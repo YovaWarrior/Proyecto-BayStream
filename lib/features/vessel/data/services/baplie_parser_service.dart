@@ -1,0 +1,610 @@
+import 'package:uuid/uuid.dart';
+import '../../../../core/constants/baplie_constants.dart';
+import '../../../../core/errors/exceptions.dart';
+import '../../../../core/utils/iso_coordinate_parser.dart';
+import '../../domain/entities/entities.dart';
+
+/// Servicio para parsear archivos BAPLIE 2.2.1 (EDIFACT)
+/// 
+/// Implementa el parsing según el estándar SMDG BAPLIE 2.2.1:
+/// - Separador de segmentos: `'` (comilla simple)
+/// - Separador de elementos: `+`
+/// - Separador de componentes: `:`
+class BaplieParserService {
+  final Uuid _uuid = const Uuid();
+
+  /// Parsea un string completo de archivo BAPLIE/EDI
+  /// 
+  /// Retorna un [VesselVoyage] con toda la información del buque y contenedores.
+  /// Lanza [BaplieParsingException] si el formato es inválido.
+  VesselVoyage parse(String ediContent) {
+    if (ediContent.trim().isEmpty) {
+      throw const BaplieParsingException(
+        message: 'El contenido del archivo BAPLIE está vacío',
+      );
+    }
+
+    // Normalizar saltos de línea y separar segmentos
+    final normalizedContent = _normalizeContent(ediContent);
+    final segments = _splitSegments(normalizedContent);
+
+    if (segments.isEmpty) {
+      throw const BaplieParsingException(
+        message: 'No se encontraron segmentos válidos en el archivo',
+      );
+    }
+
+    // Extraer información del buque (TDT)
+    final vesselInfo = _parseVesselInfo(segments);
+    
+    // Extraer metadatos del mensaje
+    final metadata = _parseMetadata(segments);
+    
+    // Extraer contenedores (grupos LOC+147 -> EQD -> MEA)
+    final containers = _parseContainers(segments);
+    
+    // Organizar contenedores por bahías
+    final bays = _organizeBays(containers);
+
+    return VesselVoyage(
+      id: _uuid.v4(),
+      vessel: vesselInfo.vessel,
+      voyageNumber: vesselInfo.voyageNumber,
+      direction: _determineDirection(segments),
+      containers: containers,
+      bays: bays,
+      metadata: metadata,
+    );
+  }
+
+  /// Normaliza el contenido removiendo saltos de línea innecesarios
+  String _normalizeContent(String content) {
+    return content
+        .replaceAll('\r\n', '')
+        .replaceAll('\r', '')
+        .replaceAll('\n', '')
+        .trim();
+  }
+
+  /// Divide el contenido en segmentos usando el separador `'`
+  List<String> _splitSegments(String content) {
+    return content
+        .split(BaplieConstants.segmentSeparator)
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+
+  /// Extrae los elementos de un segmento (separados por `+`)
+  List<String> _getElements(String segment) {
+    return segment.split(BaplieConstants.elementSeparator);
+  }
+
+  /// Extrae los componentes de un elemento (separados por `:`)
+  List<String> _getComponents(String element) {
+    return element.split(BaplieConstants.componentSeparator);
+  }
+
+  /// Obtiene un componente de forma segura por índice
+  String? _safeGetComponent(List<String> components, int index) {
+    if (index < 0 || index >= components.length) return null;
+    final value = components[index].trim();
+    return value.isEmpty ? null : value;
+  }
+
+  /// Obtiene un elemento de forma segura por índice
+  String? _safeGetElement(List<String> elements, int index) {
+    if (index < 0 || index >= elements.length) return null;
+    final value = elements[index].trim();
+    return value.isEmpty ? null : value;
+  }
+
+  // ============================================
+  // PARSING DE INFORMACIÓN DEL BUQUE (TDT)
+  // ============================================
+
+  /// Parsea el segmento TDT para extraer información del buque
+  /// 
+  /// Estructura TDT según BAPLIE 2.2.1:
+  /// TDT+20+voyageNumber+mode++++carrier:qualifier:agency+:::vesselName+flag'
+  /// 
+  /// - Nombre del barco: c222.e8212 (posición 8, componente 4)
+  /// - Número de viaje: e8028 (posición 2)
+  _VesselParseResult _parseVesselInfo(List<String> segments) {
+    String? vesselName;
+    String? voyageNumber;
+    String? imoNumber;
+    String? callSign;
+    String? flag;
+    String? operatorCode;
+
+    for (final segment in segments) {
+      if (!segment.startsWith(BaplieConstants.segmentTDT)) continue;
+
+      final elements = _getElements(segment);
+      
+      // Verificar que es transporte marítimo principal (calificador 20)
+      final qualifier = _safeGetElement(elements, 1);
+      if (qualifier != BaplieConstants.transportModeMainCarriage) continue;
+
+      // e8028 - Número de viaje (posición 2)
+      voyageNumber = _safeGetElement(elements, 2);
+
+      // c222.e8212 - Nombre del buque
+      // El elemento 8 contiene c222 con componentes: id:qualifier:agency:vesselName
+      if (elements.length > 8) {
+        final c222Components = _getComponents(elements[8]);
+        // e8212 está en la posición 4 del componente (índice 3)
+        vesselName = _safeGetComponent(c222Components, 3);
+        // Si no está en posición 4, intentar posición 1 (formato alternativo)
+        vesselName ??= _safeGetComponent(c222Components, 0);
+      }
+
+      // c040 - Carrier information (posición 7)
+      if (elements.length > 7) {
+        final c040Components = _getComponents(elements[7]);
+        operatorCode = _safeGetComponent(c040Components, 0);
+      }
+
+      // Flag puede estar en el último elemento
+      if (elements.length > 9) {
+        flag = _safeGetElement(elements, 9);
+      }
+
+      break; // Solo procesamos el primer TDT válido
+    }
+
+    if (vesselName == null || vesselName.isEmpty) {
+      // Intentar buscar nombre en RFF+VM (Vessel Name Reference)
+      vesselName = _findVesselNameFromRFF(segments);
+    }
+
+    if (vesselName == null || vesselName.isEmpty) {
+      throw const BaplieParsingException(
+        message: 'No se encontró el nombre del buque en el segmento TDT',
+        segment: 'TDT',
+      );
+    }
+
+    return _VesselParseResult(
+      vessel: Vessel(
+        id: _uuid.v4(),
+        name: vesselName,
+        imoNumber: imoNumber,
+        callSign: callSign,
+        flag: flag,
+        operator: operatorCode,
+      ),
+      voyageNumber: voyageNumber ?? 'UNKNOWN',
+    );
+  }
+
+  /// Busca el nombre del buque en segmentos RFF alternativos
+  String? _findVesselNameFromRFF(List<String> segments) {
+    for (final segment in segments) {
+      if (!segment.startsWith(BaplieConstants.segmentRFF)) continue;
+      final elements = _getElements(segment);
+      if (elements.length > 1) {
+        final components = _getComponents(elements[1]);
+        if (components.isNotEmpty && components[0] == 'VM') {
+          return _safeGetComponent(components, 1);
+        }
+      }
+    }
+    return null;
+  }
+
+  // ============================================
+  // PARSING DE METADATOS DEL MENSAJE
+  // ============================================
+
+  BaplieMetadata? _parseMetadata(List<String> segments) {
+    String? messageReference;
+    String? messageType;
+    String? messageVersion;
+    DateTime? preparationDateTime;
+
+    for (final segment in segments) {
+      // UNH - Message Header
+      if (segment.startsWith(BaplieConstants.segmentUNH)) {
+        final elements = _getElements(segment);
+        messageReference = _safeGetElement(elements, 1);
+        
+        if (elements.length > 2) {
+          final msgIdComponents = _getComponents(elements[2]);
+          messageType = _safeGetComponent(msgIdComponents, 0);
+          messageVersion = _safeGetComponent(msgIdComponents, 1);
+        }
+      }
+      
+      // DTM - Date/Time of Preparation
+      if (segment.startsWith(BaplieConstants.segmentDTM)) {
+        final elements = _getElements(segment);
+        if (elements.length > 1) {
+          final components = _getComponents(elements[1]);
+          final qualifier = _safeGetComponent(components, 0);
+          final dateValue = _safeGetComponent(components, 1);
+          
+          // 137 = Document/message date/time
+          if (qualifier == '137' && dateValue != null) {
+            preparationDateTime = _parseDateTimeValue(dateValue);
+          }
+        }
+      }
+    }
+
+    if (messageReference == null && messageType == null) {
+      return null;
+    }
+
+    return BaplieMetadata(
+      messageReference: messageReference,
+      messageType: messageType,
+      messageVersion: messageVersion,
+      preparationDateTime: preparationDateTime,
+    );
+  }
+
+  /// Parsea valores de fecha/hora EDIFACT (formatos 102, 203, 304)
+  DateTime? _parseDateTimeValue(String value) {
+    try {
+      if (value.length == 8) {
+        // Formato 102: YYYYMMDD
+        return DateTime.parse(value);
+      } else if (value.length == 12) {
+        // Formato 203: YYYYMMDDHHmm
+        return DateTime(
+          int.parse(value.substring(0, 4)),
+          int.parse(value.substring(4, 6)),
+          int.parse(value.substring(6, 8)),
+          int.parse(value.substring(8, 10)),
+          int.parse(value.substring(10, 12)),
+        );
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
+  }
+
+  // ============================================
+  // PARSING DE CONTENEDORES (LOC+147 -> EQD -> MEA)
+  // ============================================
+
+  /// Parsea todos los contenedores del archivo BAPLIE
+  /// 
+  /// Lógica según BAPLIE 2.2.1:
+  /// 1. Buscar LOC+147 (posición de estiba)
+  /// 2. Dentro del grupo, buscar EQD+CN (datos del contenedor)
+  /// 3. Buscar MEA para pesos (WT = Gross Weight, VGM = Verified Gross Mass)
+  List<ContainerUnit> _parseContainers(List<String> segments) {
+    final containers = <ContainerUnit>[];
+    
+    IsoCoordinate? currentPosition;
+    String? currentPortOfLoading;
+    String? currentPortOfDischarge;
+    
+    _ContainerBuilder? containerBuilder;
+
+    for (int i = 0; i < segments.length; i++) {
+      final segment = segments[i];
+      final segmentType = _getSegmentType(segment);
+
+      switch (segmentType) {
+        case 'LOC':
+          final locResult = _parseLOC(segment);
+          if (locResult != null) {
+            switch (locResult.qualifier) {
+              case BaplieConstants.locStowageCell: // 147
+                // Solo guardar contenedor anterior cuando viene nueva posición de estiba
+                if (containerBuilder != null && containerBuilder.containerId != null) {
+                  containers.add(containerBuilder.build(
+                    _uuid.v4(),
+                    currentPosition,
+                    currentPortOfLoading,
+                    currentPortOfDischarge,
+                  ));
+                  containerBuilder = null;
+                }
+                // Reiniciar datos para nuevo grupo de contenedor
+                currentPosition = locResult.coordinate;
+                currentPortOfLoading = null;
+                currentPortOfDischarge = null;
+                break;
+              case BaplieConstants.locPortOfLoading: // 9
+                currentPortOfLoading = locResult.locationCode;
+                break;
+              case BaplieConstants.locPortOfDischarge: // 11
+                currentPortOfDischarge = locResult.locationCode;
+                break;
+            }
+          }
+          break;
+
+        case 'EQD':
+          final eqdResult = _parseEQD(segment);
+          if (eqdResult != null) {
+            // Iniciar nuevo contenedor (el anterior ya se guardó en LOC+147)
+            containerBuilder = _ContainerBuilder()
+              ..containerId = eqdResult.containerId
+              ..isoSizeType = eqdResult.isoSizeType
+              ..status = eqdResult.status;
+          }
+          break;
+
+        case 'MEA':
+          if (containerBuilder != null) {
+            _parseMEA(segment, containerBuilder);
+          }
+          break;
+
+        case 'UNT':
+          // Fin del mensaje, guardar último contenedor
+          if (containerBuilder != null && containerBuilder.containerId != null) {
+            containers.add(containerBuilder.build(
+              _uuid.v4(),
+              currentPosition,
+              currentPortOfLoading,
+              currentPortOfDischarge,
+            ));
+            containerBuilder = null; // Marcar como procesado
+          }
+          break;
+      }
+    }
+
+    // Guardar último contenedor solo si no fue procesado por UNT
+    if (containerBuilder != null && containerBuilder.containerId != null) {
+      containers.add(containerBuilder.build(
+        _uuid.v4(),
+        currentPosition,
+        currentPortOfLoading,
+        currentPortOfDischarge,
+      ));
+    }
+
+    return containers;
+  }
+
+  /// Obtiene el tipo de segmento (primeros 3 caracteres)
+  String _getSegmentType(String segment) {
+    if (segment.length < 3) return '';
+    final plusIndex = segment.indexOf(BaplieConstants.elementSeparator);
+    if (plusIndex > 0) {
+      return segment.substring(0, plusIndex);
+    }
+    return segment.substring(0, 3);
+  }
+
+  /// Parsea segmento LOC (Location)
+  /// 
+  /// Estructura: LOC+qualifier+locationCode:qualifier:agency'
+  /// Para posición de estiba (147): LOC+147+BBBRRTT:::5'
+  /// - c517.e3225 contiene la coordenada ISO BBBRRTT
+  _LocParseResult? _parseLOC(String segment) {
+    final elements = _getElements(segment);
+    if (elements.length < 3) return null;
+
+    final qualifier = _safeGetElement(elements, 1);
+    if (qualifier == null) return null;
+
+    final c517Components = _getComponents(elements[2]);
+    final locationCode = _safeGetComponent(c517Components, 0); // e3225
+
+    IsoCoordinate? coordinate;
+    if (qualifier == BaplieConstants.locStowageCell && locationCode != null) {
+      coordinate = IsoCoordinateParser.tryParse(locationCode);
+    }
+
+    return _LocParseResult(
+      qualifier: qualifier,
+      locationCode: locationCode,
+      coordinate: coordinate,
+    );
+  }
+
+  /// Parsea segmento EQD (Equipment Details)
+  /// 
+  /// Estructura: EQD+CN+containerId+isoSizeType:::qualifier++++status'
+  /// - Calificador: CN (Container)
+  /// - c237.e8260: ID del contenedor
+  /// - c224.e8155: Tipo ISO (22G1, 45R1, etc.)
+  /// - e8169: Estado ('5' = Full, '4' = Empty)
+  _EqdParseResult? _parseEQD(String segment) {
+    final elements = _getElements(segment);
+    if (elements.length < 2) return null;
+
+    final qualifier = _safeGetElement(elements, 1);
+    if (qualifier != BaplieConstants.eqdContainer) return null; // Solo CN
+
+    String? containerId;
+    String? isoSizeType;
+    ContainerStatus status = ContainerStatus.unknown;
+
+    // c237.e8260 - Container ID (posición 2)
+    if (elements.length > 2) {
+      final c237Components = _getComponents(elements[2]);
+      containerId = _safeGetComponent(c237Components, 0);
+    }
+
+    // c224.e8155 - ISO Size/Type (posición 3)
+    if (elements.length > 3) {
+      final c224Components = _getComponents(elements[3]);
+      isoSizeType = _safeGetComponent(c224Components, 0);
+    }
+
+    // e8169 - Equipment Status (posición 7)
+    if (elements.length > 7) {
+      final statusCode = _safeGetElement(elements, 7);
+      status = _parseContainerStatus(statusCode);
+    }
+
+    if (containerId == null) return null;
+
+    return _EqdParseResult(
+      containerId: containerId,
+      isoSizeType: isoSizeType,
+      status: status,
+    );
+  }
+
+  /// Convierte código de estado a enum
+  ContainerStatus _parseContainerStatus(String? code) {
+    switch (code) {
+      case BaplieConstants.statusFull: // '5'
+        return ContainerStatus.full;
+      case BaplieConstants.statusEmpty: // '4'
+        return ContainerStatus.empty;
+      default:
+        return ContainerStatus.unknown;
+    }
+  }
+
+  /// Parsea segmento MEA (Measurements)
+  /// 
+  /// Estructura: MEA+AAE+qualifier+unit:value'
+  /// - WT: Peso Bruto (Gross Weight)
+  /// - VGM: Peso Verificado SOLAS (Verified Gross Mass)
+  /// - c174.e6314: Valor del peso
+  void _parseMEA(String segment, _ContainerBuilder builder) {
+    final elements = _getElements(segment);
+    if (elements.length < 4) return;
+
+    final qualifier = _safeGetElement(elements, 2);
+    if (qualifier == null) return;
+
+    // c174 - Value/Range (posición 3)
+    final c174Components = _getComponents(elements[3]);
+    final weightValue = _safeGetComponent(c174Components, 1); // e6314
+
+    if (weightValue == null) return;
+
+    final weight = double.tryParse(weightValue);
+    if (weight == null) return;
+
+    switch (qualifier) {
+      case BaplieConstants.meaGrossWeight: // WT
+        builder.grossWeight = weight;
+        break;
+      case BaplieConstants.meaVgm: // VGM
+        builder.vgmWeight = weight;
+        break;
+      case BaplieConstants.meaTare: // T
+        builder.tareWeight = weight;
+        break;
+    }
+  }
+
+  // ============================================
+  // ORGANIZACIÓN DE BAHÍAS
+  // ============================================
+
+  /// Organiza los contenedores en bahías
+  Map<int, Bay> _organizeBays(List<ContainerUnit> containers) {
+    final baysMap = <int, List<ContainerUnit>>{};
+
+    for (final container in containers) {
+      final position = container.stowagePosition;
+      if (position == null) continue;
+
+      final bayNumber = position.bay;
+      baysMap.putIfAbsent(bayNumber, () => []);
+      baysMap[bayNumber]!.add(container);
+    }
+
+    return baysMap.map((bayNumber, containerList) {
+      Bay bay = Bay(
+        bayNumber: bayNumber,
+        is40FtBay: bayNumber % 2 == 0, // Bahías pares suelen ser de 40'
+      );
+
+      for (final container in containerList) {
+        bay = bay.addContainer(container);
+      }
+
+      return MapEntry(bayNumber, bay);
+    });
+  }
+
+  /// Determina la dirección del viaje (Import/Export)
+  VoyageDirection _determineDirection(List<String> segments) {
+    for (final segment in segments) {
+      if (segment.startsWith('BGM')) {
+        final elements = _getElements(segment);
+        if (elements.length > 1) {
+          final components = _getComponents(elements[1]);
+          final docCode = _safeGetComponent(components, 0);
+          // 129 = Goods declaration (Import)
+          // 130 = Goods declaration (Export)
+          if (docCode == '129') return VoyageDirection.import_;
+          if (docCode == '130') return VoyageDirection.export_;
+        }
+      }
+    }
+    return VoyageDirection.unknown;
+  }
+}
+
+// ============================================
+// CLASES AUXILIARES INTERNAS
+// ============================================
+
+class _VesselParseResult {
+  final Vessel vessel;
+  final String voyageNumber;
+
+  _VesselParseResult({required this.vessel, required this.voyageNumber});
+}
+
+class _LocParseResult {
+  final String qualifier;
+  final String? locationCode;
+  final IsoCoordinate? coordinate;
+
+  _LocParseResult({
+    required this.qualifier,
+    this.locationCode,
+    this.coordinate,
+  });
+}
+
+class _EqdParseResult {
+  final String containerId;
+  final String? isoSizeType;
+  final ContainerStatus status;
+
+  _EqdParseResult({
+    required this.containerId,
+    this.isoSizeType,
+    required this.status,
+  });
+}
+
+class _ContainerBuilder {
+  String? containerId;
+  String? isoSizeType;
+  ContainerStatus status = ContainerStatus.unknown;
+  double? grossWeight;
+  double? vgmWeight;
+  double? tareWeight;
+
+  ContainerUnit build(
+    String id,
+    IsoCoordinate? position,
+    String? portOfLoading,
+    String? portOfDischarge,
+  ) {
+    return ContainerUnit(
+      id: id,
+      containerId: containerId ?? 'UNKNOWN',
+      isoSizeType: isoSizeType,
+      status: status,
+      stowagePosition: position,
+      grossWeight: grossWeight,
+      vgmWeight: vgmWeight,
+      tareWeight: tareWeight,
+      portOfLoading: portOfLoading,
+      portOfDischarge: portOfDischarge,
+    );
+  }
+}

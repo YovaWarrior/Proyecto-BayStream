@@ -1,0 +1,39 @@
+name: baystream
+description: Aplicación de gestión de carga marítima - Parser BAPLIE 2.2.1
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+  
+  # Firebase
+  firebase_core: ^2.24.2
+  cloud_firestore: ^4.14.0
+  
+  # Utilities
+  equatable: ^2.0.5
+  dartz: ^0.10.1
+  uuid: ^4.3.3
+  intl: ^0.19.0
+  
+  # UI
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  riverpod_generator: ^2.3.9
+  build_runner: ^2.4.8
+  mockito: ^5.4.4
+
+flutter:
+  uses-material-design: true
