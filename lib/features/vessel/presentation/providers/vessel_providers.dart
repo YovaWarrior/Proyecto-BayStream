@@ -66,6 +66,46 @@ final containersInBayProvider = Provider.family<List<ContainerUnit>, int>((ref, 
   );
 });
 
+/// Provider para el filtro de naviera seleccionada
+final selectedCarrierProvider = StateProvider<String?>((ref) => null);
+
+/// Provider para obtener lista de navieras únicas del viaje
+final carriersListProvider = Provider<List<String>>((ref) {
+  final voyageAsync = ref.watch(voyageNotifierProvider);
+  
+  return voyageAsync.maybeWhen(
+    data: (voyage) {
+      if (voyage == null) return [];
+      final carriers = voyage.containers
+          .map((c) => c.operatorCode)
+          .where((code) => code != null && code.isNotEmpty)
+          .cast<String>()
+          .toSet()
+          .toList();
+      carriers.sort();
+      return carriers;
+    },
+    orElse: () => [],
+  );
+});
+
+/// Provider para contenedores filtrados por naviera
+final filteredContainersProvider = Provider<List<ContainerUnit>>((ref) {
+  final voyageAsync = ref.watch(voyageNotifierProvider);
+  final selectedCarrier = ref.watch(selectedCarrierProvider);
+  
+  return voyageAsync.maybeWhen(
+    data: (voyage) {
+      if (voyage == null) return [];
+      if (selectedCarrier == null) return voyage.containers;
+      return voyage.containers
+          .where((c) => c.operatorCode == selectedCarrier)
+          .toList();
+    },
+    orElse: () => [],
+  );
+});
+
 /// Provider para estadísticas del viaje actual
 final voyageStatsProvider = Provider<VoyageStats?>((ref) {
   final voyageAsync = ref.watch(voyageNotifierProvider);

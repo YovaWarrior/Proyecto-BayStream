@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
 import '../widgets/voyage_summary_card.dart';
 import '../widgets/containers_list_view.dart';
@@ -85,6 +86,10 @@ class VesselOverviewPage extends ConsumerWidget {
           }
 
           // Mostrar información del viaje cargado
+          final carriers = ref.watch(carriersListProvider);
+          final selectedCarrier = ref.watch(selectedCarrierProvider);
+          final filteredContainers = ref.watch(filteredContainersProvider);
+          
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -94,12 +99,57 @@ class VesselOverviewPage extends ConsumerWidget {
                 VoyageSummaryCard(voyage: voyage),
                 const SizedBox(height: 24),
                 
+                // Filtro por naviera
+                if (carriers.isNotEmpty) ...[
+                  Text(
+                    'Filtrar por Naviera',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        // Chip "Todas"
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text('Todas (${voyage.totalContainers})'),
+                            selected: selectedCarrier == null,
+                            onSelected: (_) {
+                              ref.read(selectedCarrierProvider.notifier).state = null;
+                            },
+                          ),
+                        ),
+                        // Chips por naviera
+                        ...carriers.map((carrier) {
+                          final count = voyage.containers
+                              .where((c) => c.operatorCode == carrier)
+                              .length;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text('$carrier ($count)'),
+                              selected: selectedCarrier == carrier,
+                              onSelected: (_) {
+                                ref.read(selectedCarrierProvider.notifier).state = 
+                                    selectedCarrier == carrier ? null : carrier;
+                              },
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                
                 // Título de la lista de contenedores
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Contenedores (${voyage.totalContainers})',
+                      'Contenedores (${filteredContainers.length})',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     // Chip con estadísticas rápidas
@@ -107,13 +157,13 @@ class VesselOverviewPage extends ConsumerWidget {
                       children: [
                         _buildStatChip(
                           context,
-                          '${voyage.fullContainers} llenos',
+                          '${filteredContainers.where((c) => c.status == ContainerStatus.full).length} llenos',
                           Colors.green,
                         ),
                         const SizedBox(width: 8),
                         _buildStatChip(
                           context,
-                          '${voyage.emptyContainers} vacíos',
+                          '${filteredContainers.where((c) => c.status == ContainerStatus.empty).length} vacíos',
                           Colors.orange,
                         ),
                       ],
@@ -122,8 +172,8 @@ class VesselOverviewPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 
-                // Lista de contenedores
-                ContainersListView(containers: voyage.containers),
+                // Lista de contenedores filtrados
+                ContainersListView(containers: filteredContainers),
               ],
             ),
           );

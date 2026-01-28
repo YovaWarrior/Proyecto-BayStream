@@ -81,17 +81,40 @@ class _ContainerCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   
-                  // ID del contenedor
+                  // ID del contenedor y naviera
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          container.containerId,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              container.containerId,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                            if (container.operatorCode != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+                                ),
+                                child: Text(
+                                  container.operatorCode!,
+                                  style: const TextStyle(
+                                    color: Colors.indigo,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         if (container.isoSizeType != null)
                           Text(
@@ -357,6 +380,7 @@ class _ContainerCard extends StatelessWidget {
               const SizedBox(height: 24),
               
               // Detalles en lista
+              _buildDetailRow(context, 'Naviera', container.operatorCode ?? 'N/A'),
               _buildDetailRow(context, 'Tipo ISO', container.isoSizeType ?? 'N/A'),
               _buildDetailRow(context, 'Tamaño', '${container.sizeInFeet ?? "?"} pies'),
               _buildDetailRow(context, 'Estado', _getStatusText(container.status)),

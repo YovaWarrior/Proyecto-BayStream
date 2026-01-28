@@ -271,18 +271,25 @@ class BaplieParserService {
   // PARSING DE CONTENEDORES (LOC+147 -> EQD -> MEA)
   // ============================================
 
-  /// Parsea todos los contenedores del archivo BAPLIE
+  /// Parsea los contenedores del mensaje BAPLIE
   /// 
-  /// Lógica según BAPLIE 2.2.1:
-  /// 1. Buscar LOC+147 (posición de estiba)
-  /// 2. Dentro del grupo, buscar EQD+CN (datos del contenedor)
-  /// 3. Buscar MEA para pesos (WT = Gross Weight, VGM = Verified Gross Mass)
+  /// Lógica según BAPLIE 2.2.1 (orden real del archivo):
+  /// 1. LOC+147 (posición de estiba)
+  /// 2. MEA (pesos) - puede venir ANTES o DESPUÉS del EQD
+  /// 3. EQD+CN (datos del contenedor)
+  /// 
+  /// Por esto, acumulamos los pesos temporalmente hasta encontrar el EQD
   List<ContainerUnit> _parseContainers(List<String> segments) {
     final containers = <ContainerUnit>[];
     
     IsoCoordinate? currentPosition;
     String? currentPortOfLoading;
     String? currentPortOfDischarge;
+    
+    // Acumuladores temporales para pesos (pueden venir antes del EQD)
+    double? pendingGrossWeight;
+    double? pendingVgmWeight;
+    double? pendingTareWeight;
     
     _ContainerBuilder? containerBuilder;
 
@@ -296,7 +303,7 @@ class BaplieParserService {
           if (locResult != null) {
             switch (locResult.qualifier) {
               case BaplieConstants.locStowageCell: // 147
-                // Solo guardar contenedor anterior cuando viene nueva posición de estiba
+                // Guardar contenedor anterior cuando viene nueva posición de estiba
                 if (containerBuilder != null && containerBuilder.containerId != null) {
                   containers.add(containerBuilder.build(
                     _uuid.v4(),
@@ -310,6 +317,10 @@ class BaplieParserService {
                 currentPosition = locResult.coordinate;
                 currentPortOfLoading = null;
                 currentPortOfDischarge = null;
+                // Reiniciar pesos pendientes
+                pendingGrossWeight = null;
+                pendingVgmWeight = null;
+                pendingTareWeight = null;
                 break;
               case BaplieConstants.locPortOfLoading: // 9
                 currentPortOfLoading = locResult.locationCode;
@@ -321,20 +332,66 @@ class BaplieParserService {
           }
           break;
 
+        case 'MEA':
+          // Parsear peso a un builder temporal
+          final tempBuilder = _ContainerBuilder();
+          _parseMEA(segment, tempBuilder);
+          
+          // Guardar en pendientes o aplicar al contenedor si ya existe
+          if (containerBuilder != null) {
+            // Ya tenemos EQD, aplicar directamente
+            if (tempBuilder.grossWeight != null) {
+              containerBuilder.grossWeight = tempBuilder.grossWeight;
+            }
+            if (tempBuilder.vgmWeight != null) {
+              containerBuilder.vgmWeight = tempBuilder.vgmWeight;
+            }
+            if (tempBuilder.tareWeight != null) {
+              containerBuilder.tareWeight = tempBuilder.tareWeight;
+            }
+          } else {
+            // EQD aún no llegó, guardar como pendiente
+            if (tempBuilder.grossWeight != null) {
+              pendingGrossWeight = tempBuilder.grossWeight;
+            }
+            if (tempBuilder.vgmWeight != null) {
+              pendingVgmWeight = tempBuilder.vgmWeight;
+            }
+            if (tempBuilder.tareWeight != null) {
+              pendingTareWeight = tempBuilder.tareWeight;
+            }
+          }
+          break;
+
         case 'EQD':
           final eqdResult = _parseEQD(segment);
           if (eqdResult != null) {
-            // Iniciar nuevo contenedor (el anterior ya se guardó en LOC+147)
+            // Crear nuevo contenedor
             containerBuilder = _ContainerBuilder()
               ..containerId = eqdResult.containerId
               ..isoSizeType = eqdResult.isoSizeType
               ..status = eqdResult.status;
+            
+            // Aplicar pesos pendientes (MEA vino antes del EQD)
+            if (pendingGrossWeight != null) {
+              containerBuilder.grossWeight = pendingGrossWeight;
+            }
+            if (pendingVgmWeight != null) {
+              containerBuilder.vgmWeight = pendingVgmWeight;
+            }
+            if (pendingTareWeight != null) {
+              containerBuilder.tareWeight = pendingTareWeight;
+            }
           }
           break;
 
-        case 'MEA':
+        case 'NAD':
+          // NAD+CA+ZIM:172:20' -> Carrier (Naviera)
           if (containerBuilder != null) {
-            _parseMEA(segment, containerBuilder);
+            final operatorCode = _parseNAD(segment);
+            if (operatorCode != null) {
+              containerBuilder.operatorCode = operatorCode;
+            }
           }
           break;
 
@@ -347,13 +404,13 @@ class BaplieParserService {
               currentPortOfLoading,
               currentPortOfDischarge,
             ));
-            containerBuilder = null; // Marcar como procesado
+            containerBuilder = null;
           }
           break;
       }
     }
 
-    // Guardar último contenedor solo si no fue procesado por UNT
+    // Guardar último contenedor si no fue procesado por UNT
     if (containerBuilder != null && containerBuilder.containerId != null) {
       containers.add(containerBuilder.build(
         _uuid.v4(),
@@ -405,11 +462,12 @@ class BaplieParserService {
 
   /// Parsea segmento EQD (Equipment Details)
   /// 
-  /// Estructura: EQD+CN+containerId+isoSizeType:::qualifier++++status'
-  /// - Calificador: CN (Container)
+  /// Estructura puede variar:
+  /// - EQD+CN+containerId+isoSizeType+...+status'
+  /// - EQD+CN+containerId:prefix+isoSizeType+...'
   /// - c237.e8260: ID del contenedor
   /// - c224.e8155: Tipo ISO (22G1, 45R1, etc.)
-  /// - e8169: Estado ('5' = Full, '4' = Empty)
+  /// - e8169: Estado ('5' = Full, '4' = Empty) - puede estar en diferentes posiciones
   _EqdParseResult? _parseEQD(String segment) {
     final elements = _getElements(segment);
     if (elements.length < 2) return null;
@@ -433,10 +491,24 @@ class BaplieParserService {
       isoSizeType = _safeGetComponent(c224Components, 0);
     }
 
-    // e8169 - Equipment Status (posición 7)
-    if (elements.length > 7) {
-      final statusCode = _safeGetElement(elements, 7);
-      status = _parseContainerStatus(statusCode);
+    // e8169 - Equipment Status - buscar en múltiples posiciones
+    // Puede estar en posición 4, 5, 6, 7 o incluso como componente
+    for (int i = 4; i < elements.length && status == ContainerStatus.unknown; i++) {
+      final element = _safeGetElement(elements, i);
+      if (element != null && element.isNotEmpty) {
+        status = _parseContainerStatus(element);
+        // También buscar en componentes
+        if (status == ContainerStatus.unknown) {
+          final components = _getComponents(element);
+          for (final comp in components) {
+            final parsed = _parseContainerStatus(comp);
+            if (parsed != ContainerStatus.unknown) {
+              status = parsed;
+              break;
+            }
+          }
+        }
+      }
     }
 
     if (containerId == null) return null;
@@ -462,24 +534,54 @@ class BaplieParserService {
 
   /// Parsea segmento MEA (Measurements)
   /// 
-  /// Estructura: MEA+AAE+qualifier+unit:value'
+  /// Formatos encontrados:
+  /// - MEA+WT++KGM:21850' (qualifier en pos 1, peso en pos 3 comp 1)
+  /// - MEA+AAE+WT+KGM:25000' (qualifier en pos 2, peso en pos 3 comp 1)
   /// - WT: Peso Bruto (Gross Weight)
   /// - VGM: Peso Verificado SOLAS (Verified Gross Mass)
-  /// - c174.e6314: Valor del peso
   void _parseMEA(String segment, _ContainerBuilder builder) {
     final elements = _getElements(segment);
-    if (elements.length < 4) return;
+    if (elements.length < 2) return;
 
-    final qualifier = _safeGetElement(elements, 2);
+    // Buscar el qualifier (WT, VGM, T) en posición 1 o 2
+    String? qualifier;
+    int weightElementIndex = 3;
+    
+    // Formato 1: MEA+WT++KGM:21850 (qualifier en posición 1)
+    final pos1 = _safeGetElement(elements, 1);
+    if (pos1 == BaplieConstants.meaGrossWeight || 
+        pos1 == BaplieConstants.meaVgm || 
+        pos1 == BaplieConstants.meaTare) {
+      qualifier = pos1;
+      weightElementIndex = 3;
+    } else {
+      // Formato 2: MEA+AAE+WT+KGM:25000 (qualifier en posición 2)
+      qualifier = _safeGetElement(elements, 2);
+      weightElementIndex = 3;
+    }
+
     if (qualifier == null) return;
 
-    // c174 - Value/Range (posición 3)
-    final c174Components = _getComponents(elements[3]);
-    final weightValue = _safeGetComponent(c174Components, 1); // e6314
+    double? weight;
 
-    if (weightValue == null) return;
+    // Buscar peso en el elemento correspondiente y sus componentes
+    for (int elemIdx = weightElementIndex; elemIdx < elements.length && weight == null; elemIdx++) {
+      final element = _safeGetElement(elements, elemIdx);
+      if (element == null || element.isEmpty) continue;
+      
+      // Intentar parsear el elemento directamente
+      weight = double.tryParse(element);
+      
+      // Si no, buscar en componentes
+      if (weight == null) {
+        final components = _getComponents(element);
+        for (final comp in components) {
+          weight = double.tryParse(comp);
+          if (weight != null) break;
+        }
+      }
+    }
 
-    final weight = double.tryParse(weightValue);
     if (weight == null) return;
 
     switch (qualifier) {
@@ -493,6 +595,23 @@ class BaplieParserService {
         builder.tareWeight = weight;
         break;
     }
+  }
+
+  /// Parsea segmento NAD (Name and Address)
+  /// 
+  /// Formato: NAD+CA+ZIM:172:20'
+  /// - CA = Carrier (Naviera)
+  /// - El código de la naviera está en la posición 2, componente 0
+  String? _parseNAD(String segment) {
+    final elements = _getElements(segment);
+    if (elements.length < 3) return null;
+
+    final qualifier = _safeGetElement(elements, 1);
+    // CA = Carrier (Naviera)
+    if (qualifier != 'CA') return null;
+
+    final components = _getComponents(elements[2]);
+    return _safeGetComponent(components, 0);
   }
 
   // ============================================
@@ -587,6 +706,7 @@ class _ContainerBuilder {
   double? grossWeight;
   double? vgmWeight;
   double? tareWeight;
+  String? operatorCode;
 
   ContainerUnit build(
     String id,
@@ -605,6 +725,7 @@ class _ContainerBuilder {
       tareWeight: tareWeight,
       portOfLoading: portOfLoading,
       portOfDischarge: portOfDischarge,
+      operatorCode: operatorCode,
     );
   }
 }
