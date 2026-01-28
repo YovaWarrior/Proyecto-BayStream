@@ -127,6 +127,61 @@ class _ContainerCard extends StatelessWidget {
                     ),
                   ),
                   
+                  // Indicadores especiales (IMO, Reefer)
+                  if (container.isDangerous)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.red.withOpacity(0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.warning_amber, color: Colors.red, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              'IMO ${container.imdgClass ?? ""}',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (container.isReefer)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.cyan.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.cyan.withOpacity(0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.ac_unit, color: Colors.cyan, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${container.temperature?.toStringAsFixed(0) ?? "?"}°${container.temperatureUnit ?? "C"}',
+                              style: const TextStyle(
+                                color: Colors.cyan,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   // Estado (lleno/vacío)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -389,6 +444,51 @@ class _ContainerCard extends StatelessWidget {
               _buildDetailRow(context, 'Peso VGM', '${container.vgmWeight?.toStringAsFixed(0) ?? "N/A"} kg'),
               _buildDetailRow(context, 'Puerto Carga', container.portOfLoading ?? 'N/A'),
               _buildDetailRow(context, 'Puerto Descarga', container.portOfDischarge ?? 'N/A'),
+              
+              // Información de mercancías peligrosas
+              if (container.isDangerous) ...[
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    const Icon(Icons.warning_amber, color: Colors.red, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'MERCANCÍA PELIGROSA',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow(context, 'Clase IMO', container.imdgClass ?? 'N/A'),
+                _buildDetailRow(context, 'Número ONU', container.unNumber ?? 'N/A'),
+              ],
+              
+              // Información de reefer
+              if (container.isReefer) ...[
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    const Icon(Icons.ac_unit, color: Colors.cyan, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'CONTENEDOR REFRIGERADO',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Colors.cyan,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow(
+                  context, 
+                  'Temperatura', 
+                  '${container.temperature?.toStringAsFixed(1) ?? "N/A"}°${container.temperatureUnit ?? "C"}',
+                ),
+              ],
               
               const SizedBox(height: 24),
               

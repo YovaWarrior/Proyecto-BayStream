@@ -395,6 +395,30 @@ class BaplieParserService {
           }
           break;
 
+        case 'DGS':
+          // DGS+IMD+clase+unNumber' -> Mercancías peligrosas
+          if (containerBuilder != null) {
+            final dgsResult = _parseDGS(segment);
+            if (dgsResult != null) {
+              containerBuilder.isDangerous = true;
+              containerBuilder.imdgClass = dgsResult.imdgClass;
+              containerBuilder.unNumber = dgsResult.unNumber;
+            }
+          }
+          break;
+
+        case 'TMP':
+          // TMP+2+temperatura:CEL' -> Temperatura de reefer
+          if (containerBuilder != null) {
+            final tmpResult = _parseTMP(segment);
+            if (tmpResult != null) {
+              containerBuilder.isReefer = true;
+              containerBuilder.temperature = tmpResult.temperature;
+              containerBuilder.temperatureUnit = tmpResult.unit;
+            }
+          }
+          break;
+
         case 'UNT':
           // Fin del mensaje, guardar último contenedor
           if (containerBuilder != null && containerBuilder.containerId != null) {
@@ -614,6 +638,61 @@ class BaplieParserService {
     return _safeGetComponent(components, 0);
   }
 
+  /// Parsea segmento DGS (Dangerous Goods)
+  /// 
+  /// Formato: DGS+IMD+clase:version+unNumber'
+  /// - IMD = IMDG (International Maritime Dangerous Goods)
+  /// - clase = Clase IMDG (ej: 3, 8, 9)
+  /// - unNumber = Número ONU (ej: 1993, 2810)
+  _DgsParseResult? _parseDGS(String segment) {
+    final elements = _getElements(segment);
+    if (elements.length < 3) return null;
+
+    String? imdgClass;
+    String? unNumber;
+
+    // Clase IMDG (posición 2)
+    if (elements.length > 2) {
+      final classComponents = _getComponents(elements[2]);
+      imdgClass = _safeGetComponent(classComponents, 0);
+    }
+
+    // Número ONU (posición 3)
+    if (elements.length > 3) {
+      final unComponents = _getComponents(elements[3]);
+      unNumber = _safeGetComponent(unComponents, 0);
+    }
+
+    if (imdgClass == null && unNumber == null) return null;
+
+    return _DgsParseResult(imdgClass: imdgClass, unNumber: unNumber);
+  }
+
+  /// Parsea segmento TMP (Temperature)
+  /// 
+  /// Formato: TMP+2+temperatura:CEL' o TMP+2+temperatura:FAH'
+  /// - 2 = Storage temperature
+  /// - temperatura = valor numérico
+  /// - CEL = Celsius, FAH = Fahrenheit
+  _TmpParseResult? _parseTMP(String segment) {
+    final elements = _getElements(segment);
+    if (elements.length < 3) return null;
+
+    final tempComponents = _getComponents(elements[2]);
+    final tempValue = _safeGetComponent(tempComponents, 0);
+    final tempUnit = _safeGetComponent(tempComponents, 1) ?? 'CEL';
+
+    if (tempValue == null) return null;
+
+    final temperature = double.tryParse(tempValue);
+    if (temperature == null) return null;
+
+    return _TmpParseResult(
+      temperature: temperature,
+      unit: tempUnit == 'FAH' ? 'F' : 'C',
+    );
+  }
+
   // ============================================
   // ORGANIZACIÓN DE BAHÍAS
   // ============================================
@@ -699,6 +778,20 @@ class _EqdParseResult {
   });
 }
 
+class _DgsParseResult {
+  final String? imdgClass;
+  final String? unNumber;
+
+  _DgsParseResult({this.imdgClass, this.unNumber});
+}
+
+class _TmpParseResult {
+  final double temperature;
+  final String unit;
+
+  _TmpParseResult({required this.temperature, required this.unit});
+}
+
 class _ContainerBuilder {
   String? containerId;
   String? isoSizeType;
@@ -707,6 +800,12 @@ class _ContainerBuilder {
   double? vgmWeight;
   double? tareWeight;
   String? operatorCode;
+  bool isDangerous = false;
+  String? imdgClass;
+  String? unNumber;
+  bool isReefer = false;
+  double? temperature;
+  String? temperatureUnit;
 
   ContainerUnit build(
     String id,
@@ -726,6 +825,12 @@ class _ContainerBuilder {
       portOfLoading: portOfLoading,
       portOfDischarge: portOfDischarge,
       operatorCode: operatorCode,
+      isDangerous: isDangerous,
+      imdgClass: imdgClass,
+      unNumber: unNumber,
+      isReefer: isReefer,
+      temperature: temperature,
+      temperatureUnit: temperatureUnit,
     );
   }
 }

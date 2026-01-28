@@ -6,15 +6,37 @@ import '../providers/vessel_providers.dart';
 import '../widgets/voyage_summary_card.dart';
 import '../widgets/containers_list_view.dart';
 import '../widgets/empty_state_widget.dart';
+import '../widgets/bay_plan_view.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
-class VesselOverviewPage extends ConsumerWidget {
+class VesselOverviewPage extends ConsumerStatefulWidget {
   const VesselOverviewPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VesselOverviewPage> createState() => _VesselOverviewPageState();
+}
+
+class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final voyageAsync = ref.watch(voyageNotifierProvider);
+    final hasVoyage = voyageAsync.hasValue && voyageAsync.value != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -28,13 +50,22 @@ class VesselOverviewPage extends ConsumerWidget {
             onPressed: () => _pickAndParseBaplieFile(context, ref),
           ),
           // Botón para limpiar datos cargados
-          if (voyageAsync.hasValue && voyageAsync.value != null)
+          if (hasVoyage)
             IconButton(
               icon: const Icon(Icons.clear),
               tooltip: 'Limpiar datos',
               onPressed: () => ref.read(voyageNotifierProvider.notifier).clearVoyage(),
             ),
         ],
+        bottom: hasVoyage
+            ? TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(icon: Icon(Icons.list), text: 'Lista'),
+                  Tab(icon: Icon(Icons.grid_view), text: 'Bay Plan'),
+                ],
+              )
+            : null,
       ),
       body: voyageAsync.when(
         // Estado: Cargando
@@ -85,97 +116,16 @@ class VesselOverviewPage extends ConsumerWidget {
             );
           }
 
-          // Mostrar información del viaje cargado
-          final carriers = ref.watch(carriersListProvider);
-          final selectedCarrier = ref.watch(selectedCarrierProvider);
-          final filteredContainers = ref.watch(filteredContainersProvider);
-          
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Tarjeta resumen del viaje
-                VoyageSummaryCard(voyage: voyage),
-                const SizedBox(height: 24),
-                
-                // Filtro por naviera
-                if (carriers.isNotEmpty) ...[
-                  Text(
-                    'Filtrar por Naviera',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        // Chip "Todas"
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text('Todas (${voyage.totalContainers})'),
-                            selected: selectedCarrier == null,
-                            onSelected: (_) {
-                              ref.read(selectedCarrierProvider.notifier).state = null;
-                            },
-                          ),
-                        ),
-                        // Chips por naviera
-                        ...carriers.map((carrier) {
-                          final count = voyage.containers
-                              .where((c) => c.operatorCode == carrier)
-                              .length;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: FilterChip(
-                              label: Text('$carrier ($count)'),
-                              selected: selectedCarrier == carrier,
-                              onSelected: (_) {
-                                ref.read(selectedCarrierProvider.notifier).state = 
-                                    selectedCarrier == carrier ? null : carrier;
-                              },
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                
-                // Título de la lista de contenedores
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Contenedores (${filteredContainers.length})',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    // Chip con estadísticas rápidas
-                    Row(
-                      children: [
-                        _buildStatChip(
-                          context,
-                          '${filteredContainers.where((c) => c.status == ContainerStatus.full).length} llenos',
-                          Colors.green,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildStatChip(
-                          context,
-                          '${filteredContainers.where((c) => c.status == ContainerStatus.empty).length} vacíos',
-                          Colors.orange,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // Lista de contenedores filtrados
-                ContainersListView(containers: filteredContainers),
-              ],
-            ),
+          // Mostrar información del viaje con pestañas
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              // Pestaña 1: Lista de contenedores
+              _buildContainersListTab(context, voyage),
+              
+              // Pestaña 2: Bay Plan
+              BayPlanView(voyage: voyage),
+            ],
           );
         },
       ),
@@ -243,6 +193,101 @@ class VesselOverviewPage extends ConsumerWidget {
         );
       }
     }
+  }
+
+  /// Construye la pestaña de lista de contenedores
+  Widget _buildContainersListTab(BuildContext context, VesselVoyage voyage) {
+    final carriers = ref.watch(carriersListProvider);
+    final selectedCarrier = ref.watch(selectedCarrierProvider);
+    final filteredContainers = ref.watch(filteredContainersProvider);
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Tarjeta resumen del viaje
+          VoyageSummaryCard(voyage: voyage),
+          const SizedBox(height: 24),
+          
+          // Filtro por naviera
+          if (carriers.isNotEmpty) ...[
+            Text(
+              'Filtrar por Naviera',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  // Chip "Todas"
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text('Todas (${voyage.totalContainers})'),
+                      selected: selectedCarrier == null,
+                      onSelected: (_) {
+                        ref.read(selectedCarrierProvider.notifier).state = null;
+                      },
+                    ),
+                  ),
+                  // Chips por naviera
+                  ...carriers.map((carrier) {
+                    final count = voyage.containers
+                        .where((c) => c.operatorCode == carrier)
+                        .length;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: Text('$carrier ($count)'),
+                        selected: selectedCarrier == carrier,
+                        onSelected: (_) {
+                          ref.read(selectedCarrierProvider.notifier).state = 
+                              selectedCarrier == carrier ? null : carrier;
+                        },
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          // Título de la lista de contenedores
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Contenedores (${filteredContainers.length})',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              // Chip con estadísticas rápidas
+              Row(
+                children: [
+                  _buildStatChip(
+                    context,
+                    '${filteredContainers.where((c) => c.status == ContainerStatus.full).length} llenos',
+                    Colors.green,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildStatChip(
+                    context,
+                    '${filteredContainers.where((c) => c.status == ContainerStatus.empty).length} vacíos',
+                    Colors.orange,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Lista de contenedores filtrados
+          ContainersListView(containers: filteredContainers),
+        ],
+      ),
+    );
   }
 
   /// Construye un chip con estadísticas
