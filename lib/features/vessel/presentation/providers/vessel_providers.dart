@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/vessel_repository_impl.dart';
 import '../../data/services/baplie_parser_service.dart';
@@ -15,25 +16,99 @@ final vesselRepositoryProvider = Provider<VesselRepository>((ref) {
   return VesselRepositoryImpl(parserService: parserService);
 });
 
-/// Provider del viaje actualmente cargado
-final currentVoyageProvider = StateProvider<VesselVoyage?>((ref) => null);
+/// Provider del viaje actual - maneja estado async manualmente
+final voyageNotifierProvider = NotifierProvider<VoyageNotifier, AsyncValue<VesselVoyage?>>(
+  VoyageNotifier.new,
+);
 
-/// Provider de estado de carga
-final isLoadingProvider = StateProvider<bool>((ref) => false);
+/// Resultado de la operación de carga de archivo
+class LoadFileResult {
+  final bool success;
+  final String? fileName;
+  final String? errorMessage;
 
-/// Provider de errores
-final errorMessageProvider = StateProvider<String?>((ref) => null);
+  const LoadFileResult._({
+    required this.success,
+    this.fileName,
+    this.errorMessage,
+  });
 
-/// Notifier para manejar operaciones de viajes
-class VoyageNotifier extends StateNotifier<AsyncValue<VesselVoyage?>> {
-  final VesselRepository _repository;
+  factory LoadFileResult.success(String fileName) => 
+      LoadFileResult._(success: true, fileName: fileName);
+  
+  factory LoadFileResult.error(String message) => 
+      LoadFileResult._(success: false, errorMessage: message);
+  
+  factory LoadFileResult.cancelled() => 
+      const LoadFileResult._(success: false);
 
-  VoyageNotifier(this._repository) : super(const AsyncValue.data(null));
+  bool get isCancelled => !success && errorMessage == null;
+}
 
+/// Notifier para manejar operaciones de viajes (Riverpod 3.x)
+class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
+  @override
+  AsyncValue<VesselVoyage?> build() {
+    return const AsyncValue.data(null);
+  }
+
+  /// Abre el selector de archivos, lee el contenido y parsea el BAPLIE
+  /// Retorna un resultado indicando éxito, error o cancelación
+  Future<LoadFileResult> loadVesselFromFile() async {
+    try {
+      // Abrir selector de archivos nativo
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['edi', 'txt', 'baplie'],
+        withData: true,
+        dialogTitle: 'Seleccionar archivo BAPLIE',
+      );
+
+      // Usuario canceló la selección
+      if (result == null || result.files.isEmpty) {
+        return LoadFileResult.cancelled();
+      }
+
+      final file = result.files.first;
+      
+      // Verificar que el archivo tenga contenido
+      if (file.bytes == null || file.bytes!.isEmpty) {
+        return LoadFileResult.error('No se pudo leer el contenido del archivo');
+      }
+
+      // Poner estado en loading
+      state = const AsyncValue.loading();
+
+      // Convertir bytes a String
+      final content = String.fromCharCodes(file.bytes!);
+      
+      // Parsear el contenido
+      final repository = ref.read(vesselRepositoryProvider);
+      final parseResult = await repository.parseBaplieFile(content);
+      
+      return parseResult.fold(
+        (failure) {
+          state = AsyncValue.error(failure.message, StackTrace.current);
+          return LoadFileResult.error(failure.message);
+        },
+        (voyage) {
+          state = AsyncValue.data(voyage);
+          return LoadFileResult.success(file.name);
+        },
+      );
+    } catch (e) {
+      final errorMsg = 'Error inesperado: ${e.toString()}';
+      state = AsyncValue.error(errorMsg, StackTrace.current);
+      return LoadFileResult.error(errorMsg);
+    }
+  }
+
+  /// Parsea contenido BAPLIE directamente (para uso con contenido ya leído)
   Future<void> parseBaplieContent(String content) async {
     state = const AsyncValue.loading();
     
-    final result = await _repository.parseBaplieFile(content);
+    final repository = ref.read(vesselRepositoryProvider);
+    final result = await repository.parseBaplieFile(content);
     
     result.fold(
       (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
@@ -41,17 +116,11 @@ class VoyageNotifier extends StateNotifier<AsyncValue<VesselVoyage?>> {
     );
   }
 
+  /// Limpia el viaje cargado
   void clearVoyage() {
     state = const AsyncValue.data(null);
   }
 }
-
-/// Provider del notifier de viajes
-final voyageNotifierProvider = 
-    StateNotifierProvider<VoyageNotifier, AsyncValue<VesselVoyage?>>((ref) {
-  final repository = ref.watch(vesselRepositoryProvider);
-  return VoyageNotifier(repository);
-});
 
 /// Provider para obtener contenedores de una bahía específica
 final containersInBayProvider = Provider.family<List<ContainerUnit>, int>((ref, bayNumber) {
@@ -67,7 +136,23 @@ final containersInBayProvider = Provider.family<List<ContainerUnit>, int>((ref, 
 });
 
 /// Provider para el filtro de naviera seleccionada
-final selectedCarrierProvider = StateProvider<String?>((ref) => null);
+final selectedCarrierProvider = NotifierProvider<SelectedCarrierNotifier, String?>(
+  SelectedCarrierNotifier.new,
+);
+
+/// Notifier para la naviera seleccionada
+class SelectedCarrierNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void select(String? carrier) {
+    state = carrier;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
 
 /// Provider para obtener lista de navieras únicas del viaje
 final carriersListProvider = Provider<List<String>>((ref) {

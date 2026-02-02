@@ -11,19 +11,19 @@ dependencies:
     sdk: flutter
   
   # State Management
-  flutter_riverpod: ^2.4.9
-  riverpod_annotation: ^2.3.3
+  flutter_riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
   
-  # Firebase
-  firebase_core: ^2.24.2
-  cloud_firestore: ^4.14.0
+  # Firebase (comentado temporalmente - causa error CMake en Windows)
+  # firebase_core: ^4.4.0
+  # cloud_firestore: ^6.1.2
   
   # Utilities
   equatable: ^2.0.5
   dartz: ^0.10.1
   uuid: ^4.3.3
-  intl: ^0.19.0
-  file_picker: ^8.0.0+1
+  intl: ^0.20.2
+  file_picker: ^10.3.10
   
   # UI
   cupertino_icons: ^1.0.6
@@ -31,8 +31,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
-  riverpod_generator: ^2.3.9
+  flutter_lints: ^6.0.0
+  riverpod_generator: ^4.0.0+1
   build_runner: ^2.4.8
   mockito: ^5.4.4
 

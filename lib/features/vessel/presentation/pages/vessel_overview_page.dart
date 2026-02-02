@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
 import '../widgets/voyage_summary_card.dart';
@@ -47,7 +46,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           IconButton(
             icon: const Icon(Icons.upload_file),
             tooltip: 'Cargar archivo BAPLIE',
-            onPressed: () => _pickAndParseBaplieFile(context, ref),
+            onPressed: () => _loadBaplieFile(context),
           ),
           // Botón para limpiar datos cargados
           if (hasVoyage)
@@ -100,7 +99,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
-                  onPressed: () => _pickAndParseBaplieFile(context, ref),
+                  onPressed: () => _loadBaplieFile(context),
                   icon: const Icon(Icons.refresh),
                   label: const Text('Intentar de nuevo'),
                 ),
@@ -112,7 +111,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         data: (voyage) {
           if (voyage == null) {
             return EmptyStateWidget(
-              onPickFile: () => _pickAndParseBaplieFile(context, ref),
+              onPickFile: () => _loadBaplieFile(context),
             );
           }
 
@@ -133,7 +132,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       floatingActionButton: voyageAsync.maybeWhen(
         data: (voyage) => voyage == null
             ? FloatingActionButton.extended(
-                onPressed: () => _pickAndParseBaplieFile(context, ref),
+                onPressed: () => _loadBaplieFile(context),
                 icon: const Icon(Icons.file_open),
                 label: const Text('Cargar BAPLIE'),
               )
@@ -143,56 +142,28 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     );
   }
 
-  /// Abre el selector de archivos y parsea el archivo BAPLIE seleccionado
-  Future<void> _pickAndParseBaplieFile(BuildContext context, WidgetRef ref) async {
-    try {
-      // Abrir selector de archivos
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['edi', 'txt', 'baplie'],
-        withData: true,
-      );
-
-      if (result == null || result.files.isEmpty) return;
-
-      final file = result.files.first;
-      
-      // Verificar que el archivo tenga contenido
-      if (file.bytes == null) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se pudo leer el contenido del archivo'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Convertir bytes a String y parsear
-      final content = String.fromCharCodes(file.bytes!);
-      await ref.read(voyageNotifierProvider.notifier).parseBaplieContent(content);
-
-      // Mostrar mensaje de éxito
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Archivo "${file.name}" cargado correctamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+  /// Carga un archivo BAPLIE usando el VoyageNotifier
+  Future<void> _loadBaplieFile(BuildContext context) async {
+    final result = await ref.read(voyageNotifierProvider.notifier).loadVesselFromFile();
+    
+    if (!context.mounted) return;
+    
+    // No mostrar nada si el usuario canceló
+    if (result.isCancelled) return;
+    
+    // Mostrar SnackBar según el resultado
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.success 
+              ? 'Archivo "${result.fileName}" cargado correctamente'
+              : result.errorMessage ?? 'Error desconocido',
+        ),
+        backgroundColor: result.success ? Colors.green : Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   /// Construye la pestaña de lista de contenedores
@@ -228,7 +199,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                       label: Text('Todas (${voyage.totalContainers})'),
                       selected: selectedCarrier == null,
                       onSelected: (_) {
-                        ref.read(selectedCarrierProvider.notifier).state = null;
+                        ref.read(selectedCarrierProvider.notifier).clear();
                       },
                     ),
                   ),
@@ -243,8 +214,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                         label: Text('$carrier ($count)'),
                         selected: selectedCarrier == carrier,
                         onSelected: (_) {
-                          ref.read(selectedCarrierProvider.notifier).state = 
-                              selectedCarrier == carrier ? null : carrier;
+                          ref.read(selectedCarrierProvider.notifier).select(
+                              selectedCarrier == carrier ? null : carrier);
                         },
                       ),
                     );
