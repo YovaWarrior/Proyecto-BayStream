@@ -6,6 +6,7 @@ import '../widgets/voyage_summary_card.dart';
 import '../widgets/containers_list_view.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/bay_plan_view.dart';
+import '../widgets/container_search_delegate.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -42,6 +43,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         title: const Text('BayStream'),
         centerTitle: true,
         actions: [
+          // Botón de búsqueda (solo si hay viaje cargado)
+          if (hasVoyage)
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: 'Buscar contenedor',
+              onPressed: () => _openSearch(context, voyageAsync.value!),
+            ),
           // Botón para cargar archivo BAPLIE
           IconButton(
             icon: const Icon(Icons.upload_file),
@@ -53,7 +61,11 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             IconButton(
               icon: const Icon(Icons.clear),
               tooltip: 'Limpiar datos',
-              onPressed: () => ref.read(voyageNotifierProvider.notifier).clearVoyage(),
+              onPressed: () {
+                ref.read(voyageNotifierProvider.notifier).clearVoyage();
+                ref.read(highlightedContainerProvider.notifier).clear();
+                ref.read(selectedBayProvider.notifier).clear();
+              },
             ),
         ],
         bottom: hasVoyage
@@ -138,6 +150,21 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               )
             : null,
         orElse: () => null,
+      ),
+    );
+  }
+
+  /// Abre el buscador de contenedores
+  void _openSearch(BuildContext context, VesselVoyage voyage) {
+    // Limpiar resaltado anterior
+    ref.read(highlightedContainerProvider.notifier).clear();
+    
+    showSearch<ContainerUnit?>(
+      context: context,
+      delegate: ContainerSearchDelegate(
+        containers: voyage.containers,
+        ref: ref,
+        tabController: _tabController,
       ),
     );
   }

@@ -211,6 +211,44 @@ final voyageStatsProvider = Provider<VoyageStats?>((ref) {
   );
 });
 
+/// Provider para el contenedor resaltado (búsqueda)
+final highlightedContainerProvider = NotifierProvider<HighlightedContainerNotifier, String?>(
+  HighlightedContainerNotifier.new,
+);
+
+/// Notifier para el contenedor resaltado
+class HighlightedContainerNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void highlight(String containerId) {
+    state = containerId;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
+/// Provider para la bahía seleccionada en el Bay Plan
+final selectedBayProvider = NotifierProvider<SelectedBayNotifier, int?>(
+  SelectedBayNotifier.new,
+);
+
+/// Notifier para la bahía seleccionada
+class SelectedBayNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void select(int bayNumber) {
+    state = bayNumber;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
 /// Clase para estadísticas del viaje
 class VoyageStats {
   final int totalContainers;

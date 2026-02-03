@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
+import '../providers/vessel_providers.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
 /// Permite navegar entre bahías y ver la disposición de contenedores
-class BayPlanView extends StatefulWidget {
+/// Soporta zoom/pan con InteractiveViewer y resaltado de contenedores
+class BayPlanView extends ConsumerStatefulWidget {
   final VesselVoyage voyage;
 
   const BayPlanView({super.key, required this.voyage});
 
   @override
-  State<BayPlanView> createState() => _BayPlanViewState();
+  ConsumerState<BayPlanView> createState() => _BayPlanViewState();
 }
 
-class _BayPlanViewState extends State<BayPlanView> {
+class _BayPlanViewState extends ConsumerState<BayPlanView> {
   int? _selectedBayNumber;
+  final ScrollController _bayScrollController = ScrollController();
 
   @override
   void initState() {
@@ -25,8 +29,24 @@ class _BayPlanViewState extends State<BayPlanView> {
   }
 
   @override
+  void dispose() {
+    _bayScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final sortedBayNumbers = widget.voyage.bays.keys.toList()..sort();
+    final highlightedContainerId = ref.watch(highlightedContainerProvider);
+    
+    // Escuchar cambios en la bahía seleccionada desde búsqueda
+    ref.listen<int?>(selectedBayProvider, (previous, next) {
+      if (next != null && widget.voyage.bays.containsKey(next)) {
+        setState(() {
+          _selectedBayNumber = next;
+        });
+      }
+    });
     
     if (sortedBayNumbers.isEmpty) {
       return const Center(
@@ -40,12 +60,13 @@ class _BayPlanViewState extends State<BayPlanView> {
         _buildBaySelector(sortedBayNumbers),
         const Divider(height: 1),
         
-        // Grid de la bahía seleccionada
+        // Grid de la bahía seleccionada con scroll normal
         Expanded(
           child: _selectedBayNumber != null
               ? _BayGridWidget(
                   bay: widget.voyage.bays[_selectedBayNumber]!,
                   onContainerTap: _showContainerDetails,
+                  highlightedContainerId: highlightedContainerId,
                 )
               : const Center(child: Text('Selecciona una bahía')),
         ),
@@ -60,43 +81,75 @@ class _BayPlanViewState extends State<BayPlanView> {
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        itemCount: bayNumbers.length,
-        itemBuilder: (context, index) {
-          final bayNumber = bayNumbers[index];
-          final bay = widget.voyage.bays[bayNumber]!;
-          final isSelected = bayNumber == _selectedBayNumber;
-          
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: FilterChip(
-              label: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Bay ${bayNumber.toString().padLeft(2, '0')}',
-                    style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 12,
+      child: Row(
+        children: [
+          // Flecha izquierda
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: () {
+              _bayScrollController.animateTo(
+                (_bayScrollController.offset - 200).clamp(0, _bayScrollController.position.maxScrollExtent),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            tooltip: 'Anterior',
+          ),
+          // Lista de bahías
+          Expanded(
+            child: ListView.builder(
+              controller: _bayScrollController,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              itemCount: bayNumbers.length,
+              itemBuilder: (context, index) {
+                final bayNumber = bayNumbers[index];
+                final bay = widget.voyage.bays[bayNumber]!;
+                final isSelected = bayNumber == _selectedBayNumber;
+                
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: FilterChip(
+                    label: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Bay ${bayNumber.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '${bay.containers.length}',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ],
                     ),
+                    selected: isSelected,
+                    onSelected: (_) {
+                      setState(() {
+                        _selectedBayNumber = bayNumber;
+                      });
+                    },
                   ),
-                  Text(
-                    '${bay.containers.length}',
-                    style: const TextStyle(fontSize: 10),
-                  ),
-                ],
-              ),
-              selected: isSelected,
-              onSelected: (_) {
-                setState(() {
-                  _selectedBayNumber = bayNumber;
-                });
+                );
               },
             ),
-          );
-        },
+          ),
+          // Flecha derecha
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: () {
+              _bayScrollController.animateTo(
+                (_bayScrollController.offset + 200).clamp(0, _bayScrollController.position.maxScrollExtent),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            tooltip: 'Siguiente',
+          ),
+        ],
       ),
     );
   }
@@ -294,10 +347,12 @@ class _BayPlanViewState extends State<BayPlanView> {
 class _BayGridWidget extends StatelessWidget {
   final Bay bay;
   final Function(ContainerUnit) onContainerTap;
+  final String? highlightedContainerId;
 
   const _BayGridWidget({
     required this.bay,
     required this.onContainerTap,
+    this.highlightedContainerId,
   });
 
   @override
@@ -365,91 +420,175 @@ class _BayGridWidget extends StatelessWidget {
     final rows = [...evenRows, ...oddRows];
     
     // Tiers de arriba a abajo (mayor tier arriba)
-    final tiers = <int>[];
+    // Separar en cubierta (deck: tier >= 80) y bodega (hold: tier < 80)
+    final deckTiers = <int>[];
+    final holdTiers = <int>[];
     for (int t = maxTier; t >= minTier; t -= 2) {
-      tiers.add(t);
+      if (t >= 80) {
+        deckTiers.add(t);
+      } else {
+        holdTiers.add(t);
+      }
     }
     
+    // Scroll normal con contenido centrado
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      child: Center(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Título de la bahía
-            Text(
-              'BAY ${bay.bayNumber.toString().padLeft(2, '0')}',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+          // Título de la bahía
+          Text(
+            'BAY ${bay.bayNumber.toString().padLeft(2, '0')}',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            '${bay.containers.length} contenedores | ${(bay.totalWeight / 1000).toStringAsFixed(1)} ton',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 16),
+          
+          // Header de rows
+          _buildRowHeader(rows),
+          const SizedBox(height: 4),
+          
+          // CUBIERTA (DECK) - Tiers >= 80
+          if (deckTiers.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                '▲ CUBIERTA (DECK)',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
               ),
             ),
-            Text(
-              '${bay.containers.length} contenedores | ${bay.totalWeight.toStringAsFixed(0)} kg',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 16),
-            
-            // Header de rows
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(width: 40), // Espacio para labels de tier
-                ...rows.map((row) => Container(
-                  width: 50,
-                  alignment: Alignment.center,
-                  child: Text(
-                    row.toString().padLeft(2, '0'),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                )),
-              ],
-            ),
             const SizedBox(height: 4),
-            
-            // Grid de celdas
-            ...tiers.map((tier) => Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Label de tier
-                SizedBox(
-                  width: 40,
-                  child: Text(
-                    tier.toString().padLeft(2, '0'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                // Celdas de contenedores
-                ...rows.map((row) {
-                  final key = '$row-$tier';
-                  final container = positionMap[key];
-                  return _ContainerCell(
-                    container: container,
-                    onTap: container != null ? () => onContainerTap(container) : null,
-                  );
-                }),
-              ],
+            ...deckTiers.map((tier) => _buildTierRow(
+              tier, rows, positionMap, highlightedContainerId,
             )),
           ],
+          
+          // Separador visual entre cubierta y bodega
+          if (deckTiers.isNotEmpty && holdTiers.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              height: 3,
+              margin: const EdgeInsets.symmetric(horizontal: 40),
+              decoration: BoxDecoration(
+                color: Colors.brown.shade400,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          
+          // BODEGA (HOLD) - Tiers < 80
+          if (holdTiers.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.brown.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                '▼ BODEGA (HOLD)',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.brown,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            ...holdTiers.map((tier) => _buildTierRow(
+              tier, rows, positionMap, highlightedContainerId,
+            )),
+          ],
+        ],
         ),
       ),
     );
   }
+
+  Widget _buildRowHeader(List<int> rows) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(width: 40),
+        ...rows.map((row) => Container(
+          width: 50,
+          alignment: Alignment.center,
+          child: Text(
+            row.toString().padLeft(2, '0'),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        )),
+      ],
+    );
+  }
+
+  Widget _buildTierRow(
+    int tier,
+    List<int> rows,
+    Map<String, ContainerUnit> positionMap,
+    String? highlightedContainerId,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Label de tier
+        SizedBox(
+          width: 40,
+          child: Text(
+            tier.toString().padLeft(2, '0'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        // Celdas de contenedores
+        ...rows.map((row) {
+          final key = '$row-$tier';
+          final container = positionMap[key];
+          final isHighlighted = container != null && 
+              highlightedContainerId != null &&
+              container.containerId == highlightedContainerId;
+          return _ContainerCell(
+            container: container,
+            onTap: container != null ? () => onContainerTap(container) : null,
+            isHighlighted: isHighlighted,
+          );
+        }),
+      ],
+    );
+  }
 }
 
-/// Widget de celda individual de contenedor
+/// Widget de celda individual de contenedor (optimizado para rendimiento)
 class _ContainerCell extends StatelessWidget {
   final ContainerUnit? container;
   final VoidCallback? onTap;
+  final bool isHighlighted;
 
   const _ContainerCell({
     this.container,
     this.onTap,
+    this.isHighlighted = false,
   });
 
   @override
@@ -499,9 +638,21 @@ class _ContainerCell extends StatelessWidget {
         height: 40,
         margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          color: cellColor,
+          color: isHighlighted ? Colors.yellow.shade100 : cellColor,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: borderColor, width: 2),
+          border: Border.all(
+            color: isHighlighted ? Colors.yellow.shade700 : borderColor, 
+            width: isHighlighted ? 3 : 2,
+          ),
+          boxShadow: isHighlighted
+              ? [
+                  BoxShadow(
+                    color: Colors.yellow.withOpacity(0.5),
+                    blurRadius: 6,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
