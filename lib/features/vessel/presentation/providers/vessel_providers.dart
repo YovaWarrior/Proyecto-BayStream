@@ -271,3 +271,125 @@ class VoyageStats {
       ? (fullContainers / totalContainers) * 100 
       : 0;
 }
+
+/// Provider para distribución de contenedores por naviera (operatorCode -> count)
+final carrierDistributionProvider = Provider<Map<String, int>>((ref) {
+  final voyageAsync = ref.watch(voyageNotifierProvider);
+  return voyageAsync.maybeWhen(
+    data: (voyage) {
+      if (voyage == null) return {};
+      final dist = <String, int>{};
+      for (final c in voyage.containers) {
+        final key = c.operatorCode ?? 'SIN NAVIERA';
+        dist[key] = (dist[key] ?? 0) + 1;
+      }
+      // Ordenar por cantidad descendente
+      final sorted = dist.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      return Map.fromEntries(sorted);
+    },
+    orElse: () => {},
+  );
+});
+
+/// Provider para distribución por puerto de descarga (port -> count)
+final portDistributionProvider = Provider<Map<String, int>>((ref) {
+  final voyageAsync = ref.watch(voyageNotifierProvider);
+  return voyageAsync.maybeWhen(
+    data: (voyage) {
+      if (voyage == null) return {};
+      final dist = <String, int>{};
+      for (final c in voyage.containers) {
+        final key = c.portOfDischarge ?? 'N/A';
+        dist[key] = (dist[key] ?? 0) + 1;
+      }
+      final sorted = dist.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      return Map.fromEntries(sorted);
+    },
+    orElse: () => {},
+  );
+});
+
+/// Provider para conteo de carga especial
+final specialCargoStatsProvider = Provider<SpecialCargoStats>((ref) {
+  final voyageAsync = ref.watch(voyageNotifierProvider);
+  return voyageAsync.maybeWhen(
+    data: (voyage) {
+      if (voyage == null) return const SpecialCargoStats();
+      int reefers = 0, dangerous = 0, oog = 0, twentyFt = 0, fortyFt = 0, fortyFiveFt = 0;
+      for (final c in voyage.containers) {
+        if (c.isReefer) reefers++;
+        if (c.isDangerous) dangerous++;
+        if (c.isOverDimension) oog++;
+        final size = c.sizeInFeet;
+        if (size == 20) twentyFt++;
+        else if (size == 40) fortyFt++;
+        else if (size == 45) fortyFiveFt++;
+      }
+      return SpecialCargoStats(
+        reeferCount: reefers,
+        dangerousCount: dangerous,
+        oogCount: oog,
+        twentyFtCount: twentyFt,
+        fortyFtCount: fortyFt,
+        fortyFiveFtCount: fortyFiveFt,
+      );
+    },
+    orElse: () => const SpecialCargoStats(),
+  );
+});
+
+/// Provider para estadísticas por bahía (bayNumber -> {containers, weight})
+final bayStatsProvider = Provider<List<BayStat>>((ref) {
+  final voyageAsync = ref.watch(voyageNotifierProvider);
+  return voyageAsync.maybeWhen(
+    data: (voyage) {
+      if (voyage == null) return [];
+      final stats = <BayStat>[];
+      final sortedKeys = voyage.bays.keys.toList()..sort();
+      for (final bayNum in sortedKeys) {
+        final bay = voyage.bays[bayNum]!;
+        stats.add(BayStat(
+          bayNumber: bayNum,
+          containerCount: bay.containers.length,
+          totalWeight: bay.totalWeight,
+        ));
+      }
+      return stats;
+    },
+    orElse: () => [],
+  );
+});
+
+/// Estadísticas de carga especial
+class SpecialCargoStats {
+  final int reeferCount;
+  final int dangerousCount;
+  final int oogCount;
+  final int twentyFtCount;
+  final int fortyFtCount;
+  final int fortyFiveFtCount;
+
+  const SpecialCargoStats({
+    this.reeferCount = 0,
+    this.dangerousCount = 0,
+    this.oogCount = 0,
+    this.twentyFtCount = 0,
+    this.fortyFtCount = 0,
+    this.fortyFiveFtCount = 0,
+  });
+}
+
+/// Estadísticas de una bahía individual
+class BayStat {
+  final int bayNumber;
+  final int containerCount;
+  final double totalWeight;
+
+  const BayStat({
+    required this.bayNumber,
+    required this.containerCount,
+    required this.totalWeight,
+  });
+}

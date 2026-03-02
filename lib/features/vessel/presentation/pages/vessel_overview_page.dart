@@ -7,6 +7,7 @@ import '../widgets/containers_list_view.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/bay_plan_view.dart';
 import '../widgets/container_search_delegate.dart';
+import '../widgets/voyage_stats_view.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -24,7 +25,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -74,6 +75,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 tabs: const [
                   Tab(icon: Icon(Icons.list), text: 'Lista'),
                   Tab(icon: Icon(Icons.grid_view), text: 'Bay Plan'),
+                  Tab(icon: Icon(Icons.bar_chart), text: 'Estadísticas'),
                 ],
               )
             : null,
@@ -136,6 +138,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               
               // Pestaña 2: Bay Plan
               BayPlanView(voyage: voyage),
+              
+              // Pestaña 3: Estadísticas
+              VoyageStatsView(voyage: voyage),
             ],
           );
         },
