@@ -1,0 +1,369 @@
+﻿{
+    "rfs":  [
+                {
+                    "observaciones":  "Punto de entrada principal. Implementado con file_picker para compatibilidad multiplataforma. RF-002 — Parsing y Validación del Formato BAPLIE 2.2.1",
+                    "id":  "RF-001",
+                    "nombre":  "Selección y Carga de Archivo BAPLIE",
+                    "entrada":  "Archivo BAPLIE seleccionado por el usuario ( formatos: edi ,. txt ,. baplie ) . Acción del usuario al presionar el botón de carga o el botón flotante .",
+                    "salida":  "Contenido del archivo listo para parsing, o mensaje de error descriptivo. Notificación visual (SnackBar) indicando el resultado con el nombre del archivo.",
+                    "proceso":  "Presentar el selector de archivos nativo con filtro de extensiones (. edi ,. txt ,. baplie ). Verificar que el usuario haya seleccionado un archivo. Leer el contenido completo del archivo en memoria como bytes. Validar que el archivo no este vacío y contenga datos legibles. Convertir los bytes a cadena de texto para procesamiento. Transferir el contenido al servicio de parsing BAPLIE. Mostrar indicador de carga durante el procesamiento.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Núcleo del sistema. Implementado en BaplieParserService (837 líneas ). RF-003 — Extracción de Información del Buque",
+                    "id":  "RF-002",
+                    "nombre":  "Parsing y Validación del Formato BAPLIE 2.2.1",
+                    "entrada":  "Cadena de texto con el contenido completo del archivo BAPLIE/EDI .",
+                    "salida":  "Objeto VesselVoyage completo con buque, contenedores, bahías y metadatos. O excepción BaplieParsingException.",
+                    "proceso":  "Normalizar contenido removiendo retornos de carro. Dividir en segmentos usando el separador (\u0027). Filtrar segmentos vacíos . Validar existencia de segmentos válidos . Procesar secuencialmente cada segmento (UNH, TDT, LOC, EQD, MEA, NAD, DGS, TMP, UNT). Construir el objeto VesselVoyage con la información extraída .",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Soporta variaciones de MSC, Maersk, CMA CGM, ZIM, etc. RF-004 — Extracción de Datos de Contenedores",
+                    "id":  "RF-003",
+                    "nombre":  "Extracción de Información del Buque",
+                    "entrada":  "Segmento TDT con calificador \u002720\u0027 (transporte maritimo principal) . Segmentos RFF como respaldo para nombre del buque .",
+                    "salida":  "Objeto Vessel con nombre, numero IMO, indicativo de llamada, bandera y operador.",
+                    "proceso":  "Localizar segmento TDT con calificador 20. Extraer número de viaje del elemento e8028 ( posición 2). Extraer nombre del buque del componente c222 ( posición 8, subíndice 3). Intentar formato alternativo si no se encuentra ( posición 8, subíndice 0). Extraer código de operador del componente c040. Extraer bandera del buque ( posición 9). Si no se encuentra nombre, buscar en segmentos RFF con calificador VM.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "La lógica de pesos pendientes resuelve ambigüedad real del estándar BAPLIE. RF-005 — Detección de Carga Especial",
+                    "id":  "RF-004",
+                    "nombre":  "Extracción de Datos de Contenedores",
+                    "entrada":  "Segmentos LOC+147 ( posición de estiba), LOC+9 (puerto carga), LOC+11 (puerto descarga) . Segmentos EQD+CN (datos del contenedor) . Segmentos MEA con calificadores WT, VGM, T . Segmentos NAD+CA (naviera) .",
+                    "salida":  "Lista de objetos ContainerUnit con todos los atributos extraídos .",
+                    "proceso":  "Detectar LOC+147 que inicia un nuevo grupo de contenedor. Parsear coordenada ISO de estiba (BBBRRTT) a bahía , fila y tier. Detectar LOC+9 y LOC+11 para puertos de carga y descarga. Acumular pesos de segmentos MEA en variables pendientes. Al encontrar EQD+CN, crear contenedor con ID, tipo ISO y estado. Aplicar pesos pendientes al contenedor recién creado. Continuar procesando segmentos MEA y NAD adicionales. Al encontrar nuevo LOC+147 o UNT, guardar contenedor actual.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Critico para cumplimiento del código IMDG y regulaciones SOLAS. Modulo 2: Visualización del Plano de Estiba (RF-006 a RF-014) Este módulo comprende las funcionalidades de representación visual del plano de estiba (Bay Plan) del buque. Permite visualizar gráficamente la distribución de contenedores en cada bahía, diferenciando cubierta y bodega, con información detallada mediante interacción . RF-006 — Representación Visual del Grid de Bahia",
+                    "id":  "RF-005",
+                    "nombre":  "Detección de Carga Especial (IMO, Reefer, OOG)",
+                    "entrada":  "Segmentos DGS: DGS+IMD+ clase: versión +unNumber . Segmentos TMP: TMP+2+ temperatura: CEL o FAH . Segmentos DIM para sobredimensión .",
+                    "salida":  "Contenedores con indicadores de carga especial y detalles (clase IMDG, numero ONU, temperatura).",
+                    "proceso":  "Al encontrar DGS, extraer clase IMDG y numero ONU; marcar isDangerous=true. Al encontrar TMP, extraer temperatura y unidad; marcar isReefer=true. Evaluar dimensiones para detectar sobredimensión (OOG).",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Implementado en _BayGridWidget. Referencia visual critica para planificadores de estiba. RF-007 — Selector de Bahías con Navegación",
+                    "id":  "RF-006",
+                    "nombre":  "Representación Visual del Grid de Bahia",
+                    "entrada":  "Objeto Bay con mapa de ContainerSlots y lista de contenedores . Número máximo de filas y rango de tiers de la bahía .",
+                    "salida":  "Widget visual tipo cuadricula con celdas coloreadas representando la distribución de contenedores.",
+                    "proceso":  "Calcular dimensiones del grid a partir de maxRow y rango de tiers. Separar tiers en cubierta (\u0026gt;=80) y bodega (\u0026lt;80). Generar filas del grid de arriba hacia abajo (tier mayor a menor). Para cada posición (row, tier), verificar si existe ContainerSlot con contenedor. Renderizar cada celda con color y estilo correspondiente. Agregar etiquetas de fila y tier en los márgenes .",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Componente esencial para navegación dentro del Bay Plan. RF-008 — Codificación por Color según Estado del Contenedor",
+                    "id":  "RF-007",
+                    "nombre":  "Selector de Bahías con Navegación",
+                    "entrada":  "Lista ordenada de números de bahía disponibles . Acción del usuario: toque en número o presión de flechas .",
+                    "salida":  "Barra de navegación funcional con bahía seleccionada resaltada y grid actualizado.",
+                    "proceso":  "Renderizar lista de bahías como chips horizontales desplazables. Al seleccionar, actualizar selectedBayNumber. Actualizar grid para mostrar bahía seleccionada. Flechas avanzan/retroceden a bahía adyacente. Scroll automático para centrar bahía activa.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Sigue convenciones de la industria marítima para codificación visual. RF-009 — Separación Visual Cubierta / Bodega",
+                    "id":  "RF-008",
+                    "nombre":  "Codificación por Color según Estado del Contenedor",
+                    "entrada":  "Objeto ContainerUnit con atributos de estado y carga especial .",
+                    "salida":  "Celdas del grid coloreadas según jerarquía de estado y tipo de carga.",
+                    "proceso":  "Evaluar isDangerous; si verdadero, asignar rojo. Evaluar isReefer; si verdadero, asignar celeste. Evaluar isOverDimension; si verdadero, asignar morado. Sin indicadores especiales, asignar según status (Full=verde, Empty=naranja). Aplicar color como fondo de la celda.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Refleja la estructura física real del buque portacontenedores. RF-010 — Detalle de Contenedor al Interactuar",
+                    "id":  "RF-009",
+                    "nombre":  "Separación Visual entre Cubierta (Deck) y Bodega (Hold)",
+                    "entrada":  "Lista de tiers clasificados en deckTiers (\u0026gt;=80) y holdTiers (\u0026lt;80) .",
+                    "salida":  "Grid de bahía con secciones visualmente diferenciadas.",
+                    "proceso":  "Clasificar tiers en cubierta y bodega. Mostrar etiqueta \"CUBIERTA (DECK)\" si hay tiers de cubierta. Renderizar filas de cubierta. Dibujar línea divisora si hay ambas secciones. Mostrar etiqueta \"BODEGA (HOLD)\" si hay tiers de bodega. Renderizar filas de bodega.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Esencial para inspección individual de contenedores en el plano de estiba. RF-011 — Leyenda Interactiva de Colores",
+                    "id":  "RF-010",
+                    "nombre":  "Detalle de Contenedor al Interactuar",
+                    "entrada":  "Objeto ContainerUnit seleccionado por el usuario en el grid .",
+                    "salida":  "Panel modal con información completa del contenedor seleccionado.",
+                    "proceso":  "Detectar interacción del usuario en celda ocupada. Recuperar el ContainerUnit asociado. Construir panel modal con secciones de información . Presentar BottomSheet con animación de entrada.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Mejora significativa de usabilidad para identificación rápida de carga especial. RF-012 — Indicadores de Peso por Tier",
+                    "id":  "RF-011",
+                    "nombre":  "Leyenda Interactiva de Colores",
+                    "entrada":  "Esquema de colores definido para cada tipo . Interacción del usuario con elementos de la leyenda .",
+                    "salida":  "Leyenda visual con capacidad de filtrado interactivo.",
+                    "proceso":  "Renderizar ítems de leyenda con color y etiqueta. Detectar toque en un ítem . Activar filtro visual que atenúa los demás tipos. Si se toca el mismo tipo nuevamente, desactivar filtro.",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Útil para verificar distribución de peso según reglas de estabilidad. RF-013 — Resaltado de Contenedor Buscado en Bay Plan",
+                    "id":  "RF-012",
+                    "nombre":  "Indicadores de Peso por Tier",
+                    "entrada":  "Lista de contenedores de la bahía con pesos y tiers .",
+                    "salida":  "Indicadores numéricos de peso por tier integrados al grid.",
+                    "proceso":  "Agrupar contenedores por tier. Sumar peso bruto (grossWeight) de cada tier. Convertir totales a toneladas. Renderizar etiquetas de peso junto a cada fila del grid.",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Conecta búsqueda con visualización del Bay Plan. RF-014 — Indicador de Porcentaje de Ocupación por Bahia",
+                    "id":  "RF-013",
+                    "nombre":  "Resaltado de Contenedor Buscado en Bay Plan",
+                    "entrada":  "ID del contenedor a resaltar (highlightedContainerId) . Numero de bahía donde se ubica .",
+                    "salida":  "Celda del contenedor resaltada con animación pulsante en el grid.",
+                    "proceso":  "Recibir ID del contenedor vía provider. Determinar bahía del contenedor. Actualizar selector de bahías . Aplicar efecto de borde animado ( pulsación dorada). Limpiar resaltado al iniciar nueva acción .",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Útil para visión general rápida de distribución de carga. Modulo 3: Búsqueda de Contenedores (RF-015 a RF-020) Este módulo agrupa las funcionalidades de búsqueda y localización de contenedores dentro del viaje cargado. Permite encontrar contenedores por diversos criterios y navegar directamente a su ubicación en el plano de estiba. RF-015 — Búsqueda por Identificador de Contenedor",
+                    "id":  "RF-014",
+                    "nombre":  "Indicador de Porcentaje de Ocupación por Bahia",
+                    "entrada":  "Objeto Bay con método occupancyRate .",
+                    "salida":  "Porcentaje de ocupación visible para cada bahía .",
+                    "proceso":  "Obtener occupancyRate del objeto Bay. Formatear porcentaje a un decimal. Mostrar como etiqueta en selector o grid. Opcionalmente, aplicar gradiente de color a chips.",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Implementado en ContainerSearchDelegate. Fundamental para operaciones portuarias. RF-016 — Búsqueda por Puerto de Carga/Descarga",
+                    "id":  "RF-015",
+                    "nombre":  "Búsqueda por Identificador de Contenedor (BIC Code)",
+                    "entrada":  "Texto ingresado por el usuario en el campo de búsqueda . Lista completa de contenedores del viaje .",
+                    "salida":  "Lista de contenedores coincidentes. Al seleccionar, navegación al Bay Plan con resaltado.",
+                    "proceso":  "Abrir interfaz de búsqueda desde icono de lupa en AppBar. Filtrar contenedores cuyo containerId contenga el texto (case-insensitive). Mostrar resultados como tarjetas con ID, operador, tipo ISO y posición . Al seleccionar, establecer highlightedContainerId vía provider. Navegar a pestana Bay Plan y seleccionar bahía del contenedor.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Integrado en ContainerSearchDelegate como búsqueda unificada. RF-017 — Búsqueda por Naviera Operadora",
+                    "id":  "RF-016",
+                    "nombre":  "Búsqueda por Puerto de Carga o Descarga",
+                    "entrada":  "Código de puerto (UN/LOCODE) ingresado por el usuario . Lista de contenedores con puertos de carga y descarga .",
+                    "salida":  "Lista de contenedores filtrados por puerto con indicación del tipo de coincidencia.",
+                    "proceso":  "Filtrar contenedores cuyo portOfLoading o portOfDischarge contenga el texto. Mostrar resultados etiquetados según tipo de coincidencia (carga o descarga). Permitir selección para navegar al Bay Plan.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Complementa el filtro por chips de naviera en la pestaña de lista. RF-018 — Búsqueda por Tipo de Carga Especial",
+                    "id":  "RF-017",
+                    "nombre":  "Búsqueda por Naviera Operadora",
+                    "entrada":  "Código de naviera ingresado por el usuario . Lista de contenedores con operatorCode .",
+                    "salida":  "Lista de contenedores de la naviera buscada.",
+                    "proceso":  "Filtrar contenedores cuyo operatorCode contenga el texto. Mostrar resultados con c ódigo de naviera resaltado. Permitir selección para navegar al Bay Plan.",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Critico para cumplimiento de protocolos de seguridad portuaria. RF-019 — Navegación desde Búsqueda al Bay Plan",
+                    "id":  "RF-018",
+                    "nombre":  "Búsqueda por Tipo de Carga Especial",
+                    "entrada":  "Termino de búsqueda relacionado con carga especial . Lista de contenedores con indicadores isDangerous, isReefer , isOverDimension .",
+                    "salida":  "Lista de contenedores con el tipo de carga especial solicitado.",
+                    "proceso":  "Detectar si el termino coincide con palabras clave de carga especial. Filtrar contenedores según indicador correspondiente. Mostrar resultados con etiqueta del tipo de carga.",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Integra módulos de búsqueda y visualización para flujo de trabajo optimo. RF-020 — Estado Vacio del Buscador con Estadísticas",
+                    "id":  "RF-019",
+                    "nombre":  "Navegación Automática desde Búsqueda al Bay Plan",
+                    "entrada":  "ContainerUnit seleccionado en resultados de búsqueda . TabController de la página principal .",
+                    "salida":  "Vista Bay Plan mostrando bahía del contenedor con celda resaltada.",
+                    "proceso":  "Obtener posición de estiba del contenedor seleccionado. Calcular número de bahía de la coordenada ISO. Actualizar selectedBayProvider con numero de bahía . Actualizar highlightedContainerProvider con ID del contenedor. Cambiar TabController al índice de Bay Plan. Cerrar interfaz de búsqueda .",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Mejora experiencia de usuario al proporcionar contexto. Modulo 4: Lista y Filtrado de Contenedores (RF-021 a RF-025) Este módulo abarca las funcionalidades de visualización tabular, filtrado y análisis de contenedores. Proporciona una vista alternativa al Bay Plan, orientada a la gestión y consulta estructurada de datos. RF-021 — Lista Desplazable de Contenedores con Tarjetas de Detalle",
+                    "id":  "RF-020",
+                    "nombre":  "Estado Vacio del Buscador con Estadísticas",
+                    "entrada":  "Estado del campo de búsqueda ( vacío o sin resultados) . Estadísticas generales del viaje .",
+                    "salida":  "Vista informativa con sugerencias o mensaje de búsqueda sin resultados.",
+                    "proceso":  "Detectar si campo de búsqueda está vacío . Si vacío , mostrar sugerencias y estadísticas . Si tiene texto sin resultados, mostrar \"sin coincidencias\".",
+                    "prioridad":  "COULD (Media)"
+                },
+                {
+                    "observaciones":  "Implementado en ContainersListView. Usa ListView.builder para rendimiento. RF-022 — Filtrado por Naviera mediante Chips",
+                    "id":  "RF-021",
+                    "nombre":  "Lista Desplazable de Contenedores con Tarjetas de Detalle",
+                    "entrada":  "Lista de objetos ContainerUnit (filtrada o completa) .",
+                    "salida":  "Lista visual de contenedores con tarjetas informativas e interactivas.",
+                    "proceso":  "Construir ListView.builder con la lista de contenedores. Renderizar tarjeta por cada contenedor con información resumida. Aplicar colores de estado e iconos de carga especial. Al tocar tarjeta, mostrar BottomSheet con detalle completo.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Implementado con Riverpod para reactividad automática . RF-023 — Tarjeta de Resumen del Viaje",
+                    "id":  "RF-022",
+                    "nombre":  "Filtrado por Naviera mediante Chips",
+                    "entrada":  "Lista de navieras únicas del carriersListProvider . Selección del usuario en un chip .",
+                    "salida":  "Lista filtrada por naviera seleccionada con chips actualizados.",
+                    "proceso":  "Obtener navieras únicas vía carriersListProvider. Renderizar chips horizontales con nombre y conteo. Al seleccionar, actualizar selectedCarrierProvider. filteredContainersProvider reacciona automáticamente . Actualizar conteo en título de la lista.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Implementado en VoyageSummaryCard. RF-024 — Dashboard Estadístico con gráficos de Distribución",
+                    "id":  "RF-023",
+                    "nombre":  "Tarjeta de Resumen del Viaje",
+                    "entrada":  "Objeto VesselVoyage con información del buque, estadísticas y metadatos .",
+                    "salida":  "Tarjeta visual con resumen completo del viaje.",
+                    "proceso":  "Extraer nombre del buque, numero de viaje y bandera. Calcular estadísticas : total contenedores, bahías , peso bruto. Formatear peso en toneladas. Renderizar tarjeta con secciones e iconos.",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Implementado en VoyageStatsView con CustomPainter para pie chart. 3ra pestana del sistema. RF-025 — Exportación de Reporte en PDF",
+                    "id":  "RF-024",
+                    "nombre":  "Dashboard Estadístico con gráficos de Distribución",
+                    "entrada":  "Providers: voyageStatsProvider, carrierDistributionProvider, portDistributionProvider, specialCargoStatsProvider, bayStatsProvider.",
+                    "salida":  "Dashboard completo con múltiples gráficos y visualizaciones estadísticas .",
+                    "proceso":  "Obtener datos de todos los providers estadísticos . Renderizar grid de métricas con tarjetas coloreadas. Pintar grafico circular usando CustomPainter. Calcular y renderizar barra de distribución por tamaño . Generar tarjetas de carga especial (solo si existen). Generar barras horizontales de distribución por naviera y puerto. Generar barras verticales de contenedores y peso por bahía .",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Requiere paquete pdf de Flutter. Pendiente de implementación . Modulo 5: Gestión de Muelle y Planificación (RF-026 a RF-030) Este módulo agrupa las funcionalidades relacionadas con la gestión operativa del muelle, incluyendo la validación de posiciones de contenedores, planificación de secuencias de descarga y carga, y soporte para operación sin conexión a internet en zonas portuarias. RF-026 — Visualización de la Distribución General del Buque",
+                    "id":  "RF-025",
+                    "nombre":  "Exportación de Reporte en PDF",
+                    "entrada":  "Objeto VesselVoyage con todos los datos del viaje . Acción del usuario al presionar botón de exportar .",
+                    "salida":  "Archivo PDF con reporte completo del viaje.",
+                    "proceso":  "Recopilar datos del viaje desde los providers. Construir documento PDF con secciones formateadas. Agregar tablas de estadísticas y distribución . Generar representación gráfica simplificada del Bay Plan. Guardar PDF en almacenamiento local o abrir dialogo de compartir.",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Proporciona contexto global para decisiones de planificación de estiba. RF-027 — Validación de Reglas de Estiba",
+                    "id":  "RF-026",
+                    "nombre":  "Visualización de la Distribución General del Buque",
+                    "entrada":  "Mapa completo de bahías del objeto VesselVoyage . Estadísticas de ocupación y peso por bahía .",
+                    "salida":  "Vista panorámica del buque con bahías coloreadas por ocupación .",
+                    "proceso":  "Obtener todas las bahías del viaje ordenadas de proa a popa. Calcular el porcentaje de ocupación y peso total de cada bahía . Representar cada bahía como un bloque coloreado según nivel de ocupación . Mostrar indicadores de carga especial por bahía si aplica. Permitir toque en una bahía para navegar al detalle de esa bahía .",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Funcionalidad avanzada para futuras versiones. Requiere definición de parámetros del buque. RF-028 — Planificación de Secuencia de Descarga",
+                    "id":  "RF-027",
+                    "nombre":  "validación de Reglas de Estiba",
+                    "entrada":  "Lista de contenedores con posiciones de estiba, pesos y tipos . Reglas de estiba configuradas (peso máximo por tier, separación IMDG) .",
+                    "salida":  "Lista de alertas de validación con nivel de severidad, descripción y posición afectada.",
+                    "proceso":  "Recorrer cada bahía verificando reglas de apilamiento vertical. Verificar límites de peso por stack (columna de contenedores). Verificar separación de mercancías peligrosas según clase IMDG. Verificar ubicación de reefers en posiciones con servicio eléctrico . Generar lista de alertas y advertencias con descripción y ubicación .",
+                    "prioridad":  "COULD (Media)"
+                },
+                {
+                    "observaciones":  "Funcionalidad de valor agregado para operaciones de terminal. RF-029 — Comparación entre Viajes",
+                    "id":  "RF-028",
+                    "nombre":  "Planificación de Secuencia de Descarga",
+                    "entrada":  "Código de puerto de descarga seleccionado . Lista de contenedores con portOfDischarge y posiciones .",
+                    "salida":  "Secuencia sugerida de descarga con contenedores ordenados por bahía y tier.",
+                    "proceso":  "Filtrar contenedores cuyo portOfDischarge coincida con el puerto seleccionado. Agrupar contenedores por bahía . Dentro de cada bahía , ordenar por tier (cubierta primero, luego bodega). Generar secuencia sugerida con orden de bahías y movimientos. Presentar la secuencia como lista ordenada con estimación de movimientos.",
+                    "prioridad":  "COULD (Media)"
+                },
+                {
+                    "observaciones":  "Funcionalidad avanzada para auditorias y verificación operativa. RF-030 — Soporte de Modo Offline",
+                    "id":  "RF-029",
+                    "nombre":  "Comparación entre Viajes",
+                    "entrada":  "Dos archivos BAPLIE del mismo buque en diferentes estados .",
+                    "salida":  "Vista comparativa con contenedores clasificados como descargados, cargados o permanentes.",
+                    "proceso":  "Parsear ambos archivos BAPLIE. Comparar listas de contenedores por ID. Clasificar en: descargados (solo en el primero), cargados (solo en el segundo), permanentes (en ambos). Generar vista comparativa con colores diferenciados.",
+                    "prioridad":  "COULD (Media)"
+                },
+                {
+                    "observaciones":  "Requisito operativo crítico del sector portuario. Ya cumplido por la arquitectura actual. Modulo 6: S incronización y Respaldo de Datos (RF-031 a RF-033) Este módulo abarca las funcionalidades de respaldo, sincronización y exportación de datos para garantizar la persistencia y compartición de información entre dispositivos y usuarios. RF-031 — Almacenamiento Local Persistente",
+                    "id":  "RF-030",
+                    "nombre":  "Soporte de Modo Offline",
+                    "entrada":  "Archivos BAPLIE almacenados localmente en el dispositivo .",
+                    "salida":  "Aplicación completamente funcional sin conexión a internet.",
+                    "proceso":  "Toda la lógica de parsing se ejecuta localmente. El almacenamiento de datos es en memoria del dispositivo. No se realizan llamadas a APIs externas para funcionalidad básica . La interfaz de usuario funciona sin conexión .",
+                    "prioridad":  "MUST (Muy Alta)"
+                },
+                {
+                    "observaciones":  "Las entidades ya implementan toJson/fromJson. Requiere integración con SharedPreferences o Hive. RF-032 — Sincronización en la Nube",
+                    "id":  "RF-031",
+                    "nombre":  "Almacenamiento Local Persistente",
+                    "entrada":  "Objeto VesselVoyage serializado en formato JSON . Acción del usuario para guardar o lista automática de viajes recientes .",
+                    "salida":  "Viaje restaurado desde almacenamiento local sin reprocesamiento.",
+                    "proceso":  "Serializar el VesselVoyage a JSON usando toJson(). Almacenar el JSON en SharedPreferences o archivo local. Mantener índice de viajes guardados con metadatos. Al abrir la aplicación , mostrar lista de viajes recientes. Al seleccionar un viaje guardado, desrealizar con fromJson( ).",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Firebase está incluido en pubspec. yaml pero comentado temporalmente por incompatibilidad con build Windows/CMake. RF-033 — Exportación de Datos en Formatos Estándar",
+                    "id":  "RF-032",
+                    "nombre":  "Sincronización en la Nube",
+                    "entrada":  "Viajes almacenados localmente . Credenciales de autenticación del usuario . Estado de conexión a internet .",
+                    "salida":  "Viajes sincronizados entre dispositivos via Firebase.",
+                    "proceso":  "Verificar estado de conexión a internet. Si hay conexión y sincronización habilitada, subir viajes nuevos a Firestore. Descargar viajes sincronizados desde otros dispositivos. Resolver conflictos de sincronización por timestamp.",
+                    "prioridad":  "COULD (Media)"
+                },
+                {
+                    "observaciones":  "Facilita integración con sistemas TOS (Terminal Operating System) existentes. Modulo 7: Administración y Seguridad (RF-034 a RF-035) Este módulo agrupa las funcionalidades de autenticación y control de acceso basado en roles para la gestión segura del sistema en entornos multiusuario. RF-034 — Autenticación de Usuarios",
+                    "id":  "RF-033",
+                    "nombre":  "Exportación de Datos en Formatos Estándar",
+                    "entrada":  "Objeto VesselVoyage con datos del viaje . Formato de exportación seleccionado (CSV o JSON) .",
+                    "salida":  "Archivo CSV o JSON con los datos del viaje exportados.",
+                    "proceso":  "Recopilar datos del viaje desde el provider. Si CSV: generar encabezados y filas con datos de cada contenedor. Si JSON: serializar el VesselVoyage completo con toJson(). Presentar dialogo de guardado con nombre sugerido. Escribir archivo en la ubicación seleccionada.",
+                    "prioridad":  "SHOULD (Alta)"
+                },
+                {
+                    "observaciones":  "Requiere habilitar Firebase en el proyecto. Dependencia comentada en pubspec.yaml. RF-035 — Control de Acceso Basado en Roles",
+                    "id":  "RF-034",
+                    "nombre":  "Autenticación de Usuarios",
+                    "entrada":  "Correo electrónico y contraseña del usuario . O credenciales de proveedor de identidad (Google) .",
+                    "salida":  "Usuario autenticado con sesión activa o mensaje de error.",
+                    "proceso":  "Presentar pantalla de login con opciones de autenticación . Validar formato de correo electrónico . Enviar credenciales a Firebase Authentication. Recibir token de sesión y almacenarlo de forma segura. Mantener sesión activa entre reinicios de la aplicación . Proporcionar opción de cierre de sesión .",
+                    "prioridad":  "COULD (Media)"
+                },
+                {
+                    "observaciones":  "Funcionalidad para entornos multiusuario . Requiere Firebase y definición de políticas de seguridad. R equerimientos No Funcionales del Sistema Los requerimientos no funcionales definen las restricciones, cualidades y atributos de calidad que el sistema debe cumplir. Se han identificado 8 requerimientos no funcionales que abarcan rendimiento, usabilidad, portabilidad, seguridad, mantenibilidad, disponibilidad, escalabilidad y compatibilidad. RNF-001 — Rendimiento y Tiempo de Respuesta ID: RNF-001 Nombre: Rendimiento y Tiempo de Respuesta Descripción : El sistema debe garantizar tiempos de respuesta óptimos en todas sus operaciones críticas . El parsing de un archivo BAPLIE de hasta 5,000 contenedores no deberá exceder los 5 segundos en dispositivos de gama media. La navegación entre bahías en el Bay Plan debe ser instantánea (menos de 100 milisegundos). La búsqueda de contenedores deberá mostrar resultados en tiempo real conforme el usuario escribe, con un retraso máximo de 200 milisegundos por actualización . El scroll de la lista de contenedores deberá mantener una tasa de cuadros por segundo (FPS) de al menos 60 fps incluso con listas de miles de elementos, logrado mediante el uso de ListView.builder para renderizado bajo demanda. El dashboard estadístico deberá calcular y renderizar todos los gráficos en menos de 1 segundo tras la carga de datos. La aplicación no deberá consumir más de 200 MB de memoria RAM durante la operación normal con archivos de hasta 5,000 contenedores. Métricas : Parsing BAPLIE (5,000 contenedores): \u0026lt; 5 segundos . Navegación entre bahías : \u0026lt; 100 ms . Búsqueda en tiempo real: \u0026lt; 200 ms por actualización . Scroll de lista: ≥ 60 fps . Renderizado de dashboard: \u0026lt; 1 segundo . Consumo de RAM: \u0026lt; 200 MB en operación normal . Prioridad: MUST (Muy Alta) . Observaciones: El uso de Riverpod para gestión reactiva del estado y ListView.builder para renderizado eficiente contribuyen directamente al cumplimiento de estas métricas . RNF-002 — Usabilidad y Experiencia de Usuario ID: RNF-002 Nombre: Usabilidad y Experiencia de Usuario Descripción : El sistema debe ser intuitivo y fácil de usar para personal del sector marítimo -portuario, que puede no tener experiencia técnica avanzada en aplicaciones móviles . La interfaz debe seguir las guías de Material Design 3 para garantizar consistencia visual y patrones de interacción familiares. El usuario deberá poder cargar un archivo BAPLIE y visualizar el plano de estiba en un máximo de 3 pasos (abrir app , presionar botón de carga, seleccionar archivo). El sistema debe proporcionar retroalimentación visual clara en todas las operaciones: indicadores de carga durante procesamiento, notificaciones de éxito /error, estados vacíos informativos con sugerencias de acción , y codificación por colores consistente en toda la aplicación . Todos los textos deben estar en español para el mercado objetivo latinoamericano. Métricas : Tiempo para primera visualización desde apertura: ≤ 3 pasos / 30 segundos . Curva de aprendizaje: usuario productivo en \u0026lt; 10 minutos sin capacitación . Consistencia visual: 100% adherencia a Material Design 3 . Idioma de interfaz: español . Prioridad: MUST (Muy Alta) . Observaciones: La aplicación utiliza Material Design 3 vía useMaterial3: true y ColorScheme.fromSeed () para temas coherentes. RNF-003 — Portabilidad y Compatibilidad Multiplataforma ID: RNF-003 Nombre: Portabilidad y Compatibilidad Multiplataforma Descripción : El sistema debe ser compatible con múltiples plataformas sin necesidad de reescribir código significativo. La aplicación debe ejecutarse nativamente en: Windows 10/11 (escritorio), Android 8.0+ ( móvil y tableta), y opcionalmente en navegadores web modern",
+                    "id":  "RF-035",
+                    "nombre":  "Control de Acceso Basado en Roles (RBAC)",
+                    "entrada":  "Rol asignado al usuario autenticado . Configuración de permisos por rol .",
+                    "salida":  "Interfaz adaptada al rol del usuario con funcionalidades autorizadas.",
+                    "proceso":  "Al autenticarse, obtener el rol del usuario desde Firebase. Configurar la interfaz según permisos del rol. Ocultar o deshabilitar funcionalidades no autorizadas. Validar permisos en cada operación sensible.",
+                    "prioridad":  "COULD (Media)"
+                }
+            ],
+    "rnfs":  [
+                 {
+                     "prioridad":  "MUST (Muy Alta)",
+                     "nombre":  "Rendimiento y Tiempo de Respuesta",
+                     "id":  "RNF-001",
+                     "observaciones":  "El uso de Riverpod para gestión reactiva del estado y ListView.builder para renderizado eficiente contribuyen directamente al cumplimiento de estas métricas . RNF-002 — Usabilidad y Experiencia de Usuario"
+                 },
+                 {
+                     "prioridad":  "MUST (Muy Alta)",
+                     "nombre":  "Usabilidad y Experiencia de Usuario",
+                     "id":  "RNF-002",
+                     "observaciones":  "La aplicación utiliza Material Design 3 vía useMaterial3: true y ColorScheme.fromSeed () para temas coherentes. RNF-003 — Portabilidad y Compatibilidad Multiplataforma"
+                 },
+                 {
+                     "prioridad":  "MUST (Muy Alta)",
+                     "nombre":  "Portabilidad y Compatibilidad Multiplataforma",
+                     "id":  "RNF-003",
+                     "observaciones":  "Flutter SDK \u0026gt;= 3.0.0 con compilación nativa. Actualmente probado en Windows y Android. RNF-004 — Seguridad de los Datos"
+                 },
+                 {
+                     "prioridad":  "MUST (Muy Alta)",
+                     "nombre":  "Seguridad de los Datos",
+                     "id":  "RNF-004",
+                     "observaciones":  "La arquitectura offline-first cumple inherentemente con este requerimiento para operaciones basicas. RNF-005 — Mantenibilidad y Calidad del Código"
+                 },
+                 {
+                     "prioridad":  "SHOULD (Alta)",
+                     "nombre":  "Mantenibilidad y Calidad del Código",
+                     "id":  "RNF-005",
+                     "observaciones":  "La estructura actual sigue domain-driven design con entidades inmutables (Equatable) y serialización JSON. RNF-006 — Disponibilidad y Tolerancia a Fallos"
+                 },
+                 {
+                     "prioridad":  "MUST (Muy Alta)",
+                     "nombre":  "Disponibilidad y Tolerancia a Fallos",
+                     "id":  "RNF-006",
+                     "observaciones":  "Implementado con manejo de excepciones en VoyageNotifier y estados de error en AsyncValue de Riverpod. RNF-007 — Escalabilidad"
+                 },
+                 {
+                     "prioridad":  "SHOULD (Alta)",
+                     "nombre":  "Escalabilidad",
+                     "id":  "RNF-007",
+                     "observaciones":  "La arquitectura feature-based y el uso de providers derivados facilitan la escalabilidad. RNF-008 — Compatibilidad con Estándares de la Industria"
+                 },
+                 {
+                     "prioridad":  "MUST (Muy Alta)",
+                     "nombre":  "Compatibilidad con Estándares de la Industria Marítima",
+                     "id":  "RNF-008",
+                     "observaciones":  "El parser implementa estos estándares en BaplieParserService y las constantes en BaplieConstants."
+                 }
+             ]
+}

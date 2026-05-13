@@ -249,6 +249,30 @@ class SelectedBayNotifier extends Notifier<int?> {
   }
 }
 
+/// Tipos visuales seleccionables desde la leyenda del Bay Plan
+enum LegendFilterType { full, empty, imo, reefer, oog }
+
+/// Provider para el filtro visual activo desde la leyenda interactiva (RF-011)
+final selectedTypeFilterProvider =
+    NotifierProvider<SelectedTypeFilterNotifier, LegendFilterType?>(
+  SelectedTypeFilterNotifier.new,
+);
+
+/// Notifier que permite alternar el filtro visual del Bay Plan
+class SelectedTypeFilterNotifier extends Notifier<LegendFilterType?> {
+  @override
+  LegendFilterType? build() => null;
+
+  /// Selecciona el tipo; si ya estaba activo, lo limpia (toggle).
+  void toggle(LegendFilterType type) {
+    state = state == type ? null : type;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
 /// Clase para estadísticas del viaje
 class VoyageStats {
   final int totalContainers;

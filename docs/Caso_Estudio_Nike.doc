@@ -1,0 +1,259 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--[if gte mso 9]>
+<xml>
+<w:WordDocument>
+<w:View>Print</w:View>
+<w:Zoom>100</w:Zoom>
+<w:DoNotOptimizeForBrowser/>
+</w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+@page {
+    size: letter;
+    margin: 2.54cm 2.54cm 2.54cm 2.54cm;
+}
+body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12pt;
+    line-height: 2;
+    text-align: justify;
+    color: #000000;
+}
+h1 {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14pt;
+    font-weight: bold;
+    text-align: center;
+    color: #000000;
+    margin-top: 0pt;
+    margin-bottom: 12pt;
+    line-height: 2;
+}
+h2 {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12pt;
+    font-weight: bold;
+    text-align: left;
+    color: #000000;
+    margin-top: 18pt;
+    margin-bottom: 6pt;
+    line-height: 2;
+}
+p {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12pt;
+    text-indent: 1.27cm;
+    margin-top: 0pt;
+    margin-bottom: 0pt;
+    line-height: 2;
+    text-align: justify;
+}
+p.no-indent {
+    text-indent: 0cm;
+}
+p.center {
+    text-align: center;
+    text-indent: 0cm;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 12pt;
+    margin-bottom: 12pt;
+}
+td {
+    border: 1px solid #000000;
+    padding: 6pt 8pt;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11pt;
+    vertical-align: top;
+    line-height: 1.5;
+}
+td.header {
+    background-color: #2E4057;
+    color: #FFFFFF;
+    font-weight: bold;
+    text-align: center;
+}
+td.subheader {
+    background-color: #E8EDF2;
+    font-weight: bold;
+}
+.portada {
+    text-align: center;
+    margin-top: 120pt;
+}
+.portada h1 {
+    font-size: 16pt;
+    margin-bottom: 24pt;
+}
+.portada p {
+    text-indent: 0cm;
+    text-align: center;
+    margin-bottom: 6pt;
+}
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="portada">
+<br/><br/><br/><br/>
+<h1>Universidad Mariano G&aacute;lvez de Guatemala</h1>
+<p class="center" style="font-size:14pt;"><b>Caso de Estudio &ndash; Cap&iacute;tulo 3</b></p>
+<p class="center" style="font-size:14pt;"><b>Sesi&oacute;n Interactiva: Tecnolog&iacute;a</b></p>
+<br/>
+<p class="center" style="font-size:16pt;"><b>&ldquo;Nike se Convierte en una Empresa Tecnol&oacute;gica&rdquo;</b></p>
+<br/><br/><br/>
+<p class="center" style="font-size:12pt;">Sistemas de Informaci&oacute;n, Organizaciones y Estrategia</p>
+<p class="center" style="font-size:12pt;">P&aacute;ginas 98 &ndash; 99</p>
+<br/><br/><br/><br/><br/><br/>
+<p class="center" style="font-size:12pt;">Guatemala, 2026</p>
+</div>
+
+<br clear="all" style="page-break-before:always"/>
+
+<!-- CONTENIDO -->
+
+<h1>Caso de Estudio: Nike se Convierte en una Empresa Tecnol&oacute;gica</h1>
+
+<p>A continuaci&oacute;n presento mis respuestas al caso de estudio del Cap&iacute;tulo 3, donde b&aacute;sicamente se habla de c&oacute;mo Nike pas&oacute; de ser solo una marca de tenis y ropa deportiva a meterse de lleno en el mundo de la tecnolog&iacute;a con productos como la FuelBand, las apps de running y todo el ecosistema Nike+.</p>
+
+<h2>1. Nike evaluada con las Fuerzas de Porter</h2>
+
+<p>Si aplicamos el modelo de Porter a Nike, lo que me llama la atenci&oacute;n es que la empresa ha sabido usar la tecnolog&iacute;a para mover las fuerzas a su favor en casi todos los frentes.</p>
+
+<p><b>Rivalidad entre competidores:</b> Esta es alta porque Nike pelea contra Adidas, Puma, Under Armour y dem&aacute;s. Pero lo interesante es que ninguna de esas marcas ha creado un ecosistema tecnol&oacute;gico tan completo como Nike+. La FuelBand, la app de running, la comunidad en l&iacute;nea&hellip; todo eso le da a Nike una ventaja que va m&aacute;s all&aacute; de simplemente vender zapatos bonitos. Es como si compraras unos tenis y de paso te llevaras un entrenador personal digital.</p>
+
+<p><b>Nuevos entrantes:</b> Aqu&iacute; Nike ha jugado bastante bien. El sistema de puntos NikeFuel genera algo que en clase vimos como &ldquo;costos de cambio&rdquo;: si ya llevas meses acumulando puntos, tu historial de carreras, tus metas, tus amigos en la comunidad&hellip; pues no te vas a querer ir a Fitbit y empezar de cero. Eso hace dif&iacute;cil que un nuevo competidor entre y te quite los usuarios as&iacute; nada m&aacute;s.</p>
+
+<p><b>Proveedores:</b> Nike necesita componentes tecnol&oacute;gicos como sensores, Bluetooth, pantallas LED y GPS. Pero siendo la marca de ropa deportiva m&aacute;s grande del mundo, tiene bastante poder para negociar. Hasta trabaja directamente con Apple, que no es cualquier cosa.</p>
+
+<p><b>Compradores:</b> Aunque uno como consumidor tiene muchas opciones, Nike logra que te quedes enganchado con el ecosistema. El caso lo dice clarito: no hay manera de pasar tus puntos NikeFuel a una Fitbit. Entonces aunque quieras cambiar, lo piensas dos veces.</p>
+
+<p><b>Sustitutos:</b> S&iacute; hay varios, como Fitbit, Jawbone y lo que Apple estaba preparando con su reloj. Pero Nike tiene algo que los otros no: combina el producto f&iacute;sico (los zapatos, la ropa) con la tecnolog&iacute;a. Fitbit te vende una pulsera, pero no te vende los tenis para correr. Nike te da todo el paquete.</p>
+
+<h2>2. Estrategias competitivas de Nike y su relaci&oacute;n con la TI</h2>
+
+<p>Despu&eacute;s de leer el caso, yo identifiqu&eacute; que Nike b&aacute;sicamente maneja varias estrategias al mismo tiempo y todas tienen que ver con tecnolog&iacute;a:</p>
+
+<p>La primera y m&aacute;s obvia es la <b>diferenciaci&oacute;n</b>. Nike ya no vende solo tenis, vende una experiencia completa. Con la FuelBand pod&eacute;s rastrear tu actividad, con la app de running ten&eacute;s GPS y te va diciendo tu ritmo mientras corr&eacute;s, y en nikeplus.com pod&eacute;s ver todo tu historial y hasta encontrar rutas nuevas. Ninguna otra marca deportiva ofrece algo tan integrado. La TI es lo que hace posible toda esa diferenciaci&oacute;n.</p>
+
+<p>Tambi&eacute;n hay una estrategia clara de <b>cercan&iacute;a con el cliente</b>. La comunidad Nike+ te deja ponerte metas, competir con amigos, publicar tus carreras en Facebook y hasta recibir aplausos en tiempo real. Nike pasa de ser una marca que te vende algo a ser como un compa&ntilde;ero que te acompa&ntilde;a en tu entrenamiento. Eso genera lealtad, y todo eso funciona gracias a la tecnolog&iacute;a.</p>
+
+<p>Y la estrategia que me parece m&aacute;s inteligente es el <b>bloqueo tecnol&oacute;gico</b>. Los puntos NikeFuel que vas acumulando, tu progreso, tus metas&hellip; todo eso se queda en Nike. Si te quer&eacute;s cambiar a otro dispositivo, perd&eacute;s todo. Es una jugada brillante porque la gente se queda no solo porque le gusta Nike, sino porque irse le costar&iacute;a perder todo lo que ya tiene.</p>
+
+<p>Por &uacute;ltimo, Nike apuesta fuerte por la <b>innovaci&oacute;n constante</b>. La funci&oacute;n &ldquo;Next Moves&rdquo; que te sugiere desaf&iacute;os, los programas de entrenamiento diarios, la mejora de la FuelBand SE&hellip; siempre est&aacute;n sacando algo nuevo. Y todo eso lo impulsa la TI.</p>
+
+<h2>3. &iquest;En qu&eacute; sentido es Nike una compa&ntilde;&iacute;a tecnol&oacute;gica?</h2>
+
+<p>Honestamente, cuando uno piensa en Nike piensa en tenis y ropa, no en tecnolog&iacute;a. Pero despu&eacute;s de leer este caso queda bastante claro que Nike ya es, en muchos sentidos, una empresa de tecnolog&iacute;a.</p>
+
+<p>Para empezar, varios de sus productos m&aacute;s recientes son b&aacute;sicamente gadgets. La FuelBand tiene sensores de movimiento, pantalla LED, Bluetooth 4.0 y se sincroniza autom&aacute;ticamente con tu tel&eacute;fono. El SportWatch GPS rastrea ubicaci&oacute;n, ritmo, distancia, calor&iacute;as y hasta el ritmo card&iacute;aco si le conect&aacute;s un Polar Wearlink+. Eso no es un accesorio deportivo, es un dispositivo tecnol&oacute;gico completo.</p>
+
+<p>Adem&aacute;s, Nike desarroll&oacute; su propio software para crear NikeFuel, que es una m&eacute;trica que mide cualquier tipo de movimiento y te permite compararte con cualquier persona sin importar si sos alto, bajito, hombre o mujer. Crear tu propia m&eacute;trica universal es algo que har&iacute;a una empresa de tecnolog&iacute;a, no una zapatear&iacute;a.</p>
+
+<p>Tambi&eacute;n manejan una plataforma digital con su sitio web y apps para iPhone y Android donde recopilan datos de millones de personas. Y sus dispositivos se conectan a internet, lo que los mete de lleno en lo que el libro llama &ldquo;Internet de las cosas&rdquo;. B&aacute;sicamente Nike hace lo mismo que Apple o Google: integra hardware, software y servicios en la nube.</p>
+
+<p>As&iacute; que s&iacute;, Nike sigue vendiendo tenis, pero una buena parte de su negocio ya es pura tecnolog&iacute;a.</p>
+
+<h2>4. Ventaja de Nike sobre sus competidores</h2>
+
+<p>Nike tiene una ventaja bastante buena, pero hay que ser realistas: no es invencible.</p>
+
+<p>Lo que le da m&aacute;s fuerza es que es la &uacute;nica empresa que junta todo: te vende los tenis, la ropa, la pulsera tecnol&oacute;gica, la app y la comunidad en l&iacute;nea. Fitbit te da la pulsera pero no los tenis. Adidas te da los tenis pero no tiene un ecosistema tecnol&oacute;gico tan armado. Esa combinaci&oacute;n es dif&iacute;cil de copiar.</p>
+
+<p>El sistema NikeFuel tambi&eacute;n es una ventaja fuerte. Es una m&eacute;trica &uacute;nica que nadie m&aacute;s tiene, y Nike ni siquiera ha dicho c&oacute;mo se calcula. Eso crea una comunidad donde la gente compite y se motiva, y eso genera un efecto de red: entre m&aacute;s gente use NikeFuel, m&aacute;s &uacute;til se vuelve para todos.</p>
+
+<p>Y como ya mencion&eacute;, los costos de cambio son altos. Tus puntos, tu historial, tus metas&hellip; todo se queda en Nike.</p>
+
+<p>Pero hay amenazas reales. Apple estaba desarrollando su propio reloj inteligente, y empresas como Fitbit ya ten&iacute;an funciones que la FuelBand no ten&iacute;a, como medir el sue&ntilde;o o recordarte que te levantaras. Adem&aacute;s, si los tel&eacute;fonos empiezan a traer sensores m&aacute;s avanzados, quiz&aacute;s ya nadie necesite una pulsera extra. Y el mismo caso dice que lo que hace especial a la FuelBand no es el hardware sino el software, entonces si alguien saca un software igual de bueno, esa ventaja se podr&iacute;a perder.</p>
+
+<p>En resumen: la ventaja de Nike es real y fuerte, pero tiene que seguir innovando porque sus competidores no se van a quedar quietos.</p>
+
+<br clear="all" style="page-break-before:always"/>
+
+<h2>5. Retos del negocio seg&uacute;n el diagrama</h2>
+
+<p>Aplicando el diagrama que nos dieron, as&iacute; se ve el caso de Nike en cada componente:</p>
+
+<table>
+<tr>
+<td class="header" colspan="2">Diagrama aplicado al caso Nike</td>
+</tr>
+<tr>
+<td class="subheader" style="width:25%;">Componente</td>
+<td class="subheader">Aplicaci&oacute;n al caso</td>
+</tr>
+<tr>
+<td style="font-weight:bold;">Retos de Negocios</td>
+<td>
+&bull; Competencia fuerte con Fitbit, Jawbone y Apple.<br/>
+&bull; Los tel&eacute;fonos cada vez traen m&aacute;s sensores, lo que amenaza a los wearables.<br/>
+&bull; Hay que retener a los usuarios cuando hay tantas opciones en el mercado.<br/>
+&bull; La tecnolog&iacute;a avanza r&aacute;pido y hay que estar innovando todo el tiempo.
+</td>
+</tr>
+<tr>
+<td style="font-weight:bold;">Administraci&oacute;n</td>
+<td>
+&bull; La decisi&oacute;n de convertir a Nike en una empresa tecnol&oacute;gica y no solo de ropa.<br/>
+&bull; Aliarse con Apple para llegar a m&aacute;s usuarios.<br/>
+&bull; Invertir en crear software propio como NikeFuel y hardware como la FuelBand.<br/>
+&bull; Apoyar a desarrolladores peque&ntilde;os que creen apps para Nike+.
+</td>
+</tr>
+<tr>
+<td style="font-weight:bold;">Organizaci&oacute;n</td>
+<td>
+&bull; Nike tuvo que pasar de ser solo una f&aacute;brica de zapatos a tener equipos de desarrollo de software y hardware.<br/>
+&bull; Crearon toda una comunidad global con Nike+.<br/>
+&bull; Todo est&aacute; enfocado en un cliente espec&iacute;fico: el atleta.
+</td>
+</tr>
+<tr>
+<td style="font-weight:bold;">Tecnolog&iacute;a</td>
+<td>
+&bull; Nike Air con supergases para el calzado.<br/>
+&bull; Sensores, GPS, Bluetooth 4.0 y pantallas LED en los wearables.<br/>
+&bull; Plataforma web nikeplus.com y apps m&oacute;viles para iOS y Android.<br/>
+&bull; Software que convierte el movimiento en puntos NikeFuel.<br/>
+&bull; Conexi&oacute;n con Facebook y otros servicios.
+</td>
+</tr>
+<tr>
+<td style="font-weight:bold;">Sistema de Informaci&oacute;n</td>
+<td>
+&bull; Recopilaci&oacute;n y almacenamiento de datos de actividad de millones de usuarios.<br/>
+&bull; Algoritmo propio para calcular NikeFuel.<br/>
+&bull; Comunidad en l&iacute;nea con metas, comparaciones y motivaci&oacute;n.<br/>
+&bull; Recomendaciones personalizadas como &ldquo;Next Moves&rdquo;.
+</td>
+</tr>
+<tr>
+<td style="font-weight:bold;">Soluciones de Negocios</td>
+<td>
+&bull; Lealtad del cliente gracias al ecosistema Nike+.<br/>
+&bull; Diferenciaci&oacute;n real frente a la competencia.<br/>
+&bull; Los usuarios regresan siempre al sitio y las apps de Nike.<br/>
+&bull; Los datos de los usuarios sirven para seguir mejorando los productos.
+</td>
+</tr>
+</table>
+
+<p>B&aacute;sicamente, todos los componentes est&aacute;n conectados entre s&iacute;. Los retos del mercado empujan a la administraci&oacute;n a tomar decisiones de inversi&oacute;n en tecnolog&iacute;a, la organizaci&oacute;n se adapta, la tecnolog&iacute;a le da las herramientas al sistema de informaci&oacute;n, y todo eso genera soluciones que al final hacen a Nike m&aacute;s competitiva. Y ese ciclo se repite constantemente.</p>
+
+<br clear="all" style="page-break-before:always"/>
+
+<h2>Referencia</h2>
+
+<p class="no-indent" style="padding-left:1.27cm; text-indent:-1.27cm;">Laudon, K. C. y Laudon, J. P. (2016). <i>Sistemas de informaci&oacute;n gerencial</i> (14a ed.). Pearson Educaci&oacute;n. Cap&iacute;tulo 3, pp. 98-99.</p>
+
+</body>
+</html>

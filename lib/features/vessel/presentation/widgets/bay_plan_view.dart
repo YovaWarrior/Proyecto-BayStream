@@ -38,7 +38,8 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   Widget build(BuildContext context) {
     final sortedBayNumbers = widget.voyage.bays.keys.toList()..sort();
     final highlightedContainerId = ref.watch(highlightedContainerProvider);
-    
+    final activeTypeFilter = ref.watch(selectedTypeFilterProvider);
+
     // Escuchar cambios en la bahía seleccionada desde búsqueda
     ref.listen<int?>(selectedBayProvider, (previous, next) {
       if (next != null && widget.voyage.bays.containsKey(next)) {
@@ -67,6 +68,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   bay: widget.voyage.bays[_selectedBayNumber]!,
                   onContainerTap: _showContainerDetails,
                   highlightedContainerId: highlightedContainerId,
+                  activeTypeFilter: activeTypeFilter,
                 )
               : const Center(child: Text('Selecciona una bahía')),
         ),
@@ -107,6 +109,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                 final bay = widget.voyage.bays[bayNumber]!;
                 final isSelected = bayNumber == _selectedBayNumber;
                 
+                final occupancyPct = bay.occupancyRate.toStringAsFixed(0);
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: FilterChip(
@@ -114,7 +117,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Bay ${bayNumber.toString().padLeft(2, '0')}',
+                          'BAY ${bayNumber.toString().padLeft(2, '0')} ($occupancyPct%)',
                           style: TextStyle(
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             fontSize: 12,
@@ -155,6 +158,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   }
 
   Widget _buildLegend() {
+    final activeFilter = ref.watch(selectedTypeFilterProvider);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -168,37 +172,71 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildLegendItem(Colors.green, 'Lleno'),
+            _buildLegendItem(Colors.green, 'Lleno', LegendFilterType.full, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.orange, 'Vacío'),
+            _buildLegendItem(Colors.orange, 'Vacío / OOG', LegendFilterType.empty, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.red, 'IMO'),
+            _buildLegendItem(Colors.red, 'IMO', LegendFilterType.imo, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.cyan, 'Reefer'),
+            _buildLegendItem(Colors.cyan, 'Reefer', LegendFilterType.reefer, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.grey.shade300, 'Sin contenedor'),
+            _buildLegendItem(Colors.deepOrange, 'OOG', LegendFilterType.oog, activeFilter),
+            const SizedBox(width: 16),
+            _buildLegendItem(Colors.grey.shade300, 'Sin contenedor', null, activeFilter),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLegendItem(Color color, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-            border: Border.all(color: Colors.black26),
-          ),
+  Widget _buildLegendItem(
+    Color color,
+    String label,
+    LegendFilterType? type,
+    LegendFilterType? activeFilter,
+  ) {
+    final isActive = type != null && type == activeFilter;
+    return InkWell(
+      borderRadius: BorderRadius.circular(4),
+      onTap: () {
+        if (type == null) {
+          // ignore: avoid_print
+          print('[BayPlan] Leyenda "Sin contenedor" no es filtrable');
+          return;
+        }
+        ref.read(selectedTypeFilterProvider.notifier).toggle(type);
+        // ignore: avoid_print
+        print('[BayPlan] Toggle filtro leyenda: ${type.name}');
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+                border: Border.all(
+                  color: isActive ? Colors.black : Colors.black26,
+                  width: isActive ? 2 : 1,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                decoration: isActive ? TextDecoration.underline : null,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 12)),
-      ],
+      ),
     );
   }
 
@@ -348,11 +386,13 @@ class _BayGridWidget extends StatelessWidget {
   final Bay bay;
   final Function(ContainerUnit) onContainerTap;
   final String? highlightedContainerId;
+  final LegendFilterType? activeTypeFilter;
 
   const _BayGridWidget({
     required this.bay,
     required this.onContainerTap,
     this.highlightedContainerId,
+    this.activeTypeFilter,
   });
 
   @override
@@ -474,7 +514,7 @@ class _BayGridWidget extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             ...deckTiers.map((tier) => _buildTierRow(
-              tier, rows, positionMap, highlightedContainerId,
+              tier, rows, positionMap, highlightedContainerId, activeTypeFilter,
             )),
           ],
           
@@ -511,7 +551,7 @@ class _BayGridWidget extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             ...holdTiers.map((tier) => _buildTierRow(
-              tier, rows, positionMap, highlightedContainerId,
+              tier, rows, positionMap, highlightedContainerId, activeTypeFilter,
             )),
           ],
         ],
@@ -545,6 +585,7 @@ class _BayGridWidget extends StatelessWidget {
     List<int> rows,
     Map<String, ContainerUnit> positionMap,
     String? highlightedContainerId,
+    LegendFilterType? activeTypeFilter,
   ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -565,17 +606,34 @@ class _BayGridWidget extends StatelessWidget {
         ...rows.map((row) {
           final key = '$row-$tier';
           final container = positionMap[key];
-          final isHighlighted = container != null && 
+          final isHighlighted = container != null &&
               highlightedContainerId != null &&
               container.containerId == highlightedContainerId;
           return _ContainerCell(
             container: container,
             onTap: container != null ? () => onContainerTap(container) : null,
             isHighlighted: isHighlighted,
+            activeTypeFilter: activeTypeFilter,
           );
         }),
       ],
     );
+  }
+}
+
+/// Determina si un contenedor coincide con el filtro de leyenda activo
+bool _containerMatchesFilter(ContainerUnit container, LegendFilterType filter) {
+  switch (filter) {
+    case LegendFilterType.full:
+      return container.status == ContainerStatus.full;
+    case LegendFilterType.empty:
+      return container.status == ContainerStatus.empty;
+    case LegendFilterType.imo:
+      return container.isDangerous;
+    case LegendFilterType.reefer:
+      return container.isReefer;
+    case LegendFilterType.oog:
+      return container.isOverDimension;
   }
 }
 
@@ -584,11 +642,13 @@ class _ContainerCell extends StatelessWidget {
   final ContainerUnit? container;
   final VoidCallback? onTap;
   final bool isHighlighted;
+  final LegendFilterType? activeTypeFilter;
 
   const _ContainerCell({
     this.container,
     this.onTap,
     this.isHighlighted = false,
+    this.activeTypeFilter,
   });
 
   @override
@@ -606,12 +666,12 @@ class _ContainerCell extends StatelessWidget {
         ),
       );
     }
-    
+
     // Determinar color según estado y tipo
     Color cellColor;
     Color borderColor;
     IconData? icon;
-    
+
     if (container!.isDangerous) {
       cellColor = Colors.red.shade100;
       borderColor = Colors.red;
@@ -620,6 +680,11 @@ class _ContainerCell extends StatelessWidget {
       cellColor = Colors.cyan.shade100;
       borderColor = Colors.cyan;
       icon = Icons.ac_unit;
+    } else if (container!.isOverDimension) {
+      // RF-008: indicador visual para carga OOG (Out of Gauge)
+      cellColor = Colors.orange.shade100;
+      borderColor = Colors.orange;
+      icon = Icons.open_in_full;
     } else if (container!.status == ContainerStatus.full) {
       cellColor = Colors.green.shade100;
       borderColor = Colors.green;
@@ -630,55 +695,64 @@ class _ContainerCell extends StatelessWidget {
       cellColor = Colors.grey.shade100;
       borderColor = Colors.grey;
     }
-    
+
+    // RF-011: atenuar contenedores que no coinciden con el filtro activo
+    final bool isDimmedByFilter = activeTypeFilter != null &&
+        !_containerMatchesFilter(container!, activeTypeFilter!);
+
+    final cell = Container(
+      width: 50,
+      height: 40,
+      margin: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: isHighlighted ? Colors.yellow.shade100 : cellColor,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: isHighlighted ? Colors.yellow.shade700 : borderColor,
+          width: isHighlighted ? 3 : 2,
+        ),
+        boxShadow: isHighlighted
+            ? [
+                BoxShadow(
+                  color: Colors.yellow.withOpacity(0.5),
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null)
+            Icon(icon, size: 12, color: borderColor)
+          else
+            Text(
+              container!.sizeInFeet?.toString() ?? '',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: borderColor,
+              ),
+            ),
+          if (container!.operatorCode != null)
+            Text(
+              container!.operatorCode!,
+              style: TextStyle(
+                fontSize: 8,
+                color: borderColor,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+        ],
+      ),
+    );
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 50,
-        height: 40,
-        margin: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: isHighlighted ? Colors.yellow.shade100 : cellColor,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isHighlighted ? Colors.yellow.shade700 : borderColor, 
-            width: isHighlighted ? 3 : 2,
-          ),
-          boxShadow: isHighlighted
-              ? [
-                  BoxShadow(
-                    color: Colors.yellow.withOpacity(0.5),
-                    blurRadius: 6,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null)
-              Icon(icon, size: 12, color: borderColor)
-            else
-              Text(
-                container!.sizeInFeet?.toString() ?? '',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: borderColor,
-                ),
-              ),
-            if (container!.operatorCode != null)
-              Text(
-                container!.operatorCode!,
-                style: TextStyle(
-                  fontSize: 8,
-                  color: borderColor,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-          ],
-        ),
+      child: Opacity(
+        opacity: isDimmedByFilter ? 0.25 : 1.0,
+        child: cell,
       ),
     );
   }
