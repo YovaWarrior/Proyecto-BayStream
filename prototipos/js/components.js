@@ -188,18 +188,27 @@ window.Proto = (function () {
       return '<div class="bay-canvas"><div class="bay-name">BAY ' + P.pad(bayNumber, 2) + '</div>' +
         '<div class="bay-meta">Sin contenedores</div></div>';
     }
-    var minRow = 99, maxRow = 0, minTier = 99, maxTier = 0;
+    var minRow = 99, maxRow = 0;
     list.forEach(function (c) {
       if (c.row < minRow) minRow = c.row; if (c.row > maxRow) maxRow = c.row;
-      if (c.tier < minTier) minTier = c.tier; if (c.tier > maxTier) maxTier = c.tier;
     });
     var even = [], odd = [];
     for (var r = minRow; r <= maxRow; r++) { (r % 2 === 0 ? even : odd).push(r); }
     even.sort(function (a, b) { return b - a; }); odd.sort(function (a, b) { return a - b; });
     var rows = even.concat(odd);
 
-    var deck = [], hold = [];
-    for (var t = maxTier; t >= minTier; t -= 2) { (t >= 80 ? deck : hold).push(t); }
+    // Cubierta (tier >= 80) y bodega (tier < 80): cada sección usa SU PROPIO
+    // rango contiguo, de modo que no se dibuja el hueco de numeración entre
+    // bodega y cubierta (la separación real es la tapa de escotilla).
+    function tierRange(filterFn) {
+      var ts = list.filter(filterFn).map(function (c) { return c.tier; });
+      if (!ts.length) return [];
+      var mn = Math.min.apply(null, ts), mx = Math.max.apply(null, ts), out = [];
+      for (var t = mx; t >= mn; t -= 2) out.push(t);
+      return out;
+    }
+    var deck = tierRange(function (c) { return c.tier >= 80; });
+    var hold = tierRange(function (c) { return c.tier < 80; });
 
     var posMap = {};
     list.forEach(function (c) { posMap[c.row + '-' + c.tier] = c; });

@@ -27,58 +27,94 @@ window.DEMO = {
     portOfDischarge: 'HNPCR', // Puerto Cortés, Honduras
   },
 
-  // Contenedores del viaje: estándar, reefer, IMDG, OOG y vacíos, en cubierta y bodega
+  // Contenedores del viaje. ESTIBA FÍSICAMENTE VÁLIDA: dentro de cada columna
+  // (fila), los contenedores se apilan de forma contigua desde la base de su
+  // sección — bodega desde el tier 02 hacia arriba, cubierta desde el tier 82.
+  // Ningún contenedor queda "flotando" con un hueco vacío debajo.
   containers: [
-    // --- Bahía 010 · cubierta (tier ≥ 80) + bodega (tier < 80) ---
+    // ===== Bahía 010 — showcase: cubierta (82/84) + bodega (02/04) =====
+    // Cubierta · fila 06 (stack de 2: 82 → 84)
     {
-      id: 'c1', containerId: 'MSCU1234567', isoSizeType: '22G1', sizeFeet: 20,
-      status: 'full', bay: 10, row: 4, tier: 82,
-      gross: 24500, vgm: 24650, tare: 2200,
-      pol: 'GTSTC', pod: 'HNPCR', operator: 'MSC',
-      isDangerous: false, isReefer: false, isOOG: false,
-    },
-    {
-      id: 'c2', containerId: 'MSKU7654321', isoSizeType: '45R1', sizeFeet: 40,
+      id: 'c1', containerId: 'MSKU7654321', isoSizeType: '45R1', sizeFeet: 40,
       status: 'full', bay: 10, row: 6, tier: 82,
       gross: 28200, vgm: 28400, tare: 4200,
       pol: 'GTSTC', pod: 'HNPCR', operator: 'MSK',
       isDangerous: false, isReefer: true, temp: -18.0, tempUnit: 'C', isOOG: false,
     },
     {
-      id: 'c3', containerId: 'MEDU3045882', isoSizeType: '45G1', sizeFeet: 40,
-      status: 'full', bay: 10, row: 2, tier: 84,
-      gross: 21750, vgm: 21900, tare: 3900,
+      id: 'c2', containerId: 'MSKU9001225', isoSizeType: '45G1', sizeFeet: 40,
+      status: 'full', bay: 10, row: 6, tier: 84,
+      gross: 26500, vgm: 26700, tare: 3900,
+      pol: 'GTSTC', pod: 'HNPCR', operator: 'MSK',
+      isDangerous: false, isReefer: false, isOOG: false,
+    },
+    // Cubierta · fila 04 (stack de 2: 82 → 84)
+    {
+      id: 'c3', containerId: 'MSCU1234567', isoSizeType: '22G1', sizeFeet: 20,
+      status: 'full', bay: 10, row: 4, tier: 82,
+      gross: 24500, vgm: 24650, tare: 2200,
       pol: 'GTSTC', pod: 'HNPCR', operator: 'MSC',
       isDangerous: false, isReefer: false, isOOG: false,
     },
     {
-      id: 'c4', containerId: 'MSKU8830114', isoSizeType: '22G1', sizeFeet: 20,
-      status: 'full', bay: 10, row: 4, tier: 78,
+      id: 'c4', containerId: 'MEDU3045882', isoSizeType: '45G1', sizeFeet: 40,
+      status: 'full', bay: 10, row: 4, tier: 84,
+      gross: 21750, vgm: 21900, tare: 3900,
+      pol: 'GTSTC', pod: 'HNPCR', operator: 'MSC',
+      isDangerous: false, isReefer: false, isOOG: false,
+    },
+    // Cubierta · fila 02 (1 en la base)
+    {
+      id: 'c5', containerId: 'MSCU5566120', isoSizeType: '22G1', sizeFeet: 20,
+      status: 'full', bay: 10, row: 2, tier: 82,
+      gross: 18900, vgm: 19050, tare: 2200,
+      pol: 'GTSTC', pod: 'HNPCR', operator: 'MSC',
+      isDangerous: false, isReefer: false, isOOG: false,
+    },
+    // Bodega · fila 06 (1 en la base)
+    {
+      id: 'c6', containerId: 'MSKU8830114', isoSizeType: '22G1', sizeFeet: 20,
+      status: 'full', bay: 10, row: 6, tier: 2,
       gross: 17600, vgm: 17700, tare: 2200,
       pol: 'GTSTC', pod: 'HNPCR', operator: 'MSK',
       isDangerous: false, isReefer: false, isOOG: false,
     },
+    // Bodega · fila 04 (stack de 2: vacío en la base 02 → lleno en 04)
     {
-      id: 'c5', containerId: 'CMAU5567401', isoSizeType: '22G1', sizeFeet: 20,
-      status: 'empty', bay: 10, row: 6, tier: 76,
+      id: 'c7', containerId: 'CMAU5567401', isoSizeType: '22G1', sizeFeet: 20,
+      status: 'empty', bay: 10, row: 4, tier: 2,
       gross: 2300, vgm: null, tare: 2300,
       pol: 'GTSTC', pod: 'HNPCR', operator: 'CMA',
       isDangerous: false, isReefer: false, isOOG: false,
     },
-
-    // --- Bahía 012 · mercancía peligrosa (IMDG) ---
     {
-      id: 'c6', containerId: 'CMAU9988776', isoSizeType: '22G1', sizeFeet: 20,
-      status: 'full', bay: 12, row: 1, tier: 84,
+      id: 'c8', containerId: 'CMAU7781340', isoSizeType: '22G1', sizeFeet: 20,
+      status: 'full', bay: 10, row: 4, tier: 4,
+      gross: 16400, vgm: 16550, tare: 2200,
+      pol: 'GTSTC', pod: 'HNPCR', operator: 'CMA',
+      isDangerous: false, isReefer: false, isOOG: false,
+    },
+
+    // ===== Bahía 012 — mercancía peligrosa IMDG (stack de 2: 82 → 84) =====
+    {
+      id: 'c9', containerId: 'CMAU9988776', isoSizeType: '22G1', sizeFeet: 20,
+      status: 'full', bay: 12, row: 1, tier: 82,
       gross: 19800, vgm: null, tare: 2200,
       pol: 'GTSTC', pod: 'HNPCR', operator: 'CMA',
       isDangerous: true, imdgClass: '3', unNumber: '1993',
       isReefer: false, isOOG: false,
     },
-
-    // --- Bahía 014 · sobredimensionado (OOG) ---
     {
-      id: 'c7', containerId: 'HLBU5544332', isoSizeType: '42P3', sizeFeet: 40,
+      id: 'c10', containerId: 'ZIMU4420098', isoSizeType: '22G1', sizeFeet: 20,
+      status: 'full', bay: 12, row: 1, tier: 84,
+      gross: 22100, vgm: 22300, tare: 2200,
+      pol: 'GTSTC', pod: 'HNPCR', operator: 'ZIM',
+      isDangerous: false, isReefer: false, isOOG: false,
+    },
+
+    // ===== Bahía 014 — sobredimensionado OOG (1 en la base) =====
+    {
+      id: 'c11', containerId: 'HLBU5544332', isoSizeType: '42P3', sizeFeet: 40,
       status: 'full', bay: 14, row: 6, tier: 82,
       gross: 31400, vgm: 31600, tare: 5000,
       pol: 'GTSTC', pod: 'HNPCR', operator: 'HLC',
@@ -86,10 +122,10 @@ window.DEMO = {
       isOOG: true, overHeight: 35, overWidthLeft: 20, overWidthRight: 20,
     },
 
-    // --- Bahía 022 · contenedor vacío ---
+    // ===== Bahía 022 — contenedor vacío (1 en la base) =====
     {
-      id: 'c8', containerId: 'ZIMU1112223', isoSizeType: '22G1', sizeFeet: 20,
-      status: 'empty', bay: 22, row: 1, tier: 84,
+      id: 'c12', containerId: 'ZIMU1112223', isoSizeType: '22G1', sizeFeet: 20,
+      status: 'empty', bay: 22, row: 1, tier: 82,
       gross: 2300, vgm: null, tare: 2300,
       pol: 'GTSTC', pod: 'HNPCR', operator: 'ZIM',
       isDangerous: false, isReefer: false, isOOG: false,
@@ -98,8 +134,8 @@ window.DEMO = {
 
   // Bahías con su % de ocupación
   bays: [
-    { bayNumber: 10, occupancy: 6 },
-    { bayNumber: 12, occupancy: 2 },
+    { bayNumber: 10, occupancy: 9 },
+    { bayNumber: 12, occupancy: 3 },
     { bayNumber: 14, occupancy: 1 },
     { bayNumber: 22, occupancy: 1 },
   ],

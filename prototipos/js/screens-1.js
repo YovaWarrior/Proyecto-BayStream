@@ -148,7 +148,7 @@ SCREENS['RF-002'] = function (host) {
 "MEA+WT++KGM:24500'\n" +
 "NAD+CA+MSC:172:166'\n" +
 "...\n" +
-"LOC+147+0120184::5'\n" +
+"LOC+147+0120182::5'\n" +
 "EQD+CN+CMAU9988776+22G1+++5'\n" +
 "DGS+IMD+3+1993'\n" +
 "LOC+147+0100682::5'\n" +
