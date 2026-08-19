@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BayStream — Product Backlog y estimación de tiempos de entrega</title>
+<style>
+:root{
+  color-scheme: light;
+  --plane:#f9f9f7; --surface:#fcfcfb; --surface-2:#f3f3f0;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  --s-done:#2a78d6; --s-part:#1baf7a; --s-pend:#eb6834;
+  --accent:#2a78d6;
+  --radius:10px;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#222221;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,0.10);
+  --s-done:#3987e5; --s-part:#199e70; --s-pend:#d95926;
+  --accent:#3987e5;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--plane);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 22px 90px}
+
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:26px}
+.brand{flex:1 1 620px;min-width:0}
+.brand h1{font-size:23px;line-height:1.25;margin:0 0 6px;letter-spacing:-0.01em}
+.brand p{margin:0;color:var(--ink-2);font-size:13.5px;max-width:64ch}
+.brand .meta{margin-top:8px;color:var(--muted);font-size:12.5px}
+button.ghost{background:var(--surface);color:var(--ink-2);border:1px solid var(--ring);border-radius:8px;padding:7px 13px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+button.ghost:hover{background:var(--surface-2)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:28px}
+.tile{background:var(--surface);border:1px solid var(--ring);border-radius:var(--radius);padding:15px 17px}
+.tile .lbl{font-size:12px;color:var(--muted);letter-spacing:.02em;text-transform:uppercase;margin-bottom:6px}
+.tile .val{font-size:29px;font-weight:650;letter-spacing:-0.02em;line-height:1.05}
+.tile .val small{font-size:15px;font-weight:500;color:var(--ink-2);letter-spacing:0}
+.tile .sub{font-size:12.5px;color:var(--ink-2);margin-top:5px}
+
+section{margin-bottom:34px}
+h2.sec{font-size:16.5px;margin:0 0 4px;letter-spacing:-0.01em}
+p.lede{margin:0 0 16px;color:var(--ink-2);font-size:13.5px;max-width:82ch}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:14px}
+.grid1{display:grid;grid-template-columns:1fr;gap:14px}
+.card{background:var(--surface);border:1px solid var(--ring);border-radius:var(--radius);padding:16px 18px 14px}
+.card h3{font-size:14px;margin:0 0 2px;font-weight:620}
+.card .cap{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+.legend{display:flex;gap:15px;flex-wrap:wrap;margin:2px 0 10px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gridline{stroke:var(--grid);stroke-width:1}
+.axisline{stroke:var(--axis);stroke-width:1}
+.tick{fill:var(--muted);font-size:11px;font-family:var(--font);font-variant-numeric:tabular-nums}
+.dlabel{fill:var(--ink);font-size:11px;font-weight:600;font-family:var(--font);font-variant-numeric:tabular-nums}
+.dlabel.inv{fill:#fff}
+.catlabel{fill:var(--ink-2);font-size:11.5px;font-family:var(--font)}
+.bar{transition:opacity .12s}
+.bar:hover{opacity:.82;cursor:default}
+
+details.data{margin-top:10px;border-top:1px solid var(--ring);padding-top:8px}
+details.data summary{font-size:12.5px;color:var(--muted);cursor:pointer;list-style:none}
+details.data summary::-webkit-details-marker{display:none}
+details.data summary::before{content:"▸ ";color:var(--muted)}
+details.data[open] summary::before{content:"▾ "}
+details.data table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+details.data th,details.data td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--grid)}
+details.data th{color:var(--muted);font-weight:600}
+details.data td.n{text-align:right;font-variant-numeric:tabular-nums}
+
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;background:var(--surface);border:1px solid var(--ring);border-radius:var(--radius);padding:13px 15px}
+.fgroup{display:flex;flex-direction:column;gap:4px}
+.fgroup label{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em}
+select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1px solid var(--ring);border-radius:7px;padding:6px 9px;font:inherit;font-size:13px;min-width:132px}
+input[type=search]{min-width:200px}
+.count{margin-left:auto;font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+table.bk{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--ring);border-radius:var(--radius);overflow:hidden;font-size:13px}
+table.bk thead th{background:var(--surface-2);color:var(--ink-2);font-size:11.5px;text-transform:uppercase;letter-spacing:.02em;font-weight:600;text-align:left;padding:9px 11px;border-bottom:1px solid var(--ring);white-space:nowrap}
+table.bk thead th.n{text-align:right}
+table.bk tbody td{padding:8px 11px;border-bottom:1px solid var(--grid);vertical-align:top}
+table.bk tbody td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.bk tbody tr.row{cursor:pointer}
+table.bk tbody tr.row:hover{background:var(--surface-2)}
+table.bk tr.eph td{background:var(--surface-2);font-weight:640;font-size:12px;letter-spacing:.01em;color:var(--ink)}
+.id{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--ring);white-space:nowrap}
+.chip .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.chip.must{color:var(--ink);font-weight:600}
+tr.detail td{background:var(--surface-2);font-size:12.5px;color:var(--ink-2);padding:12px 14px 14px}
+tr.detail .d-row{margin-bottom:6px}
+tr.detail b{color:var(--ink);font-weight:620}
+tr.detail code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;background:var(--surface);padding:1px 5px;border-radius:4px;border:1px solid var(--ring)}
+
+table.simple{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--ring);border-radius:var(--radius);overflow:hidden;font-size:13px}
+table.simple thead th{background:var(--surface-2);color:var(--ink-2);font-size:11.5px;text-transform:uppercase;letter-spacing:.02em;font-weight:600;text-align:left;padding:9px 11px;border-bottom:1px solid var(--ring)}
+table.simple td{padding:8px 11px;border-bottom:1px solid var(--grid);vertical-align:top}
+table.simple td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.note{background:var(--surface);border:1px solid var(--ring);border-left:3px solid var(--accent);border-radius:var(--radius);padding:14px 17px;font-size:13.5px;color:var(--ink-2)}
+.note b{color:var(--ink)}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--ring);color:var(--muted);font-size:12px}
+
+#tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--surface);color:var(--ink);border:1px solid var(--ring);border-radius:8px;padding:8px 11px;font-size:12.5px;box-shadow:0 6px 22px rgba(0,0,0,.14);z-index:60;max-width:250px;line-height:1.45}
+#tip .t{font-weight:640;margin-bottom:3px}
+#tip .v{color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+@media (max-width:640px){ .grid2{grid-template-columns:1fr} .wrap{padding:18px 14px 70px} table.bk{font-size:12px} }
+@media print{ body{background:#fff} .filters,button.ghost{display:none} .card,table.bk,table.simple{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand">
+    <h1>Product Backlog y estimación de tiempos de entrega</h1>
+    <p>BayStream — Ecosistema multiplataforma para la optimización en tiempo real de la planificación de estiba de buques portacontenedores.</p>
+    <div class="meta">Carlos Giovanni Martínez Aldana · 0909-22-19157 · Proyecto de Graduación II · Universidad Mariano Gálvez de Guatemala, Centro Universitario de Puerto Barrios · Ing. Juan Pablo Escobar · 15 de agosto de 2026</div>
+  </div>
+  <button class="ghost" id="theme">Modo oscuro</button>
+</header>
+
+<div class="tiles" id="tiles"></div>
+
+<section>
+  <h2 class="sec">Registro del backlog</h2>
+  <p class="lede">Cada fila es un elemento del backlog. Toque una fila para ver la historia de usuario completa, sus criterios de aceptación y la evidencia que respalda su estado.</p>
+  <div class="filters">
+    <div class="fgroup"><label for="fEp">Épica</label><select id="fEp"></select></div>
+    <div class="fgroup"><label for="fPri">Prioridad</label><select id="fPri"></select></div>
+    <div class="fgroup"><label for="fEst">Estado</label><select id="fEst"></select></div>
+    <div class="fgroup"><label for="fSpr">Sprint</label><select id="fSpr"></select></div>
+    <div class="fgroup"><label for="fQ">Buscar</label><input type="search" id="fQ" placeholder="ID, texto de la historia…"></div>
+    <div class="count" id="cnt"></div>
+  </div>
+  <table class="bk">
+    <thead><tr>
+      <th>ID</th><th>Historia de usuario</th><th>Prioridad</th>
+      <th class="n">Pts.</th><th class="n">Horas</th><th class="n">Sprint</th><th>Entrega</th><th>Estado</th>
+    </tr></thead>
+    <tbody id="tb"></tbody>
+  </table>
+</section>
+
+<section>
+  <h2 class="sec">Esfuerzo, ritmo y cobertura</h2>
+  <p class="lede">Los sprints 1 a 6 son ejecutados: sus horas provienen de la bitácora reconstruida a partir de los commits del repositorio, el mismo instrumento con el que se contrastó la hipótesis H4. Los sprints 7 a 9 son proyecciones.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Puntos de historia entregados por sprint</h3>
+      <p class="cap">Tamaño relativo del incremento de cada iteración.</p>
+      <div class="legend"><span><i class="swatch" style="background:var(--s-done)"></i>Ejecutado</span><span><i class="swatch" style="background:var(--s-pend)"></i>Proyectado</span></div>
+      <div id="cA"></div>
+      <details class="data"><summary>Ver los datos</summary><div id="tA"></div></details>
+    </div>
+    <div class="card">
+      <h3>Avance acumulado del backlog</h3>
+      <p class="cap">Puntos acumulados frente al alcance total especificado.</p>
+      <div class="legend"><span><i class="swatch" style="background:var(--s-done)"></i>Ejecutado</span><span><i class="swatch" style="background:var(--s-pend)"></i>Proyectado</span><span><i class="swatch" style="background:var(--axis)"></i>Alcance total (209 pts)</span></div>
+      <div id="cB"></div>
+      <details class="data"><summary>Ver los datos</summary><div id="tB"></div></details>
+    </div>
+    <div class="card">
+      <h3>Cobertura de los 35 requerimientos por prioridad</h3>
+      <p class="cap">La totalidad de los requerimientos MUST quedó implementada.</p>
+      <div class="legend"><span><i class="swatch" style="background:var(--s-done)"></i>Implementado</span><span><i class="swatch" style="background:var(--s-part)"></i>Parcial</span><span><i class="swatch" style="background:var(--s-pend)"></i>Pendiente</span></div>
+      <div id="cC"></div>
+      <details class="data"><summary>Ver los datos</summary><div id="tC"></div></details>
+    </div>
+    <div class="card">
+      <h3>Horas netas de desarrollo por épica</h3>
+      <p class="cap">Entregadas según la bitácora frente a las proyectadas para el backlog abierto.</p>
+      <div class="legend"><span><i class="swatch" style="background:var(--s-done)"></i>Entregadas</span><span><i class="swatch" style="background:var(--s-pend)"></i>Proyectadas</span></div>
+      <div id="cD"></div>
+      <details class="data"><summary>Ver los datos</summary><div id="tD"></div></details>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="sec">Plan de entregas por sprint</h2>
+  <p class="lede">Los sprints no tienen duración uniforme: el desarrollo lo ejecutó una sola persona con disponibilidad variable a lo largo del calendario académico. Un sprint delimita un incremento funcional coherente, no una ventana fija de dos semanas; por eso la duración en días y el esfuerzo en horas no guardan proporción.</p>
+  <table class="simple" id="tSpr"></table>
+</section>
+
+<section>
+  <h2 class="sec">Restricciones no funcionales y su verificación</h2>
+  <p class="lede">Los ocho requerimientos no funcionales no compiten por posición en el backlog: condicionan cómo se construye cada historia y se verifican sobre el producto en conjunto.</p>
+  <table class="simple" id="tRnf"></table>
+</section>
+
+<section>
+  <h2 class="sec">Definición de términos</h2>
+  <p class="lede">Una definición operacional es el conjunto de procedimientos que describe las actividades que hay que realizar para asignarle un valor a una variable (Hernández Sampieri et al., 2010, p. 111). Sin la tercera columna, expresiones como «implementado» u «hora neta» quedarían al criterio de quien lea el tablero.</p>
+  <table class="simple" id="tDef"></table>
+</section>
+
+<section>
+  <h2 class="sec">Escala de estimación y definición de terminado</h2>
+  <div class="grid2">
+    <div class="card"><h3>Escala de puntos de historia</h3><p class="cap">Cada valor anclado a un criterio y a un elemento de referencia ya construido.</p><table class="simple" id="tEsc" style="border:none"></table></div>
+    <div class="card"><h3>Definición de terminado</h3><p class="cap">Criterios comunes a todas las historias.</p><ol id="lDod" style="margin:0;padding-left:20px;font-size:13px;color:var(--ink-2)"></ol></div>
+  </div>
+</section>
+
+<section>
+  <div class="note">
+    <b>Reconciliación con la medición de la hipótesis H4.</b> Las horas de los elementos entregados no son una estimación independiente: reconcilian exactamente con el instrumento M2. Los elementos de las épicas E1 a E6 suman <b>32.0 horas</b> de desarrollo compartido y las tres tareas técnicas de la épica E8 suman <b>3.0 horas</b> de desarrollo específico por plataforma, para un total de <b>35.0 horas</b>, que es la cifra reportada en el capítulo de resultados. La distribución entre elementos individuales se ponderó por el volumen de código medido con <code>cloc</code> sobre <code>lib/</code>; se trata de una atribución razonada y no de una medición por historia, ya que un commit puede tocar varias historias a la vez. Esta limitación se declara de forma expresa.
+  </div>
+  <div class="note" style="margin-top:14px">
+    <b>Estructura del reporte.</b> El documento Word que acompaña a este tablero sigue los apartados que Hernández Sampieri, Fernández Collado y Baptista Lucio (2010) establecen para un reporte de resultados en contexto académico: portada, índices de contenidos, tablas y figuras, resumen de hasta 320 palabras, cuerpo del documento con introducción, método, resultados y discusión, y referencias. Este tablero es una vista de consulta del mismo contenido, no un sustituto del reporte.
+  </div>
+</section>
+
+<footer>
+  Elaborado a partir de la Especificación de Requerimientos de Software de BayStream (35 RF y 8 RNF), del archivo <code>bitacora_commits.csv</code> del repositorio <code>Proyecto-BayStream</code>, del conteo de líneas con <code>cloc</code> sobre <code>lib/</code> y de los resultados de los instrumentos M1, M2 y M3. La estructura del reporte sigue a Hernández Sampieri, R., Fernández Collado, C. y Baptista Lucio, M. P. (2010). <i>Metodología de la investigación</i> (5.ª ed.). McGraw-Hill.
+</footer>
+</div>
+
+<div id="tip"></div>
+
+<script>
+const D = {"epicas":[{"id":"E1","nombre":"Carga y Procesamiento BAPLIE","objetivo":"Convertir un archivo EDIFACT BAPLIE 2.2.1 en un modelo de dominio verificable.","rf":"RF-001 a RF-005"},{"id":"E2","nombre":"Visualización del Bay Plan","objetivo":"Representar el plano de estiba como una rejilla interactiva fiel a la coordenada BBBRRTT.","rf":"RF-006 a RF-014"},{"id":"E3","nombre":"Búsqueda y Localización","objetivo":"Reducir el tiempo de localización de un contenedor (hipótesis H2).","rf":"RF-015 a RF-020"},{"id":"E4","nombre":"Lista, Filtrado y Analítica","objetivo":"Ofrecer lectura tabular y agregada del viaje para el planificador de oficina.","rf":"RF-021 a RF-025"},{"id":"E5","nombre":"Muelle y Planificación","objetivo":"Validar la posición del contenedor antes de que la grúa lo coloque (innovación central).","rf":"RF-026 a RF-030"},{"id":"E6","nombre":"Sincronización y Persistencia","objetivo":"Mantener oficina y muelle coherentes en tiempo real (hipótesis H5).","rf":"RF-031 a RF-033"},{"id":"E7","nombre":"Administración y Seguridad","objetivo":"Gobernar el acceso multiusuario del ecosistema.","rf":"RF-034 a RF-035"},{"id":"E8","nombre":"Habilitación Multiplataforma","objetivo":"Sostener un único código base sobre Windows, Android y Web (hipótesis H4).","rf":"TT-01 a TT-03"},{"id":"E9","nombre":"Cierre y Liberación del Producto","objetivo":"Dejar el producto verificable, documentado y disponible para el usuario final.","rf":"TC-01 a TC-05"}],"items":[{"id":"RF-001","ep":"E1","nombre":"Selección y carga de archivo BAPLIE","historia":"Como planificador quiero seleccionar un archivo BAPLIE desde mi dispositivo para cargar el plano de estiba sin depender de un servidor.","ac":"El selector filtra .edi/.txt/.baplie; se muestra indicador de progreso; una notificación confirma el nombre del archivo cargado o describe el error.","pri":"MUST","sp":2,"h":1,"sprint":1,"estado":"Implementado","ev":"file_picker 10.3.10 · empty_state_widget.dart"},{"id":"RF-002","ep":"E1","nombre":"Parsing y validación del formato BAPLIE 2.2.1","historia":"Como planificador quiero que la aplicación interprete los segmentos EDIFACT para obtener el viaje completo sin transcripción manual.","ac":"Se reconocen UNB/UNH/TDT/LOC/EQD/MEA/NAD/DGS/TMP; un archivo malformado produce un error con número de línea y segmento; precisión ≥ 95 % (H1).","pri":"MUST","sp":13,"h":4.5,"sprint":1,"estado":"Implementado","ev":"baplie_parser_service.dart (27.8 KB) · 21/21 pruebas"},{"id":"RF-003","ep":"E1","nombre":"Extracción de información del buque","historia":"Como planificador quiero ver el buque y el número de viaje para confirmar que abrí el archivo correcto.","ac":"Del segmento TDT se extraen nombre del buque, número de viaje y naviera operadora; se muestran en el encabezado.","pri":"MUST","sp":2,"h":0.5,"sprint":1,"estado":"Implementado","ev":"vessel.dart · vessel_voyage.dart"},{"id":"RF-004","ep":"E1","nombre":"Extracción de datos de contenedores","historia":"Como planificador quiero que cada contenedor conserve su identificador, posición y pesos para poder auditarlos.","ac":"Por grupo LOC+EQD+MEA+NAD se obtienen BIC, tipo ISO, estado, coordenada BBBRRTT, peso bruto, VGM y naviera; los pesos pendientes se resuelven al cierre del grupo.","pri":"MUST","sp":8,"h":3,"sprint":1,"estado":"Implementado","ev":"container_unit.dart (11.1 KB) · iso_coordinate_parser.dart"},{"id":"RF-005","ep":"E1","nombre":"Detección de carga especial (IMO, Reefer, OOG)","historia":"Como planificador quiero identificar la carga peligrosa, refrigerada y sobredimensionada para atender primero lo crítico.","ac":"DGS marca IMDG con su clase; TMP marca reefer con temperatura; DIM marca OOG; cada tipo recibe un indicador visual propio.","pri":"MUST","sp":5,"h":1.5,"sprint":1,"estado":"Implementado","ev":"baplie_constants.dart · parsing DGS/TMP"},{"id":"RF-006","ep":"E2","nombre":"Representación visual del grid de bahía","historia":"Como planificador quiero ver la bahía como una rejilla fila × nivel para leer la estiba de un vistazo.","ac":"La rejilla respeta filas pares/impares y niveles reales; las celdas vacías se distinguen de las ocupadas; soporta desplazamiento y zoom.","pri":"MUST","sp":8,"h":3,"sprint":1,"estado":"Implementado","ev":"bay_plan_view.dart (26.1 KB)"},{"id":"RF-007","ep":"E2","nombre":"Selector de bahías con navegación","historia":"Como planificador quiero saltar entre bahías para recorrer el buque sin volver al inicio.","ac":"Lista horizontal de bahías con su porcentaje de ocupación; la bahía activa queda resaltada; navegación anterior/siguiente.","pri":"MUST","sp":3,"h":1,"sprint":2,"estado":"Implementado","ev":"bay_plan_view.dart · selector \"BAY nn (xx %)\""},{"id":"RF-008","ep":"E2","nombre":"Codificación por color según estado del contenedor","historia":"Como planificador quiero distinguir por color el tipo de carga para detectar riesgos sin abrir cada celda.","ac":"Prioridad cromática peligroso > reefer > OOG > estado base; seis categorías consistentes con la leyenda.","pri":"MUST","sp":3,"h":1,"sprint":1,"estado":"Implementado","ev":"bay_plan_view.dart · esquema de 6 colores"},{"id":"RF-009","ep":"E2","nombre":"Separación visual entre cubierta y bodega","historia":"Como planificador quiero ver separadas cubierta y bodega para no confundir niveles al validar una posición.","ac":"Los niveles ≥ 80 se agrupan como cubierta y los < 80 como bodega, con un separador explícito y rótulo.","pri":"MUST","sp":2,"h":0.5,"sprint":1,"estado":"Implementado","ev":"bay_plan_view.dart · corte en tier 80"},{"id":"RF-010","ep":"E2","nombre":"Detalle de contenedor al interactuar","historia":"Como planificador quiero tocar una celda y ver todos los datos del contenedor para verificarlo en el momento.","ac":"Un panel modal muestra BIC, tipo ISO, estado, posición, pesos bruto y VGM, puertos, naviera y marcas de carga especial.","pri":"MUST","sp":3,"h":1.5,"sprint":2,"estado":"Implementado","ev":"bay_plan_view.dart · BottomSheet de detalle"},{"id":"RF-011","ep":"E2","nombre":"Leyenda interactiva de colores","historia":"Como planificador quiero tocar un color de la leyenda para aislar ese tipo de carga en la bahía.","ac":"Cada entrada de la leyenda funciona como filtro conmutable; el filtro activo se marca; \"Sin contenedor\" no es filtrable.","pri":"SHOULD","sp":3,"h":1,"sprint":4,"estado":"Implementado","ev":"LegendFilterType · _containerMatchesFilter()"},{"id":"RF-012","ep":"E2","nombre":"Indicadores de peso por nivel (tier)","historia":"Como planificador quiero ver el peso acumulado por nivel para vigilar la estabilidad de la pila.","ac":"Cada nivel muestra su peso total y se resalta cuando supera el límite configurado de la pila.","pri":"SHOULD","sp":3,"h":1.5,"sprint":7,"estado":"Pendiente","ev":"bay.dart expone totalWeight por bahía, no por nivel"},{"id":"RF-013","ep":"E2","nombre":"Resaltado del contenedor buscado en el bay plan","historia":"Como planificador quiero que el contenedor buscado quede resaltado para ubicarlo sin recorrer la rejilla.","ac":"La celda del resultado se resalta en dorado con animación y la vista se desplaza hasta ella.","pri":"MUST","sp":3,"h":0.5,"sprint":2,"estado":"Implementado","ev":"container_search_delegate.dart (14.5 KB)"},{"id":"RF-014","ep":"E2","nombre":"Indicador de porcentaje de ocupación por bahía","historia":"Como planificador quiero conocer la ocupación de cada bahía para priorizar dónde reviso primero.","ac":"Se calcula ocupación = contenedores / (filas × niveles) y se muestra en el selector y en el tablero.","pri":"SHOULD","sp":2,"h":0.5,"sprint":4,"estado":"Implementado","ev":"bay.dart occupancyRate · _BayOccupancyChart"},{"id":"RF-015","ep":"E3","nombre":"Búsqueda por identificador de contenedor (BIC)","historia":"Como planificador quiero buscar por código BIC para localizar un contenedor concreto en segundos.","ac":"La búsqueda es incremental, insensible a mayúsculas y tolera coincidencias parciales; muestra posición y bahía en el resultado.","pri":"MUST","sp":3,"h":1,"sprint":2,"estado":"Implementado","ev":"container_search_delegate.dart · searchContainers()"},{"id":"RF-016","ep":"E3","nombre":"Búsqueda por puerto de carga o descarga","historia":"Como planificador quiero filtrar por puerto para preparar la operación de un puerto específico.","ac":"Acepta código UN/LOCODE y nombre; devuelve el conteo de contenedores por puerto.","pri":"MUST","sp":2,"h":0.5,"sprint":2,"estado":"Implementado","ev":"container_search_delegate.dart"},{"id":"RF-017","ep":"E3","nombre":"Búsqueda por naviera operadora","historia":"Como planificador quiero buscar por naviera para revisar la carga de un cliente concreto.","ac":"La naviera se obtiene del segmento NAD+CA y admite búsqueda por código o nombre.","pri":"SHOULD","sp":2,"h":0.5,"sprint":1,"estado":"Implementado","ev":"parsing NAD+CA · vessel_providers.dart"},{"id":"RF-018","ep":"E3","nombre":"Búsqueda por tipo de carga especial","historia":"Como planificador quiero listar todos los reefer o IMDG del viaje para hacer la ronda de revisión.","ac":"Los términos reefer, IMO, IMDG y OOG devuelven el conjunto correspondiente con su conteo.","pri":"SHOULD","sp":2,"h":0.5,"sprint":2,"estado":"Implementado","ev":"container_search_delegate.dart"},{"id":"RF-019","ep":"E3","nombre":"Navegación automática desde la búsqueda al bay plan","historia":"Como planificador quiero que al tocar un resultado la aplicación me lleve a su bahía para no buscarla a mano.","ac":"Al seleccionar un resultado se cambia a la pestaña Bay Plan, se abre la bahía correcta y se resalta la celda.","pri":"MUST","sp":3,"h":1,"sprint":2,"estado":"Implementado","ev":"vessel_overview_page.dart · vessel_providers.dart"},{"id":"RF-020","ep":"E3","nombre":"Estado vacío del buscador con estadísticas","historia":"Como planificador quiero ver sugerencias útiles cuando aún no he escrito nada para descubrir qué puedo buscar.","ac":"El estado vacío muestra totales del viaje, navieras frecuentes y ejemplos de búsqueda tocables.","pri":"COULD","sp":2,"h":1,"sprint":7,"estado":"Pendiente","ev":"—"},{"id":"RF-021","ep":"E4","nombre":"Lista desplazable de contenedores con tarjetas de detalle","historia":"Como planificador quiero recorrer todos los contenedores en una lista para revisarlos secuencialmente.","ac":"ListView.builder con tarjetas de BIC, naviera, tipo ISO, estado, posición, peso e indicadores; abre el detalle al tocar.","pri":"MUST","sp":3,"h":1.5,"sprint":1,"estado":"Implementado","ev":"containers_list_view.dart (19.9 KB)"},{"id":"RF-022","ep":"E4","nombre":"Filtrado por naviera mediante chips","historia":"Como planificador quiero filtrar la lista con un toque para aislar la carga de una naviera.","ac":"Se genera un chip por naviera presente con su conteo; los chips son acumulables y reversibles.","pri":"MUST","sp":2,"h":0.5,"sprint":1,"estado":"Implementado","ev":"FilterChips · vessel_providers.dart"},{"id":"RF-023","ep":"E4","nombre":"Tarjeta de resumen del viaje","historia":"Como planificador quiero un resumen del viaje al abrir el archivo para validar de inmediato la magnitud de la operación.","ac":"Muestra buque, viaje, puertos, total de contenedores, TEU, peso total y conteo de carga especial.","pri":"MUST","sp":2,"h":0.5,"sprint":1,"estado":"Implementado","ev":"voyage_summary_card.dart"},{"id":"RF-024","ep":"E4","nombre":"Tablero estadístico con gráficos de distribución","historia":"Como planificador quiero gráficos de distribución para explicar la operación a mi supervisor sin exportar a Excel.","ac":"Gráfico circular por estado, barras por tamaño ISO, tarjetas de carga especial y barras por bahía (ocupación y peso).","pri":"SHOULD","sp":8,"h":2,"sprint":3,"estado":"Implementado","ev":"voyage_stats_view.dart (29.8 KB) · CustomPainter propio"},{"id":"RF-025","ep":"E4","nombre":"Exportación de reporte en PDF","historia":"Como planificador quiero exportar el reporte del viaje en PDF para adjuntarlo al expediente de la operación.","ac":"Genera un PDF con portada, resumen, plano por bahía y tabla de contenedores; permite compartir el archivo.","pri":"SHOULD","sp":5,"h":3,"sprint":7,"estado":"Pendiente","ev":"—"},{"id":"RF-026","ep":"E5","nombre":"Visualización de la distribución general del buque","historia":"Como planificador quiero una vista panorámica del buque para entender el reparto de la carga en su conjunto.","ac":"Perfil longitudinal con todas las bahías, coloreadas por ocupación y peso, navegable hacia el detalle de cada bahía.","pri":"SHOULD","sp":2,"h":0.5,"sprint":3,"estado":"Parcial","ev":"_BayOccupancyChart y _BayWeightChart cubren la distribución por bahía; falta el perfil longitudinal"},{"id":"RF-027","ep":"E5","nombre":"Validación de reglas de estiba","historia":"Como operador de muelle quiero que la aplicación valide la posición antes de colocar el contenedor para evitar una restiba.","ac":"Verifica coordenada existente, celda libre, compatibilidad de tamaño, segregación IMDG, disponibilidad de toma reefer y holgura OOG; el resultado es un veredicto legible con el motivo del rechazo.","pri":"COULD","sp":13,"h":8,"sprint":8,"estado":"Pendiente","ev":"Innovación central de la tesis; especificada en el ERS y prototipada"},{"id":"RF-028","ep":"E5","nombre":"Planificación de secuencia de descarga","historia":"Como planificador quiero una secuencia sugerida de descarga para reducir movimientos improductivos.","ac":"Ordena los movimientos por puerto de descarga y nivel, marca los bloqueos por sobrestiba y estima el número de movimientos.","pri":"COULD","sp":8,"h":5,"sprint":8,"estado":"Pendiente","ev":"—"},{"id":"RF-029","ep":"E5","nombre":"Comparación entre viajes","historia":"Como planificador quiero comparar dos archivos BAPLIE para detectar qué cambió entre versiones del plano.","ac":"Diferencia por identificador de contenedor con tres estados (agregado, retirado, movido) y un resumen numérico de movimientos.","pri":"COULD","sp":8,"h":5,"sprint":10,"estado":"Pendiente","ev":"—"},{"id":"RF-030","ep":"E5","nombre":"Soporte de modo sin conexión","historia":"Como operador de muelle quiero seguir consultando el plano sin señal para no depender de la cobertura del patio.","ac":"El parsing y toda la consulta funcionan en local; la caché sigue disponible sin red y la reconciliación ocurre al reconectar.","pri":"MUST","sp":3,"h":0.5,"sprint":5,"estado":"Implementado","ev":"Parsing 100 % local · caché offline de Firestore · escenario C3 (10 ciclos)"},{"id":"RF-031","ep":"E6","nombre":"Almacenamiento local persistente","historia":"Como planificador quiero que la aplicación recuerde los viajes recientes para no volver a cargar el archivo cada vez.","ac":"Los viajes abiertos persisten entre sesiones, se listan por fecha y pueden eliminarse individualmente.","pri":"SHOULD","sp":2,"h":0.5,"sprint":6,"estado":"Parcial","ev":"Persistencia por caché de Firestore; sin almacén local propio (Hive/Isar) en pubspec.yaml"},{"id":"RF-032","ep":"E6","nombre":"Sincronización en la nube","historia":"Como planificador de oficina quiero que mis cambios lleguen al muelle en tiempo real para trabajar sobre el mismo plano.","ac":"Escrituras y escuchas en tiempo real sobre la colección de viajes; latencia de propagación ≤ 3 s (H5).","pri":"COULD","sp":8,"h":3,"sprint":6,"estado":"Parcial","ev":"vessel_repository_impl.dart · watchVoyageById() con snapshots; validado Web↔Android (C1 mediana 0.453 s). Sin soporte de cloud_firestore en Windows escritorio"},{"id":"RF-033","ep":"E6","nombre":"Exportación de datos en formatos estándar","historia":"Como planificador quiero exportar el viaje en CSV o JSON para analizarlo en otras herramientas.","ac":"Exporta la lista completa con todas las columnas del modelo; el CSV abre correctamente en Excel con codificación UTF-8.","pri":"SHOULD","sp":3,"h":2,"sprint":7,"estado":"Pendiente","ev":"—"},{"id":"RF-034","ep":"E7","nombre":"Autenticación de usuarios","historia":"Como administrador quiero que cada usuario inicie sesión para saber quién modificó el plano.","ac":"Inicio de sesión con correo y contraseña, cierre de sesión, recuperación y sesión persistente entre reinicios.","pri":"COULD","sp":5,"h":3,"sprint":10,"estado":"Pendiente","ev":"firebase_core presente; Firebase Auth no incorporado"},{"id":"RF-035","ep":"E7","nombre":"Control de acceso basado en roles (RBAC)","historia":"Como administrador quiero separar permisos de planificador y operador para que el muelle no altere el plano maestro.","ac":"Tres roles (administrador, planificador, operador) con permisos diferenciados aplicados también en las reglas de Firestore.","pri":"COULD","sp":8,"h":5,"sprint":10,"estado":"Pendiente","ev":"—"},{"id":"TT-01","ep":"E8","nombre":"Habilitación del cliente Windows escritorio","historia":"Como planificador de oficina quiero ejecutar BayStream en mi PC de trabajo para usarla en la estación habitual.","ac":"Compila y ejecuta en Windows; el selector de archivos nativo funciona; se documenta la limitación de cloud_firestore en escritorio.","pri":"MUST","sp":3,"h":1.5,"sprint":2,"estado":"Implementado","ev":"windows/ · 702 líneas específicas (cloc)"},{"id":"TT-02","ep":"E8","nombre":"Habilitación del cliente Android (tablet de muelle)","historia":"Como operador de muelle quiero usar BayStream en la tablet para consultar el plano junto a la grúa.","ac":"Compila y ejecuta en Android; permisos de almacenamiento resueltos; interfaz adaptada a tablet.","pri":"MUST","sp":2,"h":1,"sprint":2,"estado":"Implementado","ev":"android/ · 389 líneas específicas (cloc)"},{"id":"TT-03","ep":"E8","nombre":"Habilitación del cliente Web","historia":"Como planificador quiero abrir BayStream desde el navegador para consultarla en cualquier equipo.","ac":"Compila y se sirve como aplicación web; la carga de archivos funciona desde el navegador.","pri":"MUST","sp":1,"h":0.5,"sprint":2,"estado":"Implementado","ev":"web/ · 54 líneas específicas (cloc)"},{"id":"TC-01","ep":"E9","nombre":"Revisión de características de calidad de la aplicación","historia":"Como responsable del producto quiero verificar sistemáticamente los atributos de calidad para poder afirmar que la aplicación está lista para liberarse.","ac":"Se recorre cada requerimiento no funcional del ERS contrastándolo con su métrica declarada; el resultado es un informe con el veredicto por atributo y la evidencia que lo respalda.","pri":"MUST","sp":5,"h":3,"sprint":9,"estado":"Pendiente","ev":"—"},{"id":"TC-02","ep":"E9","nombre":"Manual de usuario","historia":"Como planificador quiero un manual que explique cada función de la aplicación para poder usarla sin acompañamiento.","ac":"Cubre las tres plataformas, documenta el flujo completo desde la carga del archivo hasta la consulta en muelle, e incluye capturas de cada pantalla y la resolución de los errores más frecuentes.","pri":"MUST","sp":5,"h":4,"sprint":9,"estado":"Pendiente","ev":"—"},{"id":"TC-03","ep":"E9","nombre":"Pruebas finales de seguridad","historia":"Como responsable del producto quiero verificar que los datos del viaje están protegidos para poder liberar la aplicación sin exponer información de la naviera.","ac":"Se comprueban las reglas de acceso de Firestore, el cifrado en tránsito y la ausencia de credenciales en el repositorio; cada hallazgo queda registrado con su severidad y su corrección.","pri":"MUST","sp":5,"h":3,"sprint":9,"estado":"Pendiente","ev":"—"},{"id":"TC-04","ep":"E9","nombre":"Despliegue de la aplicación en la nube o tienda de aplicaciones","historia":"Como usuario quiero instalar o abrir BayStream desde un canal público para poder utilizarla sin compilarla yo mismo.","ac":"El cliente Web queda publicado en una URL accesible y el cliente Android disponible como paquete instalable; ambos se verifican desde un dispositivo ajeno al entorno de desarrollo.","pri":"MUST","sp":8,"h":5,"sprint":9,"estado":"Pendiente","ev":"—"},{"id":"TC-05","ep":"E9","nombre":"Presentación final del proyecto","historia":"Como sustentante quiero una presentación que articule problema, solución y evidencia para poder defender el proyecto ante el jurado.","ac":"Recorre el planteamiento, el producto en funcionamiento, las seis hipótesis con su resultado y las limitaciones declaradas; incluye demostración en vivo sobre un archivo BAPLIE real.","pri":"MUST","sp":3,"h":2,"sprint":9,"estado":"Pendiente","ev":"—"},{"id":"RF-026+","base":"RF-026","ep":"E5","nombre":"Completar el perfil longitudinal del buque","pri":"SHOULD","sp":5,"h":3,"sprint":7,"estado":"Pendiente","historia":"Ampliación de RF-026: completar el perfil longitudinal del buque.","ac":"Hereda los criterios de aceptación del requerimiento base; se cierran al resolver la brecha identificada.","ev":"Continuación de RF-026"},{"id":"RF-031+","base":"RF-031","ep":"E6","nombre":"Almacén local propio independiente de la caché de Firestore","pri":"SHOULD","sp":5,"h":3,"sprint":8,"estado":"Pendiente","historia":"Ampliación de RF-031: almacén local propio independiente de la caché de firestore.","ac":"Hereda los criterios de aceptación del requerimiento base; se cierran al resolver la brecha identificada.","ev":"Continuación de RF-031"},{"id":"RF-032+","base":"RF-032","ep":"E6","nombre":"Sincronización en el cliente Windows (migración a Supabase o plugin alterno)","pri":"COULD","sp":13,"h":8,"sprint":10,"estado":"Pendiente","historia":"Ampliación de RF-032: sincronización en el cliente windows (migración a supabase o plugin alterno).","ac":"Hereda los criterios de aceptación del requerimiento base; se cierran al resolver la brecha identificada.","ev":"Continuación de RF-032"}],"sprints":[{"n":1,"nombre":"Núcleo de dominio y parser BAPLIE","ini":"20/01/2026","fin":"27/01/2026","tipo":"Ejecutado","entregable":"Arquitectura limpia, modelos de dominio, parser EDIFACT operativo y primera lectura tabular del viaje."},{"n":2,"nombre":"Multiplataforma, bay plan y búsqueda","ini":"28/01/2026","fin":"02/02/2026","tipo":"Ejecutado","entregable":"Clientes Windows, Android y Web compilando; navegación por bahías, detalle de celda y buscador con salto al plano."},{"n":3,"nombre":"Analítica y tablero estadístico","ini":"03/02/2026","fin":"01/03/2026","tipo":"Ejecutado","entregable":"Tercera pestaña con gráficos de distribución por estado, tamaño, carga especial, ocupación y peso por bahía."},{"n":4,"nombre":"Refinamiento visual del MVP","ini":"02/03/2026","fin":"12/05/2026","tipo":"Ejecutado","entregable":"Leyenda interactiva como filtro, indicador de ocupación por bahía y ajuste cromático de OOG."},{"n":5,"nombre":"Cierre del MVP y prototipado del ERS","ini":"13/05/2026","fin":"04/06/2026","tipo":"Ejecutado","entregable":"Modo sin conexión verificado y prototipos interactivos navegables de los 35 RF publicables en GitHub Pages."},{"n":6,"nombre":"Sincronización en tiempo real e instrumentación","ini":"05/06/2026","fin":"14/08/2026","tipo":"Ejecutado","entregable":"Repositorio sobre Firestore con escuchas en tiempo real e instrumentación de latencia para los escenarios C1, C2 y C3 (H5)."},{"n":7,"nombre":"Cierre de brechas del MVP","ini":"22/08/2026","fin":"29/08/2026","tipo":"Planificado","entregable":"Peso por nivel, estado vacío del buscador, exportación PDF y CSV/JSON, y perfil longitudinal del buque. Primer incremento presentable del calendario del curso."},{"n":8,"nombre":"Módulo de muelle (innovación central)","ini":"19/09/2026","fin":"17/10/2026","tipo":"Planificado","entregable":"Motor de validación de reglas de estiba, secuencia de descarga y almacén local propio para operación sin conexión prolongada. Segundo incremento presentable."},{"n":9,"nombre":"Cierre y liberación del producto","ini":"18/10/2026","fin":"24/10/2026","tipo":"Planificado","entregable":"Revisión de características de calidad, manual de usuario, pruebas finales de seguridad, despliegue en la nube o tienda de aplicaciones y presentación final del proyecto."},{"n":10,"nombre":"Trabajo futuro fuera del alcance del curso","ini":"—","fin":"Sin comprometer","tipo":"Diferido","entregable":"Comparación entre viajes, sincronización en el cliente Windows, autenticación y control de acceso por roles. Elementos que no caben en el calendario académico y que se declaran expresamente como trabajo futuro."}],"rnfs":[{"id":"RNF-001","nombre":"Rendimiento y tiempo de respuesta","pri":"MUST","verif":"H2 · H5","estado":"Verificado","ev":"Reducción del tiempo de localización de 74.6 % en T1 y 71.0 % en T2 (Wilcoxon, p = 0.00098). Latencia mediana de sincronización de 0.453 s en C1."},{"id":"RNF-002","nombre":"Usabilidad y experiencia de usuario","pri":"MUST","verif":"H6","estado":"Verificado","ev":"SUS con mediana de 86.25; 10 de 12 participantes por encima de 80 (Wilcoxon una muestra, p = 0.00879)."},{"id":"RNF-003","nombre":"Portabilidad y compatibilidad multiplataforma","pri":"MUST","verif":"H4","estado":"Verificado con limitación","ev":"4,953 líneas compartidas (81.2 %) frente a 1,145 específicas; reducción de esfuerzo de 61.9 % en código y 64.6 % en horas. cloud_firestore sin soporte oficial en Windows escritorio."},{"id":"RNF-004","nombre":"Seguridad de los datos","pri":"MUST","verif":"RF-034 · RF-035","estado":"Parcial","ev":"Reglas de acceso en Firestore y transporte cifrado; la autenticación y el control por roles quedan en el backlog pendiente."},{"id":"RNF-005","nombre":"Mantenibilidad y calidad del código","pri":"SHOULD","verif":"M2","estado":"Verificado","ev":"Arquitectura limpia en tres capas, 21 de 21 pruebas unitarias en verde y análisis estático con flutter_lints 6.0."},{"id":"RNF-006","nombre":"Disponibilidad y tolerancia a fallos","pri":"MUST","verif":"H5 · C3","estado":"Verificado","ev":"Reconciliación tras 60 s sin conexión en 10 ciclos, con mediana de 2.469 s y validación por triangulación con marcas de ADB."},{"id":"RNF-007","nombre":"Escalabilidad","pri":"SHOULD","verif":"M1","estado":"Verificado parcialmente","ev":"Corpus de 7 archivos BAPLIE reales con 4,584 declaraciones únicas en 6 operaciones procesadas sin degradación perceptible."},{"id":"RNF-008","nombre":"Compatibilidad con estándares de la industria marítima","pri":"MUST","verif":"H1","estado":"Verificado","ev":"Precisión puntual del parser de 98.9 % con límite inferior de Wilson de 96.24 % sobre 190 contenedores verificados manualmente."}],"escala":[{"sp":"1","crit":"Cambio trivial y aislado, sin lógica nueva ni efectos en otras capas.","ref":"TT-03 — habilitación del cliente Web"},{"sp":"2","crit":"Función pequeña sobre un modelo ya existente, con una sola ruta de prueba.","ref":"RF-003 — extracción de información del buque"},{"sp":"3","crit":"Componente de interfaz o consulta que toca dos capas y tiene estado propio.","ref":"RF-015 — búsqueda por código BIC"},{"sp":"5","crit":"Funcionalidad con reglas de negocio propias y varios casos límite.","ref":"RF-005 — detección de carga especial"},{"sp":"8","crit":"Funcionalidad transversal que atraviesa dominio, datos y presentación.","ref":"RF-006 — grid de bahía"},{"sp":"13","crit":"Componente crítico con estándar externo, alta incertidumbre y prueba formal asociada.","ref":"RF-002 — parser BAPLIE 2.2.1"}],"dod":["La historia satisface todos sus criterios de aceptación en los tres clientes soportados (Windows, Android y Web).","El código respeta la separación de capas de la arquitectura limpia: la presentación no accede a fuentes de datos ni el dominio depende de Flutter.","La suite de pruebas unitarias completa se ejecuta en verde antes de integrar (21 de 21 al cierre del MVP).","El análisis estático con flutter_lints no reporta advertencias nuevas.","El comportamiento se verifica contra al menos un archivo BAPLIE real del corpus anonimizado M1, no solo con datos sintéticos.","La funcionalidad se comporta de forma coherente sin conexión cuando la historia lo exige.","El cambio queda registrado en un commit descriptivo, que es la unidad de la bitácora de esfuerzo del instrumento M2.","La trazabilidad hacia el requerimiento del ERS y hacia la hipótesis correspondiente queda documentada."],"defop":[["Elemento del backlog","Unidad mínima de trabajo con valor identificable para el producto.","Se cuenta un elemento por cada requerimiento funcional del ERS, por cada tarea técnica de habilitación de plataforma y por cada ampliación de un requerimiento parcialmente cubierto."],["Épica","Agrupación de elementos que comparten un objetivo de negocio.","Se asigna según el módulo del ERS al que pertenece el requerimiento; los módulos originales dan lugar a las ocho épicas."],["Prioridad MoSCoW","Nivel de obligatoriedad del elemento respecto de los objetivos del proyecto.","Se toma literalmente del campo «Prioridad» de la ficha del requerimiento en el ERS aprobado, sin reinterpretación."],["Punto de historia","Medida de tamaño relativo que combina complejidad, incertidumbre y volumen de código.","Se asigna un valor de la serie 1, 2, 3, 5, 8 o 13 comparando el elemento con el elemento de referencia de cada escalón."],["Hora neta de desarrollo","Tiempo efectivo de codificación atribuible al elemento.","Para lo entregado, se reparte el total de la bitácora del instrumento M2 en proporción al volumen de código que lo implementa, medido con cloc sobre lib/. Para lo pendiente, estimación por comparación."],["Estado implementado","El elemento existe en el producto y satisface sus criterios de aceptación.","Se verifica localizando en el repositorio el archivo o la función que lo implementa; la referencia se registra en «Evidencia»."],["Estado parcial","Existe una parte verificable, pero no todos sus criterios de aceptación se cumplen.","Se verifica el código existente y se describe la brecha; toda brecha genera un elemento de ampliación con el sufijo «+»."],["Estado pendiente","El elemento está especificado y priorizado, pero no construido.","Se comprueba la ausencia de código que lo implemente; «Evidencia» registra un guion."],["Sprint","Iteración que agrupa los elementos entregados en un mismo incremento funcional.","Se delimita por las fechas de los bloques de commits de bitacora_commits.csv; el cierre es la fecha del último commit del bloque."],["Velocidad","Ritmo de entrega del equipo.","Cociente entre los puntos de historia entregados y las horas netas invertidas en entregarlos."],["Cobertura","Grado de cumplimiento de un nivel de prioridad.","Cociente entre los elementos implementados más la mitad de los parciales, y el total de ese nivel de prioridad."]],"kpi":{"SP_DONE":105,"H_DONE":35,"H_SHARED":32,"H_PLAT":3,"SP_FUT":104,"H_FUT":64.5,"SP_TOT":209,"H_TOT":99.5,"VEL_OBS":3,"VEL_PROY":1.61,"nDone":29,"nFut":17,"nAll":46,"mustTotal":18,"mustImpl":18}};
+const EP = Object.fromEntries(D.epicas.map(e=>[e.id,e]));
+const SPR = Object.fromEntries(D.sprints.map(s=>[s.n,s]));
+const K = D.kpi;
+const f1 = x => Number(x).toFixed(1);
+const r1 = x => Math.round(x*10)/10;
+const COL = { Implementado:'var(--s-done)', Parcial:'var(--s-part)', Pendiente:'var(--s-pend)' };
+
+/* ---------------- tema ---------------- */
+const btn = document.getElementById('theme');
+btn.onclick = () => {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+  btn.textContent = dark ? 'Modo oscuro' : 'Modo claro';
+  drawAll();
+};
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.dataset.theme='dark'; btn.textContent='Modo claro';
+}
+
+/* ---------------- tooltip ---------------- */
+const tip = document.getElementById('tip');
+function showTip(e,title,val){ tip.innerHTML='<div class="t">'+title+'</div><div class="v">'+val+'</div>'; tip.style.opacity=1; moveTip(e); }
+function moveTip(e){ const p=14; let x=e.clientX+p, y=e.clientY+p;
+  const b=tip.getBoundingClientRect();
+  if(x+b.width>innerWidth-8) x=e.clientX-b.width-p;
+  if(y+b.height>innerHeight-8) y=e.clientY-b.height-p;
+  tip.style.left=x+'px'; tip.style.top=y+'px'; }
+function hideTip(){ tip.style.opacity=0; }
+function bindTip(el,title,val){ el.addEventListener('mouseenter',e=>showTip(e,title,val)); el.addEventListener('mousemove',moveTip); el.addEventListener('mouseleave',hideTip); }
+
+/* ---------------- tiles ---------------- */
+document.getElementById('tiles').innerHTML = [
+  ['Elementos del backlog', K.nAll, K.nDone+' entregados · '+K.nFut+' abiertos'],
+  ['Puntos entregados', K.SP_DONE+'<small> / '+K.SP_TOT+'</small>', r1(K.SP_DONE/K.SP_TOT*100)+' % del alcance especificado'],
+  ['Horas netas de desarrollo', f1(K.H_DONE), f1(K.H_SHARED)+' h compartidas + '+f1(K.H_PLAT)+' h por plataforma'],
+  ['Requerimientos MUST', K.mustImpl+'<small> / '+K.mustTotal+'</small>', 'Cobertura del 100 % de la prioridad crítica'],
+].map(t=>'<div class="tile"><div class="lbl">'+t[0]+'</div><div class="val">'+t[1]+'</div><div class="sub">'+t[2]+'</div></div>').join('');
+
+/* ---------------- filtros + tabla ---------------- */
+function opts(sel, list, all){ sel.innerHTML = '<option value="">'+all+'</option>' + list.map(v=>'<option value="'+v[0]+'">'+v[1]+'</option>').join(''); }
+const fEp=document.getElementById('fEp'), fPri=document.getElementById('fPri'), fEst=document.getElementById('fEst'), fSpr=document.getElementById('fSpr'), fQ=document.getElementById('fQ');
+opts(fEp, D.epicas.map(e=>[e.id, e.id+' · '+e.nombre]), 'Todas');
+opts(fPri, [['MUST','MUST (muy alta)'],['SHOULD','SHOULD (alta)'],['COULD','COULD (media)']], 'Todas');
+opts(fEst, [['Implementado','Implementado'],['Parcial','Parcial'],['Pendiente','Pendiente']], 'Todos');
+opts(fSpr, D.sprints.map(s=>[s.n,'Sprint '+s.n+' — '+s.nombre]), 'Todos');
+
+function filtered(){
+  const q=(fQ.value||'').trim().toLowerCase();
+  return D.items.filter(i =>
+    (!fEp.value  || i.ep===fEp.value) &&
+    (!fPri.value || i.pri===fPri.value) &&
+    (!fEst.value || i.estado===fEst.value) &&
+    (!fSpr.value || String(i.sprint)===fSpr.value) &&
+    (!q || (i.id+' '+i.nombre+' '+i.historia+' '+i.ac).toLowerCase().includes(q))
+  );
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderTable(){
+  const rows = filtered();
+  const tb = document.getElementById('tb');
+  let html='', cur=null;
+  const order = rows.slice().sort((a,b)=> a.ep===b.ep ? a.id.localeCompare(b.id) : a.ep.localeCompare(b.ep));
+  order.forEach(i=>{
+    if(i.ep!==cur){ cur=i.ep; html += '<tr class="eph"><td colspan="8">'+EP[cur].id+' · '+esc(EP[cur].nombre)+'</td></tr>'; }
+    html += '<tr class="row" data-id="'+i.id+'">'
+      + '<td class="id">'+i.id+'</td>'
+      + '<td>'+esc(i.nombre)+'</td>'
+      + '<td><span class="chip'+(i.pri==='MUST'?' must':'')+'">'+i.pri+'</span></td>'
+      + '<td class="n">'+i.sp+'</td><td class="n">'+f1(i.h)+'</td><td class="n">'+i.sprint+'</td>'
+      + '<td class="n">'+SPR[i.sprint].fin+'</td>'
+      + '<td><span class="chip"><i class="dot" style="background:'+COL[i.estado]+'"></i>'+i.estado+'</span></td></tr>';
+    html += '<tr class="detail" data-for="'+i.id+'" hidden><td colspan="8">'
+      + '<div class="d-row"><b>Historia.</b> '+esc(i.historia)+'</div>'
+      + '<div class="d-row"><b>Criterios de aceptación.</b> '+esc(i.ac)+'</div>'
+      + '<div class="d-row"><b>Evidencia.</b> '+esc(i.ev)+'</div>'
+      + '<div class="d-row"><b>Sprint '+i.sprint+'.</b> '+esc(SPR[i.sprint].nombre)+' — entrega '+SPR[i.sprint].fin+' ('+SPR[i.sprint].tipo.toLowerCase()+')</div>'
+      + '</td></tr>';
+  });
+  tb.innerHTML = html || '<tr><td colspan="8" style="color:var(--muted);padding:20px 12px">Ningún elemento coincide con los filtros aplicados.</td></tr>';
+  document.getElementById('cnt').textContent =
+    rows.length+' de '+D.items.length+' elementos · '+rows.reduce((s,i)=>s+i.sp,0)+' pts · '+f1(rows.reduce((s,i)=>s+i.h,0))+' h';
+  tb.querySelectorAll('tr.row').forEach(tr=>tr.onclick=()=>{
+    const d = tb.querySelector('tr.detail[data-for="'+tr.dataset.id+'"]');
+    d.hidden = !d.hidden;
+  });
+}
+[fEp,fPri,fEst,fSpr].forEach(s=>s.onchange=renderTable);
+fQ.oninput=renderTable;
+renderTable();
+
+/* ---------------- helpers svg ---------------- */
+const NS='http://www.w3.org/2000/svg';
+function svg(w,h){ const s=document.createElementNS(NS,'svg'); s.setAttribute('viewBox','0 0 '+w+' '+h); s.setAttribute('role','img'); return s; }
+function el(tag,attrs,parent){ const n=document.createElementNS(NS,tag); for(const k in attrs) n.setAttribute(k,attrs[k]); if(parent) parent.appendChild(n); return n; }
+function txt(p,x,y,s,cls,anchor,baseline){ const t=el('text',{x,y,class:cls||'tick','text-anchor':anchor||'start','dominant-baseline':baseline||'auto'},p); t.textContent=s; return t; }
+function niceMax(v,steps){ const raw=v/steps; const mag=Math.pow(10,Math.floor(Math.log10(raw))); const n=[1,1.2,1.5,2,2.5,3,4,5,6,8,10].find(x=>raw<=x*mag)*mag; return n*steps; }
+function dtable(id, head, rows){
+  document.getElementById(id).innerHTML='<table><thead><tr>'+head.map((h,i)=>'<th'+(i?' class="n"':'')+'>'+h+'</th>').join('')+'</tr></thead><tbody>'
+    + rows.map(r=>'<tr>'+r.map((c,i)=>'<td'+(i?' class="n"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+}
+
+/* ---------------- A · puntos por sprint ---------------- */
+function chartA(){
+  const box=document.getElementById('cA'); box.innerHTML='';
+  const data=D.sprints.map(s=>({n:s.n,tipo:s.tipo,nombre:s.nombre,fin:s.fin,
+    sp:D.items.filter(i=>i.sprint===s.n).reduce((a,i)=>a+i.sp,0),
+    h:r1(D.items.filter(i=>i.sprint===s.n).reduce((a,i)=>a+i.h,0))}));
+  const W=560,H=250,ml=34,mr=8,mt=14,mb=34;
+  const pw=W-ml-mr, ph=H-mt-mb;
+  const max=niceMax(Math.max(...data.map(d=>d.sp)),4);
+  const s=svg(W,H); box.appendChild(s);
+  for(let i=0;i<=4;i++){ const y=mt+ph-ph*i/4;
+    el('line',{x1:ml,x2:W-mr,y1:y,y2:y,class:i?'gridline':'axisline'},s);
+    txt(s,ml-7,y,String(Math.round(max*i/4)),'tick','end','middle'); }
+  const bw=pw/data.length, iw=Math.min(40,bw-12);
+  data.forEach((d,i)=>{
+    const x=ml+bw*i+(bw-iw)/2, bh=Math.max(2,ph*d.sp/max), y=mt+ph-bh;
+    const col=d.tipo==='Ejecutado'?'var(--s-done)':'var(--s-pend)';
+    const rct=el('rect',{x,y,width:iw,height:bh,rx:4,fill:col,class:'bar'},s);
+    bindTip(rct,'Sprint '+d.n+' · '+d.nombre, d.sp+' puntos · '+f1(d.h)+' h · entrega '+d.fin+' · '+d.tipo.toLowerCase());
+    txt(s,x+iw/2,y-5,String(d.sp),'dlabel','middle','auto');
+    txt(s,x+iw/2,mt+ph+15,'S'+d.n,'catlabel','middle','hanging');
+  });
+  dtable('tA',['Sprint','Puntos','Horas','Entrega'],data.map(d=>['S'+d.n+' · '+d.nombre,d.sp,f1(d.h),d.fin]));
+}
+
+/* ---------------- B · burnup acumulado ---------------- */
+function chartB(){
+  const box=document.getElementById('cB'); box.innerHTML='';
+  const pts=[{n:0,c:0,tipo:'Ejecutado'}]; let c=0;
+  D.sprints.forEach(s=>{ c+=D.items.filter(i=>i.sprint===s.n).reduce((a,i)=>a+i.sp,0); pts.push({n:s.n,c,tipo:s.tipo,nombre:s.nombre,fin:s.fin}); });
+  const W=560,H=250,ml=40,mr=52,mt=14,mb=34, pw=W-ml-mr, ph=H-mt-mb;
+  const max=niceMax(K.SP_TOT,4);
+  const X=n=>ml+pw*n/9, Y=v=>mt+ph-ph*v/max;
+  const s=svg(W,H); box.appendChild(s);
+  for(let i=0;i<=4;i++){ const y=mt+ph-ph*i/4;
+    el('line',{x1:ml,x2:W-mr,y1:y,y2:y,class:i?'gridline':'axisline'},s);
+    txt(s,ml-7,y,String(Math.round(max*i/4)),'tick','end','middle'); }
+  el('line',{x1:ml,x2:W-mr,y1:Y(K.SP_TOT),y2:Y(K.SP_TOT),stroke:'var(--axis)','stroke-width':1.5,'stroke-dasharray':'2 4'},s);
+  txt(s,W-mr+5,Y(K.SP_TOT),String(K.SP_TOT),'tick','start','middle');
+  const ex=pts.filter(p=>p.tipo==='Ejecutado'), pr=pts.filter(p=>p.n>=6);
+  const path=a=>a.map((p,i)=>(i?'L':'M')+X(p.n)+' '+Y(p.c)).join(' ');
+  el('path',{d:path(pr),fill:'none',stroke:'var(--s-pend)','stroke-width':2,'stroke-dasharray':'5 4','stroke-linejoin':'round'},s);
+  el('path',{d:path(ex),fill:'none',stroke:'var(--s-done)','stroke-width':2,'stroke-linejoin':'round'},s);
+  pts.forEach(p=>{ if(!p.n) return;
+    const col=p.tipo==='Ejecutado'?'var(--s-done)':'var(--s-pend)';
+    el('circle',{cx:X(p.n),cy:Y(p.c),r:5.5,fill:'var(--surface)',stroke:col,'stroke-width':2},s);
+    const hit=el('circle',{cx:X(p.n),cy:Y(p.c),r:13,fill:'transparent',class:'bar'},s);
+    bindTip(hit,'Sprint '+p.n+' · '+p.nombre, p.c+' de '+K.SP_TOT+' puntos acumulados ('+r1(p.c/K.SP_TOT*100)+' %) · '+p.fin);
+    txt(s,X(p.n),mt+ph+15,'S'+p.n,'catlabel','middle','hanging'); });
+  const last=pts[6];
+  txt(s,X(last.n)+9,Y(last.c)-9,String(last.c),'dlabel','middle','auto');
+  dtable('tB',['Sprint','Puntos acumulados','Avance'],pts.filter(p=>p.n).map(p=>['S'+p.n,p.c,r1(p.c/K.SP_TOT*100)+' %']));
+}
+
+/* ---------------- C · cobertura MoSCoW ---------------- */
+function chartC(){
+  const box=document.getElementById('cC'); box.innerHTML='';
+  const rf=D.items.filter(i=>i.id.startsWith('RF-')&&i.id.length===6);
+  const cats=[['MUST','MUST (muy alta)'],['SHOULD','SHOULD (alta)'],['COULD','COULD (media)']];
+  const est=['Implementado','Parcial','Pendiente'];
+  const rows=cats.map(([k,lbl])=>{ const g=rf.filter(i=>i.pri===k);
+    return {lbl,total:g.length,vals:est.map(e=>g.filter(i=>i.estado===e).length)}; });
+  const W=560,H=190,ml=118,mr=34,mt=8,mb=30, pw=W-ml-mr;
+  const max=Math.max(...rows.map(r=>r.total));
+  const s=svg(W,H); box.appendChild(s);
+  const bh=32, gap=(H-mt-mb-rows.length*bh)/(rows.length-1);
+  rows.forEach((row,ri)=>{
+    const y=mt+ri*(bh+gap); let x=ml;
+    txt(s,ml-9,y+bh/2,row.lbl,'catlabel','end','middle');
+    row.vals.forEach((v,vi)=>{ if(!v) return;
+      const w=pw*v/max - (vi<2?2:0);
+      const rc=el('rect',{x,y,width:Math.max(2,w),height:bh,rx:4,fill:'var(--s-'+['done','part','pend'][vi]+')',class:'bar'},s);
+      bindTip(rc,row.lbl+' · '+est[vi], v+' de '+row.total+' requerimientos ('+r1(v/row.total*100)+' %)');
+      if(w>19) txt(s,x+w/2,y+bh/2,String(v),'dlabel inv','middle','middle');
+      x+=pw*v/max; });
+    txt(s,x+7,y+bh/2,row.total+' RF','tick','start','middle');
+  });
+  el('line',{x1:ml,x2:ml,y1:mt,y2:H-mb+2,class:'axisline'},s);
+  txt(s,ml,H-10,'Cantidad de requerimientos funcionales','tick','start','auto');
+  dtable('tC',['Prioridad','Implementado','Parcial','Pendiente','Total'],rows.map(r=>[r.lbl,...r.vals,r.total]));
+}
+
+/* ---------------- D · horas por épica ---------------- */
+function chartD(){
+  const box=document.getElementById('cD'); box.innerHTML='';
+  const rows=D.epicas.map(e=>{ const g=D.items.filter(i=>i.ep===e.id);
+    return {id:e.id,nombre:e.nombre,
+      done:r1(g.filter(i=>i.estado!=='Pendiente').reduce((a,i)=>a+i.h,0)),
+      pend:r1(g.filter(i=>i.estado==='Pendiente').reduce((a,i)=>a+i.h,0))}; })
+    .map(o=>({...o,tot:r1(o.done+o.pend)}));
+  const W=560,H=300,ml=152,mr=46,mt=8,mb=30, pw=W-ml-mr;
+  const max=niceMax(Math.max(...rows.map(r=>r.tot)),4);
+  const s=svg(W,H); box.appendChild(s);
+  const bh=22, gap=(H-mt-mb-rows.length*bh)/(rows.length-1);
+  for(let i=0;i<=4;i++){ const x=ml+pw*i/4;
+    el('line',{x1:x,x2:x,y1:mt,y2:H-mb+2,class:i?'gridline':'axisline'},s);
+    txt(s,x,H-mb+8,String(Math.round(max*i/4)),'tick','middle','hanging'); }
+  rows.forEach((row,ri)=>{
+    const y=mt+ri*(bh+gap); let x=ml;
+    txt(s,ml-9,y+bh/2,row.id+' · '+(row.nombre.length>24?row.nombre.slice(0,23)+'…':row.nombre),'catlabel','end','middle');
+    [['done','s-done','Entregadas'],['pend','s-pend','Proyectadas']].forEach(([k,c,lbl],idx)=>{
+      const v=row[k]; if(!v) return;
+      const w=pw*v/max - (idx===0&&row.pend?2:0);
+      const rc=el('rect',{x,y,width:Math.max(2,w),height:bh,rx:4,fill:'var(--'+c+')',class:'bar'},s);
+      bindTip(rc,row.id+' · '+row.nombre, lbl.toLowerCase()+': '+f1(v)+' h de '+f1(row.tot)+' h totales de la épica');
+      x+=pw*v/max; });
+    txt(s,x+7,y+bh/2,f1(row.tot)+' h','tick','start','middle');
+  });
+  dtable('tD',['Épica','Entregadas','Proyectadas','Total'],rows.map(r=>[r.id+' · '+r.nombre,f1(r.done),f1(r.pend),f1(r.tot)]));
+}
+
+
+function drawAll(){ chartA(); chartB(); chartC(); chartD(); }
+drawAll();
+
+/* ---------------- tablas auxiliares ---------------- */
+document.getElementById('tSpr').innerHTML =
+  '<thead><tr><th>Sprint</th><th>Objetivo del incremento</th><th>Inicio</th><th>Entrega</th><th class="n">Elem.</th><th class="n">Pts.</th><th class="n">Horas</th><th>Tipo</th></tr></thead><tbody>'
+  + D.sprints.map(s=>{ const g=D.items.filter(i=>i.sprint===s.n);
+      return '<tr><td class="n"><b>'+s.n+'</b></td><td><b>'+esc(s.nombre)+'</b><br><span style="color:var(--muted);font-size:12px">'+esc(s.entregable)+'</span></td>'
+      +'<td class="n">'+s.ini+'</td><td class="n">'+s.fin+'</td><td class="n">'+g.length+'</td><td class="n">'+g.reduce((a,i)=>a+i.sp,0)+'</td><td class="n">'+f1(g.reduce((a,i)=>a+i.h,0))+'</td>'
+      +'<td><span class="chip"><i class="dot" style="background:'+(s.tipo==='Ejecutado'?'var(--s-done)':'var(--s-pend)')+'"></i>'+s.tipo+'</span></td></tr>'; }).join('')
+  + '<tr><td></td><td><b>Total del programa</b></td><td class="n">20/01/2026</td><td class="n">31/01/2027</td><td class="n"><b>'+K.nAll+'</b></td><td class="n"><b>'+K.SP_TOT+'</b></td><td class="n"><b>'+f1(K.H_TOT)+'</b></td><td></td></tr></tbody>';
+
+document.getElementById('tRnf').innerHTML =
+  '<thead><tr><th>ID</th><th>Restricción</th><th>Prioridad</th><th>Verificada por</th><th>Evidencia y resultado</th><th>Estado</th></tr></thead><tbody>'
+  + D.rnfs.map(n=>'<tr><td class="id">'+n.id+'</td><td>'+esc(n.nombre)+'</td><td><span class="chip">'+n.pri+'</span></td><td>'+esc(n.verif)+'</td><td style="color:var(--ink-2);font-size:12.5px">'+esc(n.ev)+'</td><td>'+esc(n.estado)+'</td></tr>').join('')
+  + '</tbody>';
+
+document.getElementById('tEsc').innerHTML =
+  '<thead><tr><th class="n">Pts.</th><th>Criterio</th><th>Referencia</th></tr></thead><tbody>'
+  + D.escala.map(e=>'<tr><td class="n"><b>'+e.sp+'</b></td><td style="font-size:12.5px">'+esc(e.crit)+'</td><td style="font-size:12.5px;color:var(--ink-2)">'+esc(e.ref)+'</td></tr>').join('')
+  + '</tbody>';
+
+document.getElementById('tDef').innerHTML =
+  '<thead><tr><th>Término</th><th>Definición conceptual</th><th>Definición operacional</th></tr></thead><tbody>'
+  + D.defop.map(d=>'<tr><td><b>'+esc(d[0])+'</b></td><td style="font-size:12.5px">'+esc(d[1])+'</td><td style="font-size:12.5px;color:var(--ink-2)">'+esc(d[2])+'</td></tr>').join('')
+  + '</tbody>';
+
+document.getElementById('lDod').innerHTML = D.dod.map(d=>'<li style="margin-bottom:6px">'+esc(d)+'</li>').join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BayStream — Presentación · Proyecto de Graduación I</title>
+  <meta name="description" content="Presentación del proyecto de investigación BayStream: Ecosistema Multiplataforma para la Optimización de Estiba de Buques Portacontenedores.">
+  <link rel="stylesheet" href="css/presentation.css">
+</head>
+<body>
+<div class="presentation">
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 1 — PORTADA
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide title-slide">
+  <div class="slide-inner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <div class="title-logo anim">⛴</div>
+    <h1 class="anim d1" style="margin-bottom:8px;">BayStream</h1>
+    <p class="subtitle anim d2" style="text-align:center;max-width:640px;">
+      Ecosistema Multiplataforma para la Optimización en Tiempo Real de la Planificación de Estiba de Buques Portacontenedores
+    </p>
+    <span class="title-pill anim d3">Proyecto de Graduación I · Junio 2026</span>
+    <div class="title-meta anim d4">
+      <span class="title-meta-item"><strong>Carlos Giovanni Martínez Aldana</strong> · 0909-22-19157</span>
+    </div>
+    <div class="title-meta anim d5">
+      <span class="title-meta-item">Universidad Mariano Gálvez de Guatemala · Centro Universitario de Puerto Barrios</span>
+    </div>
+    <div class="title-meta anim d6">
+      <span class="title-meta-item">Facultad de Ingeniería en Sistemas · Asesor: Ing. Juan Pablo Escobar</span>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 2 — AGENDA
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Contenido</p>
+    <h2 class="anim d1">Agenda de la presentación</h2>
+    <div class="agenda-list anim d2">
+      <div class="agenda-item"><span class="agenda-num">1</span>Resumen Ejecutivo</div>
+      <div class="agenda-item"><span class="agenda-num">7</span>Hipótesis</div>
+      <div class="agenda-item"><span class="agenda-num">2</span>Antecedentes</div>
+      <div class="agenda-item"><span class="agenda-num">8</span>Diseño de Investigación</div>
+      <div class="agenda-item"><span class="agenda-num">3</span>Planteamiento del Problema</div>
+      <div class="agenda-item"><span class="agenda-num">9</span>Muestra</div>
+      <div class="agenda-item"><span class="agenda-num">4</span>Justificación</div>
+      <div class="agenda-item"><span class="agenda-num">10</span>Variables e Indicadores</div>
+      <div class="agenda-item"><span class="agenda-num">5</span>Objetivos</div>
+      <div class="agenda-item"><span class="agenda-num">11</span>Arquitectura y Prototipos</div>
+      <div class="agenda-item"><span class="agenda-num">6</span>Alcances y Límites</div>
+      <div class="agenda-item"><span class="agenda-num">12</span>Diagramas y Cierre</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 3 — RESUMEN EJECUTIVO
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Resumen Ejecutivo</p>
+    <h2 class="anim d1">BayStream en cuatro pilares</h2>
+    <div class="card-grid cols-2 anim d2">
+      <div class="card card-accent">
+        <div class="card-icon">📥</div>
+        <div class="card-title">Parser BAPLIE/EDIFACT</div>
+        <div class="card-body">Procesamiento de archivos estándar de la industria marítima con precisión ≥95%, extrayendo contenedores, posiciones ISO, pesos y carga especial.</div>
+      </div>
+      <div class="card card-green">
+        <div class="card-icon">🗺️</div>
+        <div class="card-title">Visualización Interactiva</div>
+        <div class="card-body">Bay Plan Grid bidimensional con codificación por colores, diferenciación cubierta/bodega y búsqueda avanzada de contenedores.</div>
+      </div>
+      <div class="card card-cyan">
+        <div class="card-icon">📱</div>
+        <div class="card-title">Multiplataforma</div>
+        <div class="card-body">Una sola base de código Flutter para Windows, Android y Web, reduciendo el esfuerzo de desarrollo en ≥50% vs. desarrollo nativo.</div>
+      </div>
+      <div class="card card-orange">
+        <div class="card-icon">☁️</div>
+        <div class="card-title">Offline-First</div>
+        <div class="card-body">Sincronización bidireccional con Firebase Firestore, operación completa sin conexión y latencia ≤3s en condiciones normales.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 4 — ANTECEDENTES 1/2
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Antecedentes</p>
+    <h2 class="anim d1">Contexto de la industria marítima</h2>
+    <div class="split">
+      <div>
+        <p class="body-text anim d2">El transporte marítimo de contenedores moviliza aproximadamente el <span class="highlight">90% del comercio internacional</span>. Guatemala opera dos puertos principales: Puerto Quetzal (Pacífico) y Santo Tomás de Castilla (Atlántico).</p>
+        <p class="body-text anim d3" style="margin-top:14px;">La planificación de estiba, es decir, la disposición física de contenedores dentro de un buque, es una operación crítica que impacta directamente la <span class="highlight-warn">seguridad, estabilidad y eficiencia</span> de las operaciones portuarias.</p>
+        <p class="body-text anim d4" style="margin-top:14px;">El estándar <span class="highlight">BAPLIE (Bayplan/stowage plan)</span> del framework EDIFACT de Naciones Unidas es el formato universal para intercambiar planos de estiba entre navieras, terminales y autoridades portuarias.</p>
+      </div>
+      <div class="anim d3">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title">📊 Datos clave</div>
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-soft);">
+              <span>Comercio mundial por mar</span><strong style="color:var(--primary);">~90%</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-soft);">
+              <span>Puertos principales GT</span><strong>2</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-soft);">
+              <span>Estándar BAPLIE</span><strong>EDIFACT/SMDG</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;">
+              <span>Formato coordenadas</span><strong class="mono">BBBRRTT</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 5 — ANTECEDENTES 2/2
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Antecedentes</p>
+    <h2 class="anim d1">Brecha tecnológica actual</h2>
+    <div class="split">
+      <div>
+        <h3 class="anim d2" style="color:var(--err);">Métodos actuales</h3>
+        <ul class="check-list anim d3" style="margin-bottom:20px;">
+          <li style="color:var(--err);">Lectura manual de archivos BAPLIE en texto plano</li>
+          <li style="color:var(--err);">Listados de secuencia impresos en papel</li>
+          <li style="color:var(--err);">Sin visualización gráfica accesible</li>
+          <li style="color:var(--err);">Validación manual propensa a errores (~1%)</li>
+        </ul>
+        <h3 class="anim d4" style="color:var(--accent);">Solución propuesta</h3>
+        <ul class="check-list anim d5">
+          <li>Ecosistema de código abierto y gratuito</li>
+          <li>Interfaz visual interactiva del Bay Plan</li>
+          <li>Validación matemática preventiva</li>
+          <li>Accesible para terminales pequeñas y medianas</li>
+        </ul>
+      </div>
+      <div class="anim d3">
+        <div class="card card-red" style="margin-bottom:12px;">
+          <div class="card-title">🏢 Sistemas Comerciales (TOS)</div>
+          <div class="card-body">Navis N4, TOPS, Tideworks: soluciones robustas pero con alto costo de licencia ($50K-$500K+), implementación compleja y cerradas. Inaccesibles para operadores pequeños de Centroamérica.</div>
+        </div>
+        <div class="card card-green">
+          <div class="card-title">🌊 BayStream (propuesta)</div>
+          <div class="card-body">Código abierto, multiplataforma, Offline-First, enfocado en visualización y validación de estiba. Diseñado para el contexto centroamericano.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 6 — PLANTEAMIENTO DEL PROBLEMA
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Planteamiento del Problema</p>
+    <h2 class="anim d1">El problema central</h2>
+    <p class="body-text anim d2" style="margin-bottom:20px;">Los profesionales del sector marítimo-portuario guatemalteco dependen de la <span class="highlight-err">lectura manual de archivos BAPLIE</span> y <span class="highlight-err">listados impresos en papel</span> para interpretar la distribución de contenedores en un buque. Esto resulta en:</p>
+    <div class="card-grid cols-3 anim d3">
+      <div class="card card-red">
+        <div class="card-icon">⏱️</div>
+        <div class="card-title">Tiempos elevados</div>
+        <div class="card-body">La localización manual de un contenedor en un archivo BAPLIE de texto plano requiere minutos de lectura secuencial.</div>
+      </div>
+      <div class="card card-orange">
+        <div class="card-icon">⚠️</div>
+        <div class="card-title">Errores de posición</div>
+        <div class="card-body">Sin validación preventiva, ~1% de contenedores se colocan en posición incorrecta, generando retrabajos y riesgos.</div>
+      </div>
+      <div class="card card-cyan">
+        <div class="card-icon">🔒</div>
+        <div class="card-title">Inaccesibilidad</div>
+        <div class="card-body">Los archivos BAPLIE son crípticos para quien no conoce la especificación EDIFACT, limitando la toma de decisiones.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 7 — PREGUNTA DE INVESTIGACIÓN
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Pregunta de Investigación</p>
+    <h2 class="anim d1">Pregunta principal</h2>
+    <div class="question-box anim d2">
+      ¿En qué medida un ecosistema multiplataforma de código abierto (BayStream), basado en el procesamiento de archivos BAPLIE/EDIFACT, reduce el tiempo de interpretación de los planos de estiba, previene los errores de posición de contenedores y mejora la accesibilidad de la información para los profesionales del sector marítimo-portuario, en comparación con los métodos actuales de lectura manual de archivos y listados impresos en papel?
+    </div>
+    <h3 class="anim d3" style="margin-top:22px;">Preguntas específicas</h3>
+    <div class="sub-questions anim d4">
+      <div class="sub-q"><span class="sub-q-num">P1.</span>¿Qué arquitectura y tecnologías son las más adecuadas para un ecosistema multiplataforma con sincronización en tiempo real?</div>
+      <div class="sub-q"><span class="sub-q-num">P2.</span>¿Cómo implementar un parser eficiente para BAPLIE/EDIFACT que extraiga correctamente la información de estiba?</div>
+      <div class="sub-q"><span class="sub-q-num">P3.</span>¿Cuál es la representación visual más efectiva para comunicar la distribución de contenedores?</div>
+      <div class="sub-q"><span class="sub-q-num">P4.</span>¿Cómo diseñar un motor de validación matemática para verificar posiciones antes del movimiento de grúa?</div>
+      <div class="sub-q"><span class="sub-q-num">P5.</span>¿Qué estrategia Offline-First garantiza consistencia entre oficina y muelle con conectividad intermitente?</div>
+      <div class="sub-q"><span class="sub-q-num">P6.</span>¿Qué mecanismos de búsqueda y filtrado son más útiles para localizar contenedores en un plano de estiba?</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 8 — JUSTIFICACIÓN
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Justificación</p>
+    <h2 class="anim d1">¿Por qué BayStream?</h2>
+    <div class="card-grid cols-2 anim d2">
+      <div class="card">
+        <div class="card-icon">💰</div>
+        <div class="card-title">Trascendencia económica</div>
+        <div class="card-body">Las terminales pequeñas y medianas de Centroamérica no pueden acceder a sistemas TOS comerciales. BayStream democratiza el acceso a herramientas de gestión de estiba al ser de código abierto.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔬</div>
+        <div class="card-title">Pertinencia técnica</div>
+        <div class="card-body">No existe una alternativa de código abierto para interpretar visualmente archivos BAPLIE. Este proyecto llena un vacío real en la industria marítima regional.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">Impacto en seguridad</div>
+        <div class="card-body">La validación preventiva de posiciones puede reducir errores del 1% al 0.2%, evitando retrabajos, daños a la carga y riesgos para el personal operativo.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎓</div>
+        <div class="card-title">Contribución académica</div>
+        <div class="card-body">Documenta una metodología replicable para el desarrollo de herramientas portuarias con Flutter y Clean Architecture, contribuyendo al conocimiento de la ingeniería en sistemas.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 9 — OBJETIVO GENERAL
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Objetivos</p>
+    <h2 class="anim d1">Objetivo General</h2>
+    <div class="question-box anim d2" style="font-style:normal;">
+      Desarrollar y validar un ecosistema multiplataforma de código abierto (<span class="highlight">BayStream</span>), basado en <span class="highlight">Flutter con Clean Architecture</span> y sincronización <span class="highlight">Offline-First</span>, que permita a los profesionales del sector marítimo-portuario de Guatemala <span class="highlight-accent">visualizar interactivamente</span>, <span class="highlight-accent">gestionar</span> y <span class="highlight-accent">validar en tiempo real</span> los planos de estiba de buques portacontenedores mediante el procesamiento de archivos BAPLIE/EDIFACT, reduciendo el tiempo de interpretación, previniendo errores de posición y eliminando la dependencia de listados en papel.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 10 — OBJETIVOS ESPECÍFICOS
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Objetivos</p>
+    <h2 class="anim d1">Objetivos Específicos</h2>
+    <div class="obj-list">
+      <div class="obj-item anim d2"><span class="obj-letter">a</span><span class="obj-text">Diseñar e implementar un <strong>parser BAPLIE/EDIFACT en Dart</strong> con precisión ≥95% para contenedores, posiciones ISO, puertos, pesos y carga especial.</span></div>
+      <div class="obj-item anim d3"><span class="obj-letter">b</span><span class="obj-text">Desarrollar un <strong>módulo de escritorio (Windows)</strong> con Bay Plan Grid interactivo: distribución por bahía, cubierta/bodega, codificación por colores.</span></div>
+      <div class="obj-item anim d4"><span class="obj-letter">c</span><span class="obj-text">Implementar <strong>búsqueda global</strong> por BIC, puerto, naviera y tipo de carga con navegación automática al plano de bahía.</span></div>
+      <div class="obj-item anim d5"><span class="obj-letter">d</span><span class="obj-text">Construir un <strong>módulo de muelle (tablet Android)</strong> con secuencia digital y validación matemática preventiva del posicionamiento.</span></div>
+      <div class="obj-item anim d6"><span class="obj-letter">e</span><span class="obj-text">Implementar <strong>sincronización Offline-First</strong> con Firebase Firestore, garantizando latencia ≤3s en WiFi normal.</span></div>
+      <div class="obj-item anim d7"><span class="obj-letter">f</span><span class="obj-text">Evaluar usabilidad mediante <strong>cuestionario SUS</strong>, tareas cronometradas y mediciones de precisión con usuarios del sector.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 11 — ALCANCES
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Alcances</p>
+    <h2 class="anim d1">Alcances del Proyecto</h2>
+    <div class="card-grid cols-2">
+      <ul class="check-list anim d2">
+        <li>Parser BAPLIE completo (D.95B, D.00B, D.13B)</li>
+        <li>Visualización interactiva de Bay Plan por bahía</li>
+        <li>Motor de búsqueda por BIC, puerto, naviera y tipo</li>
+        <li>Módulo de validación de muelle para tablet</li>
+        <li>Sincronización bidireccional Offline-First</li>
+      </ul>
+      <ul class="check-list anim d3">
+        <li>Multiplataforma: Windows, Android, Web</li>
+        <li>Dashboard estadístico con métricas de viaje</li>
+        <li>Autenticación y roles (Planificador / Supervisor)</li>
+        <li>Registro de auditoría (Audit Trail)</li>
+        <li>Interfaz bilingüe (español con terminología inglesa)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 12 — LÍMITES
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Límites</p>
+    <h2 class="anim d1">Límites del Proyecto</h2>
+    <div class="card-grid cols-2">
+      <ul class="numbered-list limit-list anim d2">
+        <li><strong>No es un planificador de estiba.</strong> BayStream visualiza y valida; no sugiere posiciones automáticamente.</li>
+        <li><strong>No calcula estabilidad naval.</strong> Sin GM, esfuerzos cortantes ni momentos flectores.</li>
+        <li><strong>Sin integración TOS.</strong> No se conecta con Navis N4, TOPS ni Tideworks en fase académica.</li>
+        <li><strong>Solo BAPLIE.</strong> No soporta MOVINS, COPARN ni CUSCAR.</li>
+      </ul>
+      <ul class="numbered-list limit-list anim d3">
+        <li><strong>Sin iOS/macOS.</strong> Requiere hardware Mac para compilación Apple.</li>
+        <li><strong>Sin versiones propietarias.</strong> No garantiza compatibilidad con BAPLIE no estándar SMDG.</li>
+        <li><strong>MVP limitado.</strong> Diseñado para máximo 10 usuarios simultáneos por terminal.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 13 — HIPÓTESIS GENERAL
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Hipótesis</p>
+    <h2 class="anim d1">Hipótesis General</h2>
+    <div class="question-box anim d2" style="font-style:normal;border-color:rgba(67,196,99,0.25);">
+      El desarrollo de un ecosistema multiplataforma basado en Flutter (<span class="highlight">BayStream</span>) para la visualización, gestión y validación en tiempo real de planos de estiba a partir de archivos BAPLIE/EDIFACT, aplicado en el contexto de las operaciones portuarias de Guatemala (<span class="highlight-accent">Puerto Quetzal</span> y <span class="highlight-accent">Santo Tomás de Castilla</span>) durante el período académico febrero-mayo 2026, <span class="highlight-accent">reducirá significativamente el tiempo de interpretación</span>, <span class="highlight-accent">eliminará errores de posición</span> mediante validación preventiva y <span class="highlight-accent">mejorará la accesibilidad</span> de la información para los profesionales del sector.
+    </div>
+    <p class="body-text anim d3" style="margin-top:14px;font-size:13px;color:var(--text-faint);">Hernández Sampieri y Mendoza Torres (2023): "Las hipótesis son explicaciones tentativas del fenómeno investigado que se formulan como proposiciones" (p. 104).</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 14 — HIPÓTESIS ESPECÍFICAS 1/2
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Hipótesis Específicas</p>
+    <h2 class="anim d1">H1, H2 y H3</h2>
+    <div class="card-grid cols-3">
+      <div class="hyp-card anim d2">
+        <div class="hyp-id">H1 — Precisión del Parser</div>
+        <div class="hyp-body">Un parser en Dart para BAPLIE/EDIFACT puede alcanzar una tasa de precisión del 95% o superior en la extracción de contenedores, posiciones ISO y metadatos del viaje.</div>
+        <span class="hyp-threshold">≥ 95% precisión</span>
+      </div>
+      <div class="hyp-card anim d3">
+        <div class="hyp-id">H2 — Reducción de Tiempo</div>
+        <div class="hyp-body">La representación visual con codificación por colores y búsqueda interactiva reduce en al menos un 60% el tiempo de localización vs. lectura manual.</div>
+        <span class="hyp-threshold">≥ 60% reducción</span>
+      </div>
+      <div class="hyp-card anim d4">
+        <div class="hyp-id">H3 — Errores de Muelle</div>
+        <div class="hyp-body">La validación preventiva reduce los errores de posición en al menos un 90%, pasando del 1% al 0.2% o inferior.</div>
+        <span class="hyp-threshold">Del 1% al ≤ 0.2%</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 15 — HIPÓTESIS ESPECÍFICAS 2/2
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Hipótesis Específicas</p>
+    <h2 class="anim d1">H4, H5 y H6</h2>
+    <div class="card-grid cols-3">
+      <div class="hyp-card anim d2">
+        <div class="hyp-id">H4 — Eficiencia Multiplataforma</div>
+        <div class="hyp-body">Flutter permite desarrollar una app funcional para Windows, Android y Web desde una única base de código, reduciendo el esfuerzo en ≥50% vs. desarrollo nativo.</div>
+        <span class="hyp-threshold">≥ 50% menos esfuerzo</span>
+      </div>
+      <div class="hyp-card anim d3">
+        <div class="hyp-id">H5 — Sincronización</div>
+        <div class="hyp-body">La estrategia Offline-First con Firebase Firestore permite mantener consistencia con latencia máxima de 3 segundos en WiFi normal.</div>
+        <span class="hyp-threshold">≤ 3,000 ms latencia</span>
+      </div>
+      <div class="hyp-card anim d4">
+        <div class="hyp-id">H6 — Usabilidad Validada</div>
+        <div class="hyp-body">Los usuarios calificarán la usabilidad con un puntaje ≥68 en la escala SUS normalizada (0-100), indicando usabilidad aceptable.</div>
+        <span class="hyp-threshold">SUS ≥ 68 puntos</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 16 — DISEÑO DE INVESTIGACIÓN
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Diseño de Investigación</p>
+    <h2 class="anim d1">Enfoque, alcance y diseño</h2>
+    <div class="card-grid cols-3 anim d2">
+      <div class="card card-accent">
+        <div class="card-icon">🔬</div>
+        <div class="card-title">Enfoque Mixto</div>
+        <div class="card-body">Predominancia cuantitativa. Medición de precisión, tiempos, errores, latencia y SUS (cuantitativo) + observación directa y retroalimentación (cualitativo).</div>
+      </div>
+      <div class="card card-green">
+        <div class="card-icon">📐</div>
+        <div class="card-title">Alcance Descriptivo-Aplicado</div>
+        <div class="card-body">Describe el comportamiento de variables dependientes al introducir BayStream. Orientado a resolver un problema práctico concreto del sector portuario.</div>
+      </div>
+      <div class="card card-cyan">
+        <div class="card-icon">📋</div>
+        <div class="card-title">Diseño No Experimental</div>
+        <div class="card-body">Transversal, tipo prototipo/MVP. Recolección en un momento (febrero-mayo 2026). Construcción y validación empírica con usuarios reales.</div>
+      </div>
+    </div>
+    <h3 class="anim d3" style="margin-top:22px;">Estrategia de validación del MVP</h3>
+    <div class="split anim d4">
+      <div class="card">
+        <div class="card-title">🔧 Validación Técnica</div>
+        <div class="card-body">Pruebas automatizadas del parser con archivos reales de 5+ navieras. Medición de latencia de sincronización (30+ mediciones). Escenarios simulados de errores.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Validación con Usuarios</div>
+        <div class="card-body">Cuestionario SUS (10 ítems, Likert 1-5). Tareas cronometradas de localización. Observación directa de la interacción. Retroalimentación semiestructurada.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 17 — DEFINICIÓN DE MUESTRA
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Muestra</p>
+    <h2 class="anim d1">Definición y tamaño de la muestra</h2>
+    <p class="body-text anim d2" style="margin-bottom:16px;">Muestreo <span class="highlight">no probabilístico por conveniencia</span>. Según Nielsen (2024), 5 usuarios por perfil detectan la mayoría de problemas de usabilidad con máximo retorno de inversión.</p>
+    <div class="card anim d3" style="overflow:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Perfil</th>
+            <th>Cantidad</th>
+            <th>Criterio de selección</th>
+            <th>Instrumento</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Planificadores de estiba</strong></td>
+            <td style="color:var(--primary);font-weight:700;">3-4</td>
+            <td>Experiencia mínima de 1 año en planificación de estiba con herramientas digitales</td>
+            <td>SUS + entrevista semiestructurada</td>
+          </tr>
+          <tr>
+            <td><strong>Supervisores de muelle</strong></td>
+            <td style="color:var(--primary);font-weight:700;">3-4</td>
+            <td>Experiencia en operaciones de muelle con listados de secuencia impresos</td>
+            <td>Test de tareas en tablet + observación directa</td>
+          </tr>
+          <tr>
+            <td><strong>Estudiantes / Profesionales Jr.</strong></td>
+            <td style="color:var(--primary);font-weight:700;">2-4</td>
+            <td>Conocimientos básicos de operaciones portuarias, sin experiencia TOS</td>
+            <td>SUS + tiempo de completado de tareas</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-grid cols-3 anim d4" style="margin-top:14px;">
+      <div class="metric-card">
+        <div class="metric-value">8-12</div>
+        <div class="metric-label">Usuarios totales</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">3</div>
+        <div class="metric-label">Perfiles distintos</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">SUS</div>
+        <div class="metric-label">Instrumento principal</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 18 — VARIABLES E INDICADORES 1/2
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Variables e Indicadores</p>
+    <h2 class="anim d1">Variables Dependientes (1/2)</h2>
+    <p class="body-text anim d2" style="margin-bottom:14px;">Variable independiente: <span class="highlight">Sistema BayStream</span>. Las variables dependientes miden los efectos de su introducción.</p>
+    <div class="var-row">
+      <div class="var-card anim d3">
+        <div class="var-header">
+          <span class="var-icon">🎯</span>
+          <span class="var-name">Precisión del Parser</span>
+          <span class="var-hyp">H1</span>
+        </div>
+        <div class="var-indicator">% de contenedores correctamente parseados</div>
+        <div class="var-threshold">✓ Umbral: ≥ 95%</div>
+        <div class="var-method">Unit tests con 5+ archivos BAPLIE reales de distintas navieras (MSC, Maersk, CMA CGM, ZIM, Hapag-Lloyd).</div>
+      </div>
+      <div class="var-card anim d4">
+        <div class="var-header">
+          <span class="var-icon">⏱️</span>
+          <span class="var-name">Tiempo de Localización</span>
+          <span class="var-hyp">H2</span>
+        </div>
+        <div class="var-indicator">Segundos promedio por tarea de localización</div>
+        <div class="var-threshold">✓ Reducción ≥ 60%</div>
+        <div class="var-method">Tareas cronometradas: primero con BAPLIE en texto plano, luego con interfaz BayStream.</div>
+      </div>
+    </div>
+    <div class="var-row anim d5" style="margin-top:12px;">
+      <div class="var-card">
+        <div class="var-header">
+          <span class="var-icon">🛡️</span>
+          <span class="var-name">Tasa de Errores de Posición</span>
+          <span class="var-hyp">H3</span>
+        </div>
+        <div class="var-indicator">% de errores detectados preventivamente</div>
+        <div class="var-threshold">✓ Del 1% al ≤ 0.2%</div>
+        <div class="var-method">Escenarios simulados con posiciones erróneas insertadas deliberadamente en la tablet de muelle.</div>
+      </div>
+      <div class="var-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+        <div style="font-size:14px;color:var(--text-dim);">Continúa en la siguiente diapositiva</div>
+        <div style="font-size:24px;margin-top:6px;">→</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 19 — VARIABLES E INDICADORES 2/2
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Variables e Indicadores</p>
+    <h2 class="anim d1">Variables Dependientes (2/2)</h2>
+    <div class="var-row">
+      <div class="var-card anim d2">
+        <div class="var-header">
+          <span class="var-icon">⚡</span>
+          <span class="var-name">Esfuerzo de Desarrollo</span>
+          <span class="var-hyp">H4</span>
+        </div>
+        <div class="var-indicator">Razón horas-hombre Flutter vs. estimación nativa</div>
+        <div class="var-threshold">✓ Reducción ≥ 50%</div>
+        <div class="var-method">Bitácora semanal + estimación COCOMO y puntos de función para desarrollo nativo en 3 plataformas.</div>
+      </div>
+      <div class="var-card anim d3">
+        <div class="var-header">
+          <span class="var-icon">🔄</span>
+          <span class="var-name">Latencia de Sincronización</span>
+          <span class="var-hyp">H5</span>
+        </div>
+        <div class="var-indicator">Milisegundos promedio escritura → lectura</div>
+        <div class="var-threshold">✓ ≤ 3,000 ms</div>
+        <div class="var-method">30+ mediciones de timestamps de escritura/lectura en Firebase Firestore en distintas condiciones WiFi.</div>
+      </div>
+    </div>
+    <div class="var-row anim d4" style="margin-top:12px;">
+      <div class="var-card">
+        <div class="var-header">
+          <span class="var-icon">📊</span>
+          <span class="var-name">Usabilidad Percibida</span>
+          <span class="var-hyp">H6</span>
+        </div>
+        <div class="var-indicator">Puntaje SUS normalizado (0-100)</div>
+        <div class="var-threshold">✓ SUS ≥ 68 puntos (Lewis, 2018)</div>
+        <div class="var-method">Cuestionario SUS (10 ítems, Likert 1-5) aplicado después de las pruebas. Desglose por perfil de usuario.</div>
+      </div>
+      <div class="card anim d5" style="display:flex;flex-direction:column;justify-content:center;">
+        <div class="card-title" style="color:var(--primary);">Resumen de umbrales</div>
+        <div class="card-body" style="line-height:1.8;">
+          <span class="badge badge-green">Parser ≥95%</span>
+          <span class="badge badge-green">Tiempo -60%</span>
+          <span class="badge badge-green">Errores -90%</span><br>
+          <span class="badge badge-primary">Esfuerzo -50%</span>
+          <span class="badge badge-primary">Latencia ≤3s</span>
+          <span class="badge badge-primary">SUS ≥68</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 20 — ARQUITECTURA DEL SISTEMA
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Arquitectura</p>
+    <h2 class="anim d1">Stack Tecnológico y Arquitectura</h2>
+    <div class="split">
+      <div class="anim d2">
+        <h3>Clean Architecture en Flutter</h3>
+        <div class="arch-diagram">
+          <div class="arch-layer">
+            <span class="arch-layer-label">Presentación</span>
+            <div class="arch-layer-items">
+              <span class="arch-chip">Pages</span>
+              <span class="arch-chip">Widgets</span>
+              <span class="arch-chip">Riverpod</span>
+            </div>
+          </div>
+          <div class="arch-arrow">↕</div>
+          <div class="arch-layer">
+            <span class="arch-layer-label">Dominio</span>
+            <div class="arch-layer-items">
+              <span class="arch-chip">Entities</span>
+              <span class="arch-chip">Repositories</span>
+              <span class="arch-chip">Use Cases</span>
+            </div>
+          </div>
+          <div class="arch-arrow">↕</div>
+          <div class="arch-layer">
+            <span class="arch-layer-label">Datos</span>
+            <div class="arch-layer-items">
+              <span class="arch-chip">BAPLIE Parser</span>
+              <span class="arch-chip">Firebase</span>
+              <span class="arch-chip">Local Storage</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="anim d3">
+        <h3>Stack Tecnológico</h3>
+        <div class="card" style="margin-bottom:12px;">
+          <div style="display:grid;gap:8px;">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-soft);">
+              <span style="color:var(--text-dim);">Frontend</span>
+              <strong style="color:var(--cyan);">Flutter 3.x</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-soft);">
+              <span style="color:var(--text-dim);">Lenguaje</span>
+              <strong style="color:var(--cyan);">Dart</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-soft);">
+              <span style="color:var(--text-dim);">Base de datos</span>
+              <strong style="color:var(--warn);">Firebase Firestore</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-soft);">
+              <span style="color:var(--text-dim);">Estado</span>
+              <strong style="color:var(--accent);">Riverpod</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-soft);">
+              <span style="color:var(--text-dim);">Arquitectura</span>
+              <strong style="color:var(--primary);">Clean Architecture</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;">
+              <span style="color:var(--text-dim);">Plataformas</span>
+              <strong>Win · Android · Web</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 21 — PROTOTIPOS INTERACTIVOS
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Prototipos</p>
+    <h2 class="anim d1">35 Prototipos Interactivos</h2>
+    <p class="body-text anim d2" style="margin-bottom:16px;">Cada requerimiento funcional cuenta con un prototipo interactivo navegable. Los prototipos replican el tema oscuro Material 3 de la aplicación Flutter real.</p>
+    <div class="card-grid cols-4 anim d3" style="margin-bottom:16px;">
+      <div class="metric-card">
+        <div class="metric-value">35</div>
+        <div class="metric-label">Requerimientos funcionales</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">7</div>
+        <div class="metric-label">Módulos del sistema</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:var(--accent);">20</div>
+        <div class="metric-label">Implementados</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" style="color:var(--warn);">15</div>
+        <div class="metric-label">Propuestos</div>
+      </div>
+    </div>
+    <div class="card card-accent anim d4" style="text-align:center;padding:18px;">
+      <div class="card-title" style="font-size:16px;">🔗 Prototipos en vivo</div>
+      <div class="card-body" style="margin-top:6px;">
+        <a href="https://yovawarrior.github.io/Proyecto-BayStream/prototipos/" target="_blank" style="color:var(--primary);font-weight:600;font-size:15px;">
+          yovawarrior.github.io/Proyecto-BayStream/prototipos
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 22 — PROTOTIPOS: MÓDULOS
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Prototipos</p>
+    <h2 class="anim d1">Los 7 módulos del ecosistema</h2>
+    <div class="module-grid">
+      <div class="module-card anim d2"><div class="module-icon">📥</div><div class="module-num">Módulo 1</div><div class="module-name">Carga y Procesamiento</div><div class="module-count">5 RF</div></div>
+      <div class="module-card anim d3"><div class="module-icon">🗺️</div><div class="module-num">Módulo 2</div><div class="module-name">Visualización de Estiba</div><div class="module-count">9 RF</div></div>
+      <div class="module-card anim d4"><div class="module-icon">🔍</div><div class="module-num">Módulo 3</div><div class="module-name">Búsqueda de Contenedores</div><div class="module-count">6 RF</div></div>
+      <div class="module-card anim d5"><div class="module-icon">📋</div><div class="module-num">Módulo 4</div><div class="module-name">Lista y Filtrado</div><div class="module-count">5 RF</div></div>
+      <div class="module-card anim d6"><div class="module-icon">⚓</div><div class="module-num">Módulo 5</div><div class="module-name">Gestión de Muelle</div><div class="module-count">5 RF</div></div>
+      <div class="module-card anim d7"><div class="module-icon">☁️</div><div class="module-num">Módulo 6</div><div class="module-name">Sincronización y Respaldo</div><div class="module-count">3 RF</div></div>
+      <div class="module-card anim d8"><div class="module-icon">🔐</div><div class="module-num">Módulo 7</div><div class="module-name">Administración y Seguridad</div><div class="module-count">2 RF</div></div>
+      <div class="module-card anim d9" style="border-color:var(--primary);background:var(--primary-soft);">
+        <div class="module-icon">📊</div>
+        <div class="module-num" style="color:var(--text);">Caso de Prueba</div>
+        <div class="module-name">MSC GUATEMALA</div>
+        <div class="module-count">Viaje V047E</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 23 — DIAGRAMA DE CASOS DE USO
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Diagramas de Análisis</p>
+    <h2 class="anim d1">Diagrama de Casos de Uso</h2>
+    <div class="uc-diagram anim d2">
+      <div class="uc-actor">
+        <div class="uc-actor-icon">👷</div>
+        <div class="uc-actor-name">Supervisor<br>de Muelle</div>
+      </div>
+      <div>
+        <div class="uc-system">
+          <div class="uc-system-label">Sistema BayStream</div>
+          <div class="uc-cases">
+            <div class="uc-case">CU01 · Cargar archivo BAPLIE</div>
+            <div class="uc-case">CU02 · Visualizar Bay Plan</div>
+            <div class="uc-case">CU03 · Buscar contenedor</div>
+            <div class="uc-case">CU04 · Validar posición de muelle</div>
+            <div class="uc-case">CU05 · Sincronizar datos</div>
+            <div class="uc-case">CU06 · Ver detalle de contenedor</div>
+            <div class="uc-case">CU07 · Gestionar usuarios/roles</div>
+            <div class="uc-case">CU08 · Filtrar por tipo de carga</div>
+            <div class="uc-case">CU09 · Generar reportes/estadísticas</div>
+          </div>
+        </div>
+      </div>
+      <div class="uc-actor">
+        <div class="uc-actor-icon">🧑‍💼</div>
+        <div class="uc-actor-name">Planificador<br>de Estiba</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 24 — DIAGRAMA DE ARQUITECTURA
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Diagramas de Diseño</p>
+    <h2 class="anim d1">Arquitectura del Ecosistema</h2>
+    <div class="anim d2" style="max-width:800px;margin:0 auto;">
+      <div class="card-grid cols-3" style="margin-bottom:14px;">
+        <div class="card card-accent" style="text-align:center;">
+          <div style="font-size:24px;">🖥️</div>
+          <div class="card-title">Módulo Escritorio</div>
+          <div class="card-body">Windows · Planificación<br>Bay Plan + Dashboard</div>
+        </div>
+        <div class="card card-green" style="text-align:center;">
+          <div style="font-size:24px;">📱</div>
+          <div class="card-title">Módulo Muelle</div>
+          <div class="card-body">Android Tablet<br>Validación + Secuencia</div>
+        </div>
+        <div class="card card-cyan" style="text-align:center;">
+          <div style="font-size:24px;">🌐</div>
+          <div class="card-title">Módulo Web</div>
+          <div class="card-body">Chrome / Edge<br>Consulta remota</div>
+        </div>
+      </div>
+      <div style="text-align:center;color:var(--text-faint);font-size:20px;margin:6px 0;">↕ Sincronización Offline-First ↕</div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;">🔥</div>
+        <div class="card-title">Firebase Firestore</div>
+        <div class="card-body">Base de datos NoSQL · Autenticación · Cloud Functions</div>
+      </div>
+      <div style="text-align:center;color:var(--text-faint);font-size:20px;margin:6px 0;">↕ Datos BAPLIE ↕</div>
+      <div class="card card-orange" style="text-align:center;">
+        <div style="font-size:24px;">📄</div>
+        <div class="card-title">Archivos BAPLIE/EDIFACT</div>
+        <div class="card-body">.edi · .txt · .baplie · Estándar SMDG · Coordenadas ISO BBBRRTT</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 25 — ENTIDADES DEL DOMINIO
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Diagramas de Diseño</p>
+    <h2 class="anim d1">Entidades del Dominio</h2>
+    <div class="card-grid cols-2 anim d2" style="max-width:800px;margin:0 auto;">
+      <div class="card">
+        <div class="card-title" style="color:var(--primary);">🚢 Vessel</div>
+        <div class="card-body"><span class="mono">name</span>, <span class="mono">imoNumber</span>, <span class="mono">callSign</span>, <span class="mono">flag</span>, <span class="mono">operator</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--primary);">🧭 VesselVoyage</div>
+        <div class="card-body"><span class="mono">vessel</span>, <span class="mono">voyageNumber</span>, <span class="mono">containers[]</span>, <span class="mono">bays[]</span>, <span class="mono">baplieVersion</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--accent);">📦 ContainerUnit</div>
+        <div class="card-body"><span class="mono">containerId</span>, <span class="mono">isoSizeType</span>, <span class="mono">status</span>, <span class="mono">bay/row/tier</span>, <span class="mono">gross/vgm/tare</span>, <span class="mono">pol/pod</span>, <span class="mono">isDangerous/isReefer/isOOG</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--warn);">🔲 Bay / ContainerSlot</div>
+        <div class="card-body"><span class="mono">bayNumber</span>, <span class="mono">occupancy</span>, <span class="mono">row</span>, <span class="mono">tier</span>, <span class="mono">container?</span></div>
+      </div>
+    </div>
+    <p class="body-text anim d3" style="margin-top:16px;text-align:center;font-size:13px;">Las entidades siguen el patrón <span class="highlight">Entity</span> de Clean Architecture: objetos inmutables sin dependencia de frameworks externos.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 26 — RESULTADOS ESPERADOS
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Resultados Esperados</p>
+    <h2 class="anim d1">Lo que se espera lograr</h2>
+    <div class="card-grid cols-3">
+      <div class="metric-card anim d2">
+        <div style="font-size:28px;">🎯</div>
+        <div class="metric-value" style="font-size:1.5rem;">≥95%</div>
+        <div class="metric-label">Precisión del parser BAPLIE con archivos de 5+ navieras</div>
+      </div>
+      <div class="metric-card anim d3">
+        <div style="font-size:28px;">⏱️</div>
+        <div class="metric-value" style="font-size:1.5rem;">-60%</div>
+        <div class="metric-label">Reducción en tiempo de localización de contenedores</div>
+      </div>
+      <div class="metric-card anim d4">
+        <div style="font-size:28px;">🛡️</div>
+        <div class="metric-value" style="font-size:1.5rem;">-90%</div>
+        <div class="metric-label">Reducción de errores de posición en muelle</div>
+      </div>
+      <div class="metric-card anim d5">
+        <div style="font-size:28px;">⚡</div>
+        <div class="metric-value" style="font-size:1.5rem;">-50%</div>
+        <div class="metric-label">Reducción de esfuerzo vs. desarrollo nativo</div>
+      </div>
+      <div class="metric-card anim d6">
+        <div style="font-size:28px;">🔄</div>
+        <div class="metric-value" style="font-size:1.5rem;">≤3s</div>
+        <div class="metric-label">Latencia máxima de sincronización en WiFi</div>
+      </div>
+      <div class="metric-card anim d7">
+        <div style="font-size:28px;">📊</div>
+        <div class="metric-value" style="font-size:1.5rem;">≥68</div>
+        <div class="metric-label">Puntaje SUS de usabilidad percibida</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 27 — CRONOGRAMA
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide">
+  <div class="slide-inner">
+    <p class="slide-label anim">Cronograma</p>
+    <h2 class="anim d1">Línea de tiempo del proyecto</h2>
+    <div class="timeline anim d2">
+      <div class="timeline-item">
+        <div class="timeline-dot done"></div>
+        <div class="timeline-month">Febrero</div>
+        <div class="timeline-desc">Investigación y marco teórico. Primer entregable.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot done"></div>
+        <div class="timeline-month">Marzo</div>
+        <div class="timeline-desc">Parser BAPLIE. Modelos de dominio. Segundo entregable.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot done"></div>
+        <div class="timeline-month">Abril</div>
+        <div class="timeline-desc">Interfaz Bay Plan. Búsqueda. Filtrado. ERS.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot done"></div>
+        <div class="timeline-month">Mayo</div>
+        <div class="timeline-desc">Prototipos interactivos. Dashboard. Tercer entregable.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-month">Junio</div>
+        <div class="timeline-desc">Presentación final. Video. Entrega completa.</div>
+      </div>
+    </div>
+    <div class="card-grid cols-2 anim d3" style="margin-top:28px;">
+      <div class="card">
+        <div class="card-title">📄 Documentos completados</div>
+        <ul class="check-list" style="margin-top:8px;">
+          <li>Tercer Entregable de Investigación</li>
+          <li>ERS BayStream v2 (Análisis y Diseño)</li>
+          <li>Prototipos Interactivos (35 RF)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">🎬 Pendientes</div>
+        <ul class="check-list" style="margin-top:8px;">
+          <li>Presentación (este documento)</li>
+          <li>Video de exposición (~35 min)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SLIDE 28 — CIERRE
+     ════════════════════════════════════════════════════════════════════ -->
+<section class="slide title-slide">
+  <div class="slide-inner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <div class="title-logo anim">⛴</div>
+    <h1 class="anim d1" style="margin-bottom:8px;">Gracias</h1>
+    <p class="subtitle anim d2" style="text-align:center;max-width:520px;">
+      BayStream busca democratizar el acceso a herramientas de gestión de estiba para el sector marítimo-portuario de Centroamérica.
+    </p>
+    <div class="close-links anim d3">
+      <a href="https://yovawarrior.github.io/Proyecto-BayStream/prototipos/" target="_blank" class="close-link">🌐 Prototipos en vivo</a>
+      <a href="https://github.com/yovawarrior/Proyecto-BayStream" target="_blank" class="close-link">📂 Repositorio GitHub</a>
+    </div>
+    <div class="title-meta anim d4" style="margin-top:24px;">
+      <span class="title-meta-item"><strong>Carlos Giovanni Martínez Aldana</strong></span>
+    </div>
+    <div class="title-meta anim d5">
+      <span class="title-meta-item">Universidad Mariano Gálvez de Guatemala · Ingeniería en Sistemas</span>
+    </div>
+    <span class="title-pill anim d6">Proyecto de Graduación I · Junio 2026</span>
+  </div>
+</section>
+
+</div><!-- /.presentation -->
+
+<!-- ── Barra de progreso ── -->
+<div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+
+<!-- ── Contador de slides ── -->
+<div class="slide-counter">01 / 28</div>
+
+<!-- ── Hint de navegación ── -->
+<div class="nav-hint">
+  <span class="nav-key">←</span><span class="nav-key">→</span> Navegar
+</div>
+
+<script src="js/presentation.js"></script>
+</body>
+</html>

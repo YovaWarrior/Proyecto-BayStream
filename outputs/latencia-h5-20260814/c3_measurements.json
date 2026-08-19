@@ -1,0 +1,12 @@
+[
+  {"cycle": 1, "offline_at_ms": 1786754460169, "reconnect_at_ms": 1786754520375, "complete_at_ms": 1786754522987, "reconciliation_seconds": 2.612},
+  {"cycle": 2, "offline_at_ms": 1786754575968, "reconnect_at_ms": 1786754636111, "complete_at_ms": 1786754638593, "reconciliation_seconds": 2.482},
+  {"cycle": 3, "offline_at_ms": 1786754694224, "reconnect_at_ms": 1786754754372, "complete_at_ms": 1786754756901, "reconciliation_seconds": 2.529},
+  {"cycle": 4, "offline_at_ms": 1786754807774, "reconnect_at_ms": 1786754867926, "complete_at_ms": 1786754870382, "reconciliation_seconds": 2.456},
+  {"cycle": 5, "offline_at_ms": 1786754918238, "reconnect_at_ms": 1786754978384, "complete_at_ms": 1786754980931, "reconciliation_seconds": 2.547},
+  {"cycle": 6, "offline_at_ms": 1786755030513, "reconnect_at_ms": 1786755090730, "complete_at_ms": 1786755093186, "reconciliation_seconds": 2.456},
+  {"cycle": 7, "offline_at_ms": 1786755140693, "reconnect_at_ms": 1786755200834, "complete_at_ms": 1786755203283, "reconciliation_seconds": 2.449},
+  {"cycle": 8, "offline_at_ms": 1786755252136, "reconnect_at_ms": 1786755312280, "complete_at_ms": 1786755314712, "reconciliation_seconds": 2.432},
+  {"cycle": 9, "offline_at_ms": 1786755362100, "reconnect_at_ms": 1786755422257, "complete_at_ms": 1786755424884, "reconciliation_seconds": 2.627},
+  {"cycle": 10, "offline_at_ms": 1786755475412, "reconnect_at_ms": 1786755535538, "complete_at_ms": 1786755537867, "reconciliation_seconds": 2.329}
+]
