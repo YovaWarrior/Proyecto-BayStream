@@ -49,3 +49,13 @@ firebase_options.dart
 # Environment files
 .env
 .env.*
+
+# Material bibliografico de terceros (no redistribuible)
+docs/Metodologia*.pdf
+
+# Archivos temporales de trabajo con XML de Word
+docs/temp_*.xml
+docs/temp_*.txt
+
+# Configuracion local de herramientas
+.claude/
