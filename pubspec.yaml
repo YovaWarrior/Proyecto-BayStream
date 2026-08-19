@@ -14,9 +14,9 @@ dependencies:
   flutter_riverpod: ^3.1.0
   riverpod_annotation: ^4.0.0
   
-  # Firebase (comentado temporalmente - causa error CMake en Windows)
-  # firebase_core: ^4.4.0
-  # cloud_firestore: ^6.1.2
+  # Firebase / sincronización Offline-First
+  firebase_core: ^4.4.0
+  cloud_firestore: ^6.1.2
   
   # Utilities
   equatable: ^2.0.5

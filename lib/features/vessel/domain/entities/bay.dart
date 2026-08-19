@@ -50,9 +50,10 @@ class Bay extends Equatable {
 
   /// Porcentaje de ocupación
   double get occupancyRate {
-    if (slots.isEmpty) return 0.0;
-    return (occupiedSlots / slots.length) * 100;
-  }
+  final totalCapacity = maxRows * maxTiers; // 12 × 10 = 120 slots por defecto
+  if (totalCapacity == 0) return 0.0;
+  return (containers.length / totalCapacity) * 100;
+}
 
   /// Peso total de contenedores en esta bahía
   double get totalWeight =>

@@ -241,6 +241,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   }
 
   void _showContainerDetails(ContainerUnit container) {
+    ref.read(highlightedContainerProvider.notifier).clear();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
