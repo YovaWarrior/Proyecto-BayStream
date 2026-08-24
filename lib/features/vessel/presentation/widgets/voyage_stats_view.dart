@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
+import 'vessel_profile_view.dart';
 
 /// Vista de estadísticas completas del viaje
 /// Incluye gráficos de distribución por naviera, tipo, tamaño y bahía
@@ -79,6 +80,17 @@ class VoyageStatsView extends ConsumerWidget {
               color: Colors.teal,
               total: stats.totalContainers,
             ),
+            const SizedBox(height: 24),
+          ],
+
+          // Vista panorámica del buque completo
+          if (voyage.bays.isNotEmpty) ...[
+            const _SectionTitle(
+              title: 'Perfil longitudinal',
+              icon: Icons.directions_boat,
+            ),
+            const SizedBox(height: 12),
+            VesselProfileView(voyage: voyage),
             const SizedBox(height: 24),
           ],
 
@@ -304,8 +316,7 @@ class _StatusPieChart extends StatelessWidget {
                   segments: [
                     _PieSegment(fullCount / total, Colors.green.shade600),
                     _PieSegment(emptyCount / total, Colors.orange.shade600),
-                    if (unknownCount > 0)
-                      _PieSegment(unknownCount / total, Colors.grey.shade400),
+                    if (unknownCount > 0) _PieSegment(unknownCount / total, Colors.grey.shade400),
                   ],
                 ),
                 child: Center(
@@ -502,8 +513,7 @@ class _SpecialCargoCards extends StatelessWidget {
               color: Colors.cyan,
             ),
           ),
-        if (specialCargo.reeferCount > 0 && specialCargo.dangerousCount > 0)
-          const SizedBox(width: 12),
+        if (specialCargo.reeferCount > 0 && specialCargo.dangerousCount > 0) const SizedBox(width: 12),
         if (specialCargo.dangerousCount > 0)
           Expanded(
             child: _SpecialCard(
@@ -740,9 +750,7 @@ class _BayOccupancyChart extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: bayStats.map((stat) {
-                      final height = maxContainers > 0
-                          ? (stat.containerCount / maxContainers) * 150
-                          : 0.0;
+                      final height = maxContainers > 0 ? (stat.containerCount / maxContainers) * 150 : 0.0;
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 2),
                         child: Column(
@@ -787,8 +795,7 @@ class _BayOccupancyChart extends StatelessWidget {
     );
   }
 
-  TextStyle? _axisStyle(BuildContext context) =>
-      Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9);
+  TextStyle? _axisStyle(BuildContext context) => Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9);
 }
 
 /// Gráfico de barras verticales para peso por bahía
@@ -836,9 +843,7 @@ class _BayWeightChart extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: bayStats.map((stat) {
-                      final height = maxWeight > 0
-                          ? (stat.totalWeight / maxWeight) * 150
-                          : 0.0;
+                      final height = maxWeight > 0 ? (stat.totalWeight / maxWeight) * 150 : 0.0;
                       final tons = stat.totalWeight / 1000;
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -884,8 +889,7 @@ class _BayWeightChart extends StatelessWidget {
     );
   }
 
-  TextStyle? _axisStyle(BuildContext context) =>
-      Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9);
+  TextStyle? _axisStyle(BuildContext context) => Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9);
 }
 
 // ============================================
@@ -927,6 +931,5 @@ class _PieChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PieChartPainter oldDelegate) =>
-      oldDelegate.segments != segments;
+  bool shouldRepaint(covariant _PieChartPainter oldDelegate) => oldDelegate.segments != segments;
 }
