@@ -280,5 +280,51 @@ UNT+4+1'
 
       expect(updatedBay.occupiedSlots, 2);
     });
+
+    test('debe acumular el peso bruto por nivel', () {
+      const deckContainer1 = ContainerUnit(
+        id: '1',
+        containerId: 'DECK1',
+        grossWeight: 50000,
+        stowagePosition: IsoCoordinate(bay: 10, row: 1, tier: 82, rawCode: '0100182'),
+      );
+      const deckContainer2 = ContainerUnit(
+        id: '2',
+        containerId: 'DECK2',
+        grossWeight: 45000,
+        stowagePosition: IsoCoordinate(bay: 10, row: 2, tier: 82, rawCode: '0100282'),
+      );
+      const holdContainer = ContainerUnit(
+        id: '3',
+        containerId: 'HOLD1',
+        grossWeight: 25000,
+        stowagePosition: IsoCoordinate(bay: 10, row: 1, tier: 6, rawCode: '0100106'),
+      );
+      const containerWithoutWeight = ContainerUnit(
+        id: '4',
+        containerId: 'HOLD2',
+        stowagePosition: IsoCoordinate(bay: 10, row: 2, tier: 6, rawCode: '0100206'),
+      );
+      const containerWithoutPosition = ContainerUnit(
+        id: '5',
+        containerId: 'NO_POSITION',
+      );
+
+      const bay = Bay(
+        bayNumber: 10,
+        containers: [
+          deckContainer1,
+          deckContainer2,
+          holdContainer,
+          containerWithoutWeight,
+          containerWithoutPosition,
+        ],
+      );
+
+      expect(bay.weightByTier[82], 95000);
+      expect(bay.weightByTier[6], 25000);
+      expect(bay.weightByTier.length, 2);
+      expect(bay.weightByTier.values.reduce((a, b) => a + b), bay.totalWeight);
+    });
   });
 }

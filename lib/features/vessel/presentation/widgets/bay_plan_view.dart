@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/baplie_constants.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
 
@@ -384,6 +385,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
 
 /// Widget que muestra el grid de una bahía específica
 class _BayGridWidget extends StatelessWidget {
+  static const double _tierLabelWidth = 40;
+  static const double _tierWeightWidth = 88;
+
   final Bay bay;
   final Function(ContainerUnit) onContainerTap;
   final String? highlightedContainerId;
@@ -472,11 +476,17 @@ class _BayGridWidget extends StatelessWidget {
       }
     }
     
-    // Scroll normal con contenido centrado
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Center(
-        child: Column(
+    // Scroll vertical y horizontal para conservar la alineación en pantallas angostas
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: constraints.maxWidth > 32 ? constraints.maxWidth - 32 : 0,
+            ),
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
           // Título de la bahía
@@ -515,7 +525,7 @@ class _BayGridWidget extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             ...deckTiers.map((tier) => _buildTierRow(
-              tier, rows, positionMap, highlightedContainerId, activeTypeFilter,
+              context, tier, rows, positionMap, highlightedContainerId, activeTypeFilter,
             )),
           ],
           
@@ -552,10 +562,12 @@ class _BayGridWidget extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             ...holdTiers.map((tier) => _buildTierRow(
-              tier, rows, positionMap, highlightedContainerId, activeTypeFilter,
+              context, tier, rows, positionMap, highlightedContainerId, activeTypeFilter,
             )),
           ],
-        ],
+          ],
+            ),
+          ),
         ),
       ),
     );
@@ -565,7 +577,7 @@ class _BayGridWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(width: 40),
+        const SizedBox(width: _tierLabelWidth),
         ...rows.map((row) => Container(
           width: 50,
           alignment: Alignment.center,
@@ -577,23 +589,29 @@ class _BayGridWidget extends StatelessWidget {
             ),
           ),
         )),
+        const SizedBox(width: _tierWeightWidth),
       ],
     );
   }
 
   Widget _buildTierRow(
+    BuildContext context,
     int tier,
     List<int> rows,
     Map<String, ContainerUnit> positionMap,
     String? highlightedContainerId,
     LegendFilterType? activeTypeFilter,
   ) {
+    final tierWeight = bay.weightByTier[tier];
+    final exceedsLimit = tierWeight != null && tierWeight > kStackWeightLimitKg;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Label de tier
         SizedBox(
-          width: 40,
+          width: _tierLabelWidth,
           child: Text(
             tier.toString().padLeft(2, '0'),
             textAlign: TextAlign.center,
@@ -617,6 +635,29 @@ class _BayGridWidget extends StatelessWidget {
             activeTypeFilter: activeTypeFilter,
           );
         }),
+        SizedBox(
+          width: _tierWeightWidth,
+          child: tierWeight == null || tierWeight <= 0
+              ? null
+              : Container(
+                  margin: const EdgeInsets.only(left: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: exceedsLimit ? colorScheme.errorContainer : null,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '${(tierWeight / 1000).toStringAsFixed(1)} t',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: exceedsLimit
+                              ? colorScheme.onErrorContainer
+                              : colorScheme.onSurfaceVariant,
+                          fontWeight: exceedsLimit ? FontWeight.bold : FontWeight.normal,
+                        ),
+                  ),
+                ),
+        ),
       ],
     );
   }

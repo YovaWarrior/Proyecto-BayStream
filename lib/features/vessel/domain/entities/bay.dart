@@ -59,6 +59,22 @@ class Bay extends Equatable {
   double get totalWeight =>
       containers.fold(0.0, (sum, c) => sum + (c.grossWeight ?? 0));
 
+  /// Peso bruto acumulado por nivel (tier), en kilogramos.
+  /// Clave: número de nivel. Valor: suma de grossWeight de los contenedores de ese nivel.
+  Map<int, double> get weightByTier {
+    final weights = <int, double>{};
+    for (final container in containers) {
+      final tier = container.stowagePosition?.tier;
+      if (tier == null) continue;
+      weights.update(
+        tier,
+        (weight) => weight + (container.grossWeight ?? 0),
+        ifAbsent: () => container.grossWeight ?? 0,
+      );
+    }
+    return weights;
+  }
+
   /// Obtiene un slot específico por coordenadas Row-Tier
   ContainerSlot? getSlot(int row, int tier) {
     final key = '${row.toString().padLeft(2, '0')}${tier.toString().padLeft(2, '0')}';
