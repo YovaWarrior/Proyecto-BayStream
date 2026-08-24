@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/services/export_service.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
 import '../widgets/voyage_summary_card.dart';
@@ -50,6 +52,42 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               icon: const Icon(Icons.search),
               tooltip: 'Buscar contenedor',
               onPressed: () => _openSearch(context, voyageAsync.value!),
+            ),
+          // Único punto de exportación para PDF, CSV y JSON
+          if (hasVoyage)
+            PopupMenuButton<VoyageExportFormat>(
+              icon: const Icon(Icons.download),
+              tooltip: 'Exportar viaje',
+              onSelected: (format) =>
+                  _exportVoyage(context, voyageAsync.value!, format),
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: VoyageExportFormat.pdf,
+                  enabled: false,
+                  child: ListTile(
+                    leading: Icon(Icons.picture_as_pdf),
+                    title: Text('PDF'),
+                    subtitle: Text('Disponible al completar RF-025'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: VoyageExportFormat.csv,
+                  child: ListTile(
+                    leading: Icon(Icons.table_view),
+                    title: Text('CSV'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: VoyageExportFormat.json,
+                  child: ListTile(
+                    leading: Icon(Icons.data_object),
+                    title: Text('JSON'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
             ),
           // Botón para cargar archivo BAPLIE
           IconButton(
@@ -172,6 +210,35 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         tabController: _tabController,
       ),
     );
+  }
+
+  /// Exporta el viaje desde el punto de entrada compartido por todos los formatos.
+  Future<void> _exportVoyage(
+    BuildContext context,
+    VesselVoyage voyage,
+    VoyageExportFormat format,
+  ) async {
+    try {
+      final path = await const ExportService().saveVoyage(voyage, format);
+      if (!context.mounted) return;
+      if (path == null && !kIsWeb) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Exportación ${format.label} completada'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo exportar ${format.label}: $error'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   /// Carga un archivo BAPLIE usando el VoyageNotifier
