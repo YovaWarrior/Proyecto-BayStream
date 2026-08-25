@@ -9,8 +9,13 @@ import 'vessel_profile_view.dart';
 /// Incluye gráficos de distribución por naviera, tipo, tamaño y bahía
 class VoyageStatsView extends ConsumerWidget {
   final VesselVoyage voyage;
+  final ValueChanged<int> onBaySelected;
 
-  const VoyageStatsView({super.key, required this.voyage});
+  const VoyageStatsView({
+    super.key,
+    required this.voyage,
+    required this.onBaySelected,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -90,7 +95,10 @@ class VoyageStatsView extends ConsumerWidget {
               icon: Icons.directions_boat,
             ),
             const SizedBox(height: 12),
-            VesselProfileView(voyage: voyage),
+            VesselProfileView(
+              voyage: voyage,
+              onBaySelected: onBaySelected,
+            ),
             const SizedBox(height: 24),
           ],
 

@@ -23,9 +23,14 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   @override
   void initState() {
     super.initState();
-    // Seleccionar primera bahía por defecto
+    // Respetar una selección hecha antes de construir esta pestaña.
     if (widget.voyage.bays.isNotEmpty) {
-      _selectedBayNumber = widget.voyage.bays.keys.first;
+      final sortedBayNumbers = widget.voyage.bays.keys.toList()..sort();
+      final requestedBay = ref.read(selectedBayProvider);
+      _selectedBayNumber = requestedBay != null &&
+              widget.voyage.bays.containsKey(requestedBay)
+          ? requestedBay
+          : sortedBayNumbers.first;
     }
   }
 
@@ -41,9 +46,11 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     final highlightedContainerId = ref.watch(highlightedContainerProvider);
     final activeTypeFilter = ref.watch(selectedTypeFilterProvider);
 
-    // Escuchar cambios en la bahía seleccionada desde búsqueda
+    // Escuchar cambios en la bahía seleccionada desde búsqueda o perfil.
     ref.listen<int?>(selectedBayProvider, (previous, next) {
-      if (next != null && widget.voyage.bays.containsKey(next)) {
+      if (next != null &&
+          next != _selectedBayNumber &&
+          widget.voyage.bays.containsKey(next)) {
         setState(() {
           _selectedBayNumber = next;
         });
@@ -132,9 +139,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                     ),
                     selected: isSelected,
                     onSelected: (_) {
-                      setState(() {
-                        _selectedBayNumber = bayNumber;
-                      });
+                      ref
+                          .read(selectedBayProvider.notifier)
+                          .select(bayNumber);
                     },
                   ),
                 );

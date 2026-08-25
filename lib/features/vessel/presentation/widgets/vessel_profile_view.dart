@@ -10,8 +10,13 @@ enum VesselProfileMetric { occupancy, weight }
 /// Vista panorámica de todas las bahías, ordenadas de proa a popa.
 class VesselProfileView extends StatefulWidget {
   final VesselVoyage voyage;
+  final ValueChanged<int> onBaySelected;
 
-  const VesselProfileView({super.key, required this.voyage});
+  const VesselProfileView({
+    super.key,
+    required this.voyage,
+    required this.onBaySelected,
+  });
 
   @override
   State<VesselProfileView> createState() => _VesselProfileViewState();
@@ -23,7 +28,14 @@ class _VesselProfileViewState extends State<VesselProfileView> {
   static const _sidePadding = 36.0;
   static const _profileHeight = 132.0;
 
+  final ScrollController _profileScrollController = ScrollController();
   VesselProfileMetric _metric = VesselProfileMetric.occupancy;
+
+  @override
+  void dispose() {
+    _profileScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,24 +110,74 @@ class _VesselProfileViewState extends State<VesselProfileView> {
                   constraints.maxWidth,
                   cellsWidth + _sidePadding * 2,
                 );
+                final needsHorizontalScroll =
+                    profileWidth > constraints.maxWidth;
 
                 return SizedBox(
                   height: _profileHeight,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Semantics(
-                      label: _semanticsLabel(bays, maxWeight),
-                      child: CustomPaint(
-                        size: Size(profileWidth, _profileHeight),
-                        painter: VesselProfilePainter(
-                          bays: bays,
-                          metric: _metric,
-                          baseColor: baseColor,
-                          lowColor: lowColor,
-                          outlineColor: colorScheme.outlineVariant,
-                          textColor: colorScheme.onSurface,
-                          guideColor: colorScheme.onSurfaceVariant,
-                          maxWeight: maxWeight,
+                  child: Scrollbar(
+                    controller: _profileScrollController,
+                    thumbVisibility: needsHorizontalScroll,
+                    scrollbarOrientation: ScrollbarOrientation.bottom,
+                    child: SingleChildScrollView(
+                      key: const ValueKey('vessel-profile-scroll'),
+                      controller: _profileScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: Semantics(
+                        container: true,
+                        label: _semanticsLabel(bays, maxWeight),
+                        child: SizedBox(
+                          width: profileWidth,
+                          height: _profileHeight,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  painter: VesselProfilePainter(
+                                    bays: bays,
+                                    metric: _metric,
+                                    baseColor: baseColor,
+                                    lowColor: lowColor,
+                                    outlineColor: colorScheme.outlineVariant,
+                                    textColor: colorScheme.onSurface,
+                                    guideColor: colorScheme.onSurfaceVariant,
+                                    maxWeight: maxWeight,
+                                  ),
+                                ),
+                              ),
+                              for (var index = 0; index < bays.length; index++)
+                                Positioned(
+                                  left: _sidePadding +
+                                      index * (_cellWidth + _cellGap),
+                                  top: VesselProfilePainter._cellTop,
+                                  width: _cellWidth,
+                                  height: VesselProfilePainter._cellHeight,
+                                  child: Semantics(
+                                    button: true,
+                                    label:
+                                        'Abrir bahía ${bays[index].bayNumberPadded} en Bay Plan',
+                                    child: Tooltip(
+                                      message:
+                                          'Abrir bahía ${bays[index].bayNumberPadded} en Bay Plan',
+                                      excludeFromSemantics: true,
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          key: ValueKey(
+                                            'vessel-profile-bay-${bays[index].bayNumber}',
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(5),
+                                          onTap: () => widget.onBaySelected(
+                                            bays[index].bayNumber,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

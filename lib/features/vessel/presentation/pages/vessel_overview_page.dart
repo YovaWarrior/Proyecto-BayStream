@@ -177,7 +177,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               BayPlanView(voyage: voyage),
               
               // Pestaña 3: Estadísticas
-              VoyageStatsView(voyage: voyage),
+              VoyageStatsView(
+                voyage: voyage,
+                onBaySelected: _openBayPlan,
+              ),
             ],
           );
         },
@@ -209,6 +212,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         tabController: _tabController,
       ),
     );
+  }
+
+  /// Selecciona una bahía desde el perfil y abre su rejilla en Bay Plan.
+  void _openBayPlan(int bayNumber) {
+    ref.read(highlightedContainerProvider.notifier).clear();
+    ref.read(selectedBayProvider.notifier).select(bayNumber);
+    _tabController.animateTo(1);
   }
 
   /// Exporta el viaje desde el punto de entrada compartido por todos los formatos.
