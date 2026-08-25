@@ -9,6 +9,21 @@ service cloud.firestore {
       allow read, create, update: if true;
       allow delete: if false;
     }
+    // Instrumentacion de la hipotesis H5 (pantallas de medicion C1 y C2).
+    // El protocolo es un intercambio en dos fases sobre un mismo documento:
+    // el emisor lo crea con respondido:false y el receptor lo cierra
+    // poniendo respondido:true. Se permite ESA transicion y ninguna otra.
+    // t0, condicion y evento son inmutables desde su creacion, y una
+    // medicion ya cerrada no se puede volver a tocar.
+    match /latency_test/{medicionId} {
+      allow read, create: if true;
+      allow update: if resource.data.respondido == false
+        && request.resource.data.respondido == true
+        && request.resource.data.proceso_b_ms is number
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['respondido', 'proceso_b_ms']);
+      allow delete: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }
