@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // PROVISIONAL - Proyecto de Graduacion II, sin autenticacion en alcance.
+    // Permite lectura y escritura de viajes, pero NUNCA borrado.
+    // El borrado es la operacion irreversible y no la necesita ningun
+    // requerimiento del ERS.
+    match /voyages/{voyageId} {
+      allow read, create, update: if true;
+      allow delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
