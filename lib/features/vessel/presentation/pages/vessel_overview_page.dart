@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/export_service.dart';
+import '../../data/services/pdf_report_service.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
 import '../widgets/voyage_summary_card.dart';
@@ -63,11 +64,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               itemBuilder: (context) => const [
                 PopupMenuItem(
                   value: VoyageExportFormat.pdf,
-                  enabled: false,
                   child: ListTile(
                     leading: Icon(Icons.picture_as_pdf),
                     title: Text('PDF'),
-                    subtitle: Text('Disponible al completar RF-025'),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -219,8 +218,26 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     VoyageExportFormat format,
   ) async {
     try {
-      final path = await const ExportService().saveVoyage(voyage, format);
+      Uint8List? pdfBytes;
+      if (format == VoyageExportFormat.pdf) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Generando reporte PDF...'),
+            duration: Duration(minutes: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        pdfBytes = await const PdfReportService().generate(voyage);
+      }
+
+      final path = await const ExportService().saveVoyage(
+        voyage,
+        format,
+        pdfBytes: pdfBytes,
+      );
       if (!context.mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       if (path == null && !kIsWeb) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -231,6 +248,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       );
     } catch (error) {
       if (!context.mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('No se pudo exportar ${format.label}: $error'),
