@@ -106,19 +106,42 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
     final colorScheme = Theme.of(context).colorScheme;
     
     // Obtener estadísticas reales del viaje para mostrar sugerencias útiles
-    final operators = containers
-        .map((c) => c.operatorCode)
-        .where((o) => o != null && o.isNotEmpty)
-        .cast<String>()
-        .toSet()
+    final operatorCounts = <String, int>{};
+    final portCounts = <String, int>{};
+    for (final container in containers) {
+      final operator = container.operatorCode;
+      if (operator != null && operator.isNotEmpty) {
+        operatorCounts.update(
+          operator,
+          (count) => count + 1,
+          ifAbsent: () => 1,
+        );
+      }
+
+      final port = container.portOfDischarge;
+      if (port != null && port.isNotEmpty) {
+        portCounts.update(
+          port,
+          (count) => count + 1,
+          ifAbsent: () => 1,
+        );
+      }
+    }
+
+    int compareByFrequency(
+      MapEntry<String, int> first,
+      MapEntry<String, int> second,
+    ) {
+      final byCount = second.value.compareTo(first.value);
+      return byCount != 0 ? byCount : first.key.compareTo(second.key);
+    }
+
+    final operators = (operatorCounts.entries.toList()
+          ..sort(compareByFrequency))
         .take(5)
         .toList();
-    
-    final ports = containers
-        .map((c) => c.portOfDischarge)
-        .where((p) => p != null && p.isNotEmpty)
-        .cast<String>()
-        .toSet()
+
+    final ports = (portCounts.entries.toList()..sort(compareByFrequency))
         .take(5)
         .toList();
 
@@ -175,19 +198,18 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: operators.map((op) {
-                final count = containers.where((c) => c.operatorCode == op).length;
+              children: operators.map((operator) {
                 return ActionChip(
                   avatar: CircleAvatar(
                     backgroundColor: colorScheme.primaryContainer,
                     child: Text(
-                      count.toString(),
+                      operator.value.toString(),
                       style: TextStyle(fontSize: 10, color: colorScheme.onPrimaryContainer),
                     ),
                   ),
-                  label: Text(op),
+                  label: Text(operator.key),
                   onPressed: () {
-                    query = op;
+                    query = operator.key;
                     showResults(context);
                   },
                 );
@@ -210,18 +232,17 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
               spacing: 8,
               runSpacing: 8,
               children: ports.map((port) {
-                final count = containers.where((c) => c.portOfDischarge == port).length;
                 return ActionChip(
                   avatar: CircleAvatar(
                     backgroundColor: colorScheme.secondaryContainer,
                     child: Text(
-                      count.toString(),
+                      port.value.toString(),
                       style: TextStyle(fontSize: 10, color: colorScheme.onSecondaryContainer),
                     ),
                   ),
-                  label: Text(port),
+                  label: Text(port.key),
                   onPressed: () {
-                    query = port;
+                    query = port.key;
                     showResults(context);
                   },
                 );
