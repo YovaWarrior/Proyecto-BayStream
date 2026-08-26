@@ -21,14 +21,29 @@ la desviacion en la entrega.
 - Margen derecho: 2.5 cm.
 - Margenes superior e inferior: 3 cm.
 - Fuente base: Arial, 12 puntos, color negro, peso normal.
-- Interlineado del cuerpo: 1.5.
+- Interlineado: 1.5 en **todo** el documento, incluida la caratula. La plantilla
+  trae 1.15 en el bloque de la caratula: hay que corregirlo a 1.5.
 - Alineacion del cuerpo: justificada, como muestran los ejemplos visuales.
 - Separacion entre parrafos: 12 puntos posteriores; evita acumular parrafos
   vacios manuales.
 - Primera linea: sangria configurada de 0.63 cm, equivalente visual a los cinco
   espacios de la guia. No insertes tabuladores o espacios literales.
-- El texto de un parrafo subordinado se alinea con el inicio del texto de su
-  titulo, no con el indicador romano, alfabetico o numerico.
+- **Regla de parrafo subordinado (obligatoria).** El cuerpo se alinea a la
+  izquierda con el INICIO DEL TEXTO del titulo que lo gobierna, no con el margen
+  ni con el indicador romano, alfabetico o numerico. La sangria de primera linea
+  de 0.63 cm se suma encima de esa alineacion. Valores exactos, iguales a los del
+  listado multinivel de la seccion 5:
+
+  | Bajo un titulo de nivel | Sangria izquierda del cuerpo |
+  |---|---:|
+  | 1 (`I.`) | 0.75 cm (425 twips) |
+  | 2 (`A.`) | 1.50 cm (850 twips) |
+  | 3 (`1.`) | 2.25 cm (1276 twips) |
+  | 4 (`a.`) | 2.25 cm (1276 twips) |
+
+  Aplica igual a parrafos, vinetas, rotulos de tabla, la linea `Fuente:` y las
+  propias tablas. En las vinetas la sangria del nivel se suma a la francesa de la
+  vineta; las lineas de continuacion se alinean con el texto, no con el simbolo.
 - Numeracion: arabiga, esquina superior derecha, oculta en caratula e indice.
   Salvo instruccion distinta, el cuerpo inicia en la pagina 1.
 
@@ -36,6 +51,12 @@ la desviacion en la entrega.
 
 La caratula no lleva numero visible y mantiene una composicion limpia en una
 sola pagina.
+
+> La caratula de la plantilla es una **tabla de 1x2** (texto a la izquierda,
+> logotipo a la derecha). Los marcadores viven dentro de celdas, asi que un
+> reemplazo que solo recorra parrafos de primer nivel no los encuentra. Anula
+> tambien la sangria de primera linea heredada de `Normal` en la caratula: si no,
+> el bloque centrado queda desalineado respecto de su propio eje.
 
 ### Bloque superior
 
@@ -90,6 +111,17 @@ Usa la fecha de entrega, no automaticamente la fecha de generacion.
   usuario lo pide expresamente; nunca escribas un indice manual.
 - Usa estilos reales `Titulo 1` a `Titulo 4` o sus equivalentes para alimentar
   el indice.
+- **El primer titulo numerado del documento es siempre `I. Introduccion`.** No
+  lleva apartado `Resumen` ni ningun otro titulo numerado por delante. Si hace
+  falta un resumen, va sin numerar y fuera de la jerarquia.
+- **Quita la numeracion del estilo `TOCHeading` antes de entregar.** Al generar la
+  tabla de contenido, Word inserta su propio encabezado (`Contenido`) con ese
+  estilo; en la plantilla `TOCHeading` esta `basedOn="Heading1"`, de modo que
+  **hereda su numeracion y se queda con el `I.`**, empujando `Introduccion` a
+  `II.`. La correccion es anadir `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="0"/>
+  </w:numPr>` al `pPr` del estilo (`numId=0` significa «sin numeracion»), antes de
+  `outlineLvl` para respetar el orden del esquema. El defecto **solo se ve despues
+  de generar el indice en Word**, no en el DOCX recien construido.
 
 ## 5. Jerarquia de titulos
 
@@ -113,18 +145,77 @@ infinita. Los indicadores no se escriben manualmente.
 
 - Arial 12, interlineado 1.5 y texto justificado.
 - Primera linea con sangria de 0.63 cm.
-- Espaciado posterior de 12 puntos entre parrafos consecutivos.
+- **Separacion entre bloques.** Debe verse aproximadamente una linea en blanco
+  entre un titulo y su primer parrafo, y entre parrafos consecutivos. Consiguelo
+  con espaciado configurado, nunca con parrafos vacios ni `Enter` repetidos:
+  espaciado posterior de unos 44 pt en los parrafos de cuerpo y de unos 38 pt en
+  los titulos, con espaciado anterior 0 en el titulo (el parrafo previo ya aporta
+  el suyo). Un parrafo vacio se desalinea en cuanto el texto refluye; el
+  espaciado no.
 - Evita espacios repetidos para justificar y `Enter` sucesivos para posicionar
   contenido; usa sangrias, espaciado y saltos de pagina configurados.
 - Mantén cada titulo junto al primer parrafo que le sigue y evita lineas viudas
   o huerfanas cuando Word lo permita.
 
+## 6.1. Listas dentro de una seccion
+
+Una lista dentro de un apartado **es una lista, no un nivel mas de la jerarquia de
+titulos**. Nunca debe salir con los indicadores romanos o alfabeticos de la
+seccion 5. Usa vinetas; usa `1.`, `2.`, `3.` solo si el orden o el conteo importan.
+
+> ⚠️ **Trampa verificada, no reutilizar la numeracion de la plantilla.** El nivel de
+> vinetas que trae la plantilla lleva `<w:pStyle w:val="ListBullet"/>` dentro de su
+> definicion. Si se aplica ese `numId` a un parrafo con otro estilo (por ejemplo
+> `ListParagraph`), **Word remapea ese nivel a la lista multinivel de los titulos**:
+> las vinetas aparecen como `III.`, `IV.`, `V.` y ademas **consumen numeros de la
+> secuencia de titulos**, de modo que el primer titulo deja de ser `I.` y la
+> numeracion salta (`Resumen` pasa a `II.`, `Metodo` a `VII.`). El indice generado
+> en Word hereda el error.
+>
+> **LibreOffice no reproduce el fallo**: pinta las vinetas correctamente. Por eso
+> revisar el PDF renderizado NO basta para detectarlo; hay que evitarlo por
+> construccion.
+
+Como hacerlo bien:
+
+- Declara en `numbering.xml` un `abstractNum` **propio** para las vinetas, con
+  `numFmt="bullet"`, fuente Symbol y **sin `pStyle` dentro del nivel**, y un
+  `numId` exclusivo que no colisione con los de la plantilla.
+- Aplica ese `numId` al parrafo junto con su sangria explicita (izquierda del nivel
+  mas la francesa de la vineta). No uses el estilo `ListParagraph`: basta `Normal`
+  con sangria e `numPr` propios.
+- **Comprobacion objetiva:** en `document.xml` el unico `numId` referenciado debe
+  ser el de la lista propia. Los `numId` de los titulos viven en `styles.xml` y no
+  deben aparecer nunca en `document.xml`. Si aparecen, hay colision.
+- Tras generar el indice en Word, confirma que el primer titulo de nivel 1 es `I.`
+  y que la secuencia no salta numeros.
+
 ## 7. Tablas, figuras y diagramas
 
 - Ningun elemento puede rebasar el area util delimitada por los margenes de
   3.5 cm y 2.5 cm. Ancho util maximo aproximado: 15.59 cm.
-- Alinea el borde izquierdo del elemento con el inicio del cuerpo del texto.
-- Usa numeracion consecutiva independiente por tipo.
+- **Alinea el borde izquierdo del elemento con el inicio del cuerpo del texto**
+  de su seccion (regla de parrafo subordinado, seccion 2), no con el margen de
+  3.5 cm. El ancho util disponible se reduce en esa misma sangria.
+- Cuidado al fijar la sangria de tabla: Word y LibreOffice miden `tblInd` hasta el
+  borde del CONTENIDO de la celda, no hasta la linea de la tabla. Hay que sumarle
+  el margen interno de celda (108 twips) para que la linea quede realmente
+  alineada con el texto del titulo. Verificalo midiendo sobre el render, no a ojo.
+- Fija los anchos reales en `tblGrid`, no solo en las celdas: si solo se fijan las
+  celdas, el documento se renderiza con todas las columnas iguales.
+- **Ninguna palabra ni codigo debe partirse a mitad.** Dimensiona cada columna
+  para que quepan en un renglon: la palabra mas larga del encabezado (que va en
+  negrita y por tanto es mas ancha) y el contenido completo de las celdas cortas
+  (`H-01`, `RF-026+`, `A05:2025`, `T-01 … T-04`). En columnas de prosa el ajuste
+  de linea es normal y no hay que forzarlo.
+- Sustituye el guion por un **guion de no separacion** (U+2011) dentro de codigos
+  cortos como `TC-03`, `17-ago` o `RF-026+`, en tablas y en el cuerpo. Sin esto
+  Word los parte al final del renglon (`Diferido a TC-` / `01`).
+- Marca las filas como no divisibles entre paginas y repite la fila de encabezado
+  cuando la tabla ocupe mas de una pagina.
+- Usa numeracion consecutiva independiente por tipo, **en orden de aparicion en
+  el documento**. Si se inserta un elemento nuevo en medio, hay que renumerar los
+  posteriores: que la Tabla 59 aparezca antes que la 58 es un defecto.
 - Antes del elemento, coloca el rotulo en negrita y terminado en punto:
   `Tabla 1.`, `Figura 1.` o `Diagrama 1.`
 - En la linea siguiente coloca el titulo descriptivo en cursiva. Entre rotulo y
@@ -179,8 +270,16 @@ La guia contiene dos ambiguedades que deben resolverse de forma consistente:
 - [ ] Arial 12, cuerpo 1.5 y parrafos consistentes.
 - [ ] Caratula completa, en una pagina, con logo sin deformar.
 - [ ] Indice reservado y encabezados con niveles reales.
+- [ ] `TOCHeading` sin numeracion, y el primer titulo numerado es `I. Introduccion`.
 - [ ] Numeracion superior derecha; caratula e indice sin numero visible.
 - [ ] Titulos multinivel, negrita y sangrias correctas.
+- [ ] Cuerpo, vinetas, rotulos y tablas alineados con el texto de su titulo.
+- [ ] Separacion visible entre titulo y parrafo, y entre parrafos, hecha con
+      espaciado y no con parrafos vacios.
+- [ ] Ninguna palabra ni codigo partido a mitad dentro de una tabla.
+- [ ] Rotulos de tabla/figura consecutivos en orden de aparicion.
+- [ ] Las listas salen como vinetas (o 1., 2., 3.), nunca con los indicadores de
+      la jerarquia de titulos, y la secuencia de titulos empieza en `I.` sin saltos.
 - [ ] Tablas y figuras dentro de margenes, con rotulo, descripcion y fuente.
 - [ ] Citas y referencias coherentes con APA 7; ninguna fuente inventada.
 - [ ] Sin texto cortado, solapamientos, paginas casi vacias injustificadas ni

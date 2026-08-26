@@ -1,12 +1,13 @@
 ---
 name: formato-entregables
-description: Crea y revisa DOCX academicos de BayStream con el formato UMG de Carlos. Usar para tareas, informes y entregables Word; no para codigo, hojas de calculo, presentaciones ni plantillas externas obligatorias.
+description: Crea y revisa documentos Word academicos con el formato UMG de Carlos: caratula institucional con logotipo, margenes 3.5/2.5/3/3 cm, Arial 12 a 1.5, jerarquia I./A./1./a., tablas con rotulo y fuente, citas y referencias APA 7. Usar en cualquier tarea, informe, ensayo, reporte, monografia o entregable Word de la carrera, incluido el proyecto de graduacion BayStream; no para codigo, hojas de calculo, presentaciones ni plantillas externas obligatorias.
 ---
 
-# Formato de entregables BayStream
+# Formato de entregables academicos (UMG)
 
-Aplica el formato academico del proyecto de manera reproducible, sobria y
-defendible. Las instrucciones actuales del usuario y la plantilla oficial de una
+Aplica el formato academico de Carlos de manera reproducible, sobria y
+defendible. Sirve para cualquier entregable Word de la carrera, no solo para
+el proyecto de graduacion. Las instrucciones actuales del usuario y la plantilla oficial de una
 tarea concreta prevalecen sobre esta skill.
 
 ## Antes de crear o editar
@@ -61,6 +62,8 @@ Antes de entregar:
 ## Fuente original
 
 La referencia humana completa permanece en
-`${CLAUDE_PROJECT_DIR}/docs/Formato Completo para Documentos, Tareas, Entregables....docx`.
-Consulta ese archivo cuando un caso no este cubierto por la especificacion
-destilada, sin modificarlo.
+`docs/Formato Completo para Documentos, Tareas, Entregables....docx` del
+repositorio de BayStream. Consulta ese archivo cuando un caso no este cubierto
+por la especificacion destilada, sin modificarlo. Si trabajas fuera de ese
+repositorio y el archivo no esta a la vista, la especificacion destilada basta:
+no supongas reglas que no aparezcan en ella.
