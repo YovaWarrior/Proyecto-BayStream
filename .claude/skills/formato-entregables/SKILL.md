@@ -48,7 +48,25 @@ tarea concreta prevalecen sobre esta skill.
 
 ## Verificacion obligatoria
 
-Antes de entregar:
+Antes de entregar, **ejecuta primero el verificador**:
+
+```
+python ${CLAUDE_SKILL_DIR}/scripts/verificar_formato.py documento.docx --render
+```
+
+Comprueba geometria, tipografia, marcadores pendientes, anchos y sangria de
+tablas, rotulos consecutivos, estructura y desbordes de margen. Devuelve codigo
+1 si algo falla. **Dos de sus comprobaciones detectan defectos que ningun render
+revela** —la colision de numeracion de las listas con los titulos y la
+numeracion heredada por `TOCHeading`— porque solo se manifiestan al abrir el
+archivo en Word. No las sustituyas por una inspeccion visual.
+
+Los defectos ya conocidos, con su causa y su comprobacion, estan en
+[casos de regresion](references/casos-de-regresion.md). Cada defecto nuevo debe
+terminar convertido en una regla de la especificacion **y** en una comprobacion
+del script.
+
+Despues del verificador, la revision visual sigue siendo obligatoria:
 
 1. Renderiza el DOCX a PDF o imagenes y revisa visualmente todas las paginas.
 2. Comprueba caratula, margenes, tipografia, interlineado, sangrias, jerarquia,
