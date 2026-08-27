@@ -190,3 +190,36 @@ Lo que interesa de verdad son las tres columnas de la derecha:
 1. **Coincidencias en NO CUMPLE** — hallazgos confirmados por dos vías independientes. Van al informe con la mayor confianza.
 2. **Discrepancias** — uno dice cumple y el otro no. Cada una se resuelve mirando el código juntos. Son las más valiosas: ahí está lo que un solo auditor habría dado por bueno.
 3. **NO DETERMINABLE de Yov que Codex sí resolvió** — mide exactamente cuánto aporta poder ejecutar. Ese número es material para el apartado de método del entregable.
+
+---
+
+## Nota añadida el 27-ago · dónde está el corpus real
+
+Los archivos BAPLIE reales **no están en el repositorio**. `corpus_m1/` no existe: ni rastreado, ni en el árbol de trabajo, ni listado en `.gitignore`. El único `.edi` versionado es `test/fixtures/sample_baplie.edi`, con 7 contenedores, todos en bodega y todos en niveles pares — con ese fixture varias comprobaciones de este checklist no se pueden ver.
+
+El corpus vive fuera del repositorio, ya anonimizado:
+
+```
+C:\Users\Giova\OneDrive\Documentos\OneDrive\Desktop\Archivos .EDI\Anonimizados\files\
+```
+
+Siete archivos: `CORPUS_A01.edi` … `CORPUS_A06.edi` más `CORPUS_A03v_VGM.edi`. Ojo con la ruta: lleva espacios y un punto en `Archivos .EDI`, así que hay que entrecomillarla. Y al estar en OneDrive, conviene confirmar que los archivos están descargados en el disco (marca verde, no icono de nube) antes de cargarlos.
+
+**Usar `CORPUS_A01.edi`** salvo que la comprobación pida otra cosa: es el de referencia del Incremento 1.
+
+### Cifras del corpus verificadas por conteo directo de segmentos EDI (Yov, 27-ago)
+
+| Magnitud | CORPUS_A01 | CORPUS_A04 |
+|---|---|---|
+| Contenedores (`EQD+CN`) | **977** | 979 |
+| Posiciones (`LOC+147`) | 977 | 979 |
+| Contenedores sin posición | 0 | 0 |
+| Bahías distintas | **27** | 27 |
+| Bahía más cargada | B030, 105 contenedores | B026, 108 |
+| Fila máxima | 12 | 12 |
+| Nivel máximo | 90 | 90 |
+| Niveles impares | 0 | 0 |
+| Coordenadas duplicadas | 0 | 0 |
+| Bytes no ASCII | 0 | 0 |
+
+Las cifras de 977 contenedores y 27 bahías que reporta el documento del Incremento 1 **quedan confirmadas de forma independiente**, contando segmentos sobre el archivo, sin pasar por la aplicación.

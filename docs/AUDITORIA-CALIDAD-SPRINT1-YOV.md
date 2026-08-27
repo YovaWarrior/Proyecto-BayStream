@@ -258,3 +258,69 @@ Para la revisión, tres cosas:
 3. **Todo lo demás va a TC-01** (revisión de calidad, octubre), donde ya está reservado el tiempo. La inyección de fórmulas del CSV y el límite de tamaño de archivo son los dos que yo pondría primero en esa lista, porque son de seguridad y ya hay un apartado de seguridad donde encajan.
 
 Lo que más me gustaría que Codex resolviera son las **once comprobaciones que dejé en NO DETERMINABLE**, y en particular las cuatro que confirman o descartan hallazgos míos: 3.13 (alineación y colores del PDF), 3.14 (repetición de cabecera), 5.8 (el CSV en Excel, que también decide 5.4) y 8.8 (si las advertencias de `flutter analyze` siguen en 49).
+
+---
+
+# ADENDA · verificación empírica sobre el corpus real (27-ago, posterior a la entrega)
+
+> Esta adenda se añadió **después** de commitear la auditoría en `886280b`, al recibir acceso a la carpeta del corpus. El texto original queda intacto en el historial de git; nada de lo de arriba se modificó. Se separa así para que el orden de lo que se sabía y cuándo quede auditable.
+
+Conté los segmentos EDI de `CORPUS_A01.edi` y `CORPUS_A04.edi` directamente sobre el archivo, con un script, sin pasar por la aplicación. Eso permite calibrar cuáles de mis hallazgos son **reales hoy** y cuáles son **latentes**.
+
+## Lo que se confirma
+
+**Las cifras de la tesis son correctas.** `CORPUS_A01.edi` tiene exactamente **977 contenedores** (`EQD+CN`) en **27 bahías distintas**. Verificado de forma independiente. `CORPUS_A04.edi` da 979 y 27.
+
+## Hallazgos que resultan LATENTES, no activos
+
+Sobre el corpus real no se disparan. Siguen siendo defectos reales del código, pero no producen daño hoy, y decirlo así es más honesto que dejarlos sonando a alarma:
+
+| Hallazgo | Evidencia en el corpus |
+|---|---|
+| Pérdida de contenedores sin `stowagePosition` | 977 `EQD` y 977 `LOC+147`: **ninguno sin posición** |
+| `_tierRange` con paridad mixta | **0 niveles impares**, 0 bahías con paridad mixta |
+| Contenedores duplicados en la misma coordenada | **0 coordenadas repetidas** |
+| Mojibake por `String.fromCharCodes` | **0 bytes no ASCII** — el corpus está anonimizado a ASCII puro |
+| Inyección de fórmulas en el CSV | **0 campos que abran con `=` o `@`** |
+| Etiqueta de ocupación por encima del 100 % | bahía más cargada 105 contenedores, por debajo de los 120 |
+
+Los seis siguen en la lista de TC-01, pero como endurecimiento, no como corrección urgente.
+
+## El hallazgo que SUBE de gravedad
+
+**La ocupación que muestra la aplicación está mal por un factor de ~2,5 en promedio, hoy, con el corpus real.**
+
+`maxTiers = 10` no es solo un supuesto: **el archivo lo contradice**. Los niveles presentes en `CORPUS_A01` son
+
+```
+[2, 4, 6, 8, 10, 12, 14,  82, 84, 86, 88, 90]
+```
+
+Doce valores distintos —siete de bodega y cinco de cubierta— que llegan hasta el 90. `maxRows = 12` sí coincide con el dato (fila máxima 12), pero `maxTiers = 10` no describe nada de lo que hay en el archivo.
+
+Comparando la ocupación que se muestra contra la ocupación calculada sobre la extensión real de cada bahía:
+
+| Bahía | Contenedores | Extensión real | Ocupación MOSTRADA | Ocupación real |
+|---|---|---|---|---|
+| B030 | 105 | 12×10 = 120 | 88 % | 88 % |
+| B026 | 97 | 12×11 = 132 | 81 % | 73 % |
+| B014 | 92 | 12×9 = 108 | 77 % | 85 % |
+| B022 | 92 | 12×11 = 132 | 77 % | 70 % |
+| B018 | 88 | 12×9 = 108 | 73 % | 81 % |
+| **Promedio de las 27** | | | **30,2 %** | **74,1 %** |
+
+La media se hunde porque el divisor es 120 para **todas** las bahías, también para las pequeñas, y a esas la constante las aplasta contra cero. Las bahías grandes coinciden por casualidad; el resto, no.
+
+**Esto se ve en la demostración del 29-ago**, porque el modo Ocupación del perfil longitudinal es una de las tres cosas que se van a enseñar en vivo. Un perfil que dice 30 % de ocupación media sobre un buque que va al 74 % es una cifra que un jurado con experiencia portuaria puede cuestionar en el momento.
+
+Sigue siendo cierto que **la capacidad real no se puede derivar del archivo** — el BAPLIE no transmite la geometría del buque, igual que no transmite el límite de apilamiento. La extensión observada de coordenadas es un piso, no la capacidad verdadera. Pero eso refuerza el argumento en vez de debilitarlo: el número correcto no se conoce, así que **presentar 30 % como si se conociera es la parte que hay que corregir**, no el cálculo.
+
+## Un segundo efecto del mismo dato
+
+Los niveles van de 2 a 90 con un hueco enorme entre el 14 y el 82. `bay_plan_view.dart:478` genera **un solo rango** de `minTier` a `maxTier` de dos en dos: de 2 a 90 son **45 filas de nivel**, de las cuales solo 12 tienen contenedores. **La rejilla en pantalla dibuja 33 filas vacías** en cada bahía del corpus real. El PDF no, porque calcula los rangos de cubierta y bodega por separado.
+
+Esto confirma sobre datos reales el hallazgo 3.9, que hasta ahora era un razonamiento. Y también es visible en la demostración.
+
+## Sobre la reproducibilidad del corpus
+
+Los siete archivos suman ~790 KB y están anonimizados. **Hoy la evidencia empírica central del Incremento 1 no es reproducible desde el repositorio**: nadie que clone `Proyecto-BayStream` puede repetir la validación de las 55 páginas ni el conteo de 977 contenedores. Es una decisión de Carlos —versionarlos o declarar por qué no—, pero no debería quedar implícita.
