@@ -427,7 +427,12 @@ Con esto, **RF-026+ queda funcionalmente completo** y el sprint llega a 9.5 h de
 
 ---
 
-## ✅ SPRINT 1 COMPLETO — 29/08/2026
+## ✅ SPRINT 1 COMPLETO — cerrado el 25/08/2026
+
+> **Sobre las fechas, para evitar confusiones.** La ventana del sprint es 22 → 29 de agosto de 2026 y
+> el 29 es la fecha de la **revisión con el catedrático**, no la de cierre. El trabajo de código cerró
+> el 25 de agosto, cuatro días antes del fin de la ventana. Si alguien lee «29/08» como fecha de
+> término, está leyendo el final de la ventana, no el final del trabajo.
 
 **18 tareas · 9.75 h netas sobre 12 h de capacidad · 7 commits · 31/31 pruebas.**
 

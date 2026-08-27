@@ -189,7 +189,7 @@ La evidencia es concluyente por construcción del código: la fila de resultados
 
 **Observación durante la activación.** Al activar el receptor se produjeron tres denegaciones de permiso sobre documentos históricos que habían quedado sin cerrar en corridas anteriores. No afectaron a los eventos nuevos. La explicación más probable es que la regla rechazó un segundo cierre sobre documentos que ya había cerrado —es decir, la garantía de no reabrir una medición operando por sí sola—, aunque no se conservó traza suficiente para descartar que se trate de documentos con una forma que la regla no contempla.
 
-**Recomendación operativa:** purgar desde la consola los documentos que permanezcan con `respondido: false` antes de ejecutar una serie de medición completa. Con tres eventos la ráfaga de activación es inocua; con treinta conviene no depender de que el listener la absorba sin degradarse.
+**Seguimiento (27-ago).** La recomendación inicial fue purgar esos documentos antes de una serie completa. Al revisar la colección desde la consola resultó innecesaria: los 66 documentos históricos estaban en `respondido: true`, sin ninguno pendiente. La serie completa se ejecutó después sin incidencias y la colección terminó con 99 documentos, todos cerrados.
 
 ### Lección registrada
 
@@ -206,8 +206,13 @@ Migración al proyecto de producción, autenticación real, y reglas basadas en 
 Declararlo es parte del rigor:
 
 - **No se ejecutaron pruebas dinámicas** (DAST) ni escaneo de penetración contra el despliegue.
-- **No se verificó el estado real de las reglas** en la consola de Firebase; H-03 se infiere del nombre del proyecto y del comportamiento por defecto de Firebase, no de una observación directa.
 - **No se auditó el binario Android** para M7 (Insufficient Binary Protections): requiere herramientas de ingeniería inversa fuera del alcance.
 - **No se ejecutó análisis de composición de software** (SCA) sobre el árbol de dependencias transitivas.
 
-Estas cuatro quedan como alcance de **TC-03 · Pruebas de Seguridad** (18–24 de octubre).
+Estas tres quedan como alcance de **TC-03 · Pruebas de Seguridad** (18–24 de octubre).
+
+> **Corregido el 27-ago.** Esta lista incluía una cuarta entrada: «no se verificó el estado real de las
+> reglas en la consola». Dejó de ser cierta el 25 de agosto, cuando se leyeron las reglas vigentes
+> directamente en la consola —así se detectaron los dos errores de la propia auditoría—, se confirmó la
+> interrupción con el panel de uso, se publicaron las reglas versionadas y se ejercitó el Rules
+> Playground. H-03 dejó de ser inferido y pasó a ser observado. La entrada se retiró.
