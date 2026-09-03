@@ -372,9 +372,12 @@ antes de la revisión del 29 por decisión deliberada:
 `C‑3` es la base: sin la geometría parametrizada, `C‑2` y `C‑4` se quedan en
 parches sobre una rejilla inferida.
 
-1. **C‑3** — parámetros del buque. Habilita todo lo demás.
+1. **C‑3** — parámetros del buque. Habilita todo lo demás. ✓ cerrado
+   (`45ff509`).
 2. **C‑4** — rangos de nivel reales. **Probar el ANR en Android aquí mismo.**
-3. **C‑2** — fila 00 y orden fijo de columnas.
+   ✓ cerrado (`3f2ced5`); ANR verificado sin reproducir en emulador API 36,
+   APK release, bahía 038, dieciocho cambios rápidos.
+3. **C‑2** — fila 00 y orden fijo de columnas. ✓ cerrado (`3f2ced5`).
 4. **EQD** — el indicador lleno/vacío. Pequeño, aislado y de alto impacto.
 5. **C‑1** — TEU entero.
 6. **C‑5a** — la carga que va de paso. Pequeño, y necesita el campo de puerto
@@ -382,6 +385,25 @@ parches sobre una rejilla inferida.
 7. **C‑5b** — slots ocupados por 40 pies. Es el de más diseño.
 8. **C‑7** — peso por fila y el límite donde corresponde.
 9. **C‑6** — posición en el CSV, junto con la neutralización de fórmulas.
+
+**Estado al 3 de septiembre.** C‑3, C‑4 y C‑2 quedan cerrados y verificados en
+código por Yov, no solo reportados por el segundo programador. Antes de dar
+C‑3 por completo cerrado falta una extensión: `deckTiers` (y probablemente
+`holdTiers`) son hoy un entero con ancla y paso fijos —no una lista— así que
+un buque con un arranque de cubierta distinto o con un hueco no se puede
+expresar. Cambia a `List<int>`, con chips quitables y uno para agregar; la
+propuesta inicial no cambia —sigue anclada en el máximo, corrida contigua—,
+solo la edición manual pasa a admitir un conjunto. Hallazgo del segundo
+programador, 3 de septiembre.
+
+**Por decisión del segundo programador, confirmada aquí: `C‑6` se adelanta y
+va antes que `C‑5a`.** No tiene ninguna decisión pendiente, y comparte código
+con el defecto 5.4 de la auditoría de seguridad: el truco de escribir
+`="0030410"` para que Excel no recorte los ceros a la izquierda es el mismo
+patrón de inyección de fórmulas que 5.4 señaló. Se resuelven juntos.
+`C‑5a` queda detrás porque depende de una decisión de operación aún abierta
+— el campo de puerto de esta escala — que se resuelve directamente con
+Carlos antes de tocar otra vez la pantalla de parámetros.
 
 ## 5 · Lo que no hay que hacer todavía
 
