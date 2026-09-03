@@ -86,11 +86,11 @@ UNH+1+BAPLIE:D:95B:UN'
 BGM+129+BAPLIE123+9'
 TDT+20+V001++++++CARRIER:::VESSEL MAYA'
 LOC+147+0120006:::5'
-EQD+CN+MSCU1234567+22G1++++5'
+EQD+CN+MSCU1234567+22G1+++5'
 MEA+AAE+WT+KGM:25000'
 MEA+AAE+VGM+KGM:25500'
 LOC+147+0120106:::5'
-EQD+CN+TCNU7654321+45R1++++5'
+EQD+CN+TCNU7654321+45R1+++5'
 MEA+AAE+WT+KGM:28000'
 UNT+12+1'
 UNZ+1+123456'
@@ -124,11 +124,11 @@ UNZ+1+123456'
 UNH+1+BAPLIE:D:95B:UN'
 TDT+20+V002++++++:::TEST VESSEL'
 LOC+147+0100102:::5'
-EQD+CN+CONT001+22G1++++5'
+EQD+CN+CONT001+22G1+++5'
 LOC+147+0100202:::5'
-EQD+CN+CONT002+22G1++++5'
+EQD+CN+CONT002+22G1+++5'
 LOC+147+0200102:::5'
-EQD+CN+CONT003+22G1++++5'
+EQD+CN+CONT003+22G1+++5'
 UNT+10+1'
 ''';
 
@@ -144,10 +144,10 @@ UNT+10+1'
 UNH+1+BAPLIE:D:95B:UN'
 TDT+20+V003++++++:::STATS VESSEL'
 LOC+147+0100102:::5'
-EQD+CN+CONT001+22G1++++5'
+EQD+CN+CONT001+22G1+++5'
 MEA+AAE+WT+KGM:20000'
 LOC+147+0100202:::5'
-EQD+CN+CONT002+22G1++++4'
+EQD+CN+CONT002+22G1+++4'
 MEA+AAE+WT+KGM:2000'
 UNT+10+1'
 ''';
@@ -171,7 +171,7 @@ UNT+10+1'
       const invalidContent = '''
 UNH+1+BAPLIE:D:95B:UN'
 LOC+147+0100102:::5'
-EQD+CN+CONT001+22G1++++5'
+EQD+CN+CONT001+22G1+++5'
 UNT+4+1'
 ''';
 
@@ -179,6 +179,73 @@ UNT+4+1'
         () => parser.parse(invalidContent),
         throwsA(isA<Exception>()),
       );
+    });
+  });
+
+  group('EQD · indicador lleno/vacío', () {
+    late BaplieParserService parser;
+
+    setUp(() {
+      parser = BaplieParserService();
+    });
+
+    /// Envuelve segmentos EQD reales del corpus en un mensaje mínimo.
+    String mensajeCon(List<String> segmentosEqd) {
+      final buffer = StringBuffer()
+        ..writeln("UNH+1+BAPLIE:D:95B:UN'")
+        ..writeln("TDT+20+V001++++++CARRIER:::VESSEL MAYA'");
+      for (var i = 0; i < segmentosEqd.length; i++) {
+        buffer
+          ..writeln("LOC+147+006010${i + 2}:::5'")
+          ..writeln("${segmentosEqd[i]}'");
+      }
+      buffer.writeln("UNT+9+1'");
+      return buffer.toString();
+    }
+
+    test('lee el elemento 6 y no el primero que valga 4 o 5', () {
+      // Segmento real de CORPUS_A01. El elemento 5 vale '4' —es e8249, otro
+      // código EDIFACT— y el elemento 6 vale '5'. Buscar por valor se detenía
+      // en el 5 y declaraba vacío un contenedor lleno.
+      final result = parser.parse(mensajeCon([
+        'EQD+CN+TSTU5805726+22G1++4+5',
+      ]));
+
+      expect(result.containers.single.status, ContainerStatus.full);
+    });
+
+    test('el elemento 5 con valor 4 no decide el estado', () {
+      // Mismo elemento 5 en los dos, distinto elemento 6: el resultado tiene
+      // que diferir.
+      final result = parser.parse(mensajeCon([
+        'EQD+CN+TSTU5805726+22G1++4+5',
+        'EQD+CN+ZKPU4140679+22G1++4+4',
+      ]));
+
+      expect(result.containers[0].status, ContainerStatus.full);
+      expect(result.containers[1].status, ContainerStatus.empty);
+    });
+
+    test('reconoce las tres formas del elemento 5 en el corpus', () {
+      // Vacío en 325 segmentos, '2' en 457 y '4' en 195, sobre CORPUS_A01.
+      final result = parser.parse(mensajeCon([
+        'EQD+CN+WLDU1694480+45G1+++5',
+        'EQD+CN+EDUU0994165+45G1++2+4',
+        'EQD+CN+VALU0988827+45R8++4+5',
+      ]));
+
+      expect(
+        result.containers.map((c) => c.status).toList(),
+        [ContainerStatus.full, ContainerStatus.empty, ContainerStatus.full],
+      );
+    });
+
+    test('sin elemento 6 el estado queda desconocido, no se adivina', () {
+      final result = parser.parse(mensajeCon([
+        'EQD+CN+ABCU1234567+22G1',
+      ]));
+
+      expect(result.containers.single.status, ContainerStatus.unknown);
     });
   });
 

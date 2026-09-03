@@ -501,7 +501,6 @@ class BaplieParserService {
 
     String? containerId;
     String? isoSizeType;
-    ContainerStatus status = ContainerStatus.unknown;
 
     // c237.e8260 - Container ID (posición 2)
     if (elements.length > 2) {
@@ -515,25 +514,15 @@ class BaplieParserService {
       isoSizeType = _safeGetComponent(c224Components, 0);
     }
 
-    // e8169 - Equipment Status - buscar en múltiples posiciones
-    // Puede estar en posición 4, 5, 6, 7 o incluso como componente
-    for (int i = 4; i < elements.length && status == ContainerStatus.unknown; i++) {
-      final element = _safeGetElement(elements, i);
-      if (element != null && element.isNotEmpty) {
-        status = _parseContainerStatus(element);
-        // También buscar en componentes
-        if (status == ContainerStatus.unknown) {
-          final components = _getComponents(element);
-          for (final comp in components) {
-            final parsed = _parseContainerStatus(comp);
-            if (parsed != ContainerStatus.unknown) {
-              status = parsed;
-              break;
-            }
-          }
-        }
-      }
-    }
+    // e8169 - Indicador lleno/vacío. Se lee el elemento 6 **por su posición**.
+    //
+    // Antes se recorrían los elementos desde el 4 tomando el primero que
+    // valiera '4' o '5'. Pero el elemento 5 es e8249, un código EDIFACT
+    // distinto que en 195 de los 977 segmentos de CORPUS_A01 vale '4': la
+    // búsqueda se detenía ahí y nunca llegaba al campo real. Resultado, 158
+    // contenedores llenos leídos como vacíos en CORPUS_A01 y 269 en
+    // CORPUS_A03. La posición es la que identifica el campo, no su valor.
+    final status = _parseContainerStatus(_safeGetElement(elements, 6));
 
     if (containerId == null) return null;
 
