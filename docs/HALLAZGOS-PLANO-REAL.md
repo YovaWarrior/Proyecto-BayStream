@@ -352,18 +352,45 @@ está, como dato informativo, sin alerta o con un umbral propio y distinto.
 
 ## 3 · Lo que sigue abierto del Sprint 1
 
-Dos defectos ya diagnosticados, con la prueba hecha, que no se corrigieron
-antes de la revisión del 29 por decisión deliberada:
+**El indicador lleno/vacío. ✓ cerrado (`09599c8`), verificado contra los seis
+archivos.** Ahora se lee el elemento 6 por su posición, no el primer valor
+que coincida desde el índice 4. Reproduje el parseo viejo y el nuevo en
+Python sobre el corpus completo: `CORPUS_A01` pasa de 84/893 a 242/735
+(exacto a lo reportado); `CORPUS_A03` pasa de 46/323 a 315/54 — **269 de 315
+llenos se perdían, el 85 %**, y el documento hasta hoy solo tenía registrados
+los 158 de A01. En `A02`, `A04`, `A05` y `A06` el resultado no cambia,
+porque en esos archivos el elemento 5 nunca vale `'4'` ni `'5'`, así que el
+parser viejo llegaba al 6 igual, por casualidad de los datos y no por
+diseño. Cero estados desconocidos en los seis archivos con el parseo nuevo.
 
-- **El indicador lleno/vacío se lee mal.** `_parseEQD` recorre los elementos
-  desde el índice 4 y toma el primero que valga `'4'` o `'5'`; el índice 5 es
-  otro código EDIFACT que en 158 segmentos vale `'4'`, así que nunca llega al
-  índice 6, que es el campo real. El archivo declara 242 llenos y 735 vacíos;
-  la aplicación muestra 84 y 893. La corrección es leer el elemento 6 por su
-  posición. **Encaja con este trabajo:** el plano real muestra la `F` de Lleno
-  en cada celda, y hoy esa letra saldría mal en 158 casos.
+Ocho de los fixtures EQD de `test/baplie_parser_test.dart` tenían un `+` de
+más, que ponía el indicador en el elemento 7 en vez del 6 — con el parser
+viejo pasaban igual, porque la búsqueda por valor no distingue la posición.
+Es una instancia concreta, con nombre y apellido, del defecto 15 del cruce
+de auditorías (*«hay pruebas que pasarían igual si el código estuviera
+mal»*, `CRUCE-DOBLE-PRUEBA-SPRINT1.md`, checklist 8.3). Corregidos sin tocar
+ninguna aserción existente; se agregó además un grupo de pruebas nuevo con
+segmentos reales del corpus. Hallazgo y corrección del segundo programador,
+3 de septiembre.
+
 - **Los refrigerados no se detectan.** El corpus trae 43 segmentos `TMP` y 50
   contenedores con tipo ISO de refrigerado; la aplicación reporta 0.
+- **`CORPUS_A06` no abre.** Lanza «No se encontró el nombre del buque en el
+  segmento TDT». El parser busca el bloque `c222` (nombre del buque) en el
+  elemento 8 del segmento `TDT`, posición válida en los otros seis archivos;
+  en `A06` ese mismo bloque está en el elemento 4, porque el segmento omite
+  los campos vacíos intermedios que sí trae el resto del corpus. **Es el
+  mismo error de método que el indicador lleno/vacío, en otro segmento:
+  confiar en una posición fija cuando la fuente real varía.** La diferencia
+  es que en EQD la corrección fue anclarse en la posición correcta; acá no
+  hay una posición fija que sirva para los siete archivos a la vez, así que
+  el arreglo tendría que buscar el bloque `c222` por forma —tres o cuatro
+  componentes separados por `:`, con texto reconocible como nombre en uno de
+  ellos— en vez de por índice. No entra como tarea activa todavía: afecta a
+  uno de siete archivos, no bloquea nada de lo que sigue en la lista, y el
+  diseño de una búsqueda robusta merece pensarse aparte en vez de
+  improvisarse. Hallazgo del segundo programador, 3 de septiembre; queda
+  registrado para cuando se decida tomarlo.
 
 ---
 
@@ -379,6 +406,7 @@ parches sobre una rejilla inferida.
    APK release, bahía 038, dieciocho cambios rápidos.
 3. **C‑2** — fila 00 y orden fijo de columnas. ✓ cerrado (`3f2ced5`).
 4. **EQD** — el indicador lleno/vacío. Pequeño, aislado y de alto impacto.
+   ✓ cerrado (`09599c8`); ver el detalle completo en la sección 3.
 5. **C‑1** — TEU entero.
 6. **C‑5a** — la carga que va de paso. Pequeño, y necesita el campo de puerto
    de escala en la pantalla de C‑3.
@@ -421,12 +449,21 @@ a ojo.
 fue antes que `C‑5a`.** No tenía ninguna decisión pendiente, y compartía
 código con el defecto 5.4 de la auditoría de seguridad. Resuelto en el mismo
 cambio, como estaba previsto.
-`C‑5a` sigue detrás de `EQD` y `C‑1` en el orden: depende de una decisión de
-operación ya resuelta con Carlos —el campo de puerto de esta escala propone
-el `LOC+9` más frecuente entre los contenedores del archivo, mismo patrón
-que el resto de C‑3—, pero vuelve a tocar la pantalla de parámetros que
-recién se cerró, así que conviene dejarla para después de los dos cambios
-aislados que quedan.
+`C‑5a` sigue detrás en el orden: depende de una decisión de operación ya
+resuelta con Carlos —el campo de puerto de esta escala propone el `LOC+9`
+más frecuente entre los contenedores del archivo, mismo patrón que el resto
+de C‑3—, pero vuelve a tocar la pantalla de parámetros.
+
+**Con EQD cerrado (`09599c8`, verificado: `CORPUS_A01` 242/735, `CORPUS_A03`
+315/54 con 269 llenos rescatados — el 85 % que se perdía ahí —, sin cambios
+en A02/A04/A05/A06, cero desconocidos), lo siguiente es la extensión de
+`deckTiers`/`holdTiers` a `List<int>`, no `C‑1` ni `C‑5a`.** Razón del
+segundo programador, confirmada aquí: `C‑5a` va a tocar la misma pantalla de
+parámetros para agregar el campo de puerto de escala; conviene hacerlo una
+sola vez con la lista editable ya en su lugar, no abrir esa pantalla dos
+veces por separado. `C‑1` (TEU entero) queda disponible para hacerse en
+paralelo o inmediatamente después — es independiente y no toca la pantalla
+de parámetros.
 
 ## 5 · Lo que no hay que hacer todavía
 
