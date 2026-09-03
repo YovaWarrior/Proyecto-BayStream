@@ -414,44 +414,16 @@ class _BayGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calcular filas y tiers para el grid
+    // La rejilla sale de la geometría declarada del buque, nunca del contenido
+    // de la bahía. Interpolar del mínimo al máximo cargado generaba 45 filas de
+    // nivel por bahía de las que solo 13 podían tener carga.
+    final geometry = bay.geometry;
+    if (geometry == null) {
+      return _buildMissingGeometryState(context);
+    }
+
     final containers = bay.containers;
-    
-    // Obtener rangos de rows y tiers
-    int minRow = 99, maxRow = 0;
-    int minTier = 99, maxTier = 0;
-    
-    for (final container in containers) {
-      final pos = container.stowagePosition;
-      if (pos != null) {
-        if (pos.row < minRow) minRow = pos.row;
-        if (pos.row > maxRow) maxRow = pos.row;
-        if (pos.tier < minTier) minTier = pos.tier;
-        if (pos.tier > maxTier) maxTier = pos.tier;
-      }
-    }
-    
-    // Si no hay contenedores con posición válida
-    if (minRow > maxRow || minTier > maxTier) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'Bay ${bay.bayNumber.toString().padLeft(2, '0')}',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            Text(
-              '${bay.containers.length} contenedores',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
-    
+
     // Crear mapa de posiciones para búsqueda rápida
     final positionMap = <String, ContainerUnit>{};
     for (final container in containers) {
@@ -460,34 +432,26 @@ class _BayGridWidget extends StatelessWidget {
         positionMap['${pos.row}-${pos.tier}'] = container;
       }
     }
-    
-    // Generar filas de rows (de izquierda a derecha: 02, 04, 06... 01, 03, 05...)
-    // En BAPLIE: pares a babor (izquierda), impares a estribor (derecha), 00/01 centro
-    final evenRows = <int>[];
-    final oddRows = <int>[];
-    for (int r = minRow; r <= maxRow; r++) {
-      if (r % 2 == 0) {
-        evenRows.add(r);
-      } else {
-        oddRows.add(r);
-      }
-    }
-    evenRows.sort((a, b) => b.compareTo(a)); // Pares descendente (babor)
-    oddRows.sort(); // Impares ascendente (estribor)
-    final rows = [...evenRows, ...oddRows];
-    
-    // Tiers de arriba a abajo (mayor tier arriba)
-    // Separar en cubierta (deck: tier >= 80) y bodega (hold: tier < 80)
-    final deckTiers = <int>[];
-    final holdTiers = <int>[];
-    for (int t = maxTier; t >= minTier; t -= 2) {
-      if (t >= 80) {
-        deckTiers.add(t);
-      } else {
-        holdTiers.add(t);
-      }
-    }
-    
+
+    // C-2 · Orden fijo de columnas: pares descendentes hacia babor, la fila 00
+    // en el centro, e impares ascendentes hacia estribor. La fila 00 se dibuja
+    // aunque este viaje no la traiga ocupada.
+    final rows = geometry.orderedRows;
+
+    // C-4 · Cubierta y bodega se calculan por separado, como ya hace el PDF.
+    final deckTiers = geometry.deckTierNumbers;
+    final holdTiers = geometry.holdTierNumbers;
+
+    // Ningún contenedor puede desaparecer en silencio: los que no caen en
+    // ninguna celda dibujada se cuentan y se muestran encima de la rejilla.
+    final drawnRows = rows.toSet();
+    final drawnTiers = <int>{...deckTiers, ...holdTiers};
+    final outsideGeometry = containers.where((container) {
+      final pos = container.stowagePosition;
+      if (pos == null) return true;
+      return !drawnRows.contains(pos.row) || !drawnTiers.contains(pos.tier);
+    }).toList();
+
     // Scroll vertical y horizontal para conservar la alineación en pantallas angostas
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
@@ -513,7 +477,13 @@ class _BayGridWidget extends StatelessWidget {
             style: TextStyle(color: Colors.grey[600]),
           ),
           const SizedBox(height: 16),
-          
+
+          // Carga que la geometría declarada no alcanza a representar
+          if (outsideGeometry.isNotEmpty) ...[
+            _buildOutsideGeometryNotice(context, outsideGeometry),
+            const SizedBox(height: 16),
+          ],
+
           // Header de rows
           _buildRowHeader(rows),
           const SizedBox(height: 4),
@@ -585,6 +555,109 @@ class _BayGridWidget extends StatelessWidget {
     );
   }
 
+  /// Estado para un viaje sin geometría declarada.
+  ///
+  /// Solo alcanzable con documentos anteriores a C-3: el flujo de carga no
+  /// publica un viaje hasta que el usuario confirma los parámetros. No se
+  /// dibuja una rejilla inferida del contenido, que es justamente el defecto
+  /// que C-3 corrigió.
+  Widget _buildMissingGeometryState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.straighten, size: 48, color: colorScheme.onSurfaceVariant),
+            const SizedBox(height: 16),
+            Text(
+              'Bay ${bay.bayNumber.toString().padLeft(2, '0')}',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Este viaje no trae la geometría del buque declarada, así que no '
+              'hay rejilla contra la cual dibujarlo. Declara los parámetros del '
+              'buque para ver el plano.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Avisa de la carga que no cae en ninguna celda de la rejilla declarada.
+  ///
+  /// Un contenedor cuya coordenada quede fuera de la geometría no puede
+  /// desaparecer sin más: la bahía mostraría menos carga de la que tiene y
+  /// nadie se enteraría.
+  Widget _buildOutsideGeometryNotice(
+    BuildContext context,
+    List<ContainerUnit> outside,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final positions = outside
+        .map((container) =>
+            container.stowagePosition?.rawCode ?? container.containerId)
+        .toList();
+    final shown = positions.take(6).join(', ');
+    final rest = positions.length - 6;
+
+    return Container(
+      key: const ValueKey('outside-geometry-notice'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      // Ancho acotado a mano: este aviso vive dentro del scroll horizontal de
+      // la rejilla, donde el ancho entrante es infinito y un hijo flexible no
+      // puede repartirse el espacio.
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.report_outlined, color: colorScheme.onErrorContainer),
+          const SizedBox(width: 12),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  outside.length == 1
+                      ? '1 contenedor fuera de la geometría declarada'
+                      : '${outside.length} contenedores fuera de la geometría '
+                          'declarada',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: colorScheme.onErrorContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'No se dibujan en la rejilla porque su posición no existe en '
+                  'el buque declarado: ${rest > 0 ? '$shown y $rest más' : shown}.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onErrorContainer,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRowHeader(List<int> rows) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -641,6 +714,7 @@ class _BayGridWidget extends StatelessWidget {
               highlightedContainerId != null &&
               container.containerId == highlightedContainerId;
           return _ContainerCell(
+            key: ValueKey('cell-$row-$tier'),
             container: container,
             onTap: container != null ? () => onContainerTap(container) : null,
             isHighlighted: isHighlighted,
@@ -699,6 +773,7 @@ class _ContainerCell extends StatelessWidget {
   final LegendFilterType? activeTypeFilter;
 
   const _ContainerCell({
+    super.key,
     this.container,
     this.onTap,
     this.isHighlighted = false,

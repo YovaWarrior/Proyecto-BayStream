@@ -11,9 +11,9 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 /// siempre una **cota inferior**: la geometría real es mayor o igual, nunca
 /// menor. La confirma o la corrige el usuario.
 ///
-/// La demostración concreta está en el corpus: el plano impreso del MIZAR
-/// tiene seis niveles de cubierta (80 a 90) y en los siete archivos el nivel
-/// 80 no aparece ocupado ni una sola vez.
+/// Lo que sí queda fijo es dónde **empieza** cada zona, porque la numeración
+/// ISO la ancla: la bodega en el nivel 02 y la cubierta en el 82. La primera
+/// fila de contenedores sobre cubierta va en el 82.
 class VesselGeometry extends Equatable {
   /// Fila central del buque. Existe siempre, aunque el viaje no la cargue.
   static const int centerRow = 0;
@@ -22,7 +22,14 @@ class VesselGeometry extends Equatable {
   static const int firstHoldTier = 2;
 
   /// Primer nivel de cubierta según la numeración ISO.
-  static const int firstDeckTier = 80;
+  ///
+  /// La primera fila de contenedores sobre cubierta va en el **82**, no en el
+  /// 80. Evidencia en el corpus: de 4 584 slots ocupados en los seis archivos,
+  /// el nivel 80 no aparece **ni una sola vez**, y el nivel más bajo con carga
+  /// es el 82 en 45 bahías. El contraste con la bodega lo confirma: allí el
+  /// nivel ancla 02 sí es el piso más común, con 66 bahías. Anclar la cubierta
+  /// en el 80 dibujaba una fila vacía fantasma bajo toda la carga.
+  static const int firstDeckTier = 82;
 
   /// Paso entre niveles consecutivos (los impares son de contenedores altos).
   static const int tierStep = 2;
@@ -118,8 +125,10 @@ class VesselGeometry extends Equatable {
   ///
   /// Se ancla en la numeración ISO y toma el **máximo observado**, no la
   /// cantidad de valores distintos. Esa diferencia es la que rescata los
-  /// niveles vacíos intermedios: con carga hasta el nivel 90 propone seis
-  /// niveles de cubierta, incluido el 80 que el corpus nunca trae ocupado.
+  /// niveles vacíos **intermedios**: una bahía cargada en 82 y 86 pero no en
+  /// 84 propone igual los tres niveles, porque el 84 existe aunque hoy esté
+  /// vacío. Lo que la deducción no hace es inventar niveles por debajo del
+  /// ancla.
   ///
   /// El límite de apilamiento nunca se propone.
   factory VesselGeometry.proposeFrom(Iterable<IsoCoordinate> positions) {

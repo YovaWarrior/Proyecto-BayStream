@@ -11,7 +11,7 @@ const _proposal = VesselGeometry(
   portRows: 6,
   starboardRows: 6,
   holdTiers: 7,
-  deckTiers: 6,
+  deckTiers: 5,
 );
 
 void main() {
@@ -69,7 +69,7 @@ void main() {
 
     expect(find.text('Lo propuesto es un mínimo observado'), findsOneWidget);
     expect(
-      find.text('Mínimo observado en el archivo: 6. El buque puede tener más.'),
+      find.text('Mínimo observado en el archivo: 5. El buque puede tener más.'),
       findsWidgets,
     );
     expect(
@@ -79,7 +79,7 @@ void main() {
           )
           .controller
           ?.text,
-      '6',
+      '5',
     );
   });
 
@@ -123,13 +123,13 @@ void main() {
 
     await tester.enterText(
       find.byKey(const ValueKey('geometry-deck-tiers')),
-      '5',
+      '4',
     );
     await tester.pumpAndSettle();
 
     expect(
       find.text(
-        'El archivo trae carga en el nivel 90; con 5 niveles de cubierta '
+        'El archivo trae carga en el nivel 90; con 4 niveles de cubierta '
         'quedaría fuera del plano.',
       ),
       findsOneWidget,
@@ -159,7 +159,7 @@ void main() {
 
     expect(captured!.portRows, 8);
     expect(captured!.stackWeightLimitKg, 90000);
-    expect(captured!.slotsPerBay, 15 * 13);
+    expect(captured!.slotsPerBay, 15 * 12);
   });
 
   testWidgets('cancelar no devuelve geometría', (tester) async {

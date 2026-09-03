@@ -21,25 +21,31 @@ void main() {
       expect(geometry.portRows, 6, reason: 'filas 02 a 12');
       expect(geometry.starboardRows, 6, reason: 'filas 01 a 11');
       expect(geometry.holdTiers, 7, reason: 'niveles 02 a 14');
-      expect(geometry.deckTiers, 6, reason: 'niveles 80 a 90');
+      expect(geometry.deckTiers, 5, reason: 'niveles 82 a 90');
     });
 
-    test('con carga hasta el nivel 90 propone el nivel 80 que el archivo nunca trae',
-        () {
-      // Los siete archivos del corpus solo traen cubierta 82, 84, 86, 88 y 90.
-      // El plano impreso del MIZAR tiene seis niveles, incluido el 80 vacío.
-      // Anclar en el máximo observado y no en la cantidad de valores distintos
-      // es lo que rescata ese nivel.
+    test('la cubierta arranca en el 82, sin inventar una fila vacia debajo', () {
+      // La primera fila de contenedores sobre cubierta va en el 82. En los seis
+      // archivos del corpus, de 4584 slots ocupados, el nivel 80 no aparece ni
+      // una sola vez, y el nivel mas bajo con carga es el 82 en 45 bahias.
       final geometry = VesselGeometry.proposeFrom([
         IsoCoordinateParser.parse('0060182'),
-        IsoCoordinateParser.parse('0060184'),
-        IsoCoordinateParser.parse('0060186'),
-        IsoCoordinateParser.parse('0060188'),
         IsoCoordinateParser.parse('0060190'),
       ]);
 
-      expect(geometry.deckTiers, 6);
-      expect(geometry.deckTierNumbers, [90, 88, 86, 84, 82, 80]);
+      expect(geometry.deckTiers, 5);
+      expect(geometry.deckTierNumbers, [90, 88, 86, 84, 82]);
+      expect(geometry.deckTierNumbers.contains(80), isFalse);
+    });
+
+    test('rescata los niveles vacios intermedios, no los de abajo', () {
+      // Carga en 82 y 86 pero no en 84: el 84 existe y se propone igual.
+      final geometry = VesselGeometry.proposeFrom([
+        IsoCoordinateParser.parse('0060182'),
+        IsoCoordinateParser.parse('0060186'),
+      ]);
+
+      expect(geometry.deckTierNumbers, [86, 84, 82]);
     });
 
     test('el límite de apilamiento nunca se propone', () {
@@ -68,7 +74,7 @@ void main() {
       portRows: 6,
       starboardRows: 6,
       holdTiers: 7,
-      deckTiers: 6,
+      deckTiers: 5,
     );
 
     test('las columnas van pares descendentes, la fila 00 y luego impares', () {
@@ -84,13 +90,13 @@ void main() {
     });
 
     test('los niveles salen separados y descendentes', () {
-      expect(geometry.deckTierNumbers, [90, 88, 86, 84, 82, 80]);
+      expect(geometry.deckTierNumbers, [90, 88, 86, 84, 82]);
       expect(geometry.holdTierNumbers, [14, 12, 10, 8, 6, 4, 2]);
-      expect(geometry.totalTiers, 13);
+      expect(geometry.totalTiers, 12);
     });
 
     test('los huecos por bahía son columnas por niveles', () {
-      expect(geometry.slotsPerBay, 169, reason: '13 columnas x 13 niveles');
+      expect(geometry.slotsPerBay, 156, reason: '13 columnas x 12 niveles');
     });
   });
 
@@ -99,7 +105,7 @@ void main() {
       portRows: 6,
       starboardRows: 6,
       holdTiers: 7,
-      deckTiers: 6,
+      deckTiers: 5,
     );
 
     test('declarar más que el mínimo observado es válido', () {
@@ -107,7 +113,7 @@ void main() {
         portRows: 7,
         starboardRows: 7,
         holdTiers: 8,
-        deckTiers: 7,
+        deckTiers: 6,
       );
 
       expect(declared.isAtLeast(minimum), isTrue);
@@ -118,7 +124,7 @@ void main() {
         portRows: 6,
         starboardRows: 6,
         holdTiers: 7,
-        deckTiers: 5, // el archivo trae carga en el nivel 90
+        deckTiers: 4, // el archivo trae carga en el nivel 90
       );
 
       expect(declared.isAtLeast(minimum), isFalse);
@@ -137,7 +143,7 @@ void main() {
       portRows: 6,
       starboardRows: 6,
       holdTiers: 7,
-      deckTiers: 6,
+      deckTiers: 5,
     );
 
     const container = ContainerUnit(
@@ -155,7 +161,7 @@ void main() {
       const bay = Bay(bayNumber: 6, geometry: geometry);
       final loaded = bay.addContainer(container);
 
-      expect(loaded.occupancyRate, closeTo(1 / 169 * 100, 0.0001));
+      expect(loaded.occupancyRate, closeTo(1 / 156 * 100, 0.0001));
     });
 
     test('sin geometría declarada no hay porcentaje, y no se inventa uno', () {
@@ -177,7 +183,7 @@ void main() {
       portRows: 6,
       starboardRows: 6,
       holdTiers: 7,
-      deckTiers: 6,
+      deckTiers: 5,
       stackWeightLimitKg: 90000,
     );
 
@@ -227,7 +233,7 @@ void main() {
 
       expect(restored.geometry, geometry);
       expect(restored.bays[6]!.geometry, geometry);
-      expect(restored.bays[6]!.occupancyRate, closeTo(1 / 169 * 100, 0.0001));
+      expect(restored.bays[6]!.occupancyRate, closeTo(1 / 156 * 100, 0.0001));
     });
 
     test('un documento anterior a C-3 no produce un porcentaje inventado', () {
