@@ -66,6 +66,12 @@ It shows occupied slots on board the vessel.»* La herramienta comercial declara
 que no conoce la geometría del buque. Esa frase es la que da sentido a la
 sugerencia del tutor sobre parametrizar.
 
+**Las equis grandes.** En la hoja de la bahía 14 hay equis trazadas a mano que
+tachan zonas enteras del plano. **No son slots inexistentes ni celdas vacías:
+marcan carga que no se opera en esta escala** — contenedores de otros puertos
+que siguen a bordo y que la cuadrilla no debe tocar. Es una marca operativa,
+no una propiedad del buque. (Ver la corrección número 3 del registro final.)
+
 **Anotaciones a mano del planificador.** Números de secuencia de grúa dentro de
 círculos sobre cada celda (139, 155, 144…), flechas de orden de movimiento, y
 el total `26 MOVS` al pie. Es información que no viene en el EDI y que el
@@ -126,7 +132,9 @@ las dos están mal:
 - Supone la capacidad: `Bay` nace con `maxRows = 12` y `maxTiers = 10` y el
   parser **nunca los asigna**, así que toda la ocupación se calcula contra 120
   huecos ficticios. Sobre `CORPUS_A01` la ocupación media que se muestra es
-  **30.2 %** cuando sobre la extensión real es **74.1 %**.
+  **30.2 %**, contra **21.4 %** medido sobre la geometría declarada de 13
+  columnas × 13 niveles. Ver la corrección número 1 del registro al final: la
+  primera versión de este documento daba **74.1 %** y ese número era erróneo.
 
 **Cambio:** una pantalla de parámetros **previa a la carga del EDI**, donde se
 declare la geometría: filas de babor y de estribor, si el buque tiene fila 00,
@@ -151,6 +159,17 @@ buque de diez filas. Por eso la propuesta que la aplicación calcule es siempre
 una **cota inferior**: la geometría real es mayor o igual, nunca menor. Es
 exactamente lo que declara la nota al pie del plano comercial. La pantalla
 tiene que dejar claro que lo propuesto es un mínimo observado y no una medición.
+
+**La regla de deducción se ancla en el máximo, no en la cuenta de valores
+distintos.** La diferencia no es teórica y tiene una demostración exacta: el
+plano impreso del MIZAR tiene **seis** niveles de cubierta —80, 82, 84, 86, 88
+y 90— pero **el nivel 80 no aparece ocupado ni una sola vez en ninguno de los
+siete archivos del corpus**. Contando valores distintos se deducirían cinco
+niveles y el buque tiene seis. Anclando en el máximo, `(90 − 80) / 2 + 1 = 6`,
+sale el número correcto y el nivel 80 aparece vacío, como en la hoja impresa.
+
+Es la demostración concreta y verificable de por qué lo deducido es una cota
+inferior. Hallazgo del segundo programador durante la implementación de C‑3.
 
 **Qué se puede deducir y qué no:**
 
@@ -209,7 +228,40 @@ filas × 13 columnas se construyen unas 585 celdas por bahía, la mayoría vací
 y sin construcción diferida. Al corregir C‑4 se cae a 169. **Verificar el ANR
 en Android inmediatamente después de este cambio, antes de tocar nada más.**
 
-### C‑5 · Los slots ocupados por contenedores de 40 pies
+### C‑5 · Lo que ocupa un slot sin ser carga de esta operación
+
+Este cambio tiene **dos mitades independientes**, y las dos responden al punto
+del tutor sobre mostrar las bahías completas. Se pueden implementar por
+separado.
+
+#### C‑5a · La carga que va de paso
+
+**Plano real:** las equis a mano tachan la carga que no se opera en esta
+escala. El planificador necesita verla —ocupa slots y condiciona el orden de
+los movimientos— pero no la toca.
+
+**Evidencia en el corpus: el dato ya está en el archivo.** El segmento `LOC+9`
+declara el puerto de carga de cada contenedor, y en `CORPUS_A01` hay tres:
+
+| Puerto de carga | Contenedores |
+|---|---|
+| HNPCR · Puerto Cortés, Honduras | 457 |
+| GTPBR · Puerto Barrios, Guatemala | 325 |
+| PAMIT · Manzanillo, Panamá | 195 |
+
+Si la escala es Puerto Barrios, **325 se cargan ahí y 652 ya vienen a bordo**.
+Esos 652 son exactamente lo que la equis tacha. `CORPUS_A05` da el mismo
+patrón con GTPBR 382, HNPCR 348 y USHOU 6.
+
+**BayStream ya parsea `LOC+9` y no lo usa para nada.** Los muestra todos
+iguales, sin distinguir lo que se opera de lo que va de paso.
+
+**Cambio:** atenuar o marcar en el plano los contenedores cuyo puerto de carga
+no sea el de esta escala. **Falta un dato que el archivo no da: cuál es el
+puerto de la operación en curso.** Encaja de forma natural en la pantalla de
+parámetros de C‑3, como un campo más con los puertos del archivo como opciones.
+
+#### C‑5b · Los slots ocupados por contenedores de 40 pies
 
 **Plano real:** la bahía 07 aparece casi llena de celdas que dicen
 `Occupied by 40'`, con solo dos contenedores propios y `2 MOVS` al pie.
@@ -309,9 +361,11 @@ parches sobre una rejilla inferida.
 3. **C‑2** — fila 00 y orden fijo de columnas.
 4. **EQD** — el indicador lleno/vacío. Pequeño, aislado y de alto impacto.
 5. **C‑1** — TEU entero.
-6. **C‑5** — slots ocupados por 40 pies. Es el de más diseño.
-7. **C‑7** — peso por fila y el límite donde corresponde.
-8. **C‑6** — posición en el CSV, junto con la neutralización de fórmulas.
+6. **C‑5a** — la carga que va de paso. Pequeño, y necesita el campo de puerto
+   de escala en la pantalla de C‑3.
+7. **C‑5b** — slots ocupados por 40 pies. Es el de más diseño.
+8. **C‑7** — peso por fila y el límite donde corresponde.
+9. **C‑6** — posición en el CSV, junto con la neutralización de fórmulas.
 
 ## 5 · Lo que no hay que hacer todavía
 
@@ -321,3 +375,62 @@ parches sobre una rejilla inferida.
 - No modelar las anotaciones a mano del planificador —secuencia de grúa,
   flechas, `26 MOVS`—. Es información valiosa y no está en el EDI; se discute
   como alcance nuevo, no se improvisa.
+
+
+---
+
+## 6 · Registro de correcciones a este documento
+
+Se anotan porque el proyecto ya lleva cuatro casos en que un segundo revisor
+encontró algo que el primero había dado por bueno, y ese patrón es material
+para el apartado de método. Ocultar las correcciones lo desperdiciaría.
+
+**1 · La cifra de ocupación «real» del 74.1 % era errónea.**
+*Detectada por el segundo programador, 3 de septiembre.* La primera versión de
+este documento afirmaba que la ocupación media de `CORPUS_A01` era 30.2 %
+mostrada contra 74.1 % «sobre la extensión real». El 74.1 % se calculó con un
+denominador que se mueve con la carga —filas presentes × niveles presentes en
+esa misma bahía—, lo que premia a las bahías casi vacías: **seis bahías
+puntuaban exactamente 100 %**, entre ellas la 041, que tiene un solo contenedor
+en una caja de 1 × 1. No servía como objetivo.
+
+Sobre la geometría declarada de 13 × 13 = 169 huecos, las cifras correctas de
+`CORPUS_A01` son:
+
+| | Ocupación media |
+|---|---|
+| Bahías pares (11) | 45.7 % |
+| Bahías impares (16) | 4.7 % |
+| Todas (27) | **21.4 %** |
+
+**La cifra honesta baja de 30.2 % a 21.4 %, no sube.** Y seguirá baja hasta que
+entre C‑5b, porque las 16 bahías impares están físicamente llenas de
+contenedores de 40 pies que todavía no se cuentan. Al presentarlo hace falta esa
+frase de contexto: el número anterior estaba inflado porque el denominador se
+ajustaba a la carga.
+
+**2 · El nivel 80 y la regla de deducción.**
+*Aportada por el segundo programador, 3 de septiembre.* La regla debe anclarse
+en el valor máximo observado y no en la cuenta de valores distintos. El plano
+del MIZAR tiene seis niveles de cubierta y el nivel 80 no aparece ocupado en
+ningún archivo del corpus. Incorporada a C‑3.
+
+**3 · El significado de las equis del plano.**
+*Corregida por Carlos, 3 de septiembre.* La primera lectura de la hoja de la
+bahía 14 interpretó las equis como slots que no existen físicamente, y de ahí
+dedujo que el casco se estrecha hacia proa y popa. **Es falso.** Las equis son
+marcas a mano del planificador sobre carga que no se opera en esa escala. La
+deducción sobre la forma del casco queda retirada por completo.
+
+**4 · `LOC+9` ya trae con qué resolver el punto 2 del tutor.**
+*Hallada al investigar la corrección 3, 3 de septiembre.* El puerto de carga de
+cada contenedor está en el archivo y BayStream lo parsea sin usarlo. Eso parte
+C‑5 en dos mitades independientes, C‑5a y C‑5b.
+
+**Sobre la corrección 3 conviene ser explícito:** el error se cometió por
+inferir el significado de una marca en vez de preguntar a quien trabaja en el
+muelle. Es la misma clase de fallo que la auditoría de seguridad del 25 de
+agosto documentó al inferir las reglas de Firestore en lugar de leerlas. Con
+tres apariciones ya no es una anécdota, y la lección operativa es la misma:
+**cuando el dato viene del mundo y no del código, se observa o se pregunta; no
+se deduce.**
