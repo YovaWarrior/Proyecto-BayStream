@@ -40,11 +40,18 @@ class VesselGeometry extends Equatable {
   /// Filas a estribor: las impares 01, 03, ...
   final int starboardRows;
 
-  /// Niveles de bodega: 02, 04, ... por debajo de la línea de cubierta.
-  final int holdTiers;
+  /// Niveles de bodega declarados, por su número: 02, 04, 06...
+  ///
+  /// Se guardan los números y no una cuenta porque un buque puede no tener un
+  /// nivel intermedio. La **propuesta** que calcula `proposeFrom` es siempre la
+  /// corrida contigua anclada; solo la corrección manual admite huecos. Si la
+  /// propuesta pasara a ser «los niveles distintos que trae el archivo»,
+  /// volveríamos a inventar geometrías con agujeros que el buque no tiene.
+  final List<int> holdTiers;
 
-  /// Niveles de cubierta: 80, 82, ... por encima de la línea de cubierta.
-  final int deckTiers;
+  /// Niveles de cubierta declarados, por su número: 82, 84, 86...
+  /// Ver [holdTiers].
+  final List<int> deckTiers;
 
   /// Límite de apilamiento en kilogramos.
   ///
@@ -77,18 +84,16 @@ class VesselGeometry extends Equatable {
   List<int> get orderedRows =>
       [...portRowNumbers, centerRow, ...starboardRowNumbers];
 
-  /// Niveles de cubierta de arriba hacia abajo: 90, 88, ... 80.
-  List<int> get deckTierNumbers => [
-        for (var i = deckTiers - 1; i >= 0; i--) firstDeckTier + i * tierStep,
-      ];
+  /// Niveles de cubierta de arriba hacia abajo: 90, 88, ... 82.
+  List<int> get deckTierNumbers =>
+      [...deckTiers]..sort((a, b) => b.compareTo(a));
 
   /// Niveles de bodega de arriba hacia abajo: 14, 12, ... 02.
-  List<int> get holdTierNumbers => [
-        for (var i = holdTiers - 1; i >= 0; i--) firstHoldTier + i * tierStep,
-      ];
+  List<int> get holdTierNumbers =>
+      [...holdTiers]..sort((a, b) => b.compareTo(a));
 
   /// Total de niveles declarados, cubierta más bodega.
-  int get totalTiers => deckTiers + holdTiers;
+  int get totalTiers => deckTiers.length + holdTiers.length;
 
   /// Huecos por bahía: columnas por niveles. Es el denominador de la ocupación.
   int get slotsPerBay => orderedRows.length * totalTiers;
@@ -105,21 +110,16 @@ class VesselGeometry extends Equatable {
             : row <= starboardRows * 2 - 1;
     if (!rowFits) return false;
 
-    if (tier >= firstDeckTier) {
-      return deckTiers > 0 &&
-          tier <= firstDeckTier + (deckTiers - 1) * tierStep;
-    }
-    return holdTiers > 0 && tier <= firstHoldTier + (holdTiers - 1) * tierStep;
+    return tier >= firstDeckTier
+        ? deckTiers.contains(tier)
+        : holdTiers.contains(tier);
   }
 
-  /// Indica si esta geometría es igual o mayor que [minimum] en los cuatro
-  /// parámetros deducibles. Declarar menos que el mínimo observado dejaría
-  /// carga real fuera del plano.
-  bool isAtLeast(VesselGeometry minimum) =>
-      portRows >= minimum.portRows &&
-      starboardRows >= minimum.starboardRows &&
-      holdTiers >= minimum.holdTiers &&
-      deckTiers >= minimum.deckTiers;
+  /// Indica si la geometría declarada contiene toda la carga del archivo.
+  ///
+  /// Es el invariante que sostiene la edición manual: el usuario puede quitar
+  /// un nivel que el buque no tenga, pero no uno donde este viaje trae carga.
+  bool coversAll(Iterable<IsoCoordinate> positions) => positions.every(covers);
 
   /// Deduce del archivo la geometría **mínima** compatible con la carga.
   ///
@@ -158,13 +158,20 @@ class VesselGeometry extends Equatable {
     return VesselGeometry(
       portRows: maxPortRow ~/ 2,
       starboardRows: (maxStarboardRow + 1) ~/ 2,
-      holdTiers: maxHoldTier == null
-          ? 0
-          : math.max(1, (maxHoldTier - firstHoldTier) ~/ tierStep + 1),
-      deckTiers: maxDeckTier == null
-          ? 0
-          : math.max(1, (maxDeckTier - firstDeckTier) ~/ tierStep + 1),
+      holdTiers: _anchoredRun(firstHoldTier, maxHoldTier),
+      deckTiers: _anchoredRun(firstDeckTier, maxDeckTier),
     );
+  }
+
+  /// Corrida contigua desde [anchor] hasta [maxObserved], de dos en dos.
+  ///
+  /// Vacía si el archivo no trae carga en esa zona. Si el máximo observado
+  /// queda por debajo del ancla —un nivel que la numeracion ISO no contempla—
+  /// la corrida sale vacia y esa carga aparece en el aviso de la rejilla, que
+  /// es donde corresponde: no se silencia ni se fuerza un nivel inventado.
+  static List<int> _anchoredRun(int anchor, int? maxObserved) {
+    if (maxObserved == null || maxObserved < anchor) return const [];
+    return [for (var t = anchor; t <= maxObserved; t += tierStep) t];
   }
 
   @override
@@ -174,8 +181,8 @@ class VesselGeometry extends Equatable {
   VesselGeometry copyWith({
     int? portRows,
     int? starboardRows,
-    int? holdTiers,
-    int? deckTiers,
+    List<int>? holdTiers,
+    List<int>? deckTiers,
     double? stackWeightLimitKg,
   }) {
     return VesselGeometry(
@@ -207,8 +214,8 @@ class VesselGeometry extends Equatable {
   factory VesselGeometry.fromJson(Map<String, dynamic> json) => VesselGeometry(
         portRows: json['portRows'] as int,
         starboardRows: json['starboardRows'] as int,
-        holdTiers: json['holdTiers'] as int,
-        deckTiers: json['deckTiers'] as int,
+        holdTiers: (json['holdTiers'] as List<dynamic>).cast<int>(),
+        deckTiers: (json['deckTiers'] as List<dynamic>).cast<int>(),
         stackWeightLimitKg: (json['stackWeightLimitKg'] as num?)?.toDouble(),
       );
 

@@ -328,6 +328,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       MaterialPageRoute(
         builder: (_) => VesselGeometryPage(
           proposal: VesselGeometry.proposeFrom(target.stowagePositions),
+          positions: target.stowagePositions.toList(),
           initial: target.geometry,
           fileName: fileName,
         ),

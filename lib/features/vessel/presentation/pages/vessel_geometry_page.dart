@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 
 /// Pantalla de parámetros del buque, previa al plano.
@@ -19,9 +22,16 @@ class VesselGeometryPage extends StatefulWidget {
   /// Nombre del archivo cargado, para situar al usuario.
   final String? fileName;
 
+  /// Posiciones ocupadas del viaje.
+  ///
+  /// Sirven para saber qué niveles traen carga: esos no se pueden quitar,
+  /// porque dejarían contenedores fuera del plano.
+  final Iterable<IsoCoordinate> positions;
+
   const VesselGeometryPage({
     super.key,
     required this.proposal,
+    this.positions = const [],
     this.initial,
     this.fileName,
   });
@@ -35,9 +45,15 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
 
   late final TextEditingController _portRows;
   late final TextEditingController _starboardRows;
-  late final TextEditingController _holdTiers;
-  late final TextEditingController _deckTiers;
   late final TextEditingController _stackLimit;
+
+  /// Niveles declarados. Son listas y no cuentas: el usuario puede quitar uno
+  /// intermedio que el buque no tenga.
+  late List<int> _deckTiers;
+  late List<int> _holdTiers;
+
+  /// Niveles que este viaje trae ocupados. No se pueden quitar.
+  final Set<int> _ocupados = {};
 
   /// El usuario declaró no tener el manual de estabilidad a mano.
   bool _limitUnavailable = false;
@@ -48,8 +64,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     final start = widget.initial ?? widget.proposal;
     _portRows = TextEditingController(text: '${start.portRows}');
     _starboardRows = TextEditingController(text: '${start.starboardRows}');
-    _holdTiers = TextEditingController(text: '${start.holdTiers}');
-    _deckTiers = TextEditingController(text: '${start.deckTiers}');
+    _deckTiers = [...start.deckTiers];
+    _holdTiers = [...start.holdTiers];
+    _ocupados.addAll(widget.positions.map((p) => p.tier));
     _stackLimit = TextEditingController(
       text: start.stackWeightLimitKg == null
           ? ''
@@ -66,8 +83,6 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   List<TextEditingController> get _controllers => [
         _portRows,
         _starboardRows,
-        _holdTiers,
-        _deckTiers,
         _stackLimit,
       ];
 
@@ -91,22 +106,24 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   bool get _canConfirm {
     if (!_limitResolved) return false;
     final candidate = _buildGeometry();
-    return candidate != null && candidate.isAtLeast(widget.proposal);
+    if (candidate == null) return false;
+    // Las filas se declaran por cantidad y no pueden bajar del mínimo; los
+    // niveles se declaran uno a uno y el invariante es que ninguna carga del
+    // archivo quede fuera.
+    return candidate.portRows >= widget.proposal.portRows &&
+        candidate.starboardRows >= widget.proposal.starboardRows &&
+        candidate.coversAll(widget.positions);
   }
 
   VesselGeometry? _buildGeometry() {
     final port = _value(_portRows);
     final starboard = _value(_starboardRows);
-    final hold = _value(_holdTiers);
-    final deck = _value(_deckTiers);
-    if (port == null || starboard == null || hold == null || deck == null) {
-      return null;
-    }
+    if (port == null || starboard == null) return null;
     return VesselGeometry(
       portRows: port,
       starboardRows: starboard,
-      holdTiers: hold,
-      deckTiers: deck,
+      holdTiers: _holdTiers,
+      deckTiers: _deckTiers,
       stackWeightLimitKg:
           _limitUnavailable ? null : double.tryParse(_stackLimit.text.trim()),
     );
@@ -177,26 +194,22 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
 
             Text('Niveles', style: textTheme.titleMedium),
             const SizedBox(height: 8),
-            _buildCountField(
-              fieldKey: const ValueKey('geometry-deck-tiers'),
-              controller: _deckTiers,
-              label: 'Niveles de cubierta',
-              minimum: proposal.deckTiers,
-              observed: proposal.deckTierNumbers.isEmpty
-                  ? null
-                  : 'el nivel ${_pad(proposal.deckTierNumbers.first)}',
-              unit: 'niveles de cubierta',
+            _buildTierChips(
+              context,
+              titulo: 'Niveles de cubierta',
+              prefijo: 'deck',
+              tiers: _deckTiers,
+              anchor: VesselGeometry.firstDeckTier,
+              onChanged: (nuevos) => setState(() => _deckTiers = nuevos),
             ),
             const SizedBox(height: 16),
-            _buildCountField(
-              fieldKey: const ValueKey('geometry-hold-tiers'),
-              controller: _holdTiers,
-              label: 'Niveles de bodega',
-              minimum: proposal.holdTiers,
-              observed: proposal.holdTierNumbers.isEmpty
-                  ? null
-                  : 'el nivel ${_pad(proposal.holdTierNumbers.first)}',
-              unit: 'niveles de bodega',
+            _buildTierChips(
+              context,
+              titulo: 'Niveles de bodega',
+              prefijo: 'hold',
+              tiers: _holdTiers,
+              anchor: VesselGeometry.firstHoldTier,
+              onChanged: (nuevos) => setState(() => _holdTiers = nuevos),
             ),
             const SizedBox(height: 24),
 
@@ -305,6 +318,95 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
         ),
       ],
     );
+  }
+
+  /// Sección de niveles de una zona, como chips quitables.
+  ///
+  /// Un nivel con carga en este viaje no trae aspa: quitarlo dejaría
+  /// contenedores fuera del plano. Los demás sí, porque el buque puede no
+  /// tener ese nivel aunque la numeración ISO lo contemple.
+  Widget _buildTierChips(
+    BuildContext context, {
+    required String titulo,
+    required String prefijo,
+    required List<int> tiers,
+    required int anchor,
+    required ValueChanged<List<int>> onChanged,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final ordenados = [...tiers]..sort((a, b) => b.compareTo(a));
+    final candidatos = _nivelesAgregables(tiers, anchor);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(titulo, style: textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final tier in ordenados)
+              InputChip(
+                key: ValueKey('$prefijo-tier-${_pad(tier)}'),
+                label: Text(_pad(tier)),
+                backgroundColor: _ocupados.contains(tier)
+                    ? colorScheme.secondaryContainer
+                    : null,
+                tooltip: _ocupados.contains(tier)
+                    ? 'Este viaje trae carga en el nivel ${_pad(tier)}: no se '
+                        'puede quitar'
+                    : 'Quitar el nivel ${_pad(tier)}',
+                onDeleted: _ocupados.contains(tier)
+                    ? null
+                    : () => onChanged([...tiers]..remove(tier)),
+              ),
+            PopupMenuButton<int>(
+              key: ValueKey('$prefijo-add'),
+              tooltip: 'Agregar un nivel',
+              onSelected: (tier) => onChanged([...tiers, tier]..sort()),
+              itemBuilder: (context) => [
+                for (final tier in candidatos)
+                  PopupMenuItem(
+                    key: ValueKey('$prefijo-add-${_pad(tier)}'),
+                    value: tier,
+                    child: Text('Nivel ${_pad(tier)}'),
+                  ),
+              ],
+              child: Chip(
+                avatar: const Icon(Icons.add, size: 18),
+                label: const Text('Agregar'),
+                backgroundColor: colorScheme.surfaceContainerHighest,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          ordenados.isEmpty
+              ? 'El archivo no trae carga en esta zona.'
+              : 'Propuesto desde el archivo: ${ordenados.length} niveles. '
+                  'Quita los que el buque no tenga.',
+          style: textTheme.bodySmall
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
+        ),
+      ],
+    );
+  }
+
+  /// Niveles que se pueden agregar: los que falten dentro de la corrida y el
+  /// siguiente por encima del más alto declarado.
+  List<int> _nivelesAgregables(List<int> tiers, int anchor) {
+    final maximo = tiers.isEmpty
+        ? anchor - VesselGeometry.tierStep
+        : tiers.reduce(math.max);
+    final siguiente = maximo + VesselGeometry.tierStep;
+    return [
+      for (var t = anchor; t < siguiente; t += VesselGeometry.tierStep)
+        if (!tiers.contains(t)) t,
+      siguiente,
+    ];
   }
 
   Widget _buildCountField({
@@ -446,6 +548,19 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   bool _sameShapeAs(VesselGeometry a, VesselGeometry b) =>
       a.portRows == b.portRows &&
       a.starboardRows == b.starboardRows &&
-      a.holdTiers == b.holdTiers &&
-      a.deckTiers == b.deckTiers;
+      _sameTiers(a.holdTierNumbers, b.holdTierNumbers) &&
+      _sameTiers(a.deckTierNumbers, b.deckTierNumbers);
+
+  /// Compara los niveles por contenido y no por identidad.
+  ///
+  /// `==` entre listas compara referencias, y la pantalla trabaja sobre copias
+  /// de las de la propuesta: comparar con `==` rotulaba como «corregida» una
+  /// geometría que nadie había tocado.
+  bool _sameTiers(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 }

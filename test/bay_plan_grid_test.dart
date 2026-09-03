@@ -11,8 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 const _geometry = VesselGeometry(
   portRows: 6,
   starboardRows: 6,
-  holdTiers: 7,
-  deckTiers: 5,
+  holdTiers: [2, 4, 6, 8, 10, 12, 14],
+  deckTiers: [82, 84, 86, 88, 90],
 );
 
 ContainerUnit _container(String rawCode, {String? id}) {

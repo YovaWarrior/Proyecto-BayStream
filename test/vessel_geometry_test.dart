@@ -20,8 +20,8 @@ void main() {
 
       expect(geometry.portRows, 6, reason: 'filas 02 a 12');
       expect(geometry.starboardRows, 6, reason: 'filas 01 a 11');
-      expect(geometry.holdTiers, 7, reason: 'niveles 02 a 14');
-      expect(geometry.deckTiers, 5, reason: 'niveles 82 a 90');
+      expect(geometry.holdTiers, [2, 4, 6, 8, 10, 12, 14], reason: 'niveles 02 a 14');
+      expect(geometry.deckTiers, [82, 84, 86, 88, 90], reason: 'niveles 82 a 90');
     });
 
     test('la cubierta arranca en el 82, sin inventar una fila vacia debajo', () {
@@ -33,7 +33,7 @@ void main() {
         IsoCoordinateParser.parse('0060190'),
       ]);
 
-      expect(geometry.deckTiers, 5);
+      expect(geometry.deckTiers, [82, 84, 86, 88, 90]);
       expect(geometry.deckTierNumbers, [90, 88, 86, 84, 82]);
       expect(geometry.deckTierNumbers.contains(80), isFalse);
     });
@@ -73,8 +73,8 @@ void main() {
     const geometry = VesselGeometry(
       portRows: 6,
       starboardRows: 6,
-      holdTiers: 7,
-      deckTiers: 5,
+      holdTiers: [2, 4, 6, 8, 10, 12, 14],
+      deckTiers: [82, 84, 86, 88, 90],
     );
 
     test('las columnas van pares descendentes, la fila 00 y luego impares', () {
@@ -104,30 +104,32 @@ void main() {
     const minimum = VesselGeometry(
       portRows: 6,
       starboardRows: 6,
-      holdTiers: 7,
-      deckTiers: 5,
+      holdTiers: [2, 4, 6, 8, 10, 12, 14],
+      deckTiers: [82, 84, 86, 88, 90],
     );
 
-    test('declarar más que el mínimo observado es válido', () {
-      const declared = VesselGeometry(
-        portRows: 7,
-        starboardRows: 7,
-        holdTiers: 8,
-        deckTiers: 6,
-      );
+    final carga = [
+      IsoCoordinateParser.parse('0061290'), // nivel 90, el mas alto
+      IsoCoordinateParser.parse('0060102'),
+    ];
 
-      expect(declared.isAtLeast(minimum), isTrue);
+    test('la geometría propuesta contiene toda la carga del archivo', () {
+      expect(minimum.coversAll(carga), isTrue);
     });
 
-    test('declarar menos que el mínimo dejaría carga fuera del plano', () {
-      const declared = VesselGeometry(
-        portRows: 6,
-        starboardRows: 6,
-        holdTiers: 7,
-        deckTiers: 4, // el archivo trae carga en el nivel 90
-      );
+    test('quitar un nivel vacío es válido: el buque puede no tenerlo', () {
+      // El 84 existe en la propuesta y no trae carga en este viaje.
+      final sinEl84 = minimum.copyWith(deckTiers: [82, 86, 88, 90]);
 
-      expect(declared.isAtLeast(minimum), isFalse);
+      expect(sinEl84.coversAll(carga), isTrue);
+      expect(sinEl84.deckTierNumbers, [90, 88, 86, 82]);
+      expect(sinEl84.totalTiers, 11);
+    });
+
+    test('quitar un nivel con carga deja contenedores fuera del plano', () {
+      final sinEl90 = minimum.copyWith(deckTiers: [82, 84, 86, 88]);
+
+      expect(sinEl90.coversAll(carga), isFalse);
     });
 
     test('covers deja fuera la posición que excede la geometría declarada', () {
@@ -142,8 +144,8 @@ void main() {
     const geometry = VesselGeometry(
       portRows: 6,
       starboardRows: 6,
-      holdTiers: 7,
-      deckTiers: 5,
+      holdTiers: [2, 4, 6, 8, 10, 12, 14],
+      deckTiers: [82, 84, 86, 88, 90],
     );
 
     const container = ContainerUnit(
@@ -182,8 +184,8 @@ void main() {
     const geometry = VesselGeometry(
       portRows: 6,
       starboardRows: 6,
-      holdTiers: 7,
-      deckTiers: 5,
+      holdTiers: [2, 4, 6, 8, 10, 12, 14],
+      deckTiers: [82, 84, 86, 88, 90],
       stackWeightLimitKg: 90000,
     );
 

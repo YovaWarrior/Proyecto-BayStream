@@ -10,9 +10,15 @@ import 'package:flutter_test/flutter_test.dart';
 const _proposal = VesselGeometry(
   portRows: 6,
   starboardRows: 6,
-  holdTiers: 7,
-  deckTiers: 5,
+  holdTiers: [2, 4, 6, 8, 10, 12, 14],
+  deckTiers: [82, 84, 86, 88, 90],
 );
+
+/// Carga del viaje: niveles 90 y 02 ocupados, el resto vacios.
+final _posiciones = [
+  IsoCoordinateParser.parse('0061290'),
+  IsoCoordinateParser.parse('0060102'),
+];
 
 void main() {
   /// Abre la pantalla y deja el resultado en [captured] al cerrarse.
@@ -38,6 +44,7 @@ void main() {
                     MaterialPageRoute(
                       builder: (_) => VesselGeometryPage(
                         proposal: _proposal,
+                        positions: _posiciones,
                         initial: initial,
                         fileName: 'CORPUS_A01.edi',
                       ),
@@ -69,18 +76,91 @@ void main() {
 
     expect(find.text('Lo propuesto es un mínimo observado'), findsOneWidget);
     expect(
-      find.text('Mínimo observado en el archivo: 5. El buque puede tener más.'),
+      find.text('Mínimo observado en el archivo: 6. El buque puede tener más.'),
       findsWidgets,
     );
-    expect(
-      tester
-          .widget<TextFormField>(
-            find.byKey(const ValueKey('geometry-deck-tiers')),
-          )
-          .controller
-          ?.text,
-      '5',
-    );
+    // Los niveles llegan como chips, uno por nivel de la corrida anclada.
+    for (final tier in ['82', '84', '86', '88', '90']) {
+      expect(find.byKey(ValueKey('deck-tier-$tier')), findsOneWidget,
+          reason: 'cubierta $tier');
+    }
+    for (final tier in ['02', '04', '06', '08', '10', '12', '14']) {
+      expect(find.byKey(ValueKey('hold-tier-$tier')), findsOneWidget,
+          reason: 'bodega $tier');
+    }
+  });
+
+  testWidgets('la propuesta sin tocar no se rotula como corregida',
+      (tester) async {
+    await openPage(tester, (_) {});
+
+    // Los niveles se comparan por contenido: la pantalla trabaja sobre copias
+    // de las listas de la propuesta, y compararlas por identidad rotulaba como
+    // corregida una geometria que nadie habia tocado.
+    expect(find.text('Geometría igual al mínimo observado en el archivo.'),
+        findsOneWidget);
+    expect(find.text('Geometría corregida por el usuario.'), findsNothing);
+  });
+
+  testWidgets('al quitar un nivel sí se rotula como corregida', (tester) async {
+    await openPage(tester, (_) {});
+
+    tester
+        .widget<InputChip>(find.byKey(const ValueKey('deck-tier-84')))
+        .onDeleted!();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Geometría corregida por el usuario.'), findsOneWidget);
+  });
+
+  testWidgets('un nivel con carga no se puede quitar', (tester) async {
+    await openPage(tester, (_) {});
+
+    // El 90 trae carga en este viaje; el 84 no.
+    final conCarga =
+        tester.widget<InputChip>(find.byKey(const ValueKey('deck-tier-90')));
+    final vacio =
+        tester.widget<InputChip>(find.byKey(const ValueKey('deck-tier-84')));
+
+    expect(conCarga.onDeleted, isNull, reason: 'el 90 trae carga');
+    expect(vacio.onDeleted, isNotNull, reason: 'el 84 esta vacio');
+  });
+
+  testWidgets('quitar un nivel vacío deja el hueco en la geometría',
+      (tester) async {
+    VesselGeometry? captured;
+    await openPage(tester, (value) => captured = value);
+
+    // Se invoca el contrato del chip y no su icono, que cambia con el tema.
+    tester
+        .widget<InputChip>(find.byKey(const ValueKey('deck-tier-84')))
+        .onDeleted!();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('geometry-no-limit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+    await tester.pumpAndSettle();
+
+    expect(captured!.deckTierNumbers, [90, 88, 86, 82]);
+    expect(captured!.totalTiers, 11);
+  });
+
+  testWidgets('se puede volver a agregar un nivel quitado', (tester) async {
+    await openPage(tester, (_) {});
+
+    // Se invoca el contrato del chip y no su icono, que cambia con el tema.
+    tester
+        .widget<InputChip>(find.byKey(const ValueKey('deck-tier-84')))
+        .onDeleted!();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('deck-tier-84')), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('deck-add')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('deck-add-84')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('deck-tier-84')), findsOneWidget);
   });
 
   testWidgets('Confirmar queda deshabilitado hasta resolver el límite',
@@ -117,20 +197,20 @@ void main() {
     expect(captured!.stackWeightLimitKg, isNull);
   });
 
-  testWidgets('bajar por debajo del mínimo explica qué carga quedaría fuera',
+  testWidgets('bajar las filas por debajo del mínimo explica qué queda fuera',
       (tester) async {
     await openPage(tester, (_) {});
 
     await tester.enterText(
-      find.byKey(const ValueKey('geometry-deck-tiers')),
+      find.byKey(const ValueKey('geometry-port-rows')),
       '4',
     );
     await tester.pumpAndSettle();
 
     expect(
       find.text(
-        'El archivo trae carga en el nivel 90; con 4 niveles de cubierta '
-        'quedaría fuera del plano.',
+        'El archivo trae carga en la fila 12; con 4 filas a babor quedaría '
+        'fuera del plano.',
       ),
       findsOneWidget,
     );
