@@ -385,25 +385,48 @@ parches sobre una rejilla inferida.
 7. **C‑5b** — slots ocupados por 40 pies. Es el de más diseño.
 8. **C‑7** — peso por fila y el límite donde corresponde.
 9. **C‑6** — posición en el CSV, junto con la neutralización de fórmulas.
+   ✓ cerrado (`36f369b`).
 
-**Estado al 3 de septiembre.** C‑3, C‑4 y C‑2 quedan cerrados y verificados en
-código por Yov, no solo reportados por el segundo programador. Antes de dar
-C‑3 por completo cerrado falta una extensión: `deckTiers` (y probablemente
-`holdTiers`) son hoy un entero con ancla y paso fijos —no una lista— así que
-un buque con un arranque de cubierta distinto o con un hueco no se puede
-expresar. Cambia a `List<int>`, con chips quitables y uno para agregar; la
-propuesta inicial no cambia —sigue anclada en el máximo, corrida contigua—,
-solo la edición manual pasa a admitir un conjunto. Hallazgo del segundo
-programador, 3 de septiembre.
+**Estado al 3 de septiembre.** C‑3, C‑4, C‑2 y C‑6 quedan cerrados y
+verificados en código y en el corpus por Yov, no solo reportados por el
+segundo programador. Antes de dar C‑3 por completo cerrado falta una
+extensión: `deckTiers` (y probablemente `holdTiers`) son hoy un entero con
+ancla y paso fijos —no una lista— así que un buque con un arranque de
+cubierta distinto o con un hueco no se puede expresar. Cambia a `List<int>`,
+con chips quitables y uno para agregar; la propuesta inicial no cambia —sigue
+anclada en el máximo, corrida contigua—, solo la edición manual pasa a
+admitir un conjunto. Hallazgo del segundo programador, 3 de septiembre.
 
-**Por decisión del segundo programador, confirmada aquí: `C‑6` se adelanta y
-va antes que `C‑5a`.** No tiene ninguna decisión pendiente, y comparte código
-con el defecto 5.4 de la auditoría de seguridad: el truco de escribir
-`="0030410"` para que Excel no recorte los ceros a la izquierda es el mismo
-patrón de inyección de fórmulas que 5.4 señaló. Se resuelven juntos.
-`C‑5a` queda detrás porque depende de una decisión de operación aún abierta
-— el campo de puerto de esta escala — que se resuelve directamente con
-Carlos antes de tocar otra vez la pantalla de parámetros.
+**C‑6, verificado.** El CSV protege el campo con una tabulación al inicio
+(`_excelTextGuard`), no con `="0030410"` — esa forma habría resuelto los
+ceros creando el defecto 5.4 en el mismo cambio. Un solo predicado cubre los
+dos casos porque son el mismo mecanismo: campo vacío no se toca; empieza en
+`0` seguido de otro dígito → protegido (pierde los ceros si no); empieza en
+`=`, `+`, `@`, tabulación, retorno de carro o salto de línea → protegido
+(carácter de fórmula); empieza en `-` y lo que sigue **no** forma un número
+→ protegido (fórmula disfrazada de resta); empieza en `-` y sí forma un
+número → **no** se toca, es una temperatura real. Reverificado contra el
+corpus completo: de las 4584 posiciones de estiba de los seis archivos,
+4584 quedan protegidas (todas empiezan en `0`), y las temperaturas reales
+del corpus (`-18`, `-18.0`, `-04.4`, `-22.0`…) pasan la prueba `double.
+tryParse` y se quedan como número. Sobre `CORPUS_A01` en particular: 977
+posiciones, las 977 protegidas, cero campos con forma de fórmula — coincide
+exacto con lo reportado. Hay pruebas para las dos ramas del signo menos en
+`test/export_service_test.dart` (grupo «Defecto 5.4 · inyección de
+fórmulas»), incluida una que confirma explícitamente que `="..."` no
+aparece en la salida. Carlos abrió el CSV de verdad en Excel y lo confirmó
+a ojo.
+
+**Por decisión del segundo programador, confirmada aquí: `C‑6` se adelantó y
+fue antes que `C‑5a`.** No tenía ninguna decisión pendiente, y compartía
+código con el defecto 5.4 de la auditoría de seguridad. Resuelto en el mismo
+cambio, como estaba previsto.
+`C‑5a` sigue detrás de `EQD` y `C‑1` en el orden: depende de una decisión de
+operación ya resuelta con Carlos —el campo de puerto de esta escala propone
+el `LOC+9` más frecuente entre los contenedores del archivo, mismo patrón
+que el resto de C‑3—, pero vuelve a tocar la pantalla de parámetros que
+recién se cerró, así que conviene dejarla para después de los dos cambios
+aislados que quedan.
 
 ## 5 · Lo que no hay que hacer todavía
 
