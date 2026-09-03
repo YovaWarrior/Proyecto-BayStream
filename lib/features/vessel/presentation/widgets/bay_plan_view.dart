@@ -117,7 +117,12 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                 final bay = widget.voyage.bays[bayNumber]!;
                 final isSelected = bayNumber == _selectedBayNumber;
                 
-                final occupancyPct = bay.occupancyRate.toStringAsFixed(0);
+                // Sin geometria declarada no hay porcentaje que mostrar; se
+                // rotula el hueco en vez de rellenarlo con un numero inventado.
+                final occupancy = bay.occupancyRate;
+                final occupancyLabel = occupancy == null
+                    ? 'sin geometria'
+                    : '${occupancy.toStringAsFixed(0)}%';
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: FilterChip(
@@ -125,7 +130,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'BAY ${bayNumber.toString().padLeft(2, '0')} ($occupancyPct%)',
+                          'BAY ${bayNumber.toString().padLeft(2, '0')} ($occupancyLabel)',
                           style: TextStyle(
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             fontSize: 12,

@@ -346,7 +346,8 @@ class VesselProfilePainter extends CustomPainter {
 
   double _normalizedValue(Bay bay) {
     if (metric == VesselProfileMetric.occupancy) {
-      return (bay.occupancyRate / 100).clamp(0.0, 1.0);
+      // Sin geometria declarada la ocupacion no es calculable: se dibuja vacia.
+      return ((bay.occupancyRate ?? 0) / 100).clamp(0.0, 1.0);
     }
     if (maxWeight <= 0) return 0;
     return (bay.totalWeight / maxWeight).clamp(0.0, 1.0);
@@ -354,7 +355,8 @@ class VesselProfilePainter extends CustomPainter {
 
   String _valueLabel(Bay bay) {
     if (metric == VesselProfileMetric.occupancy) {
-      return '${bay.occupancyRate.toStringAsFixed(0)}%';
+      final occupancy = bay.occupancyRate;
+      return occupancy == null ? '--' : '${occupancy.toStringAsFixed(0)}%';
     }
     return '${(bay.totalWeight / 1000).toStringAsFixed(1)}t';
   }

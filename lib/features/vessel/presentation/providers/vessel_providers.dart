@@ -27,19 +27,27 @@ class LoadFileResult {
   final String? fileName;
   final String? errorMessage;
 
+  /// El archivo se parseó pero el viaje quedó pendiente de que el usuario
+  /// confirme la geometría del buque. Todavía no hay nada publicado.
+  final bool needsGeometry;
+
   const LoadFileResult._({
     required this.success,
     this.fileName,
     this.errorMessage,
+    this.needsGeometry = false,
   });
 
-  factory LoadFileResult.success(String fileName) => 
+  factory LoadFileResult.success(String fileName) =>
       LoadFileResult._(success: true, fileName: fileName);
-  
-  factory LoadFileResult.error(String message) => 
+
+  factory LoadFileResult.needsGeometry(String fileName) =>
+      LoadFileResult._(success: true, fileName: fileName, needsGeometry: true);
+
+  factory LoadFileResult.error(String message) =>
       LoadFileResult._(success: false, errorMessage: message);
-  
-  factory LoadFileResult.cancelled() => 
+
+  factory LoadFileResult.cancelled() =>
       const LoadFileResult._(success: false);
 
   bool get isCancelled => !success && errorMessage == null;
@@ -47,6 +55,19 @@ class LoadFileResult {
 
 /// Notifier para manejar operaciones de viajes (Riverpod 3.x)
 class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
+  /// Viaje parseado que todavía no se publica porque falta confirmar la
+  /// geometría del buque.
+  ///
+  /// Sostiene el invariante de C-3: **un viaje publicado siempre trae
+  /// geometría**. El único lugar que lo rompe o lo mantiene es este notifier.
+  VesselVoyage? _pendingVoyage;
+
+  /// Viaje a la espera de que se confirmen los parámetros del buque.
+  VesselVoyage? get pendingVoyage => _pendingVoyage;
+
+  /// Viaje publicado, o `null` si no hay ninguno.
+  VesselVoyage? get publishedVoyage => state.hasValue ? state.value : null;
+
   @override
   AsyncValue<VesselVoyage?> build() {
     return const AsyncValue.data(null);
@@ -70,30 +91,36 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       }
 
       final file = result.files.first;
-      
+
       // Verificar que el archivo tenga contenido
       if (file.bytes == null || file.bytes!.isEmpty) {
         return LoadFileResult.error('No se pudo leer el contenido del archivo');
       }
+
+      // Si el usuario cancela los parámetros, se vuelve a lo que había antes:
+      // una carga a medias no debe borrar el viaje que ya estaba en pantalla.
+      final previousState = state;
 
       // Poner estado en loading
       state = const AsyncValue.loading();
 
       // Convertir bytes a String
       final content = String.fromCharCodes(file.bytes!);
-      
+
       // Parsear el contenido
       final repository = ref.read(vesselRepositoryProvider);
       final parseResult = await repository.parseBaplieFile(content);
-      
+
       return parseResult.fold(
         (failure) {
           state = AsyncValue.error(failure.message, StackTrace.current);
           return LoadFileResult.error(failure.message);
         },
         (voyage) {
-          state = AsyncValue.data(voyage);
-          return LoadFileResult.success(file.name);
+          // El viaje NO se publica todavía: primero se confirma la geometría.
+          _pendingVoyage = voyage;
+          state = previousState;
+          return LoadFileResult.needsGeometry(file.name);
         },
       );
     } catch (e) {
@@ -116,8 +143,25 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     );
   }
 
+  /// Publica el viaje con la geometría que el usuario confirmó.
+  ///
+  /// Sirve para el viaje pendiente y también para corregir la geometría de uno
+  /// ya publicado. Es el único punto donde un viaje pasa a estado publicado.
+  void confirmGeometry(VesselGeometry geometry) {
+    final target = _pendingVoyage ?? publishedVoyage;
+    if (target == null) return;
+    _pendingVoyage = null;
+    state = AsyncValue.data(target.withGeometry(geometry));
+  }
+
+  /// Descarta el viaje pendiente cuando el usuario cancela los parámetros.
+  void discardPendingVoyage() {
+    _pendingVoyage = null;
+  }
+
   /// Limpia el viaje cargado
   void clearVoyage() {
+    _pendingVoyage = null;
     state = const AsyncValue.data(null);
   }
 }

@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
+import '../../../../core/utils/iso_coordinate_parser.dart';
 import 'vessel.dart';
 import 'container_unit.dart';
 import 'bay.dart';
+import 'vessel_geometry.dart';
 
 /// Entidad que representa un viaje completo de un buque
 /// 
@@ -38,6 +40,14 @@ class VesselVoyage extends Equatable {
   /// Metadatos adicionales del mensaje BAPLIE
   final BaplieMetadata? metadata;
 
+  /// Geometría del buque declarada por el usuario.
+  ///
+  /// Fuente única: se guarda una sola vez aquí y `Bay` la recibe inyectada.
+  /// Es `null` mientras el viaje está pendiente de confirmación, y en los
+  /// documentos escritos antes de C-3. En ambos casos la ocupación se rotula
+  /// como no calculable en vez de mostrar un número de respaldo.
+  final VesselGeometry? geometry;
+
   const VesselVoyage({
     required this.id,
     required this.vessel,
@@ -49,6 +59,7 @@ class VesselVoyage extends Equatable {
     this.containers = const [],
     this.bays = const {},
     this.metadata,
+    this.geometry,
   });
 
   /// Total de contenedores en el buque
@@ -74,6 +85,22 @@ class VesselVoyage extends Equatable {
   List<ContainerUnit> getContainersInBay(int bayNumber) =>
       containers.where((c) => c.stowagePosition?.bay == bayNumber).toList();
 
+  /// Devuelve el viaje con la geometría confirmada y propagada a cada bahía.
+  ///
+  /// Es la única transformación que asigna geometría. Mantiene el invariante
+  /// de que un viaje publicado siempre trae geometría, en el buque y en todas
+  /// sus bahías a la vez.
+  VesselVoyage withGeometry(VesselGeometry geometry) => copyWith(
+        geometry: geometry,
+        bays: bays.map(
+          (number, bay) => MapEntry(number, bay.copyWith(geometry: geometry)),
+        ),
+      );
+
+  /// Posiciones de estiba ocupadas en este viaje, para deducir la geometría.
+  Iterable<IsoCoordinate> get stowagePositions =>
+      containers.map((c) => c.stowagePosition).whereType<IsoCoordinate>();
+
   @override
   List<Object?> get props => [
         id,
@@ -86,6 +113,7 @@ class VesselVoyage extends Equatable {
         containers,
         bays,
         metadata,
+        geometry,
       ];
 
   VesselVoyage copyWith({
@@ -99,6 +127,7 @@ class VesselVoyage extends Equatable {
     List<ContainerUnit>? containers,
     Map<int, Bay>? bays,
     BaplieMetadata? metadata,
+    VesselGeometry? geometry,
   }) {
     return VesselVoyage(
       id: id ?? this.id,
@@ -111,6 +140,7 @@ class VesselVoyage extends Equatable {
       containers: containers ?? this.containers,
       bays: bays ?? this.bays,
       metadata: metadata ?? this.metadata,
+      geometry: geometry ?? this.geometry,
     );
   }
 
@@ -125,9 +155,18 @@ class VesselVoyage extends Equatable {
         'containers': containers.map((c) => c.toJson()).toList(),
         'bays': bays.map((k, v) => MapEntry(k.toString(), v.toJson())),
         if (metadata != null) 'metadata': metadata!.toJson(),
+        // Una sola vez para todo el buque: las bahias no la serializan.
+        if (geometry != null) 'geometry': geometry!.toJson(),
       };
 
-  factory VesselVoyage.fromJson(Map<String, dynamic> json) => VesselVoyage(
+  factory VesselVoyage.fromJson(Map<String, dynamic> json) {
+    // Se lee antes que las bahias porque cada una la recibe inyectada.
+    final geometry = json['geometry'] != null
+        ? VesselGeometry.fromJson(json['geometry'] as Map<String, dynamic>)
+        : null;
+
+    return VesselVoyage(
+        geometry: geometry,
         id: json['id'] as String,
         vessel: Vessel.fromJson(json['vessel'] as Map<String, dynamic>),
         voyageNumber: json['voyageNumber'] as String,
@@ -145,13 +184,17 @@ class VesselVoyage extends Equatable {
                 .toList() ??
             [],
         bays: (json['bays'] as Map<String, dynamic>?)?.map(
-              (k, v) => MapEntry(int.parse(k), Bay.fromJson(v as Map<String, dynamic>)),
+              (k, v) => MapEntry(
+                int.parse(k),
+                Bay.fromJson(v as Map<String, dynamic>, geometry: geometry),
+              ),
             ) ??
             {},
         metadata: json['metadata'] != null
             ? BaplieMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
             : null,
-      );
+    );
+  }
 
   @override
   String toString() =>

@@ -11,6 +11,7 @@ import '../widgets/empty_state_widget.dart';
 import '../widgets/bay_plan_view.dart';
 import '../widgets/container_search_delegate.dart';
 import '../widgets/voyage_stats_view.dart';
+import 'vessel_geometry_page.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -87,6 +88,14 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                   ),
                 ),
               ],
+            ),
+          // Corregir la geometría declarada sin volver a cargar el archivo
+          if (hasVoyage)
+            IconButton(
+              key: const ValueKey('edit-geometry'),
+              icon: const Icon(Icons.straighten),
+              tooltip: 'Parámetros del buque',
+              onPressed: () => _askForGeometry(context),
             ),
           // Botón para cargar archivo BAPLIE
           IconButton(
@@ -270,23 +279,89 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
   }
 
   /// Carga un archivo BAPLIE usando el VoyageNotifier
+  ///
+  /// El viaje no se publica al parsearlo: primero pasa por la pantalla de
+  /// parámetros del buque. El plano nunca se dibuja con geometría inferida.
   Future<void> _loadBaplieFile(BuildContext context) async {
-    final result = await ref.read(voyageNotifierProvider.notifier).loadVesselFromFile();
-    
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    final result = await notifier.loadVesselFromFile();
+
     if (!context.mounted) return;
-    
-    // No mostrar nada si el usuario canceló
+
+    // No mostrar nada si el usuario canceló el selector de archivos
     if (result.isCancelled) return;
-    
+
+    if (result.needsGeometry) {
+      await _askForGeometry(context, fileName: result.fileName);
+      return;
+    }
+
     // Mostrar SnackBar según el resultado
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          result.success 
+          result.success
               ? 'Archivo "${result.fileName}" cargado correctamente'
               : result.errorMessage ?? 'Error desconocido',
         ),
         backgroundColor: result.success ? Colors.green : Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  /// Abre la pantalla de parámetros del buque con la propuesta deducida.
+  ///
+  /// Si el usuario cancela, el viaje pendiente se descarta: no se publica un
+  /// viaje sin geometría confirmada.
+  Future<void> _askForGeometry(
+    BuildContext context, {
+    String? fileName,
+  }) async {
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    final target = notifier.pendingVoyage ?? notifier.publishedVoyage;
+    if (target == null) return;
+
+    final isEditing = notifier.pendingVoyage == null;
+    final geometry = await Navigator.of(context).push<VesselGeometry>(
+      MaterialPageRoute(
+        builder: (_) => VesselGeometryPage(
+          proposal: VesselGeometry.proposeFrom(target.stowagePositions),
+          initial: target.geometry,
+          fileName: fileName,
+        ),
+      ),
+    );
+
+    if (!context.mounted) return;
+
+    if (geometry == null) {
+      // Cancelar deja el árbol como estaba: nada publicado, nada pendiente.
+      notifier.discardPendingVoyage();
+      if (isEditing) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Carga cancelada: no se confirmó la geometría del buque',
+          ),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(16),
+        ),
+      );
+      return;
+    }
+
+    notifier.confirmGeometry(geometry);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isEditing
+              ? 'Parámetros del buque actualizados'
+              : 'Archivo "$fileName" cargado correctamente',
+        ),
+        backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
       ),
