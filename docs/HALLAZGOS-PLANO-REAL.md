@@ -41,8 +41,12 @@ pila vertical), alineadas con las columnas de abajo: `0.0 · 0.0 · 19.8 · 62.7
 ascienden hacia estribor, y **el 00 va en el centro**.
 
 **Rótulos de fila (niveles).** Cubierta `90 · 88 · 86 · 84 · 82 · 80`, una
-línea doble de separación, y bodega `14 · 12 · 10 · 08 · 06 · 04 · 02`. **Trece
-niveles en total y ni uno más.**
+línea doble de separación, y bodega `14 · 12 · 10 · 08 · 06 · 04 · 02`.
+**Corrección (Carlos, 3 de septiembre — ver corrección 5 del registro):** de
+esas seis etiquetas de cubierta, el nivel realmente utilizable es el **82**,
+no el 80. El 80 no aparece ocupado ni una sola vez en los 4584 slots del
+corpus (seis archivos) y no corresponde a un nivel real de estiba del MIZAR.
+**Doce niveles reales en total: cinco de cubierta y siete de bodega.**
 
 **Columna derecha.** Peso acumulado por **nivel**: `159.3 · 123.8 · 145.3 ·
 114.8 · 60.9` para los niveles con carga, `0.0` para el resto.
@@ -132,9 +136,12 @@ las dos están mal:
 - Supone la capacidad: `Bay` nace con `maxRows = 12` y `maxTiers = 10` y el
   parser **nunca los asigna**, así que toda la ocupación se calcula contra 120
   huecos ficticios. Sobre `CORPUS_A01` la ocupación media que se muestra es
-  **30.2 %**, contra **21.4 %** medido sobre la geometría declarada de 13
-  columnas × 13 niveles. Ver la corrección número 1 del registro al final: la
-  primera versión de este documento daba **74.1 %** y ese número era erróneo.
+  **30.2 %**, contra **23.2 %** medido sobre la geometría declarada de 13
+  columnas × 12 niveles (156 huecos por bahía). Ver las correcciones número 1
+  y número 5 del registro al final: la primera versión de este documento daba
+  **74.1 %**, la segunda corrección lo bajó a 21.4 % pero con un denominador
+  de 169 huecos que resultó tener un nivel de más; el número correcto es
+  **23.2 %**.
 
 **Cambio:** una pantalla de parámetros **previa a la carga del EDI**, donde se
 declare la geometría: filas de babor y de estribor, si el buque tiene fila 00,
@@ -160,16 +167,24 @@ una **cota inferior**: la geometría real es mayor o igual, nunca menor. Es
 exactamente lo que declara la nota al pie del plano comercial. La pantalla
 tiene que dejar claro que lo propuesto es un mínimo observado y no una medición.
 
-**La regla de deducción se ancla en el máximo, no en la cuenta de valores
-distintos.** La diferencia no es teórica y tiene una demostración exacta: el
-plano impreso del MIZAR tiene **seis** niveles de cubierta —80, 82, 84, 86, 88
-y 90— pero **el nivel 80 no aparece ocupado ni una sola vez en ninguno de los
-siete archivos del corpus**. Contando valores distintos se deducirían cinco
-niveles y el buque tiene seis. Anclando en el máximo, `(90 − 80) / 2 + 1 = 6`,
-sale el número correcto y el nivel 80 aparece vacío, como en la hoja impresa.
+**Corrección (ver corrección 5 del registro final).** La versión anterior de
+este documento afirmaba aquí que el plano impreso del MIZAR tenía seis niveles
+de cubierta —con el 80 como nivel real pero siempre vacío— y usaba ese caso
+para argumentar que la regla de deducción debía anclarse en el valor máximo
+observado y no en la cuenta de valores distintos. Carlos corrigió el dato de
+origen: el nivel real más bajo de cubierta es el **82**, no el 80, así que la
+cubierta tiene **cinco** niveles, no seis. Contando valores distintos en el
+corpus se llega exactamente a esos cinco (82, 84, 86, 88, 90 — 2375
+posiciones en los seis archivos), así que en este caso concreto contar
+valores distintos ya da el número correcto. No hay una discrepancia que
+anclar, y la demostración numérica anterior queda retirada.
 
-Es la demostración concreta y verificable de por qué lo deducido es una cota
-inferior. Hallazgo del segundo programador durante la implementación de C‑3.
+Lo que sigue en pie, y sigue siendo la razón de fondo de C‑3, es que **un
+corpus de seis viajes no prueba que esos sean todos los niveles reales del
+buque**. Si el MIZAR tuviera un nivel adicional que en ninguno de estos seis
+viajes se usó, el corpus jamás lo mostraría. La cota inferior sigue siendo
+cota inferior aunque en este caso particular, ya verificado, coincida con la
+realidad.
 
 **Qué se puede deducir y qué no:**
 
@@ -177,8 +192,8 @@ inferior. Hallazgo del segundo programador durante la implementación de C‑3.
 |---|---|---|
 | Filas presentes | Sí, como mínimo | Conjunto de `RR` de las coordenadas |
 | ¿Existe la fila 00? | Solo si viene ocupada | Presencia de `RR = 00` |
-| Niveles de bodega | Sí, como mínimo | Conjunto de `TT` menores que 80 |
-| Niveles de cubierta | Sí, como mínimo | Conjunto de `TT` mayores o iguales a 80 |
+| Niveles de bodega | Sí, como mínimo | Conjunto de `TT` menores que 50 |
+| Niveles de cubierta | Sí, como mínimo | Conjunto de `TT` mayores o iguales a 50 |
 | Bahías | Sí | Conjunto de `BBB` |
 | **Límite de apilamiento** | **No** | Viene del manual de estabilidad del buque |
 
@@ -201,7 +216,8 @@ geometría inferida y después se ofrezca ajustarla.
 
 ### C‑4 · Los niveles reales, sin el desierto de celdas vacías
 
-**Plano real:** trece niveles. Cubierta 80–90, bodega 02–14.
+**Plano real:** doce niveles. Cubierta 82–90 (cinco niveles: 82, 84, 86, 88,
+90), bodega 02–14 (siete niveles).
 
 **BayStream:** dibuja el rango continuo del mínimo al máximo. Como el corpus va
 del nivel 02 al 90, genera **45 filas de nivel por bahía de las que solo 13
@@ -225,7 +241,7 @@ pantalla la que está mal (`bay_plan_view.dart:478`, un solo rango).
 
 **Esto es además la hipótesis principal de la detención en Android.** Con 45
 filas × 13 columnas se construyen unas 585 celdas por bahía, la mayoría vacías
-y sin construcción diferida. Al corregir C‑4 se cae a 169. **Verificar el ANR
+y sin construcción diferida. Al corregir C‑4 se cae a 156. **Verificar el ANR
 en Android inmediatamente después de este cambio, antes de tocar nada más.**
 
 ### C‑5 · Lo que ocupa un slot sin ser carga de esta operación
@@ -381,7 +397,7 @@ parches sobre una rejilla inferida.
 
 ## 6 · Registro de correcciones a este documento
 
-Se anotan porque el proyecto ya lleva cuatro casos en que un segundo revisor
+Se anotan porque el proyecto ya lleva cinco casos en que un segundo revisor
 encontró algo que el primero había dado por bueno, y ese patrón es material
 para el apartado de método. Ocultar las correcciones lo desperdiciaría.
 
@@ -403,7 +419,11 @@ Sobre la geometría declarada de 13 × 13 = 169 huecos, las cifras correctas de
 | Bahías impares (16) | 4.7 % |
 | Todas (27) | **21.4 %** |
 
-**La cifra honesta baja de 30.2 % a 21.4 %, no sube.** Y seguirá baja hasta que
+*(Nota, 3 de septiembre: este 21.4 % usaba un denominador de 169 huecos por
+bahía que resultó tener un nivel de más. Ver la corrección número 5: el
+número final correcto es 49.5 % / 5.1 % / 23.2 %.)*
+
+**La cifra honesta baja de 30.2 % a 23.2 %, no sube.** Y seguirá baja hasta que
 entre C‑5b, porque las 16 bahías impares están físicamente llenas de
 contenedores de 40 pies que todavía no se cuentan. Al presentarlo hace falta esa
 frase de contexto: el número anterior estaba inflado porque el denominador se
@@ -427,10 +447,51 @@ deducción sobre la forma del casco queda retirada por completo.
 cada contenedor está en el archivo y BayStream lo parsea sin usarlo. Eso parte
 C‑5 en dos mitades independientes, C‑5a y C‑5b.
 
+**5 · El nivel 80 no era un nivel real, y eso también arrastraba mal la cifra
+de la corrección 1.**
+*Corregido por Carlos vía el segundo programador, 3 de septiembre.* La
+corrección número 2 de este mismo registro decía que el plano del MIZAR tiene
+seis niveles de cubierta, con el 80 como nivel real que solo aparece vacío.
+Era la lectura equivocada. Carlos aclaró que el nivel real más bajo de
+cubierta es el **82**: la cubierta tiene **cinco** niveles (82, 84, 86, 88,
+90), no seis, y el 80 no corresponde a ningún nivel real de estiba del buque.
+
+Se reverificó contra los seis archivos primarios del corpus (excluyendo
+`CORPUS_A03v_VGM`, idéntico a `A03`): **4584 posiciones ocupadas en total**.
+El nivel 80 no aparece ni una sola vez; el 82 aparece 386 veces, en 45 de las
+130 combinaciones bahía‑archivo del corpus. Doce niveles reales en total, no
+trece: siete de bodega (02–14, en 66 combinaciones bahía‑archivo para el
+nivel 02) y cinco de cubierta (82–90). Eso arrastraba dos números más:
+
+- La geometría declarada pasa de **13 × 13 = 169** huecos por bahía a
+  **13 × 12 = 156**.
+- Las cifras de la corrección 1, calculadas sobre el denominador de 169,
+  quedan a su vez corregidas: sobre `CORPUS_A01`, bahías pares **49.5 %** (no
+  45.7 %), impares **5.1 %** (no 4.7 %), todas **23.2 %** (no 21.4 %).
+
+Es la tercera cifra que se corrige en este documento, y la segunda vez que se
+corrige una corrección anterior. La demostración original del punto 2 —anclar
+la deducción en el máximo, no en la cuenta de valores distintos, usando el 80
+como ejemplo— queda retirada: contando valores distintos en este corpus ya se
+llega a los cinco niveles reales de cubierta, sin discrepancia que anclar. El
+principio general, que lo deducido del EDI es siempre una cota inferior y
+nunca una medición, sigue siendo válido y sigue siendo la razón de C‑3;
+simplemente ya no tiene, en este documento, un ejemplo numérico que lo
+demuestre con este corpus.
+
 **Sobre la corrección 3 conviene ser explícito:** el error se cometió por
 inferir el significado de una marca en vez de preguntar a quien trabaja en el
 muelle. Es la misma clase de fallo que la auditoría de seguridad del 25 de
 agosto documentó al inferir las reglas de Firestore en lugar de leerlas. Con
-tres apariciones ya no es una anécdota, y la lección operativa es la misma:
-**cuando el dato viene del mundo y no del código, se observa o se pregunta; no
-se deduce.**
+la corrección 5 ya son cuatro apariciones del mismo patrón, y la lección
+operativa es la misma: **cuando el dato viene del mundo y no del código, se
+observa o se pregunta; no se deduce.**
+
+**Sobre la corrección 5 conviene añadir algo distinto:** no fue un error de
+inferencia sino de no volver a confirmar contra la fuente primaria antes de
+escribirlo como una demostración cerrada. El segundo programador aportó el
+dato del nivel 80 de buena fe y con un argumento que sonaba completo; quedó
+incorporado a este documento sin que nadie —ni Yov, que lo redactó, ni Carlos,
+hasta que lo contrastó con lo que sabe del buque— lo verificara de nuevo. La
+lección no cambia, solo se extiende: se observa o se pregunta, incluso cuando
+el dato ya llega envuelto en la demostración de otra persona.
