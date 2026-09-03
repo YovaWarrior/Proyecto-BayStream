@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(git checkout:*)",
+      "Bash(git restore:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(git rm:*)",
+      "Bash(git mv:*)",
+      "Bash(git clean:*)",
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(firebase deploy:*)",
+      "Edit(lib/latency_test_screen.dart)",
+      "Edit(lib/c3_reconciliation_screen.dart)",
+      "Edit(lib/main.dart)",
+      "Edit(.claude/settings.local.json)"
+    ],
+    "allow": [
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git diff:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(flutter test:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(flutter build:*)"
+    ]
+  }
+}

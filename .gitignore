@@ -58,4 +58,10 @@ docs/temp_*.xml
 docs/temp_*.txt
 
 # Configuracion local de herramientas
-.claude/
+# Se versiona lo compartido entre programadores; lo personal se queda fuera.
+.claude/*
+!.claude/settings.json
+!.claude/skills/
+!.claude/agents/
+!.claude/commands/
+.claude/settings.local.json
