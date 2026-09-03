@@ -137,10 +137,46 @@ class ExportService {
     return 'BayStream_${vesselName}_$voyageNumber.${format.extension}';
   }
 
+  /// Carácter que fuerza a Excel a leer el campo como texto.
+  ///
+  /// Se elige la tabulación y no la comilla simple porque Excel oculta la
+  /// tabulación al importar y en cambio muestra la comilla como parte del
+  /// dato. Tampoco se usa `="0030410"`: esa forma es una fórmula, y sería
+  /// introducir el defecto 5.4 mientras se corrige el de los ceros.
+  static const String _excelTextGuard = '\t';
+
+  /// Indica si Excel interpretaría el campo como algo distinto del texto que
+  /// trae, y por tanto hay que protegerlo.
+  ///
+  /// Cubre los dos defectos a la vez, porque son el mismo mecanismo:
+  ///
+  /// - **Ceros a la izquierda (C-6).** La posición de estiba es de siete
+  ///   dígitos: `0030410` es bahía 003, fila 04, nivel 10. Excel la lee como
+  ///   número y la deja en `30410`.
+  /// - **Inyección de fórmulas (defecto 5.4 de la auditoría).** Un campo que
+  ///   empieza en `=`, `+`, `@` o un carácter de control se evalúa al abrir
+  ///   el archivo. El contenido viene de un BAPLIE de terceros.
+  ///
+  /// El signo menos se trata aparte: `-18.5` es una temperatura legítima y
+  /// tiene que seguir siendo un número en Excel. Solo se protege cuando lo
+  /// que sigue al signo no forma un número, que es cuando es una fórmula.
+  static bool _needsExcelTextGuard(String text) {
+    if (text.isEmpty) return false;
+    if (RegExp(r'^0\d').hasMatch(text)) return true;
+    if (RegExp(r'^[=+@\t\r\n]').hasMatch(text)) return true;
+    if (text.startsWith('-') && double.tryParse(text) == null) return true;
+    return false;
+  }
+
   String _escapeCsvField(Object? value) {
     final text = value?.toString() ?? '';
-    final escaped = text.replaceAll('"', '""');
-    final needsQuotes = escaped.contains(',') ||
+    final guarded = _needsExcelTextGuard(text);
+    final protected = guarded ? '$_excelTextGuard$text' : text;
+    final escaped = protected.replaceAll('"', '""');
+    // Un campo protegido se entrecomilla siempre: la tabulación suelta queda
+    // a merced de cómo cada lector delimite los campos.
+    final needsQuotes = guarded ||
+        escaped.contains(',') ||
         escaped.contains('"') ||
         escaped.contains('\r') ||
         escaped.contains('\n');

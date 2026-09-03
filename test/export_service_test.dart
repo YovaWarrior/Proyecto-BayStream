@@ -57,6 +57,108 @@ void main() {
     expect(csv, contains('25000.5'));
   });
 
+  group('C-6 · la posición conserva los siete dígitos en Excel', () {
+    test('la posición se exporta protegida y con sus ceros a la izquierda', () {
+      const conCeros = ContainerUnit(
+        id: '2',
+        containerId: 'TEST0000001',
+        stowagePosition: IsoCoordinate(
+          bay: 3,
+          row: 4,
+          tier: 10,
+          rawCode: '0030410',
+        ),
+      );
+      const viaje = VesselVoyage(
+        id: 'voyage-2',
+        vessel: Vessel(id: 'vessel-2', name: 'Buque Prueba'),
+        voyageNumber: 'V002',
+        containers: [conCeros],
+      );
+
+      final csv = service.serializeCsv(viaje);
+
+      // Los siete dígitos completos, no los cinco que deja Excel al leerlo
+      // como número.
+      expect(csv, contains('"\t0030410"'));
+      expect(csv, isNot(contains(',30410,')));
+    });
+
+    test('no se usa la forma de fórmula para forzar el texto', () {
+      const conCeros = ContainerUnit(
+        id: '3',
+        containerId: 'TEST0000002',
+        stowagePosition: IsoCoordinate(
+          bay: 6,
+          row: 6,
+          tier: 88,
+          rawCode: '0060688',
+        ),
+      );
+      const viaje = VesselVoyage(
+        id: 'voyage-3',
+        vessel: Vessel(id: 'vessel-3', name: 'Buque Prueba'),
+        voyageNumber: 'V003',
+        containers: [conCeros],
+      );
+
+      final csv = service.serializeCsv(viaje);
+
+      // `="0060688"` resolvería los ceros creando el defecto 5.4.
+      expect(csv, contains('0060688'));
+      expect(csv, isNot(contains('="')));
+    });
+  });
+
+  group('Defecto 5.4 · inyección de fórmulas', () {
+    VesselVoyage voyageConTexto(String texto) => VesselVoyage(
+          id: 'voyage-x',
+          vessel: const Vessel(id: 'vessel-x', name: 'Buque Prueba'),
+          voyageNumber: 'V004',
+          containers: [
+            ContainerUnit(
+              id: '9',
+              containerId: 'TEST0000009',
+              operatorCode: texto,
+            ),
+          ],
+        );
+
+    test('neutraliza los prefijos =, + y @ que vienen del archivo', () {
+      for (final ataque in [
+        '=cmd|\'/c calc\'!A1',
+        '+1+1',
+        '@SUM(1+1)',
+      ]) {
+        final csv = service.serializeCsv(voyageConTexto(ataque));
+
+        expect(csv, contains('"\t$ataque"'), reason: ataque);
+      }
+    });
+
+    test('neutraliza el menos solo cuando no forma un número', () {
+      final ataque = service.serializeCsv(voyageConTexto('-2+3+cmd|x'));
+
+      expect(ataque, contains('"\t-2+3+cmd|x"'));
+    });
+
+    test('un número negativo legítimo sigue siendo número', () {
+      // La temperatura del contenedor de referencia es -18.5: protegerla la
+      // volvería texto en Excel y dejaría de poder promediarse.
+      final csv = service.serializeCsv(voyage);
+
+      expect(csv, contains(',-18.5,'));
+      expect(csv, isNot(contains('\t-18.5')));
+    });
+
+    test('los pesos y medidas no se protegen sin necesidad', () {
+      final csv = service.serializeCsv(voyage);
+
+      expect(csv, contains('25000.5'));
+      expect(csv, isNot(contains('"\t25000.5"')));
+    });
+  });
+
   test('JSON reutiliza exactamente VesselVoyage.toJson', () {
     final decoded = jsonDecode(service.serializeJson(voyage));
 
