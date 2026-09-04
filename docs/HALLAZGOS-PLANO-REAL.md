@@ -293,13 +293,14 @@ regla de qué cuenta como «ir de paso» queda en el dominio, no en la vista:
 reimplementa. Confirmado leyendo `vessel_voyage.dart` y
 `bay_plan_view.dart:80,732`.
 
-#### C‑5b · Los slots ocupados por contenedores de 40 pies
+#### C‑5b · Los slots ocupados por contenedores de 40 pies — ✓ cerrado (`15cf140`)
 
 **Plano real:** la bahía 07 aparece casi llena de celdas que dicen
 `Occupied by 40'`, con solo dos contenedores propios y `2 MOVS` al pie.
 
-**BayStream:** muestra la bahía 07 con 10 contenedores y **8 % de ocupación**.
-Para el planificador esa cifra es falsa: la bahía está prácticamente llena.
+**BayStream, antes:** mostraba la bahía 07 con 10 contenedores y **8 % de
+ocupación**. Para el planificador esa cifra era falsa: la bahía está
+prácticamente llena.
 
 **Evidencia en el corpus — la regla es absoluta:**
 
@@ -312,14 +313,55 @@ Un contenedor de 40 pies estibado en la bahía par `B` **ocupa físicamente los
 slots de las bahías impares `B‑1` y `B+1`**. Por eso las bahías pares e impares
 no son independientes.
 
-**Cambio:** al dibujar una bahía impar, marcar como *ocupado por 40 pies* todo
-slot cuya fila y nivel estén tomados por un contenedor de 40/45 pies de las
-bahías vecinas. Esos slots cuentan para la ocupación y **no** cuentan como
-contenedores del viaje. Necesitan su propio color en la leyenda.
+**Cambio, implementado.** `neighborOccupiedSlots()` vive en `VesselVoyage` y
+se inyecta en cada `Bay` como `slotsOccupiedByNeighbors` — igual que la
+geometría, sin serializarse porque es derivado, no un dato propio. La
+ocupación cuenta la **unión** de slots propios y tomados, no la suma: hay
+una prueba con datos deliberadamente inconsistentes (una bahía impar declara
+carga en un hueco que su vecina par ya reclama) que fija que el resultado es
+un slot, no dos. Verificado en dispositivo, con un matiz: el emulador API 36
+tenía el gestor de paquetes roto tras instalar C‑5a; con otro AVD instaló a
+la primera. La bahía 07 pasa de 8 % a 44 % con los mismos seis contenedores
+propios, la cubierta se ve entera marcada `40'` como en el plano impreso, y
+la leyenda trae las dos entradas nuevas. Confirmado también por dos pruebas
+de widget que montan el plano completo (`test/bay_plan_grid_test.dart`,
+incluida `find.text("40'")`).
 
-**Ojo con el caso raro:** en `CORPUS_A01` la bahía 41 tiene carga y ninguna
-bahía par vecina cargada. Conviene que el algoritmo no dé por hecho que siempre
-existe la vecina.
+**Caso raro, verificado.** En `CORPUS_A01` la bahía 41 tiene carga propia y
+ninguna vecina par cargada — el algoritmo no asume que siempre existe la
+vecina; confirmado que sigue así.
+
+**Hallazgo nuevo, abierto — siete bahías impares invisibles.** El parser solo
+crea una `Bay` cuando tiene contenedores propios. Reverificado directamente
+sobre `CORPUS_A01`: hay **siete bahías impares con slots físicamente
+ocupados por vecinas pares y cero contenedores propios**, que hoy no existen
+en `voyage.bays` y por lo tanto no se dibujan en absoluto — no es que se vean
+vacías, es que no aparecen:
+
+| Bahía | Huecos tomados / 156 | % |
+|---|---|---|
+| 005 | 62 | 39.7 % |
+| **013** | **92** | **59.0 %** |
+| 015 | 92 | 59.0 % |
+| 035 | 104 | 66.7 % |
+| 039 | 98 | 62.8 % |
+| 043 | 25 | 16.0 % |
+| 045 | 25 | 16.0 % |
+
+La 013, la más grave, está un 59 % físicamente llena y es invisible para el
+planificador. No se tocó a propósito: crear bahías sin carga propia cambia
+qué significa `voyage.bays` —de «bahías con contenedores del viaje» a «bahías
+con cualquier evidencia de ocupación física»— y eso es alcance nuevo, más
+allá de lo aprobado para C‑5b. `neighborOccupiedSlots()` ya calcula el dato
+necesario, así que el arreglo es chico si se aprueba.
+
+**Aprobado aquí para después de C‑7:** extender `voyage.bays` para incluir
+toda bahía con evidencia física de ocupación —propia o de vecinas—, no solo
+contenedores propios. Es la misma regla epistémica que ya rige la geometría
+declarada desde C‑3: se muestra lo que el archivo permite deducir con
+certeza, nunca menos. Una bahía sin ningún dato —ni propio ni de vecina—
+sigue sin poder mostrarse, porque de esa no hay nada que deducir; el punto
+es no ocultar la que sí tiene evidencia.
 
 ### C‑6 · La posición nunca puede perder los ceros a la izquierda
 
@@ -426,8 +468,13 @@ parches sobre una rejilla inferida.
 5. **C‑1** — TEU entero.
 6. **C‑5a** — la carga que va de paso. ✓ cerrado (`ba73ac3`); ver el
    detalle completo en la sección 2, C‑5a.
-7. **C‑5b** — slots ocupados por 40 pies. Es el de más diseño. **Siguiente.**
-8. **C‑7** — peso por fila y el límite donde corresponde.
+7. **C‑5b** — slots ocupados por 40 pies. ✓ cerrado (`15cf140`); ver el
+   detalle en la sección 2, C‑5b, incluido el hallazgo abierto de las siete
+   bahías impares invisibles.
+8. **C‑7** — peso por fila y el límite donde corresponde. **Siguiente.**
+8b. **Bahías invisibles** — extender `voyage.bays` a toda bahía con
+   evidencia física de ocupación, no solo contenedores propios. Aprobado
+   para después de C‑7; el cálculo ya existe en `neighborOccupiedSlots()`.
 9. **C‑6** — posición en el CSV, junto con la neutralización de fórmulas.
    ✓ cerrado (`36f369b`).
 
