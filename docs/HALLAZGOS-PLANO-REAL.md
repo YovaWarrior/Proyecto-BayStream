@@ -293,6 +293,32 @@ regla de qué cuenta como «ir de paso» queda en el dominio, no en la vista:
 reimplementa. Confirmado leyendo `vessel_voyage.dart` y
 `bay_plan_view.dart:80,732`.
 
+**Corrección a una premisa de esta misma sección.** Más arriba se dijo
+«falta un dato que el archivo no da: cuál es el puerto de la operación en
+curso». **Es falso — el archivo sí lo da.** El segmento `LOC+5` (lugar de
+salida) está en los siete archivos, una vez por archivo, a nivel de mensaje,
+no por contenedor como `LOC+9`. Reverificado directo sobre los `.edi`:
+`CORPUS_A01` trae `LOC+5+GTPBR`, exactamente Puerto Barrios — el puerto que
+la propuesta por frecuencia de `LOC+9` **no** acertaba (proponía HNPCR con
+457, no GTPBR con 325). C-5a funciona porque el campo se confirma a mano,
+pero apostaba con `LOC+9` habiendo un dato duro al lado en `LOC+5`. El
+parser no lee el calificador `5` de `LOC` hoy, y `portOfOrigin` en
+`VesselVoyage` existe mapeado en `toJson`/`fromJson` pero nunca se asigna —
+confirmado, se queda `null` siempre. Sin tocar todavía: la corrección
+natural es proponer `LOC+5` primero y dejar el `LOC+9` más frecuente como
+alternativa manual, no al revés. Hallazgo del segundo programador al cerrar
+C‑7, 3 de septiembre.
+
+**De paso, responde una duda operativa de Carlos: ¿el archivo es de carga o
+de descarga?** Es de carga. Ninguno de los 977 contenedores de `CORPUS_A01`
+descarga en GTPBR — reverificado por `LOC+11` contenedor por contenedor: 907
+a USHOU, 40 a USMSY, 30 a XXVSL, cero a GTPBR. Viaje `V01N`, rumbo norte: los
+325 que se cargan en Puerto Barrios y los 652 que ya vienen de Panamá y
+Honduras siguen todos hacia Houston y puertos cercanos. Explica por qué los
+20 pies enterrados en la bodega de la bahía 23 no se tocan en esta escala —
+sería absurdo reestibar tanto para sacar tan poco, y en efecto no se saca
+nada ahí. La duda de Carlos se resuelve con el dato, no con una suposición.
+
 #### C‑5b · Los slots ocupados por contenedores de 40 pies — ✓ cerrado (`15cf140`)
 
 **Plano real:** la bahía 07 aparece casi llena de celdas que dicen
@@ -388,23 +414,32 @@ es `BBBRRTT`, como en el plano impreso: `0060810` es bahía 006, fila 08, nivel
 (`iso_coordinate_parser.dart:101`, `^\d{7}$`). Ningún componente puede mostrar
 la posición con menos de siete dígitos ni recortar los ceros de la izquierda.
 
-### C‑7 · Falta el peso por fila, que es donde el límite de apilamiento aplica
+### C‑7 · Falta el peso por fila, que es donde el límite de apilamiento aplica — ✓ cerrado (`71ad205`)
 
 **Plano real:** muestra **las dos** magnitudes. Arriba, el peso de cada fila —
 la pila vertical. A la derecha, el peso de cada nivel.
 
-**BayStream:** solo muestra el peso por nivel.
+**BayStream, antes:** solo mostraba el peso por nivel.
 
-**El problema de fondo:** la constante se llama `kStackWeightLimitKg`, que
-significa *límite de la pila*, pero se compara contra la suma horizontal de las
-doce filas de ese nivel (`bay_plan_view.dart:613`). Son magnitudes distintas.
-Por eso en la bahía 22 salen tres de cinco niveles en rojo: doce contenedores de
-18 toneladas ya suman 216, y el umbral es 90. **Una alerta que se dispara casi
-siempre no informa nada.**
+**El problema de fondo, ya corregido:** la constante se llamaba
+`kStackWeightLimitKg`, que significa *límite de la pila*, pero se comparaba
+contra la suma horizontal de las doce filas de ese nivel
+(`bay_plan_view.dart:613`). Son magnitudes distintas. Por eso en la bahía 22
+salían tres de cinco niveles en rojo: doce contenedores de 18 toneladas ya
+sumaban 216, y el umbral era 90. Una alerta que se disparaba casi siempre no
+informaba nada.
 
-**Cambio:** añadir el peso acumulado **por fila** en la cabecera, como el plano
-real, y aplicar ahí el límite de apilamiento. El peso por nivel se queda donde
-está, como dato informativo, sin alerta o con un umbral propio y distinto.
+**Cambio, implementado.** Peso acumulado **por fila** en la cabecera, como el
+plano real (`Bay._weightByRow`, separado en bodega y cubierta con el mismo
+corte que usa la geometría —`tier >= VesselGeometry.firstDeckTier`—); el
+límite de apilamiento se aplica ahí. El peso por nivel queda como dato
+informativo, sin la alerta que no informaba nada.
+
+**Verificado en la aplicación**, no solo en pruebas —Carlos lo corrió en
+Windows porque el emulador seguía inservible. La bahía 22 muestra las tres
+pilas de bodega marcadas (113.0, 101.3, 128.8), ninguna de cubierta, y los
+pesos por nivel ya sin alerta — coincide exacto con la medición previa que
+motivó el cambio. 109 `test(`/`testWidgets(` en total.
 
 ---
 
@@ -449,6 +484,24 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   diseño de una búsqueda robusta merece pensarse aparte en vez de
   improvisarse. Hallazgo del segundo programador, 3 de septiembre; queda
   registrado para cuando se decida tomarlo.
+- **`LOC+5` sin usar para proponer el puerto de escala.** El campo existe en
+  los siete archivos, una vez por mensaje, con el puerto de salida real —no
+  una frecuencia deducida. `C‑5a` propone hoy el `LOC+9` más frecuente entre
+  contenedores, que en `CORPUS_A01` da HNPCR y no acierta; `LOC+5` da GTPBR
+  directo, el correcto. Detalle completo en la sección 2, C‑5a. No entra
+  como tarea activa: la corrección natural es proponer `LOC+5` y dejar
+  `LOC+9` como alternativa manual, y merece su propio cambio en vez de un
+  parche apurado sobre C‑5a recién cerrado.
+- **Siete bahías impares invisibles en el plano.** Aprobado para
+  implementarse; detalle y tabla completa en la sección 2, C‑5b.
+
+**Estado verificado en código, no solo reportado.** `C‑2`, `C‑3`, `C‑4`,
+`C‑5a`, `C‑5b`, `C‑6`, `C‑7` y `EQD` están cerrados. **`C‑1` (TEU sin
+decimales) sigue abierto** — `pdf_report_service.dart:683` todavía calcula
+`size / 20` sin el caso especial de 45 pies a 2.0; no hay commit de C‑1 en
+el historial. Se mencionó que quedaba con Codex; falta confirmación de que
+se cerró. Del resto quedan tres pendientes sin urgencia: `LOC+5`, las
+bahías invisibles y el TDT de `CORPUS_A06`.
 
 ---
 
@@ -465,13 +518,14 @@ parches sobre una rejilla inferida.
 3. **C‑2** — fila 00 y orden fijo de columnas. ✓ cerrado (`3f2ced5`).
 4. **EQD** — el indicador lleno/vacío. Pequeño, aislado y de alto impacto.
    ✓ cerrado (`09599c8`); ver el detalle completo en la sección 3.
-5. **C‑1** — TEU entero.
+5. **C‑1** — TEU entero. **Abierto** — quedó con Codex; sin confirmar.
 6. **C‑5a** — la carga que va de paso. ✓ cerrado (`ba73ac3`); ver el
    detalle completo en la sección 2, C‑5a.
 7. **C‑5b** — slots ocupados por 40 pies. ✓ cerrado (`15cf140`); ver el
    detalle en la sección 2, C‑5b, incluido el hallazgo abierto de las siete
    bahías impares invisibles.
-8. **C‑7** — peso por fila y el límite donde corresponde. **Siguiente.**
+8. **C‑7** — peso por fila y el límite donde corresponde. ✓ cerrado
+   (`71ad205`); ver el detalle en la sección 2, C‑7.
 8b. **Bahías invisibles** — extender `voyage.bays` a toda bahía con
    evidencia física de ocupación, no solo contenedores propios. Aprobado
    para después de C‑7; el cálculo ya existe en `neighborOccupiedSlots()`.
