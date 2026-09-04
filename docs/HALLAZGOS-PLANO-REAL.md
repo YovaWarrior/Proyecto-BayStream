@@ -597,14 +597,52 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   verificable. Si se quiere usar ese dato hace falta primero confirmar con
   quien emite `A05` qué es exactamente ese campo — decisión de datos, no de
   código, y el cambio sería chico cuando se tome.
-- **`LOC+5` sin usar para proponer el puerto de escala.** El campo existe en
-  los siete archivos, una vez por mensaje, con el puerto de salida real —no
-  una frecuencia deducida. `C‑5a` propone hoy el `LOC+9` más frecuente entre
-  contenedores, que en `CORPUS_A01` da HNPCR y no acierta; `LOC+5` da GTPBR
-  directo, el correcto. Detalle completo en la sección 2, C‑5a. No entra
-  como tarea activa: la corrección natural es proponer `LOC+5` y dejar
-  `LOC+9` como alternativa manual, y merece su propio cambio en vez de un
-  parche apurado sobre C‑5a recién cerrado.
+- **`LOC+5` sin usar para proponer el puerto de escala — ✓ cerrado
+  (`06a62a9`, Timonel).** Ahora `proposedPortOfCall` prefiere el `LOC+5` de
+  la cabecera —declaración del propio archivo— y solo cae al `LOC+9` más
+  frecuente —una apuesta— cuando no hay `LOC+5`. `_findPlaceOfDeparture`
+  busca únicamente en la cabecera y corta en el primer `LOC+147`: un
+  `LOC+5` dentro de un grupo de contenedor hablaría de esa caja, no del
+  buque. Tolera el segmento sin calificador ni agencia (`LOC+5+GTPBR`, el
+  formato de `CORPUS_A06`) porque solo necesita el primer componente.
+
+  Reproduje el conteo completo en Python sobre los siete archivos, comparando
+  el declarado contra el más frecuente:
+
+  | Archivo | `LOC+5` (declarado) | `LOC+9` más frecuente |
+  |---|---|---|
+  | A01 | GTPBR | HNPCR, 457/977 |
+  | A02 | HNPCR | COCTG, 477/806 |
+  | A03 / A03v | HNPCR | JMKIN, 195/369 |
+  | A04 | GTSTC | VEPBL, 477/979 |
+  | A05 | GTPBR | GTPBR, 382/736 (coincide) |
+  | A06 | GTPBR | *(no trae `LOC+9`)* |
+
+  Exacto a lo reportado: **contar proponía el puerto equivocado en cinco de
+  los seis archivos primarios**, no solo en `A01` como decía la versión
+  anterior de este documento — solo `A05` coincidía, y por casualidad.
+  `CORPUS_A06` no tiene ni un `LOC+9`, así que antes no ofrecía ningún chip
+  y la escala quedaba sin poder declararse; ahora el `LOC+5` solo ya basta.
+
+  En pantalla el puerto declarado aparece primero y sin conteo —es un
+  hecho, no una frecuencia—, los `LOC+9` van detrás como alternativa
+  manual, y cuando no hay ninguno el reparto dice que la carga de paso no
+  se puede separar en vez de mostrar «0 se operan y 0 de paso». Confirmado
+  leyendo `vessel_geometry_page.dart` y sus pruebas nuevas.
+
+  **Hallazgo nuevo, sin tocar: `CORPUS_A06` no usa `LOC+9`/`LOC+11`.**
+  Verificado contra el `.edi` crudo: donde los otros seis archivos traen
+  `LOC+9` y `LOC+11` (uno de cada uno por contenedor), `A06` trae **717
+  `LOC+6` y 717 `LOC+12`** — mismo lugar del grupo, calificador distinto —
+  y es el único de los siete que declara la versión `SMDG15` (el resto no
+  trae esa etiqueta). No hay carga de paso separable ahí hasta confirmar
+  qué significan esos calificadores en esa versión del estándar; darlos por
+  equivalentes a `9`/`11` porque ocupan el mismo sitio sería la misma
+  suposición por apariencia que ya se retiró dos veces en este documento
+  (equis del plano, corrección 3; nivel 80, corrección 5). Queda registrado
+  para cuando se decida investigarlo, no bloquea nada.
+
+  135 pruebas confirmadas por conteo directo.
 - **Bahías invisibles por falta de carga propia. ✓ cerrado (`fb4a037`).**
   `voyage.bays` extendido: hasta ahora solo tenía bahías con contenedores
   propios; `withGeometry` —no el parser— agrega también toda bahía sin carga
@@ -667,6 +705,20 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   la suma por archivo y la ejecución de la suite coinciden en 112. Sin
   discrepancia pendiente.
 
+  **Decisión, 4 de septiembre: el conteo de «Bahías» se queda en 34, no
+  vuelve a 27.** Timonel dejó la pregunta abierta al cerrar `LOC+5`: si
+  «Bahías» debe seguir contando solo las que tienen carga propia (27 en
+  `CORPUS_A01`) o las 34 físicamente ocupadas, propias más sombreadas. Me
+  quedo con 34, por la misma razón por la que esta extensión se hizo en
+  primer lugar: 27 es el número que este mismo documento ya mostró que
+  esconde una séptima parte del buque realmente ocupado, y volver a 27
+  sería deshacer C‑5b/bahías‑invisibles en el reporte que más lee un
+  planificador. Lo que sí falta, y no es código sino redacción de UI —una
+  línea, sin prisa—: que la tarjeta o el PDF aclaren que de esas 34 hay 7
+  sin contenedor propio, para que quien lea el número no espere ver
+  carga propia en las siete. No entra como tarea activa; queda anotado
+  para cuando se retome el lado visual.
+
 **Estado final verificado en código, no solo reportado. Los nueve cambios
 del Sprint 1 —`C‑1` a `C‑7`, `C‑2`, `EQD`— están cerrados**, el último de
 ellos `C‑1`, cerrado por Codex el 4 de septiembre y confirmado contra el
@@ -674,16 +726,20 @@ corpus: `CORPUS_A01` da 1826 TEU exacto. La extensión de `voyage.bays` a
 las bahías sin carga propia también quedó cerrada. **Los cinco puntos de
 retroalimentación del tutor están todos atendidos.** Fuera del sprint
 original, también cerraron el TDT de `CORPUS_A06` (`1af3a7e`), los
-refrigerados (`c101fb5`/`206545c`) y `operatorCode`/`flag` del `TDT`
-(`c101fb5`) — los tres verificados contra el corpus completo, no solo
-reportados. **Queda un solo pendiente sin urgencia, `LOC+5`** (proponer el
-puerto de escala del dato duro en vez de adivinarlo por frecuencia); no
-bloquea nada de lo anterior. 124 pruebas en verde, `analyze` en 49
-observaciones preexistentes sin cambios.
+refrigerados (`c101fb5`/`206545c`), `operatorCode`/`flag` del `TDT`
+(`c101fb5`) y `LOC+5` (`06a62a9`) — los cuatro verificados contra el corpus
+completo, no solo reportados. **No queda ningún pendiente técnico
+verificado como bloqueante.** Sin urgencia y sin código escrito: los
+calificadores `LOC+6`/`LOC+12` de `CORPUS_A06` (`SMDG15`, ver arriba) y la
+aclaración de UI sobre las 34 bahías de `CORPUS_A01` (ver la decisión de
+arriba). 135 pruebas en verde, `analyze` en 49 observaciones preexistentes
+sin cambios en todo el proceso.
 
-**Decisión, 4 de septiembre: seguimos sin pausar para la revisión del
-tutor, con `LOC+5` como el único trabajo activo que queda del lado del
-código.**
+**Decisión, 4 de septiembre: se pausa el trabajo de código para la revisión
+con el tutor.** No queda nada activo de este lado — es el punto de pausa
+que Codex y yo habíamos adelantado y que Carlos confirmó al repartir
+`LOC+5`. Los dos pendientes que quedan (`SMDG15` y la aclaración de las 34
+bahías) son anotaciones para retomar después, no tareas abiertas ahora.
 
 ---
 
