@@ -1,5 +1,6 @@
 import 'package:baystream/core/utils/iso_coordinate_parser.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
+import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/widgets/bay_plan_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -212,6 +213,70 @@ void main() {
 
       expect(colorPaso, isNot(colorEscala));
       expect(colorPaso, Colors.grey.shade50);
+    });
+  });
+
+  group('C-5b · huecos tomados por un 40 pies vecino', () {
+    /// Bahia 07 con un contenedor propio de 20 pies, y la 06 con uno de 40
+    /// que le toma el hueco de la fila 02, nivel 84.
+    VesselVoyage viajeConVecina() {
+      final propio = ContainerUnit(
+        id: 'propio',
+        containerId: 'PROPIO',
+        isoSizeType: '22G1',
+        stowagePosition: IsoCoordinateParser.parse('0070184'),
+      );
+      final vecino = ContainerUnit(
+        id: 'vecino',
+        containerId: 'VECINO',
+        isoSizeType: '45G1',
+        stowagePosition: IsoCoordinateParser.parse('0060284'),
+      );
+      return VesselVoyage(
+        id: 'v',
+        vessel: const Vessel(id: 'b', name: 'Buque'),
+        voyageNumber: 'V001',
+        containers: [propio, vecino],
+        bays: {
+          6: const Bay(bayNumber: 6).addContainer(vecino),
+          7: const Bay(bayNumber: 7).addContainer(propio),
+        },
+      ).withGeometry(_geometry);
+    }
+
+    Future<void> pumpBahia7(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1600, 2200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(selectedBayProvider.notifier).select(7);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(body: BayPlanView(voyage: viajeConVecina())),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('el hueco tomado se rotula como de 40 pies, no libre',
+        (tester) async {
+      await pumpBahia7(tester);
+
+      expect(find.text("40'"), findsOneWidget);
+    });
+
+    testWidgets('la leyenda declara el hueco tomado por 40 pies',
+        (tester) async {
+      await pumpBahia7(tester);
+
+      expect(find.text('Ocupado por 40 pies'), findsOneWidget);
     });
   });
 

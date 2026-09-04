@@ -201,6 +201,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   LegendFilterType.transit, activeFilter),
             ],
             const SizedBox(width: 16),
+            _buildLegendItem(
+                Colors.blueGrey.shade200, 'Ocupado por 40 pies', null, activeFilter),
+            const SizedBox(width: 16),
             _buildLegendItem(Colors.grey.shade300, 'Sin contenedor', null, activeFilter),
           ],
         ),
@@ -723,6 +726,8 @@ class _BayGridWidget extends StatelessWidget {
           final isHighlighted = container != null &&
               highlightedContainerId != null &&
               container.containerId == highlightedContainerId;
+          final slotKey = '${row.toString().padLeft(2, '0')}'
+              '${tier.toString().padLeft(2, '0')}';
           return _ContainerCell(
             key: ValueKey('cell-$row-$tier'),
             container: container,
@@ -730,6 +735,8 @@ class _BayGridWidget extends StatelessWidget {
             isHighlighted: isHighlighted,
             activeTypeFilter: activeTypeFilter,
             isInTransit: container != null && isInTransit(container),
+            isOccupiedByNeighbor: container == null &&
+                bay.slotsOccupiedByNeighbors.contains(slotKey),
           );
         }),
         SizedBox(
@@ -792,6 +799,10 @@ class _ContainerCell extends StatelessWidget {
   /// El contenedor ya venía a bordo: no se opera en esta escala.
   final bool isInTransit;
 
+  /// El hueco está vacío en esta bahía pero lo ocupa físicamente un contenedor
+  /// de 40 pies estibado en una bahía par vecina.
+  final bool isOccupiedByNeighbor;
+
   const _ContainerCell({
     super.key,
     this.container,
@@ -799,21 +810,42 @@ class _ContainerCell extends StatelessWidget {
     this.isHighlighted = false,
     this.activeTypeFilter,
     this.isInTransit = false,
+    this.isOccupiedByNeighbor = false,
   });
 
   @override
   Widget build(BuildContext context) {
     if (container == null) {
-      // Celda vacía
+      // C-5b: el hueco puede estar vacío en esta bahía pero tomado por un
+      // contenedor de 40 pies estibado en una par vecina. No es carga de este
+      // viaje, así que no se cuenta como contenedor, pero el planificador no
+      // puede estibar ahí: mostrarlo libre sería mentirle.
       return Container(
         width: 50,
         height: 40,
         margin: const EdgeInsets.all(2),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.grey.shade200,
+          color: isOccupiedByNeighbor
+              ? Colors.blueGrey.shade100
+              : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(
+            color: isOccupiedByNeighbor
+                ? Colors.blueGrey.shade300
+                : Colors.grey.shade300,
+          ),
         ),
+        child: isOccupiedByNeighbor
+            ? Text(
+                "40'",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey.shade400,
+                ),
+              )
+            : null,
       );
     }
 

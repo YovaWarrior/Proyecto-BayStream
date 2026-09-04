@@ -46,6 +46,19 @@ class Bay extends Equatable {
   /// al reconstruir cada bahía.
   final VesselGeometry? geometry;
 
+  /// Slots que ocupa físicamente un contenedor de 40 o 45 pies estibado en una
+  /// bahía par vecina. Clave `"RRTT"`, como [slots].
+  ///
+  /// Un contenedor de 40 pies estibado en la bahía par `B` ocupa los slots de
+  /// las impares `B-1` y `B+1`, así que pares e impares no son independientes.
+  /// La regla es absoluta en el corpus: de 977 contenedores de `CORPUS_A01`,
+  /// los 128 de 20 pies están en bahías impares y los 849 de 40 y 45 en pares,
+  /// **sin una sola excepción**. Igual en `CORPUS_A05`.
+  ///
+  /// **No se serializa aquí**, por lo mismo que [geometry]: es dato derivado de
+  /// los contenedores del viaje, y `VesselVoyage` lo recalcula e inyecta.
+  final Set<String> slotsOccupiedByNeighbors;
+
   const Bay({
     required this.bayNumber,
     this.is40FtBay = false,
@@ -55,6 +68,7 @@ class Bay extends Equatable {
     this.maxTiers = 10,
     this.location = BayLocation.unknown,
     this.geometry,
+    this.slotsOccupiedByNeighbors = const {},
   });
 
   /// Número de bahía con padding de 3 dígitos
@@ -76,10 +90,25 @@ class Bay extends Equatable {
   /// Una bahía vacía sí devuelve 0: cero contenedores son cero por ciento
   /// contra cualquier capacidad, y eso se sabe sin declarar nada.
   double? get occupancyRate {
-    if (containers.isEmpty) return 0.0;
+    if (containers.isEmpty && slotsOccupiedByNeighbors.isEmpty) return 0.0;
     final totalCapacity = geometry?.slotsPerBay;
     if (totalCapacity == null || totalCapacity == 0) return null;
-    return (containers.length / totalCapacity) * 100;
+    return (occupiedSlotKeys.length / totalCapacity) * 100;
+  }
+
+  /// Slots físicamente ocupados: los de los contenedores propios más los que
+  /// toma un contenedor de 40 pies de una bahía vecina.
+  ///
+  /// Se cuenta la unión y no la suma: un slot tomado dos veces sigue siendo un
+  /// slot, y sumar inflaría la ocupación de la bahía.
+  Set<String> get occupiedSlotKeys {
+    final keys = <String>{...slotsOccupiedByNeighbors};
+    for (final container in containers) {
+      final position = container.stowagePosition;
+      if (position == null) continue;
+      keys.add('${position.rowPadded}${position.tierPadded}');
+    }
+    return keys;
   }
 
   /// Peso total de contenedores en esta bahía
@@ -133,6 +162,7 @@ class Bay extends Equatable {
         maxTiers,
         location,
         geometry,
+        slotsOccupiedByNeighbors,
       ];
 
   Bay copyWith({
@@ -144,6 +174,7 @@ class Bay extends Equatable {
     int? maxTiers,
     BayLocation? location,
     VesselGeometry? geometry,
+    Set<String>? slotsOccupiedByNeighbors,
   }) {
     return Bay(
       bayNumber: bayNumber ?? this.bayNumber,
@@ -154,6 +185,8 @@ class Bay extends Equatable {
       maxTiers: maxTiers ?? this.maxTiers,
       location: location ?? this.location,
       geometry: geometry ?? this.geometry,
+      slotsOccupiedByNeighbors:
+          slotsOccupiedByNeighbors ?? this.slotsOccupiedByNeighbors,
     );
   }
 
@@ -180,7 +213,8 @@ class Bay extends Equatable {
     return copyWith(containers: updatedContainers);
   }
 
-  /// La geometría no se incluye a propósito: ver [geometry].
+  /// La geometría y los slots de las vecinas no se incluyen a propósito: son
+  /// datos derivados que `VesselVoyage` recalcula. Ver [geometry].
   Map<String, dynamic> toJson() => {
         'bayNumber': bayNumber,
         'is40FtBay': is40FtBay,

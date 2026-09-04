@@ -97,14 +97,52 @@ class VesselVoyage extends Equatable {
   /// Es la única transformación que asigna geometría. Mantiene el invariante
   /// de que un viaje publicado siempre trae geometría, en el buque y en todas
   /// sus bahías a la vez.
-  VesselVoyage withGeometry(VesselGeometry geometry, {String? portOfCall}) =>
-      copyWith(
-        geometry: geometry,
-        portOfCall: portOfCall,
-        bays: bays.map(
-          (number, bay) => MapEntry(number, bay.copyWith(geometry: geometry)),
+  /// También recalcula qué slots de cada bahía impar toma un contenedor de 40
+  /// pies de una bahía par vecina: es dato derivado de los contenedores, así
+  /// que se computa aquí, una sola vez, y se inyecta.
+  VesselVoyage withGeometry(VesselGeometry geometry, {String? portOfCall}) {
+    final shadows = neighborOccupiedSlots();
+    return copyWith(
+      geometry: geometry,
+      portOfCall: portOfCall,
+      bays: bays.map(
+        (number, bay) => MapEntry(
+          number,
+          bay.copyWith(
+            geometry: geometry,
+            slotsOccupiedByNeighbors: shadows[number] ?? const {},
+          ),
         ),
-      );
+      ),
+    );
+  }
+
+  /// Slots que los contenedores de 40 y 45 pies de las bahías pares ocupan en
+  /// las impares vecinas, por número de bahía. Clave `"RRTT"`.
+  ///
+  /// Un contenedor de 40 pies estibado en la bahía par `B` ocupa físicamente
+  /// los slots de `B-1` y `B+1`. El resultado incluye bahías impares que no
+  /// existen en [bays]: quien lo consuma decide qué hacer con ellas.
+  ///
+  /// No se da por hecho que la vecina exista, ni en un sentido ni en el otro:
+  /// en `CORPUS_A01` la bahía 41 tiene carga y ninguna par vecina cargada.
+  Map<int, Set<String>> neighborOccupiedSlots() {
+    final shadows = <int, Set<String>>{};
+    for (final container in containers) {
+      final position = container.stowagePosition;
+      if (position == null) continue;
+      if (position.bay.isOdd) continue;
+      final size = container.sizeInFeet;
+      if (size == null || size < 40) continue;
+
+      final key = '${position.rowPadded}${position.tierPadded}';
+      for (final neighbor in [position.bay - 1, position.bay + 1]) {
+        if (neighbor < 1) continue;
+        shadows.putIfAbsent(neighbor, () => <String>{}).add(key);
+      }
+    }
+    return shadows;
+  }
 
   /// Posiciones de estiba ocupadas en este viaje, para deducir la geometría.
   Iterable<IsoCoordinate> get stowagePositions =>

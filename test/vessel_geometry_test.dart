@@ -253,6 +253,107 @@ void main() {
     });
   });
 
+  group('C-5b · slots ocupados por contenedores de 40 pies', () {
+    ContainerUnit cuarenta(String rawCode) => ContainerUnit(
+          id: rawCode,
+          containerId: 'C$rawCode',
+          isoSizeType: '45G1',
+          stowagePosition: IsoCoordinateParser.parse(rawCode),
+        );
+
+    ContainerUnit veinte(String rawCode) => ContainerUnit(
+          id: rawCode,
+          containerId: 'C$rawCode',
+          isoSizeType: '22G1',
+          stowagePosition: IsoCoordinateParser.parse(rawCode),
+        );
+
+    VesselVoyage viajeCon(List<ContainerUnit> cs) {
+      final bays = <int, Bay>{};
+      for (final c in cs) {
+        final b = c.stowagePosition!.bay;
+        bays[b] = (bays[b] ?? Bay(bayNumber: b)).addContainer(c);
+      }
+      return VesselVoyage(
+        id: 'v',
+        vessel: const Vessel(id: 'b', name: 'Buque'),
+        voyageNumber: 'V001',
+        containers: cs,
+        bays: bays,
+      );
+    }
+
+    test('un contenedor de 40 pies en bahía par ocupa las dos impares vecinas',
+        () {
+      final viaje = viajeCon([cuarenta('0060284')]);
+
+      final sombra = viaje.neighborOccupiedSlots();
+
+      expect(sombra[5], {'0284'});
+      expect(sombra[7], {'0284'});
+      expect(sombra.containsKey(6), isFalse, reason: 'no se sombrea a si misma');
+    });
+
+    test('un contenedor de 20 pies no proyecta sombra', () {
+      final viaje = viajeCon([veinte('0070284')]);
+
+      expect(viaje.neighborOccupiedSlots(), isEmpty);
+    });
+
+    test('la sombra llega a bahías impares que no existen en el plano', () {
+      // En CORPUS_A01 hay siete: 005, 013, 015, 035, 039, 043 y 045.
+      final viaje = viajeCon([cuarenta('0060284')]);
+
+      expect(viaje.bays.containsKey(5), isFalse);
+      expect(viaje.neighborOccupiedSlots().containsKey(5), isTrue);
+    });
+
+    test('la bahía 001 no intenta sombrear una bahía cero', () {
+      final viaje = viajeCon([cuarenta('0020284')]);
+
+      expect(viaje.neighborOccupiedSlots().keys, {1, 3});
+    });
+
+    test('los slots de la vecina cuentan para la ocupación', () {
+      const geometry = VesselGeometry(
+        portRows: 6,
+        starboardRows: 6,
+        holdTiers: [2, 4, 6, 8, 10, 12, 14],
+        deckTiers: [82, 84, 86, 88, 90],
+      );
+      // Bahia 07 con un contenedor propio, y la 06 con dos de 40 pies que le
+      // toman dos huecos mas.
+      final viaje = viajeCon([
+        veinte('0070184'),
+        cuarenta('0060284'),
+        cuarenta('0060384'),
+      ]).withGeometry(geometry);
+
+      final bahia7 = viaje.bays[7]!;
+      expect(bahia7.containers.length, 1, reason: 'un contenedor propio');
+      expect(bahia7.slotsOccupiedByNeighbors, {'0284', '0384'});
+      expect(bahia7.occupancyRate, closeTo(3 / 156 * 100, 0.0001),
+          reason: 'tres slots tomados, no uno');
+    });
+
+    test('un slot tomado dos veces cuenta una sola vez', () {
+      const geometry = VesselGeometry(
+        portRows: 6,
+        starboardRows: 6,
+        holdTiers: [2, 4, 6, 8, 10, 12, 14],
+        deckTiers: [82, 84, 86, 88, 90],
+      );
+      // Dato inconsistente: la bahia 07 declara carga en un hueco que la 06 ya
+      // ocupa. Sumar daria 2; el hueco sigue siendo uno.
+      final viaje = viajeCon([
+        veinte('0070284'),
+        cuarenta('0060284'),
+      ]).withGeometry(geometry);
+
+      expect(viaje.bays[7]!.occupancyRate, closeTo(1 / 156 * 100, 0.0001));
+    });
+  });
+
   group('Persistencia de la geometría', () {
     const geometry = VesselGeometry(
       portRows: 6,
