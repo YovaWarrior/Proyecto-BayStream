@@ -180,6 +180,79 @@ void main() {
     });
   });
 
+  group('C-5a · carga de paso', () {
+    ContainerUnit conPuerto(String id, String? puerto) => ContainerUnit(
+          id: id,
+          containerId: id,
+          portOfLoading: puerto,
+        );
+
+    VesselVoyage viajeCon(List<ContainerUnit> cs, {String? portOfCall}) =>
+        VesselVoyage(
+          id: 'v',
+          vessel: const Vessel(id: 'b', name: 'Buque'),
+          voyageNumber: 'V001',
+          containers: cs,
+          portOfCall: portOfCall,
+        );
+
+    test('cuenta los puertos de carga del más frecuente al menos', () {
+      final viaje = viajeCon([
+        conPuerto('1', 'HNPCR'),
+        conPuerto('2', 'GTPBR'),
+        conPuerto('3', 'HNPCR'),
+        conPuerto('4', 'PAMIT'),
+        conPuerto('5', 'GTPBR'),
+        conPuerto('6', 'HNPCR'),
+      ]);
+
+      expect(viaje.loadingPortCounts,
+          {'HNPCR': 3, 'GTPBR': 2, 'PAMIT': 1});
+      expect(viaje.proposedPortOfCall, 'HNPCR');
+    });
+
+    test('sin puerto de escala declarado nada va de paso', () {
+      final viaje = viajeCon([
+        conPuerto('1', 'HNPCR'),
+        conPuerto('2', 'GTPBR'),
+      ]);
+
+      expect(viaje.containersInTransit, 0);
+      expect(viaje.isInTransit(viaje.containers.first), isFalse);
+    });
+
+    test('va de paso lo cargado en otro puerto', () {
+      final viaje = viajeCon([
+        conPuerto('1', 'GTPBR'),
+        conPuerto('2', 'HNPCR'),
+        conPuerto('3', 'PAMIT'),
+      ], portOfCall: 'GTPBR');
+
+      expect(viaje.containersAtCall, 1);
+      expect(viaje.containersInTransit, 2);
+    });
+
+    test('un contenedor sin puerto de carga no se marca de paso', () {
+      // No saber no es lo mismo que ir de paso: marcarlo seria afirmar algo
+      // que el archivo no dice.
+      final viaje = viajeCon([
+        conPuerto('1', 'GTPBR'),
+        conPuerto('2', null),
+      ], portOfCall: 'GTPBR');
+
+      expect(viaje.containersInTransit, 0);
+      expect(viaje.isInTransit(viaje.containers.last), isFalse);
+    });
+
+    test('el puerto de escala sobrevive al viaje redondo por Firestore', () {
+      final viaje = viajeCon([conPuerto('1', 'GTPBR')], portOfCall: 'GTPBR');
+
+      final restored = VesselVoyage.fromJson(viaje.toJson());
+
+      expect(restored.portOfCall, 'GTPBR');
+    });
+  });
+
   group('Persistencia de la geometría', () {
     const geometry = VesselGeometry(
       portRows: 6,

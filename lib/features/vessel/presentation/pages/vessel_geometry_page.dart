@@ -6,6 +6,11 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 
+/// Lo que la pantalla devuelve: la geometría del buque y el puerto de esta
+/// escala. El puerto no es geometría —el casco no cambia entre escalas— pero
+/// se confirma en el mismo paso porque es el otro dato que el archivo no trae.
+typedef VesselCallParameters = ({VesselGeometry geometry, String? portOfCall});
+
 /// Pantalla de parámetros del buque, previa al plano.
 ///
 /// El archivo BAPLIE no transmite las dimensiones del buque: solo revela los
@@ -22,6 +27,12 @@ class VesselGeometryPage extends StatefulWidget {
   /// Nombre del archivo cargado, para situar al usuario.
   final String? fileName;
 
+  /// Puertos de carga del archivo con su conteo, del más frecuente al menos.
+  final Map<String, int> loadingPorts;
+
+  /// Puerto de escala ya confirmado, al reabrir la pantalla.
+  final String? initialPortOfCall;
+
   /// Posiciones ocupadas del viaje.
   ///
   /// Sirven para saber qué niveles traen carga: esos no se pueden quitar,
@@ -32,6 +43,8 @@ class VesselGeometryPage extends StatefulWidget {
     super.key,
     required this.proposal,
     this.positions = const [],
+    this.loadingPorts = const {},
+    this.initialPortOfCall,
     this.initial,
     this.fileName,
   });
@@ -55,6 +68,13 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   /// Niveles que este viaje trae ocupados. No se pueden quitar.
   final Set<int> _ocupados = {};
 
+  /// Puerto de esta escala. `null` significa que el usuario prefirió no
+  /// declararlo, y entonces no se distingue la carga de paso.
+  String? _portOfCall;
+
+  /// El usuario tocó la selección de puerto.
+  bool _puertoElegido = false;
+
   /// El usuario declaró no tener el manual de estabilidad a mano.
   bool _limitUnavailable = false;
 
@@ -67,6 +87,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     _deckTiers = [...start.deckTiers];
     _holdTiers = [...start.holdTiers];
     _ocupados.addAll(widget.positions.map((p) => p.tier));
+    _portOfCall = widget.initialPortOfCall ??
+        (widget.loadingPorts.keys.isEmpty ? null : widget.loadingPorts.keys.first);
+    _puertoElegido = widget.initialPortOfCall != null;
     _stackLimit = TextEditingController(
       text: start.stackWeightLimitKg == null
           ? ''
@@ -133,7 +156,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final geometry = _buildGeometry();
     if (geometry == null) return;
-    Navigator.of(context).pop(geometry);
+    Navigator.of(context)
+        .pop((geometry: geometry, portOfCall: _portOfCall));
   }
 
   @override
@@ -212,6 +236,11 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               onChanged: (nuevos) => setState(() => _holdTiers = nuevos),
             ),
             const SizedBox(height: 24),
+
+            if (widget.loadingPorts.isNotEmpty) ...[
+              _buildPortOfCallSection(context),
+              const SizedBox(height: 24),
+            ],
 
             _buildStackLimitSection(context),
             const SizedBox(height: 24),
@@ -443,6 +472,78 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
         }
         return null;
       },
+    );
+  }
+
+  /// Puerto de esta escala: el dato que separa la carga que se opera aquí de
+  /// la que ya venía a bordo.
+  ///
+  /// El archivo no lo dice. Solo dice dónde se cargó cada contenedor, así que
+  /// lo más frecuente es una apuesta razonable y nada más: se propone y se
+  /// confirma, como el resto.
+  Widget _buildPortOfCallSection(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final total = widget.loadingPorts.values.fold(0, (a, b) => a + b);
+    final enEscala = _portOfCall == null ? 0 : widget.loadingPorts[_portOfCall] ?? 0;
+    final dePaso = total - enEscala;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Puerto de esta escala', style: textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(
+              'El archivo dice dónde se cargó cada contenedor, no en qué escala '
+              'está el buque. Se propone el puerto más frecuente; corrígelo si '
+              'la escala es otra.',
+              style: textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final entry in widget.loadingPorts.entries)
+                  ChoiceChip(
+                    key: ValueKey('port-${entry.key}'),
+                    label: Text('${entry.key} (${entry.value})'),
+                    selected: _portOfCall == entry.key,
+                    onSelected: (_) => setState(() {
+                      _portOfCall = entry.key;
+                      _puertoElegido = true;
+                    }),
+                  ),
+                ChoiceChip(
+                  key: const ValueKey('port-none'),
+                  label: const Text('Sin declarar'),
+                  selected: _portOfCall == null,
+                  onSelected: (_) => setState(() {
+                    _portOfCall = null;
+                    _puertoElegido = true;
+                  }),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _portOfCall == null
+                  ? 'Sin puerto declarado no se distingue la carga de paso: el '
+                      'plano muestra todo igual.'
+                  : '$enEscala se operan en esta escala y $dePaso ya vienen a '
+                      'bordo, de paso.',
+              key: const ValueKey('port-split'),
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: _puertoElegido ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

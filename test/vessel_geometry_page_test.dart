@@ -24,7 +24,7 @@ void main() {
   /// Abre la pantalla y deja el resultado en [captured] al cerrarse.
   Future<void> openPage(
     WidgetTester tester,
-    void Function(VesselGeometry?) captured, {
+    void Function(VesselCallParameters?) captured, {
     VesselGeometry? initial,
   }) async {
     tester.view.physicalSize = const Size(1000, 2600);
@@ -40,11 +40,12 @@ void main() {
               child: ElevatedButton(
                 onPressed: () async {
                   final result =
-                      await Navigator.of(context).push<VesselGeometry>(
+                      await Navigator.of(context).push<VesselCallParameters>(
                     MaterialPageRoute(
                       builder: (_) => VesselGeometryPage(
                         proposal: _proposal,
                         positions: _posiciones,
+                        loadingPorts: const {'GTPBR': 3, 'HNPCR': 2},
                         initial: initial,
                         fileName: 'CORPUS_A01.edi',
                       ),
@@ -128,7 +129,7 @@ void main() {
 
   testWidgets('quitar un nivel vacío deja el hueco en la geometría',
       (tester) async {
-    VesselGeometry? captured;
+    VesselCallParameters? captured;
     await openPage(tester, (value) => captured = value);
 
     // Se invoca el contrato del chip y no su icono, que cambia con el tema.
@@ -141,8 +142,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
     await tester.pumpAndSettle();
 
-    expect(captured!.deckTierNumbers, [90, 88, 86, 82]);
-    expect(captured!.totalTiers, 11);
+    expect(captured!.geometry.deckTierNumbers, [90, 88, 86, 82]);
+    expect(captured!.geometry.totalTiers, 11);
   });
 
   testWidgets('se puede volver a agregar un nivel quitado', (tester) async {
@@ -182,7 +183,7 @@ void main() {
 
   testWidgets('«No lo tengo» habilita Confirmar y no inventa un umbral',
       (tester) async {
-    VesselGeometry? captured;
+    VesselCallParameters? captured;
     await openPage(tester, (value) => captured = value);
 
     await tester.tap(find.byKey(const ValueKey('geometry-no-limit')));
@@ -194,7 +195,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(captured, isNotNull);
-    expect(captured!.stackWeightLimitKg, isNull);
+    expect(captured!.geometry.stackWeightLimitKg, isNull);
   });
 
   testWidgets('bajar las filas por debajo del mínimo explica qué queda fuera',
@@ -219,7 +220,7 @@ void main() {
 
   testWidgets('subir por encima del mínimo se acepta sin objeción',
       (tester) async {
-    VesselGeometry? captured;
+    VesselCallParameters? captured;
     await openPage(tester, (value) => captured = value);
 
     await tester.enterText(
@@ -237,14 +238,14 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
     await tester.pumpAndSettle();
 
-    expect(captured!.portRows, 8);
-    expect(captured!.stackWeightLimitKg, 90000);
-    expect(captured!.slotsPerBay, 15 * 12);
+    expect(captured!.geometry.portRows, 8);
+    expect(captured!.geometry.stackWeightLimitKg, 90000);
+    expect(captured!.geometry.slotsPerBay, 15 * 12);
   });
 
   testWidgets('cancelar no devuelve geometría', (tester) async {
     var called = false;
-    VesselGeometry? captured;
+    VesselCallParameters? captured;
     await openPage(tester, (value) {
       called = true;
       captured = value;
@@ -255,6 +256,72 @@ void main() {
 
     expect(called, isTrue);
     expect(captured, isNull);
+  });
+
+  group('C-5a · puerto de esta escala', () {
+    testWidgets('propone el puerto más frecuente y muestra el reparto',
+        (tester) async {
+      await openPage(tester, (_) {});
+
+      expect(
+        tester
+            .widget<ChoiceChip>(find.byKey(const ValueKey('port-GTPBR')))
+            .selected,
+        isTrue,
+        reason: 'GTPBR es el mas frecuente con 3',
+      );
+      expect(
+        find.text('3 se operan en esta escala y 2 ya vienen a bordo, de paso.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('corregir el puerto recalcula el reparto', (tester) async {
+      await openPage(tester, (_) {});
+
+      await tester.tap(find.byKey(const ValueKey('port-HNPCR')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('2 se operan en esta escala y 3 ya vienen a bordo, de paso.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sin declarar el puerto no se distingue la carga de paso',
+        (tester) async {
+      VesselCallParameters? captured;
+      await openPage(tester, (value) => captured = value);
+
+      await tester.tap(find.byKey(const ValueKey('port-none')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('no se distingue la carga de paso'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('geometry-no-limit')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(captured!.portOfCall, isNull);
+    });
+
+    testWidgets('el puerto elegido viaja en el resultado', (tester) async {
+      VesselCallParameters? captured;
+      await openPage(tester, (value) => captured = value);
+
+      await tester.tap(find.byKey(const ValueKey('port-HNPCR')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('geometry-no-limit')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+      await tester.pumpAndSettle();
+
+      expect(captured!.portOfCall, 'HNPCR');
+    });
   });
 
   group('Invariante de publicación', () {

@@ -147,11 +147,13 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   ///
   /// Sirve para el viaje pendiente y también para corregir la geometría de uno
   /// ya publicado. Es el único punto donde un viaje pasa a estado publicado.
-  void confirmGeometry(VesselGeometry geometry) {
+  void confirmGeometry(VesselGeometry geometry, {String? portOfCall}) {
     final target = _pendingVoyage ?? publishedVoyage;
     if (target == null) return;
     _pendingVoyage = null;
-    state = AsyncValue.data(target.withGeometry(geometry));
+    state = AsyncValue.data(
+      target.withGeometry(geometry, portOfCall: portOfCall),
+    );
   }
 
   /// Descarta el viaje pendiente cuando el usuario cancela los parámetros.
@@ -294,7 +296,7 @@ class SelectedBayNotifier extends Notifier<int?> {
 }
 
 /// Tipos visuales seleccionables desde la leyenda del Bay Plan
-enum LegendFilterType { full, empty, imo, reefer, oog }
+enum LegendFilterType { full, empty, imo, reefer, oog, transit }
 
 /// Provider para el filtro visual activo desde la leyenda interactiva (RF-011)
 final selectedTypeFilterProvider =

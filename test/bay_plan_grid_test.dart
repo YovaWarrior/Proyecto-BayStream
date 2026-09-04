@@ -15,12 +15,13 @@ const _geometry = VesselGeometry(
   deckTiers: [82, 84, 86, 88, 90],
 );
 
-ContainerUnit _container(String rawCode, {String? id}) {
+ContainerUnit _container(String rawCode, {String? id, String? puerto}) {
   final position = IsoCoordinateParser.parse(rawCode);
   return ContainerUnit(
     id: id ?? rawCode,
     containerId: id ?? 'CONT$rawCode',
     grossWeight: 18000,
+    portOfLoading: puerto,
     stowagePosition: position,
   );
 }
@@ -28,6 +29,7 @@ ContainerUnit _container(String rawCode, {String? id}) {
 VesselVoyage _voyage(
   List<ContainerUnit> containers, {
   VesselGeometry? geometry = _geometry,
+  String? portOfCall,
 }) {
   var bay = const Bay(bayNumber: 6);
   for (final container in containers) {
@@ -40,7 +42,9 @@ VesselVoyage _voyage(
     containers: containers,
     bays: {6: bay},
   );
-  return geometry == null ? voyage : voyage.withGeometry(geometry);
+  return geometry == null
+      ? voyage
+      : voyage.withGeometry(geometry, portOfCall: portOfCall);
 }
 
 Future<void> pumpPlan(WidgetTester tester, VesselVoyage voyage) async {
@@ -171,6 +175,43 @@ void main() {
 
       expect(find.byKey(const ValueKey('outside-geometry-notice')),
           findsNothing);
+    });
+  });
+
+  group('C-5a · carga de paso en el plano', () {
+    final mixta = [
+      _container('0060102', puerto: 'GTPBR'),
+      _container('0060104', puerto: 'HNPCR'),
+    ];
+
+    testWidgets('la leyenda solo trae «De paso» con puerto declarado',
+        (tester) async {
+      await pumpPlan(tester, _voyage(mixta));
+      expect(find.text('De paso'), findsNothing);
+
+      await pumpPlan(tester, _voyage(mixta, portOfCall: 'GTPBR'));
+      expect(find.text('De paso'), findsOneWidget);
+    });
+
+    testWidgets('la carga de paso se dibuja apagada y la de la escala no',
+        (tester) async {
+      await pumpPlan(tester, _voyage(mixta, portOfCall: 'GTPBR'));
+
+      // El 0060104 se cargo en HNPCR: en una escala en GTPBR va de paso.
+      final deEscala = tester.widget<Container>(find.descendant(
+        of: find.byKey(const ValueKey('cell-1-2')),
+        matching: find.byType(Container),
+      ).first);
+      final dePaso = tester.widget<Container>(find.descendant(
+        of: find.byKey(const ValueKey('cell-1-4')),
+        matching: find.byType(Container),
+      ).first);
+
+      final colorEscala = (deEscala.decoration as BoxDecoration).color;
+      final colorPaso = (dePaso.decoration as BoxDecoration).color;
+
+      expect(colorPaso, isNot(colorEscala));
+      expect(colorPaso, Colors.grey.shade50);
     });
   });
 

@@ -324,11 +324,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     if (target == null) return;
 
     final isEditing = notifier.pendingVoyage == null;
-    final geometry = await Navigator.of(context).push<VesselGeometry>(
+    final result = await Navigator.of(context).push<VesselCallParameters>(
       MaterialPageRoute(
         builder: (_) => VesselGeometryPage(
           proposal: VesselGeometry.proposeFrom(target.stowagePositions),
           positions: target.stowagePositions.toList(),
+          loadingPorts: target.loadingPortCounts,
+          initialPortOfCall: target.portOfCall,
           initial: target.geometry,
           fileName: fileName,
         ),
@@ -337,7 +339,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
 
     if (!context.mounted) return;
 
-    if (geometry == null) {
+    if (result == null) {
       // Cancelar deja el árbol como estaba: nada publicado, nada pendiente.
       notifier.discardPendingVoyage();
       if (isEditing) return;
@@ -353,7 +355,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       return;
     }
 
-    notifier.confirmGeometry(geometry);
+    notifier.confirmGeometry(result.geometry, portOfCall: result.portOfCall);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

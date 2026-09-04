@@ -48,6 +48,12 @@ class VesselVoyage extends Equatable {
   /// como no calculable en vez de mostrar un número de respaldo.
   final VesselGeometry? geometry;
 
+  /// Puerto de esta escala, confirmado por el usuario.
+  ///
+  /// El archivo **no lo trae**: solo dice dónde se cargó cada contenedor
+  /// (`LOC+9`). Separa la carga que se opera aquí de la que ya venía a bordo.
+  final String? portOfCall;
+
   const VesselVoyage({
     required this.id,
     required this.vessel,
@@ -60,6 +66,7 @@ class VesselVoyage extends Equatable {
     this.bays = const {},
     this.metadata,
     this.geometry,
+    this.portOfCall,
   });
 
   /// Total de contenedores en el buque
@@ -90,8 +97,10 @@ class VesselVoyage extends Equatable {
   /// Es la única transformación que asigna geometría. Mantiene el invariante
   /// de que un viaje publicado siempre trae geometría, en el buque y en todas
   /// sus bahías a la vez.
-  VesselVoyage withGeometry(VesselGeometry geometry) => copyWith(
+  VesselVoyage withGeometry(VesselGeometry geometry, {String? portOfCall}) =>
+      copyWith(
         geometry: geometry,
+        portOfCall: portOfCall,
         bays: bays.map(
           (number, bay) => MapEntry(number, bay.copyWith(geometry: geometry)),
         ),
@@ -100,6 +109,50 @@ class VesselVoyage extends Equatable {
   /// Posiciones de estiba ocupadas en este viaje, para deducir la geometría.
   Iterable<IsoCoordinate> get stowagePositions =>
       containers.map((c) => c.stowagePosition).whereType<IsoCoordinate>();
+
+  /// Puertos de carga del archivo (`LOC+9`) con su conteo, del más frecuente
+  /// al menos frecuente.
+  ///
+  /// Sobre `CORPUS_A01`: HNPCR 457, GTPBR 325, PAMIT 195.
+  Map<String, int> get loadingPortCounts {
+    final counts = <String, int>{};
+    for (final container in containers) {
+      final port = container.portOfLoading;
+      if (port == null || port.isEmpty) continue;
+      counts[port] = (counts[port] ?? 0) + 1;
+    }
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return Map.fromEntries(sorted);
+  }
+
+  /// Puerto de escala propuesto: el `LOC+9` más frecuente.
+  ///
+  /// Es una **propuesta, no una deducción**. El archivo no dice en qué escala
+  /// está el buque; solo dice dónde se cargó cada contenedor. Que el puerto
+  /// más repetido sea el de esta escala es lo más probable, no un hecho: en
+  /// `CORPUS_A01` el más frecuente es HNPCR con 457, y si la escala fuera
+  /// Puerto Barrios el usuario tiene que corregirlo a GTPBR. Por eso el campo
+  /// se confirma, igual que el resto de los parámetros.
+  String? get proposedPortOfCall =>
+      loadingPortCounts.keys.isEmpty ? null : loadingPortCounts.keys.first;
+
+  /// Indica si el contenedor ya venía a bordo y no se opera en esta escala.
+  ///
+  /// Es lo que el planificador tacha a mano en el plano impreso. Sin puerto de
+  /// escala declarado no hay nada que distinguir, y un contenedor sin puerto de
+  /// carga no se marca: no saber no es lo mismo que ir de paso.
+  bool isInTransit(ContainerUnit container) =>
+      portOfCall != null &&
+      container.portOfLoading != null &&
+      container.portOfLoading != portOfCall;
+
+  /// Contenedores que se operan en esta escala.
+  int get containersAtCall =>
+      portOfCall == null ? 0 : containers.where((c) => !isInTransit(c)).length;
+
+  /// Contenedores que van de paso.
+  int get containersInTransit => containers.where(isInTransit).length;
 
   @override
   List<Object?> get props => [
@@ -114,6 +167,7 @@ class VesselVoyage extends Equatable {
         bays,
         metadata,
         geometry,
+        portOfCall,
       ];
 
   VesselVoyage copyWith({
@@ -128,6 +182,7 @@ class VesselVoyage extends Equatable {
     Map<int, Bay>? bays,
     BaplieMetadata? metadata,
     VesselGeometry? geometry,
+    String? portOfCall,
   }) {
     return VesselVoyage(
       id: id ?? this.id,
@@ -141,6 +196,7 @@ class VesselVoyage extends Equatable {
       bays: bays ?? this.bays,
       metadata: metadata ?? this.metadata,
       geometry: geometry ?? this.geometry,
+      portOfCall: portOfCall ?? this.portOfCall,
     );
   }
 
@@ -157,6 +213,7 @@ class VesselVoyage extends Equatable {
         if (metadata != null) 'metadata': metadata!.toJson(),
         // Una sola vez para todo el buque: las bahias no la serializan.
         if (geometry != null) 'geometry': geometry!.toJson(),
+        if (portOfCall != null) 'portOfCall': portOfCall,
       };
 
   factory VesselVoyage.fromJson(Map<String, dynamic> json) {
@@ -167,6 +224,7 @@ class VesselVoyage extends Equatable {
 
     return VesselVoyage(
         geometry: geometry,
+        portOfCall: json['portOfCall'] as String?,
         id: json['id'] as String,
         vessel: Vessel.fromJson(json['vessel'] as Map<String, dynamic>),
         voyageNumber: json['voyageNumber'] as String,

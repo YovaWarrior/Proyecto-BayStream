@@ -77,6 +77,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   onContainerTap: _showContainerDetails,
                   highlightedContainerId: highlightedContainerId,
                   activeTypeFilter: activeTypeFilter,
+                  isInTransit: widget.voyage.isInTransit,
                 )
               : const Center(child: Text('Selecciona una bahía')),
         ),
@@ -194,6 +195,11 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             _buildLegendItem(Colors.cyan, 'Reefer', LegendFilterType.reefer, activeFilter),
             const SizedBox(width: 16),
             _buildLegendItem(Colors.deepOrange, 'OOG', LegendFilterType.oog, activeFilter),
+            if (widget.voyage.portOfCall != null) ...[
+              const SizedBox(width: 16),
+              _buildLegendItem(Colors.grey.shade500, 'De paso',
+                  LegendFilterType.transit, activeFilter),
+            ],
             const SizedBox(width: 16),
             _buildLegendItem(Colors.grey.shade300, 'Sin contenedor', null, activeFilter),
           ],
@@ -405,9 +411,13 @@ class _BayGridWidget extends StatelessWidget {
   final String? highlightedContainerId;
   final LegendFilterType? activeTypeFilter;
 
+  /// Predicado del dominio: no se reimplementa la regla aqui.
+  final bool Function(ContainerUnit) isInTransit;
+
   const _BayGridWidget({
     required this.bay,
     required this.onContainerTap,
+    required this.isInTransit,
     this.highlightedContainerId,
     this.activeTypeFilter,
   });
@@ -719,6 +729,7 @@ class _BayGridWidget extends StatelessWidget {
             onTap: container != null ? () => onContainerTap(container) : null,
             isHighlighted: isHighlighted,
             activeTypeFilter: activeTypeFilter,
+            isInTransit: container != null && isInTransit(container),
           );
         }),
         SizedBox(
@@ -750,7 +761,11 @@ class _BayGridWidget extends StatelessWidget {
 }
 
 /// Determina si un contenedor coincide con el filtro de leyenda activo
-bool _containerMatchesFilter(ContainerUnit container, LegendFilterType filter) {
+bool _containerMatchesFilter(
+  ContainerUnit container,
+  LegendFilterType filter, {
+  required bool isInTransit,
+}) {
   switch (filter) {
     case LegendFilterType.full:
       return container.status == ContainerStatus.full;
@@ -762,6 +777,8 @@ bool _containerMatchesFilter(ContainerUnit container, LegendFilterType filter) {
       return container.isReefer;
     case LegendFilterType.oog:
       return container.isOverDimension;
+    case LegendFilterType.transit:
+      return isInTransit;
   }
 }
 
@@ -772,12 +789,16 @@ class _ContainerCell extends StatelessWidget {
   final bool isHighlighted;
   final LegendFilterType? activeTypeFilter;
 
+  /// El contenedor ya venía a bordo: no se opera en esta escala.
+  final bool isInTransit;
+
   const _ContainerCell({
     super.key,
     this.container,
     this.onTap,
     this.isHighlighted = false,
     this.activeTypeFilter,
+    this.isInTransit = false,
   });
 
   @override
@@ -827,7 +848,16 @@ class _ContainerCell extends StatelessWidget {
 
     // RF-011: atenuar contenedores que no coinciden con el filtro activo
     final bool isDimmedByFilter = activeTypeFilter != null &&
-        !_containerMatchesFilter(container!, activeTypeFilter!);
+        !_containerMatchesFilter(container!, activeTypeFilter!,
+            isInTransit: isInTransit);
+
+    // C-5a: la carga de paso conserva su icono de tipo pero se apaga, para que
+    // la bahia se lea de un vistazo como "lo que opero" contra "lo que sigue a
+    // bordo". Es lo que el planificador tacha a mano en el plano impreso.
+    if (isInTransit) {
+      cellColor = Colors.grey.shade50;
+      borderColor = Colors.grey.shade500;
+    }
 
     final cell = Container(
       width: 50,
