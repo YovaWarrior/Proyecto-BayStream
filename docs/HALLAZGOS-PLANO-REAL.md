@@ -492,8 +492,50 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   como tarea activa: la corrección natural es proponer `LOC+5` y dejar
   `LOC+9` como alternativa manual, y merece su propio cambio en vez de un
   parche apurado sobre C‑5a recién cerrado.
-- **Siete bahías impares invisibles en el plano.** Aprobado para
-  implementarse; detalle y tabla completa en la sección 2, C‑5b.
+- **Bahías invisibles por falta de carga propia. ✓ cerrado (`fb4a037`).**
+  `voyage.bays` extendido: hasta ahora solo tenía bahías con contenedores
+  propios; `withGeometry` —no el parser— agrega también toda bahía sin carga
+  propia pero con evidencia física de ocupación por una vecina. Confirmado
+  en código y con dos pruebas (`vessel_geometry_test.dart`): recién parseado
+  la bahía sombreada no existe (`viaje.bays.containsKey(5)` es falso),
+  `withGeometry` la crea con `containers` vacío pero `occupancyRate` real, y
+  el conteo de contenedores del viaje no se altera.
+
+  **Lo que Timonel llamó «chico» resultó ser más grande de lo esperado — y
+  lo dijo él mismo.** Reproduje el cálculo sobre los seis archivos, no solo
+  A01, y esto es lo que había debajo:
+
+  | Archivo | Bahías con carga propia | Bahías invisibles | Total real |
+  |---|---|---|---|
+  | A01 | 27 | 7 | 34 |
+  | A02 | 20 | **10** | 30 |
+  | A03 | 14 | **13** | 27 |
+  | A04 | 27 | 7 | 34 |
+  | A05 | 21 | 6 | 27 |
+  | A06 | 21 | 6 | 27 |
+
+  En `CORPUS_A03` las invisibles (13) casi igualan a las visibles (14) — el
+  plano mostraba poco más de la mitad de las bahías físicamente ocupadas.
+  Sobre las cifras puntuales que dio Timonel para A03 (bahías 017 y 019 «al
+  50 % cada una»): recalculadas dan 66/156 = **42.3 %** exacto para ambas,
+  no 50 %. La diferencia es chica y probablemente una cifra redondeada al
+  ojo en el mensaje, no un valor mal calculado en el código —la lógica ya
+  está verificada arriba con pruebas exactas—, pero queda anotado en vez de
+  repetir el número sin revisar.
+
+  El resumen y el PDF pasan de 27 a 34 bahías con `CORPUS_A01`, confirmado
+  en código: `pdf_report_service.dart:136` usa `voyage.bays.length`
+  directamente, así que el cambio se propaga solo. No verifiqué el detalle
+  del chip «0 contenedores» en el selector —no encontré ese widget
+  puntual—, pero la fuente de datos que lo alimentaría es correcta.
+
+  **Pendiente de aclarar: 111 pruebas en verde reportadas, 112 declaradas
+  contando `test(`/`testWidgets(` en todo `test/`.** Es la primera vez en
+  todo este intercambio que un conteo estructural no cuadra exacto. Puede
+  ser una prueba que hoy falla (así que «en verde» da una menos que el
+  total declarado) o una diferencia de cuándo se corrió `flutter test`
+  contra el último commit. Vale la pena correrlo una vez más antes de
+  cerrar esto del todo y confirmar cuál de las dos explicaciones es.
 
 **Estado verificado en código, no solo reportado.** `C‑2`, `C‑3`, `C‑4`,
 `C‑5a`, `C‑5b`, `C‑6`, `C‑7` y `EQD` están cerrados. **`C‑1` (TEU sin decimales) en curso con Codex.** Diagnóstico
@@ -503,8 +545,9 @@ contenedores `L5G1` en `CORPUS_A01`, TEU con la regla vieja (`size / 20`)
 justo esos 22 contenedores. Cambio aislado, un solo archivo
 (`pdf_report_service.dart`), y `_formatTeu` puede simplificarse a entero
 porque la suma de valores siempre enteros (1.0 ó 2.0 por contenedor) da
-siempre un entero. Del resto quedan tres pendientes sin urgencia: `LOC+5`,
-las bahías invisibles y el TDT de `CORPUS_A06`.
+siempre un entero. La extensión de `voyage.bays` a las bahías sin carga
+propia también quedó cerrada. Del resto quedan dos pendientes sin urgencia:
+`LOC+5` y el TDT de `CORPUS_A06`.
 
 ---
 
