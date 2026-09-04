@@ -34,7 +34,22 @@ class VesselVoyage extends Equatable {
   /// Lista de todos los contenedores en el buque
   final List<ContainerUnit> containers;
   
-  /// Mapa de bahías organizadas por número
+  /// Mapa de bahías organizadas por número.
+  ///
+  /// **Cambio de contrato.** Antes contenía solo las bahías con carga propia
+  /// de este viaje, porque el parser crea una bahía por cada contenedor. Desde
+  /// la extensión posterior a C-7 contiene **toda bahía con evidencia física
+  /// de ocupación**: la propia y también la que está tomada por contenedores
+  /// de 40 pies de una bahía par vecina, aunque no traiga ni un contenedor de
+  /// este viaje.
+  ///
+  /// El motivo: sin eso, siete bahías impares de `CORPUS_A01` no aparecían en
+  /// el plano estando físicamente ocupadas. La 013 tiene 92 de sus 156 huecos
+  /// tomados —un 59 %— y el planificador no podía verla.
+  ///
+  /// La extensión la hace [withGeometry], no el parser: depende de la
+  /// geometría declarada tanto como el resto del plano. Recién parseado, el
+  /// mapa sigue teniendo solo las bahías con carga propia.
   final Map<int, Bay> bays;
   
   /// Metadatos adicionales del mensaje BAPLIE
@@ -102,18 +117,32 @@ class VesselVoyage extends Equatable {
   /// que se computa aquí, una sola vez, y se inyecta.
   VesselVoyage withGeometry(VesselGeometry geometry, {String? portOfCall}) {
     final shadows = neighborOccupiedSlots();
+    final updated = <int, Bay>{};
+
+    for (final entry in bays.entries) {
+      updated[entry.key] = entry.value.copyWith(
+        geometry: geometry,
+        slotsOccupiedByNeighbors: shadows[entry.key] ?? const {},
+      );
+    }
+
+    // Bahías sin carga propia pero físicamente ocupadas por un contenedor de
+    // 40 pies de una vecina. Sin esto quedan invisibles aunque estén tomadas,
+    // que es lo que le pasa a siete bahías impares de CORPUS_A01. Ver [bays].
+    for (final entry in shadows.entries) {
+      if (updated.containsKey(entry.key)) continue;
+      updated[entry.key] = Bay(
+        bayNumber: entry.key,
+        is40FtBay: entry.key.isEven,
+        geometry: geometry,
+        slotsOccupiedByNeighbors: entry.value,
+      );
+    }
+
     return copyWith(
       geometry: geometry,
       portOfCall: portOfCall,
-      bays: bays.map(
-        (number, bay) => MapEntry(
-          number,
-          bay.copyWith(
-            geometry: geometry,
-            slotsOccupiedByNeighbors: shadows[number] ?? const {},
-          ),
-        ),
-      ),
+      bays: updated,
     );
   }
 

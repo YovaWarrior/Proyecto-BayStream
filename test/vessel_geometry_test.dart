@@ -300,12 +300,48 @@ void main() {
       expect(viaje.neighborOccupiedSlots(), isEmpty);
     });
 
-    test('la sombra llega a bahías impares que no existen en el plano', () {
-      // En CORPUS_A01 hay siete: 005, 013, 015, 035, 039, 043 y 045.
+    test('recien parseado, la bahia solo sombreada todavia no existe', () {
+      // El parser crea una bahia por contenedor propio, asi que la 005 no
+      // aparece aunque este fisicamente ocupada.
       final viaje = viajeCon([cuarenta('0060284')]);
 
       expect(viaje.bays.containsKey(5), isFalse);
       expect(viaje.neighborOccupiedSlots().containsKey(5), isTrue);
+    });
+
+    test('withGeometry crea la bahia que solo ocupa una vecina', () {
+      // Cambio de contrato de voyage.bays: pasa a contener toda bahia con
+      // evidencia fisica de ocupacion. En CORPUS_A01 son siete las que antes
+      // quedaban invisibles: 005, 013, 015, 035, 039, 043 y 045.
+      const geometry = VesselGeometry(
+        portRows: 6,
+        starboardRows: 6,
+        holdTiers: [2, 4, 6, 8, 10, 12, 14],
+        deckTiers: [82, 84, 86, 88, 90],
+      );
+      final viaje = viajeCon([cuarenta('0060284')]).withGeometry(geometry);
+
+      expect(viaje.bays.keys.toList()..sort(), [5, 6, 7]);
+
+      final invisible = viaje.bays[5]!;
+      expect(invisible.containers, isEmpty, reason: 'sin carga propia');
+      expect(invisible.slotsOccupiedByNeighbors, {'0284'});
+      expect(invisible.geometry, geometry, reason: 'recibe la geometria igual');
+      expect(invisible.occupancyRate, closeTo(1 / 156 * 100, 0.0001),
+          reason: 'ocupada aunque no traiga carga de este viaje');
+    });
+
+    test('la bahia creada no altera el conteo de contenedores del viaje', () {
+      const geometry = VesselGeometry(
+        portRows: 6,
+        starboardRows: 6,
+        holdTiers: [2, 4, 6, 8, 10, 12, 14],
+        deckTiers: [82, 84, 86, 88, 90],
+      );
+      final viaje = viajeCon([cuarenta('0060284')]).withGeometry(geometry);
+
+      expect(viaje.totalContainers, 1, reason: 'el contenedor sigue siendo uno');
+      expect(viaje.bays.length, 3, reason: 'pero ocupa tres bahias');
     });
 
     test('la bahía 001 no intenta sombrear una bahía cero', () {
