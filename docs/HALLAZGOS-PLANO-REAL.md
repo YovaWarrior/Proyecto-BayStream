@@ -496,12 +496,15 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   implementarse; detalle y tabla completa en la sección 2, C‑5b.
 
 **Estado verificado en código, no solo reportado.** `C‑2`, `C‑3`, `C‑4`,
-`C‑5a`, `C‑5b`, `C‑6`, `C‑7` y `EQD` están cerrados. **`C‑1` (TEU sin
-decimales) sigue abierto** — `pdf_report_service.dart:683` todavía calcula
-`size / 20` sin el caso especial de 45 pies a 2.0; no hay commit de C‑1 en
-el historial. Se mencionó que quedaba con Codex; falta confirmación de que
-se cerró. Del resto quedan tres pendientes sin urgencia: `LOC+5`, las
-bahías invisibles y el TDT de `CORPUS_A06`.
+`C‑5a`, `C‑5b`, `C‑6`, `C‑7` y `EQD` están cerrados. **`C‑1` (TEU sin decimales) en curso con Codex.** Diagnóstico
+reverificado directo sobre el corpus, coincide exacto con el de Codex: 22
+contenedores `L5G1` en `CORPUS_A01`, TEU con la regla vieja (`size / 20`)
+1831.5, con la regla correcta (45 pies = 2.0) 1826.0 — los 5.5 de más son
+justo esos 22 contenedores. Cambio aislado, un solo archivo
+(`pdf_report_service.dart`), y `_formatTeu` puede simplificarse a entero
+porque la suma de valores siempre enteros (1.0 ó 2.0 por contenedor) da
+siempre un entero. Del resto quedan tres pendientes sin urgencia: `LOC+5`,
+las bahías invisibles y el TDT de `CORPUS_A06`.
 
 ---
 
