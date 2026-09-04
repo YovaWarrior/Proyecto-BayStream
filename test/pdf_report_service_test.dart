@@ -66,4 +66,23 @@ void main() {
       'HOLD0000002',
     ]);
   });
+
+  test('cuenta cada contenedor L5G1 como 2 TEU', () {
+    final containers = List.generate(
+      22,
+      (index) => ContainerUnit(
+        id: 'l5g1-$index',
+        containerId: 'L5G1-$index',
+        isoSizeType: 'L5G1',
+      ),
+    );
+    final l5g1Voyage = VesselVoyage(
+      id: 'voyage-l5g1',
+      vessel: const Vessel(id: 'vessel-l5g1', name: 'Buque L5G1'),
+      voyageNumber: 'V-L5G1',
+      containers: containers,
+    );
+
+    expect(service.totalTeu(l5g1Voyage), 44);
+  });
 }

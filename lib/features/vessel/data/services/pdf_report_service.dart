@@ -145,7 +145,7 @@ class PdfReportService {
             runSpacing: 10,
             children: [
               _metricCard('Contenedores', voyage.totalContainers.toString()),
-              _metricCard('TEU', _formatTeu(_totalTeu(voyage))),
+              _metricCard('TEU', totalTeu(voyage).toString()),
               _metricCard(
                 'Peso bruto',
                 '${(voyage.totalGrossWeight / 1000).toStringAsFixed(1)} t',
@@ -677,17 +677,14 @@ class PdfReportService {
     );
   }
 
-  double _totalTeu(VesselVoyage voyage) {
-    return voyage.containers.fold<double>(0, (sum, container) {
+  /// Calcula la capacidad nominal: 20 pies = 1 TEU; 40/45 pies = 2 TEU.
+  int totalTeu(VesselVoyage voyage) {
+    return voyage.containers.fold<int>(0, (sum, container) {
       final size = container.sizeInFeet;
-      return sum + (size == null ? 0 : size / 20);
+      if (size == 20) return sum + 1;
+      if (size == 40 || size == 45) return sum + 2;
+      return sum;
     });
-  }
-
-  String _formatTeu(double teu) {
-    return teu == teu.roundToDouble()
-        ? teu.toStringAsFixed(0)
-        : teu.toStringAsFixed(2);
   }
 
   String _portSummary(String? primary, Iterable<String?> alternatives) {
