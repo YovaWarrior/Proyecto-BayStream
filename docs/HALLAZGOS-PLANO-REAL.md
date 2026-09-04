@@ -418,12 +418,11 @@ parches sobre una rejilla inferida.
 **Estado al 3 de septiembre.** C‑3, C‑4, C‑2 y C‑6 quedan cerrados y
 verificados en código y en el corpus por Yov, no solo reportados por el
 segundo programador. Antes de dar C‑3 por completo cerrado falta una
-extensión: `deckTiers` (y probablemente `holdTiers`) son hoy un entero con
-ancla y paso fijos —no una lista— así que un buque con un arranque de
-cubierta distinto o con un hueco no se puede expresar. Cambia a `List<int>`,
-con chips quitables y uno para agregar; la propuesta inicial no cambia —sigue
-anclada en el máximo, corrida contigua—, solo la edición manual pasa a
-admitir un conjunto. Hallazgo del segundo programador, 3 de septiembre.
+extensión: `deckTiers` (y `holdTiers`) eran un entero con ancla y paso
+fijos —no una lista— así que un buque con un arranque de cubierta distinto
+o con un hueco no se podía expresar. ✓ cerrada (`17d9d49`), verificada más
+abajo en esta misma sección. Hallazgo y corrección del segundo programador,
+3 de septiembre.
 
 **C‑6, verificado.** El CSV protege el campo con una tabulación al inicio
 (`_excelTextGuard`), no con `="0030410"` — esa forma habría resuelto los
@@ -464,6 +463,36 @@ sola vez con la lista editable ya en su lugar, no abrir esa pantalla dos
 veces por separado. `C‑1` (TEU entero) queda disponible para hacerse en
 paralelo o inmediatamente después — es independiente y no toca la pantalla
 de parámetros.
+
+**Extensión de C‑3, cerrada y verificada (`17d9d49`).** `deckTiers` y
+`holdTiers` pasan de entero a `List<int>`, con chips quitables y uno para
+agregar; la propuesta inicial sigue anclada en el máximo y contigua, como
+quedó decidido — solo la edición manual admite huecos. El contrato
+`isAtLeast` (comparaba cuentas) se retira porque con listas habría prohibido
+quitar cualquier nivel, incluidos los vacíos — lo contrario de la función.
+Lo reemplaza `coversAll(positions)`: el invariante pasa de «declarar al
+menos tanto» a «no dejar carga fuera», que es el que importaba desde el
+principio. Confirmado leyendo `vessel_geometry.dart:122` y su uso en
+`vessel_geometry_page.dart:115`.
+
+Se encontró y corrigió además un error de comparación: el resumen de la
+pantalla rotulaba «geometría corregida por el usuario» sin que nadie
+tocara nada, porque comparaba las listas propuesta/actual con `==`, que en
+Dart compara **identidad de referencia**, no contenido — y la pantalla
+trabaja sobre copias. Es el riesgo específico de convertir un campo de
+`int` a `List<int>`: la semántica de la comparación cambia sin que el
+compilador avise nada. Corregido con un `_sameTiers` elemento por elemento;
+dos pruebas nuevas cubren las dos ramas (`vessel_geometry_page_test.dart`:
+«la propuesta sin tocar no se rotula como corregida» y «al quitar un nivel
+sí se rotula como corregida»). Vale la pena recordarlo si se migra algún
+otro campo de conteo a lista más adelante en el proyecto.
+
+Con `CORPUS_A01` ningún chip aparece removible por falta de carga: los doce
+niveles reales tienen contenedores en alguna bahía de ese archivo — ya
+verificado en la sección 3 (`n_unique_tiers = 12` en los seis archivos por
+separado, no solo en el agregado). El caso de un nivel intermedio vacío en
+todo el buque solo se ejercita hoy con los fixtures de prueba, no con el
+corpus real; ahí está cubierto igual.
 
 ## 5 · Lo que no hay que hacer todavía
 
