@@ -480,24 +480,99 @@ ninguna aserción existente; se agregó además un grupo de pruebas nuevo con
 segmentos reales del corpus. Hallazgo y corrección del segundo programador,
 3 de septiembre.
 
-- **Los refrigerados no se detectan.** El corpus trae 43 segmentos `TMP` y 50
-  contenedores con tipo ISO de refrigerado; la aplicación reporta 0.
-- **`CORPUS_A06` no abre.** Lanza «No se encontró el nombre del buque en el
-  segmento TDT». El parser busca el bloque `c222` (nombre del buque) en el
-  elemento 8 del segmento `TDT`, posición válida en los otros seis archivos;
-  en `A06` ese mismo bloque está en el elemento 4, porque el segmento omite
-  los campos vacíos intermedios que sí trae el resto del corpus. **Es el
-  mismo error de método que el indicador lleno/vacío, en otro segmento:
-  confiar en una posición fija cuando la fuente real varía.** La diferencia
-  es que en EQD la corrección fue anclarse en la posición correcta; acá no
-  hay una posición fija que sirva para los siete archivos a la vez, así que
-  el arreglo tendría que buscar el bloque `c222` por forma —tres o cuatro
-  componentes separados por `:`, con texto reconocible como nombre en uno de
-  ellos— en vez de por índice. No entra como tarea activa todavía: afecta a
-  uno de siete archivos, no bloquea nada de lo que sigue en la lista, y el
-  diseño de una búsqueda robusta merece pensarse aparte en vez de
-  improvisarse. Hallazgo del segundo programador, 3 de septiembre; queda
-  registrado para cuando se decida tomarlo.
+- **Los refrigerados no se detectan — diagnosticado, sin cerrar.** El
+  corpus trae 238 segmentos `TMP` y 327 contenedores con tipo ISO de
+  refrigerado (código con `R`, p. ej. `45R1`, `22R8`); la aplicación reporta
+  0. Reproduje el diagnóstico de Codex por mi cuenta contra los seis
+  archivos y coincide cifra por cifra:
+
+  | Archivo | `TMP` | ISO refrigerado | ISO refrigerado sin `TMP` |
+  |---|---|---|---|
+  | A01 | 43 | 50 | 7 |
+  | A02 | 14 | 14 | 0 |
+  | A03 | 1 | 10 | 9 |
+  | A04 | 34 | 71 | 37 |
+  | A05 | 73 | 91 | 18 |
+  | A06 | 73 | 91 | 18 |
+  | **Total** | **238** | **327** | **89** |
+
+  Causa doble, confirmada leyendo `baplie_parser_service.dart`: al llegar
+  `LOC+147` el `containerBuilder` se pone en `null` y no vuelve a existir
+  hasta el siguiente `EQD`; el caso `'TMP'` del switch solo actúa
+  `if (containerBuilder != null)`, así que un `TMP` que llegue antes del
+  `EQD` se descarta en silencio. Verificado con el propio corpus: **los 238
+  `TMP` del corpus llegan antes que su `EQD`, ninguno después** — hoy se
+  pierden los 238. Aparte, `_parseEQD` guarda el tipo ISO
+  (`isoSizeType`) pero nunca lo revisa para poner `isReefer = true`; el
+  getter `containerType` de `ContainerUnit` sí reconoce la `R` del código,
+  pero reportes, filtros y estadísticas leen el campo `isReefer`, que se
+  queda en `false` salvo que un `TMP` lo haya puesto en `true`. Eso explica
+  los 89 refrigerados que no tienen `TMP` en el corpus: ni por temperatura
+  ni por tipo quedan marcados.
+
+  Las 117 pruebas no lo detectaban: el fixture con `45R1`
+  (`test/baplie_parser_test.dart:93`) solo comprueba `isoSizeType`, nunca
+  `isReefer`, y no hay ningún fixture con `TMP` en el orden real del
+  corpus (`TMP` antes del `EQD`).
+
+  Propuesta de Codex, sin objeciones: acumular `TMP` en una variable
+  pendiente igual que ya se hace con los pesos de `MEA` (mismo patrón,
+  mismo problema de orden) y transferirla al builder cuando llegue el
+  `EQD`; marcar `isReefer` cuando exista un `TMP` **o** el tipo ISO tenga
+  `R`, para cubrir también los 89 sin temperatura. Pendiente: que la
+  implemente y la verifique contra el corpus antes de cerrarlo.
+- **`CORPUS_A06` no abría — ✓ cerrado (`1af3a7e`, Timonel).** Lanzaba «No se
+  encontró el nombre del buque en el segmento TDT» porque el parser leía el
+  bloque `c222` en el elemento 8 del `TDT` por índice fijo, posición válida
+  en seis de los siete archivos; en `A06` ese bloque está en el elemento 4,
+  porque el segmento omite los campos vacíos intermedios que el resto del
+  corpus sí escribe.
+
+  El arreglo prueba primero la posición del estándar (elemento 8) y, solo si
+  ahí no hay nombre, busca el bloque por forma (cuatro o más componentes con
+  el cuarto no vacío) como respaldo — **no** busca por forma directamente.
+  La razón, y es una desviación deliberada de lo que yo había pedido: el
+  bloque `c040` del transportista admite la misma forma cuando trae el
+  nombre de la naviera en su cuarto componente, así que buscar por forma sin
+  probar antes la posición del estándar podría devolver la naviera en vez
+  del buque. No pasa en el corpus, pero el estándar lo permite, y hay una
+  prueba nueva con un `c040` completo (`NAVIERA FALSA`) que lo demuestra.
+  También quitó un respaldo anterior que devolvía el identificador del buque
+  como si fuera su nombre cuando el nombre venía vacío —dato falso
+  presentado como cierto, aunque nunca se activaba en el corpus.
+
+  **Matización, no «el mismo principio».** La primera versión de este
+  documento describía este defecto y el de `EQD` como el mismo error de
+  método porque los dos confían en una posición fija. Timonel corrigió el
+  matiz y tiene razón: en `EQD` el arreglo fue el sentido contrario —de
+  buscar por valor a leer por posición fija—, porque ahí la posición del
+  estándar sí se cumple siempre. Lo que comparten no es una técnica
+  («buscar por forma») sino un principio: identificar el campo por lo que
+  es —su posición cuando el estándar la garantiza, su forma cuando no—, y
+  no por una suposición que no se sostiene en todo el corpus.
+
+  Reverifiqué contra los siete archivos (`A01`–`A06` más `A03v_VGM`)
+  reimplementando la lógica nueva en Python sobre los `.edi` crudos: los
+  siete abren y devuelven el nombre correcto, incluido `CORPUS_A06` («BUQUE
+  ECO», resuelto por la búsqueda por forma porque ese archivo ni siquiera
+  llega al elemento 8). 117 pruebas confirmadas (`grep` de
+  `test(`/`testWidgets(` en `test/`, no solo lo reportado); las 5 nuevas
+  quedan en el grupo «TDT · nombre del buque» de
+  `test/baplie_parser_test.dart`.
+
+  **Dos hallazgos nuevos en la misma función, sin tocar.** Verificados
+  contra el corpus, ninguno de los dos entra como tarea activa todavía:
+  - `operatorCode` se lee del elemento 7 del `TDT`, que está **vacío** en
+    los cinco archivos donde existe (`A01`–`A05`); el código de
+    transportista real (`NV2`, `NV3`, `NAVE5`, `NV4`…) está en el
+    componente 0 del elemento **5**. En `A06` tampoco está en el 5 —está
+    en el 6—, así que ni siquiera la corrección obvia cubre los siete
+    archivos por igual.
+  - `flag` se lee del elemento 9, pero en `A05` (el único con dato real de
+    bandera) el valor está en el elemento **10** (`LINEA-A:LR`, con `LR`
+    como el código de bandera). Con 9 elementos o menos (`A01`–`A04`,
+    `A06`) el campo directamente no existe. Este es el que se ve en la
+    tarjeta de resumen de la aplicación, y por eso siempre aparece vacío.
 - **`LOC+5` sin usar para proponer el puerto de escala.** El campo existe en
   los siete archivos, una vez por mensaje, con el puerto de salida real —no
   una frecuencia deducida. `C‑5a` propone hoy el `LOC+9` más frecuente entre
@@ -573,10 +648,20 @@ del Sprint 1 —`C‑1` a `C‑7`, `C‑2`, `EQD`— están cerrados**, el últi
 ellos `C‑1`, cerrado por Codex el 4 de septiembre y confirmado contra el
 corpus: `CORPUS_A01` da 1826 TEU exacto. La extensión de `voyage.bays` a
 las bahías sin carga propia también quedó cerrada. **Los cinco puntos de
-retroalimentación del tutor están todos atendidos.** Quedan dos pendientes
-sin urgencia y sin decisión tomada sobre cuándo tomarlos: `LOC+5` (proponer
-el puerto de escala del dato duro en vez de adivinarlo por frecuencia) y el
-TDT de `CORPUS_A06` (un archivo de siete no abre). Ninguno bloquea nada.
+retroalimentación del tutor están todos atendidos.** El TDT de `CORPUS_A06`
+también cerró (`1af3a7e`, ver más arriba). Quedan, sin urgencia y sin
+bloquear nada de lo anterior: los refrigerados (diagnosticados por Codex y
+verificados por mí, sin codificar todavía), `LOC+5` (proponer el puerto de
+escala del dato duro), y los dos hallazgos nuevos del `TDT` —`operatorCode`
+y `flag` mal leídos— que dejó Timonel sin tocar al cerrar `CORPUS_A06`.
+
+**Decisión, 4 de septiembre: no se pausa todavía para la revisión del
+tutor.** `CORPUS_A06` cerró. Codex sigue con los refrigerados —ya tiene el
+diagnóstico verificado, falta implementar el arreglo que propuso—. Timonel
+sigue con `operatorCode`/`flag`: son hallazgos suyos, en la misma función
+que acaba de tocar, con el contexto fresco. `LOC+5` queda para después de
+que alguno de los dos termine, porque implica volver a tocar la pantalla de
+parámetros que `C‑3` y `C‑5a` ya tocaron.
 
 ---
 
