@@ -85,21 +85,35 @@ planificador añade encima.
 
 ## 2 · Los siete cambios
 
-### C‑1 · TEU sin decimales
+### C‑1 · TEU sin decimales — ✓ cerrado (`a8572ae`, Codex)
 
 **Plano real:** la cabecera cuenta unidades enteras — `20FT Units = 0,
 40FT Units = 38`.
 
-**BayStream:** la portada del PDF reporta `TEU 1831.50`.
+**BayStream, antes:** la portada del PDF reportaba `TEU 1831.50`.
 
-**Causa exacta:** `pdf_report_service.dart:683` calcula `size / 20`, y
+**Causa exacta:** `pdf_report_service.dart:683` calculaba `size / 20`, y
 `ContainerUnit.sizeInFeet` devuelve 45 para los tipos que empiezan en `L`. Con
 `CORPUS_A01`: 827 contenedores de 40 pies a 2.0 + 128 de 20 pies a 1.0 + **22
-contenedores `L5G1` a 2.25** = 1831.5. Todo el decimal sale de esos 22.
+contenedores `L5G1` a 2.25** = 1831.5. Todo el decimal salía de esos 22.
+Reverificado independientemente sobre el `.edi` crudo antes de aprobar el
+cambio.
 
-**Cambio:** un contenedor de 45 pies cuenta **2 TEU**, no 2.25. El total es
-siempre entero y se muestra sin decimales, en todas las vistas y en el PDF.
-Con `CORPUS_A01` el valor correcto es **1826 TEU**.
+**Cambio, implementado por Codex, verificado en código.** `totalTeu()` ya no
+divide: es `int`, suma 1 por cada contenedor de 20 pies y 2 por cada uno de
+40 o 45, sin pasar por ningún cálculo fraccionario
+(`pdf_report_service.dart:681`). Con `CORPUS_A01` da **1826**, exacto a lo
+calculado. Se agregó una prueba dedicada
+(`test/pdf_report_service_test.dart`: «cuenta cada contenedor L5G1 como 2
+TEU», 22 contenedores → 44 TEU) — confirmado en el diff del commit.
+
+**Sobre el conteo de pruebas:** Codex reportó «112/112». El repositorio
+tiene hoy **113** `test(`/`testWidgets(` declarados — 112 antes de este
+commit (ver la discrepancia sin resolver de la sección 3) más el que Codex
+agregó. Probablemente reportó el conteo previo a agregar su propia prueba,
+no una discrepancia nueva, pero sigue pendiente correr `flutter test` una
+vez para tener un número confirmado de punta a punta en vez de tres
+reportes parciales.
 
 ### C‑2 · La fila 00 tiene que existir siempre
 
@@ -537,17 +551,15 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   contra el último commit. Vale la pena correrlo una vez más antes de
   cerrar esto del todo y confirmar cuál de las dos explicaciones es.
 
-**Estado verificado en código, no solo reportado.** `C‑2`, `C‑3`, `C‑4`,
-`C‑5a`, `C‑5b`, `C‑6`, `C‑7` y `EQD` están cerrados. **`C‑1` (TEU sin decimales) en curso con Codex.** Diagnóstico
-reverificado directo sobre el corpus, coincide exacto con el de Codex: 22
-contenedores `L5G1` en `CORPUS_A01`, TEU con la regla vieja (`size / 20`)
-1831.5, con la regla correcta (45 pies = 2.0) 1826.0 — los 5.5 de más son
-justo esos 22 contenedores. Cambio aislado, un solo archivo
-(`pdf_report_service.dart`), y `_formatTeu` puede simplificarse a entero
-porque la suma de valores siempre enteros (1.0 ó 2.0 por contenedor) da
-siempre un entero. La extensión de `voyage.bays` a las bahías sin carga
-propia también quedó cerrada. Del resto quedan dos pendientes sin urgencia:
-`LOC+5` y el TDT de `CORPUS_A06`.
+**Estado final verificado en código, no solo reportado. Los nueve cambios
+del Sprint 1 —`C‑1` a `C‑7`, `C‑2`, `EQD`— están cerrados**, el último de
+ellos `C‑1`, cerrado por Codex el 4 de septiembre y confirmado contra el
+corpus: `CORPUS_A01` da 1826 TEU exacto. La extensión de `voyage.bays` a
+las bahías sin carga propia también quedó cerrada. **Los cinco puntos de
+retroalimentación del tutor están todos atendidos.** Quedan dos pendientes
+sin urgencia y sin decisión tomada sobre cuándo tomarlos: `LOC+5` (proponer
+el puerto de escala del dato duro en vez de adivinarlo por frecuencia) y el
+TDT de `CORPUS_A06` (un archivo de siete no abre). Ninguno bloquea nada.
 
 ---
 
