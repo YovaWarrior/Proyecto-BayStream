@@ -480,11 +480,10 @@ ninguna aserción existente; se agregó además un grupo de pruebas nuevo con
 segmentos reales del corpus. Hallazgo y corrección del segundo programador,
 3 de septiembre.
 
-- **Los refrigerados no se detectan — diagnosticado, sin cerrar.** El
-  corpus trae 238 segmentos `TMP` y 327 contenedores con tipo ISO de
-  refrigerado (código con `R`, p. ej. `45R1`, `22R8`); la aplicación reporta
-  0. Reproduje el diagnóstico de Codex por mi cuenta contra los seis
-  archivos y coincide cifra por cifra:
+- **Los refrigerados no se detectan — ✓ cerrado.** El corpus trae 238
+  segmentos `TMP` y 327 contenedores con tipo ISO de refrigerado (código
+  con `R` en el tercer carácter, p. ej. `45R1`, `22R8`); la aplicación
+  reportaba 0.
 
   | Archivo | `TMP` | ISO refrigerado | ISO refrigerado sin `TMP` |
   |---|---|---|---|
@@ -496,31 +495,33 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   | A06 | 73 | 91 | 18 |
   | **Total** | **238** | **327** | **89** |
 
-  Causa doble, confirmada leyendo `baplie_parser_service.dart`: al llegar
-  `LOC+147` el `containerBuilder` se pone en `null` y no vuelve a existir
-  hasta el siguiente `EQD`; el caso `'TMP'` del switch solo actúa
-  `if (containerBuilder != null)`, así que un `TMP` que llegue antes del
-  `EQD` se descarta en silencio. Verificado con el propio corpus: **los 238
-  `TMP` del corpus llegan antes que su `EQD`, ninguno después** — hoy se
-  pierden los 238. Aparte, `_parseEQD` guarda el tipo ISO
-  (`isoSizeType`) pero nunca lo revisa para poner `isReefer = true`; el
-  getter `containerType` de `ContainerUnit` sí reconoce la `R` del código,
-  pero reportes, filtros y estadísticas leen el campo `isReefer`, que se
-  queda en `false` salvo que un `TMP` lo haya puesto en `true`. Eso explica
-  los 89 refrigerados que no tienen `TMP` en el corpus: ni por temperatura
-  ni por tipo quedan marcados.
+  Causa doble, confirmada leyendo el código antes del arreglo: al llegar
+  `LOC+147` el `containerBuilder` se ponía en `null` hasta el siguiente
+  `EQD`, y el caso `'TMP'` solo actuaba si el builder ya existía —
+  descartaba en silencio los 238 `TMP`, que en el corpus completo llegan
+  siempre antes que su `EQD`, nunca después. Aparte, `_parseEQD` guardaba
+  el tipo ISO pero nunca lo revisaba para poner `isReefer`, el campo que
+  leen reportes, filtros y estadísticas.
 
-  Las 117 pruebas no lo detectaban: el fixture con `45R1`
-  (`test/baplie_parser_test.dart:93`) solo comprueba `isoSizeType`, nunca
-  `isReefer`, y no hay ningún fixture con `TMP` en el orden real del
-  corpus (`TMP` antes del `EQD`).
+  El arreglo agrega `pendingTemperature`, el mismo patrón que ya existía
+  para los pesos de `MEA`: si `TMP` llega antes que el `EQD` se guarda como
+  pendiente y se aplica al builder en cuanto se crea; si llega después, se
+  aplica directo. Además, cada `EQD` marca `isReefer` de una vez si el
+  tercer carácter del tipo ISO es `R` (`_isReeferIsoType`), lo que cubre a
+  los 89 refrigerados que no traen `TMP`.
 
-  Propuesta de Codex, sin objeciones: acumular `TMP` en una variable
-  pendiente igual que ya se hace con los pesos de `MEA` (mismo patrón,
-  mismo problema de orden) y transferirla al builder cuando llegue el
-  `EQD`; marcar `isReefer` cuando exista un `TMP` **o** el tipo ISO tenga
-  `R`, para cubrir también los 89 sin temperatura. Pendiente: que la
-  implemente y la verifique contra el corpus antes de cerrarlo.
+  Curiosidad de autoría, no afecta el resultado: la lógica quedó
+  implementada en el commit `c101fb5` de Timonel —de paso, al tocar la
+  misma función para `operatorCode`/`flag`—, y el commit `206545c` de
+  Codex, que llegó después, ya no tuvo código de servicio que aportar y
+  solo agregó las tres pruebas de regresión en un archivo nuevo,
+  `test/baplie_reefer_parser_test.dart`: `TMP` antes del `EQD`, tipo `R`
+  sin `TMP`, y el caso negativo (ni `TMP` ni `R`).
+
+  Reimplementé el parseo completo —incluida la acumulación pendiente— en
+  Python sobre los seis archivos crudos, contenedor por contenedor: **327
+  refrigerados, 238 con temperatura**, exacto en total y por archivo contra
+  la tabla de arriba. 124 pruebas confirmadas por conteo directo.
 - **`CORPUS_A06` no abría — ✓ cerrado (`1af3a7e`, Timonel).** Lanzaba «No se
   encontró el nombre del buque en el segmento TDT» porque el parser leía el
   bloque `c222` en el elemento 8 del `TDT` por índice fijo, posición válida
@@ -555,24 +556,47 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   reimplementando la lógica nueva en Python sobre los `.edi` crudos: los
   siete abren y devuelven el nombre correcto, incluido `CORPUS_A06` («BUQUE
   ECO», resuelto por la búsqueda por forma porque ese archivo ni siquiera
-  llega al elemento 8). 117 pruebas confirmadas (`grep` de
+  llega al elemento 8). 117 pruebas confirmadas en ese momento (`grep` de
   `test(`/`testWidgets(` en `test/`, no solo lo reportado); las 5 nuevas
   quedan en el grupo «TDT · nombre del buque» de
-  `test/baplie_parser_test.dart`.
+  `test/baplie_parser_test.dart`. (Sube a 124 con los cambios siguientes,
+  ver abajo.)
 
-  **Dos hallazgos nuevos en la misma función, sin tocar.** Verificados
-  contra el corpus, ninguno de los dos entra como tarea activa todavía:
-  - `operatorCode` se lee del elemento 7 del `TDT`, que está **vacío** en
-    los cinco archivos donde existe (`A01`–`A05`); el código de
-    transportista real (`NV2`, `NV3`, `NAVE5`, `NV4`…) está en el
-    componente 0 del elemento **5**. En `A06` tampoco está en el 5 —está
-    en el 6—, así que ni siquiera la corrección obvia cubre los siete
-    archivos por igual.
-  - `flag` se lee del elemento 9, pero en `A05` (el único con dato real de
-    bandera) el valor está en el elemento **10** (`LINEA-A:LR`, con `LR`
-    como el código de bandera). Con 9 elementos o menos (`A01`–`A04`,
-    `A06`) el campo directamente no existe. Este es el que se ve en la
-    tarjeta de resumen de la aplicación, y por eso siempre aparece vacío.
+  **Los dos hallazgos adjuntos — ✓ cerrados (`c101fb5`, el mismo commit de
+  arriba).** `operatorCode` leía el elemento 7 del `TDT`, vacío en los seis
+  archivos; el código real (`NV2`, `NV3`, `NAVE5`, `NV4`…) vive en el
+  bloque `c040`, que el estándar pone en el elemento 5 pero que en `A06`
+  aparece en el 6 —el mismo corrimiento que ya afecta a `c222`—. El arreglo
+  no fija un índice: busca el primer elemento con dos o más componentes que
+  no sea el índice ya identificado como `c222`, porque los dos bloques
+  admiten la misma forma cuando `c040` trae el nombre de la naviera en su
+  cuarto componente —la razón por la que la búsqueda de `c222` no busca por
+  forma sin más, ver arriba—.
+
+  `flag` es la parte más interesante: **no** usó el elemento 10 de `A05`
+  (`LINEA-A:LR`) que yo había señalado como candidato. Decisión de
+  Timonel, con razón de estándar: el `TDT` del estándar tiene nueve
+  elementos, así que un elemento 10 es una extensión propia de ese emisor,
+  y construir una regla sobre un elemento no estándar visto en un solo
+  archivo es la misma clase de suposición fácil que este documento lleva
+  varias correcciones desmontando. En vez de eso lee `e8453`, la
+  nacionalidad del medio de transporte, que sí tiene lugar fijo en el
+  estándar: el quinto componente del propio bloque `c222` (`9000003:146:11
+  :BUQUE ALFA:PA` sería un ejemplo con nacionalidad). Como es un campo
+  codificado, solo acepta dos o tres letras; `'kingston JM'`, el valor real
+  de `A05` en esa posición, es un lugar, no un código, y se descarta.
+
+  **Efecto verificado: ningún archivo del corpus declara bandera hoy.**
+  Reimplementé `_findC222Index`, `_findCarrierIndex` y `_nationalityIn` en
+  Python sobre los siete `.edi` crudos y coincide exacto con lo reportado:
+  operador `NV2, NV3, NV3, NAVE5, NV4, NV3` para `A01`–`A06` (antes, seis
+  nulos), bandera `None` en los siete. Visualmente el chip de bandera sigue
+  sin aparecer en ningún archivo, igual que antes del cambio —pero antes
+  era porque leía un elemento vacío por casualidad, y ahora es porque el
+  único dato real que hay (`LINEA-A:LR`) no tiene forma de nacionalidad
+  verificable. Si se quiere usar ese dato hace falta primero confirmar con
+  quien emite `A05` qué es exactamente ese campo — decisión de datos, no de
+  código, y el cambio sería chico cuando se tome.
 - **`LOC+5` sin usar para proponer el puerto de escala.** El campo existe en
   los siete archivos, una vez por mensaje, con el puerto de salida real —no
   una frecuencia deducida. `C‑5a` propone hoy el `LOC+9` más frecuente entre
@@ -648,20 +672,18 @@ del Sprint 1 —`C‑1` a `C‑7`, `C‑2`, `EQD`— están cerrados**, el últi
 ellos `C‑1`, cerrado por Codex el 4 de septiembre y confirmado contra el
 corpus: `CORPUS_A01` da 1826 TEU exacto. La extensión de `voyage.bays` a
 las bahías sin carga propia también quedó cerrada. **Los cinco puntos de
-retroalimentación del tutor están todos atendidos.** El TDT de `CORPUS_A06`
-también cerró (`1af3a7e`, ver más arriba). Quedan, sin urgencia y sin
-bloquear nada de lo anterior: los refrigerados (diagnosticados por Codex y
-verificados por mí, sin codificar todavía), `LOC+5` (proponer el puerto de
-escala del dato duro), y los dos hallazgos nuevos del `TDT` —`operatorCode`
-y `flag` mal leídos— que dejó Timonel sin tocar al cerrar `CORPUS_A06`.
+retroalimentación del tutor están todos atendidos.** Fuera del sprint
+original, también cerraron el TDT de `CORPUS_A06` (`1af3a7e`), los
+refrigerados (`c101fb5`/`206545c`) y `operatorCode`/`flag` del `TDT`
+(`c101fb5`) — los tres verificados contra el corpus completo, no solo
+reportados. **Queda un solo pendiente sin urgencia, `LOC+5`** (proponer el
+puerto de escala del dato duro en vez de adivinarlo por frecuencia); no
+bloquea nada de lo anterior. 124 pruebas en verde, `analyze` en 49
+observaciones preexistentes sin cambios.
 
-**Decisión, 4 de septiembre: no se pausa todavía para la revisión del
-tutor.** `CORPUS_A06` cerró. Codex sigue con los refrigerados —ya tiene el
-diagnóstico verificado, falta implementar el arreglo que propuso—. Timonel
-sigue con `operatorCode`/`flag`: son hallazgos suyos, en la misma función
-que acaba de tocar, con el contexto fresco. `LOC+5` queda para después de
-que alguno de los dos termine, porque implica volver a tocar la pantalla de
-parámetros que `C‑3` y `C‑5a` ya tocaron.
+**Decisión, 4 de septiembre: seguimos sin pausar para la revisión del
+tutor, con `LOC+5` como el único trabajo activo que queda del lado del
+código.**
 
 ---
 
