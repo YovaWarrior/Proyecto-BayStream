@@ -60,6 +60,12 @@ class BaplieConstants {
   /// Posición de estiba en el buque (Stowage Cell)
   static const String locStowageCell = '147';
   
+  /// Puerto de salida del buque (Place of Departure)
+  ///
+  /// Va una sola vez, en la cabecera del mensaje, y es lo que el archivo
+  /// declara como puerto para el que vale este plano.
+  static const String locPlaceOfDeparture = '5';
+
   /// Puerto de carga (Port of Loading)
   static const String locPortOfLoading = '9';
   

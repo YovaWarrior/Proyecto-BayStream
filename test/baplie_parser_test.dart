@@ -288,6 +288,85 @@ UNT+4+1'
     });
   });
 
+  group('LOC+5 · puerto de salida declarado', () {
+    late BaplieParserService parser;
+
+    setUp(() {
+      parser = BaplieParserService();
+    });
+
+    String mensajeCon(List<String> segmentos) => [
+          "UNH+1+BAPLIE:D:95B:UN'",
+          "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'",
+          ...segmentos.map((s) => "$s'"),
+          "UNT+5+1'",
+        ].join();
+
+    test('lo lee de la cabecera del mensaje', () {
+      // Segmento real de CORPUS_A01.
+      final r = parser.parse(mensajeCon([
+        'LOC+5+GTPBR:139:6',
+        'LOC+147+0060102:::5',
+        'EQD+CN+ABCU1234567+22G1+++5',
+      ]));
+
+      expect(r.portOfOrigin, 'GTPBR');
+    });
+
+    test('lo lee tambien sin calificador ni agencia', () {
+      // Forma de CORPUS_A06: LOC+5+GTPBR, sin los componentes opcionales.
+      final r = parser.parse(mensajeCon([
+        'LOC+5+GTPBR',
+        'LOC+147+0060102:::5',
+        'EQD+CN+ABCU1234567+22G1+++5',
+      ]));
+
+      expect(r.portOfOrigin, 'GTPBR');
+    });
+
+    test('sin LOC+5 el puerto de salida queda sin declarar', () {
+      final r = parser.parse(mensajeCon([
+        'LOC+147+0060102:::5',
+        'EQD+CN+ABCU1234567+22G1+++5',
+      ]));
+
+      expect(r.portOfOrigin, isNull);
+    });
+
+    test('no lo toma de dentro de un grupo de contenedor', () {
+      // La cabecera termina en el primer LOC+147. Un LOC+5 posterior habla de
+      // esa caja, no del buque, y tomarlo seria declarar como salida del
+      // viaje el origen de un contenedor.
+      final r = parser.parse(mensajeCon([
+        'LOC+147+0060102:::5',
+        'EQD+CN+ABCU1234567+22G1+++5',
+        'LOC+5+PAMIT:139:6',
+      ]));
+
+      expect(r.portOfOrigin, isNull);
+    });
+
+    test('el puerto declarado gana al puerto de carga mas frecuente', () {
+      // El caso de CORPUS_A01 en pequeno: la salida declarada es GTPBR y el
+      // LOC+9 mas repetido es HNPCR. Contar proponia el puerto equivocado.
+      final r = parser.parse(mensajeCon([
+        'LOC+5+GTPBR:139:6',
+        'LOC+147+0060102:::5',
+        'LOC+9+HNPCR:139:6',
+        'EQD+CN+ABCU1234567+22G1+++5',
+        'LOC+147+0060104:::5',
+        'LOC+9+HNPCR:139:6',
+        'EQD+CN+ABCU1234568+22G1+++5',
+        'LOC+147+0060106:::5',
+        'LOC+9+GTPBR:139:6',
+        'EQD+CN+ABCU1234569+22G1+++5',
+      ]));
+
+      expect(r.loadingPortCounts, {'HNPCR': 2, 'GTPBR': 1});
+      expect(r.proposedPortOfCall, 'GTPBR');
+    });
+  });
+
   group('EQD · indicador lleno/vacío', () {
     late BaplieParserService parser;
 

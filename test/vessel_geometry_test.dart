@@ -187,13 +187,18 @@ void main() {
           portOfLoading: puerto,
         );
 
-    VesselVoyage viajeCon(List<ContainerUnit> cs, {String? portOfCall}) =>
+    VesselVoyage viajeCon(
+      List<ContainerUnit> cs, {
+      String? portOfCall,
+      String? portOfOrigin,
+    }) =>
         VesselVoyage(
           id: 'v',
           vessel: const Vessel(id: 'b', name: 'Buque'),
           voyageNumber: 'V001',
           containers: cs,
           portOfCall: portOfCall,
+          portOfOrigin: portOfOrigin,
         );
 
     test('cuenta los puertos de carga del más frecuente al menos', () {
@@ -209,6 +214,37 @@ void main() {
       expect(viaje.loadingPortCounts,
           {'HNPCR': 3, 'GTPBR': 2, 'PAMIT': 1});
       expect(viaje.proposedPortOfCall, 'HNPCR');
+    });
+
+    test('el puerto de salida declarado gana al mas contado', () {
+      // Es el caso de CORPUS_A01: el archivo declara GTPBR y el LOC+9 mas
+      // repetido es HNPCR. La declaracion del archivo manda sobre el conteo.
+      final viaje = viajeCon(
+        [
+          conPuerto('1', 'HNPCR'),
+          conPuerto('2', 'HNPCR'),
+          conPuerto('3', 'GTPBR'),
+        ],
+        portOfOrigin: 'GTPBR',
+      );
+
+      expect(viaje.loadingPortCounts.keys.first, 'HNPCR');
+      expect(viaje.proposedPortOfCall, 'GTPBR');
+    });
+
+    test('hay puerto que proponer aunque la carga no diga donde se cargo', () {
+      // CORPUS_A06 no trae LOC+9 en ningun contenedor: sin el LOC+5 de la
+      // cabecera no habria nada que proponer y la escala quedaba sin declarar.
+      final viaje = viajeCon(
+        [
+          const ContainerUnit(id: '1', containerId: '1'),
+          const ContainerUnit(id: '2', containerId: '2'),
+        ],
+        portOfOrigin: 'GTPBR',
+      );
+
+      expect(viaje.loadingPortCounts, isEmpty);
+      expect(viaje.proposedPortOfCall, 'GTPBR');
     });
 
     test('sin puerto de escala declarado nada va de paso', () {

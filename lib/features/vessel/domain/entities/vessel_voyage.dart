@@ -22,7 +22,11 @@ class VesselVoyage extends Equatable {
   /// Dirección del viaje (Import/Export)
   final VoyageDirection direction;
   
-  /// Puerto de origen del archivo BAPLIE
+  /// Puerto de salida declarado en la cabecera del archivo (`LOC+5`).
+  ///
+  /// Es el puerto para el que vale este plano, dicho por el propio archivo.
+  /// De ahí se propone [portOfCall]: no hace falta adivinarlo contando los
+  /// `LOC+9` de la carga.
   final String? portOfOrigin;
   
   /// Puerto de destino
@@ -65,8 +69,10 @@ class VesselVoyage extends Equatable {
 
   /// Puerto de esta escala, confirmado por el usuario.
   ///
-  /// El archivo **no lo trae**: solo dice dónde se cargó cada contenedor
-  /// (`LOC+9`). Separa la carga que se opera aquí de la que ya venía a bordo.
+  /// Separa la carga que se opera aquí de la que ya venía a bordo. Se propone
+  /// desde [portOfOrigin] —el `LOC+5` de la cabecera— y se sigue confirmando:
+  /// el archivo declara para qué salida se emitió el plano, no dónde está el
+  /// buque el día que alguien lo abre.
   final String? portOfCall;
 
   const VesselVoyage({
@@ -193,16 +199,25 @@ class VesselVoyage extends Equatable {
     return Map.fromEntries(sorted);
   }
 
-  /// Puerto de escala propuesto: el `LOC+9` más frecuente.
+  /// Puerto de escala propuesto: el `LOC+5` de la cabecera, y si falta, el
+  /// `LOC+9` más frecuente.
   ///
-  /// Es una **propuesta, no una deducción**. El archivo no dice en qué escala
-  /// está el buque; solo dice dónde se cargó cada contenedor. Que el puerto
-  /// más repetido sea el de esta escala es lo más probable, no un hecho: en
-  /// `CORPUS_A01` el más frecuente es HNPCR con 457, y si la escala fuera
-  /// Puerto Barrios el usuario tiene que corregirlo a GTPBR. Por eso el campo
-  /// se confirma, igual que el resto de los parámetros.
-  String? get proposedPortOfCall =>
-      loadingPortCounts.keys.isEmpty ? null : loadingPortCounts.keys.first;
+  /// El orden importa y no es un detalle. El `LOC+5` es una **declaración del
+  /// archivo**: el puerto de salida para el que se emitió el plano, presente
+  /// una vez por mensaje en los siete archivos del corpus. El `LOC+9` más
+  /// frecuente es una **apuesta**: el archivo dice dónde se cargó cada caja,
+  /// no en qué escala está el buque, y las dos cosas no coinciden. En
+  /// `CORPUS_A01` el `LOC+5` dice GTPBR mientras que el `LOC+9` más repetido
+  /// es HNPCR con 457 de 977 — contar habría propuesto el puerto equivocado.
+  ///
+  /// El respaldo se queda porque el estándar no obliga al `LOC+5`, y porque un
+  /// archivo sin él sigue teniendo que poder abrirse. Con o sin declaración,
+  /// el usuario confirma.
+  String? get proposedPortOfCall {
+    final declared = portOfOrigin;
+    if (declared != null && declared.isNotEmpty) return declared;
+    return loadingPortCounts.keys.isEmpty ? null : loadingPortCounts.keys.first;
+  }
 
   /// Indica si el contenedor ya venía a bordo y no se opera en esta escala.
   ///

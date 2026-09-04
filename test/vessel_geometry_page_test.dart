@@ -26,6 +26,8 @@ void main() {
     WidgetTester tester,
     void Function(VesselCallParameters?) captured, {
     VesselGeometry? initial,
+    Map<String, int> loadingPorts = const {'GTPBR': 3, 'HNPCR': 2},
+    String? declaredPort,
   }) async {
     tester.view.physicalSize = const Size(1000, 2600);
     tester.view.devicePixelRatio = 1.0;
@@ -45,7 +47,8 @@ void main() {
                       builder: (_) => VesselGeometryPage(
                         proposal: _proposal,
                         positions: _posiciones,
-                        loadingPorts: const {'GTPBR': 3, 'HNPCR': 2},
+                        loadingPorts: loadingPorts,
+                        declaredPort: declaredPort,
                         initial: initial,
                         fileName: 'CORPUS_A01.edi',
                       ),
@@ -272,6 +275,71 @@ void main() {
       );
       expect(
         find.text('3 se operan en esta escala y 2 ya vienen a bordo, de paso.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('propone el que declara el archivo, no el mas cargado',
+        (tester) async {
+      // PAMIT no aparece en ningun LOC+9 del viaje: se ofrece igual porque lo
+      // declara la cabecera, y el reparto dice la verdad, que es que toda la
+      // carga a bordo viene de otro sitio.
+      await openPage(tester, (_) {}, declaredPort: 'PAMIT');
+
+      expect(
+        tester
+            .widget<ChoiceChip>(find.byKey(const ValueKey('port-PAMIT')))
+            .selected,
+        isTrue,
+      );
+      expect(find.text('PAMIT'), findsOneWidget);
+      expect(
+        find.text('0 se operan en esta escala y 5 ya vienen a bordo, de paso.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('el puerto declarado se ofrece primero', (tester) async {
+      await openPage(tester, (_) {}, declaredPort: 'PAMIT');
+
+      final etiquetas = tester
+          .widgetList<ChoiceChip>(find.byType(ChoiceChip))
+          .map((chip) => (chip.label as Text).data)
+          .toList();
+
+      expect(etiquetas, ['PAMIT', 'GTPBR (3)', 'HNPCR (2)', 'Sin declarar']);
+    });
+
+    testWidgets('el texto nombra el puerto que declara el archivo',
+        (tester) async {
+      await openPage(tester, (_) {}, declaredPort: 'GTPBR');
+
+      expect(
+        find.textContaining('El archivo declara GTPBR como puerto de salida'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sin LOC+9 en la carga sigue habiendo puerto que declarar',
+        (tester) async {
+      // CORPUS_A06: ningun contenedor dice donde se cargo. Antes no habia un
+      // solo chip que elegir y la escala quedaba sin declarar por falta de
+      // opciones, no por decision del usuario.
+      await openPage(
+        tester,
+        (_) {},
+        loadingPorts: const {},
+        declaredPort: 'GTPBR',
+      );
+
+      expect(
+        tester
+            .widget<ChoiceChip>(find.byKey(const ValueKey('port-GTPBR')))
+            .selected,
+        isTrue,
+      );
+      expect(
+        find.textContaining('la carga de paso no se puede separar'),
         findsOneWidget,
       );
     });

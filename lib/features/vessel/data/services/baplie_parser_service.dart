@@ -51,6 +51,7 @@ class BaplieParserService {
       vessel: vesselInfo.vessel,
       voyageNumber: vesselInfo.voyageNumber,
       direction: _determineDirection(segments),
+      portOfOrigin: _findPlaceOfDeparture(segments),
       containers: containers,
       bays: bays,
       metadata: metadata,
@@ -262,6 +263,35 @@ class BaplieParserService {
           return _safeGetComponent(components, 1);
         }
       }
+    }
+    return null;
+  }
+
+  /// Puerto de salida declarado en la cabecera (`LOC+5`, e3227 = 5).
+  ///
+  /// Es el único puerto que el archivo afirma por sí mismo: dice para qué
+  /// salida vale este plano. Los `LOC+9` de cada contenedor dicen otra cosa
+  /// —dónde se cargó cada caja, incluida la que ya venía a bordo— y por eso el
+  /// más frecuente puede no ser el de la escala. En `CORPUS_A01` el `LOC+5`
+  /// dice GTPBR y el `LOC+9` más frecuente es HNPCR con 457.
+  ///
+  /// Se busca **solo en la cabecera**, y la cabecera termina donde empieza el
+  /// primer contenedor: al llegar al primer `LOC+147` se corta. Un `LOC+5` que
+  /// apareciera dentro de un grupo de contenedor hablaría de esa caja y no del
+  /// buque.
+  ///
+  /// Tolera que el segmento venga sin los componentes de calificador y agencia
+  /// (`LOC+5+GTPBR`, como en `CORPUS_A06`) porque el código de puerto vive en
+  /// el primer componente y los otros dos son opcionales.
+  String? _findPlaceOfDeparture(List<String> segments) {
+    for (final segment in segments) {
+      if (_getSegmentType(segment) != BaplieConstants.segmentLOC) continue;
+      final location = _parseLOC(segment);
+      if (location == null) continue;
+      if (location.qualifier == BaplieConstants.locStowageCell) break;
+      if (location.qualifier != BaplieConstants.locPlaceOfDeparture) continue;
+      final code = location.locationCode;
+      if (code != null && code.isNotEmpty) return code;
     }
     return null;
   }

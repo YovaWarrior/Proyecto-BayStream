@@ -330,6 +330,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           proposal: VesselGeometry.proposeFrom(target.stowagePositions),
           positions: target.stowagePositions.toList(),
           loadingPorts: target.loadingPortCounts,
+          declaredPort: target.portOfOrigin,
           initialPortOfCall: target.portOfCall,
           initial: target.geometry,
           fileName: fileName,
