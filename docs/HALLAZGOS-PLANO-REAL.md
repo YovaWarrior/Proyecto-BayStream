@@ -530,12 +530,33 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
 
   En `CORPUS_A03` las invisibles (13) casi igualan a las visibles (14) — el
   plano mostraba poco más de la mitad de las bahías físicamente ocupadas.
-  Sobre las cifras puntuales que dio Timonel para A03 (bahías 017 y 019 «al
-  50 % cada una»): recalculadas dan 66/156 = **42.3 %** exacto para ambas,
-  no 50 %. La diferencia es chica y probablemente una cifra redondeada al
-  ojo en el mensaje, no un valor mal calculado en el código —la lógica ya
-  está verificada arriba con pruebas exactas—, pero queda anotado en vez de
-  repetir el número sin revisar.
+
+  **Corrección: el 42.3 % que escribí arriba estaba mal, y el error fue
+  mío, no de Timonel.** `CORPUS_A03` (y `A05` y `A06`) traen fila 00 y
+  filas solo hasta la 10 — **once** filas, no trece — así que su geometría
+  declarada son **132 huecos por bahía** (11 × 12), no 156. Usé la rejilla
+  de `A01` sobre los seis archivos por parejo, exactamente el error que
+  `C‑3` existe para prevenir: la geometría se declara por archivo, no es
+  una constante del proyecto. Con el denominador correcto, 017 y 019 de
+  `A03` dan 66/132 = **50.0 %**, el número que Timonel había dado desde el
+  principio y que yo descarté como redondeo sin verificarlo del todo. Con
+  esto, la tabla completa de bahías invisibles, con el denominador correcto
+  por archivo:
+
+  | Archivo | Huecos/bahía | Bahías invisibles y su % |
+  |---|---|---|
+  | A01 | 156 | 005 39.7 %, 013 59.0 %, 015 59.0 %, 035 66.7 %, 039 62.8 %, 043 16.0 %, 045 16.0 % |
+  | A02 | 156 | 017 61.5 %, 019 61.5 %, 025 66.7 %, 027 66.7 %, 029 60.3 %, 031 60.3 %, 037 37.2 %, 039 37.2 %, 041 33.3 %, 043 33.3 % |
+  | A03 | **132** | 005 15.2 %, 007 15.2 %, 009 18.9 %, 011 18.9 %, 013 47.7 %, 015 47.7 %, **017 50.0 %, 019 50.0 %**, 021 25.0 %, 023 25.0 %, 029 5.3 %, 031 5.3 %, 035 18.2 % |
+  | A04 | 156 | 001 15.4 %, 017 67.9 %, 019 67.9 %, 025 69.2 %, 027 69.2 %, 043 32.1 %, 045 32.1 % |
+  | A05 | **132** | 001 23.5 %, 017 62.1 %, 019 62.1 %, 031 53.8 %, 033 40.2 %, 035 40.2 % |
+  | A06 | **132** | 001 23.5 %, 017 53.8 %, 019 53.8 %, 031 53.8 %, 033 40.2 %, 035 40.2 % |
+
+  Las cuentas de bahías invisibles (7/10/13/7/6/6) no cambian — dependen de
+  posiciones y contenedores de 40 pies, no del denominador — solo cambiaban
+  los porcentajes de A03, A05 y A06, ya corregidos. Detectado y corregido
+  por Codex, 4 de septiembre; ver la corrección correspondiente en el
+  registro al final del documento.
 
   El resumen y el PDF pasan de 27 a 34 bahías con `CORPUS_A01`, confirmado
   en código: `pdf_report_service.dart:136` usa `voyage.bays.length`
@@ -543,13 +564,9 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   del chip «0 contenedores» en el selector —no encontré ese widget
   puntual—, pero la fuente de datos que lo alimentaría es correcta.
 
-  **Pendiente de aclarar: 111 pruebas en verde reportadas, 112 declaradas
-  contando `test(`/`testWidgets(` en todo `test/`.** Es la primera vez en
-  todo este intercambio que un conteo estructural no cuadra exacto. Puede
-  ser una prueba que hoy falla (así que «en verde» da una menos que el
-  total declarado) o una diferencia de cuándo se corrió `flutter test`
-  contra el último commit. Vale la pena correrlo una vez más antes de
-  cerrar esto del todo y confirmar cuál de las dos explicaciones es.
+  **112 pruebas, confirmado.** Codex reconoció que su «111» estaba mal;
+  la suma por archivo y la ejecución de la suite coinciden en 112. Sin
+  discrepancia pendiente.
 
 **Estado final verificado en código, no solo reportado. Los nueve cambios
 del Sprint 1 —`C‑1` a `C‑7`, `C‑2`, `EQD`— están cerrados**, el último de
@@ -683,7 +700,7 @@ corpus real; ahí está cubierto igual.
 
 ## 6 · Registro de correcciones a este documento
 
-Se anotan porque el proyecto ya lleva cinco casos en que un segundo revisor
+Se anotan porque el proyecto ya lleva seis casos en que un segundo revisor
 encontró algo que el primero había dado por bueno, y ese patrón es material
 para el apartado de método. Ocultar las correcciones lo desperdiciaría.
 
@@ -781,3 +798,34 @@ incorporado a este documento sin que nadie —ni Yov, que lo redactó, ni Carlos
 hasta que lo contrastó con lo que sabe del buque— lo verificara de nuevo. La
 lección no cambia, solo se extiende: se observa o se pregunta, incluso cuando
 el dato ya llega envuelto en la demostración de otra persona.
+
+**6 · Los porcentajes de bahías invisibles de `A03`, `A05` y `A06` estaban mal
+— apliqué la geometría de `A01` a los seis archivos por parejo.**
+*Detectado por Codex, 4 de septiembre.* Al calcular el cuadro de bahías
+invisibles (sección 3, ✓ `fb4a037`) escribí que las bahías 017 y 019 de
+`CORPUS_A03` estaban ocupadas al 42.3 %, y atribuí la diferencia con el 50.0 %
+que había dado Timonel a una imprecisión de redondeo de su parte. Estaba
+equivocado y el error fue mío: usé 156 huecos por bahía (13 × 12, la
+geometría de `A01`) como denominador para los seis archivos del corpus por
+igual, en vez de leer la geometría declarada de cada archivo — exactamente el
+error que `C‑3` existe para prevenir, porque la geometría se declara por
+archivo y no es una constante del proyecto.
+
+Reverifiqué extrayendo directamente las filas ocupadas de los seis `.edi`
+primarios: `A01`, `A02` y `A04` usan filas 01–12 (doce filas observadas más la
+fila 00, que por C‑2 siempre existe aunque no tenga carga) — 13 filas, 156
+huecos por bahía. `A03`, `A05` y `A06` usan filas 00–10 —la fila 00 ya
+aparece ocupada— **once** filas, **132** huecos por bahía, no 156. Con el
+denominador correcto, 017 y 019 de `A03` dan 66/132 = **50.0 %**, el número
+que Timonel había dado desde el principio. Las cuentas de bahías invisibles
+(7/10/13/7/6/6) no cambiaron: dependen de posiciones y de contenedores de 40
+pies, no del denominador usado para el porcentaje. La tabla completa,
+corregida, y el resto del cambio de código quedan en la sección 3; no generó
+ningún cambio de código porque el error estaba solo en este documento — el
+`VesselGeometry` de la aplicación ya se declara por archivo desde C‑3.
+
+Es la sexta corrección de este documento y la primera que atrapa Codex en vez
+de Timonel o Carlos. La lección sigue siendo la misma que las anteriores,
+aplicada esta vez a mi propio trabajo: verificar de nuevo contra la fuente
+primaria en vez de dar por buena una demostración —aunque sea la propia—
+solo porque suena completa.
