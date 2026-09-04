@@ -182,6 +182,70 @@ UNT+4+1'
     });
   });
 
+  group('TDT · nombre del buque', () {
+    late BaplieParserService parser;
+
+    setUp(() {
+      parser = BaplieParserService();
+    });
+
+    String mensajeCon(String tdt) => [
+          "UNH+1+BAPLIE:D:95B:UN'",
+          "$tdt'",
+          "LOC+147+0060102:::5'",
+          "EQD+CN+ABCU1234567+22G1+++5'",
+          "UNT+5+1'",
+        ].join();
+
+    test('lo lee del elemento 8, que es donde lo pone el estandar', () {
+      // Segmento real de CORPUS_A01.
+      final r = parser.parse(mensajeCon(
+        'TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA',
+      ));
+
+      expect(r.vessel.name, 'BUQUE ALFA');
+      expect(r.voyageNumber, 'V01N');
+    });
+
+    test('lo encuentra en el elemento 4 cuando el segmento omite vacios', () {
+      // Segmento real de CORPUS_A06, el archivo que no se podia abrir: trae
+      // el bloque c222 en el elemento 4 y el transportista en el 6.
+      final r = parser.parse(mensajeCon(
+        'TDT+20+VIAJE004A++9000039:146::BUQUE ECO++NV3:172:20',
+      ));
+
+      expect(r.vessel.name, 'BUQUE ECO');
+      expect(r.voyageNumber, 'VIAJE004A');
+    });
+
+    test('con cinco componentes toma el nombre, no el lugar', () {
+      // Segmento real de CORPUS_A05: el quinto componente es un puerto.
+      final r = parser.parse(mensajeCon(
+        'TDT+20++++NV4:172:ZZZ+++ZZC5603:103::BUQUE ECO:kingston JM'
+        '++LINEA-A:LR',
+      ));
+
+      expect(r.vessel.name, 'BUQUE ECO');
+    });
+
+    test('prefiere la posicion del estandar sobre la busqueda por forma', () {
+      // c040 admite la misma forma cuando trae el nombre de la naviera en su
+      // cuarto componente. Buscar por forma primero devolveria la naviera.
+      final r = parser.parse(mensajeCon(
+        'TDT+20+V01N+++NV2:172:20:NAVIERA FALSA+++9000003:146:11:BUQUE ALFA',
+      ));
+
+      expect(r.vessel.name, 'BUQUE ALFA');
+    });
+
+    test('sin nombre en ninguna parte falla en vez de inventar uno', () {
+      expect(
+        () => parser.parse(mensajeCon('TDT+20+V01N+++NV2:172:20')),
+        throwsA(isA<BaplieParsingException>()),
+      );
+    });
+  });
+
   group('EQD · indicador lleno/vacío', () {
     late BaplieParserService parser;
 

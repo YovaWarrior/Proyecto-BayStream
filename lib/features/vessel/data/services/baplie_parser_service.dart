@@ -86,6 +86,39 @@ class BaplieParserService {
   }
 
   /// Obtiene un componente de forma segura por índice
+  /// Nombre del buque si el elemento [index] es un bloque c222.
+  ///
+  /// `e8212`, el nombre, es el cuarto componente del bloque.
+  String? _vesselNameInC222(List<String> elements, int index) {
+    final element = _safeGetElement(elements, index);
+    if (element == null) return null;
+    return _safeGetComponent(_getComponents(element), 3);
+  }
+
+  /// Busca el bloque c222 por su **forma**: cuatro o más componentes con el
+  /// cuarto —el nombre— no vacío.
+  ///
+  /// Es el respaldo, no el camino principal, y la razón importa: el bloque
+  /// c040 del transportista admite esa misma forma cuando trae el nombre de la
+  /// naviera en su cuarto componente. Buscar por forma sin haber probado antes
+  /// la posición del estándar podría devolver la naviera en lugar del buque —
+  /// el mismo error de identificar un campo por su apariencia que causaba el
+  /// defecto de EQD. En los siete archivos del corpus c040 nunca trae ese
+  /// componente y hay un único bloque con esta forma, pero el estándar permite
+  /// lo contrario.
+  ///
+  /// Empieza en el elemento 3: el 1 es el calificador de transporte y el 2 el
+  /// número de viaje, que son valores simples.
+  String? _findVesselNameByShape(List<String> elements) {
+    for (var index = 3; index < elements.length; index++) {
+      final components = _getComponents(elements[index]);
+      if (components.length < 4) continue;
+      final name = _safeGetComponent(components, 3);
+      if (name != null) return name;
+    }
+    return null;
+  }
+
   String? _safeGetComponent(List<String> components, int index) {
     if (index < 0 || index >= components.length) return null;
     final value = components[index].trim();
@@ -130,15 +163,16 @@ class BaplieParserService {
       // e8028 - Número de viaje (posición 2)
       voyageNumber = _safeGetElement(elements, 2);
 
-      // c222.e8212 - Nombre del buque
-      // El elemento 8 contiene c222 con componentes: id:qualifier:agency:vesselName
-      if (elements.length > 8) {
-        final c222Components = _getComponents(elements[8]);
-        // e8212 está en la posición 4 del componente (índice 3)
-        vesselName = _safeGetComponent(c222Components, 3);
-        // Si no está en posición 4, intentar posición 1 (formato alternativo)
-        vesselName ??= _safeGetComponent(c222Components, 0);
-      }
+      // c222.e8212 - Nombre del buque.
+      //
+      // El estándar lo pone en el elemento 8, y así viene en seis de los siete
+      // archivos del corpus. `CORPUS_A06` lo trae en el **4**, porque su
+      // segmento TDT omite campos vacíos intermedios que el resto sí escribe.
+      // No hay una posición fija que sirva para los siete, así que se prueba
+      // la del estándar y, solo si ahí no hay nombre, se busca el bloque por
+      // su forma.
+      vesselName = _vesselNameInC222(elements, 8) ??
+          _findVesselNameByShape(elements);
 
       // c040 - Carrier information (posición 7)
       if (elements.length > 7) {
