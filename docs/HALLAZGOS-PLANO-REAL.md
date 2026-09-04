@@ -250,14 +250,15 @@ Este cambio tiene **dos mitades independientes**, y las dos responden al punto
 del tutor sobre mostrar las bahías completas. Se pueden implementar por
 separado.
 
-#### C‑5a · La carga que va de paso
+#### C‑5a · La carga que va de paso — ✓ cerrado (`ba73ac3`)
 
 **Plano real:** las equis a mano tachan la carga que no se opera en esta
 escala. El planificador necesita verla —ocupa slots y condiciona el orden de
 los movimientos— pero no la toca.
 
 **Evidencia en el corpus: el dato ya está en el archivo.** El segmento `LOC+9`
-declara el puerto de carga de cada contenedor, y en `CORPUS_A01` hay tres:
+declara el puerto de carga de cada contenedor, y en `CORPUS_A01` hay tres,
+reverificado directamente sobre el `.edi`:
 
 | Puerto de carga | Contenedores |
 |---|---|
@@ -265,17 +266,32 @@ declara el puerto de carga de cada contenedor, y en `CORPUS_A01` hay tres:
 | GTPBR · Puerto Barrios, Guatemala | 325 |
 | PAMIT · Manzanillo, Panamá | 195 |
 
-Si la escala es Puerto Barrios, **325 se cargan ahí y 652 ya vienen a bordo**.
-Esos 652 son exactamente lo que la equis tacha. `CORPUS_A05` da el mismo
-patrón con GTPBR 382, HNPCR 348 y USHOU 6.
+**La primera versión de esta sección asumía Puerto Barrios como la escala y
+por lo tanto 325/652.** Es un ejemplo real, no hipotético, de por qué el
+campo tiene que proponerse y confirmarse y no aplicarse solo: la propuesta
+automática —el `LOC+9` más frecuente— da **HNPCR con 457, no GTPBR**. Con
+GTPBR el reparto es 325 operados / 652 de paso; con HNPCR, 457 / 520. En
+`CORPUS_A01` hay que corregir la propuesta a mano si la escala real es
+Puerto Barrios, y el campo confirmable existe exactamente para eso.
+Hallazgo del segundo programador al implementar el cambio, 3 de septiembre.
 
-**BayStream ya parsea `LOC+9` y no lo usa para nada.** Los muestra todos
-iguales, sin distinguir lo que se opera de lo que va de paso.
+**Cambio, implementado:** `BayStream` ya parseaba `LOC+9` y no lo usaba para
+nada; ahora el plano atenúa (sin perder el ícono de tipo) los contenedores
+cuyo puerto de carga no coincide con el puerto de esta escala, con una
+entrada propia y filtrable en la leyenda («De paso») que solo aparece si hay
+puerto declarado. El campo de puerto vive en la pantalla de parámetros de
+C‑3, propuesto desde el `LOC+9` más frecuente y confirmable, tal como se
+decidió.
 
-**Cambio:** atenuar o marcar en el plano los contenedores cuyo puerto de carga
-no sea el de esta escala. **Falta un dato que el archivo no da: cuál es el
-puerto de la operación en curso.** Encaja de forma natural en la pantalla de
-parámetros de C‑3, como un campo más con los puertos del archivo como opciones.
+**Decisión de modelo, registrada:** el puerto de escala **no** entró en
+`VesselGeometry` — el casco no cambia entre escalas del mismo viaje, así que
+vive en `VesselVoyage` (campo `portOfCall`, más `proposedPortOfCall` y el
+predicado `isInTransit`), y la pantalla de parámetros devuelve un registro
+con las dos cosas (`({VesselGeometry geometry, String? portOfCall})`). La
+regla de qué cuenta como «ir de paso» queda en el dominio, no en la vista:
+`bay_plan_view.dart` recibe `isInTransit` como función y la llama, no la
+reimplementa. Confirmado leyendo `vessel_voyage.dart` y
+`bay_plan_view.dart:80,732`.
 
 #### C‑5b · Los slots ocupados por contenedores de 40 pies
 
@@ -408,9 +424,9 @@ parches sobre una rejilla inferida.
 4. **EQD** — el indicador lleno/vacío. Pequeño, aislado y de alto impacto.
    ✓ cerrado (`09599c8`); ver el detalle completo en la sección 3.
 5. **C‑1** — TEU entero.
-6. **C‑5a** — la carga que va de paso. Pequeño, y necesita el campo de puerto
-   de escala en la pantalla de C‑3.
-7. **C‑5b** — slots ocupados por 40 pies. Es el de más diseño.
+6. **C‑5a** — la carga que va de paso. ✓ cerrado (`ba73ac3`); ver el
+   detalle completo en la sección 2, C‑5a.
+7. **C‑5b** — slots ocupados por 40 pies. Es el de más diseño. **Siguiente.**
 8. **C‑7** — peso por fila y el límite donde corresponde.
 9. **C‑6** — posición en el CSV, junto con la neutralización de fórmulas.
    ✓ cerrado (`36f369b`).
