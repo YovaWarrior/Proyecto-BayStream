@@ -109,9 +109,3 @@ class BaplieConstants {
   /// Transporte marítimo principal
   static const String transportModeMainCarriage = '20';
 }
-
-/// Límite de peso por nivel usado para la alerta visual de apilamiento, en kg.
-/// PROVISIONAL: el límite real depende del buque y de la terminal, y no viene
-/// declarado en el archivo BAPLIE. Se expone como constante configurable
-/// mientras no exista una fuente autorizada.
-const double kStackWeightLimitKg = 90000;

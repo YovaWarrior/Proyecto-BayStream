@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/baplie_constants.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
 
@@ -497,6 +496,25 @@ class _BayGridWidget extends StatelessWidget {
             const SizedBox(height: 16),
           ],
 
+          // C-7 · Peso de cada pila, como el plano impreso: dos líneas arriba,
+          // alineadas con las columnas. Es donde el límite de apilamiento
+          // aplica de verdad.
+          _buildStackWeights(
+            context,
+            rows: rows,
+            weights: bay.deckWeightByRow,
+            zona: 'cub.',
+            limitKg: geometry.stackWeightLimitKg,
+          ),
+          _buildStackWeights(
+            context,
+            rows: rows,
+            weights: bay.holdWeightByRow,
+            zona: 'bod.',
+            limitKg: geometry.stackWeightLimitKg,
+          ),
+          const SizedBox(height: 4),
+
           // Header de rows
           _buildRowHeader(rows),
           const SizedBox(height: 4),
@@ -671,6 +689,62 @@ class _BayGridWidget extends StatelessWidget {
     );
   }
 
+  /// Una línea de pesos por pila, alineada con las columnas de la rejilla.
+  ///
+  /// El límite de apilamiento se compara **aquí**, contra la pila vertical, y
+  /// no contra la suma horizontal de un nivel. Sin límite declarado no se
+  /// marca nada: la aplicación no inventa un umbral.
+  Widget _buildStackWeights(
+    BuildContext context, {
+    required List<int> rows,
+    required Map<int, double> weights,
+    required String zona,
+    required double? limitKg,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: _tierLabelWidth,
+          child: Text(
+            zona,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 9, color: colorScheme.onSurfaceVariant),
+          ),
+        ),
+        ...rows.map((row) {
+          final weight = weights[row] ?? 0;
+          final excede = limitKg != null && weight > limitKg;
+          return Container(
+            width: 50,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            decoration: excede
+                ? BoxDecoration(
+                    color: colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(3),
+                  )
+                : null,
+            child: Text(
+              (weight / 1000).toStringAsFixed(1),
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: excede ? FontWeight.bold : FontWeight.normal,
+                color: excede
+                    ? colorScheme.onErrorContainer
+                    : colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }),
+        const SizedBox(width: _tierWeightWidth),
+      ],
+    );
+  }
+
   Widget _buildRowHeader(List<int> rows) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -701,7 +775,9 @@ class _BayGridWidget extends StatelessWidget {
     LegendFilterType? activeTypeFilter,
   ) {
     final tierWeight = bay.weightByTier[tier];
-    final exceedsLimit = tierWeight != null && tierWeight > kStackWeightLimitKg;
+    // C-7: el peso por nivel es la suma horizontal de las filas, no una pila.
+    // Se queda como dato informativo; el limite de apilamiento se compara
+    // arriba, contra cada pila, que es la magnitud que el nombre describe.
     final colorScheme = Theme.of(context).colorScheme;
 
     return Row(
@@ -747,17 +823,13 @@ class _BayGridWidget extends StatelessWidget {
                   margin: const EdgeInsets.only(left: 6),
                   padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
                   decoration: BoxDecoration(
-                    color: exceedsLimit ? colorScheme.errorContainer : null,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     '${(tierWeight / 1000).toStringAsFixed(1)} t',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: exceedsLimit
-                              ? colorScheme.onErrorContainer
-                              : colorScheme.onSurfaceVariant,
-                          fontWeight: exceedsLimit ? FontWeight.bold : FontWeight.normal,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                   ),
                 ),

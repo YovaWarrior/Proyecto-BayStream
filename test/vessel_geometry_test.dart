@@ -354,6 +354,68 @@ void main() {
     });
   });
 
+  group('C-7 · peso por pila', () {
+    ContainerUnit conPeso(String rawCode, double kg) => ContainerUnit(
+          id: rawCode,
+          containerId: 'C$rawCode',
+          grossWeight: kg,
+          stowagePosition: IsoCoordinateParser.parse(rawCode),
+        );
+
+    Bay bahiaCon(List<ContainerUnit> cs) {
+      var bay = const Bay(bayNumber: 22);
+      for (final c in cs) {
+        bay = bay.addContainer(c);
+      }
+      return bay;
+    }
+
+    test('la pila es la columna vertical, no la suma horizontal del nivel', () {
+      // Dos contenedores en la fila 01, uno en la 03, todos en cubierta.
+      final bay = bahiaCon([
+        conPeso('0220182', 20000),
+        conPeso('0220184', 25000),
+        conPeso('0220382', 18000),
+      ]);
+
+      expect(bay.deckWeightByRow, {1: 45000.0, 3: 18000.0});
+      // El nivel 82 suma horizontalmente dos filas distintas: otra magnitud.
+      expect(bay.weightByTier[82], 38000.0);
+    });
+
+    test('cubierta y bodega son pilas separadas, no se suman', () {
+      // Las divide la tapa de escotilla: la de bodega apoya en el doble fondo
+      // y la de cubierta sobre la tapa.
+      final bay = bahiaCon([
+        conPeso('0220182', 20000),
+        conPeso('0220102', 30000),
+      ]);
+
+      expect(bay.deckWeightByRow, {1: 20000.0});
+      expect(bay.holdWeightByRow, {1: 30000.0});
+    });
+
+    test('una fila sin carga en una zona no aparece en esa zona', () {
+      final bay = bahiaCon([conPeso('0220182', 20000)]);
+
+      expect(bay.deckWeightByRow.containsKey(1), isTrue);
+      expect(bay.holdWeightByRow, isEmpty);
+    });
+
+    test('un contenedor sin peso no rompe la suma', () {
+      final bay = bahiaCon([
+        conPeso('0220182', 20000),
+        ContainerUnit(
+          id: 'x',
+          containerId: 'X',
+          stowagePosition: IsoCoordinateParser.parse('0220184'),
+        ),
+      ]);
+
+      expect(bay.deckWeightByRow, {1: 20000.0});
+    });
+  });
+
   group('Persistencia de la geometría', () {
     const geometry = VesselGeometry(
       portRows: 6,

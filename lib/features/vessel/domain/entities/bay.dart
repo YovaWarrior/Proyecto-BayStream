@@ -131,6 +131,40 @@ class Bay extends Equatable {
     return weights;
   }
 
+  /// Peso bruto acumulado por fila en cubierta, en kilogramos.
+  ///
+  /// Una **pila** es la columna vertical de contenedores de una fila, y es la
+  /// magnitud a la que aplica el límite de apilamiento. No es lo mismo que
+  /// [weightByTier], que suma horizontalmente todas las filas de un nivel: en
+  /// la bahía 22 de `CORPUS_A01` el peso por nivel supera las 90 toneladas en
+  /// seis de once niveles, y una alerta que salta más de la mitad de las veces
+  /// no informa nada.
+  ///
+  /// Cubierta y bodega van separadas porque son pilas físicamente distintas:
+  /// entre ellas está la tapa de escotilla. La de bodega apoya en el doble
+  /// fondo y la de cubierta sobre la tapa, así que sus pesos no se suman.
+  Map<int, double> get deckWeightByRow =>
+      _weightByRow((tier) => tier >= VesselGeometry.firstDeckTier);
+
+  /// Peso bruto acumulado por fila en bodega, en kilogramos.
+  /// Ver [deckWeightByRow].
+  Map<int, double> get holdWeightByRow =>
+      _weightByRow((tier) => tier < VesselGeometry.firstDeckTier);
+
+  Map<int, double> _weightByRow(bool Function(int tier) enZona) {
+    final weights = <int, double>{};
+    for (final container in containers) {
+      final position = container.stowagePosition;
+      if (position == null || !enZona(position.tier)) continue;
+      weights.update(
+        position.row,
+        (weight) => weight + (container.grossWeight ?? 0),
+        ifAbsent: () => container.grossWeight ?? 0,
+      );
+    }
+    return weights;
+  }
+
   /// Obtiene un slot específico por coordenadas Row-Tier
   ContainerSlot? getSlot(int row, int tier) {
     final key = '${row.toString().padLeft(2, '0')}${tier.toString().padLeft(2, '0')}';

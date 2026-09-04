@@ -280,6 +280,103 @@ void main() {
     });
   });
 
+  group('C-7 · peso por pila en la cabecera', () {
+    ContainerUnit conPeso(String rawCode, double kg) => ContainerUnit(
+          id: rawCode,
+          containerId: 'C$rawCode',
+          grossWeight: kg,
+          stowagePosition: IsoCoordinateParser.parse(rawCode),
+        );
+
+    VesselVoyage viaje(List<ContainerUnit> cs, {double? limite}) {
+      var bay = const Bay(bayNumber: 6);
+      for (final c in cs) {
+        bay = bay.addContainer(c);
+      }
+      return VesselVoyage(
+        id: 'v',
+        vessel: const Vessel(id: 'b', name: 'Buque'),
+        voyageNumber: 'V001',
+        containers: cs,
+        bays: {6: bay},
+      ).withGeometry(_geometry.copyWith(stackWeightLimitKg: limite));
+    }
+
+    testWidgets('la cabecera muestra el peso de cada pila', (tester) async {
+      // Fila 01: 20 t en cubierta. Fila 03: 30 t en bodega.
+      await pumpPlan(
+        tester,
+        viaje([conPeso('0060182', 20000), conPeso('0060302', 30000)]),
+      );
+
+      expect(find.text('20.0'), findsOneWidget, reason: 'pila de cubierta');
+      expect(find.text('30.0'), findsOneWidget, reason: 'pila de bodega');
+    });
+
+    testWidgets('sin límite declarado no se marca ninguna pila',
+        (tester) async {
+      await pumpPlan(tester, viaje([conPeso('0060182', 200000)]));
+
+      final marcadas = tester
+          .widgetList<Container>(find.byType(Container))
+          .where((c) => c.decoration is BoxDecoration)
+          .where((c) => (c.decoration as BoxDecoration).color != null)
+          .where((c) => (c.decoration as BoxDecoration).borderRadius ==
+              BorderRadius.circular(3));
+
+      expect(marcadas, isEmpty);
+    });
+
+    testWidgets('la alerta se dispara por pila, no por nivel', (tester) async {
+      // Cuatro filas de 30 t cada una en el mismo nivel: el nivel suma 120 t
+      // pero ninguna pila pasa las 90. Con la magnitud vieja, todas en rojo.
+      await pumpPlan(
+        tester,
+        viaje([
+          conPeso('0060182', 30000),
+          conPeso('0060382', 30000),
+          conPeso('0060582', 30000),
+          conPeso('0060782', 30000),
+        ], limite: 90000),
+      );
+
+      expect(find.text('30.0'), findsNWidgets(4));
+      final marcadas = tester
+          .widgetList<Container>(find.byType(Container))
+          .where((c) =>
+              c.decoration is BoxDecoration &&
+              (c.decoration as BoxDecoration).borderRadius ==
+                  BorderRadius.circular(3) &&
+              (c.decoration as BoxDecoration).color != null);
+
+      expect(marcadas, isEmpty, reason: 'ninguna pila supera el limite');
+    });
+
+    testWidgets('una pila que sí supera el límite se marca', (tester) async {
+      // Toda la carga en la fila 01: la pila suma 120 t contra un limite de 90.
+      await pumpPlan(
+        tester,
+        viaje([
+          conPeso('0060182', 30000),
+          conPeso('0060184', 30000),
+          conPeso('0060186', 30000),
+          conPeso('0060188', 30000),
+        ], limite: 90000),
+      );
+
+      expect(find.text('120.0'), findsOneWidget);
+      final marcadas = tester
+          .widgetList<Container>(find.byType(Container))
+          .where((c) =>
+              c.decoration is BoxDecoration &&
+              (c.decoration as BoxDecoration).borderRadius ==
+                  BorderRadius.circular(3) &&
+              (c.decoration as BoxDecoration).color != null);
+
+      expect(marcadas.length, 1);
+    });
+  });
+
   group('Sin geometría declarada', () {
     testWidgets('no se dibuja una rejilla inferida del contenido',
         (tester) async {
