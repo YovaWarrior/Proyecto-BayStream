@@ -238,6 +238,48 @@ UNT+4+1'
       expect(r.vessel.name, 'BUQUE ALFA');
     });
 
+    test('el transportista sale del elemento 5, no del 7', () {
+      // El 7 esta vacio en los seis archivos conformes: el operador nunca se
+      // llenaba. Segmento real de CORPUS_A01.
+      final r = parser.parse(mensajeCon(
+        'TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA',
+      ));
+
+      expect(r.vessel.operator, 'NV2');
+    });
+
+    test('el transportista se encuentra en el 6 cuando el TDT omite vacios',
+        () {
+      // Segmento real de CORPUS_A06: c222 en el 4 y transportista en el 6.
+      final r = parser.parse(mensajeCon(
+        'TDT+20+VIAJE004A++9000039:146::BUQUE ECO++NV3:172:20',
+      ));
+
+      expect(r.vessel.operator, 'NV3');
+      expect(r.vessel.name, 'BUQUE ECO', reason: 'sin confundir los bloques');
+    });
+
+    test('la nacionalidad sale del c222, no del elemento 9', () {
+      // El 9 es el indicador de propiedad del medio de transporte, otra cosa.
+      final r = parser.parse(mensajeCon(
+        'TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA:PA+XX',
+      ));
+
+      expect(r.vessel.flag, 'PA');
+    });
+
+    test('no se acepta como bandera algo que no tenga forma de codigo', () {
+      // CORPUS_A05 trae 'kingston JM' en la ranura de nacionalidad: es un
+      // lugar, no un codigo de pais.
+      final r = parser.parse(mensajeCon(
+        'TDT+20++++NV4:172:ZZZ+++ZZC5603:103::BUQUE ECO:kingston JM'
+        '++LINEA-A:LR',
+      ));
+
+      expect(r.vessel.flag, isNull);
+      expect(r.vessel.operator, 'NV4', reason: 'el transportista si sale');
+    });
+
     test('sin nombre en ninguna parte falla en vez de inventar uno', () {
       expect(
         () => parser.parse(mensajeCon('TDT+20+V01N+++NV2:172:20')),

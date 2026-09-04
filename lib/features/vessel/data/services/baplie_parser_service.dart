@@ -85,18 +85,15 @@ class BaplieParserService {
     return element.split(BaplieConstants.componentSeparator);
   }
 
-  /// Obtiene un componente de forma segura por índice
-  /// Nombre del buque si el elemento [index] es un bloque c222.
+  /// Índice del bloque c222 (identificación del transporte) dentro del TDT.
   ///
-  /// `e8212`, el nombre, es el cuarto componente del bloque.
-  String? _vesselNameInC222(List<String> elements, int index) {
-    final element = _safeGetElement(elements, index);
-    if (element == null) return null;
-    return _safeGetComponent(_getComponents(element), 3);
-  }
-
-  /// Busca el bloque c222 por su **forma**: cuatro o más componentes con el
-  /// cuarto —el nombre— no vacío.
+  /// Se prueba primero el elemento 8, que es donde lo pone el estándar y donde
+  /// viene en seis de los siete archivos del corpus. `CORPUS_A06` lo trae en el
+  /// **4** porque su segmento omite campos vacíos intermedios que el resto sí
+  /// escribe, así que no hay una posición fija que sirva para los siete.
+  ///
+  /// El respaldo busca por **forma**: cuatro o más componentes con el cuarto
+  /// —`e8212`, el nombre— no vacío.
   ///
   /// Es el respaldo, no el camino principal, y la razón importa: el bloque
   /// c040 del transportista admite esa misma forma cuando trae el nombre de la
@@ -109,16 +106,55 @@ class BaplieParserService {
   ///
   /// Empieza en el elemento 3: el 1 es el calificador de transporte y el 2 el
   /// número de viaje, que son valores simples.
-  String? _findVesselNameByShape(List<String> elements) {
+  int? _findC222Index(List<String> elements) {
+    bool esC222(int index) {
+      final element = _safeGetElement(elements, index);
+      if (element == null) return false;
+      return _safeGetComponent(_getComponents(element), 3) != null;
+    }
+
+    if (esC222(8)) return 8;
     for (var index = 3; index < elements.length; index++) {
-      final components = _getComponents(elements[index]);
-      if (components.length < 4) continue;
-      final name = _safeGetComponent(components, 3);
-      if (name != null) return name;
+      if (esC222(index)) return index;
     }
     return null;
   }
 
+  /// Índice del bloque c040, el del transportista, dentro del TDT.
+  ///
+  /// Mismo problema que c222 y misma solución: el estándar lo pone en el
+  /// elemento 5 y así viene en seis archivos, pero `CORPUS_A06` lo trae en el
+  /// **6**. El respaldo recorre los elementos saltando el de c222, que es el
+  /// único con el que se puede confundir: los dos admiten cuatro componentes
+  /// con el cuarto no vacío, porque c040 lleva ahí el nombre de la naviera.
+  int? _findCarrierIndex(List<String> elements, int? c222Index) {
+    bool esCarrier(int index) {
+      if (index == c222Index) return false;
+      final element = _safeGetElement(elements, index);
+      if (element == null) return false;
+      return _getComponents(element).length >= 2;
+    }
+
+    if (esCarrier(5)) return 5;
+    for (var index = 3; index < elements.length; index++) {
+      if (esCarrier(index)) return index;
+    }
+    return null;
+  }
+
+  /// Nacionalidad del buque: `e8453`, quinto componente del bloque c222.
+  ///
+  /// Es un campo **codificado**, así que solo se acepta lo que tenga forma de
+  /// código de país: dos o tres letras. `CORPUS_A05` trae ahí `'kingston JM'`,
+  /// que es un lugar y no una nacionalidad; mostrarlo bajo el icono de bandera
+  /// sería presentar como cierto un dato que el archivo no da.
+  String? _nationalityIn(List<String> c222Components) {
+    final value = _safeGetComponent(c222Components, 4);
+    if (value == null) return null;
+    return RegExp(r'^[A-Za-z]{2,3}$').hasMatch(value) ? value.toUpperCase() : null;
+  }
+
+  /// Obtiene un componente de forma segura por índice
   String? _safeGetComponent(List<String> components, int index) {
     if (index < 0 || index >= components.length) return null;
     final value = components[index].trim();
@@ -171,18 +207,20 @@ class BaplieParserService {
       // No hay una posición fija que sirva para los siete, así que se prueba
       // la del estándar y, solo si ahí no hay nombre, se busca el bloque por
       // su forma.
-      vesselName = _vesselNameInC222(elements, 8) ??
-          _findVesselNameByShape(elements);
-
-      // c040 - Carrier information (posición 7)
-      if (elements.length > 7) {
-        final c040Components = _getComponents(elements[7]);
-        operatorCode = _safeGetComponent(c040Components, 0);
+      final c222Index = _findC222Index(elements);
+      if (c222Index != null) {
+        final c222Components = _getComponents(elements[c222Index]);
+        vesselName = _safeGetComponent(c222Components, 3);
+        // e8453 - Nacionalidad. Vive dentro del propio c222, no en un elemento
+        // aparte: el 9 es el indicador de propiedad del medio de transporte,
+        // que es otra cosa y ademas viene vacio en todo el corpus.
+        flag = _nationalityIn(c222Components);
       }
 
-      // Flag puede estar en el último elemento
-      if (elements.length > 9) {
-        flag = _safeGetElement(elements, 9);
+      // c040.e3127 - Codigo del transportista.
+      final c040Index = _findCarrierIndex(elements, c222Index);
+      if (c040Index != null) {
+        operatorCode = _safeGetComponent(_getComponents(elements[c040Index]), 0);
       }
 
       break; // Solo procesamos el primer TDT válido
@@ -325,6 +363,8 @@ class BaplieParserService {
     double? pendingVgmWeight;
     double? pendingTareWeight;
     
+    _TmpParseResult? pendingTemperature;
+
     _ContainerBuilder? containerBuilder;
 
     for (int i = 0; i < segments.length; i++) {
@@ -355,6 +395,7 @@ class BaplieParserService {
                 pendingGrossWeight = null;
                 pendingVgmWeight = null;
                 pendingTareWeight = null;
+                pendingTemperature = null;
                 break;
               case BaplieConstants.locPortOfLoading: // 9
                 currentPortOfLoading = locResult.locationCode;
@@ -404,7 +445,8 @@ class BaplieParserService {
             containerBuilder = _ContainerBuilder()
               ..containerId = eqdResult.containerId
               ..isoSizeType = eqdResult.isoSizeType
-              ..status = eqdResult.status;
+              ..status = eqdResult.status
+              ..isReefer = _isReeferIsoType(eqdResult.isoSizeType);
             
             // Aplicar pesos pendientes (MEA vino antes del EQD)
             if (pendingGrossWeight != null) {
@@ -415,6 +457,11 @@ class BaplieParserService {
             }
             if (pendingTareWeight != null) {
               containerBuilder.tareWeight = pendingTareWeight;
+            }
+            if (pendingTemperature != null) {
+              containerBuilder.isReefer = true;
+              containerBuilder.temperature = pendingTemperature.temperature;
+              containerBuilder.temperatureUnit = pendingTemperature.unit;
             }
           }
           break;
@@ -443,12 +490,14 @@ class BaplieParserService {
 
         case 'TMP':
           // TMP+2+temperatura:CEL' -> Temperatura de reefer
-          if (containerBuilder != null) {
-            final tmpResult = _parseTMP(segment);
-            if (tmpResult != null) {
+          final tmpResult = _parseTMP(segment);
+          if (tmpResult != null) {
+            if (containerBuilder != null) {
               containerBuilder.isReefer = true;
               containerBuilder.temperature = tmpResult.temperature;
               containerBuilder.temperatureUnit = tmpResult.unit;
+            } else {
+              pendingTemperature = tmpResult;
             }
           }
           break;
@@ -577,6 +626,12 @@ class BaplieParserService {
       default:
         return ContainerStatus.unknown;
     }
+  }
+
+  bool _isReeferIsoType(String? isoSizeType) {
+    return isoSizeType != null &&
+        isoSizeType.length >= 3 &&
+        isoSizeType[2].toUpperCase() == 'R';
   }
 
   /// Parsea segmento MEA (Measurements)
