@@ -618,11 +618,14 @@ segmentos reales del corpus. Hallazgo y corrección del segundo programador,
   | A05 | GTPBR | GTPBR, 382/736 (coincide) |
   | A06 | GTPBR | *(no trae `LOC+9`)* |
 
-  Exacto a lo reportado: **contar proponía el puerto equivocado en cinco de
-  los seis archivos primarios**, no solo en `A01` como decía la versión
-  anterior de este documento — solo `A05` coincidía, y por casualidad.
-  `CORPUS_A06` no tiene ni un `LOC+9`, así que antes no ofrecía ningún chip
-  y la escala quedaba sin poder declararse; ahora el `LOC+5` solo ya basta.
+  Exacto a lo reportado, con una precisión de Timonel que vale la pena
+  dejar tal cual la dio: de los archivos que traen `LOC+9` —cinco de los
+  seis primarios, más el duplicado `A03v`—, **cinco proponían el puerto
+  equivocado y solo `A05` acertaba, por casualidad**. No solo en `A01`,
+  como decía la versión anterior de este documento. `CORPUS_A06` no entra
+  en esa cuenta: no tiene un solo `LOC+9`, así que antes no proponía nada,
+  ni bien ni mal — no es lo mismo proponer mal que no tener con qué
+  proponer. Con `LOC+5` ya no necesita tenerlo.
 
   En pantalla el puerto declarado aparece primero y sin conteo —es un
   hecho, no una frecuencia—, los `LOC+9` van detrás como alternativa
@@ -734,6 +737,47 @@ calificadores `LOC+6`/`LOC+12` de `CORPUS_A06` (`SMDG15`, ver arriba) y la
 aclaración de UI sobre las 34 bahías de `CORPUS_A01` (ver la decisión de
 arriba). 135 pruebas en verde, `analyze` en 49 observaciones preexistentes
 sin cambios en todo el proceso.
+
+**El nivel 80 se clasificaba como bodega. ✓ cerrado (5 de septiembre),
+hallazgo de Carlos leyendo los archivos crudos de noche.** Carlos preguntó por
+qué los siete archivos arrancan la cubierta en el nivel 82. Al verificarlo
+aparecieron dos cosas.
+
+La primera es que la evidencia es más fuerte de lo que este documento decía.
+Los siete archivos **no son del mismo buque**: son cinco (`BUQUE ALFA`,
+`BRAVO`, `CHARLIE`, `DELTA` y `ECO`), con geometrías distintas —unos de 11
+filas, otros de 12— y los cinco anclan la cubierta en el 82. Que el 82 sea el
+piso de cubierta deja de ser un rasgo de un barco y pasa a ser la convención.
+
+La segunda es un defecto real. La numeración ISO reserva **la banda de los 80**
+para la estiba sobre cubierta: el número de nivel es lo único que distingue
+bodega de cubierta. Pero `VesselGeometry` clasificaba la zona con el **ancla**
+(`firstDeckTier = 82`) en vez de con la **frontera** (80). Un contenedor en el
+nivel 80 caía del lado de la bodega, y entonces `_anchoredRun(02, 80)` generaba
+una bodega de **cuarenta niveles inventados** — el mismo defecto que corrigió
+`C‑4`, entrando por otra puerta. La misma confusión estaba repetida en cuatro
+lugares con dos umbrales distintos: `vessel_geometry.dart` y `bay.dart` usaban
+82; `container_slot.dart` y `pdf_report_service.dart` usaban 80.
+
+La corrección separa las dos preguntas: `deckTierFloor = 80` responde «¿de qué
+zona es este nivel?» y `firstDeckTier = 82` sigue respondiendo «¿dónde arranca
+la corrida que se dibuja?». Los cuatro lugares pasan a usar la misma función
+`VesselGeometry.isDeckTier`, y los dos getters muertos de `ContainerSlot`
+—nunca usados en `lib` ni en `test`— se eliminan. Un nivel 80 real queda
+deliberadamente fuera de la corrida propuesta y sale en el aviso de la rejilla,
+que es la política que `_anchoredRun` ya tenía documentada.
+
+**Ningún archivo del corpus cambia de comportamiento**: se verificó sobre las
+4584 posiciones de los seis primarios (y las 4953 de los siete) que `>= 80` y
+`>= 82` clasifican idéntico, porque no hay una sola posición en los niveles 80
+ni 81. La corrección es para el archivo que todavía no ha llegado.
+
+Vale anotar el límite epistémico, porque es el mismo de siempre: que ningún
+archivo use el 80 **no prueba** que el 80 no exista en esos buques. Solo prueba
+que en estos seis viajes nadie estibó ahí. Lo que zanjó la pregunta no fue el
+EDI sino Carlos mirando el plano impreso — es la corrección 5 otra vez, y la
+razón por la que la app propone y deja confirmar en vez de dar por cerrada la
+geometría que deduce.
 
 **Decisión, 4 de septiembre: se pausa el trabajo de código para la revisión
 con el tutor.** No queda nada activo de este lado — es el punto de pausa
