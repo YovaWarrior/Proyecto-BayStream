@@ -38,6 +38,38 @@ void main() {
       expect(geometry.deckTierNumbers.contains(80), isFalse);
     });
 
+    test('un nivel 80 es cubierta, no una bodega de cuarenta niveles', () {
+      // La banda de los 80 es, por numeracion ISO, estiba sobre cubierta: el
+      // numero de nivel es lo unico que distingue bodega de cubierta. Antes de
+      // esta correccion proposeFrom clasificaba con el ANCLA (82) en vez de con
+      // la FRONTERA DE ZONA (80), asi que un contenedor en el nivel 80 caia en
+      // bodega y arrastraba la corrida hasta 02..80: cuarenta niveles
+      // inventados, el mismo defecto de C-4 por otra puerta.
+      final geometry = VesselGeometry.proposeFrom([
+        IsoCoordinateParser.parse('0060102'),
+        IsoCoordinateParser.parse('0060180'),
+      ]);
+
+      expect(geometry.holdTiers, [2],
+          reason: 'la bodega no se estira hasta el 80');
+    });
+
+    test('un nivel 80 queda descubierto en vez de silenciarse', () {
+      // La corrida propuesta sigue anclada en el 82, para no dibujar una fila
+      // fantasma bajo toda la carga cuando el 80 no se usa —el caso de los
+      // siete archivos del corpus—. Un 80 real queda deliberadamente fuera de
+      // la geometria propuesta: sale en el aviso de la rejilla para que lo
+      // resuelva el usuario, que es la politica ya documentada en _anchoredRun.
+      final geometry = VesselGeometry.proposeFrom([
+        IsoCoordinateParser.parse('0060180'),
+        IsoCoordinateParser.parse('0060190'),
+      ]);
+
+      expect(geometry.deckTiers, [82, 84, 86, 88, 90]);
+      expect(geometry.covers(IsoCoordinateParser.parse('0060180')), isFalse,
+          reason: 'no se absorbe como bodega ni se inventa un nivel');
+    });
+
     test('rescata los niveles vacios intermedios, no los de abajo', () {
       // Carga en 82 y 86 pero no en 84: el 84 existe y se propone igual.
       final geometry = VesselGeometry.proposeFrom([

@@ -21,7 +21,10 @@ class VesselGeometry extends Equatable {
   /// Primer nivel de bodega según la numeración ISO.
   static const int firstHoldTier = 2;
 
-  /// Primer nivel de cubierta según la numeración ISO.
+  /// Ancla de la corrida de cubierta que se dibuja.
+  ///
+  /// **No es la frontera entre bodega y cubierta**; esa es [deckTierFloor].
+  /// Este número responde otra pregunta: dónde arranca la corrida propuesta.
   ///
   /// La primera fila de contenedores sobre cubierta va en el **82**, no en el
   /// 80. Evidencia en el corpus: de 4 584 slots ocupados en los seis archivos,
@@ -30,6 +33,28 @@ class VesselGeometry extends Equatable {
   /// nivel ancla 02 sí es el piso más común, con 66 bahías. Anclar la cubierta
   /// en el 80 dibujaba una fila vacía fantasma bajo toda la carga.
   static const int firstDeckTier = 82;
+
+  /// Frontera de zona de la numeración ISO: la banda de los 80 es estiba
+  /// **sobre cubierta**.
+  ///
+  /// El número de nivel es lo único que distingue bodega de cubierta en una
+  /// posición ISO, y el estándar reserva los 80 para lo que va sobre la tapa
+  /// de escotilla. Por eso un nivel 80 es cubierta, aunque ningún buque del
+  /// corpus lo use.
+  ///
+  /// Separarlo de [firstDeckTier] no es cosmético. Clasificar con el ancla
+  /// metía un nivel 80 en **bodega**, y entonces la corrida de bodega se
+  /// estiraba de 02 a 80: **cuarenta niveles inventados**, el mismo defecto
+  /// que corrigió C‑4 entrando por otra puerta. Un 80 real queda fuera de la
+  /// corrida propuesta —que sigue anclada en el 82— y sale en el aviso de la
+  /// rejilla, que es la política ya documentada en [_anchoredRun].
+  static const int deckTierFloor = 80;
+
+  /// Indica si un nivel pertenece a la cubierta según la numeración ISO.
+  ///
+  /// Definición única en todo el proyecto: antes convivía con un `tier >= 80`
+  /// suelto en `ContainerSlot` que contradecía la clasificación real.
+  static bool isDeckTier(int tier) => tier >= deckTierFloor;
 
   /// Paso entre niveles consecutivos (los impares son de contenedores altos).
   static const int tierStep = 2;
@@ -110,7 +135,7 @@ class VesselGeometry extends Equatable {
             : row <= starboardRows * 2 - 1;
     if (!rowFits) return false;
 
-    return tier >= firstDeckTier
+    return isDeckTier(tier)
         ? deckTiers.contains(tier)
         : holdTiers.contains(tier);
   }
@@ -148,7 +173,7 @@ class VesselGeometry extends Equatable {
       }
 
       final tier = position.tier;
-      if (tier >= firstDeckTier) {
+      if (isDeckTier(tier)) {
         maxDeckTier = math.max(maxDeckTier ?? tier, tier);
       } else {
         maxHoldTier = math.max(maxHoldTier ?? tier, tier);

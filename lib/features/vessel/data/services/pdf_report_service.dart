@@ -240,7 +240,8 @@ class PdfReportService {
       final position = container.stowagePosition!;
       positions['${position.row}-${position.tier}'] = container;
       rowValues.add(position.row);
-      (position.tier >= 80 ? deckValues : holdValues).add(position.tier);
+      (VesselGeometry.isDeckTier(position.tier) ? deckValues : holdValues)
+          .add(position.tier);
     }
 
     final rows = _orderedRows(rowValues);

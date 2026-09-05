@@ -67,12 +67,6 @@ class ContainerSlot extends Equatable {
   /// Formato de display "Bay XX, Row YY, Tier ZZ"
   String get displayFormat => 'Bay $bayPadded, Row $rowPadded, Tier $tierPadded';
 
-  /// Indica si es un tier de cubierta (generalmente >= 80)
-  bool get isDeckTier => tier >= 80;
-
-  /// Indica si es un tier de bodega (generalmente < 80)
-  bool get isHoldTier => tier < 80;
-
   /// Verifica si puede aceptar un contenedor específico
   bool canAccept(ContainerUnit containerToPlace) {
     if (isOccupied || isBlocked) return false;
