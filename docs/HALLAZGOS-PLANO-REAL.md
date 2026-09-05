@@ -772,12 +772,81 @@ que es la política que `_anchoredRun` ya tenía documentada.
 `>= 82` clasifican idéntico, porque no hay una sola posición en los niveles 80
 ni 81. La corrección es para el archivo que todavía no ha llegado.
 
+**Segunda mitad, del 5 de septiembre: la propuesta no cubría su propia carga.**
+Carlos pidió un archivo de prueba para salir de la duda —`PRUEBA_NIVEL_80.edi`,
+sintético, 72 contenedores, cuatro bahías de cubierta con carga en el nivel 80—
+y al abrirlo apareció el resto del defecto. La clasificación ya era correcta: la
+bodega salió de dos niveles y no de cuarenta. Pero la corrida de cubierta seguía
+anclada en el 82, así que los doce contenedores del nivel 80 quedaban fuera de la
+geometría propuesta; `coversAll` devolvía `false`, el botón **Confirmar quedaba
+deshabilitado para siempre** y el menú «Agregar» de cubierta arrancaba también en
+el 82, así que el nivel que faltaba no se podía declarar ni a mano. **La
+aplicación proponía una geometría que después ella misma rechazaba, y el archivo
+no se podía abrir.**
+
+Conviene ser explícito en algo: el arreglo de la mañana no causó esto, pero lo
+volvió visible. Antes el archivo *sí* abría, dibujando la bodega fantasma de
+cuarenta niveles con esa carga al fondo — mal, pero en silencio. Después pasó a
+fallar de frente. Fallar de frente es mejor que corromper callado, pero seguía
+siendo un callejón sin salida.
+
+La corrección es que la corrida se ancle en el 82 **o en la carga, si el archivo
+la trae más abajo**. No es inventar un nivel: es cubrir uno observado, que es lo
+que el invariante exige. El comentario anterior de `_anchoredRun` decía que esa
+carga «aparece en el aviso de la rejilla»; se retira, porque ese aviso no existe
+en la interfaz —era una política documentada que nunca se implementó—. Con la
+corrección, `PRUEBA_NIVEL_80.edi` propone cubierta `80·82·84·86` y se confirma;
+los siete archivos del corpus siguen proponiendo `82·84·86·88·90`, sin fila
+fantasma. La prueba que se había escrito por la mañana afirmando lo contrario se
+elimina: codificaba el diseño que resultó ser el callejón.
+
 Vale anotar el límite epistémico, porque es el mismo de siempre: que ningún
 archivo use el 80 **no prueba** que el 80 no exista en esos buques. Solo prueba
 que en estos seis viajes nadie estibó ahí. Lo que zanjó la pregunta no fue el
 EDI sino Carlos mirando el plano impreso — es la corrección 5 otra vez, y la
 razón por la que la app propone y deja confirmar en vez de dar por cerrada la
 geometría que deduce.
+
+**La frontera cubierta/bodega no es una constante: es del buque. Abierto,
+5 de septiembre.** Carlos cargó un BAPLIE de un buque real y reportó dos cosas.
+La primera resultó **no ser un defecto**, y conviene dejarlo escrito porque
+estuvo a punto de "corregirse": en ese buque las filas de bodega 02 y 04 se
+dibujaban vacías y parecían inventadas —incluso parecía físicamente imposible
+tener carga en 06, 08 y 10 con 02 y 04 vacíos—, pero Carlos confirmó que **esos
+niveles existen y ese viaje simplemente no los cargó**. En bodega con guías de
+celda eso es normal. El razonamiento físico que decía lo contrario era de
+sillón, y de haberlo dado por bueno se habría roto el plano de un buque real
+para arreglar un problema inexistente. Se preguntó antes de tocar; esa es la
+única razón por la que no pasó.
+
+La segunda sí es un defecto, y es grave. Carlos aportó el dato que no está en
+ningún archivo ni en ninguna especificación consultada: **hay buques cuya
+cubierta arranca en el 78**. La constante `deckTierFloor = 80` —que este mismo
+documento justificó horas antes citando la ISO y tres fuentes secundarias— da
+`false` para el 78, así que ese nivel cae en bodega y arrastra la corrida de
+bodega hasta él: **39 niveles inventados**. Y peor que el caso del 80: aquí
+`coversAll` devuelve `true`, así que la aplicación **no falla, dibuja el
+monstruo en silencio y deja confirmar**. Reproducido con
+`PRUEBA_NIVEL_78.edi` (sintético, 63 contenedores, cubierta 78·80·82·84 y
+bodega 06·08·10).
+
+La raíz es que quedaron tres números fijos que en realidad son propiedades del
+buque, no del estándar: `firstHoldTier` (02), `deckTierFloor` (80) y
+`firstDeckTier` (82). El estándar dice cómo se numera; **no dice dónde empieza
+la cubierta de un buque concreto**, y eso es justo lo que hace falta para
+dibujar su plano.
+
+**Decisión de Carlos, 5 de septiembre: la frontera y los pisos se declaran en la
+pantalla de Parámetros**, propuestos desde el archivo y corregibles por el
+usuario, igual que las filas, los niveles y el límite de apilamiento. Es la
+misma filosofía que ya gobierna esa pantalla: la aplicación propone una cota y
+quien conoce el buque confirma. Pendiente de implementar; toca el modelo de
+dominio, la propuesta, la interfaz y la serialización a Firestore, así que no
+es un cambio de una línea. La propuesta automática de la frontera puede
+apoyarse en el salto grande entre zonas (de 10 a 78 hay un hueco que ningún
+buque tiene), pero esa heurística **debe validarse contra archivos reales de
+varios buques antes de darse por buena**, no contra el corpus actual, que es de
+cinco buques que casualmente anclan todos en 82.
 
 **Decisión, 4 de septiembre: se pausa el trabajo de código para la revisión
 con el tutor.** No queda nada activo de este lado — es el punto de pausa
