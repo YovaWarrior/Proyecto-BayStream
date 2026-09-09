@@ -1,0 +1,227 @@
+<title>BayStream Kanban Sprint 2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Paleta tomada del propio plano de estiba de BayStream: el azul con que la
+     aplicación rotula CUBIERTA (DECK) y el pardo con que rotula BODEGA (HOLD). */
+  :root{
+    --ground:#F4F7F9; --panel:#FFFFFF; --sunk:#EAEFF3;
+    --ink:#13212C; --ink-2:#4A5D6B; --ink-3:#7C8D99;
+    --line:#D7E0E7; --line-2:#C2CFD8;
+    --deck:#0E5A80; --hold:#8A5A2B;
+    --ok:#2C6E49; --warn:#B07A18; --stop:#A8443A;
+    --shadow:0 1px 2px rgba(19,33,44,.06), 0 4px 14px rgba(19,33,44,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0B1620; --panel:#11212D; --sunk:#0E1B25;
+      --ink:#E6EEF4; --ink-2:#A3B6C3; --ink-3:#718897;
+      --line:#1E3242; --line-2:#2A4356;
+      --deck:#4FA8D0; --hold:#C99457;
+      --ok:#6BBF8F; --warn:#DDAE55; --stop:#DE8078;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0B1620; --panel:#11212D; --sunk:#0E1B25;
+    --ink:#E6EEF4; --ink-2:#A3B6C3; --ink-3:#718897;
+    --line:#1E3242; --line-2:#2A4356;
+    --deck:#4FA8D0; --hold:#C99457;
+    --ok:#6BBF8F; --warn:#DDAE55; --stop:#DE8078;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.5; padding:0 20px; padding-block:36px 56px;
+  }
+  .wrap{max-width:1240px; margin:0 auto; display:flex; flex-direction:column; gap:28px}
+
+  /* ---- encabezado ---- */
+  .eyebrow{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--deck); margin:0 0 6px;
+  }
+  h1{font-size:clamp(26px,4vw,36px); font-weight:600; margin:0; text-wrap:balance; letter-spacing:-.015em}
+  .sub{margin:8px 0 0; color:var(--ink-2); max-width:66ch}
+
+  /* ---- cifras del sprint ---- */
+  .cifras{display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--line); border-radius:10px;
+    background:var(--panel); overflow:hidden}
+  .cifra{flex:1 1 150px; padding:14px 18px; border-right:1px solid var(--line)}
+  .cifra:last-child{border-right:none}
+  .cifra dt{font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin:0 0 4px}
+  .cifra dd{margin:0; font-family:"IBM Plex Mono",monospace; font-size:20px; font-variant-numeric:tabular-nums;
+    font-weight:500; color:var(--ink)}
+  .cifra dd small{font-size:12px; color:var(--ink-2); font-weight:400; margin-left:4px}
+
+  /* ---- columnas ---- */
+  .tablero{display:grid; gap:16px; grid-template-columns:repeat(4,1fr); align-items:start}
+  @media (max-width:1060px){ .tablero{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:620px){ .tablero{grid-template-columns:1fr} }
+
+  .col{background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    display:flex; flex-direction:column; min-width:0}
+  .col > header{padding:12px 14px; border-bottom:1px solid var(--line); display:flex;
+    align-items:baseline; justify-content:space-between; gap:8px}
+  .col h2{margin:0; font-size:14px; font-weight:600; letter-spacing:.01em}
+  .cuenta{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+  .wip{padding:8px 14px; font-size:12px; color:var(--warn); border-bottom:1px solid var(--line);
+    font-family:"IBM Plex Mono",monospace}
+  .cuerpo{padding:10px; display:flex; flex-direction:column; gap:14px; min-width:0}
+  .vacia{padding:22px 14px; color:var(--ink-3); font-size:13px; text-align:center}
+
+  /* ---- grupo por elemento del backlog ---- */
+  .grupo > h3{margin:0 0 7px; font-size:12px; font-weight:500; color:var(--ink-2);
+    display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; padding:0 2px}
+  .grupo > h3 .id{font-family:"IBM Plex Mono",monospace; font-weight:500; color:var(--ink); font-size:12.5px}
+  .grupo > h3 .met{margin-left:auto; font-family:"IBM Plex Mono",monospace; color:var(--ink-3); font-size:11.5px;
+    font-variant-numeric:tabular-nums}
+  .tareas{display:flex; flex-direction:column; gap:1px; background:var(--line); border:1px solid var(--line);
+    border-radius:7px; overflow:hidden}
+
+  /* ---- tarea ---- */
+  .t{background:var(--panel); padding:9px 11px; display:grid;
+    grid-template-columns:auto 1fr auto; gap:4px 9px; align-items:baseline; min-width:0}
+  .t .cod{font-family:"IBM Plex Mono",monospace; font-size:12px; font-weight:500; color:var(--deck);
+    font-variant-numeric:tabular-nums}
+  .t .txt{font-size:13px; line-height:1.4; min-width:0; overflow-wrap:anywhere}
+  .t .h{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-2);
+    font-variant-numeric:tabular-nums}
+  .t .capa{grid-column:2 / -1; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3)}
+
+  /* la capa que toca la tarea, codificada tambien en forma y no solo en texto */
+  .t.dom .cod{color:var(--deck)}
+  .t.int .cod{color:var(--hold)}
+  .t.inf .cod{color:var(--ink-2)}
+  .t.pru .cod{color:var(--ok)}
+
+  /* ---- leyenda y pie ---- */
+  .leyenda{display:flex; flex-wrap:wrap; gap:8px 20px; font-size:12.5px; color:var(--ink-2);
+    padding:14px 16px; background:var(--sunk); border:1px solid var(--line); border-radius:10px}
+  .leyenda span{display:inline-flex; align-items:center; gap:7px}
+  .pt{width:9px; height:9px; border-radius:2px; flex:none}
+  footer{color:var(--ink-3); font-size:12.5px; border-top:1px solid var(--line); padding-top:16px;
+    display:flex; flex-wrap:wrap; gap:6px 18px}
+  footer b{color:var(--ink-2); font-weight:500}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Proyecto de Graduación II · 19 sep – 17 oct 2026</p>
+    <h1>Sprint 2 — Perfil de buque persistente</h1>
+    <p class="sub">Estado del tablero al abrir el sprint. Veintiséis tareas numeradas a partir
+      de T‑24, continuando la secuencia del Sprint 1. El orden de ataque es por riesgo
+      decreciente, no numérico.</p>
+  </header>
+
+  <dl class="cifras">
+    <div class="cifra"><dt>Elementos</dt><dd>6<small>+1 diferido</small></dd></div>
+    <div class="cifra"><dt>Puntos de historia</dt><dd>57</dd></div>
+    <div class="cifra"><dt>Compromiso</dt><dd>35.0<small>h</small></dd></div>
+    <div class="cifra"><dt>Capacidad disponible</dt><dd>53.0<small>h</small></dd></div>
+    <div class="cifra"><dt>Holgura</dt><dd>34<small>%</small></dd></div>
+  </dl>
+
+  <div class="tablero">
+    <section class="col">
+      <header><h2>Por hacer</h2><span class="cuenta">26</span></header>
+      <div class="cuerpo">
+
+        <div class="grupo">
+          <h3><span class="id">RF‑036</span> Perfil de buque persistente <span class="met">21 pts · 13.0 h</span></h3>
+          <div class="tareas">
+            <div class="t dom"><span class="cod">T‑24</span><span class="txt">Entidad <code>VesselProfile</code> y su serialización</span><span class="h">1.50</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑25</span><span class="txt">Identificar el buque desde el segmento TDT</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑26</span><span class="txt">Frontera cubierta/bodega declarada en el perfil</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑27</span><span class="txt">Pisos de cubierta y de bodega declarados</span><span class="h">1.25</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑28</span><span class="txt"><code>proposeFrom</code> siembra el perfil en vez de ser la geometría</span><span class="h">1.25</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑29</span><span class="txt">Límite de apilamiento por pila en el perfil</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑30</span><span class="txt">Conjunto de posiciones con toma de reefer</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑31</span><span class="txt">Proponer las tomas de reefer desde el archivo como cota inferior</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑32</span><span class="txt">Clonar un perfil existente como plantilla</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
+            <div class="t int"><span class="cod">T‑33</span><span class="txt">Selector de plantilla al cargar un buque sin perfil</span><span class="h">1.50</span><span class="capa">Interfaz</span></div>
+            <div class="t int"><span class="cod">T‑34</span><span class="txt">Parámetros convertida en editor de perfil persistido</span><span class="h">1.50</span><span class="capa">Interfaz</span></div>
+          </div>
+        </div>
+
+        <div class="grupo">
+          <h3><span class="id">RF‑031+</span> Almacén local propio <span class="met">5 pts · 3.0 h</span></h3>
+          <div class="tareas">
+            <div class="t inf"><span class="cod">T‑35</span><span class="txt">Incorporar el motor de almacenamiento local</span><span class="h">1.00</span><span class="capa">Infraestructura</span></div>
+            <div class="t dom"><span class="cod">T‑36</span><span class="txt">Esquema y serialización de viajes y perfiles</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
+            <div class="t int"><span class="cod">T‑37</span><span class="txt">Listado de viajes recientes con apertura y eliminación</span><span class="h">1.00</span><span class="capa">Interfaz</span></div>
+          </div>
+        </div>
+
+        <div class="grupo">
+          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">13 pts · 8.0 h</span></h3>
+          <div class="tareas">
+            <div class="t dom"><span class="cod">T‑38</span><span class="txt">Validar el peso por pila contra el límite del perfil</span><span class="h">1.50</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑39</span><span class="txt">Validar refrigerado en posición sin toma eléctrica</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑40</span><span class="txt">Validar el apilamiento de 20 pies sobre 40 pies</span><span class="h">1.50</span><span class="capa">Dominio</span></div>
+            <div class="t dom"><span class="cod">T‑41</span><span class="txt">Separación de peligrosas desde los segmentos DGS</span><span class="h">2.00</span><span class="capa">Dominio</span></div>
+            <div class="t int"><span class="cod">T‑42</span><span class="txt">Panel de alertas con severidad, descripción y posición</span><span class="h">2.00</span><span class="capa">Interfaz</span></div>
+          </div>
+        </div>
+
+        <div class="grupo">
+          <h3><span class="id">TC‑01</span> Revisión de calidad <span class="met">5 pts · 3.0 h</span></h3>
+          <div class="tareas">
+            <div class="t pru"><span class="cod">T‑43</span><span class="txt">Retirar las 49 advertencias de <code>flutter analyze</code></span><span class="h">1.50</span><span class="capa">Prueba</span></div>
+            <div class="t pru"><span class="cod">T‑44</span><span class="txt">Medir los ocho requerimientos no funcionales</span><span class="h">1.50</span><span class="capa">Prueba</span></div>
+          </div>
+        </div>
+
+        <div class="grupo">
+          <h3><span class="id">TC‑03</span> Pruebas finales de seguridad <span class="met">5 pts · 3.0 h</span></h3>
+          <div class="tareas">
+            <div class="t inf"><span class="cod">T‑45</span><span class="txt">Cerrar H‑02: autenticación y reglas de acceso por usuario</span><span class="h">2.00</span><span class="capa">Infraestructura</span></div>
+            <div class="t inf"><span class="cod">T‑46</span><span class="txt">Registro de eventos y análisis de dependencias</span><span class="h">1.00</span><span class="capa">Infraestructura</span></div>
+          </div>
+        </div>
+
+        <div class="grupo">
+          <h3><span class="id">TC‑04</span> Despliegue <span class="met">8 pts · 5.0 h</span></h3>
+          <div class="tareas">
+            <div class="t inf"><span class="cod">T‑47</span><span class="txt">Proyecto de producción y retiro de credenciales del código</span><span class="h">1.50</span><span class="capa">Infraestructura</span></div>
+            <div class="t inf"><span class="cod">T‑48</span><span class="txt">Publicar el cliente Web</span><span class="h">1.50</span><span class="capa">Infraestructura</span></div>
+            <div class="t inf"><span class="cod">T‑49</span><span class="txt">Firmar y publicar el paquete Android</span><span class="h">2.00</span><span class="capa">Infraestructura</span></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="col">
+      <header><h2>En curso</h2><span class="cuenta">0</span></header>
+      <p class="wip">Límite de trabajo en curso: 1</p>
+      <div class="vacia">Sin tareas al abrir el sprint.</div>
+    </section>
+
+    <section class="col">
+      <header><h2>En revisión</h2><span class="cuenta">0</span></header>
+      <div class="vacia">Cambio escrito, pendiente de compilar<br>y de pasar las pruebas.</div>
+    </section>
+
+    <section class="col">
+      <header><h2>Terminado</h2><span class="cuenta">0</span></header>
+      <div class="vacia">Compila en las tres plataformas,<br>pruebas en verde y sin advertencias nuevas.</div>
+    </section>
+  </div>
+
+  <div class="leyenda">
+    <span><i class="pt" style="background:var(--deck)"></i>Dominio</span>
+    <span><i class="pt" style="background:var(--hold)"></i>Interfaz</span>
+    <span><i class="pt" style="background:var(--ink-2)"></i>Infraestructura</span>
+    <span><i class="pt" style="background:var(--ok)"></i>Prueba</span>
+  </div>
+
+  <footer>
+    <span><b>Precedencias:</b> RF‑027 no arranca antes que RF‑036 · TC‑03 no antes que TC‑04</span>
+    <span><b>Diferido:</b> RF‑028, secuencia de descarga (8 pts · 5.0 h)</span>
+    <span><b>Carlos Giovanni Martínez Aldana</b> · 0909‑22‑19157</span>
+  </footer>
+</div>
