@@ -96,7 +96,7 @@ párrafo, decía «tres defectos abiertos» con el indicador lleno/vacío y los
 refrigerados incluidos; los dos ya están cerrados.)*
 
 Las cinco funcionalidades del sprint están entregadas y verificadas. Compila en
-Windows, Android y Web, y las 135 pruebas pasan. `flutter analyze` reporta 49
+Windows, Android y Web, y las 139 pruebas pasan. `flutter analyze` reporta 49
 incidencias: 4 advertencias y 45 avisos informativos. Ese número es la línea
 base; **no lo subas.**
 
@@ -134,13 +134,22 @@ del Sprint 2, donde resultó no ser un defecto del producto sino del emulador.
 
 ## Sobre umbrales y datos que el archivo no trae
 
-Dos constantes del código son **supuestos provisionales declarados**, no datos
-medidos, porque el formato BAPLIE no transmite la geometría del buque:
+El formato BAPLIE no transmite la geometría del buque, y el proyecto arrancó
+con dos constantes inventadas para suplirla. **Las dos ya no existen:**
 
-- `kStackWeightLimitKg` (90 000 kg) — el límite real depende del buque y de la
-  terminal, y vive en el manual de estabilidad.
-- `maxRows` y `maxTiers` de `Bay` (12 y 10) — el parser nunca los asigna, así
-  que toda la ocupación se calcula contra 120 huecos ficticios.
+- `kStackWeightLimitKg` (90 000 kg) se retiró en C‑7 (`71ad205`). El límite de
+  apilamiento es `VesselGeometry.stackWeightLimitKg`, un `double?` que el
+  usuario declara desde el manual de estabilidad; `null` significa que no lo
+  tiene, y entonces no hay alerta de peso — antes que inventar un umbral.
+- `maxRows` y `maxTiers` de `Bay` (12 y 10) se retiraron en T‑51 (19 de
+  septiembre). Desde C‑3 la ocupación se calcula contra
+  `geometry.slotsPerBay`, la geometría declarada, y sin geometría devuelve
+  `null`, no un número de respaldo. Los documentos de Firestore escritos antes
+  traen todavía esos dos campos; `Bay.fromJson` los ignora a propósito.
 
-Si tocas algo que dependa de ellos, **mantén el comentario que los declara
-provisionales.** Es un compromiso con el tribunal, no un `TODO`.
+Lo que sigue siendo un **supuesto declarado** son las anclas de nivel de
+`VesselGeometry` —bodega en 02, cubierta en 82, frontera de zona en 80—, que
+salen de la numeración ISO y del corpus, no del buque concreto. T‑27 las
+mueve al perfil. Si tocas algo que dependa de ellas, **mantén el comentario
+que explica de dónde sale cada número.** Es un compromiso con el tribunal, no
+un `TODO`.

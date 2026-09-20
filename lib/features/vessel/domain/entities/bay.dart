@@ -20,18 +20,6 @@ class Bay extends Equatable {
   
   /// Lista de contenedores en esta bahía
   final List<ContainerUnit> containers;
-  
-  /// PROVISIONAL — supuesto histórico de capacidad, hoy sin uso en el cálculo.
-  ///
-  /// El parser nunca asignó estos dos valores, así que la ocupación se
-  /// calculaba contra 120 huecos ficticios. Desde C-3 la capacidad viene de
-  /// [geometry], que el usuario declara. Se conservan porque los documentos
-  /// de Firestore ya escritos los traen; se retiran cuando C-2, C-4 y C-5
-  /// hayan aterrizado, no antes.
-  final int maxRows;
-
-  /// PROVISIONAL — ver [maxRows].
-  final int maxTiers;
 
   /// Indica si es bahía de cubierta (deck) o bodega (hold)
   final BayLocation location;
@@ -64,8 +52,6 @@ class Bay extends Equatable {
     this.is40FtBay = false,
     this.slots = const {},
     this.containers = const [],
-    this.maxRows = 12,
-    this.maxTiers = 10,
     this.location = BayLocation.unknown,
     this.geometry,
     this.slotsOccupiedByNeighbors = const {},
@@ -192,8 +178,6 @@ class Bay extends Equatable {
         is40FtBay,
         slots,
         containers,
-        maxRows,
-        maxTiers,
         location,
         geometry,
         slotsOccupiedByNeighbors,
@@ -204,8 +188,6 @@ class Bay extends Equatable {
     bool? is40FtBay,
     Map<String, ContainerSlot>? slots,
     List<ContainerUnit>? containers,
-    int? maxRows,
-    int? maxTiers,
     BayLocation? location,
     VesselGeometry? geometry,
     Set<String>? slotsOccupiedByNeighbors,
@@ -215,8 +197,6 @@ class Bay extends Equatable {
       is40FtBay: is40FtBay ?? this.is40FtBay,
       slots: slots ?? this.slots,
       containers: containers ?? this.containers,
-      maxRows: maxRows ?? this.maxRows,
-      maxTiers: maxTiers ?? this.maxTiers,
       location: location ?? this.location,
       geometry: geometry ?? this.geometry,
       slotsOccupiedByNeighbors:
@@ -254,13 +234,17 @@ class Bay extends Equatable {
         'is40FtBay': is40FtBay,
         'slots': slots.map((k, v) => MapEntry(k, v.toJson())),
         'containers': containers.map((c) => c.toJson()).toList(),
-        'maxRows': maxRows,
-        'maxTiers': maxTiers,
         'location': location.name,
       };
 
   /// [geometry] la aporta `VesselVoyage.fromJson`, que la lee una sola vez del
   /// documento y la reinyecta en cada bahía.
+  ///
+  /// Los documentos escritos antes de T-51 traen además `maxRows` y
+  /// `maxTiers`, los dos supuestos provisionales de capacidad que el parser
+  /// nunca asignó (siempre 12 y 10). Se ignoran a propósito: la capacidad es
+  /// `geometry.slotsPerBay` desde C-3, y leer esos campos solo serviría para
+  /// resucitar un número que nunca fue del buque.
   factory Bay.fromJson(
     Map<String, dynamic> json, {
     VesselGeometry? geometry,
@@ -277,8 +261,6 @@ class Bay extends Equatable {
                 ?.map((e) => ContainerUnit.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
-        maxRows: json['maxRows'] as int? ?? 12,
-        maxTiers: json['maxTiers'] as int? ?? 10,
         location: BayLocation.values.firstWhere(
           (e) => e.name == json['location'],
           orElse: () => BayLocation.unknown,

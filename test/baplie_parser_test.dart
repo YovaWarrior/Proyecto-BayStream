@@ -578,5 +578,30 @@ UNT+4+1'
       expect(bay.weightByTier.length, 2);
       expect(bay.weightByTier.values.reduce((a, b) => a + b), bay.totalWeight);
     });
+
+    test('lee sin error un documento escrito con maxRows y maxTiers', () {
+      // Forma exacta de un documento de Firestore anterior a T-51: los dos
+      // supuestos provisionales de capacidad iban dentro de cada bahia. Se
+      // retiraron de la entidad; el documento viejo tiene que seguir abriendo
+      // y dar la misma bahia que uno escrito hoy, sin esos campos.
+      final viejo = <String, dynamic>{
+        'bayNumber': 10,
+        'is40FtBay': true,
+        'slots': <String, dynamic>{},
+        'containers': <dynamic>[],
+        'maxRows': 12,
+        'maxTiers': 10,
+        'location': 'deck',
+      };
+
+      final bay = Bay.fromJson(viejo);
+
+      expect(bay.bayNumber, 10);
+      expect(bay.is40FtBay, isTrue);
+      expect(bay.location, BayLocation.deck);
+      expect(bay, Bay.fromJson(bay.toJson()));
+      expect(bay.toJson().containsKey('maxRows'), isFalse);
+      expect(bay.toJson().containsKey('maxTiers'), isFalse);
+    });
   });
 }
