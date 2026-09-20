@@ -90,33 +90,47 @@ que dependa de cubierta, de paridad de niveles o de escala.**
 
 ## Estado al cerrar el Sprint 1
 
+*(Actualizado el 4 de septiembre — Timonel avisó que esta sección se había
+quedado atrás y mandaba a buscar dos bugs que ya no existen. Antes de este
+párrafo, decía «tres defectos abiertos» con el indicador lleno/vacío y los
+refrigerados incluidos; los dos ya están cerrados.)*
+
 Las cinco funcionalidades del sprint están entregadas y verificadas. Compila en
-Windows, Android y Web, y las 31 pruebas pasan. `flutter analyze` reporta 49
+Windows, Android y Web, y las 135 pruebas pasan. `flutter analyze` reporta 49
 incidencias: 4 advertencias y 45 avisos informativos. Ese número es la línea
 base; **no lo subas.**
 
-Hay tres defectos abiertos que conviene conocer antes de tocar el parser:
+Detalle completo de todo lo cerrado —incluido lo de esta sección— en
+`docs/HALLAZGOS-PLANO-REAL.md`; esto es solo el resumen para orientarse rápido.
 
-1. **El indicador lleno/vacío se lee mal.** `_parseEQD` en
-   `baplie_parser_service.dart` recorre los elementos desde el índice 4 y se
-   queda con el primero que valga `'4'` o `'5'`. Pero el índice 5 es otro código
-   EDIFACT distinto que en 158 segmentos del corpus vale `'4'`, así que el
-   parser nunca llega al índice 6, que es el campo real. Resultado: **158
-   contenedores llenos se clasifican como vacíos.** El archivo declara 242
-   llenos y 735 vacíos; la aplicación muestra 84 y 893. La corrección es leer el
-   elemento 6 por su posición.
-2. **Los refrigerados no se detectan.** El corpus trae 43 segmentos `TMP` y 50
-   contenedores con tipo ISO de refrigerado; la aplicación reporta 0.
-3. **Detención en Android.** Abrir el plano de bahía con el corpus completo
-   produce un ANR persistente en API 36. Windows y Web funcionan. La hipótesis
-   principal está en `bay_plan_view.dart:478`: genera un rango continuo de
-   niveles del mínimo al máximo, y como el corpus va del nivel 2 al 90, dibuja
-   45 filas por bahía de las que solo 12 tienen carga.
+1. **El indicador lleno/vacío se leía mal — ✓ cerrado (`09599c8`).** Se leía
+   por valor desde el índice 4 en vez de por posición fija en el 6. Llegó a
+   perder 269 de 315 contenedores llenos en `CORPUS_A03`. Corregido y
+   verificado contra los seis archivos primarios.
+2. **Los refrigerados no se detectaban — ✓ cerrado (`c101fb5`/`206545c`).**
+   `TMP` se descartaba en silencio cuando llegaba antes que su `EQD` —pasaba
+   en el 100 % de los casos del corpus—, y el tipo ISO con `R` nunca marcaba
+   `isReefer`. Corregido y verificado: 327 refrigerados, 238 con temperatura,
+   exacto contra el corpus.
+3. **Detención en Android — ✓ cerrado (T‑50, 19 de septiembre), sin cambio
+   de código.** Verificado en el **POCO X3 NFC real** (Android 12, MIUI 14)
+   con `CORPUS_A01` completo, bahía 038 y cambios rápidos de bahía, `logcat`
+   en vivo: **sin ANR** en `713da5a` debug —el commit y el modo exactos de la
+   auditoría—, en `713da5a` release ni en `a3dbc99` release. El ANR se vio
+   una sola vez: emulador Pixel 8 Pro API 36.1, APK debug, por Codex, que
+   dejó anotado que en el POCO solo confirmó el arranque porque MIUI bloquea
+   la inyección de eventos; nadie había abierto el plano en un dispositivo
+   real hasta el 19 de septiembre. **La «confirmación» del 4 de septiembre
+   no existió**: fue una frase de Timonel —«el de Android sigue vivo»— en
+   una lista de qué seguía abierto, sin reproducción detrás; se leyó como
+   evidencia. La matriz completa está en `docs/HALLAZGOS-PLANO-REAL.md`,
+   sección 4 y corrección 7 del registro.
 
 Ninguno de los tres se corrigió antes de la revisión del 29 de agosto, por
 decisión deliberada: la doble prueba se ejecutó sobre el commit `713da5a` y
-tocarlos habría invalidado esa evidencia. Están asignados a las tareas de
-cierre de octubre.
+tocarlos habría invalidado esa evidencia. Los tres se tomaron después: los
+dos primeros en las tareas de cierre de septiembre y el de Android en T‑50
+del Sprint 2, donde resultó no ser un defecto del producto sino del emulador.
 
 ## Sobre umbrales y datos que el archivo no trae
 

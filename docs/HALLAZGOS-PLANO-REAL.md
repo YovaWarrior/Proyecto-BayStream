@@ -866,6 +866,15 @@ parches sobre una rejilla inferida.
 2. **C‑4** — rangos de nivel reales. **Probar el ANR en Android aquí mismo.**
    ✓ cerrado (`3f2ced5`); ANR verificado sin reproducir en emulador API 36,
    APK release, bahía 038, dieciocho cambios rápidos.
+   **Reconciliado en dispositivo real el 19 de septiembre (T‑50 del
+   Sprint 2).** Esa verificación había cambiado dos variables a la vez —la
+   corrección y debug→release— y por eso no aislaba nada. En el POCO X3 NFC
+   (Android 12, MIUI 14), con `CORPUS_A01` completo, bahía 038 y cambios
+   rápidos, `logcat` en vivo: **sin ANR en `713da5a` debug, `713da5a`
+   release ni `a3dbc99` release** — cero `ANR in`, cero `Input dispatching
+   timed out`, cero frames saltados del proceso. El ANR se vio una sola vez,
+   en el emulador API 36 con APK debug; en dispositivo real no lo produce
+   ningún commit en ningún modo. Detalle en la corrección 7 del registro.
 3. **C‑2** — fila 00 y orden fijo de columnas. ✓ cerrado (`3f2ced5`).
 4. **EQD** — el indicador lleno/vacío. Pequeño, aislado y de alto impacto.
    ✓ cerrado (`09599c8`); ver el detalle completo en la sección 3.
@@ -1105,3 +1114,50 @@ de Timonel o Carlos. La lección sigue siendo la misma que las anteriores,
 aplicada esta vez a mi propio trabajo: verificar de nuevo contra la fuente
 primaria en vez de dar por buena una demostración —aunque sea la propia—
 solo porque suena completa.
+
+**7 · La «confirmación» de que el ANR de Android seguía vivo no existió.**
+*Detectada por el segundo programador, 19 de septiembre, al ejecutar T‑50.*
+`CLAUDE.md` decía que «Timonel confirmó el 4 de septiembre que el problema
+sigue vivo», y ese texto pasó a `SPRINT-2.md` como una de las dos afirmaciones
+a reconciliar frente al «sin reproducir en emulador» del punto 2 de la sección
+4. Buscada en la transcripción, la frase es «el de Android sigue vivo», dicha
+por Timonel en una lista de qué seguía *abierto* en `CLAUDE.md`: quería decir
+«nadie lo cerró», no «lo reproduje». No hubo reproducción detrás. El error lo
+cometió el segundo programador al escribir una frase ambigua, y lo amplificó
+el documento al leerla como evidencia. Las dos afirmaciones nunca fueron dos
+observaciones: eran una observación y una frase de estado.
+
+Se resolvió midiendo lo que nunca se había medido: el plano de bahía en un
+dispositivo real. `AUDITORIA-CALIDAD-SPRINT1-CODEX.md` anota que en el POCO
+X3 NFC solo se confirmó el arranque, porque MIUI bloquea la inyección de
+eventos por ADB; el ANR se vio en el emulador Pixel 8 Pro API 36.1 con
+`flutter build apk --debug`, sobre `713da5a`. Y la verificación posterior a
+C‑4 en emulador se hizo en release, así que cambió dos variables a la vez y
+no aislaba la corrección. Matriz del 19 de septiembre — POCO X3 NFC, Android
+12, MIUI 14, `CORPUS_A01` completo (977 contenedores), bahía 038, cambios
+rápidos de bahía, `logcat` escuchado en vivo:
+
+| Commit | Modo | Resultado |
+|---|---|---|
+| `713da5a` (el auditado) | debug | sin ANR |
+| `713da5a` (el auditado) | release | sin ANR |
+| `a3dbc99` (HEAD del 19‑sep) | release | sin ANR |
+
+Cero `ANR in`, cero `Input dispatching timed out`, cero frames saltados del
+proceso en las tres; los únicos frames saltados fueron los dos del arranque
+del APK debug, antes de tocar nada. Los APK se compilaron desde copias limpias
+de cada commit (`git archive` al scratchpad, sin tocar el árbol de trabajo) y
+el de HEAD se verificó por SHA‑256 contra el instalado, porque el instalador
+de MIUI reinstaló dos veces el APK anterior desde su propia caché. Como MIUI
+bloquea la inyección de eventos, los toques los dio Carlos y la observación
+fue por `logcat`, `pidof` y `screencap`, que sí funcionan. Sin medir, a
+propósito: HEAD en debug en el POCO —no se publica, y el debug del commit sin
+corrección, el caso más adverso, ya pasó— y las celdas del emulador que
+separarían corrección de modo de compilación, que son una pregunta sobre el
+emulador y no sobre el producto.
+
+Consecuencia: el ANR no bloquea T‑49, y T‑50 cierra sin cambio de código. La
+lección es distinta de las seis anteriores: no fue un número mal contado sino
+una **frase de estado leída como evidencia**. «Sigue abierto» y «sigue vivo»
+no son lo mismo, y quien escribe un estado tiene que decir cuál de los dos es
+— y quien lo lee, preguntar qué medición hay detrás antes de copiarlo.
