@@ -57,15 +57,18 @@ y bajo tres condiciones que no son negociables:
 3. **Tú no creas el proyecto ni publicas nada en la consola de Firebase.** Redactas lo
    que hay que hacer; el autor lo ejecuta. Igual que con git.
 
-### 2.3 Las 138 pruebas deben seguir en verde
+### 2.3 Las pruebas deben seguir en verde — 139 al 19-sep
 
 ```
-test/baplie_parser_test.dart          39      test/export_service_test.dart          9
+test/baplie_parser_test.dart          40      test/export_service_test.dart          9
 test/vessel_geometry_test.dart        42      test/vessel_geometry_page_test.dart   20
 test/bay_plan_grid_test.dart          17      test/baplie_reefer_parser_test.dart    3
 test/pdf_report_service_test.dart      3      test/vessel_profile_view_test.dart     3
 test/container_search_delegate_test.dart 1    test/widget_test.dart                  1
 ```
+
+**El piso sube y nunca baja.** Al abrir el sprint eran 138; T‑51 dejó 139. El piso de
+cada tarea es el número con que cerró la anterior.
 
 Si una prueba se rompe, el arreglo es parte de la tarea que la rompió — no se comenta ni
 se marca como `skip`. **Ojo con `vessel_geometry_test.dart`: 42 pruebas sobre la entidad
@@ -377,8 +380,10 @@ el usuario declaró no tenerlo, y entonces no se muestra ninguna alerta de peso 
 inventar un umbral.»* Esa política se conserva íntegra.
 
 Lo único que hace T‑29 es **mudarlo al perfil** para que se declare una vez por buque y no
-una vez por viaje. Con eso muere el `kStackWeightLimitKg = 90000` provisional como supuesto
-global: pasa a ser, a lo sumo, el valor sugerido de una plantilla, etiquetado como tal.
+una vez por viaje. **No mata ningún supuesto:** la constante global `kStackWeightLimitKg`
+ya no existe — se retiró en C‑7 (`71ad205`), dieciséis días antes de abrir el sprint. Lo
+que T‑29 aporta es permanencia por buque a un parámetro que hoy se vuelve a preguntar en
+cada viaje, y que a lo sumo una plantilla puede sugerir, etiquetado como tal.
 
 **Terminada cuando:** el valor sobrevive al cierre del viaje, y con `null` no aparece
 ninguna alerta de peso en ninguna vista.
@@ -821,7 +826,13 @@ real. Actualiza las **dos** fuentes; dejar una al día y la otra no es cómo se 
 
 ---
 
-#### T-51 · Retirar `maxRows` y `maxTiers` de `Bay` · 0.50 h
+#### T-51 · Retirar `maxRows` y `maxTiers` de `Bay` · 0.50 h — ✓ CERRADA
+
+**✓ CERRADA el 19 de septiembre (Timonel, `aa27781`).** Fuera de la entidad, `props`,
+`copyWith`, `toJson` y `fromJson`, con prueba de que un documento con la forma exacta
+anterior abre igual, y verificación de punta a punta con `CORPUS_A01` serializado con los
+campos metidos en las 27 bahías. **139/139 · `analyze` 49.** T‑36 puede entrar sin heredar
+el esquema viejo.
 
 **Toca:** `lib/features/vessel/domain/entities/bay.dart:24-34, 67-68, 195, 207, 218,
 257-258, 280-281`.
@@ -837,10 +848,15 @@ existencia es la compatibilidad con documentos de Firestore ya escritos, que `fr
 resuelve con un valor por omisión — y ese valor por omisión puede quedarse aunque el campo
 desaparezca de la entidad.
 
-**Esto cierra el tercer supuesto provisional del proyecto.** Los otros dos mueren en este
-mismo sprint: `kStackWeightLimitKg` en T‑29 y las anclas de nivel en T‑27. Al terminar,
-**BayStream no calcula nada contra una constante inventada**, y eso es una frase que se
-puede decir en la defensa.
+**Esto retira el último de los dos supuestos provisionales declarados.** El otro,
+`kStackWeightLimitKg`, ya había muerto en C‑7 (`71ad205`). Al cerrar esta tarea **BayStream
+no calcula nada contra una constante inventada** — frase que se puede decir entera, sin
+asterisco.
+
+**No los confundas con las anclas de nivel (02, 82, 80)** que T‑26 y T‑27 mueven al perfil:
+esas **no son supuestos provisionales**. Salen de la numeración ISO y están respaldadas por
+el corpus. T‑26/T‑27 hacen otra cosa: convierten una constante correcta-en-general en un
+parámetro declarado por buque.
 
 **Corrige también `CLAUDE.md` §«Sobre umbrales y datos que el archivo no trae»**, que
 sigue afirmando que «toda la ocupación se calcula contra 120 huecos ficticios». Dejó de
@@ -886,7 +902,7 @@ Una tarea no está hecha hasta que cumple **todo** esto:
 - [ ] Satisface sus criterios de aceptación en los **tres clientes** soportados.
 - [ ] Respeta la separación de capas: la presentación no accede a datos, el dominio no
       importa Flutter **ni el paquete de almacenamiento**.
-- [ ] `flutter test` en verde. Punto de partida: **138 pruebas**.
+- [ ] `flutter test` en verde. Piso vigente: **139 pruebas** (138 al abrir el sprint).
 - [ ] `flutter analyze` sin advertencias nuevas (sin advertencias, a partir de T-43).
 - [ ] **Verificada contra al menos un archivo real del corpus**, no solo con datos
       sintéticos. Seis archivos disponibles en la carpeta de archivos anonimizados.
@@ -1018,3 +1034,112 @@ señal**, y no la leí — la escalé a «bloquea un MUST». La regla que queda:
 declarar contradicción entre dos fuentes, comparar qué tan específica es cada una. La que
 no nombra condiciones de reproducción no es evidencia, es una nota.
 
+### 10.2 · T-35 — `hive_ce` elegido por medición (19-sep)
+
+**Qué se decidió.** `hive_ce: 2.20.0`, con presupuesto de cinco viajes recientes.
+
+**El número que lo decidió.** `CORPUS_A01` exportado a JSON con `ExportService` mide
+**1 788 129 bytes**; cinco viajes proyectan **8 940 645 bytes**. El techo de
+`localStorage` del cliente Web es de unos 5 MB y los navegadores lo contabilizan en
+UTF‑16, así que el presupuesto real se agota todavía antes.
+
+**Qué se descartó.** `shared_preferences`, que era la opción de **menor** costo para H4 y
+la que la ficha aprobada de RF‑031 nombraba primero. Se descartó por medición, no por
+preferencia — y eso es precisamente lo que hace defendible la dependencia.
+
+**Orden de verificación.** Web primero, después Windows y Android, con reinicios. Es el
+orden correcto: la Web es la que falla, y dejarla para el final habría destapado el
+problema con todo lo demás ya construido encima.
+
+**Es la segunda dependencia del proyecto entero**, después de `pdf: 3.12.0`. Las dos
+elegidas con criterio escrito y descarte documentado. Para H4 el argumento no es que no se
+agregaran dependencias: es que cada una tuvo que ganarse el lugar.
+
+---
+
+### 10.3 · Dos hallazgos que amplían el alcance de T-36 (19-sep)
+
+Salen de revisar el cierre de T‑35. El primero lo señaló Codex; el segundo sale de su
+propio número.
+
+**1 · `slotsOccupiedByNeighbors` se pierde al deserializar — y ya está vivo en Firestore.**
+
+`VesselVoyage.fromJson` (`vessel_voyage.dart:301`) reinyecta la **geometría** en cada
+bahía, pero **nunca vuelve a llamar a `neighborOccupiedSlots()`**. Todo viaje
+deserializado regresa con ese conjunto vacío. Tres consecuencias, todas silenciosas —
+ni excepción ni prueba en rojo:
+
+- `occupancyRate` (`bay.dart:92`) une ese conjunto en `occupiedSlotKeys`: la **ocupación
+  se sub‑reporta** en cualquier viaje reabierto.
+- Las siete bahías impares que C‑5b rescató —sin carga propia, tomadas por un 40 pies
+  vecino— vuelven con cero contenedores y cero vecinos, así que `occupancyRate` devuelve
+  **0.0** en vez de su ocupación real.
+- `bay_plan_view.dart:815` pinta las sombras del 40 pies desde ese conjunto: **desaparecen
+  del plano** al reabrir.
+
+**No lo introduce T‑36: ya está en el código entregado.** `VesselRepositoryImpl` guarda
+con `voyage.toJson()` y lee con `VesselVoyage.fromJson`, así que cualquier viaje que
+vuelva de Firestore lo arrastra hoy. Lo que hace T‑36 es volverlo visible, porque RF‑031+
+convierte reabrir un viaje guardado en el flujo principal.
+
+**Y el comentario de `bay.toJson` (`bay.dart:250-251`) afirma lo contrario** — *«son datos
+derivados que `VesselVoyage` recalcula»*. Recalcula la geometría; los vecinos no. Ese
+comentario equivocado es, con toda probabilidad, la razón de que nadie lo notara. Se
+corrige en la misma tarea.
+
+**2 · El 1.79 MB está inflado unas tres veces.** Cada contenedor se serializa **tres
+veces**: en `VesselVoyage.toJson` → `containers`, otra vez en el `containers` de su bahía,
+y una tercera dentro de `slots` → `ContainerSlot.toJson` → `container`. Son ~1 830 bytes
+por contenedor; deduplicado ronda los 610, que es lo realista.
+
+**La decisión de T‑35 no cambia** —comprobado: deduplicado, cinco viajes siguen rondando
+los 3 MB, que en UTF‑16 pasan del techo de la Web—, así que no hay que rehacer nada. Pero
+**el esquema de T‑36 no tiene por qué heredar la triplicación** del documento de Firestore.
+
+Los dos hallazgos son el mismo principio visto por dos lados: `bays`, `slots` y
+`slotsOccupiedByNeighbors` son datos **derivados** de `containers`. Hoy dos se guardan
+duplicados y el tercero se pierde — lo peor de las dos opciones. T‑36 los trata a los tres
+igual: se guardan los contenedores una vez y lo derivado se reconstruye al leer.
+
+---
+
+### 10.4 · T-51 se adelanta a T-36 (19-sep)
+
+`Bay.toJson` todavía serializa `maxRows` y `maxTiers` (`bay.dart:257-258`). Si T‑36 entra
+primero, esos dos campos muertos quedan escritos **dentro del esquema nuevo de Hive**, y
+T‑51 deja de ser un borrado de media hora para convertirse en una migración de esquema con
+cambio de versión. Orden: **T‑51 → T‑36.**
+
+---
+
+### 10.5 · Dos correcciones a este brief, de Timonel (19-sep)
+
+Las dos ciertas, verificadas contra el código antes de aplicarlas.
+
+**1 · La ficha de T‑29 afirmaba algo falso.** Decía que con T‑29 «muere el
+`kStackWeightLimitKg = 90000` provisional como supuesto global». **Ya estaba muerto**: se
+retiró en C‑7 (`71ad205`), el 3 de septiembre, dieciséis días antes de abrir el sprint.
+`grep` sobre `lib/` y `test/` no devuelve una sola aparición. **La tarea sigue en pie; la
+premisa no.** T‑29 no mata un supuesto: le da permanencia por buque a un parámetro que hoy
+se vuelve a preguntar en cada viaje.
+
+**Y el brief se contradecía a sí mismo.** El documento de ejecución del Sprint 2 ya decía,
+correctamente, que ese supuesto global había muerto; la ficha de T‑29 decía que moriría.
+Las dos frases mías, en el mismo cuerpo de documentos. Es la misma clase de defecto que
+vengo auditando en los demás: una afirmación que nadie volvió a contrastar contra el
+código.
+
+**El recuento correcto, que además favorece más al proyecto.** Los supuestos provisionales
+**declarados al tribunal eran dos**, no tres: `kStackWeightLimitKg` y `maxRows`/`maxTiers`.
+Los dos están fuera — uno en C‑7, el otro en T‑51, hoy. **BayStream ya no calcula nada
+contra una constante inventada**, y eso se puede decir entero, sin asterisco, desde el
+segundo día del sprint.
+
+Las anclas de nivel (02, 82, 80) **no eran supuestos provisionales** y no hay que contarlas
+ahí: salen de la numeración ISO y están respaldadas por el corpus — 4 584 slots, el nivel
+80 sin una sola aparición. Lo que hacen T‑26 y T‑27 es otra cosa: convertir una constante
+correcta-en-general en un parámetro declarado por buque.
+
+**2 · El conteo de pruebas.** `baplie_parser_test.dart` pasó de 39 a 40 con la prueba de
+compatibilidad de T‑51: **139**. §2.3 y §7 quedan actualizadas, con la regla explícita de
+que ese piso sube y nunca baja.
