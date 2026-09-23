@@ -694,7 +694,12 @@ desperdicia y es la clase de cosa que se detecta en la defensa.
 
 ### TC-03 · Pruebas finales de seguridad (3.0 h · T-45, T-46)
 
-#### T-45 · Cerrar H-02: autenticación y reglas de acceso por usuario · 2.00 h
+#### T-45 · Cerrar H-02: autenticación y reglas de acceso por usuario · 2.00 h — ✓ PRIMERA MITAD
+
+**Redacción y contraste hechos (Timonel, 23-sep).** Dos variantes contrastadas contra todo
+el código que gobiernan. **Se publica B, sin autenticación; §2.5 queda intacta y H‑02 se
+re‑acota en vez de cerrarse — ver 10.10.** La segunda mitad (cableado de autenticación) no
+se ejecuta en este sprint.
 
 **Toca:** `firestore.rules`. **Redactas; el autor publica** (regla 2.7).
 
@@ -711,7 +716,8 @@ La regla vigente de `latency_test` permite `update` solo si `respondido == false
 pasa a `true`, solo si `proceso_b_ms is number` y solo si
 `affectedKeys().hasOnly(['respondido','proceso_b_ms'])`. **Esas cuatro condiciones se
 conservan íntegras**: dejan `t0`, `condicion` y `evento` inmutables desde su creación, que
-es lo que impide falsear una latencia. Es un argumento fuerte para la defensa y no se toca.
+es lo que impide **editar** una medición ya tomada. **No impedían fabricarla:** ver 10.10.
+Se conservan íntegras de todos modos, y la variante publicada cierra además el `create`.
 
 **Terminada cuando:** el bloque de reglas está listo para publicar **y** viene acompañado
 del procedimiento de verificación empírica —dos clientes, receptor activo, serie corta de
@@ -1218,3 +1224,129 @@ que encontrar lo mismo que decimos nosotros.
 la triplicación y la reconstrucción de vecinos son propiedades **del esquema**, no del
 motor. Con `shared_preferences` se habrían obtenido igual. La tesis no debe presentarlas
 como beneficio de la dependencia.
+
+---
+
+### 10.8 · T-45 se parte en dos mitades (23-sep)
+
+La redacción de las reglas y su contraste contra el código van ahora, en la lane del
+segundo programador: son la única parte sustancial de TC‑03 que no toca los archivos del
+bloque 3, y las reglas las publica Carlos desde la consola, así que necesitan anticipación.
+El cableado de autenticación espera a que el árbol vuelva.
+
+*(Nota: esta entrada se anunció como escrita el 23-sep y no se había escrito. Se registra
+al detectarlo, no se antedata.)*
+
+---
+
+### 10.9 · El reporte PDF nunca recibió C-2 ni C-4 · nace T-52 (23-sep)
+
+**Cómo salió.** La instrucción de T‑26 —«si algún punto de llamada no puede alcanzar el
+perfil, detente y repórtalo»— hizo que Codex parara en
+`pdf_report_service.dart:243`. Paró bien. Pero el síntoma que encontró no es el problema.
+
+**Lo que hay de verdad.** `pdf_report_service.dart` menciona la geometría **una sola vez en
+todo el archivo**, y solo para llamar a la función estática. **Nunca lee
+`voyage.geometry`.** Su rejilla sale de `_orderedRows(rowValues)` y `_tierRange(...)`, que
+recorren *lo observado en los contenedores cargados* — mínimo a máximo.
+
+Es exactamente el método anterior a C‑2 y C‑4. `bay_plan_view.dart:432-455` hace lo
+contrario desde `3f2ced5`: lee `bay.geometry` y dibuja con `orderedRows`,
+`deckTierNumbers` y `holdTierNumbers`.
+
+**Consecuencia:** para el mismo viaje, **la pantalla y el PDF exportado dibujan rejillas
+distintas.** La pantalla muestra la geometría declarada —con la fila 00 siempre presente y
+los niveles que el buque tiene—; el PDF muestra solo lo que trae el archivo. C‑2 y C‑4 se
+cerraron para la pantalla y **el exportador se quedó atrás**, sin que nadie lo notara.
+
+Es un defecto en funcionalidad **MUST ya entregada** (RF‑025, Sprint 1), y del tipo que
+aparece en una demostración: se enseña el plano, se exporta el PDF, y no coinciden.
+
+**Nace T‑52 · Migrar el reporte PDF a la geometría declarada · 1.50 h**, fuera del
+compromiso, contra holgura, como T‑50 y T‑51. **No se mete dentro de T‑26**: T‑26 mueve una
+constante al perfil, no reescribe un exportador.
+
+**Veredicto sobre las cuatro propuestas de Codex.** Tres se aceptan y una no:
+
+- ✅ *Clasificar por la frontera declarada cuando hay geometría.* Es el punto de T‑26.
+- ❌ *Sin geometría, rotular «Geometría no declarada» y no calcular pesos por zona.*
+  **Resuelve un estado que producción no puede producir.** `confirmGeometry`
+  (`vessel_providers.dart:150`) es, según su propio comentario, «el único punto donde un
+  viaje pasa a estado publicado», y siempre llama a `withGeometry`. Un viaje publicado
+  siempre trae geometría. Rotular el caso imposible lo **tapa**: si alguna vez ocurre es
+  una violación de invariante y tiene que ser ruidosa, no cortés. **La salida correcta es
+  volverlo imposible en la firma:** que `PdfReportService.generate` exija la geometría, y
+  que el estado inválido deje de compilar en vez de manejarse.
+- ✅ *Inyectar geometría explícita en las cuatro pruebas C‑7, conservando sus aserciones.*
+  Sí — y es el defecto 15 del cruce de auditorías otra vez: cuatro pruebas construyen un
+  `Bay` que la aplicación nunca construye, y pasarían igual con el código mal.
+- ✅ *Aplicar 80/02/82 al crear perfiles y al leer geometrías antiguas, sin respaldos
+  ocultos en los consumidores.* **Sí, y es lo más importante de las cuatro.** El valor por
+  omisión vive en el borde —construcción y deserialización—, nunca como un `?? 80` repartido
+  por los consumidores. Ese reparto es literalmente cómo apareció el `tier >= 80` suelto en
+  `ContainerSlot` que la documentación de `vessel_geometry.dart:53-56` registra.
+
+**Lo que Codex no vio y T‑52 sí debe cubrir:** el problema no es solo la clasificación
+cubierta/bodega. `_orderedRows` también se queda con las filas observadas, así que **la
+fila 00 desaparece del PDF cuando va vacía** — que es C‑2, no C‑4.
+
+---
+
+### 10.10 · T-45 · se publica la variante B, sin autenticación · §2.5 intacto (23-sep)
+
+**Qué se decidió.** Se publica la variante **B**, sin identidad. **No se autoriza
+`firebase_auth`**: §2.5 queda intacta y `hive_ce` sigue siendo la única dependencia nueva
+del sprint.
+
+**El dato que lo decide, verificado por los dos.** **El producto no usa Firestore.** El
+único llamador de `VesselRepositoryImpl.saveVoyage` es `c3_reconciliation_screen.dart`, que
+es pantalla congelada y no es alcanzable desde ninguna ruta de la aplicación. Los otros
+`saveVoyage` del árbol son el de Hive y el de `ExportService`, que guarda archivos.
+
+**Por qué B y no A:**
+
+- Meter autenticación protegería una base que **solo toca la instrumentación de H5**.
+- **TC‑04 crea el proyecto de producción y ahí se deniega todo.** El producto sale seguro
+  con independencia de esta decisión. Ese es el punto más importante del reporte.
+- El cableado tendría que rodear archivos congelados, con una sesión que no sobrevive entre
+  corridas de `flutter run -d chrome`.
+- **La autenticación no haría más confiable la evidencia de H5.** Las mediciones ya están
+  tomadas; lo que sí afecta la afirmación probatoria es el hueco del `create`, y eso lo
+  cierra B.
+- Una tercera dependencia por una razón que no es del producto es difícil de sostener en H4.
+
+**H‑02 no queda abierto: queda re-acotado.** Su enunciado era «creación y actualización
+anónimas». Medido lo que de verdad usa Firestore, lo que resta es escritura sobre un
+proyecto temporal de instrumentación. B quita la enumeración, deja un solo documento de
+viajes y obliga a que las mediciones nazcan abiertas.
+
+**Residual que se declara y no se entierra.** Con B, cualquiera con la clave pública del
+proyecto puede leer las colecciones y crear una medición **abierta y bien formada**. Un
+tercero podría inyectar ruido en una corrida futura. Se mitiga porque las corridas están
+acotadas en ventana y contadas documento a documento — nunca porque sea imposible.
+
+**Corrección a la ficha de T‑45, mía.** Escribí que las cuatro condiciones «impiden falsear
+una latencia» y que eran «argumento fuerte para la defensa». **Inmutable después de crearse
+no es lo mismo que no fabricable:** `create: if true` permitía crear una medición **nacida
+cerrada**, con el `proceso_b_ms` que se quisiera, sin pasar jamás por la transición que las
+cuatro condiciones protegen. Hallazgo de Timonel.
+
+El matiz que él aporta se conserva porque acota el daño: **el tiempo de ida y vuelta no se
+guarda en Firestore** — lo calcula el emisor con su reloj local y va al CSV. Lo que se
+debilitaba era la colección **como registro** —el «99 de 99 cerrados» que citamos como
+corroboración independiente—, no las latencias medidas.
+
+**Es la cuarta vez en este sprint que cometo la misma falla, y ya tiene forma
+reconocible: verifico la regla que está escrita y no pregunto qué otro camino llega al
+mismo estado.** Idéntica a los vecinos —`fromJson` reinyecta la geometría y nadie preguntó
+por el otro derivado— e idéntica al ANR —una fuente afirma y nadie preguntó qué la
+respalda—. Se nombra aquí porque nombrar la forma es lo que la corta.
+
+**Conteo de `latency_test`, para que siga cuadrando.** La verificación empírica agrega
+cuatro documentos: la colección pasa de **99 a 103**, y la cuenta es **66 + 3 + 30 + 4**.
+Los cuatro nuevos se anotan como verificación de T‑45, no como corrida de medición.
+
+**Trazabilidad.** La variante A se conserva en `docs/firestore.rules.A-con-identidad` como
+registro de la decisión, encabezada por la razón de no haberse publicado. `firestore.rules`
+del repositorio se reemplaza con B **en el mismo commit en que B se publique**, para que el
+árbol y la consola no diverjan — que es H‑01 otra vez.
