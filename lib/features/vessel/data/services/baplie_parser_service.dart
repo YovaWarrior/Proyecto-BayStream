@@ -212,6 +212,12 @@ class BaplieParserService {
       if (c222Index != null) {
         final c222Components = _getComponents(elements[c222Index]);
         vesselName = _safeGetComponent(c222Components, 3);
+        // c222.e8213 y e1131: el calificador identifica el dato, no su forma.
+        // Verificados en los seis TDT reales: 146 = IMO, 103 = indicativo.
+        final identification = _safeGetComponent(c222Components, 0);
+        final identificationType = _safeGetComponent(c222Components, 1);
+        if (identificationType == '146') imoNumber = identification;
+        if (identificationType == '103') callSign = identification;
         // e8453 - Nacionalidad. Vive dentro del propio c222, no en un elemento
         // aparte: el 9 es el indicador de propiedad del medio de transporte,
         // que es otra cosa y ademas viene vacio en todo el corpus.

@@ -7,3 +7,4 @@ export 'container_unit.dart';
 export 'bay.dart';
 export 'container_slot.dart';
 export 'vessel_geometry.dart';
+export 'vessel_profile.dart';

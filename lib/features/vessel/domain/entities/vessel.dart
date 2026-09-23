@@ -33,6 +33,26 @@ class Vessel extends Equatable {
     this.operator,
   });
 
+  /// Identidad persistente independiente del UUID de este objeto.
+  VesselIdentity get profileIdentity => VesselIdentity.fromVesselData(
+        name: name,
+        imoNumber: imoNumber,
+        callSign: callSign,
+      );
+
+  String get profileKey => profileIdentity.key;
+
+  /// Un nombre compartido propone una pregunta, nunca una asociación automática.
+  VesselIdentityMatch matchIdentity(Vessel other) {
+    if (profileIdentity.matchesAutomatically(other.profileIdentity)) {
+      return VesselIdentityMatch.automatic;
+    }
+    return VesselIdentity.normalizeName(name) ==
+            VesselIdentity.normalizeName(other.name)
+        ? VesselIdentityMatch.requiresConfirmation
+        : VesselIdentityMatch.none;
+  }
+
   @override
   List<Object?> get props => [id, name, imoNumber, callSign, flag, operator];
 
@@ -74,4 +94,63 @@ class Vessel extends Equatable {
 
   @override
   String toString() => 'Vessel(name: $name, imo: $imoNumber)';
+}
+
+/// La procedencia forma parte de la clave: un indicativo no es un IMO.
+enum VesselIdentitySource { imo, callSign, name }
+
+enum VesselIdentityMatch { automatic, requiresConfirmation, none }
+
+/// Clave natural seleccionada del TDT, serializable sin paquetes de datos.
+class VesselIdentity extends Equatable {
+  final VesselIdentitySource source;
+  final String value;
+
+  const VesselIdentity._(this.source, this.value);
+
+  factory VesselIdentity({
+    required VesselIdentitySource source,
+    required String value,
+  }) {
+    final normalized = source == VesselIdentitySource.name
+        ? normalizeName(value)
+        : value.trim().toUpperCase();
+    if (normalized.isEmpty) {
+      throw ArgumentError.value(value, 'value', 'La identidad no puede estar vacía');
+    }
+    return VesselIdentity._(source, normalized);
+  }
+
+  factory VesselIdentity.fromVesselData({
+    required String name,
+    String? imoNumber,
+    String? callSign,
+  }) {
+    if (imoNumber != null && imoNumber.trim().isNotEmpty) {
+      return VesselIdentity(source: VesselIdentitySource.imo, value: imoNumber);
+    }
+    if (callSign != null && callSign.trim().isNotEmpty) {
+      return VesselIdentity(source: VesselIdentitySource.callSign, value: callSign);
+    }
+    return VesselIdentity(source: VesselIdentitySource.name, value: name);
+  }
+
+  /// Conserva acentos y puntuación para no fusionar nombres por aproximación.
+  static String normalizeName(String name) =>
+      name.trim().replaceAll(RegExp(r'\s+'), ' ').toUpperCase();
+
+  String get key => '${source.name}:$value';
+
+  bool matchesAutomatically(VesselIdentity other) =>
+      source != VesselIdentitySource.name && this == other;
+
+  Map<String, dynamic> toJson() => {'source': source.name, 'value': value};
+
+  factory VesselIdentity.fromJson(Map<String, dynamic> json) => VesselIdentity(
+        source: VesselIdentitySource.values.byName(json['source'] as String),
+        value: json['value'] as String,
+      );
+
+  @override
+  List<Object?> get props => [source, value];
 }
