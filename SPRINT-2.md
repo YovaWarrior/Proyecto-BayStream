@@ -57,7 +57,7 @@ y bajo tres condiciones que no son negociables:
 3. **Tú no creas el proyecto ni publicas nada en la consola de Firebase.** Redactas lo
    que hay que hacer; el autor lo ejecuta. Igual que con git.
 
-### 2.3 Las pruebas deben seguir en verde — 139 al 19-sep
+### 2.3 Las pruebas deben seguir en verde — 169 al 23-sep
 
 ```
 test/baplie_parser_test.dart          40      test/export_service_test.dart          9
@@ -67,8 +67,13 @@ test/pdf_report_service_test.dart      3      test/vessel_profile_view_test.dart
 test/container_search_delegate_test.dart 1    test/widget_test.dart                  1
 ```
 
-**El piso sube y nunca baja.** Al abrir el sprint eran 138; T‑51 dejó 139. El piso de
-cada tarea es el número con que cerró la anterior.
+**El piso sube y nunca baja.** 138 al abrir el sprint, 139 tras T‑51, **169 tras el
+bloque 2**. El piso de cada tarea es el número con que cerró la anterior.
+
+**El piso es el que imprime `flutter test`, no el que cuenta un `grep`.** Hoy hay 164
+ocurrencias estáticas de `test(`/`testWidgets(` en catorce archivos y la corrida reporta
+169: la diferencia son pruebas registradas dentro de un bucle, que existen en ejecución y
+no en el texto. La cifra de la tesis es la de la corrida.
 
 Si una prueba se rompe, el arreglo es parte de la tarea que la rompió — no se comenta ni
 se marca como `skip`. **Ojo con `vessel_geometry_test.dart`: 42 pruebas sobre la entidad
@@ -879,7 +884,7 @@ riesgoso evitó dos replanificaciones; aquí se repite el criterio.
 |---|---|---|---|---|
 | **0** | **Trámites de despliegue** | parte de T-47, T-49 | — | **Empieza el día uno.** Crear el proyecto de producción y abrir el canal de publicación dependen de **terceros**, y un tercero no se apura. Es lo único del sprint cuya duración no la decide el equipo. Lo hace el autor, en paralelo. |
 | **1** | **Motor de almacenamiento** | T-35 | 1.0 | La única dependencia nueva del sprint. Si falla en Web, replanifica todo lo que viene después. Mismo criterio que T-08 en el Sprint 1: la decisión de dependencia se verifica antes de que algo dependa de ella. |
-| **2** | **Identidad y entidad** | T-24, T-36, T-25 | 3.5 | `Vessel.id` es un UUID aleatorio por parseo: sin clave natural, **ningún perfil se recupera jamás**. Es el bloqueo duro. |
+| **2** | **Identidad y entidad** | **T-25 → T-24 → T-36** | 3.5 | `Vessel.id` es un UUID aleatorio por parseo: sin clave natural, **ningún perfil se recupera jamás**. Es el bloqueo duro. **La clave va primero** (ver 10.6): su forma decide el campo de identidad de T-24 y la clave de colección de T-36. |
 | **3** | **Geometría declarada** | T-26, T-27, T-28 | 3.5 | Toca `vessel_geometry.dart`, el archivo con 42 pruebas encima. Cuanto antes se rompa, más tiempo queda para arreglarlo. |
 | **4** | **Parámetros del buque** | T-29, T-30, T-31 | 3.0 | Campos nuevos del perfil. Riesgo bajo: se apoyan en el bloque 3 ya cerrado. |
 | **5** | **Interfaz del perfil** | T-32, T-33, T-34 | 4.0 | La pantalla ya existe y funciona; adaptarla es lo mejor entendido del sprint. |
@@ -902,7 +907,7 @@ Una tarea no está hecha hasta que cumple **todo** esto:
 - [ ] Satisface sus criterios de aceptación en los **tres clientes** soportados.
 - [ ] Respeta la separación de capas: la presentación no accede a datos, el dominio no
       importa Flutter **ni el paquete de almacenamiento**.
-- [ ] `flutter test` en verde. Piso vigente: **139 pruebas** (138 al abrir el sprint).
+- [ ] `flutter test` en verde. Piso vigente: **169 pruebas** (138 al abrir el sprint).
 - [ ] `flutter analyze` sin advertencias nuevas (sin advertencias, a partir de T-43).
 - [ ] **Verificada contra al menos un archivo real del corpus**, no solo con datos
       sintéticos. Seis archivos disponibles en la carpeta de archivos anonimizados.
@@ -1093,7 +1098,9 @@ y una tercera dentro de `slots` → `ContainerSlot.toJson` → `container`. Son 
 por contenedor; deduplicado ronda los 610, que es lo realista.
 
 **La decisión de T‑35 no cambia** —comprobado: deduplicado, cinco viajes siguen rondando
-los 3 MB, que en UTF‑16 pasan del techo de la Web—, así que no hay que rehacer nada. Pero
+los 3 MB, que en UTF‑16 pasan del techo de la Web— *(esta frase quedó desmentida por la
+medición real: ver **10.7**. Se conserva tal cual porque la entrada está fechada y el
+registro de decisiones no se reescribe hacia atrás.)*, así que no hay que rehacer nada. Pero
 **el esquema de T‑36 no tiene por qué heredar la triplicación** del documento de Firestore.
 
 Los dos hallazgos son el mismo principio visto por dos lados: `bays`, `slots` y
@@ -1143,3 +1150,71 @@ correcta-en-general en un parámetro declarado por buque.
 **2 · El conteo de pruebas.** `baplie_parser_test.dart` pasó de 39 a 40 con la prueba de
 compatibilidad de T‑51: **139**. §2.3 y §7 quedan actualizadas, con la regla explícita de
 que ese piso sube y nunca baja.
+
+---
+
+### 10.6 · El bloque 2 se reordena a T-25 → T-24 → T-36 (19-sep)
+
+El brief listaba el bloque como «T‑24, T‑36, T‑25», que no es el orden de dependencias.
+**La clave natural del buque es la raíz de las tres:** T‑24 declara un campo de identidad
+en `VesselProfile` cuya forma sale de T‑25, y T‑36 indexa la colección de perfiles por esa
+misma clave. Hacer T‑25 al final obliga a rehacer las otras dos.
+
+Se corrigió al preparar la entrada del bloque, no en ejecución: nadie había empezado.
+
+---
+
+### 10.7 · Bloque 2 cerrado, y una corrección a 10.3 que debilita mi propio argumento (23-sep)
+
+**T‑25 → T‑24 → T‑36 implementadas** (`a0edffa`, `69afd4e`). Claves naturales verificadas
+contra los seis TDT, con A05/A06 sin fusionarse. `VesselProfile` es dominio puro: importa
+`equatable` y dos entidades, nada de Flutter ni de `hive_ce`. Los vecinos se reconstruyen
+en `fromJson`, así que las siete bahías impares —05, 13, 15, 35, 39, 43 y 45— conservan su
+ocupación al releer, y el comentario que mentía en `Bay.toJson` quedó corregido. Cinco
+viajes completos sobreviven al reinicio en Web, Windows y el POCO.
+
+**La medición real de A01, por representación:**
+
+| Representación | Bytes UTF‑8 |
+|---|---:|
+| `ExportService`, JSON legible | 1 786 695 |
+| Documento completo, JSON compacto | 1 068 938 |
+| Esquema local v1, JSON legible | 514 285 |
+| **Registro local v1 compacto — lo que se guarda** | **326 442** |
+| Cinco registros locales de viaje | **1 632 210** |
+
+Compacto contra compacto, la reducción es del **69,5 %**.
+
+**Lo que esto le hace a 10.3.** Escribí ahí: *«comprobado: deduplicado, cinco viajes siguen
+rondando los 3 MB, que en UTF‑16 pasan del techo de la Web»*. **No pasan.** Medidos, los
+cinco registros son 1 632 210 bytes — 3 264 420 en UTF‑16, **por debajo** de los ~5 MB. Mi
+estimación de ~610 bytes por contenedor era casi el doble de los 334 reales, y toda la
+cadena se movió con ella.
+
+**Y la palabra «comprobado» era falsa.** No comprobé: hice aritmética sobre una estimación
+y la reporté con la confianza de una medición. Es la tercera vez en este sprint —van la
+corrección 7, la premisa de T‑29 y esta— y es exactamente el defecto que la corrección 7
+describe. Con un agravante: aquí el error estaba en **mi** argumento y a favor de **mi**
+conclusión, que es cuando menos uno lo revisa.
+
+**Qué justifica `hive_ce` ahora, dicho sin adorno.** El tamaño **ya no fuerza la decisión**.
+Lo que queda es un juicio sobre margen, y hay que declararlo como juicio:
+
+- **Margen, no imposibilidad.** 1,5× por debajo de un techo que depende del navegador, para
+  una retención de exactamente cinco viajes que elegimos nosotros. Seis o siete lo cruzan, y
+  la cuota se comparte con todo lo demás que el origen guarde.
+- **Forma de acceso.** `shared_preferences` lee una cadena entera; Hive lee un registro. Con
+  cinco viajes de ~326 KB, abrir uno obligaría a deserializar los cinco — en el hilo
+  principal, en un proyecto que ya tuvo un susto de ANR.
+- **Modo de falla.** Exceder `localStorage` lanza excepción: no hay escritura parcial ni
+  degradación elegante.
+
+**Ante el tribunal esto se dice así, no de otra forma:** la medición no obliga a Hive; el
+margen nos pareció demasiado delgado para construir encima, y esa es una decisión de
+ingeniería declarada. Un examinador con calculadora puede rehacer la aritmética, y tiene
+que encontrar lo mismo que decimos nosotros.
+
+**Un crédito que NO hay que atribuirle a Hive.** El 69,5 % de reducción, la eliminación de
+la triplicación y la reconstrucción de vecinos son propiedades **del esquema**, no del
+motor. Con `shared_preferences` se habrían obtenido igual. La tesis no debe presentarlas
+como beneficio de la dependencia.
