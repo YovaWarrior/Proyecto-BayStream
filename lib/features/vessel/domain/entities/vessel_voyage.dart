@@ -282,7 +282,9 @@ class VesselVoyage extends Equatable {
     );
   }
 
-  Map<String, dynamic> toJson() => {
+  /// Por defecto conserva el documento histórico de exportación y Firestore.
+  /// El almacén local omite las bahías, reconstruibles desde [containers].
+  Map<String, dynamic> toJson({bool includeBays = true}) => {
         'id': id,
         'vessel': vessel.toJson(),
         'voyageNumber': voyageNumber,
@@ -291,7 +293,8 @@ class VesselVoyage extends Equatable {
         if (portOfDestination != null) 'portOfDestination': portOfDestination,
         if (messageDate != null) 'messageDate': messageDate!.toIso8601String(),
         'containers': containers.map((c) => c.toJson()).toList(),
-        'bays': bays.map((k, v) => MapEntry(k.toString(), v.toJson())),
+        if (includeBays)
+          'bays': bays.map((k, v) => MapEntry(k.toString(), v.toJson())),
         if (metadata != null) 'metadata': metadata!.toJson(),
         // Una sola vez para todo el buque: las bahias no la serializan.
         if (geometry != null) 'geometry': geometry!.toJson(),
@@ -304,7 +307,21 @@ class VesselVoyage extends Equatable {
         ? VesselGeometry.fromJson(json['geometry'] as Map<String, dynamic>)
         : null;
 
-    return VesselVoyage(
+    final containers = (json['containers'] as List<dynamic>?)
+            ?.map((e) => ContainerUnit.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+    // El esquema local no guarda bahías ni celdas duplicadas. Los documentos
+    // históricos sí: se conservan sus atributos y solo se restauran vecinos.
+    final storedBays = json['bays'] as Map<String, dynamic>?;
+    final bays = storedBays?.map(
+          (k, v) => MapEntry(
+            int.parse(k),
+            Bay.fromJson(v as Map<String, dynamic>, geometry: geometry),
+          ),
+        ) ??
+        _baysFromContainers(containers, geometry);
+    final voyage = VesselVoyage(
         geometry: geometry,
         portOfCall: json['portOfCall'] as String?,
         id: json['id'] as String,
@@ -319,21 +336,47 @@ class VesselVoyage extends Equatable {
         messageDate: json['messageDate'] != null
             ? DateTime.parse(json['messageDate'] as String)
             : null,
-        containers: (json['containers'] as List<dynamic>?)
-                ?.map((e) => ContainerUnit.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-        bays: (json['bays'] as Map<String, dynamic>?)?.map(
-              (k, v) => MapEntry(
-                int.parse(k),
-                Bay.fromJson(v as Map<String, dynamic>, geometry: geometry),
-              ),
-            ) ??
-            {},
+        containers: containers,
+        bays: bays,
         metadata: json['metadata'] != null
             ? BaplieMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
             : null,
     );
+    // También se reconstruyen sin geometría: la ocupación queda no calculable,
+    // pero nunca se pierde la evidencia física ni se muestra un cero falso.
+    final shadows = voyage.neighborOccupiedSlots();
+    return voyage.copyWith(bays: {
+      for (final entry in bays.entries)
+        entry.key: entry.value.copyWith(
+          slotsOccupiedByNeighbors: shadows[entry.key] ?? const {},
+        ),
+      for (final entry in shadows.entries)
+        if (!bays.containsKey(entry.key))
+          entry.key: Bay(
+            bayNumber: entry.key,
+            is40FtBay: entry.key.isEven,
+            geometry: geometry,
+            slotsOccupiedByNeighbors: entry.value,
+          ),
+    });
+  }
+
+  static Map<int, Bay> _baysFromContainers(
+    List<ContainerUnit> containers,
+    VesselGeometry? geometry,
+  ) {
+    final bays = <int, Bay>{};
+    for (final container in containers) {
+      final position = container.stowagePosition;
+      if (position == null) continue;
+      final bay = bays.putIfAbsent(position.bay, () => Bay(
+        bayNumber: position.bay,
+        is40FtBay: position.bay.isEven,
+        geometry: geometry,
+      ));
+      bays[position.bay] = bay.addContainer(container);
+    }
+    return bays;
   }
 
   @override

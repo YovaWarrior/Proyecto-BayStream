@@ -227,8 +227,11 @@ class Bay extends Equatable {
     return copyWith(containers: updatedContainers);
   }
 
-  /// La geometría y los slots de las vecinas no se incluyen a propósito: son
-  /// datos derivados que `VesselVoyage` recalcula. Ver [geometry].
+  /// La geometría declarada se guarda una vez en `VesselVoyage` y se reinyecta
+  /// al leer; no se deduce de nuevo. Los slots de vecinas sí son derivados:
+  /// `VesselVoyage.fromJson` los recalcula mediante `neighborOccupiedSlots()`.
+  /// Este formato histórico conserva celdas y contenedores; el formato local
+  /// omite toda la bahía y la reconstruye desde los contenedores del viaje.
   Map<String, dynamic> toJson() => {
         'bayNumber': bayNumber,
         'is40FtBay': is40FtBay,
