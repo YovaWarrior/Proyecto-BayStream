@@ -5,6 +5,7 @@ import 'package:baystream/features/vessel/presentation/providers/vessel_provider
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'support/local_profile_test_support.dart';
 
 /// Propuesta equivalente a la que deduce CORPUS_A01.
 const _proposal = VesselGeometry(
@@ -393,40 +394,35 @@ void main() {
   });
 
   group('Invariante de publicación', () {
-    test('confirmGeometry propaga la geometría a todas las bahías', () {
-      const container = ContainerUnit(
-        id: '1',
-        containerId: 'TEST1',
-        stowagePosition: IsoCoordinate(
-          bay: 6,
-          row: 1,
-          tier: 2,
-          rawCode: '0060102',
-        ),
-      );
-      final voyage = VesselVoyage(
-        id: 'viaje-prueba',
-        vessel: const Vessel(id: 'buque-prueba', name: 'Buque Prueba'),
-        voyageNumber: 'V001',
-        containers: const [container],
-        bays: {6: const Bay(bayNumber: 6).addContainer(container)},
-      );
-
+    test('confirmGeometry propaga la geometría a todas las bahías', () async {
+      final store = await testProfileStore();
+      addTearDown(() async {
+        await store.repository.close();
+        await store.directory.delete(recursive: true);
+      });
       final providerContainer = ProviderContainer(
         overrides: [
-          voyageNotifierProvider.overrideWith(() => _SeededVoyageNotifier(voyage)),
+          localVesselRepositoryProvider.overrideWith((ref) async => store.repository),
+          vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),
         ],
       );
       addTearDown(providerContainer.dispose);
 
+      final notifier = providerContainer.read(voyageNotifierProvider.notifier);
+      await notifier.parseBaplieContent(
+        profileTestEdi.replaceAll('0020182', '0060102'),
+      );
+
       // Antes de confirmar no hay geometría y la ocupación no es calculable.
-      expect(providerContainer.read(voyageNotifierProvider).value!.geometry, isNull);
+      // El viaje permanece pendiente, nunca publicado sin geometría.
+      expect(notifier.publishedVoyage, isNull);
+      expect(notifier.pendingVoyage!.geometry, isNull);
       expect(
-        providerContainer.read(voyageNotifierProvider).value!.bays[6]!.occupancyRate,
+        notifier.pendingVoyage!.bays[6]!.occupancyRate,
         isNull,
       );
 
-      providerContainer
+      await providerContainer
           .read(voyageNotifierProvider.notifier)
           .confirmGeometry(_proposal);
 
@@ -436,13 +432,4 @@ void main() {
       expect(published.bays[6]!.occupancyRate, isNotNull);
     });
   });
-}
-
-class _SeededVoyageNotifier extends VoyageNotifier {
-  final VesselVoyage voyage;
-
-  _SeededVoyageNotifier(this.voyage);
-
-  @override
-  AsyncValue<VesselVoyage?> build() => AsyncValue.data(voyage);
 }

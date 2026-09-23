@@ -130,12 +130,12 @@ class Bay extends Equatable {
   /// entre ellas está la tapa de escotilla. La de bodega apoya en el doble
   /// fondo y la de cubierta sobre la tapa, así que sus pesos no se suman.
   Map<int, double> get deckWeightByRow =>
-      _weightByRow(VesselGeometry.isDeckTier);
+      _weightByRow(geometry!.isDeckTier);
 
   /// Peso bruto acumulado por fila en bodega, en kilogramos.
   /// Ver [deckWeightByRow].
   Map<int, double> get holdWeightByRow =>
-      _weightByRow((tier) => !VesselGeometry.isDeckTier(tier));
+      _weightByRow((tier) => !geometry!.isDeckTier(tier));
 
   Map<int, double> _weightByRow(bool Function(int tier) enZona) {
     final weights = <int, double>{};

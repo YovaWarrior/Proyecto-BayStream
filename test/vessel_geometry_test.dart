@@ -54,20 +54,36 @@ void main() {
           reason: 'la bodega no se estira hasta el 80');
     });
 
-    test('un nivel 80 queda descubierto en vez de silenciarse', () {
-      // La corrida propuesta sigue anclada en el 82, para no dibujar una fila
-      // fantasma bajo toda la carga cuando el 80 no se usa —el caso de los
-      // siete archivos del corpus—. Un 80 real queda deliberadamente fuera de
-      // la geometria propuesta: sale en el aviso de la rejilla para que lo
-      // resuelva el usuario, que es la politica ya documentada en _anchoredRun.
+    test('la corrida baja el ancla cuando el archivo trae carga mas abajo', () {
+      // El invariante que sostiene la pantalla de parametros es que la
+      // propuesta cubra toda la carga del archivo (`coversAll`, que es lo que
+      // habilita el boton Confirmar). Una propuesta anclada en el 82 con carga
+      // en el 80 lo viola: la app proponia una geometria que despues ella
+      // misma rechazaba, y el menu Agregar arrancaba en 82, asi que el usuario
+      // quedaba sin salida y el archivo no se podia abrir.
+      final posiciones = [
+        IsoCoordinateParser.parse('0010080'),
+        IsoCoordinateParser.parse('0010086'),
+        IsoCoordinateParser.parse('0010002'),
+      ];
+      final geometry = VesselGeometry.proposeFrom(posiciones);
+
+      expect(geometry.deckTiers, [80, 82, 84, 86],
+          reason: 'la corrida arranca en la carga, no en el ancla');
+      expect(geometry.holdTiers, [2]);
+      expect(geometry.coversAll(posiciones), isTrue,
+          reason: 'sin esto el boton Confirmar nunca se habilita');
+    });
+
+    test('sin carga bajo el ancla la corrida sigue arrancando en el 82', () {
+      // La contraparte: no se dibuja una fila fantasma cuando el 80 no se usa,
+      // que es el caso de los cinco buques del corpus.
       final geometry = VesselGeometry.proposeFrom([
-        IsoCoordinateParser.parse('0060180'),
+        IsoCoordinateParser.parse('0060182'),
         IsoCoordinateParser.parse('0060190'),
       ]);
 
       expect(geometry.deckTiers, [82, 84, 86, 88, 90]);
-      expect(geometry.covers(IsoCoordinateParser.parse('0060180')), isFalse,
-          reason: 'no se absorbe como bodega ni se inventa un nivel');
     });
 
     test('rescata los niveles vacios intermedios, no los de abajo', () {
@@ -467,7 +483,9 @@ void main() {
         );
 
     Bay bahiaCon(List<ContainerUnit> cs) {
-      var bay = const Bay(bayNumber: 22);
+      var bay = const Bay(bayNumber: 22, geometry: VesselGeometry(
+        portRows: 1, starboardRows: 2, holdTiers: [2], deckTiers: [82, 84],
+      ));
       for (final c in cs) {
         bay = bay.addContainer(c);
       }

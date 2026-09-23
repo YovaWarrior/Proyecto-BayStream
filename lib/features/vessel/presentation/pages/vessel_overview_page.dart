@@ -247,7 +247,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           ),
         );
         await Future<void>.delayed(Duration.zero);
-        pdfBytes = await const PdfReportService().generate(voyage);
+        pdfBytes = await const PdfReportService().generate(
+          voyage, geometry: voyage.geometry!,
+        );
       }
 
       final path = await const ExportService().saveVoyage(
@@ -280,16 +282,59 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
 
   /// Carga un archivo BAPLIE usando el VoyageNotifier
   ///
-  /// El viaje no se publica al parsearlo: primero pasa por la pantalla de
-  /// parámetros del buque. El plano nunca se dibuja con geometría inferida.
+  /// Un perfil conocido permite abrir directamente. Un buque nuevo, homónimo
+  /// o con carga fuera del perfil requiere confirmación antes de publicar.
   Future<void> _loadBaplieFile(BuildContext context) async {
     final notifier = ref.read(voyageNotifierProvider.notifier);
-    final result = await notifier.loadVesselFromFile();
+    var result = await notifier.loadVesselFromFile();
 
     if (!context.mounted) return;
 
     // No mostrar nada si el usuario canceló el selector de archivos
     if (result.isCancelled) return;
+
+    if (result.needsIdentity) {
+      final candidates = notifier.identityCandidates;
+      final selection = await showDialog<int>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Confirma la identidad del buque'),
+          content: SizedBox(
+              width: 480,
+              child: SingleChildScrollView(
+                  child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                      'Hay perfiles con el mismo nombre. El nombre por sí solo '
+                      'no identifica al buque. Selecciona uno solo si corresponde.'),
+                  for (var i = 0; i < candidates.length; i++)
+                    ListTile(
+                      title: Text(candidates[i].vesselName),
+                      subtitle: Text(candidates[i].key),
+                      onTap: () => Navigator.pop(context, i),
+                    ),
+                ],
+              ))),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, -1),
+                child: const Text('Es otro buque')),
+          ],
+        ),
+      );
+      if (!context.mounted) return;
+      if (selection == null) {
+        notifier.discardPendingVoyage();
+        return;
+      }
+      result = notifier
+          .resolveIdentity(selection < 0 ? null : candidates[selection]);
+      if (!result.success) notifier.discardPendingVoyage();
+    }
 
     if (result.needsGeometry) {
       await _askForGeometry(context, fileName: result.fileName);
@@ -324,52 +369,115 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     if (target == null) return;
 
     final isEditing = notifier.pendingVoyage == null;
-    final result = await Navigator.of(context).push<VesselCallParameters>(
-      MaterialPageRoute(
-        builder: (_) => VesselGeometryPage(
-          proposal: VesselGeometry.proposeFrom(target.stowagePositions),
-          positions: target.stowagePositions.toList(),
-          loadingPorts: target.loadingPortCounts,
-          declaredPort: target.portOfOrigin,
-          initialPortOfCall: target.portOfCall,
-          initial: target.geometry,
-          fileName: fileName,
+    final profile =
+        notifier.currentProfile ?? VesselProfile.proposeFrom(target);
+    final proposal =
+        VesselProfile.proposeFrom(target, parameters: profile.geometry)
+            .geometry;
+    var initial =
+        isEditing || profile.origin != VesselProfileOrigin.proposedFromFile
+            ? profile.geometry
+            : null;
+    final outside = notifier.outsideProfilePositions;
+    if (outside.isNotEmpty) {
+      final expand = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('La carga excede el perfil guardado'),
+          content: SizedBox(
+              width: 480,
+              child: SingleChildScrollView(
+                  child: Text(
+                '${outside.length} posiciones fuera del perfil:\n${outside.join(', ')}\n\n'
+                'Puedes revisar una ampliación. Solo se guardará al confirmar.',
+              ))),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar carga')),
+            FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Revisar ampliación')),
+          ],
         ),
-      ),
-    );
-
-    if (!context.mounted) return;
-
-    if (result == null) {
-      // Cancelar deja el árbol como estaba: nada publicado, nada pendiente.
-      notifier.discardPendingVoyage();
-      if (isEditing) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Carga cancelada: no se confirmó la geometría del buque',
+      );
+      if (!context.mounted) return;
+      if (expand != true) {
+        notifier.discardPendingVoyage();
+        return;
+      }
+      // Solo un borrador después de aceptar revisar; no se modifica el perfil.
+      final saved = profile.geometry;
+      initial = saved.copyWith(
+        portRows: saved.portRows > proposal.portRows
+            ? saved.portRows
+            : proposal.portRows,
+        starboardRows: saved.starboardRows > proposal.starboardRows
+            ? saved.starboardRows
+            : proposal.starboardRows,
+        holdTiers: {...saved.holdTiers, ...proposal.holdTiers}.toList()..sort(),
+        deckTiers: {...saved.deckTiers, ...proposal.deckTiers}.toList()..sort(),
+      );
+    }
+    while (context.mounted) {
+      final result = await Navigator.of(context).push<VesselCallParameters>(
+        MaterialPageRoute(
+          builder: (_) => VesselGeometryPage(
+            proposal: proposal,
+            positions: target.stowagePositions.toList(),
+            loadingPorts: target.loadingPortCounts,
+            declaredPort: target.portOfOrigin,
+            initialPortOfCall: target.portOfCall,
+            initial: initial,
+            fileName: fileName,
           ),
+        ),
+      );
+
+      if (!context.mounted) return;
+
+      if (result == null) {
+        // Cancelar deja el árbol como estaba: nada publicado, nada pendiente.
+        notifier.discardPendingVoyage();
+        if (isEditing) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Carga cancelada: no se confirmó la geometría del buque',
+            ),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(16),
+          ),
+        );
+        return;
+      }
+
+      final error = await notifier.confirmGeometry(result.geometry,
+          portOfCall: result.portOfCall);
+      if (!context.mounted) return;
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ));
+        initial = result.geometry;
+        continue;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isEditing
+                ? 'Parámetros del buque actualizados'
+                : 'Archivo "$fileName" cargado correctamente',
+          ),
+          backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
-          margin: EdgeInsets.all(16),
+          margin: const EdgeInsets.all(16),
         ),
       );
       return;
     }
-
-    notifier.confirmGeometry(result.geometry, portOfCall: result.portOfCall);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isEditing
-              ? 'Parámetros del buque actualizados'
-              : 'Archivo "$fileName" cargado correctamente',
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-      ),
-    );
   }
 
   /// Construye la pestaña de lista de contenedores

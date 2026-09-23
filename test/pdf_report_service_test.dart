@@ -52,7 +52,9 @@ void main() {
   const service = PdfReportService();
 
   test('genera un documento PDF con contenido', () async {
-    final bytes = await service.generate(voyage);
+    final bytes = await service.generate(voyage, geometry: const VesselGeometry(
+      portRows: 1, starboardRows: 1, holdTiers: [2, 4, 6], deckTiers: [82],
+    ));
 
     expect(bytes.length, greaterThan(1000));
     expect(String.fromCharCodes(bytes.take(5)), '%PDF-');

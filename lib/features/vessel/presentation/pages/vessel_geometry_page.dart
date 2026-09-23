@@ -151,6 +151,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     final starboard = _value(_starboardRows);
     if (port == null || starboard == null) return null;
     return VesselGeometry(
+      deckTierFloor: (widget.initial ?? widget.proposal).deckTierFloor,
+      firstHoldTier: (widget.initial ?? widget.proposal).firstHoldTier,
+      firstDeckTier: (widget.initial ?? widget.proposal).firstDeckTier,
       portRows: port,
       starboardRows: starboard,
       holdTiers: _holdTiers,
@@ -231,7 +234,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               titulo: 'Niveles de cubierta',
               prefijo: 'deck',
               tiers: _deckTiers,
-              anchor: VesselGeometry.firstDeckTier,
+              anchor: (widget.initial ?? proposal).firstDeckTier,
               onChanged: (nuevos) => setState(() => _deckTiers = nuevos),
             ),
             const SizedBox(height: 16),
@@ -240,7 +243,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               titulo: 'Niveles de bodega',
               prefijo: 'hold',
               tiers: _holdTiers,
-              anchor: VesselGeometry.firstHoldTier,
+              anchor: (widget.initial ?? proposal).firstHoldTier,
               onChanged: (nuevos) => setState(() => _holdTiers = nuevos),
             ),
             const SizedBox(height: 24),
@@ -376,7 +379,12 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final ordenados = [...tiers]..sort((a, b) => b.compareTo(a));
-    final candidatos = _nivelesAgregables(tiers, anchor);
+    final basis = widget.initial ?? widget.proposal;
+    final candidatos = _nivelesAgregables(tiers, anchor).where((tier) =>
+      tier <= 98 && basis.isDeckTier(tier) == (prefijo == 'deck')).toSet();
+    // También ofrece carga observada bajo el ancla declarada.
+    candidatos.addAll(_ocupados.where((tier) => !tiers.contains(tier) &&
+      basis.isDeckTier(tier) == (prefijo == 'deck')));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,7 +415,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               tooltip: 'Agregar un nivel',
               onSelected: (tier) => onChanged([...tiers, tier]..sort()),
               itemBuilder: (context) => [
-                for (final tier in candidatos)
+                for (final tier in candidatos.toList()..sort())
                   PopupMenuItem(
                     key: ValueKey('$prefijo-add-${_pad(tier)}'),
                     value: tier,

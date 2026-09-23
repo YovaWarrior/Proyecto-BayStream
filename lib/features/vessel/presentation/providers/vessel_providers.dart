@@ -1,9 +1,27 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/vessel_repository_impl.dart';
 import '../../data/services/baplie_parser_service.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/repositories/vessel_repository.dart';
+import '../../domain/repositories/local_vessel_repository.dart';
+import '../../data/repositories/local_vessel_repository_factory.dart';
+
+/// Una instancia compartida por la aplicación. La presentación usa el contrato.
+final localVesselRepositoryProvider =
+    FutureProvider<LocalVesselRepository>((ref) async {
+  var disposed = false;
+  LocalVesselRepository? repository;
+  ref.onDispose(() {
+    disposed = true;
+    if (repository != null) unawaited(repository.close());
+  });
+  repository = await openLocalVesselRepository();
+  if (disposed) await repository.close();
+  return repository;
+});
 
 /// Provider del servicio de parsing BAPLIE
 final baplieParserServiceProvider = Provider<BaplieParserService>((ref) {
@@ -17,7 +35,8 @@ final vesselRepositoryProvider = Provider<VesselRepository>((ref) {
 });
 
 /// Provider del viaje actual - maneja estado async manualmente
-final voyageNotifierProvider = NotifierProvider<VoyageNotifier, AsyncValue<VesselVoyage?>>(
+final voyageNotifierProvider =
+    NotifierProvider<VoyageNotifier, AsyncValue<VesselVoyage?>>(
   VoyageNotifier.new,
 );
 
@@ -30,12 +49,14 @@ class LoadFileResult {
   /// El archivo se parseó pero el viaje quedó pendiente de que el usuario
   /// confirme la geometría del buque. Todavía no hay nada publicado.
   final bool needsGeometry;
+  final bool needsIdentity;
 
   const LoadFileResult._({
     required this.success,
     this.fileName,
     this.errorMessage,
     this.needsGeometry = false,
+    this.needsIdentity = false,
   });
 
   factory LoadFileResult.success(String fileName) =>
@@ -44,11 +65,13 @@ class LoadFileResult {
   factory LoadFileResult.needsGeometry(String fileName) =>
       LoadFileResult._(success: true, fileName: fileName, needsGeometry: true);
 
+  factory LoadFileResult.needsIdentity(String fileName) =>
+      LoadFileResult._(success: true, fileName: fileName, needsIdentity: true);
+
   factory LoadFileResult.error(String message) =>
       LoadFileResult._(success: false, errorMessage: message);
 
-  factory LoadFileResult.cancelled() =>
-      const LoadFileResult._(success: false);
+  factory LoadFileResult.cancelled() => const LoadFileResult._(success: false);
 
   bool get isCancelled => !success && errorMessage == null;
 }
@@ -61,6 +84,27 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   /// Sostiene el invariante de C-3: **un viaje publicado siempre trae
   /// geometría**. El único lugar que lo rompe o lo mantiene es este notifier.
   VesselVoyage? _pendingVoyage;
+  VesselProfile? _pendingProfile;
+  VesselProfile? _publishedProfile;
+  List<VesselProfile> _identityCandidates = const [];
+  bool _nameMatchConfirmed = false;
+  bool _busy = false;
+  String _fileName = 'BAPLIE';
+
+  VesselProfile? get currentProfile => _pendingProfile ?? _publishedProfile;
+  List<VesselProfile> get identityCandidates =>
+      List.unmodifiable(_identityCandidates);
+  List<String> get outsideProfilePositions {
+    final voyage = _pendingVoyage;
+    final profile = _pendingProfile;
+    if (voyage == null || profile == null) return const [];
+    return voyage.stowagePositions
+        .where((p) => !profile.geometry.covers(p))
+        .map((p) => p.rawCode)
+        .toSet()
+        .toList()
+      ..sort();
+  }
 
   /// Viaje a la espera de que se confirmen los parámetros del buque.
   VesselVoyage? get pendingVoyage => _pendingVoyage;
@@ -76,6 +120,9 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   /// Abre el selector de archivos, lee el contenido y parsea el BAPLIE
   /// Retorna un resultado indicando éxito, error o cancelación
   Future<LoadFileResult> loadVesselFromFile() async {
+    if (_busy || _pendingVoyage != null) {
+      return LoadFileResult.error('Termina o cancela la carga actual.');
+    }
     try {
       // Abrir selector de archivos nativo
       final result = await FilePicker.platform.pickFiles(
@@ -97,73 +144,145 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
         return LoadFileResult.error('No se pudo leer el contenido del archivo');
       }
 
-      // Si el usuario cancela los parámetros, se vuelve a lo que había antes:
-      // una carga a medias no debe borrar el viaje que ya estaba en pantalla.
-      final previousState = state;
-
-      // Poner estado en loading
-      state = const AsyncValue.loading();
-
-      // Convertir bytes a String
-      final content = String.fromCharCodes(file.bytes!);
-
-      // Parsear el contenido
-      final repository = ref.read(vesselRepositoryProvider);
-      final parseResult = await repository.parseBaplieFile(content);
-
-      return parseResult.fold(
-        (failure) {
-          state = AsyncValue.error(failure.message, StackTrace.current);
-          return LoadFileResult.error(failure.message);
-        },
-        (voyage) {
-          // El viaje NO se publica todavía: primero se confirma la geometría.
-          _pendingVoyage = voyage;
-          state = previousState;
-          return LoadFileResult.needsGeometry(file.name);
-        },
-      );
+      return parseBaplieContent(String.fromCharCodes(file.bytes!),
+          fileName: file.name);
     } catch (e) {
       final errorMsg = 'Error inesperado: ${e.toString()}';
-      state = AsyncValue.error(errorMsg, StackTrace.current);
       return LoadFileResult.error(errorMsg);
     }
   }
 
-  /// Parsea contenido BAPLIE directamente (para uso con contenido ya leído)
-  Future<void> parseBaplieContent(String content) async {
+  /// Ambas entradas pasan por identidad/perfil antes de publicar el viaje.
+  Future<LoadFileResult> parseBaplieContent(
+    String content, {
+    String fileName = 'BAPLIE',
+  }) async {
+    if (_busy || _pendingVoyage != null) {
+      return LoadFileResult.error('Termina o cancela la carga actual.');
+    }
+    _busy = true;
+    final previousState = state;
     state = const AsyncValue.loading();
-    
-    final repository = ref.read(vesselRepositoryProvider);
-    final result = await repository.parseBaplieFile(content);
-    
-    result.fold(
-      (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
-      (voyage) => state = AsyncValue.data(voyage),
-    );
+    try {
+      final result =
+          await ref.read(vesselRepositoryProvider).parseBaplieFile(content);
+      final voyage =
+          result.fold((failure) => throw StateError(failure.message), (v) => v);
+      final local = await ref.read(localVesselRepositoryProvider.future);
+      final lookupResult = await local.findProfileFor(voyage.vessel);
+      final lookup = lookupResult.fold(
+          (failure) => throw StateError(failure.message), (v) => v);
+      _pendingVoyage = voyage;
+      _fileName = fileName;
+      _nameMatchConfirmed = false;
+      _identityCandidates = lookup.nameCandidates;
+      state = previousState;
+      if (lookup.requiresConfirmation) {
+        return LoadFileResult.needsIdentity(fileName);
+      }
+      return _useProfile(lookup.automaticMatch);
+    } catch (error) {
+      _clearPending();
+      state = previousState;
+      return LoadFileResult.error('No se pudo cargar el viaje: $error');
+    } finally {
+      _busy = false;
+    }
+  }
+
+  /// Una coincidencia de nombre se resuelve solo por una elección explícita.
+  LoadFileResult resolveIdentity(VesselProfile? selected) {
+    final voyage = _pendingVoyage;
+    if (voyage == null || _identityCandidates.isEmpty) {
+      return LoadFileResult.error('No hay una identidad pendiente.');
+    }
+    if (selected != null && !_identityCandidates.contains(selected)) {
+      return LoadFileResult.error('El perfil no pertenece a los candidatos.');
+    }
+    if (selected == null &&
+        _identityCandidates.any((p) => p.key == voyage.vessel.profileKey)) {
+      return LoadFileResult.error(
+          'No se pueden distinguir estos buques solo por nombre. '
+          'Se necesita un IMO o indicativo en el archivo.');
+    }
+    _nameMatchConfirmed = true;
+    _identityCandidates = const [];
+    return _useProfile(selected);
+  }
+
+  LoadFileResult _useProfile(VesselProfile? saved) {
+    final voyage = _pendingVoyage!;
+    _pendingProfile = saved ?? VesselProfile.proposeFrom(voyage);
+    if (saved != null && saved.geometry.coversAll(voyage.stowagePositions)) {
+      _publish(voyage, saved, voyage.proposedPortOfCall);
+      return LoadFileResult.success(_fileName);
+    }
+    return LoadFileResult.needsGeometry(_fileName);
+  }
+
+  /// Único punto de publicación: siempre inyecta la geometría del perfil.
+  void _publish(
+      VesselVoyage voyage, VesselProfile profile, String? portOfCall) {
+    _publishedProfile = profile;
+    _clearPending();
+    state = AsyncValue.data(
+        voyage.withGeometry(profile.geometry, portOfCall: portOfCall));
   }
 
   /// Publica el viaje con la geometría que el usuario confirmó.
   ///
   /// Sirve para el viaje pendiente y también para corregir la geometría de uno
-  /// ya publicado. Es el único punto donde un viaje pasa a estado publicado.
-  void confirmGeometry(VesselGeometry geometry, {String? portOfCall}) {
+  /// ya publicado. Solo delega en `_publish` después de guardar correctamente.
+  Future<String?> confirmGeometry(VesselGeometry geometry,
+      {String? portOfCall}) async {
+    if (_busy) return 'Hay una operación en curso.';
+    if (_identityCandidates.isNotEmpty) {
+      return 'Confirma primero la identidad del buque.';
+    }
     final target = _pendingVoyage ?? publishedVoyage;
-    if (target == null) return;
-    _pendingVoyage = null;
-    state = AsyncValue.data(
-      target.withGeometry(geometry, portOfCall: portOfCall),
-    );
+    if (target == null) return 'No hay un viaje para confirmar.';
+    if (!geometry.coversAll(target.stowagePositions)) {
+      return 'La geometría deja posiciones del archivo fuera del plano.';
+    }
+    final profile = (currentProfile ?? VesselProfile.proposeFrom(target))
+        .copyWith(
+            geometry: geometry,
+            origin: VesselProfileOrigin.declaredByUser,
+            updatedAt: DateTime.now());
+    _busy = true;
+    try {
+      final local = await ref.read(localVesselRepositoryProvider.future);
+      final saved = await local.saveProfile(profile,
+          nameMatchConfirmed: _nameMatchConfirmed || _pendingVoyage == null);
+      final error =
+          saved.fold<String?>((failure) => failure.message, (_) => null);
+      if (error != null) return error;
+      _publish(target, profile, portOfCall);
+      return null;
+    } catch (error) {
+      return 'No se pudo guardar el perfil: $error';
+    } finally {
+      _busy = false;
+    }
   }
 
   /// Descarta el viaje pendiente cuando el usuario cancela los parámetros.
   void discardPendingVoyage() {
+    if (!_busy) _clearPending();
+  }
+
+  void _clearPending() {
     _pendingVoyage = null;
+    _pendingProfile = null;
+    _identityCandidates = const [];
+    _nameMatchConfirmed = false;
   }
 
   /// Limpia el viaje cargado
   void clearVoyage() {
-    _pendingVoyage = null;
+    if (_busy) return;
+    _clearPending();
+    _publishedProfile = null;
     state = const AsyncValue.data(null);
   }
 }

@@ -11,15 +11,14 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 /// siempre una **cota inferior**: la geometría real es mayor o igual, nunca
 /// menor. La confirma o la corrige el usuario.
 ///
-/// Lo que sí queda fijo es dónde **empieza** cada zona, porque la numeración
-/// ISO la ancla: la bodega en el nivel 02 y la cubierta en el 82. La primera
-/// fila de contenedores sobre cubierta va en el 82.
+/// Los parámetros de zona pertenecen al perfil del buque. Los valores por
+/// omisión de construcción y lectura histórica conservan la numeración ISO.
 class VesselGeometry extends Equatable {
   /// Fila central del buque. Existe siempre, aunque el viaje no la cargue.
   static const int centerRow = 0;
 
   /// Primer nivel de bodega según la numeración ISO.
-  static const int firstHoldTier = 2;
+  final int firstHoldTier;
 
   /// Ancla de la corrida de cubierta que se dibuja.
   ///
@@ -32,7 +31,7 @@ class VesselGeometry extends Equatable {
   /// es el 82 en 45 bahías. El contraste con la bodega lo confirma: allí el
   /// nivel ancla 02 sí es el piso más común, con 66 bahías. Anclar la cubierta
   /// en el 80 dibujaba una fila vacía fantasma bajo toda la carga.
-  static const int firstDeckTier = 82;
+  final int firstDeckTier;
 
   /// Frontera de zona de la numeración ISO: la banda de los 80 es estiba
   /// **sobre cubierta**.
@@ -45,16 +44,15 @@ class VesselGeometry extends Equatable {
   /// Separarlo de [firstDeckTier] no es cosmético. Clasificar con el ancla
   /// metía un nivel 80 en **bodega**, y entonces la corrida de bodega se
   /// estiraba de 02 a 80: **cuarenta niveles inventados**, el mismo defecto
-  /// que corrigió C‑4 entrando por otra puerta. Un 80 real queda fuera de la
-  /// corrida propuesta —que sigue anclada en el 82— y sale en el aviso de la
-  /// rejilla, que es la política ya documentada en [_anchoredRun].
-  static const int deckTierFloor = 80;
+  /// que corrigió C‑4 entrando por otra puerta. Si aparece carga por debajo
+  /// del ancla, [_anchoredRun] desciende para cubrirla sin cambiar de zona.
+  final int deckTierFloor;
 
   /// Indica si un nivel pertenece a la cubierta según la numeración ISO.
   ///
   /// Definición única en todo el proyecto: antes convivía con un `tier >= 80`
   /// suelto en `ContainerSlot` que contradecía la clasificación real.
-  static bool isDeckTier(int tier) => tier >= deckTierFloor;
+  bool isDeckTier(int tier) => tier >= deckTierFloor;
 
   /// Paso entre niveles consecutivos (los impares son de contenedores altos).
   static const int tierStep = 2;
@@ -92,6 +90,9 @@ class VesselGeometry extends Equatable {
     required this.holdTiers,
     required this.deckTiers,
     this.stackWeightLimitKg,
+    this.deckTierFloor = 80,
+    this.firstHoldTier = 2,
+    this.firstDeckTier = 82,
   });
 
   /// Números de fila a babor, de fuera hacia el centro: 12, 10, ... 02.
@@ -156,11 +157,18 @@ class VesselGeometry extends Equatable {
   /// ancla.
   ///
   /// El límite de apilamiento nunca se propone.
-  factory VesselGeometry.proposeFrom(Iterable<IsoCoordinate> positions) {
+  factory VesselGeometry.proposeFrom(Iterable<IsoCoordinate> positions, {
+    VesselGeometry? parameters,
+  }) {
+    final basis = parameters ?? const VesselGeometry(
+      portRows: 0, starboardRows: 0, holdTiers: [], deckTiers: [],
+    );
     var maxPortRow = 0;
     var maxStarboardRow = 0;
     int? maxHoldTier;
     int? maxDeckTier;
+    int? minHoldTier;
+    int? minDeckTier;
 
     for (final position in positions) {
       final row = position.row;
@@ -173,35 +181,57 @@ class VesselGeometry extends Equatable {
       }
 
       final tier = position.tier;
-      if (isDeckTier(tier)) {
+      if (basis.isDeckTier(tier)) {
         maxDeckTier = math.max(maxDeckTier ?? tier, tier);
+        minDeckTier = math.min(minDeckTier ?? tier, tier);
       } else {
         maxHoldTier = math.max(maxHoldTier ?? tier, tier);
+        minHoldTier = math.min(minHoldTier ?? tier, tier);
       }
     }
 
     return VesselGeometry(
+      deckTierFloor: basis.deckTierFloor,
+      firstHoldTier: basis.firstHoldTier,
+      firstDeckTier: basis.firstDeckTier,
       portRows: maxPortRow ~/ 2,
       starboardRows: (maxStarboardRow + 1) ~/ 2,
-      holdTiers: _anchoredRun(firstHoldTier, maxHoldTier),
-      deckTiers: _anchoredRun(firstDeckTier, maxDeckTier),
+      holdTiers: _anchoredRun(basis.firstHoldTier, minHoldTier, maxHoldTier),
+      deckTiers: _anchoredRun(basis.firstDeckTier, minDeckTier, maxDeckTier),
     );
   }
 
-  /// Corrida contigua desde [anchor] hasta [maxObserved], de dos en dos.
+  /// Corrida contigua hasta [maxObserved], de dos en dos, anclada en [anchor]
+  /// **o en la carga, si el archivo la trae más abajo**.
   ///
-  /// Vacía si el archivo no trae carga en esa zona. Si el máximo observado
-  /// queda por debajo del ancla —un nivel que la numeracion ISO no contempla—
-  /// la corrida sale vacia y esa carga aparece en el aviso de la rejilla, que
-  /// es donde corresponde: no se silencia ni se fuerza un nivel inventado.
-  static List<int> _anchoredRun(int anchor, int? maxObserved) {
-    if (maxObserved == null || maxObserved < anchor) return const [];
-    return [for (var t = anchor; t <= maxObserved; t += tierStep) t];
+  /// Vacía si el archivo no trae carga en esa zona.
+  ///
+  /// Bajar el ancla no es inventar un nivel: es cubrir uno **observado**. La
+  /// versión anterior dejaba fuera la carga que estuviera por debajo del ancla
+  /// —un contenedor en el nivel 80, con la cubierta anclada en 82— y eso
+  /// rompía el invariante que sostiene la pantalla de parámetros: `coversAll`
+  /// devolvía `false`, el botón Confirmar no se habilitaba nunca y el menú
+  /// «Agregar» tampoco ofrecía el nivel que faltaba. La aplicación proponía
+  /// una geometría que después ella misma rechazaba, y el archivo no se podía
+  /// abrir. Verificado con `PRUEBA_NIVEL_80.edi` el 5 de septiembre.
+  ///
+  /// El descenso va en pasos completos de [tierStep] para no romper la paridad
+  /// par de la numeración ISO.
+  static List<int> _anchoredRun(int anchor, int? minObserved, int? maxObserved) {
+    if (maxObserved == null || minObserved == null) return const [];
+    var inicio = anchor;
+    if (minObserved < anchor) {
+      final pasos = ((anchor - minObserved) / tierStep).ceil();
+      inicio = anchor - pasos * tierStep;
+    }
+    if (maxObserved < inicio) return const [];
+    return [for (var t = inicio; t <= maxObserved; t += tierStep) t];
   }
 
   @override
   List<Object?> get props =>
-      [portRows, starboardRows, holdTiers, deckTiers, stackWeightLimitKg];
+      [portRows, starboardRows, holdTiers, deckTiers, stackWeightLimitKg,
+       deckTierFloor, firstHoldTier, firstDeckTier];
 
   VesselGeometry copyWith({
     int? portRows,
@@ -209,8 +239,14 @@ class VesselGeometry extends Equatable {
     List<int>? holdTiers,
     List<int>? deckTiers,
     double? stackWeightLimitKg,
+    int? deckTierFloor,
+    int? firstHoldTier,
+    int? firstDeckTier,
   }) {
     return VesselGeometry(
+      deckTierFloor: deckTierFloor ?? this.deckTierFloor,
+      firstHoldTier: firstHoldTier ?? this.firstHoldTier,
+      firstDeckTier: firstDeckTier ?? this.firstDeckTier,
       portRows: portRows ?? this.portRows,
       starboardRows: starboardRows ?? this.starboardRows,
       holdTiers: holdTiers ?? this.holdTiers,
@@ -221,6 +257,9 @@ class VesselGeometry extends Equatable {
 
   /// Devuelve una copia sin límite de apilamiento declarado.
   VesselGeometry withoutStackWeightLimit() => VesselGeometry(
+        deckTierFloor: deckTierFloor,
+        firstHoldTier: firstHoldTier,
+        firstDeckTier: firstDeckTier,
         portRows: portRows,
         starboardRows: starboardRows,
         holdTiers: holdTiers,
@@ -228,6 +267,9 @@ class VesselGeometry extends Equatable {
       );
 
   Map<String, dynamic> toJson() => {
+        'deckTierFloor': deckTierFloor,
+        'firstHoldTier': firstHoldTier,
+        'firstDeckTier': firstDeckTier,
         'portRows': portRows,
         'starboardRows': starboardRows,
         'holdTiers': holdTiers,
@@ -237,6 +279,9 @@ class VesselGeometry extends Equatable {
       };
 
   factory VesselGeometry.fromJson(Map<String, dynamic> json) => VesselGeometry(
+        deckTierFloor: json['deckTierFloor'] as int? ?? 80,
+        firstHoldTier: json['firstHoldTier'] as int? ?? 2,
+        firstDeckTier: json['firstDeckTier'] as int? ?? 82,
         portRows: json['portRows'] as int,
         starboardRows: json['starboardRows'] as int,
         holdTiers: (json['holdTiers'] as List<dynamic>).cast<int>(),

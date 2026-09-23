@@ -12,7 +12,9 @@ class PdfReportService {
 
   const PdfReportService();
 
-  Future<Uint8List> generate(VesselVoyage voyage) async {
+  Future<Uint8List> generate(VesselVoyage voyage, {
+    required VesselGeometry geometry,
+  }) async {
     final regularFont = pw.Font.ttf(
       await rootBundle.load('assets/fonts/Roboto-Regular.ttf'),
     );
@@ -36,7 +38,7 @@ class PdfReportService {
     final bays = voyage.bays.values.toList()
       ..sort((a, b) => a.bayNumber.compareTo(b.bayNumber));
     for (final bay in bays) {
-      document.addPage(_bayPage(voyage, bay));
+      document.addPage(_bayPage(voyage, bay, geometry));
     }
 
     document.addPage(_containersTable(voyage));
@@ -180,7 +182,7 @@ class PdfReportService {
     );
   }
 
-  pw.Page _bayPage(VesselVoyage voyage, Bay bay) {
+  pw.Page _bayPage(VesselVoyage voyage, Bay bay, VesselGeometry geometry) {
     return pw.Page(
       pageFormat: PdfPageFormat.a4.landscape,
       margin: const pw.EdgeInsets.all(_pageMargin),
@@ -209,7 +211,7 @@ class PdfReportService {
             ],
           ),
           pw.SizedBox(height: 12),
-          pw.Expanded(child: _bayPlan(bay)),
+          pw.Expanded(child: _bayPlan(bay, geometry)),
           pw.SizedBox(height: 8),
           _bayLegend(),
           pw.Divider(color: PdfColors.blueGrey200),
@@ -219,7 +221,7 @@ class PdfReportService {
     );
   }
 
-  pw.Widget _bayPlan(Bay bay) {
+  pw.Widget _bayPlan(Bay bay, VesselGeometry geometry) {
     final positioned = bay.containers
         .where((container) => container.stowagePosition != null)
         .toList();
@@ -240,7 +242,7 @@ class PdfReportService {
       final position = container.stowagePosition!;
       positions['${position.row}-${position.tier}'] = container;
       rowValues.add(position.row);
-      (VesselGeometry.isDeckTier(position.tier) ? deckValues : holdValues)
+      (geometry.isDeckTier(position.tier) ? deckValues : holdValues)
           .add(position.tier);
     }
 

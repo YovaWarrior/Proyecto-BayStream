@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import 'vessel.dart';
 import 'vessel_geometry.dart';
+import 'vessel_voyage.dart';
 
 enum VesselProfileOrigin { template, proposedFromFile, declaredByUser }
 
@@ -31,6 +32,26 @@ class VesselProfile extends Equatable {
 
   String get key => identity.key;
 
+  /// Primera versión propuesta; no se guarda ni se declara automáticamente.
+  factory VesselProfile.proposeFrom(
+    VesselVoyage voyage, {
+    VesselGeometry? parameters,
+    DateTime? updatedAt,
+  }) =>
+      VesselProfile(
+        identity: voyage.vessel.profileIdentity,
+        vesselName: voyage.vessel.name,
+        geometry: VesselGeometry.proposeFrom(voyage.stowagePositions,
+            parameters: parameters),
+        origin: VesselProfileOrigin.proposedFromFile,
+        updatedAt: updatedAt ?? DateTime.now(),
+      );
+
+  /// Parámetro del perfil guardado una sola vez dentro de su geometría.
+  int get deckTierFloor => geometry.deckTierFloor;
+  int get firstHoldTier => geometry.firstHoldTier;
+  int get firstDeckTier => geometry.firstDeckTier;
+
   /// Se conserva una sola copia del límite, dentro de la geometría persistida.
   /// `null` significa que no hay límite declarado, nunca un umbral supuesto.
   double? get stackWeightLimitKg => geometry.stackWeightLimitKg;
@@ -43,12 +64,19 @@ class VesselProfile extends Equatable {
     VesselIdentity? identity,
     String? vesselName,
     VesselGeometry? geometry,
+    int? deckTierFloor,
+    int? firstHoldTier,
+    int? firstDeckTier,
     Object? stackWeightLimitKg = _unchanged,
     Set<String>? reeferSlots,
     VesselProfileOrigin? origin,
     DateTime? updatedAt,
   }) {
-    var nextGeometry = geometry ?? this.geometry;
+    var nextGeometry = (geometry ?? this.geometry).copyWith(
+      deckTierFloor: deckTierFloor,
+      firstHoldTier: firstHoldTier,
+      firstDeckTier: firstDeckTier,
+    );
     if (!identical(stackWeightLimitKg, _unchanged)) {
       nextGeometry = stackWeightLimitKg == null
           ? nextGeometry.withoutStackWeightLimit()
