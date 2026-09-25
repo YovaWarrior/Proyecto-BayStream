@@ -47,7 +47,7 @@ al 23-sep-2026, y son idénticas.
 
 ---
 
-## 2. El hallazgo estructural: el BAPLIE no transmite el perfil de peligro de la carga
+## 2. El hallazgo estructural: dos huecos del BAPLIE en el perfil de peligro de la carga
 
 **La evaluación por clase falla en `CORPUS_A03` en los dos sentidos**, con
 instancias reales verificadas en el archivo crudo:
@@ -57,21 +57,36 @@ instancias reales verificadas en el archivo crudo:
 | `DGS+IMD+8+3084++I` (`0140784`) | clase 8 | clase 8 **con riesgo secundario 5.1** (§172.101). §176.83(a)(6) obliga a aplicar la segregación del secundario cuando es más restrictiva | Junto a los cuatro clase 3 de su bahía y nivel, por clase es X; por el secundario, 3/5.1 = 2. **Falso «conforme».** |
 | `DGS+IMD+2.1+1950` (`0260186`) | clase 2.1 | código 10B **126**: «*segregation same as for Class 9*». La sustancia prevalece sobre la tabla general (§176.83(b)) | Justo encima de UN3085 (5.1): por clase, 2.1/5.1 = 2 prohíbe la misma vertical; por la sustancia, 9/5.1 = X. **Falsa alarma.** |
 
-El segmento `DGS` **puede** llevar las etiquetas, incluida la secundaria, en su
-elemento C236. Otros archivos del corpus lo rellenan (`3:0:0`), pero en `A03`
-viene vacío. Y aunque viniera, **no hay dónde transmitir** las disposiciones
-propias de cada sustancia, como la columna 10B. Parte del perfil de peligro es
-opcional y se omite; otra parte no cabe en el formato.
+Decir que «el BAPLIE no trae la información» es impreciso, y un examinador
+puede empujar justo ahí. **Son dos huecos distintos**, y la evaluación por
+número ONU responde a los dos a la vez.
 
-**Es el mismo hallazgo estructural que RF-036, por otra puerta.**
+**Hueco 1 · El campo existe y viene vacío.** Es un problema de **calidad del
+dato**. El segmento `DGS` tiene un elemento para las etiquetas (C236), incluida
+la secundaria. En el corpus lo rellenan tres archivos en todos sus segmentos
+(`A02`, `A04` y `A06`, con valores como `3:0:0` y `2.1:0:0`) y otros tres no lo
+rellenan en ninguno (`A01`, `A03` y `A05`). **En `A03` viene vacío en los 23
+segmentos**, y por eso el 5.1 de UN3084 no viaja. Con otro emisor se podría
+leer, y la implementación debe leerlo cuando venga, pero no puede depender de
+que venga.
 
-- **RF-036 existe porque el BAPLIE no transmite el buque**: la geometría, las
-  anclas de nivel y el límite de apilamiento se declaran aparte y se recuerdan
-  por buque.
-- **La evaluación por número ONU existe porque el BAPLIE no transmite
-  suficiente del perfil de peligro de la carga**: el riesgo secundario, la
-  disposición de la sustancia y el grupo de compatibilidad salen de consultar
-  el número ONU contra una tabla normativa, no del archivo.
+La letra de compatibilidad de la clase 1 cae del mismo lado, aunque esto es
+inferencia y no está verificado contra la especificación del segmento. La
+letra forma parte de la notación de la división («1.4S») y el campo de clase es
+texto, pero el corpus trae solo «1.4».
+
+**Hueco 2 · No hay campo, y punto.** Es un **límite duro del formato**. Las
+disposiciones propias de cada sustancia —la columna 10B: «segregación como
+clase 9», «separado de ácidos»— **no tienen dónde ir** en un BAPLIE. Ninguna
+implementación lo resuelve leyendo mejor. Solo se obtienen consultando el
+número ONU contra la norma.
+
+**RF-036 es un hueco del segundo tipo.** El BAPLIE no tiene campo para la
+geometría del buque, ni para sus anclas de nivel, ni para su límite de
+apilamiento. Por eso se declaran aparte y se recuerdan por buque. La
+evaluación por número ONU cubre los dos tipos: el primero porque no depende de
+que el emisor rellene un campo opcional, y el segundo porque es la única fuente
+posible.
 
 Son **dos instancias independientes de la misma limitación del formato**,
 encontradas por rutas distintas y por agentes distintos. La primera salió de
