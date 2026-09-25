@@ -685,6 +685,10 @@ razón.
 Se mide sobre el binario que se va a publicar en TC‑04, no sobre una compilación de
 desarrollo. Registra el commit exacto y la plataforma de cada medición.
 
+**El dispositivo Android cambió** (POCO X3 NFC → Honor X5d / Android 15, ver 10.11). Toda
+medición de T‑44 se hace en el Honor y **se rotula con ese dispositivo**: no es el mismo en
+el que se cerró el ANR de T‑50 ni en el que se tomó la serie de H5.
+
 **Si un requerimiento no se cumple, el número se reporta como salió.** Este proyecto ya
 tiene seis casos documentados en que un segundo revisor encontró algo que el primero dio
 por bueno, y ese patrón es material del apartado de método. Maquillar una medición lo
@@ -694,7 +698,7 @@ desperdicia y es la clase de cosa que se detecta en la defensa.
 
 ### TC-03 · Pruebas finales de seguridad (3.0 h · T-45, T-46)
 
-#### T-45 · Cerrar H-02: autenticación y reglas de acceso por usuario · 2.00 h — ✓ PRIMERA MITAD
+#### T-45 · Cerrar H-02: autenticación y reglas de acceso por usuario · 2.00 h — ✓ CERRADA (B publicada)
 
 **Redacción y contraste hechos (Timonel, 23-sep).** Dos variantes contrastadas contra todo
 el código que gobiernan. **Se publica B, sin autenticación; §2.5 queda intacta y H‑02 se
@@ -1350,3 +1354,57 @@ Los cuatro nuevos se anotan como verificación de T‑45, no como corrida de med
 registro de la decisión, encabezada por la razón de no haberse publicado. `firestore.rules`
 del repositorio se reemplaza con B **en el mismo commit en que B se publique**, para que el
 árbol y la consola no diverjan — que es H‑01 otra vez.
+
+---
+
+### 10.11 · T-45 publicada · y el cambio de dispositivo parte la serie de H5 en dos (25-sep)
+
+**B publicada el 25-sep a las 12:33**, `firestore.rules` byte a byte igual a lo publicado
+(`8f0d39d`), variante A conservada en `docs/`. Playground 6/6 con el caso de la medición
+nacida cerrada rechazado, latencia 4/4, C3 6/6, `latency_test` en **103 documentos, cero
+abiertos**, cuadrando 66 + 3 + 30 + 4.
+
+**Los cuatro `PERMISSION_DENIED` son evidencia a favor, no un defecto.** El receptor
+congelado intenta un segundo cierre sobre cada documento que acaba de cerrar porque no mira
+el tipo de cambio; lo rechaza la condición `respondido == false`. Es la garantía de «se
+cierra una sola vez» **funcionando en uso real y con traza** — y es mejor evidencia que las
+denegaciones de agosto, porque de estas se conoce la causa. Timonel se negó explícitamente
+a extender la conclusión a aquellas, que cayeron sobre documentos históricos. Esa
+abstención es correcta y se registra.
+
+---
+
+#### Lo que nadie había mirado: la serie de H5 quedó repartida entre dos teléfonos
+
+La verificación corrió en un **Honor X5d con Android 15**, que reemplazó al **POCO X3
+NFC**. Tres consecuencias que no estaban en el reporte:
+
+1. **Los 99 documentos de la serie de H5 —66 + 3 + 30— se tomaron en el POCO.** Los cuatro
+   nuevos, en el Honor. La colección mezcla dos dispositivos, dos versiones de Android y dos
+   pilas de red.
+2. **El esquema no puede registrar cuál.** La regla publicada exige
+   `hasOnly(['t0','condicion','evento','respondido'])`: un campo de dispositivo **no se
+   puede añadir sin cambiar la regla**. La procedencia de cada medición vive únicamente en
+   el registro escrito, no en el dato. Quien calcule estadísticas sobre los 103 documentos
+   sin leer este párrafo mezcla dos poblaciones.
+3. **La conclusión de T‑50 es evidencia del POCO.** «No reproduce en dispositivo real» se
+   midió ahí. Si el POCO ya no está, esa medición no se puede repetir en el mismo hardware,
+   y **T‑44 medirá en el Honor** — distinto dispositivo del que sostiene el cierre del ANR.
+
+**Qué hacer, y es barato:** los cuatro documentos del 25-sep quedan etiquetados en el
+registro como **verificación de T‑45 en Honor X5d / Android 15**, nunca como parte de la
+serie de medición. La serie de H5 sigue siendo **N = 30 en POCO X3 NFC**, y así se reporta.
+Si la defensa pide reproducir C1/C2, se reproduce en el Honor y se declara como réplica en
+dispositivo distinto, no como continuación de la serie.
+
+**Desviación declarada del procedimiento.** La fase 0 se corrió el **23** y la publicación
+fue el **25**, no «justo antes» como se instruyó. Se acepta: la sonda demostró que
+discrimina, porque «listar viajes» pasó de 200 a 403 con la misma petición. El residuo es
+que cualquier otro cambio en esas 48 horas queda sin atribuir; como el delta observado es
+exactamente el que B predice, no hay nada huérfano.
+
+**Pendiente de aclaración.** La sonda final se reporta con **cinco** valores
+—`200 · 403 · 403 · 200 · 403`— y la sonda de la fase 0 tiene **cuatro** rutas; la
+predicción escrita para B era `200 403 200 403`. Presumo que se añadió `voyages/otro-id`,
+lo que es consistente con B, pero **presumir no es evidencia**: cada valor tiene que quedar
+rotulado con su ruta en el reporte antes de que esto entre a un documento de tesis.
