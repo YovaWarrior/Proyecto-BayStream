@@ -127,7 +127,7 @@ try {
         totalBytes = (Get-Item -LiteralPath $jsonPath).Length * 5
         boxName = $boxName
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $output 'measurement.json') -Encoding utf8
-    Write-Output "Diagnosticos preparados en $output. Compilar primero Web; consultar T35-RESULTADOS.md."
+    Write-Output "Diagnosticos preparados en $output. Compilar primero Web; consultar docs/T35-RESULTADOS.md."
 } finally {
     Pop-Location
 }
