@@ -1,0 +1,95 @@
+// ==========================================================================
+// REGISTRO DE DECISION - NO PUBLICADA. No es un descarte.
+//
+// Variante A de T-45 (H-02): reglas con identidad. Redactada y contrastada
+// contra todo el codigo que usa Firestore el 23 de septiembre de 2026. Se
+// publico la variante B, sin identidad, que es la que esta en firestore.rules
+// en la raiz del repositorio.
+//
+// Por que no se publico (SPRINT-2.md, decision 10.10):
+// - Exige autenticacion, y la autenticacion necesita firebase_auth. La
+//   seccion 2.5 del sprint autoriza una sola dependencia nueva (hive_ce) y
+//   no se abrio una excepcion.
+// - El producto no usa Firestore. Lo unico que lo toca son las dos pantallas
+//   congeladas de la hipotesis H5, y ninguna es alcanzable desde una ruta de
+//   la aplicacion. Autenticar protegeria una base que solo usa la
+//   instrumentacion.
+// - El proyecto de produccion de TC-04 deniega todo, asi que el producto sale
+//   seguro con independencia de esta decision.
+//
+// Que dejaria de ser cierto si se publicara hoy: denegaria todo a los dos
+// clientes de medicion, porque ninguno inicia sesion. El emisor se detiene
+// al crear el primer evento y el receptor deja de escuchar, sin error visible.
+//
+// Si algun dia se autoriza firebase_auth, esta variante se publica tal cual,
+// con el UID de cada cuenta autorizada en lugar de 'PEGAR-AQUI-EL-UID'.
+// Difiere de firestore.rules solo en la funcion autorizado() y sus usos.
+// ==========================================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // T-45 (H-02). NO PUBLICAR hasta que los dos clientes de medicion de H5
+    // (receptor Android y emisor Web) inicien sesion con una cuenta de la
+    // lista de autorizado(). Publicada antes, deniega todo: el emisor se
+    // detiene al crear el primer evento y el receptor deja de escuchar, y
+    // ninguna de las dos pantallas congeladas muestra el error.
+
+    // Identidad autorizada.
+    // Una sesion anonima no es una identidad: con la clave publica del
+    // proyecto cualquiera obtiene una. "Cualquier cuenta" tampoco alcanza
+    // mientras el alta por correo siga abierta en la consola. Por eso la
+    // lista explicita: el control vive en este archivo versionado y no en
+    // un interruptor de la consola, que es la leccion de H-01.
+    // Cada UID se copia de la consola: Authentication -> Users -> columna UID.
+    function autorizado() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.auth.uid in ['PEGAR-AQUI-EL-UID'];
+    }
+
+    // Viajes. Hoy los usa solo la pantalla congelada de C3
+    // (c3_reconciliation_screen.dart, via VesselRepositoryImpl.saveVoyage):
+    // el emisor Web sobrescribe voyages/c3-measurement-voyage con set() y el
+    // receptor Android escucha ese mismo documento por su id. Ningun
+    // cliente enumera la coleccion, borra, ni escribe otro documento.
+    match /voyages/{voyageId} {
+      allow get, create, update: if autorizado()
+        && voyageId == 'c3-measurement-voyage';
+      allow list, delete: if false;
+    }
+
+    // Instrumentacion de la hipotesis H5 (pantallas de medicion C1 y C2).
+    // El protocolo es un intercambio en dos fases sobre un mismo documento:
+    // el emisor lo crea con respondido:false y el receptor lo cierra
+    // poniendo respondido:true. Se permite ESA transicion y ninguna otra.
+    // t0, condicion y evento son inmutables desde su creacion, y una
+    // medicion ya cerrada no se puede volver a tocar.
+    // Una medicion nace abierta y con exactamente los cuatro campos que
+    // escribe el emisor (latency_test_screen.dart, lineas 63-68). Sin esa
+    // condicion, la regla de update se esquivaba creando el documento ya
+    // cerrado, con el proceso_b_ms que uno quisiera.
+    match /latency_test/{medicionId} {
+      allow read: if autorizado();
+      allow create: if autorizado()
+        && request.resource.data.keys().hasAll(['t0', 'condicion', 'evento', 'respondido'])
+        && request.resource.data.keys().hasOnly(['t0', 'condicion', 'evento', 'respondido'])
+        && request.resource.data.respondido == false
+        && request.resource.data.t0 is number
+        && request.resource.data.evento is number
+        && request.resource.data.condicion in ['C1', 'C2'];
+      allow update: if autorizado()
+        && resource.data.respondido == false
+        && request.resource.data.respondido == true
+        && request.resource.data.proceso_b_ms is number
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['respondido', 'proceso_b_ms']);
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

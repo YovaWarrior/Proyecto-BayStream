@@ -1,22 +1,41 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // PROVISIONAL - Proyecto de Graduacion II, sin autenticacion en alcance.
-    // Permite lectura y escritura de viajes, pero NUNCA borrado.
-    // El borrado es la operacion irreversible y no la necesita ningun
-    // requerimiento del ERS.
+
+    // PROVISIONAL - T-45, variante publicable sin autenticacion.
+    // NO cierra H-02: sin inicio de sesion no hay identidad que exigir. Lo
+    // acota a lo minimo que el codigo usa: un solo documento de viajes, sin
+    // enumeracion, y mediciones que solo pueden nacer abiertas.
+    // Es la misma regla que la variante con identidad, sin autorizado().
+
+    // Viajes. Hoy los usa solo la pantalla congelada de C3
+    // (c3_reconciliation_screen.dart, via VesselRepositoryImpl.saveVoyage):
+    // el emisor Web sobrescribe voyages/c3-measurement-voyage con set() y el
+    // receptor Android escucha ese mismo documento por su id. Ningun
+    // cliente enumera la coleccion, borra, ni escribe otro documento.
     match /voyages/{voyageId} {
-      allow read, create, update: if true;
-      allow delete: if false;
+      allow get, create, update: if voyageId == 'c3-measurement-voyage';
+      allow list, delete: if false;
     }
+
     // Instrumentacion de la hipotesis H5 (pantallas de medicion C1 y C2).
     // El protocolo es un intercambio en dos fases sobre un mismo documento:
     // el emisor lo crea con respondido:false y el receptor lo cierra
     // poniendo respondido:true. Se permite ESA transicion y ninguna otra.
     // t0, condicion y evento son inmutables desde su creacion, y una
     // medicion ya cerrada no se puede volver a tocar.
+    // Una medicion nace abierta y con exactamente los cuatro campos que
+    // escribe el emisor (latency_test_screen.dart, lineas 63-68). Sin esa
+    // condicion, la regla de update se esquivaba creando el documento ya
+    // cerrado, con el proceso_b_ms que uno quisiera.
     match /latency_test/{medicionId} {
-      allow read, create: if true;
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['t0', 'condicion', 'evento', 'respondido'])
+        && request.resource.data.keys().hasOnly(['t0', 'condicion', 'evento', 'respondido'])
+        && request.resource.data.respondido == false
+        && request.resource.data.t0 is number
+        && request.resource.data.evento is number
+        && request.resource.data.condicion in ['C1', 'C2'];
       allow update: if resource.data.respondido == false
         && request.resource.data.respondido == true
         && request.resource.data.proceso_b_ms is number
@@ -24,6 +43,7 @@ service cloud.firestore {
           .hasOnly(['respondido', 'proceso_b_ms']);
       allow delete: if false;
     }
+
     match /{document=**} {
       allow read, write: if false;
     }
