@@ -86,4 +86,60 @@ void main() {
     final json = profile().toJson()..['origin'] = 'desconocido';
     expect(() => VesselProfile.fromJson(json), throwsArgumentError);
   });
+
+  test('T-30 serializa las tomas como códigos compactos ordenados y únicos',
+      () {
+    final slots = <String>{'0040284', '0020182'};
+    slots.add('0040284');
+    final original = profile(slots: slots);
+    final encoded = jsonEncode(original.toJson()['reeferSlots']);
+    expect(encoded, '["0020182","0040284"]');
+    expect(utf8.encode(encoded).length, 21);
+    final restored =
+        VesselProfile.fromJson(jsonDecode(jsonEncode(original.toJson())));
+    expect(restored.hasReeferSocket('0020182'), isTrue);
+    expect(restored.hasReeferSocket('0020184'), isFalse);
+    expect(restored.reeferSlots, hasLength(2));
+  });
+
+  test('T-31 confirmar geometría no declara tomas propuestas', () {
+    final original = profile(slots: {'0020182'});
+    final confirmed =
+        original.copyWith(origin: VesselProfileOrigin.declaredByUser);
+    expect(confirmed.origin, VesselProfileOrigin.declaredByUser);
+    expect(confirmed.reeferSlotsOrigin, VesselProfileOrigin.proposedFromFile);
+    expect(VesselProfile.fromJson(jsonDecode(jsonEncode(confirmed.toJson()))),
+        confirmed);
+  });
+
+  test('origen de tomas es independiente y sobrevive copia e igualdad', () {
+    final original = profile(slots: {'0020182'});
+    for (final origin in VesselProfileOrigin.values) {
+      final updated = original.copyWith(reeferSlotsOrigin: origin);
+      expect(updated.copyWith().reeferSlotsOrigin, origin);
+      expect(VesselProfile.fromJson(jsonDecode(jsonEncode(updated.toJson()))),
+          updated);
+      if (origin != original.reeferSlotsOrigin) {
+        expect(updated, isNot(original));
+      }
+    }
+  });
+
+  test('un perfil antiguo no declara tomas por haber confirmado su geometría',
+      () {
+    final json = profile(slots: {'0020182'})
+        .copyWith(origin: VesselProfileOrigin.declaredByUser)
+        .toJson()
+      ..remove('reeferSlotsOrigin');
+    final restored = VesselProfile.fromJson(json);
+    expect(restored.origin, VesselProfileOrigin.declaredByUser);
+    expect(restored.reeferSlotsOrigin, VesselProfileOrigin.proposedFromFile);
+    expect(restored.hasReeferSocket('0020182'), isTrue);
+  });
+
+  test('rechaza un origen de tomas desconocido en vez de aumentar confianza',
+      () {
+    final json = profile().toJson()..['reeferSlotsOrigin'] = 'desconocido';
+    expect(() => VesselProfile.fromJson(json), throwsArgumentError);
+  });
 }

@@ -12,7 +12,15 @@ class VesselProfile extends Equatable {
   final VesselIdentity identity;
   final String vesselName;
   final VesselGeometry geometry;
+
+  /// Códigos BBBRRTT únicos. Set para consulta O(1); JSON como lista ordenada
+  /// de cadenas de siete dígitos, sin repetir objetos de coordenadas.
   final Set<String> reeferSlots;
+
+  /// Confirmar geometría no confirma el inventario de tomas eléctricas.
+  /// Sin origen específico (incluidos perfiles históricos), se conserva la
+  /// confianza de propuesta; nunca se presume una declaración del usuario.
+  final VesselProfileOrigin reeferSlotsOrigin;
   final VesselProfileOrigin origin;
   final DateTime updatedAt;
 
@@ -21,6 +29,7 @@ class VesselProfile extends Equatable {
     required this.vesselName,
     required VesselGeometry geometry,
     Set<String> reeferSlots = const {},
+    this.reeferSlotsOrigin = VesselProfileOrigin.proposedFromFile,
     required this.origin,
     required DateTime updatedAt,
   })  : geometry = geometry.copyWith(
@@ -43,6 +52,13 @@ class VesselProfile extends Equatable {
         vesselName: voyage.vessel.name,
         geometry: VesselGeometry.proposeFrom(voyage.stowagePositions,
             parameters: parameters),
+        // Cota inferior: no incluye posiciones secas, vecinas ni sin posición.
+        reeferSlots: voyage.containers
+            .where((container) => container.isReefer)
+            .map((container) => container.stowagePosition?.toIsoCode())
+            .whereType<String>()
+            .toSet(),
+        reeferSlotsOrigin: VesselProfileOrigin.proposedFromFile,
         origin: VesselProfileOrigin.proposedFromFile,
         updatedAt: updatedAt ?? DateTime.now(),
       );
@@ -69,6 +85,7 @@ class VesselProfile extends Equatable {
     int? firstDeckTier,
     Object? stackWeightLimitKg = _unchanged,
     Set<String>? reeferSlots,
+    VesselProfileOrigin? reeferSlotsOrigin,
     VesselProfileOrigin? origin,
     DateTime? updatedAt,
   }) {
@@ -89,6 +106,7 @@ class VesselProfile extends Equatable {
       vesselName: vesselName ?? this.vesselName,
       geometry: nextGeometry,
       reeferSlots: reeferSlots ?? this.reeferSlots,
+      reeferSlotsOrigin: reeferSlotsOrigin ?? this.reeferSlotsOrigin,
       origin: origin ?? this.origin,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -99,6 +117,7 @@ class VesselProfile extends Equatable {
         'vesselName': vesselName,
         'geometry': geometry.toJson(),
         'reeferSlots': reeferSlots.toList()..sort(),
+        'reeferSlotsOrigin': reeferSlotsOrigin.name,
         'origin': origin.name,
         'updatedAt': updatedAt.toIso8601String(),
       };
@@ -112,11 +131,22 @@ class VesselProfile extends Equatable {
         reeferSlots:
             (json['reeferSlots'] as List<dynamic>?)?.cast<String>().toSet() ??
                 {},
+        reeferSlotsOrigin: json['reeferSlotsOrigin'] == null
+            ? VesselProfileOrigin.proposedFromFile
+            : VesselProfileOrigin.values
+                .byName(json['reeferSlotsOrigin'] as String),
         origin: VesselProfileOrigin.values.byName(json['origin'] as String),
         updatedAt: DateTime.parse(json['updatedAt'] as String),
       );
 
   @override
-  List<Object?> get props =>
-      [identity, vesselName, geometry, reeferSlots, origin, updatedAt];
+  List<Object?> get props => [
+        identity,
+        vesselName,
+        geometry,
+        reeferSlots,
+        reeferSlotsOrigin,
+        origin,
+        updatedAt
+      ];
 }

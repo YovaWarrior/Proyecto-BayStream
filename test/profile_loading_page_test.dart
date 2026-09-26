@@ -61,6 +61,25 @@ void main() {
 
   setUp(() => local = _ProfileResponses());
 
+  testWidgets('T-31 muestra cota inferior y confirmar no declara las tomas',
+      (tester) async {
+    await open(tester);
+    notifier.content = profileTestEdi.replaceAll('42G1', '42R1');
+    await load(tester);
+    expect(
+        find.textContaining(
+            '1 posiciones propuestas del archivo (cota inferior)'),
+        findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('geometry-no-limit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+    await tester.pumpAndSettle();
+    expect(local.saved.single.origin, VesselProfileOrigin.declaredByUser);
+    expect(local.saved.single.reeferSlotsOrigin,
+        VesselProfileOrigin.proposedFromFile);
+    expect(local.saved.single.reeferSlots, {'0020182'});
+  });
+
   testWidgets(
       'la pantalla pregunta una vez y reutiliza el perfil en la segunda carga',
       (tester) async {

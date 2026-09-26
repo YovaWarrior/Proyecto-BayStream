@@ -430,6 +430,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             initialPortOfCall: target.portOfCall,
             initial: initial,
             fileName: fileName,
+            proposedReeferSocketCount:
+                profile.reeferSlotsOrigin == VesselProfileOrigin.proposedFromFile
+                    ? profile.reeferSlots.length
+                    : null,
           ),
         ),
       );

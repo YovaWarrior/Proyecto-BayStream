@@ -27,6 +27,9 @@ class VesselGeometryPage extends StatefulWidget {
   /// Nombre del archivo cargado, para situar al usuario.
   final String? fileName;
 
+  /// Solo para informar: confirmar esta pantalla no declara las tomas.
+  final int? proposedReeferSocketCount;
+
   /// Puertos de carga del archivo con su conteo, del más frecuente al menos.
   final Map<String, int> loadingPorts;
 
@@ -54,6 +57,7 @@ class VesselGeometryPage extends StatefulWidget {
     this.initialPortOfCall,
     this.initial,
     this.fileName,
+    this.proposedReeferSocketCount,
   });
 
   @override
@@ -198,6 +202,16 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
           padding: const EdgeInsets.all(16),
           children: [
             _buildExplanation(context),
+            if (widget.proposedReeferSocketCount != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Tomas de reefer: ${widget.proposedReeferSocketCount} posiciones '
+                'propuestas del archivo (cota inferior). El buque puede tener '
+                'más tomas. Confirmar la geometría no las convierte en declaradas.',
+                key: const ValueKey('reefer-sockets-proposal'),
+                style: textTheme.bodyMedium,
+              ),
+            ],
             const SizedBox(height: 24),
 
             Text('Filas', style: textTheme.titleMedium),
