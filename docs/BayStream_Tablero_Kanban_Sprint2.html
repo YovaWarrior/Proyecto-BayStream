@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BayStream Kanban Sprint 2</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -19,9 +24,11 @@
       --deck:#4FA8D0; --hold:#C99457;
       --ok:#6BBF8F; --warn:#DDAE55; --stop:#DE8078;
       --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+      color-scheme:dark;
     }
   }
   :root[data-theme="dark"]{
+    color-scheme:dark;
     --ground:#0B1620; --panel:#11212D; --sunk:#0E1B25;
     --ink:#E6EEF4; --ink-2:#A3B6C3; --ink-3:#718897;
     --line:#1E3242; --line-2:#2A4356;
@@ -31,6 +38,7 @@
   }
 
   *{box-sizing:border-box}
+  body{margin:0}
   body{
     background:var(--ground); color:var(--ink);
     font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -97,6 +105,24 @@
   .t.inf .cod{color:var(--ink-2)}
   .t.pru .cod{color:var(--ok)}
 
+
+  /* ---- estado de cada tarjeta ---- */
+  .t .pie{grid-column:2 / -1; display:flex; flex-wrap:wrap; justify-content:space-between;
+    align-items:baseline; gap:2px 10px; min-width:0}
+  .t .pie .capa{grid-column:auto}
+  .nota{font-size:11.5px; line-height:1.35; color:var(--ink-2); overflow-wrap:anywhere}
+  .nota code, .nota .hash{font-family:"IBM Plex Mono",monospace; font-size:11px}
+  .nota.ok .hash{color:var(--ok)}
+  .nota.rev{color:var(--warn)}
+  .nota.cur{color:var(--deck)}
+  .criterio{padding:8px 14px; font-size:12px; line-height:1.4; color:var(--ink-3);
+    border-bottom:1px solid var(--line)}
+  .cuenta small{color:var(--ink-3); font-size:12px}
+  .col.curso{border-color:var(--deck)}
+  .col.curso > header h2{color:var(--deck)}
+  .grupo.extra > h3{color:var(--ink-3)}
+  .grupo.extra .tareas{border-style:dashed; border-color:var(--line-2)}
+
   /* ---- leyenda y pie ---- */
   .leyenda{display:flex; flex-wrap:wrap; gap:8px 20px; font-size:12.5px; color:var(--ink-2);
     padding:14px 16px; background:var(--sunk); border:1px solid var(--line); border-radius:10px}
@@ -108,13 +134,16 @@
   @media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
 </style>
 
+</head>
+<body>
 <div class="wrap">
   <header>
     <p class="eyebrow">Proyecto de Graduación II · 19 sep – 17 oct 2026</p>
     <h1>Sprint 2 — Perfil de buque persistente</h1>
-    <p class="sub">Estado del tablero al abrir el sprint. Veintiséis tareas numeradas a partir
-      de T‑24, continuando la secuencia del Sprint 1. El orden de ataque es por riesgo
-      decreciente, no numérico.</p>
+    <p class="sub">Estado del tablero al 26 de septiembre de 2026, octavo día del sprint. De las
+      35.0 horas comprometidas hay 10.0 terminadas, 3.0 en revisión y 1.0 en curso.
+      Cada tarea terminada muestra el commit que la entrega. La fotografía al abrir el sprint,
+      con las veintiséis tareas por hacer, está en el documento del Sprint Backlog.</p>
   </header>
 
   <dl class="cifras">
@@ -127,88 +156,117 @@
 
   <div class="tablero">
     <section class="col">
-      <header><h2>Por hacer</h2><span class="cuenta">26</span></header>
+      <header><h2>Por hacer</h2><span class="cuenta">14 · 21.0 h</span></header>
+      <p class="criterio">Tarea estimada y con criterio de terminado escrito.</p>
       <div class="cuerpo">
-
         <div class="grupo">
-          <h3><span class="id">RF‑036</span> Perfil de buque persistente <span class="met">21 pts · 13.0 h</span></h3>
+          <h3><span class="id">RF‑036</span> Perfil de buque persistente <span class="met">3 de 11 · 4.0 h</span></h3>
           <div class="tareas">
-            <div class="t dom"><span class="cod">T‑24</span><span class="txt">Entidad <code>VesselProfile</code> y su serialización</span><span class="h">1.50</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑25</span><span class="txt">Identificar el buque desde el segmento TDT</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑26</span><span class="txt">Frontera cubierta/bodega declarada en el perfil</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑27</span><span class="txt">Pisos de cubierta y de bodega declarados</span><span class="h">1.25</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑28</span><span class="txt"><code>proposeFrom</code> siembra el perfil en vez de ser la geometría</span><span class="h">1.25</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑29</span><span class="txt">Límite de apilamiento por pila en el perfil</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑30</span><span class="txt">Conjunto de posiciones con toma de reefer</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑31</span><span class="txt">Proponer las tomas de reefer desde el archivo como cota inferior</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑32</span><span class="txt">Clonar un perfil existente como plantilla</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
-            <div class="t int"><span class="cod">T‑33</span><span class="txt">Selector de plantilla al cargar un buque sin perfil</span><span class="h">1.50</span><span class="capa">Interfaz</span></div>
-            <div class="t int"><span class="cod">T‑34</span><span class="txt">Parámetros convertida en editor de perfil persistido</span><span class="h">1.50</span><span class="capa">Interfaz</span></div>
+            <div class="t dom"><span class="cod">T‑32</span><span class="txt">Clonar un perfil existente como plantilla</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span></span></div>
+            <div class="t int"><span class="cod">T‑33</span><span class="txt">Selector de plantilla al cargar un buque sin perfil</span><span class="h">1.50</span><span class="pie"><span class="capa">Interfaz</span></span></div>
+            <div class="t int"><span class="cod">T‑34</span><span class="txt">Parámetros convertida en editor de perfil persistido</span><span class="h">1.50</span><span class="pie"><span class="capa">Interfaz</span></span></div>
           </div>
         </div>
-
         <div class="grupo">
-          <h3><span class="id">RF‑031+</span> Almacén local propio <span class="met">5 pts · 3.0 h</span></h3>
+          <h3><span class="id">RF‑031+</span> Almacén local propio <span class="met">1 de 3 · 1.0 h</span></h3>
           <div class="tareas">
-            <div class="t inf"><span class="cod">T‑35</span><span class="txt">Incorporar el motor de almacenamiento local</span><span class="h">1.00</span><span class="capa">Infraestructura</span></div>
-            <div class="t dom"><span class="cod">T‑36</span><span class="txt">Esquema y serialización de viajes y perfiles</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
-            <div class="t int"><span class="cod">T‑37</span><span class="txt">Listado de viajes recientes con apertura y eliminación</span><span class="h">1.00</span><span class="capa">Interfaz</span></div>
+            <div class="t int"><span class="cod">T‑37</span><span class="txt">Listado de viajes recientes con apertura y eliminación</span><span class="h">1.00</span><span class="pie"><span class="capa">Interfaz</span></span></div>
           </div>
         </div>
-
         <div class="grupo">
-          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">13 pts · 8.0 h</span></h3>
+          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">5 de 5 · 8.0 h</span></h3>
           <div class="tareas">
-            <div class="t dom"><span class="cod">T‑38</span><span class="txt">Validar el peso por pila contra el límite del perfil</span><span class="h">1.50</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑39</span><span class="txt">Validar refrigerado en posición sin toma eléctrica</span><span class="h">1.00</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑40</span><span class="txt">Validar el apilamiento de 20 pies sobre 40 pies</span><span class="h">1.50</span><span class="capa">Dominio</span></div>
-            <div class="t dom"><span class="cod">T‑41</span><span class="txt">Separación de peligrosas desde los segmentos DGS</span><span class="h">2.00</span><span class="capa">Dominio</span></div>
-            <div class="t int"><span class="cod">T‑42</span><span class="txt">Panel de alertas con severidad, descripción y posición</span><span class="h">2.00</span><span class="capa">Interfaz</span></div>
+            <div class="t dom"><span class="cod">T‑38</span><span class="txt">Validar el peso por pila contra el límite del perfil</span><span class="h">1.50</span><span class="pie"><span class="capa">Dominio</span></span></div>
+            <div class="t dom"><span class="cod">T‑39</span><span class="txt">Validar refrigerado en posición sin toma eléctrica</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span></span></div>
+            <div class="t dom"><span class="cod">T‑40</span><span class="txt">Validar el apilamiento de 20 pies sobre 40 pies</span><span class="h">1.50</span><span class="pie"><span class="capa">Dominio</span></span></div>
+            <div class="t dom"><span class="cod">T‑41</span><span class="txt">Separación de peligrosas desde los segmentos DGS</span><span class="h">2.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ">Fuente resuelta: 49 CFR Parte 176</span></span></div>
+            <div class="t int"><span class="cod">T‑42</span><span class="txt">Panel de alertas con severidad, descripción y posición</span><span class="h">2.00</span><span class="pie"><span class="capa">Interfaz</span></span></div>
           </div>
         </div>
-
         <div class="grupo">
-          <h3><span class="id">TC‑01</span> Revisión de calidad <span class="met">5 pts · 3.0 h</span></h3>
+          <h3><span class="id">TC‑01</span> Revisión de calidad <span class="met">2 de 2 · 3.0 h</span></h3>
           <div class="tareas">
-            <div class="t pru"><span class="cod">T‑43</span><span class="txt">Retirar las 49 advertencias de <code>flutter analyze</code></span><span class="h">1.50</span><span class="capa">Prueba</span></div>
-            <div class="t pru"><span class="cod">T‑44</span><span class="txt">Medir los ocho requerimientos no funcionales</span><span class="h">1.50</span><span class="capa">Prueba</span></div>
+            <div class="t pru"><span class="cod">T‑43</span><span class="txt">Retirar las 49 advertencias de <code>flutter analyze</code></span><span class="h">1.50</span><span class="pie"><span class="capa">Prueba</span><span class="nota ">Incluye retirar seis dependencias sin uso</span></span></div>
+            <div class="t pru"><span class="cod">T‑44</span><span class="txt">Medir los ocho requerimientos no funcionales</span><span class="h">1.50</span><span class="pie"><span class="capa">Prueba</span></span></div>
           </div>
         </div>
-
         <div class="grupo">
-          <h3><span class="id">TC‑03</span> Pruebas finales de seguridad <span class="met">5 pts · 3.0 h</span></h3>
+          <h3><span class="id">TC‑04</span> Despliegue <span class="met">3 de 3 · 5.0 h</span></h3>
           <div class="tareas">
-            <div class="t inf"><span class="cod">T‑45</span><span class="txt">Cerrar H‑02: autenticación y reglas de acceso por usuario</span><span class="h">2.00</span><span class="capa">Infraestructura</span></div>
-            <div class="t inf"><span class="cod">T‑46</span><span class="txt">Registro de eventos y análisis de dependencias</span><span class="h">1.00</span><span class="capa">Infraestructura</span></div>
+            <div class="t inf"><span class="cod">T‑47</span><span class="txt">Proyecto de producción y retiro de credenciales del código</span><span class="h">1.50</span><span class="pie"><span class="capa">Infraestructura</span></span></div>
+            <div class="t inf"><span class="cod">T‑48</span><span class="txt">Publicar el cliente Web</span><span class="h">1.50</span><span class="pie"><span class="capa">Infraestructura</span></span></div>
+            <div class="t inf"><span class="cod">T‑49</span><span class="txt">Firmar y publicar el paquete Android</span><span class="h">2.00</span><span class="pie"><span class="capa">Infraestructura</span></span></div>
           </div>
         </div>
-
-        <div class="grupo">
-          <h3><span class="id">TC‑04</span> Despliegue <span class="met">8 pts · 5.0 h</span></h3>
-          <div class="tareas">
-            <div class="t inf"><span class="cod">T‑47</span><span class="txt">Proyecto de producción y retiro de credenciales del código</span><span class="h">1.50</span><span class="capa">Infraestructura</span></div>
-            <div class="t inf"><span class="cod">T‑48</span><span class="txt">Publicar el cliente Web</span><span class="h">1.50</span><span class="capa">Infraestructura</span></div>
-            <div class="t inf"><span class="cod">T‑49</span><span class="txt">Firmar y publicar el paquete Android</span><span class="h">2.00</span><span class="capa">Infraestructura</span></div>
-          </div>
-        </div>
-
       </div>
     </section>
-
-    <section class="col">
-      <header><h2>En curso</h2><span class="cuenta">0</span></header>
-      <p class="wip">Límite de trabajo en curso: 1</p>
-      <div class="vacia">Sin tareas al abrir el sprint.</div>
+    <section class="col curso">
+      <header><h2>En curso</h2><span class="cuenta">1 · 1.0 h</span></header>
+      <p class="wip">Límite de trabajo en curso: 1 · ocupado 1 de 1</p>
+      <div class="cuerpo">
+        <div class="grupo">
+          <h3><span class="id">TC‑03</span> Pruebas finales de seguridad <span class="met">1 de 2 · 1.0 h</span></h3>
+          <div class="tareas">
+            <div class="t inf"><span class="cod">T‑46</span><span class="txt">Registro de eventos y análisis de dependencias</span><span class="h">1.00</span><span class="pie"><span class="capa">Infraestructura</span><span class="nota cur">H‑07 hecho · H‑06 en verificación</span></span></div>
+          </div>
+        </div>
+      </div>
     </section>
-
     <section class="col">
-      <header><h2>En revisión</h2><span class="cuenta">0</span></header>
-      <div class="vacia">Cambio escrito, pendiente de compilar<br>y de pasar las pruebas.</div>
+      <header><h2>En revisión</h2><span class="cuenta">3<small> +1</small> · 3.0 h</span></header>
+      <p class="criterio">Cambio escrito y pendiente de compilar y pasar las pruebas.</p>
+      <div class="cuerpo">
+        <div class="grupo">
+          <h3><span class="id">RF‑036</span> Perfil de buque persistente <span class="met">3 de 11 · 3.0 h</span></h3>
+          <div class="tareas">
+            <div class="t dom"><span class="cod">T‑29</span><span class="txt">Límite de apilamiento por pila en el perfil</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota rev"><span class='hash'>2157fa6</span> · falta la prueba de ejecución en Chrome</span></span></div>
+            <div class="t dom"><span class="cod">T‑30</span><span class="txt">Conjunto de posiciones con toma de reefer</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota rev"><span class='hash'>2157fa6</span> · falta la prueba de ejecución en Chrome</span></span></div>
+            <div class="t dom"><span class="cod">T‑31</span><span class="txt">Proponer las tomas de reefer desde el archivo como cota inferior</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota rev"><span class='hash'>2157fa6</span> · falta la prueba de ejecución en Chrome</span></span></div>
+          </div>
+        </div>
+        <div class="grupo extra">
+          <h3>Fuera del compromiso · contra holgura <span class="met">1 de 3 · 1.5 h</span></h3>
+          <div class="tareas">
+            <div class="t int"><span class="cod">T‑52</span><span class="txt">Migrar el reporte PDF a la geometría declarada</span><span class="h">1.50</span><span class="pie"><span class="capa">Interfaz</span><span class="nota rev"><span class='hash'>fa66565</span> · falta la prueba de ejecución en Chrome</span></span></div>
+          </div>
+        </div>
+      </div>
     </section>
-
     <section class="col">
-      <header><h2>Terminado</h2><span class="cuenta">0</span></header>
-      <div class="vacia">Compila en las tres plataformas,<br>pruebas en verde y sin advertencias nuevas.</div>
+      <header><h2>Terminado</h2><span class="cuenta">8<small> +2</small> · 10.0 h</span></header>
+      <p class="criterio">Compila en las tres plataformas, pruebas en verde y sin advertencias nuevas.</p>
+      <div class="cuerpo">
+        <div class="grupo">
+          <h3><span class="id">RF‑036</span> Perfil de buque persistente <span class="met">5 de 11 · 6.0 h</span></h3>
+          <div class="tareas">
+            <div class="t dom"><span class="cod">T‑24</span><span class="txt">Entidad <code>VesselProfile</code> y su serialización</span><span class="h">1.50</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>a0edffa</span></span></span></div>
+            <div class="t dom"><span class="cod">T‑25</span><span class="txt">Identificar el buque desde el segmento TDT</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>a0edffa</span></span></span></div>
+            <div class="t dom"><span class="cod">T‑26</span><span class="txt">Frontera cubierta/bodega declarada en el perfil</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>55fe8f5</span></span></span></div>
+            <div class="t dom"><span class="cod">T‑27</span><span class="txt">Pisos de cubierta y de bodega declarados</span><span class="h">1.25</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>55fe8f5</span></span></span></div>
+            <div class="t dom"><span class="cod">T‑28</span><span class="txt"><code>proposeFrom</code> siembra el perfil en vez de ser la geometría</span><span class="h">1.25</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>55fe8f5</span></span></span></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3><span class="id">RF‑031+</span> Almacén local propio <span class="met">2 de 3 · 2.0 h</span></h3>
+          <div class="tareas">
+            <div class="t inf"><span class="cod">T‑35</span><span class="txt">Incorporar el motor de almacenamiento local</span><span class="h">1.00</span><span class="pie"><span class="capa">Infraestructura</span><span class="nota ok"><span class='hash'>388db74</span> · <code>hive_ce</code> elegido por medición</span></span></div>
+            <div class="t dom"><span class="cod">T‑36</span><span class="txt">Esquema y serialización de viajes y perfiles</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>69afd4e</span></span></span></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3><span class="id">TC‑03</span> Pruebas finales de seguridad <span class="met">1 de 2 · 2.0 h</span></h3>
+          <div class="tareas">
+            <div class="t inf"><span class="cod">T‑45</span><span class="txt">Cerrar H‑02: autenticación y reglas de acceso por usuario</span><span class="h">2.00</span><span class="pie"><span class="capa">Infraestructura</span><span class="nota ok"><span class='hash'>8f0d39d</span> · reglas publicadas y verificadas el 25‑sep</span></span></div>
+          </div>
+        </div>
+        <div class="grupo extra">
+          <h3>Fuera del compromiso · contra holgura <span class="met">2 de 3 · 2.5 h</span></h3>
+          <div class="tareas">
+            <div class="t pru"><span class="cod">T‑50</span><span class="txt">Reconciliar la detención (ANR) de Android en dispositivo real</span><span class="h">2.00</span><span class="pie"><span class="capa">Prueba</span><span class="nota ok"><span class='hash'>d2b5c15</span> · era del emulador, sin cambio de código</span></span></div>
+            <div class="t dom"><span class="cod">T‑51</span><span class="txt">Retirar <code>maxRows</code> y <code>maxTiers</code> de <code>Bay</code></span><span class="h">0.50</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>aa27781</span></span></span></div>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 
@@ -221,7 +279,10 @@
 
   <footer>
     <span><b>Precedencias:</b> RF‑027 no arranca antes que RF‑036 · TC‑03 no antes que TC‑04</span>
+    <span><b>Fuera del compromiso:</b> T‑50 a T‑52 salen de la holgura; no alteran los 57 pts ni las 35.0 h</span>
     <span><b>Diferido:</b> RF‑028, secuencia de descarga (8 pts · 5.0 h)</span>
     <span><b>Carlos Giovanni Martínez Aldana</b> · 0909‑22‑19157</span>
   </footer>
 </div>
+</body>
+</html>
