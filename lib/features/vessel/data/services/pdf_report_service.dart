@@ -12,7 +12,8 @@ class PdfReportService {
 
   const PdfReportService();
 
-  Future<Uint8List> generate(VesselVoyage voyage, {
+  Future<Uint8List> generate(
+    VesselVoyage voyage, {
     required VesselGeometry geometry,
   }) async {
     final regularFont = pw.Font.ttf(
@@ -211,7 +212,14 @@ class PdfReportService {
             ],
           ),
           pw.SizedBox(height: 12),
-          pw.Expanded(child: _bayPlan(bay, geometry)),
+          // Los mínimos de celda no deben empujar una rejilla grande fuera
+          // del espacio reservado entre encabezado, leyenda y pie.
+          pw.Expanded(
+            child: pw.FittedBox(
+              fit: pw.BoxFit.scaleDown,
+              child: _bayPlan(bay, geometry),
+            ),
+          ),
           pw.SizedBox(height: 8),
           _bayLegend(),
           pw.Divider(color: PdfColors.blueGrey200),
@@ -225,91 +233,63 @@ class PdfReportService {
     final positioned = bay.containers
         .where((container) => container.stowagePosition != null)
         .toList();
-    if (positioned.isEmpty) {
-      return pw.Center(
-        child: pw.Text(
-          'Sin contenedores con posición de estiba',
-          style: const pw.TextStyle(color: PdfColors.blueGrey500),
-        ),
-      );
-    }
-
     final positions = <String, ContainerUnit>{};
-    final rowValues = <int>{};
-    final deckValues = <int>{};
-    final holdValues = <int>{};
     for (final container in positioned) {
       final position = container.stowagePosition!;
       positions['${position.row}-${position.tier}'] = container;
-      rowValues.add(position.row);
-      (geometry.isDeckTier(position.tier) ? deckValues : holdValues)
-          .add(position.tier);
     }
 
-    final rows = _orderedRows(rowValues);
-    final deckTiers = _tierRange(deckValues);
-    final holdTiers = _tierRange(holdValues);
+    // La misma rejilla que usa Bay Plan, incluso sin carga propia en la bahía.
+    final rows = geometry.orderedRows;
+    final deckTiers = geometry.deckTierNumbers;
+    final holdTiers = geometry.holdTierNumbers;
     final totalTierRows = max(1, deckTiers.length + holdTiers.length);
     final cellWidth = ((PdfPageFormat.a4.landscape.width - 160) / rows.length)
         .clamp(18.0, 36.0)
         .toDouble();
     final cellHeight = (330 / totalTierRows).clamp(10.0, 24.0).toDouble();
 
-    return pw.Center(
-      child: pw.Column(
-        mainAxisSize: pw.MainAxisSize.min,
-        children: [
-          _rowHeader(rows, cellWidth),
-          if (deckTiers.isNotEmpty) ...[
-            _deckLabel('CUBIERTA (DECK) - Tiers 80 y superiores'),
-            ...deckTiers.map(
-              (tier) => _tierRow(
-                tier,
-                rows,
-                positions,
-                cellWidth,
-                cellHeight,
-              ),
+    return pw.Column(
+      mainAxisSize: pw.MainAxisSize.min,
+      children: [
+        _rowHeader(rows, cellWidth),
+        if (deckTiers.isNotEmpty) ...[
+          _deckLabel(
+              'CUBIERTA (DECK) - Tiers ${geometry.deckTierFloor} y superiores'),
+          ...deckTiers.map(
+            (tier) => _tierRow(
+              tier,
+              rows,
+              positions,
+              cellWidth,
+              cellHeight,
             ),
-          ],
-          if (deckTiers.isNotEmpty && holdTiers.isNotEmpty) ...[
-            pw.SizedBox(height: 5),
-            pw.Container(
-              width: 60 + rows.length * cellWidth,
-              height: 3,
-              color: PdfColors.brown400,
-            ),
-            pw.SizedBox(height: 5),
-          ],
-          if (holdTiers.isNotEmpty) ...[
-            _deckLabel('BODEGA (HOLD) - Tiers inferiores a 80'),
-            ...holdTiers.map(
-              (tier) => _tierRow(
-                tier,
-                rows,
-                positions,
-                cellWidth,
-                cellHeight,
-              ),
-            ),
-          ],
+          ),
         ],
-      ),
+        if (deckTiers.isNotEmpty && holdTiers.isNotEmpty) ...[
+          pw.SizedBox(height: 5),
+          pw.Container(
+            width: 30 + rows.length * (cellWidth + 1.6),
+            height: 3,
+            color: PdfColors.brown400,
+          ),
+          pw.SizedBox(height: 5),
+        ],
+        if (holdTiers.isNotEmpty) ...[
+          _deckLabel(
+              'BODEGA (HOLD) - Tiers inferiores a ${geometry.deckTierFloor}'),
+          ...holdTiers.map(
+            (tier) => _tierRow(
+              tier,
+              rows,
+              positions,
+              cellWidth,
+              cellHeight,
+            ),
+          ),
+        ],
+      ],
     );
-  }
-
-  List<int> _orderedRows(Set<int> values) {
-    final even = values.where((row) => row.isEven).toList()
-      ..sort((a, b) => b.compareTo(a));
-    final odd = values.where((row) => row.isOdd).toList()..sort();
-    return [...even, ...odd];
-  }
-
-  List<int> _tierRange(Set<int> values) {
-    if (values.isEmpty) return [];
-    final minTier = values.reduce(min);
-    final maxTier = values.reduce(max);
-    return [for (var tier = maxTier; tier >= minTier; tier -= 2) tier];
   }
 
   pw.Widget _rowHeader(List<int> rows, double cellWidth) {
@@ -319,7 +299,8 @@ class PdfReportService {
         pw.SizedBox(width: 30),
         ...rows.map(
           (row) => pw.Container(
-            width: cellWidth,
+            // Coincide con el ancho exterior de la celda (margen de 0.8).
+            width: cellWidth + 1.6,
             alignment: pw.Alignment.center,
             child: pw.Text(
               row.toString().padLeft(2, '0'),
