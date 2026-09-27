@@ -97,9 +97,18 @@ Al finalizar trabajo que modifique archivos, entrega a Carlos:
 4. Tres líneas claras que resuman qué cambió.
 5. Un mensaje listo para copiar y enviar a Yov.
 
+**Tu informe de la tarea nace en `docs/`, no en la raíz.** Nómbralo
+`docs/<TAREA>-RESULTADOS.md` (por ejemplo `docs/BLOQUE5-RESULTADOS.md`). La raíz
+se reserva para `SPRINT-N.md`, `AGENTS.md`, `CLAUDE.md` y `README.md`, que son
+los cuatro archivos que un agente lee al llegar; enterrarlos entre informes le
+cuesta tiempo al siguiente.
+
 No incluyas en esos comandos los archivos H5 congelados, `lib/main.dart`,
 `.claude/settings.local.json` ni archivos bajo `docs/`, salvo autorización
-directa y específica de Carlos. Declara expresamente si cambian
+directa y específica de Carlos. **Única excepción permanente:** tu propio
+informe de la tarea en curso bajo `docs/`, por su nombre exacto y nunca por
+comodín — esa prohibición existe para proteger los entregables de tesis de
+Carlos, no para impedirte versionar lo que acabas de escribir. Declara expresamente si cambian
 `pubspec.yaml` o `pubspec.lock`.
 
 Si un archivo necesario está ignorado por `.gitignore`, explica el motivo y

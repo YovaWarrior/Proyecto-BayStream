@@ -885,6 +885,28 @@ verdad.
 
 ---
 
+#### T-53 · Dibujar en el PDF los huecos ocupados por un 40 pies vecino · 1.00 h
+
+**Toca:** `lib/features/vessel/data/services/pdf_report_service.dart`.
+
+Hallazgo de Codex al cerrar T‑52 (`docs/T52-RESULTADOS.md`, «Hallazgo fuera del alcance»).
+La pantalla marca los huecos que ocupa un contenedor de 40 pies de la bahía vecina
+(`bay_plan_view.dart:814-815`, dibuja `40'`); **el PDF no consulta
+`slotsOccupiedByNeighbors` en ningún punto.** En `CORPUS_A01` las bahías 005, 013, 015,
+035, 039, 043 y 045 salen vacías en el PDF aunque están físicamente tomadas, y el defecto
+también alcanza huecos de bahías con carga propia.
+
+**No es cosmético.** Un planificador que lee el PDF ve libre una posición que no lo está.
+
+**Alcance, el que propuso Codex:** representar y rotular esos huecos con la misma prioridad
+que la pantalla (carga propia primero), incluirlos en la leyenda y comprobarlo contra A01.
+**No** sumarlos como contenedores, ni alterar pesos, la tabla o el número de páginas.
+
+**Terminada cuando:** las siete bahías de A01 muestran sus huecos tomados, y el conteo de
+contenedores y las 62 páginas no cambian.
+
+---
+
 ## 6. Orden de ataque — por riesgo, no por número
 
 El orden numérico no es el orden de ejecución. En el Sprint 1 atacar primero lo más
@@ -902,7 +924,7 @@ riesgoso evitó dos replanificaciones; aquí se repite el criterio.
 | **7** | **Validaciones** | T-38 … T-42 | 8.0 | **No puede empezar antes del bloque 5.** T-41 es la de mayor riesgo de desborde: la matriz IMDG es normativa. |
 | **8** | **Calidad y seguridad** | T-43 … T-46 | 6.0 | Se mide sobre la versión a liberar; necesita que el producto esté quieto. |
 | **9** | **Publicación** | T-48, resto de T-47 y T-49 | 5.0 | Último. Pero el bloque 0 ya dejó los trámites listos hace semanas. |
-| **T** | **Lane del segundo programador** | T-50, T-51 | 2.5 | **Fuera del compromiso, contra holgura.** Tocan `bay_plan_view.dart`, `bay.dart` y `CLAUDE.md`: ningún bloque de RF-036 los toca, así que avanzan en paralelo. T-50 ✓ cerrada el 19-sep sin cambio de código: el bloque 9 ya no está bloqueado. |
+| **T** | **Lane del segundo programador** | T-50, T-51 (T-53 va detrás del bloque 5, ver 10.14) | 2.5 | **Fuera del compromiso, contra holgura.** Tocan `bay_plan_view.dart`, `bay.dart` y `CLAUDE.md`: ningún bloque de RF-036 los toca, así que avanzan en paralelo. T-50 ✓ cerrada el 19-sep sin cambio de código: el bloque 9 ya no está bloqueado. |
 
 **Regla de detención:** si una tarea pasa del doble de su estimación, **para y repórtalo**.
 La holgura del sprint es de 18 h sobre 53 disponibles; una sola tarea desbordada se come un
@@ -1408,3 +1430,172 @@ exactamente el que B predice, no hay nada huérfano.
 predicción escrita para B era `200 403 200 403`. Presumo que se añadió `voyages/otro-id`,
 lo que es consistente con B, pero **presumir no es evidencia**: cada valor tiene que quedar
 rotulado con su ruta en el reporte antes de que esto entre a un documento de tesis.
+
+---
+
+### 10.12 · T-41 · se acepta 49 CFR como fuente, y la evaluación pasa a número ONU (25-sep)
+
+**Qué se decidió.** La matriz de segregación se sustenta en **49 CFR Parte 176**, texto
+oficial del eCFR, de dominio público. **No es el Código IMDG y no se afirma equivalencia.**
+
+**Qué se descartó, y por quién.** Timonel encontró copias de terceros del capítulo 7.2 del
+IMDG (enmiendas 35‑10 y 40‑20) y **no las usó ni las descargó**, por procedencia, vigencia
+y citabilidad. Se detuvo y preguntó en vez de resolverlo solo.
+
+**Por qué 49 CFR es la mejor opción disponible y no una conformidad.** Una fuente que el
+tribunal **puede abrir y verificar** vale más que una que no puede. El eCFR tiene texto
+oficial y dirección estable; una copia del IMDG de procedencia incierta no es verificable
+por un examinador, y eso la hace **peor evidencia** aunque sea la norma que gobierna.
+
+**Lo que va escrito sin ambigüedad**, en el código y en el documento: las reglas
+implementadas son 49 CFR Parte 176; **no son el Código IMDG**; no se afirma equivalencia;
+para operación real gobierna el IMDG; y la alerta es **apoyo a la decisión, no verificación
+de cumplimiento**.
+
+---
+
+#### El hallazgo del número ONU es estructural, no de implementación
+
+La matriz **por clase** falla en `CORPUS_A03` **en los dos sentidos**, con instancias reales
+verificadas en el archivo crudo:
+
+| Segmento en A03 | Lo que declara | Por qué falla por clase |
+|---|---|---|
+| `DGS+IMD+8+3084++I` | clase 8 | UN3084 lleva **5.1 subsidiario**, que **no viaja en el segmento**: junto a clase 3 da un falso **«conforme»** |
+| `DGS+IMD+2.1+1950` | clase 2.1 | UN1950 **se segrega como clase 9**: sobre UN3085 da una **falsa alarma** |
+
+**Por eso T‑41 evalúa por número ONU, no por clase**, con tres estados y sin que nada salga
+«conforme» por omisión.
+
+**Y es el mismo hallazgo estructural que RF‑036, por otra puerta.** RF‑036 existe porque el
+BAPLIE **no transmite el buque**; la evaluación por ONU existe porque el BAPLIE **no
+transmite suficiente del perfil de peligro de la carga**. Dos instancias independientes de
+la misma limitación del formato, encontradas por rutas distintas y por agentes distintos.
+Eso refuerza el argumento central de la tesis y debe decirse así en el documento, no como
+dos detalles sueltos.
+
+**Ácidos contra álcalis no se decide desde el BAPLIE.** La norma de EE. UU. remite al IMDG
+3.1.4, y en las entradas «n.e.p.» decide el embarcador. Sale como **no evaluado**.
+
+**Alcance sostenible.** De los 28 pares: 9 de código 2, 4 de código 1, 1 de «\*» y 14 de
+«X». **Ninguno de código 3 o 4**, que exigirían mamparos. La 1.4 se sostiene, pero **solo
+por número ONU** — 1.4S y 1.4G, que §176.144 deja ir juntos.
+
+---
+
+#### Corrección a mi conteo del corpus
+
+Dije **57** segmentos `DGS`. Son **34**, en 30 contenedores. Los 57 incluían
+`CORPUS_A03v_VGM`, cuyos 23 segmentos son **byte a byte** los de `CORPUS_A03`. Clases
+reales: 3 (14) · 9 (6) · 8 (6) · 1.4 (4) · 2.1 (2) · 5.1 (1) · 4.1 (1).
+
+Las siete clases estaban bien; el conteo no. **Apareció porque la instrucción decía
+explícitamente que verificara mi número antes de fiarse de él** — es el control funcionando,
+no un accidente. Conviene conservar esa cláusula en las instrucciones futuras.
+
+---
+
+### 10.13 · T-41 y T-46 entregados · el hueco del formato tiene dos formas distintas (25-sep)
+
+**T‑41** en `docs/T41-SEGREGACION-FUENTE.md`: 28 pares con su sección de 49 CFR, 17 números
+ONU, ácidos contra álcalis como **no evaluado**, tres estados, y las cuatro frases de
+postura en recuadro al principio.
+
+#### El matiz de Timonel afina el paralelo con RF-036
+
+El hueco del formato **no es uno, son dos, y conviene no mezclarlos** porque un examinador
+puede empujar justo ahí:
+
+| Forma | Caso | Qué se puede responder |
+|---|---|---|
+| **El campo existe y viene vacío** | la etiqueta secundaria del `DGS`: el segmento puede llevarla, en `CORPUS_A03` viene vacía | es calidad del dato: a veces se puede leer, en este corpus no está |
+| **No hay campo, punto** | las disposiciones de la sustancia (columna 10B) no caben en el formato | es **límite duro**: ninguna implementación lo resuelve leyendo mejor |
+
+**RF‑036 es del segundo tipo**: el BAPLIE no tiene dónde poner la geometría del buque. La
+evaluación por número ONU responde a los dos a la vez. Decirlo así —y no «el BAPLIE no
+trae la información»— es lo que aguanta la repregunta.
+
+#### T-46 · H-07 cerrado, H-06 bloqueado por una consecuencia de 10.10
+
+**H‑07.** 117 paquetes, **cero vulnerabilidades** en OSV sobre versiones exactas, **con
+control positivo** — el control es lo que hace válida la ausencia de hallazgos, igual que
+la sonda de T‑45. Licencias permisivas salvo `dbus` (MPL‑2.0), verificado que no entra en
+Web ni en Android.
+
+**Tres dependencias directas de producción no se usan en ningún archivo de `lib/`:**
+`riverpod_annotation`, `intl` y `cupertino_icons`. Timonel reporta seis declaradas sin uso
+contando las de desarrollo. **No se tocan ahora:** cualquier cambio en `pubspec.yaml` obliga
+a repetir las tres compilaciones, y Codex tiene el árbol. **Se retiran en la ventana de
+T‑43**, que es cuando las tres builds se vuelven a verificar de todos modos.
+
+Retirarlas **fortalece H4**, no lo debilita: cargar dependencias muertas es lo contrario de
+la economía de dependencias que la hipótesis afirma, y si en la defensa alguien pregunta
+qué hace `intl` en el proyecto, la respuesta honesta hoy es «nada».
+
+**H‑06 · la variante B dejó inservible el registro de consola, y eso no lo previmos.**
+Cloud Audit Logs **no registra accesos a recursos alcanzables sin iniciar sesión**, y con B
+todo acceso es anónimo. La página de Firestore no lo aclara; Timonel no lo dio por hecho y
+dejó un procedimiento con control positivo y regla de decisión: **si solo aparece el
+control, H‑06 va a la ventana de T‑47.**
+
+**Es un costo de la decisión 10.10 que se descubre después, no uno que se pesó al
+decidir.** No la revierte —H‑06 es severidad **Baja**, y cerrar una Baja agregando una
+dependencia y cableando alrededor de archivos congelados es mala economía—, pero se declara
+como tal y no como si lo hubiéramos anticipado.
+
+#### Segunda corrección de conteo a este brief, mía
+
+Listé **10** dependencias directas de producción; son **12**. Omití `riverpod_annotation` y
+`cupertino_icons`. Es el segundo conteo mío que Timonel corrige, después de los 57 `DGS`
+que eran 34.
+
+Las dos veces el error tiene la misma causa mecánica: **enuncié una cifra de memoria en vez
+de generarla del archivo en el mismo acto.** Regla operativa que queda: una cifra que entra
+a este brief se produce leyendo la fuente en ese momento, nunca recordándola de una lectura
+anterior.
+
+#### Convención de dónde viven los informes
+
+**Resuelto: todos los informes van a `docs/`.** La raíz queda para `SPRINT-N.md`,
+`AGENTS.md`, `CLAUDE.md` y `README.md`, los cuatro que un agente lee al llegar.
+
+Dos correcciones de Timonel a lo que escribí aquí. **Eran cinco informes en la raíz, no
+tres:** a `T35`, `BLOQUE2` y `BLOQUE3` —ya movidos con `git mv`, con la referencia de
+`tool/prepare_t35.ps1` corregida— se suman `BLOQUE4` y `T52`, que todavía no están
+versionados. Y la regla **no basta en este brief**: los informes de Codex nacen donde
+`AGENTS.md` diga, porque es el archivo que Codex lee. Quedó escrita allí.
+
+**Y al escribirla apareció un choque con una regla anterior.** `AGENTS.md` prohíbe incluir
+archivos bajo `docs/` en el bloque de git; si los informes nacen ahí, las dos reglas se
+contradicen. Resuelto con un recorte explícito: **el propio informe de la tarea en curso es
+la única excepción permanente**, por su nombre exacto y nunca por comodín. La prohibición
+existe para proteger los entregables de tesis, no para impedir versionar lo que el agente
+acaba de escribir.
+
+---
+
+### 10.14 · El hueco del bloque 4 era Android, no Chrome · nace T-53 · orden de la semana (27-sep)
+
+**Corrección mía.** El tablero entregado el 26-sep dice, para T‑29, T‑30, T‑31 y T‑52,
+«falta la prueba de ejecución en Chrome». **Es falso.** Los informes de Codex
+(`docs/BLOQUE4-RESULTADOS.md` y `docs/T52-RESULTADOS.md`) documentan una ejecución en
+**Chrome 154 real**, release, con perfiles guardados en IndexedDB, recarga de la página,
+50 tomas recuperadas y el PDF de 62 páginas generado dentro del navegador. Windows también
+se ejercitó. **Lo que falta es Android:** el APK compiló, pero no se instaló en el teléfono,
+y el informe lo dice expresamente. La columna «En revisión» sigue siendo correcta —a las
+cuatro les falta uno de los tres clientes—, pero el motivo estaba mal.
+
+La causa es la misma de siempre: repetí el resumen de una línea («Chrome no quedó
+verificado por fallo del ejecutor», que se refería al ejecutor de `flutter test`) sin leer
+el informe que lo precisaba. **Lo que no se completa en Chrome es la suite de
+`flutter test --platform chrome`, por una ruta del SDK — un problema del ejecutor, no del
+producto.** Tampoco se recorrieron a mano el menú de exportación ni el diálogo de descarga.
+
+**Orden para cerrar el hueco sin chocar:** Timonel compila el APK y el cliente Web **desde el
+árbol limpio de hoy, antes de que Codex empiece el bloque 5**, y avisa. Con lo compilado
+verifica en el Honor X5d y recorre a mano la exportación en Chrome mientras Codex trabaja.
+Construir desde un árbol que otro programador está editando probaría una mezcla.
+
+**Nace T‑53**, fuera del compromiso y contra la holgura, detrás del bloque 5. Con ella, la
+holgura usada fuera del compromiso llega a 5.0 h (T‑50 2.0 · T‑51 0.5 · T‑52 1.5 · T‑53 1.0)
+de 18.0.
