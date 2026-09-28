@@ -902,8 +902,15 @@ también alcanza huecos de bahías con carga propia.
 que la pantalla (carga propia primero), incluirlos en la leyenda y comprobarlo contra A01.
 **No** sumarlos como contenedores, ni alterar pesos, la tabla o el número de páginas.
 
-**Terminada cuando:** las siete bahías de A01 muestran sus huecos tomados, y el conteo de
-contenedores y las 62 páginas no cambian.
+**Y en la misma leyenda: `Vacío` y `OOG` comparten color.** Observación de Timonel al
+verificar el bloque 4 en Android: `pdf_report_service.dart:430` y `:433` usan exactamente
+`orange100` / `orange` para las dos entradas, así que el PDF las separa en la leyenda pero
+no en las celdas. Como T‑53 ya abre esa leyenda, se corrige aquí: un color propio para cada
+una, que se distinga también en claridad y no solo en tono.
+
+**Terminada cuando:** las siete bahías de A01 muestran sus huecos tomados, `Vacío` y `OOG`
+se distinguen en la celda y en la leyenda, y el conteo de contenedores y las 62 páginas no
+cambian.
 
 ---
 
@@ -1599,3 +1606,26 @@ Construir desde un árbol que otro programador está editando probaría una mezc
 **Nace T‑53**, fuera del compromiso y contra la holgura, detrás del bloque 5. Con ella, la
 holgura usada fuera del compromiso llega a 5.0 h (T‑50 2.0 · T‑51 0.5 · T‑52 1.5 · T‑53 1.0)
 de 18.0.
+
+---
+
+### 10.15 · T-29, T-30, T-31 y T-52 cerradas en los tres clientes · regla de trabajo en curso (28-sep)
+
+**Android cerrado por Timonel** (`5ec3d82`, `docs/BLOQUE4-ANDROID-RESULTADOS.md`). APK y
+Web release compilados desde una copia exacta de `711c79c`, **antes** de que Codex abriera
+el bloque 5, con el hash del APK verificado. En el **Honor X5d (NAA‑LX3) / Android 15**
+—no es el POCO de la serie de H5—: cargar y confirmar con 75 000 kg (17:53:34); cierre
+forzado, reapertura y recarga con el perfil recuperado **sin** pantalla de geometría, con
+75 000 kg y «50 posiciones propuestas del archivo» (17:54:47 y 17:55:09); PDF desde el menú
+con el diálogo de guardado de Android, 62 páginas, fila 00 en 34 de 34, sin desbordes
+(17:56:15). **Chrome 154, a mano por Carlos:** PDF desde el menú, descarga directa
+(18:00:30), texto idéntico página por página al del Honor.
+
+Con eso las cuatro tareas cumplen la Definición de Terminado en Windows, Web y Android, y
+pasan a Terminado en el tablero.
+
+**Trabajo en curso: límite 1, como fijó Carlos.** Con Codex abriendo T‑32, **T‑46 vuelve a
+«Por hacer» marcada como bloqueada**: H‑07 está hecho y H‑06 espera un paso de consola que
+no depende de ningún agente. Una tarea detenida por un tercero no debe ocupar la única
+plaza de trabajo en curso. Vuelve a «En curso» cuando la consola esté lista y la plaza
+libre.
