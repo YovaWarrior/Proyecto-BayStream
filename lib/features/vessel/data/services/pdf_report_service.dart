@@ -9,6 +9,13 @@ import '../../domain/entities/entities.dart';
 /// Genera el reporte operativo completo del viaje en PDF.
 class PdfReportService {
   static const _pageMargin = 24.0;
+  // Celda y leyenda comparten la misma paleta. OOG también cambia de claridad.
+  static const _emptyFill = PdfColors.orange100;
+  static const _emptyInk = PdfColors.orange;
+  static const _oogFill = PdfColors.deepPurple300;
+  static const _oogInk = PdfColors.deepPurple900;
+  static const _neighborFill = PdfColors.blueGrey100;
+  static const _neighborInk = PdfColors.blueGrey600;
 
   const PdfReportService();
 
@@ -261,6 +268,7 @@ class PdfReportService {
               tier,
               rows,
               positions,
+              bay.slotsOccupiedByNeighbors,
               cellWidth,
               cellHeight,
             ),
@@ -283,6 +291,7 @@ class PdfReportService {
               tier,
               rows,
               positions,
+              bay.slotsOccupiedByNeighbors,
               cellWidth,
               cellHeight,
             ),
@@ -331,6 +340,7 @@ class PdfReportService {
     int tier,
     List<int> rows,
     Map<String, ContainerUnit> positions,
+    Set<String> occupiedByNeighbors,
     double cellWidth,
     double cellHeight,
   ) {
@@ -350,6 +360,8 @@ class PdfReportService {
             positions['$row-$tier'],
             cellWidth,
             cellHeight,
+            occupiedByNeighbor: occupiedByNeighbors.contains(
+                '${row.toString().padLeft(2, '0')}${tier.toString().padLeft(2, '0')}'),
           ),
         ),
       ],
@@ -360,10 +372,13 @@ class PdfReportService {
     ContainerUnit? container,
     double width,
     double height,
+    {bool occupiedByNeighbor = false}
   ) {
-    final colors = _containerColors(container);
+    // La carga propia tiene prioridad; la sombra no es otro contenedor.
+    final shadow = container == null && occupiedByNeighbor;
+    final colors = shadow ? (_neighborFill, _neighborInk) : _containerColors(container);
     final label = container == null
-        ? ''
+        ? (shadow ? "40'" : '')
         : container.isDangerous
             ? 'IMO'
             : container.isReefer
@@ -410,13 +425,13 @@ class PdfReportService {
     if (container.isDangerous) return (PdfColors.red100, PdfColors.red);
     if (container.isReefer) return (PdfColors.cyan100, PdfColors.cyan);
     if (container.isOverDimension) {
-      return (PdfColors.orange100, PdfColors.orange);
+      return (_oogFill, _oogInk);
     }
     if (container.status == ContainerStatus.full) {
       return (PdfColors.green100, PdfColors.green);
     }
     if (container.status == ContainerStatus.empty) {
-      return (PdfColors.orange100, PdfColors.orange);
+      return (_emptyFill, _emptyInk);
     }
     return (PdfColors.grey100, PdfColors.grey);
   }
@@ -427,10 +442,11 @@ class PdfReportService {
       runSpacing: 4,
       children: [
         _legendItem('Lleno', PdfColors.green100, PdfColors.green),
-        _legendItem('Vacío', PdfColors.orange100, PdfColors.orange),
+        _legendItem('Vacío', _emptyFill, _emptyInk),
         _legendItem('IMO', PdfColors.red100, PdfColors.red),
         _legendItem('Reefer', PdfColors.cyan100, PdfColors.cyan),
-        _legendItem('OOG', PdfColors.orange100, PdfColors.orange),
+        _legendItem('OOG', _oogFill, _oogInk),
+        _legendItem('Vecino de 40 pies', _neighborFill, _neighborInk),
         _legendItem('Sin contenedor', PdfColors.grey200, PdfColors.grey300),
       ],
     );
