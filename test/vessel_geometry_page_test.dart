@@ -27,6 +27,7 @@ void main() {
     WidgetTester tester,
     void Function(VesselCallParameters?) captured, {
     VesselGeometry? initial,
+    VesselProfile? profile,
     Map<String, int> loadingPorts = const {'GTPBR': 3, 'HNPCR': 2},
     String? declaredPort,
   }) async {
@@ -51,6 +52,7 @@ void main() {
                         loadingPorts: loadingPorts,
                         declaredPort: declaredPort,
                         initial: initial,
+                        profile: profile,
                         fileName: 'CORPUS_A01.edi',
                       ),
                     ),
@@ -97,7 +99,12 @@ void main() {
 
   testWidgets('la propuesta sin tocar no se rotula como corregida',
       (tester) async {
-    await openPage(tester, (_) {});
+    final profile = VesselProfile(identity: VesselIdentity(source: VesselIdentitySource.imo, value: '9000003'),
+      vesselName: 'ALFA', geometry: _proposal.copyWith(firstHoldTier: 4, firstDeckTier: 84,
+        stackWeightLimitKg: 62500.5), reeferSlots: {'0061290', '0060102'},
+      origin: VesselProfileOrigin.proposedFromFile, updatedAt: DateTime.utc(2026));
+    VesselCallParameters? captured;
+    await openPage(tester, (v) => captured = v, profile: profile);
 
     // Los niveles se comparan por contenido: la pantalla trabaja sobre copias
     // de las listas de la propuesta, y compararlas por identidad rotulaba como
@@ -105,10 +112,31 @@ void main() {
     expect(find.text('Geometría igual al mínimo observado en el archivo.'),
         findsOneWidget);
     expect(find.text('Geometría corregida por el usuario.'), findsNothing);
+    expect(find.text('Perfil sin cambios.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+    await tester.pumpAndSettle();
+    expect(captured!.changed, isFalse);
+    expect(captured!.geometry, profile.geometry);
+    expect(captured!.reeferSlots, profile.reeferSlots);
+    expect(identical(captured!.reeferSlots, profile.reeferSlots), isFalse);
   });
 
   testWidgets('al quitar un nivel sí se rotula como corregida', (tester) async {
-    await openPage(tester, (_) {});
+    final profile = VesselProfile(identity: VesselIdentity(source: VesselIdentitySource.imo, value: '9000003'),
+      vesselName: 'ALFA', geometry: _proposal, reeferSlots: {'0061290', '0060102'},
+      origin: VesselProfileOrigin.proposedFromFile, updatedAt: DateTime.utc(2026));
+    await openPage(tester, (_) {}, profile: profile);
+    await tester.tap(find.byKey(const ValueKey('profile-sockets')));
+    await tester.pumpAndSettle();
+    tester.widget<InputChip>(find.byKey(const ValueKey('socket-0061290'))).onDeleted!();
+    await tester.pumpAndSettle();
+    expect(find.text('Perfil modificado; pendiente de guardar.'), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('socket-input')), '0061290');
+    await tester.ensureVisible(find.byKey(const ValueKey('socket-add')));
+    await tester.tap(find.byKey(const ValueKey('socket-add')));
+    await tester.pumpAndSettle();
+    // El mismo contenido, con otro orden de inserción, vuelve a estar intacto.
+    expect(find.text('Perfil sin cambios.'), findsOneWidget);
 
     tester
         .widget<InputChip>(find.byKey(const ValueKey('deck-tier-84')))
@@ -116,6 +144,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Geometría corregida por el usuario.'), findsOneWidget);
+    expect(find.text('Perfil modificado; pendiente de guardar.'), findsOneWidget);
   });
 
   testWidgets('un nivel con carga no se puede quitar', (tester) async {
@@ -129,6 +158,25 @@ void main() {
 
     expect(conCarga.onDeleted, isNull, reason: 'el 90 trae carga');
     expect(vacio.onDeleted, isNotNull, reason: 'el 84 esta vacio');
+  });
+
+  testWidgets('T-34 cambiar frontera reclasifica niveles sin perderlos', (tester) async {
+    VesselCallParameters? captured;
+    await openPage(tester, (value) => captured = value);
+    await tester.tap(find.byKey(const ValueKey('geometry-anchors')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('geometry-floor')), '84');
+    await tester.enterText(find.byKey(const ValueKey('geometry-first-deck')), '84');
+    await tester.tap(find.byKey(const ValueKey('geometry-no-limit')));
+    await tester.pumpAndSettle();
+    expect(confirmEnabled(tester), isTrue);
+    await tester.ensureVisible(find.byKey(const ValueKey('geometry-confirm')));
+    await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+    await tester.pumpAndSettle();
+    expect(captured!.geometry.holdTiers, [..._proposal.holdTiers, 82]);
+    expect(captured!.geometry.deckTiers, [84, 86, 88, 90]);
+    expect(captured!.geometry.coversAll(_posiciones), isTrue);
+    expect(captured!.geometry.isDeckTier(82), isFalse);
   });
 
   testWidgets('quitar un nivel vacío deja el hueco en la geometría',

@@ -12,6 +12,7 @@ import '../widgets/bay_plan_view.dart';
 import '../widgets/container_search_delegate.dart';
 import '../widgets/voyage_stats_view.dart';
 import 'vessel_geometry_page.dart';
+import 'vessel_profiles_page.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -48,6 +49,11 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         title: const Text('BayStream'),
         centerTitle: true,
         actions: [
+          IconButton(key: const ValueKey('saved-profiles'),
+            icon: const Icon(Icons.directions_boat_outlined),
+            tooltip: 'Perfiles guardados',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const VesselProfilesPage()))),
           // Botón de búsqueda (solo si hay viaje cargado)
           if (hasVoyage)
             IconButton(
@@ -337,6 +343,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     }
 
     if (result.needsGeometry) {
+      if (notifier.canChooseTemplate && !await _chooseTemplate(context)) return;
+      if (!context.mounted) return;
       await _askForGeometry(context, fileName: result.fileName);
       return;
     }
@@ -356,6 +364,51 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     );
   }
 
+  Future<bool> _chooseTemplate(BuildContext context) async {
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    try {
+      final profiles = await ref.read(savedVesselProfilesProvider.future);
+      if (!context.mounted) return false;
+      if (profiles.isEmpty) return true;
+      final selection = await showDialog<int>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Perfil del buque nuevo'),
+          content: SizedBox(width: 480, child: SingleChildScrollView(child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Elige un punto de partida. Revisarás sus parámetros antes de guardar.'),
+              ListTile(key: const ValueKey('profile-from-file'),
+                title: const Text('Proponer desde el archivo'),
+                onTap: () => Navigator.pop(context, -1)),
+              for (var i = 0; i < profiles.length; i++)
+                ListTile(key: ValueKey('profile-template-${profiles[i].key}'),
+                  title: Text('Plantilla: ${profiles[i].vesselName}'),
+                  subtitle: Text(profiles[i].key),
+                  onTap: () => Navigator.pop(context, i)),
+            ],
+          ))),
+          actions: [TextButton(onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'))],
+        ),
+      );
+      if (!context.mounted) return false;
+      if (selection == null) {
+        notifier.discardPendingVoyage();
+        return false;
+      }
+      if (selection >= 0) notifier.useTemplate(profiles[selection]);
+      return true;
+    } catch (error) {
+      notifier.discardPendingVoyage();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('No se pudieron leer las plantillas: $error')));
+      }
+      return false;
+    }
+  }
+
   /// Abre la pantalla de parámetros del buque con la propuesta deducida.
   ///
   /// Si el usuario cancela, el viaje pendiente se descarta: no se publica un
@@ -369,7 +422,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     if (target == null) return;
 
     final isEditing = notifier.pendingVoyage == null;
-    final profile =
+    var profile =
         notifier.currentProfile ?? VesselProfile.proposeFrom(target);
     final proposal =
         VesselProfile.proposeFrom(target, parameters: profile.geometry)
@@ -429,6 +482,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             declaredPort: target.portOfOrigin,
             initialPortOfCall: target.portOfCall,
             initial: initial,
+            profile: profile,
             fileName: fileName,
             proposedReeferSocketCount:
                 profile.reeferSlotsOrigin == VesselProfileOrigin.proposedFromFile
@@ -457,7 +511,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       }
 
       final error = await notifier.confirmGeometry(result.geometry,
-          portOfCall: result.portOfCall);
+          portOfCall: result.portOfCall, reeferSlots: result.reeferSlots,
+          reeferSlotsOrigin: result.reeferSlotsOrigin);
       if (!context.mounted) return;
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -465,6 +520,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           backgroundColor: Theme.of(context).colorScheme.error,
         ));
         initial = result.geometry;
+        profile = profile.copyWith(reeferSlots: result.reeferSlots,
+          reeferSlotsOrigin: result.reeferSlotsOrigin);
         continue;
       }
 

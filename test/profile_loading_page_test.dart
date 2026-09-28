@@ -22,6 +22,9 @@ class _ReplayNotifier extends VoyageNotifier {
 class _ProfileResponses implements LocalVesselRepository {
   VesselProfileLookup lookup = VesselProfileLookup();
   final saved = <VesselProfile>[];
+  List<VesselProfile> templates = [];
+  @override
+  Future<Either<Failure, List<VesselProfile>>> getAllProfiles() async => Right(templates);
   @override
   Future<Either<Failure, VesselProfileLookup>> findProfileFor(
           Vessel vessel) async =>
@@ -60,6 +63,49 @@ void main() {
   }
 
   setUp(() => local = _ProfileResponses());
+
+  testWidgets('T-33 plantilla conserva identidad nueva y espera confirmación', (tester) async {
+    final source = VesselProfile.proposeFrom(BaplieParserService().parse(
+        profileTestEdi.replaceAll('9000003', '9000004').replaceAll('BUQUE ALFA', 'BUQUE BETA')))
+        .copyWith(stackWeightLimitKg: 75000, reeferSlots: {'0020182'},
+          origin: VesselProfileOrigin.declaredByUser,
+          reeferSlotsOrigin: VesselProfileOrigin.declaredByUser);
+    local.templates = [source];
+    await open(tester);
+    await load(tester);
+    expect(find.text('Perfil del buque nuevo'), findsOneWidget);
+    await tester.tap(find.byKey(ValueKey('profile-template-${source.key}')));
+    await tester.pumpAndSettle();
+    expect(local.saved, isEmpty);
+    expect(notifier.publishedVoyage, isNull);
+    expect(notifier.currentProfile!.key, 'imo:9000003');
+    expect(notifier.currentProfile!.origin, VesselProfileOrigin.template);
+    expect(notifier.currentProfile!.reeferSlotsOrigin, VesselProfileOrigin.template);
+    await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+    await tester.pumpAndSettle();
+    expect(local.saved.single.key, 'imo:9000003');
+    expect(local.saved.single.reeferSlotsOrigin, VesselProfileOrigin.template);
+    expect(source.key, 'imo:9000004');
+  });
+
+  testWidgets('T-33 elegir archivo o cancelar no guarda una plantilla', (tester) async {
+    local.templates = [VesselProfile.proposeFrom(BaplieParserService().parse(
+      profileTestEdi.replaceAll('9000003', '9000004')))];
+    await open(tester);
+    await load(tester);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(notifier.pendingVoyage, isNull);
+    expect(local.saved, isEmpty);
+    await load(tester);
+    await tester.tap(find.byKey(const ValueKey('profile-from-file')));
+    await tester.pumpAndSettle();
+    expect(notifier.currentProfile!.origin, VesselProfileOrigin.proposedFromFile);
+    expect(local.saved, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('geometry-cancel')));
+    await tester.pumpAndSettle();
+    expect(local.saved, isEmpty);
+  });
 
   testWidgets('T-31 muestra cota inferior y confirmar no declara las tomas',
       (tester) async {

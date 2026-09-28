@@ -41,6 +41,23 @@ class VesselProfile extends Equatable {
 
   String get key => identity.key;
 
+  /// Borrador para otro buque: copia parámetros, nunca identidad ni confianza.
+  /// El constructor copia y protege las colecciones de ambos perfiles.
+  VesselProfile cloneFor(Vessel vessel, {DateTime? updatedAt}) {
+    if (vessel.profileKey == key) {
+      throw ArgumentError('La plantilla requiere la identidad de otro buque.');
+    }
+    return VesselProfile(
+      identity: vessel.profileIdentity,
+      vesselName: vessel.name,
+      geometry: geometry,
+      reeferSlots: reeferSlots,
+      origin: VesselProfileOrigin.template,
+      reeferSlotsOrigin: VesselProfileOrigin.template,
+      updatedAt: updatedAt ?? DateTime.now(),
+    );
+  }
+
   /// Primera versión propuesta; no se guarda ni se declara automáticamente.
   factory VesselProfile.proposeFrom(
     VesselVoyage voyage, {

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,7 +10,8 @@ import '../../domain/entities/entities.dart';
 /// Lo que la pantalla devuelve: la geometría del buque y el puerto de esta
 /// escala. El puerto no es geometría —el casco no cambia entre escalas— pero
 /// se confirma en el mismo paso porque es el otro dato que el archivo no trae.
-typedef VesselCallParameters = ({VesselGeometry geometry, String? portOfCall});
+typedef VesselCallParameters = ({VesselGeometry geometry, String? portOfCall,
+  Set<String> reeferSlots, VesselProfileOrigin reeferSlotsOrigin, bool changed});
 
 /// Pantalla de parámetros del buque, previa al plano.
 ///
@@ -23,6 +25,8 @@ class VesselGeometryPage extends StatefulWidget {
 
   /// Geometría ya confirmada, cuando se reabre la pantalla para corregirla.
   final VesselGeometry? initial;
+  final VesselProfile? profile;
+  final bool profileOnly;
 
   /// Nombre del archivo cargado, para situar al usuario.
   final String? fileName;
@@ -56,6 +60,8 @@ class VesselGeometryPage extends StatefulWidget {
     this.declaredPort,
     this.initialPortOfCall,
     this.initial,
+    this.profile,
+    this.profileOnly = false,
     this.fileName,
     this.proposedReeferSocketCount,
   });
@@ -70,6 +76,17 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   late final TextEditingController _portRows;
   late final TextEditingController _starboardRows;
   late final TextEditingController _stackLimit;
+  late final TextEditingController _floor;
+  late final TextEditingController _firstHold;
+  late final TextEditingController _firstDeck;
+  final _socketInput = TextEditingController();
+  late Set<String> _sockets;
+  bool _declareSockets = false;
+  String? _socketError;
+  VesselGeometry get _start => widget.initial ?? widget.profile?.geometry ?? widget.proposal;
+  VesselProfileOrigin get _socketOrigin => _declareSockets
+      ? VesselProfileOrigin.declaredByUser
+      : widget.profile?.reeferSlotsOrigin ?? VesselProfileOrigin.proposedFromFile;
 
   /// Niveles declarados. Son listas y no cuentas: el usuario puede quitar uno
   /// intermedio que el buque no tenga.
@@ -92,11 +109,15 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   @override
   void initState() {
     super.initState();
-    final start = widget.initial ?? widget.proposal;
+    final start = _start;
     _portRows = TextEditingController(text: '${start.portRows}');
     _starboardRows = TextEditingController(text: '${start.starboardRows}');
     _deckTiers = [...start.deckTiers];
     _holdTiers = [...start.holdTiers];
+    _floor = TextEditingController(text: '${start.deckTierFloor}');
+    _firstHold = TextEditingController(text: '${start.firstHoldTier}');
+    _firstDeck = TextEditingController(text: '${start.firstDeckTier}');
+    _sockets = {...?widget.profile?.reeferSlots};
     _ocupados.addAll(widget.positions.map((p) => p.tier));
     _portOfCall = widget.initialPortOfCall ??
         widget.declaredPort ??
@@ -105,10 +126,11 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     _stackLimit = TextEditingController(
       text: start.stackWeightLimitKg == null
           ? ''
-          : start.stackWeightLimitKg!.round().toString(),
+          : start.stackWeightLimitKg!.toString(),
     );
     _limitUnavailable =
-        widget.initial != null && widget.initial!.stackWeightLimitKg == null;
+        (widget.initial != null || widget.profileOnly ||
+          widget.profile?.origin == VesselProfileOrigin.template) && start.stackWeightLimitKg == null;
 
     for (final controller in _controllers) {
       controller.addListener(_onFieldChanged);
@@ -119,17 +141,27 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
         _portRows,
         _starboardRows,
         _stackLimit,
+        _floor, _firstHold, _firstDeck,
       ];
 
   @override
   void dispose() {
+    _socketInput.dispose();
     for (final controller in _controllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  void _onFieldChanged() => setState(() {});
+  void _onFieldChanged() => setState(() {
+    final floor = _value(_floor);
+    if (floor != null && floor > 0 && floor <= 99) {
+      final tiers = {..._holdTiers, ..._deckTiers};
+      final basis = _start.copyWith(deckTierFloor: floor);
+      _holdTiers = tiers.where((t) => !basis.isDeckTier(t)).toList()..sort();
+      _deckTiers = tiers.where(basis.isDeckTier).toList()..sort();
+    }
+  });
 
   int? _value(TextEditingController controller) =>
       int.tryParse(controller.text.trim());
@@ -153,11 +185,17 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   VesselGeometry? _buildGeometry() {
     final port = _value(_portRows);
     final starboard = _value(_starboardRows);
-    if (port == null || starboard == null) return null;
+    final floor = _value(_floor), hold = _value(_firstHold), deck = _value(_firstDeck);
+    if (port == null || starboard == null || port < 0 || starboard < 0 ||
+        port > 49 || starboard > 50 || floor == null || floor < 1 || floor > 99 ||
+        hold == null || hold < 0 || hold >= floor ||
+        deck == null || deck < floor || deck > 99) {
+      return null;
+    }
     return VesselGeometry(
-      deckTierFloor: (widget.initial ?? widget.proposal).deckTierFloor,
-      firstHoldTier: (widget.initial ?? widget.proposal).firstHoldTier,
-      firstDeckTier: (widget.initial ?? widget.proposal).firstDeckTier,
+      deckTierFloor: floor,
+      firstHoldTier: hold,
+      firstDeckTier: deck,
       portRows: port,
       starboardRows: starboard,
       holdTiers: _holdTiers,
@@ -172,7 +210,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     final geometry = _buildGeometry();
     if (geometry == null) return;
     Navigator.of(context)
-        .pop((geometry: geometry, portOfCall: _portOfCall));
+        .pop((geometry: geometry, portOfCall: _portOfCall,
+          reeferSlots: Set<String>.unmodifiable(_sockets),
+          reeferSlotsOrigin: _socketOrigin, changed: _changed(geometry)));
   }
 
   @override
@@ -214,6 +254,17 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             ],
             const SizedBox(height: 24),
 
+            ExpansionTile(title: const Text('Frontera y anclas'),
+              key: const ValueKey('geometry-anchors'),
+              children: [
+                _parameterField(_floor, 'Frontera cubierta / bodega', 'geometry-floor'),
+                _parameterField(_firstHold, 'Primer nivel de bodega', 'geometry-first-hold'),
+                _parameterField(_firstDeck, 'Primer nivel de cubierta', 'geometry-first-deck'),
+                const Text('La frontera clasifica los niveles. Las anclas indican dónde empieza la propuesta de cada zona.'),
+                if (_buildGeometry() == null)
+                  const Text('Revisa frontera y anclas: bodega debajo de la frontera y cubierta desde ella.'),
+              ]),
+            const SizedBox(height: 16),
             Text('Filas', style: textTheme.titleMedium),
             const SizedBox(height: 8),
             _buildCountField(
@@ -248,7 +299,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               titulo: 'Niveles de cubierta',
               prefijo: 'deck',
               tiers: _deckTiers,
-              anchor: (widget.initial ?? proposal).firstDeckTier,
+              anchor: _value(_firstDeck) ?? _start.firstDeckTier,
               onChanged: (nuevos) => setState(() => _deckTiers = nuevos),
             ),
             const SizedBox(height: 16),
@@ -257,7 +308,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               titulo: 'Niveles de bodega',
               prefijo: 'hold',
               tiers: _holdTiers,
-              anchor: (widget.initial ?? proposal).firstHoldTier,
+              anchor: _value(_firstHold) ?? _start.firstHoldTier,
               onChanged: (nuevos) => setState(() => _holdTiers = nuevos),
             ),
             const SizedBox(height: 24),
@@ -273,6 +324,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             _buildStackLimitSection(context),
             const SizedBox(height: 24),
 
+            if (widget.profile != null) _buildSockets(context),
+
             if (candidate != null) _buildSummary(context, candidate),
             const SizedBox(height: 24),
 
@@ -280,12 +333,12 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               key: const ValueKey('geometry-confirm'),
               onPressed: _canConfirm ? _confirm : null,
               icon: const Icon(Icons.check),
-              label: const Text('Confirmar y ver el plano'),
+              label: Text(widget.profileOnly ? 'Guardar perfil' : 'Confirmar y ver el plano'),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar la carga'),
+              child: Text(widget.profileOnly ? 'Cancelar' : 'Cancelar la carga'),
             ),
             if (!_limitResolved) ...[
               const SizedBox(height: 8),
@@ -304,9 +357,68 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
 
   String _pad(int value) => value.toString().padLeft(2, '0');
 
+  Widget _parameterField(TextEditingController controller, String label, String key) =>
+      Padding(padding: const EdgeInsets.only(bottom: 12), child: TextFormField(
+        key: ValueKey(key), controller: controller,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
+        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+      ));
+
+  Widget _buildSockets(BuildContext context) {
+    final source = switch (_socketOrigin) {
+      VesselProfileOrigin.template => 'Heredadas de plantilla; pendientes de declaración para este buque.',
+      VesselProfileOrigin.proposedFromFile => 'Propuestas del archivo: cota inferior, puede haber más tomas.',
+      VesselProfileOrigin.declaredByUser => 'Tomas declaradas por el usuario.',
+    };
+    return ExpansionTile(
+      key: const ValueKey('profile-sockets'),
+      title: Text('Tomas de reefer (${_sockets.length})'),
+      subtitle: Text(source),
+      children: [
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final slot in _sockets.toList()..sort())
+            InputChip(key: ValueKey('socket-$slot'), label: Text(slot),
+              onDeleted: () => setState(() => _sockets.remove(slot))),
+        ]),
+        const SizedBox(height: 12),
+        TextField(key: const ValueKey('socket-input'), controller: _socketInput,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(7)],
+          decoration: InputDecoration(labelText: 'Posición BBBRRTT',
+            helperText: 'Ejemplo: 0020182', errorText: _socketError)),
+        TextButton.icon(key: const ValueKey('socket-add'), icon: const Icon(Icons.add),
+          label: const Text('Agregar toma'), onPressed: () {
+            final code = _socketInput.text.trim();
+            setState(() {
+              if (!IsoCoordinateParser.isValid(code) || code.startsWith('000')) {
+                _socketError = 'Escribe siete dígitos y una bahía distinta de 000.';
+                return;
+              }
+              _socketError = null;
+              _sockets.add(code);
+              _socketInput.clear();
+            });
+          }),
+        if (widget.profile!.reeferSlotsOrigin != VesselProfileOrigin.declaredByUser)
+          CheckboxListTile(key: const ValueKey('sockets-declare'),
+            value: _declareSockets, onChanged: (v) => setState(() => _declareSockets = v ?? false),
+            title: const Text('Declaro este conjunto de tomas para el buque'),
+            subtitle: const Text('Marca solo después de revisar las tomas. Confirmar la geometría no las declara.')),
+      ],
+    );
+  }
+
   Widget _buildExplanation(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    if (widget.profileOnly || widget.profile?.origin == VesselProfileOrigin.template) {
+      return Card(child: Padding(padding: const EdgeInsets.all(16), child: Text(
+        widget.profileOnly
+          ? 'Editando el perfil guardado de ${widget.profile!.vesselName}. Los cambios se guardan solo al confirmar.'
+          : 'Parámetros heredados de una plantilla para ${widget.profile!.vesselName}. Revisa si corresponden a este buque antes de confirmar.')));
+    }
 
     return Card(
       color: colorScheme.surfaceContainerHighest,
@@ -393,9 +505,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final ordenados = [...tiers]..sort((a, b) => b.compareTo(a));
-    final basis = widget.initial ?? widget.proposal;
+    final basis = _buildGeometry() ?? _start;
     final candidatos = _nivelesAgregables(tiers, anchor).where((tier) =>
-      tier <= 98 && basis.isDeckTier(tier) == (prefijo == 'deck')).toSet();
+      tier <= 99 && basis.isDeckTier(tier) == (prefijo == 'deck')).toSet();
     // También ofrece carga observada bajo el ancla declarada.
     candidatos.addAll(_ocupados.where((tier) => !tiers.contains(tier) &&
       basis.isDeckTier(tier) == (prefijo == 'deck')));
@@ -446,7 +558,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
         ),
         const SizedBox(height: 6),
         Text(
-          ordenados.isEmpty
+          widget.profileOnly || widget.profile?.origin == VesselProfileOrigin.template
+              ? '${ordenados.length} niveles del perfil. Revisa los que tiene el buque.'
+              : ordenados.isEmpty
               ? 'El archivo no trae carga en esta zona.'
               : 'Propuesto desde el archivo: ${ordenados.length} niveles. '
                   'Quita los que el buque no tenga.',
@@ -624,8 +738,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             const SizedBox(height: 8),
             Text(
               'Este dato no está en el archivo. Viene del manual de estabilidad '
-              'del buque, y es el único parámetro que la aplicación no puede '
-              'proponer.',
+              'del buque. Si procede de una plantilla, comprueba que corresponde '
+              'a este buque.',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
@@ -634,7 +748,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               controller: _stackLimit,
               enabled: !_limitUnavailable,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
               decoration: const InputDecoration(
                 labelText: 'Límite por pila',
                 suffixText: 'kg',
@@ -678,7 +792,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   Widget _buildSummary(BuildContext context, VesselGeometry geometry) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final corrected = !_sameShapeAs(geometry, widget.proposal);
+    final corrected = !_sameShapeAs(geometry, _start);
 
     return Card(
       color: colorScheme.secondaryContainer,
@@ -696,10 +810,15 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 4),
+            if (widget.profile != null)
+              Text(_changed(geometry) ? 'Perfil modificado; pendiente de guardar.' : 'Perfil sin cambios.',
+                key: const ValueKey('profile-changes')),
             Text(
               corrected
                   ? 'Geometría corregida por el usuario.'
-                  : 'Geometría igual al mínimo observado en el archivo.',
+                  : widget.initial != null || widget.profileOnly
+                    ? 'Geometría igual al perfil inicial.'
+                    : 'Geometría igual al mínimo observado en el archivo.',
               style: textTheme.bodySmall
                   ?.copyWith(color: colorScheme.onSecondaryContainer),
             ),
@@ -710,10 +829,17 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   }
 
   bool _sameShapeAs(VesselGeometry a, VesselGeometry b) =>
+      a.deckTierFloor == b.deckTierFloor &&
+      a.firstHoldTier == b.firstHoldTier && a.firstDeckTier == b.firstDeckTier &&
+      a.stackWeightLimitKg == b.stackWeightLimitKg &&
       a.portRows == b.portRows &&
       a.starboardRows == b.starboardRows &&
       _sameTiers(a.holdTierNumbers, b.holdTierNumbers) &&
       _sameTiers(a.deckTierNumbers, b.deckTierNumbers);
+
+  bool _changed(VesselGeometry geometry) => !_sameShapeAs(geometry, _start) ||
+      !setEquals(_sockets, widget.profile?.reeferSlots ?? const <String>{}) ||
+      _socketOrigin != (widget.profile?.reeferSlotsOrigin ?? VesselProfileOrigin.proposedFromFile);
 
   /// Compara los niveles por contenido y no por identidad.
   ///

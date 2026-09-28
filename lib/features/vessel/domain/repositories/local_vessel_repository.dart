@@ -23,6 +23,8 @@ abstract class LocalVesselRepository {
   Future<Either<Failure, void>> deleteVoyage(String id);
 
   Future<Either<Failure, VesselProfileLookup>> findProfileFor(Vessel vessel);
+  /// Fuentes disponibles para edición o clonación. Leer no crea perfiles;
+  /// un clon es un borrador hasta que el usuario confirma `saveProfile`.
   Future<Either<Failure, List<VesselProfile>>> getAllProfiles();
 
   /// La interfaz debe resolver cualquier homónimo antes de confirmar esta opción.

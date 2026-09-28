@@ -23,6 +23,12 @@ final localVesselRepositoryProvider =
   return repository;
 });
 
+final savedVesselProfilesProvider = FutureProvider<List<VesselProfile>>((ref) async {
+  final local = await ref.watch(localVesselRepositoryProvider.future);
+  return (await local.getAllProfiles()).fold(
+      (failure) => throw StateError(failure.message), (profiles) => profiles);
+});
+
 /// Provider del servicio de parsing BAPLIE
 final baplieParserServiceProvider = Provider<BaplieParserService>((ref) {
   return BaplieParserService();
@@ -88,10 +94,21 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   VesselProfile? _publishedProfile;
   List<VesselProfile> _identityCandidates = const [];
   bool _nameMatchConfirmed = false;
+  bool _newProfile = false;
   bool _busy = false;
   String _fileName = 'BAPLIE';
 
   VesselProfile? get currentProfile => _pendingProfile ?? _publishedProfile;
+  bool get canChooseTemplate => _pendingVoyage != null && _newProfile &&
+      _identityCandidates.isEmpty;
+
+  /// Elegir una plantilla solo cambia el borrador del buque pendiente.
+  void useTemplate(VesselProfile source) {
+    if (!canChooseTemplate || _busy) {
+      throw StateError('No hay un buque nuevo confirmado para usar la plantilla.');
+    }
+    _pendingProfile = source.cloneFor(_pendingVoyage!.vessel);
+  }
   List<VesselProfile> get identityCandidates =>
       List.unmodifiable(_identityCandidates);
   List<String> get outsideProfilePositions {
@@ -212,6 +229,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
 
   LoadFileResult _useProfile(VesselProfile? saved) {
     final voyage = _pendingVoyage!;
+    _newProfile = saved == null;
     _pendingProfile = saved ?? VesselProfile.proposeFrom(voyage);
     if (saved != null && saved.geometry.coversAll(voyage.stowagePositions)) {
       _publish(voyage, saved, voyage.proposedPortOfCall);
@@ -234,7 +252,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   /// Sirve para el viaje pendiente y también para corregir la geometría de uno
   /// ya publicado. Solo delega en `_publish` después de guardar correctamente.
   Future<String?> confirmGeometry(VesselGeometry geometry,
-      {String? portOfCall}) async {
+      {String? portOfCall, Set<String>? reeferSlots,
+      VesselProfileOrigin? reeferSlotsOrigin}) async {
     if (_busy) return 'Hay una operación en curso.';
     if (_identityCandidates.isNotEmpty) {
       return 'Confirma primero la identidad del buque.';
@@ -247,6 +266,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     final profile = (currentProfile ?? VesselProfile.proposeFrom(target))
         .copyWith(
             geometry: geometry,
+            reeferSlots: reeferSlots,
+            reeferSlotsOrigin: reeferSlotsOrigin,
             origin: VesselProfileOrigin.declaredByUser,
             updatedAt: DateTime.now());
     _busy = true;
@@ -257,7 +278,40 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       final error =
           saved.fold<String?>((failure) => failure.message, (_) => null);
       if (error != null) return error;
+      ref.invalidate(savedVesselProfilesProvider);
       _publish(target, profile, portOfCall);
+      return null;
+    } catch (error) {
+      return 'No se pudo guardar el perfil: $error';
+    } finally {
+      _busy = false;
+    }
+  }
+
+  /// Edita un perfil sin necesitar cargar un archivo. Si su buque tiene viaje
+  /// visible, preserva la cobertura de su carga y actualiza su plano al guardar.
+  Future<String?> saveEditedProfile(VesselProfile original, VesselProfile edited) async {
+    if (_busy || _pendingVoyage != null) return 'Termina o cancela la carga actual.';
+    if (original.identity != edited.identity || original.vesselName != edited.vesselName) {
+      return 'La edición de parámetros no cambia la identidad del buque.';
+    }
+    final voyage = publishedVoyage;
+    final applies = _publishedProfile?.key == original.key && voyage != null;
+    if (applies && !edited.geometry.coversAll(voyage.stowagePositions)) {
+      return 'La geometría deja posiciones del viaje abierto fuera del plano.';
+    }
+    if (original == edited) return null;
+    _busy = true;
+    try {
+      final local = await ref.read(localVesselRepositoryProvider.future);
+      final profiles = (await local.getAllProfiles()).fold(
+        (failure) => throw StateError(failure.message), (value) => value);
+      if (!profiles.contains(original)) return 'El perfil cambió. Vuelve a abrirlo antes de editar.';
+      final result = await local.saveProfile(edited, nameMatchConfirmed: true);
+      final error = result.fold<String?>((failure) => failure.message, (_) => null);
+      if (error != null) return error;
+      ref.invalidate(savedVesselProfilesProvider);
+      if (applies) _publish(voyage, edited, voyage.portOfCall);
       return null;
     } catch (error) {
       return 'No se pudo guardar el perfil: $error';
@@ -276,6 +330,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     _pendingProfile = null;
     _identityCandidates = const [];
     _nameMatchConfirmed = false;
+    _newProfile = false;
   }
 
   /// Limpia el viaje cargado
