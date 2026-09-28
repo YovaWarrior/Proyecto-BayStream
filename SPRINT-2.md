@@ -914,6 +914,24 @@ cambian.
 
 ---
 
+#### T-54 · Mostrar el límite de apilamiento igual en las tres plataformas · 0.25 h
+
+**Toca:** `lib/features/vessel/presentation/pages/vessel_geometry_page.dart:129`.
+
+Observación de Timonel en el recorrido a mano del bloque 5: el editor muestra `75000.0` en
+Windows y Android, y `75000` en Web. La línea 129 usa `stackWeightLimitKg!.toString()`, y
+**`double.toString()` no imprime igual en la máquina virtual de Dart que en JavaScript**,
+donde un número entero no lleva `.0`.
+
+Es solo de presentación, pero vale como dato para H4: **una sola base de código no garantiza
+una sola salida**; el entorno de ejecución de cada plataforma se cuela en el texto. El arreglo
+es formatear el número explícitamente, con el mismo criterio en los tres clientes.
+
+**Terminada cuando:** el mismo perfil muestra el mismo texto del límite en Windows, Web y
+Android, con y sin decimales.
+
+---
+
 ## 6. Orden de ataque — por riesgo, no por número
 
 El orden numérico no es el orden de ejecución. En el Sprint 1 atacar primero lo más
@@ -1662,3 +1680,41 @@ archivos de texto con LF, y el Git de Carlos en Windows los saca con CRLF. Un Gi
 conversión de fin de línea verá unos 62 archivos «modificados» que en la máquina de Carlos
 están limpios. Usar `git diff --stat --ignore-cr-at-eol` antes de concluir que algo cambió.
 El `.gitattributes` pendiente desde agosto eliminaría esa diferencia entre clientes.
+
+---
+
+### 10.17 · RF-036 cerrado · T-43 hecha pero sin ejecutar · Codex toma el resto de la semana (28-sep)
+
+**RF‑036 cerrado.** Timonel recorrió a mano los seis puntos del bloque 5 y T‑53 sobre
+`c1199fb` —idéntico en código a `1fa28cc`—, en el Honor X5d con el APK release (SHA‑256
+`009d9e7a…`), Windows release y Chrome 154 con la Web release (`dd9bdaa`,
+`docs/BLOQUE5-MANUAL-RESULTADOS.md`). **Los tres PDF de A01 coinciden entre sí:** 62 páginas,
+1 698 huecos de vecino, 977 celdas propias y el mismo texto. Es la igualdad entre
+plataformas que H4 afirma, medida sobre la salida y no sobre el código. T‑32, T‑33, T‑34 y
+T‑53 pasan a Terminado, y **el bloque 7 queda destrabado** por la precedencia del tablero.
+
+**Límites declarados:** la celda OOG no se puede ver con datos reales, porque el corpus no
+trae segmentos `DIM`, así que solo la cubre el PDF sintético de Codex. En Chrome, Carlos
+eligió los archivos en el cuadro de Windows.
+
+**T‑43, hecha por Timonel** (`5c024eb`, `docs/T43-RESULTADOS.md`): `flutter analyze` de 49
+incidencias a **cero**, sin un solo `// ignore:`, y las seis dependencias sin uso fuera —
+**21 paquetes menos** en el árbol resuelto. Se revisó que el cero sea legítimo: el cambio en
+`analysis_options.yaml` quita tres reglas **retiradas en Dart 3.3**
+(`avoid_returning_null_for_future`, `iterable_contains_unrelated_type`,
+`list_remove_unrelated_type`), que ya no revisaban nada y solo producían el aviso
+`removed_lint`; la regla vigente `collection_methods_unrelated_type` cubre las dos de
+colecciones. **Queda en revisión:** compila en los tres clientes, pero la aplicación no se
+ejecutó con ese build. Su primera ejecución será la verificación de T‑37.
+
+**Timonel queda fuera hasta el miércoles** por créditos. Codex toma las tareas que siguen.
+Hasta entonces, **los recorridos a mano de pantallas nuevas los hace Carlos**, con una lista
+corta que prepara Codex.
+
+**El presupuesto de cinco viajes nunca se implementó.** T‑35 lo decidió y su informe dejó
+la retención para las tareas siguientes; T‑36 no la incluyó y no existe en `lib/`. Le toca a
+T‑37. Importa más allá de la interfaz: el argumento de margen que justifica `hive_ce`
+(10.7) se apoya en una retención de exactamente cinco viajes.
+
+**Nace T‑54** (0.25 h, contra holgura): el límite se muestra `75000.0` en los clientes
+nativos y `75000` en Web. Holgura usada fuera del compromiso: 5.25 h de 18.0.
