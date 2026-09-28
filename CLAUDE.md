@@ -96,9 +96,9 @@ párrafo, decía «tres defectos abiertos» con el indicador lleno/vacío y los
 refrigerados incluidos; los dos ya están cerrados.)*
 
 Las cinco funcionalidades del sprint están entregadas y verificadas. Compila en
-Windows, Android y Web, y las 139 pruebas pasan. `flutter analyze` reporta 49
-incidencias: 4 advertencias y 45 avisos informativos. Ese número es la línea
-base; **no lo subas.**
+Windows, Android y Web, y las 202 pruebas pasan. Desde T‑43 (27 de
+septiembre) `flutter analyze` reporta **cero incidencias**, sin ningún
+`// ignore:`; antes eran 49. Esa es la línea base: **no introduzcas ninguna.**
 
 Detalle completo de todo lo cerrado —incluido lo de esta sección— en
 `docs/HALLAZGOS-PLANO-REAL.md`; esto es solo el resumen para orientarse rápido.

@@ -567,9 +567,13 @@ final specialCargoStatsProvider = Provider<SpecialCargoStats>((ref) {
         if (c.isDangerous) dangerous++;
         if (c.isOverDimension) oog++;
         final size = c.sizeInFeet;
-        if (size == 20) twentyFt++;
-        else if (size == 40) fortyFt++;
-        else if (size == 45) fortyFiveFt++;
+        if (size == 20) {
+          twentyFt++;
+        } else if (size == 40) {
+          fortyFt++;
+        } else if (size == 45) {
+          fortyFiveFt++;
+        }
       }
       return SpecialCargoStats(
         reeferCount: reefers,

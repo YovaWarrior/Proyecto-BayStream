@@ -155,7 +155,7 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withOpacity(0.3),
+              color: colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -287,7 +287,7 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
           Icon(
             Icons.search_off,
             size: 64,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -300,7 +300,7 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
           Text(
             'Intenta con otro término de búsqueda',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
           ),
         ],
@@ -411,7 +411,7 @@ class _ContainerSearchResultTile extends StatelessWidget {
               '${(container.grossWeight! / 1000).toStringAsFixed(1)}t',
               style: TextStyle(
                 fontSize: 11,
-                color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ),
         ],
@@ -438,7 +438,7 @@ class _ContainerSearchResultTile extends StatelessWidget {
     }
 
     return CircleAvatar(
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
       child: Icon(icon, color: color, size: 20),
     );
   }
@@ -467,7 +467,7 @@ class _ContainerSearchResultTile extends StatelessWidget {
           TextSpan(
             text: text.substring(startIndex, endIndex),
             style: TextStyle(
-              backgroundColor: Colors.yellow.withOpacity(0.4),
+              backgroundColor: Colors.yellow.withValues(alpha: 0.4),
               fontWeight: FontWeight.bold,
             ),
           ),

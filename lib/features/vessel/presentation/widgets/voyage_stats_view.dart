@@ -39,7 +39,7 @@ class VoyageStatsView extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Distribución por tipo de carga
-          _SectionTitle(title: 'Distribución por Estado', icon: Icons.pie_chart),
+          const _SectionTitle(title: 'Distribución por Estado', icon: Icons.pie_chart),
           const SizedBox(height: 12),
           _StatusPieChart(
             fullCount: stats.fullContainers,
@@ -49,14 +49,14 @@ class VoyageStatsView extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Distribución por tamaño
-          _SectionTitle(title: 'Distribución por Tamaño', icon: Icons.straighten),
+          const _SectionTitle(title: 'Distribución por Tamaño', icon: Icons.straighten),
           const SizedBox(height: 12),
           _SizeDistributionBar(specialCargo: specialCargo, total: stats.totalContainers),
           const SizedBox(height: 24),
 
           // Carga especial
           if (specialCargo.reeferCount > 0 || specialCargo.dangerousCount > 0 || specialCargo.oogCount > 0) ...[
-            _SectionTitle(title: 'Carga Especial', icon: Icons.warning_amber),
+            const _SectionTitle(title: 'Carga Especial', icon: Icons.warning_amber),
             const SizedBox(height: 12),
             _SpecialCargoCards(specialCargo: specialCargo),
             const SizedBox(height: 24),
@@ -64,7 +64,7 @@ class VoyageStatsView extends ConsumerWidget {
 
           // Distribución por naviera
           if (carrierDist.isNotEmpty) ...[
-            _SectionTitle(title: 'Distribución por Naviera', icon: Icons.business),
+            const _SectionTitle(title: 'Distribución por Naviera', icon: Icons.business),
             const SizedBox(height: 12),
             _HorizontalBarChart(
               data: carrierDist,
@@ -77,7 +77,7 @@ class VoyageStatsView extends ConsumerWidget {
 
           // Distribución por puerto de descarga
           if (portDist.isNotEmpty) ...[
-            _SectionTitle(title: 'Distribución por Puerto de Descarga', icon: Icons.location_on),
+            const _SectionTitle(title: 'Distribución por Puerto de Descarga', icon: Icons.location_on),
             const SizedBox(height: 12),
             _HorizontalBarChart(
               data: portDist,
@@ -104,7 +104,7 @@ class VoyageStatsView extends ConsumerWidget {
 
           // Ocupación por bahía
           if (bayStats.isNotEmpty) ...[
-            _SectionTitle(title: 'Contenedores por Bahía', icon: Icons.view_column),
+            const _SectionTitle(title: 'Contenedores por Bahía', icon: Icons.view_column),
             const SizedBox(height: 12),
             _BayOccupancyChart(bayStats: bayStats),
             const SizedBox(height: 24),
@@ -112,7 +112,7 @@ class VoyageStatsView extends ConsumerWidget {
 
           // Peso por bahía
           if (bayStats.isNotEmpty) ...[
-            _SectionTitle(title: 'Peso por Bahía (toneladas)', icon: Icons.scale),
+            const _SectionTitle(title: 'Peso por Bahía (toneladas)', icon: Icons.scale),
             const SizedBox(height: 12),
             _BayWeightChart(bayStats: bayStats),
             const SizedBox(height: 32),
@@ -241,7 +241,7 @@ class _MetricCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.3)),
+        side: BorderSide(color: color.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -250,7 +250,7 @@ class _MetricCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -564,10 +564,10 @@ class _SpecialCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      color: color.withOpacity(0.08),
+      color: color.withValues(alpha: 0.08),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.3)),
+        side: BorderSide(color: color.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -633,7 +633,7 @@ class _HorizontalBarChart extends StatelessWidget {
                 value: entries[i].value,
                 maxValue: maxValue,
                 total: total,
-                color: color.withOpacity(1.0 - (i * 0.06).clamp(0.0, 0.5)),
+                color: color.withValues(alpha: 1.0 - (i * 0.06).clamp(0.0, 0.5)),
               ),
               if (i < entries.length - 1) const SizedBox(height: 8),
             ],
@@ -693,7 +693,7 @@ class _BarRow extends StatelessWidget {
             child: LinearProgressIndicator(
               value: fraction,
               minHeight: 20,
-              backgroundColor: color.withOpacity(0.08),
+              backgroundColor: color.withValues(alpha: 0.08),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
@@ -859,7 +859,7 @@ class _BayWeightChart extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              tons >= 1 ? '${tons.toStringAsFixed(0)}' : '',
+                              tons >= 1 ? tons.toStringAsFixed(0) : '',
                               style: _axisStyle(context)?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
