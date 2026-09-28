@@ -54,6 +54,23 @@ python tool/verify_t52_pdf.py
 La segunda orden requiere `pdfplumber` y `pypdf` en el entorno de QA. Se usaron
 las herramientas incluidas con Codex; no se agregaron dependencias a Flutter.
 
+### Ejecución Web completada (25-sep, 21:38 Guatemala)
+
+El generador real se ejecutó en Chrome 154 headless, después de guardar perfiles
+en IndexedDB, cerrar las cajas y recargar la página. Corpus A01 real y la misma
+geometría de QA ampliada descrita arriba. Salida independiente de Chrome:
+`output/pdf/T52-Chrome-A01.pdf`, **284 891 bytes y 62 páginas**. Se verificaron
+las filas/niveles declarados de las 34 bahías, incluido 00, y los límites de
+texto y trazos de todas las páginas. Se renderizaron e inspeccionaron las 62
+páginas y la bahía 014 ampliada; sin recortes ni desbordes.
+
+`tool/verify_block4_web.py` comprueba tanto la evidencia de recarga como este PDF.
+Procedimiento y timestamps en `docs/BLOQUE4-RESULTADOS.md`; evidencia cruda en
+`build/block4_web/results.jsonl` y `verify.log`. Es ejecución del servicio en
+Chrome real, no solo compilación. El lanzador de QA no automatiza el menú de
+exportación ni el diálogo de descarga. El ejecutor de `flutter test` en Chrome
+sigue sin completar y no se contabiliza como prueba aprobada.
+
 ## Hallazgo fuera del alcance
 
 El PDF sigue sin representar las sombras de `slotsOccupiedByNeighbors` (C-5b).
@@ -61,6 +78,18 @@ En las siete bahías sin carga propia la rejilla aparece sin contenedores;
 la pantalla sí marca los huecos ocupados por un 40 pies vecino. Es un defecto
 preexistente distinto de C-2/C-4: se registra y no se corrige de paso. Este cierre
 afirma igualdad de **rejilla declarada**, no paridad visual completa del PDF.
+
+Revisión posterior: `bay_plan_view.dart:814-815` consulta el conjunto y su celda
+dibuja `40'` cuando no hay contenedor propio; el PDF solo consulta su mapa de
+contenedores propios y no usa ese conjunto en ningún punto. En A01 se ve
+especialmente en 005, 013, 015, 035, 039, 043 y 045, sin carga propia. También
+puede afectar huecos de bahías que sí tienen carga propia.
+
+Alcance propuesto para la corrección independiente: representar y rotular los
+huecos ocupados por vecinos con la misma prioridad que pantalla (carga propia
+primero), incluirlos en la leyenda y comprobarlo contra A01. No sumar sombras
+como contenedores nuevos ni alterar peso, tabla o conteo de páginas. Falta
+implementar esta corrección; no queda cerrada por resolver la ejecución Web.
 
 ## Archivos
 

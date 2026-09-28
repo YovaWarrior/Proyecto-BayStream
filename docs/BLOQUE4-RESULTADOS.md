@@ -86,13 +86,57 @@ diferencias de diagnóstico, descontando números de línea desplazados.
 
 Compilaciones Web release, Windows debug y Android debug correctas (logs
 `build-web.log`, `build-windows.log` y `build-android.log` bajo `build/block4`).
-No se instaló el APK en el teléfono. La prueba automatizada
-directa en Chrome no quedó verificada: el ejecutor precompilado de Flutter
-buscó `host.dart.js` en una ruta del equipo donde se construyó el SDK; el
-segundo intento desde fuentes quedó detenido en la carga y se interrumpió.
-No se presenta la compilación Web como una prueba de ejecución en navegador.
-La reapertura de Hive de este bloque se ejercitó en la VM de Windows; no se
-afirma una nueva prueba de persistencia física en Android o Web.
+No se instaló el APK en el teléfono. No se afirma una nueva prueba física
+en Android. La reapertura inicial se ejercitó en la VM de Windows.
+
+### Pendiente Web resuelto con ejecución real (25-sep, 21:38 Guatemala)
+
+El ejecutor `flutter test --platform chrome` sigue sin completar: inicialmente
+buscaba `host.dart.js` en una ruta del equipo constructor del SDK. Inyectar el
+package_config local elimina ese error, pero se detiene al cargar la suite.
+No se registra ese intento como aprobado ni se modificó el SDK para hacerlo pasar.
+
+Se preparó un lanzador de QA independiente en `build/block4_web`, ejecutado
+por `flutter run -d chrome --release`, Chrome 154 headless real. Usa el parser,
+repositorio local, Hive/IndexedDB, notifier Riverpod y generador PDF de producción.
+No sustituye esas implementaciones por mocks; solo el puerto de entrada de
+archivo recibe el corpus desde memoria. Sin Firebase ni cambios a `main.dart`.
+
+Ejecución `block4_20260925213721`:
+
+- **WRITE_OK**: 26-sep 03:38:08.200 UTC (25-sep 21:38:08 Guatemala).
+  Dos espacios de almacenamiento nuevos: límite 75 000 kg y retirada explícita
+  a null. Cierre de las cajas seguido de recarga real de la página.
+- **RELOAD_READ_PDF_OK**: 03:38:10.312 UTC. Ambos perfiles se recuperan sin
+  preguntar geometría; límites correctos en todas las bahías; 50 tomas exactas,
+  contrastadas con LOC/EQD/TMP, con origen `proposedFromFile` y geometría declarada.
+- Un segundo viaje del mismo buque, transformado a carga seca y verificado como
+  tal, conserva las 50 tomas. No se confundió inventario con carga del viaje.
+- PDF generado dentro de Chrome: **284 891 bytes, 62 páginas**, 977 contenedores
+  y 34 bahías. Comprobación independiente de las 34 rejillas y márgenes completa;
+  inspección visual de las 62 páginas y bahía 014 ampliada, sin desbordes.
+
+Evidencia local: `build/block4_web/results.jsonl`, `run.log`, `verify.log` y
+`output/pdf/T52-Chrome-A01.pdf`. Los estados se recibieron desde el navegador;
+no son mensajes inferidos de la compilación. La sonda prueba las operaciones
+del código de producción y la recarga; no automatiza el menú ni el diálogo de
+descarga. No se afirma que pasó la suite de `flutter test` en Chrome.
+
+Reproducción (dos terminales; primero generar la evidencia de T-52 indicada
+en su informe). Cada preparación crea un namespace nuevo:
+
+```powershell
+./tool/prepare_block4_web_probe.ps1 -CorpusPath 'C:\Users\Giova\OneDrive\Documentos\OneDrive\Desktop\Archivos .EDI\Anonimizados\files\CORPUS_A01.edi'
+python build/block4_web/receiver.py
+# En la otra terminal:
+flutter run -d chrome --release --no-pub --no-web-resources-cdn --web-port=8774 --web-browser-flag=--headless -t build/block4_web/probe.dart
+# Tras recibir RELOAD_READ_PDF_OK:
+python tool/verify_block4_web.py
+```
+
+El receptor solo escucha loopback y guarda evidencia bajo `build/block4_web`.
+Al terminar se cerraron la ejecución de Flutter y el receptor. No se agregó
+ninguna dependencia ni se cambió código de producción en esta continuación.
 
 ## Archivos
 
@@ -104,6 +148,8 @@ afirma una nueva prueba de persistencia física en Android o Web.
 - `test/reefer_profile_proposal_test.dart`
 - `test/profile_loading_page_test.dart`
 - `tool/block4_corpus_test.dart`
+- `tool/prepare_block4_web_probe.ps1`
+- `tool/verify_block4_web.py`
 - `docs/BLOQUE4-RESULTADOS.md`
 
 Sin dependencias nuevas: pubspec.yaml y pubspec.lock no cambiaron. Tampoco

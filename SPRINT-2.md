@@ -1629,3 +1629,36 @@ pasan a Terminado en el tablero.
 no depende de ningún agente. Una tarea detenida por un tercero no debe ocupar la única
 plaza de trabajo en curso. Vuelve a «En curso» cuando la consola esté lista y la plaza
 libre.
+
+---
+
+### 10.16 · Bloque 5 y T-53 commiteados · falta recorrer la interfaz a mano · T-43 antes que T-37 (28-sep)
+
+**Commiteados:** `b28e7d2` (T‑32, T‑33, T‑34) y `1fa28cc` (T‑53). 202 pruebas, `analyze`
+en 49. Codex separó por cliente lo que se **ejecutó** y lo que solo **compiló**, como se
+le pidió: sondas con lógica y persistencia reales en Chrome, Windows y Android (APK de QA
+con identificador separado, en el Honor X5d). **Dos límites que él mismo declara:** la
+interfaz nueva se verificó con pruebas de widgets y no recorriéndola a mano, y el último
+ajuste visual se recompiló en los tres clientes **sin reinstalar el APK**. En A01, T‑53
+dibuja 1 698 huecos de vecinos verificados por coordenada, sin mover los 977 contenedores
+ni las 62 páginas.
+
+**Por eso T‑32, T‑33, T‑34 y T‑53 quedan en revisión** hasta que Timonel recorra las
+pantallas nuevas a mano en los tres clientes, con el APK final instalado.
+
+**Orden:** T‑43 va **antes** que T‑37. T‑43 toca muchos archivos y retira seis dependencias
+de `pubspec.yaml`; T‑37 toca `vessel_overview_page.dart` y los providers. Con Codex fuera
+de sesión, el árbol está quieto: es el momento de T‑43. Codex retoma con T‑37 solo después
+de que T‑43 esté commiteada. El bloque 7 (RF‑027) no arranca hasta que RF‑036 esté cerrado
+en Terminado, por la precedencia escrita en el tablero.
+
+**La evidencia de Chrome del bloque 4 no estaba en git.** Las secciones del 25-sep en
+`docs/BLOQUE4-RESULTADOS.md` y `docs/T52-RESULTADOS.md`, y los scripts
+`tool/prepare_block4_web_probe.ps1` y `tool/verify_block4_web.py` que esos informes citan
+para reproducirla, existían solo en disco. Se commitean ahora.
+
+**Nota para cualquier agente que lea diferencias con git:** el repositorio guarda los 170
+archivos de texto con LF, y el Git de Carlos en Windows los saca con CRLF. Un Git **sin**
+conversión de fin de línea verá unos 62 archivos «modificados» que en la máquina de Carlos
+están limpios. Usar `git diff --stat --ignore-cr-at-eol` antes de concluir que algo cambió.
+El `.gitattributes` pendiente desde agosto eliminaría esa diferencia entre clientes.
