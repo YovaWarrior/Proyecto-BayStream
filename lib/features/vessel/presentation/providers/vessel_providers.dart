@@ -105,6 +105,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   String _fileName = 'BAPLIE';
 
   VesselProfile? get currentProfile => _pendingProfile ?? _publishedProfile;
+  /// Perfil de la instantánea visible, nunca el borrador de otro buque.
+  VesselProfile? get publishedProfile => _publishedProfile;
   bool get canChooseTemplate => _pendingVoyage != null && _newProfile &&
       _identityCandidates.isEmpty;
 
