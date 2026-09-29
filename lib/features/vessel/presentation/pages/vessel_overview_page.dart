@@ -13,6 +13,7 @@ import '../widgets/container_search_delegate.dart';
 import '../widgets/voyage_stats_view.dart';
 import 'vessel_geometry_page.dart';
 import 'vessel_profiles_page.dart';
+import 'recent_voyages_page.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -49,6 +50,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         title: const Text('BayStream'),
         centerTitle: true,
         actions: [
+          IconButton(key: const ValueKey('recent-voyages'),
+            icon: const Icon(Icons.history), tooltip: 'Viajes recientes',
+            onPressed: () async {
+              final loadFile = await Navigator.of(context).push<bool>(MaterialPageRoute(
+                  builder: (_) => const RecentVoyagesPage()));
+              if (context.mounted && loadFile == true) await _loadBaplieFile(context);
+            }),
           IconButton(key: const ValueKey('saved-profiles'),
             icon: const Icon(Icons.directions_boat_outlined),
             tooltip: 'Perfiles guardados',
@@ -337,8 +345,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         notifier.discardPendingVoyage();
         return;
       }
-      result = notifier
+      result = await notifier
           .resolveIdentity(selection < 0 ? null : candidates[selection]);
+      if (!context.mounted) return;
       if (!result.success) notifier.discardPendingVoyage();
     }
 

@@ -51,6 +51,37 @@ void main() {
     await directory.delete(recursive: true);
   });
 
+  test('seis viajes dejan cinco por incorporación y conservan todos los perfiles', () async {
+    // UUID y fecha del mensaje deliberadamente opuestos al orden de guardado.
+    const ids = ['z', 'c', 'y', 'b', 'x', 'a'];
+    for (var i = 0; i < ids.length; i++) {
+      final vessel = voyage.vessel.copyWith(name: 'BUQUE $i', imoNumber: '900000$i');
+      value(await repository.saveProfile(profile(vessel)));
+      value(await repository.saveVoyage(voyage.copyWith(id: ids[i], vessel: vessel,
+          messageDate: DateTime.utc(2026, 9, 30 - i))));
+    }
+    value(await repository.close());
+    repository = await open();
+    expect(value(await repository.getAllVoyages()).map((v) => v.id), ['a', 'x', 'b', 'y', 'c']);
+    expect(value(await repository.getVoyageById('z')), isNull);
+    expect(value(await repository.getAllProfiles()).length, 6);
+    expect(value(await repository.getAllProfiles()).any((p) => p.vesselName == 'BUQUE 0'), isTrue);
+    // Editar el antiguo no altera su antigüedad ni duplica el registro.
+    final old = value(await repository.getVoyageById('c'))!;
+    value(await repository.saveVoyage(old.copyWith(voyageNumber: 'EDITADO')));
+    value(await repository.saveVoyage(voyage.copyWith(id: 'nuevo')));
+    expect(value(await repository.getVoyageById('c')), isNull);
+    expect(value(await repository.getAllVoyages()).length, 5);
+    expect(value(await repository.getAllProfiles()).length, 6);
+  });
+
+  test('guardar viajes simultáneamente también respeta cinco', () async {
+    final results = await Future.wait([for (var i = 0; i < 8; i++)
+      repository.saveVoyage(voyage.copyWith(id: 'v$i'))]);
+    for (final result in results) { value(result); }
+    expect(value(await repository.getAllVoyages()).map((v) => v.id), ['v7', 'v6', 'v5', 'v4', 'v3']);
+  });
+
   test('el registro lleva versión y guarda cada contenedor una sola vez', () {
     final record = codec.encodeVoyage(voyage);
     final json = jsonDecode(record) as Map<String, dynamic>;

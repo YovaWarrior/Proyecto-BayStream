@@ -75,6 +75,10 @@ class VesselVoyage extends Equatable {
   /// buque el día que alguien lo abre.
   final String? portOfCall;
 
+  /// Perfil elegido al confirmar identidad, incluso si se resolvió un homónimo.
+  /// Opcional para leer los registros anteriores a viajes recientes.
+  final String? vesselProfileKey;
+
   const VesselVoyage({
     required this.id,
     required this.vessel,
@@ -88,6 +92,7 @@ class VesselVoyage extends Equatable {
     this.metadata,
     this.geometry,
     this.portOfCall,
+    this.vesselProfileKey,
   });
 
   /// Total de contenedores en el buque
@@ -250,6 +255,7 @@ class VesselVoyage extends Equatable {
         metadata,
         geometry,
         portOfCall,
+        vesselProfileKey,
       ];
 
   VesselVoyage copyWith({
@@ -265,6 +271,7 @@ class VesselVoyage extends Equatable {
     BaplieMetadata? metadata,
     VesselGeometry? geometry,
     String? portOfCall,
+    String? vesselProfileKey,
   }) {
     return VesselVoyage(
       id: id ?? this.id,
@@ -279,6 +286,7 @@ class VesselVoyage extends Equatable {
       metadata: metadata ?? this.metadata,
       geometry: geometry ?? this.geometry,
       portOfCall: portOfCall ?? this.portOfCall,
+      vesselProfileKey: vesselProfileKey ?? this.vesselProfileKey,
     );
   }
 
@@ -299,6 +307,7 @@ class VesselVoyage extends Equatable {
         // Una sola vez para todo el buque: las bahias no la serializan.
         if (geometry != null) 'geometry': geometry!.toJson(),
         if (portOfCall != null) 'portOfCall': portOfCall,
+        if (vesselProfileKey != null) 'vesselProfileKey': vesselProfileKey,
       };
 
   factory VesselVoyage.fromJson(Map<String, dynamic> json) {
@@ -324,6 +333,7 @@ class VesselVoyage extends Equatable {
     final voyage = VesselVoyage(
         geometry: geometry,
         portOfCall: json['portOfCall'] as String?,
+        vesselProfileKey: json['vesselProfileKey'] as String?,
         id: json['id'] as String,
         vessel: Vessel.fromJson(json['vessel'] as Map<String, dynamic>),
         voyageNumber: json['voyageNumber'] as String,

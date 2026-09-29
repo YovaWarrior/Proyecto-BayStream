@@ -29,6 +29,12 @@ final savedVesselProfilesProvider = FutureProvider<List<VesselProfile>>((ref) as
       (failure) => throw StateError(failure.message), (profiles) => profiles);
 });
 
+final recentVoyagesProvider = FutureProvider<List<VesselVoyage>>((ref) async {
+  final local = await ref.watch(localVesselRepositoryProvider.future);
+  return (await local.getAllVoyages()).fold(
+      (failure) => throw StateError(failure.message), (voyages) => voyages);
+});
+
 /// Provider del servicio de parsing BAPLIE
 final baplieParserServiceProvider = Provider<BaplieParserService>((ref) {
   return BaplieParserService();
@@ -197,7 +203,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       if (lookup.requiresConfirmation) {
         return LoadFileResult.needsIdentity(fileName);
       }
-      return _useProfile(lookup.automaticMatch);
+      return await _useProfile(lookup.automaticMatch);
     } catch (error) {
       _clearPending();
       state = previousState;
@@ -208,7 +214,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   }
 
   /// Una coincidencia de nombre se resuelve solo por una elección explícita.
-  LoadFileResult resolveIdentity(VesselProfile? selected) {
+  Future<LoadFileResult> resolveIdentity(VesselProfile? selected) async {
+    if (_busy) return LoadFileResult.error('Hay una operación en curso.');
     final voyage = _pendingVoyage;
     if (voyage == null || _identityCandidates.isEmpty) {
       return LoadFileResult.error('No hay una identidad pendiente.');
@@ -224,27 +231,39 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     }
     _nameMatchConfirmed = true;
     _identityCandidates = const [];
-    return _useProfile(selected);
+    _busy = true;
+    try {
+      return await _useProfile(selected);
+    } catch (error) {
+      return LoadFileResult.error('No se pudo guardar el viaje: $error');
+    } finally {
+      _busy = false;
+    }
   }
 
-  LoadFileResult _useProfile(VesselProfile? saved) {
+  Future<LoadFileResult> _useProfile(VesselProfile? saved) async {
     final voyage = _pendingVoyage!;
     _newProfile = saved == null;
     _pendingProfile = saved ?? VesselProfile.proposeFrom(voyage);
     if (saved != null && saved.geometry.coversAll(voyage.stowagePositions)) {
-      _publish(voyage, saved, voyage.proposedPortOfCall);
+      await _publish(voyage, saved, voyage.proposedPortOfCall);
       return LoadFileResult.success(_fileName);
     }
     return LoadFileResult.needsGeometry(_fileName);
   }
 
   /// Único punto de publicación: siempre inyecta la geometría del perfil.
-  void _publish(
-      VesselVoyage voyage, VesselProfile profile, String? portOfCall) {
+  Future<void> _publish(
+      VesselVoyage voyage, VesselProfile profile, String? portOfCall) async {
+    final published = voyage.withGeometry(profile.geometry, portOfCall: portOfCall)
+        .copyWith(vesselProfileKey: profile.key);
+    final local = await ref.read(localVesselRepositoryProvider.future);
+    (await local.saveVoyage(published)).fold(
+        (failure) => throw StateError(failure.message), (_) {});
+    ref.invalidate(recentVoyagesProvider);
     _publishedProfile = profile;
     _clearPending();
-    state = AsyncValue.data(
-        voyage.withGeometry(profile.geometry, portOfCall: portOfCall));
+    state = AsyncValue.data(published);
   }
 
   /// Publica el viaje con la geometría que el usuario confirmó.
@@ -279,7 +298,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
           saved.fold<String?>((failure) => failure.message, (_) => null);
       if (error != null) return error;
       ref.invalidate(savedVesselProfilesProvider);
-      _publish(target, profile, portOfCall);
+      await _publish(target, profile, portOfCall);
       return null;
     } catch (error) {
       return 'No se pudo guardar el perfil: $error';
@@ -311,10 +330,68 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       final error = result.fold<String?>((failure) => failure.message, (_) => null);
       if (error != null) return error;
       ref.invalidate(savedVesselProfilesProvider);
-      if (applies) _publish(voyage, edited, voyage.portOfCall);
+      if (applies) await _publish(voyage, edited, voyage.portOfCall);
       return null;
     } catch (error) {
       return 'No se pudo guardar el perfil: $error';
+    } finally {
+      _busy = false;
+    }
+  }
+
+  /// Reabre la instantánea local, sin parser, selector de archivo ni nube.
+  Future<String?> openRecentVoyage(String id) async {
+    if (_busy || _pendingVoyage != null) return 'Termina o cancela la carga actual.';
+    _busy = true;
+    try {
+      final local = await ref.read(localVesselRepositoryProvider.future);
+      final voyage = (await local.getVoyageById(id)).fold(
+          (failure) => throw StateError(failure.message), (value) => value);
+      if (voyage == null) return 'El viaje ya no está guardado.';
+      final geometry = voyage.geometry;
+      if (geometry == null || !geometry.coversAll(voyage.stowagePositions)) {
+        return 'Este viaje no tiene una geometría válida guardada. Vuelve a cargar el BAPLIE.';
+      }
+      final profiles = (await local.getAllProfiles()).fold(
+          (failure) => throw StateError(failure.message), (value) => value);
+      VesselProfile? profile;
+      for (final saved in profiles) {
+        if (voyage.vesselProfileKey != null
+            ? saved.key == voyage.vesselProfileKey
+            : saved.identity.matchesAutomatically(voyage.vessel.profileIdentity)) {
+          profile = saved;
+          break;
+        }
+      }
+      // La geometría histórica del viaje no se ensancha ni se reemplaza al abrir.
+      _publishedProfile = (profile ?? VesselProfile.proposeFrom(voyage))
+          .copyWith(geometry: geometry);
+      _clearPending();
+      ref.read(selectedBayProvider.notifier).clear();
+      ref.read(highlightedContainerProvider.notifier).clear();
+      ref.read(selectedCarrierProvider.notifier).clear();
+      ref.read(selectedTypeFilterProvider.notifier).clear();
+      state = AsyncValue.data(voyage);
+      return null;
+    } catch (error) {
+      return 'No se pudo abrir el viaje guardado: $error';
+    } finally {
+      _busy = false;
+    }
+  }
+
+  Future<String?> deleteRecentVoyage(String id) async {
+    if (_busy || _pendingVoyage != null) return 'Termina o cancela la carga actual.';
+    _busy = true;
+    try {
+      final local = await ref.read(localVesselRepositoryProvider.future);
+      (await local.deleteVoyage(id)).fold(
+          (failure) => throw StateError(failure.message), (_) {});
+      ref.invalidate(recentVoyagesProvider);
+      // El viaje abierto sigue visible; borrar la copia local no borra el perfil.
+      return null;
+    } catch (error) {
+      return 'No se pudo eliminar el viaje guardado: $error';
     } finally {
       _busy = false;
     }

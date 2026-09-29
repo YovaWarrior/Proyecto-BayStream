@@ -103,7 +103,7 @@ void main() {
     expect(notifier.publishedVoyage, original);
     expect(await notifier.confirmGeometry(notifier.currentProfile!.geometry),
         isNotNull);
-    expect(notifier.resolveIdentity(null).needsGeometry, isTrue);
+    expect((await notifier.resolveIdentity(null)).needsGeometry, isTrue);
     await notifier.confirmGeometry(notifier.currentProfile!.geometry);
     expect(
         (await store.repository.getAllProfiles())
@@ -117,9 +117,15 @@ void main() {
     final saved = notifier.currentProfile!;
     final otherId = profileTestEdi.replaceAll('9000003:146', 'ZZALFA:103');
     expect((await notifier.parseBaplieContent(otherId)).needsIdentity, isTrue);
-    expect(notifier.resolveIdentity(saved).needsGeometry, isFalse);
+    expect((await notifier.resolveIdentity(saved)).needsGeometry, isFalse);
     expect(notifier.publishedVoyage!.vessel.callSign, 'ZZALFA');
     expect(notifier.currentProfile, saved);
+    final recentId = notifier.publishedVoyage!.id;
+    expect(notifier.publishedVoyage!.vesselProfileKey, saved.key);
+    notifier.clearVoyage();
+    expect(await notifier.openRecentVoyage(recentId), isNull);
+    expect(notifier.currentProfile, saved,
+        reason: 'reabrir recuerda la elección explícita del homónimo');
     expect(
         (await store.repository.getAllProfiles())
             .getOrElse(() => <VesselProfile>[]),
@@ -166,7 +172,7 @@ void main() {
     await notifier.parseBaplieContent(nameOnly);
     await notifier.confirmGeometry(notifier.currentProfile!.geometry);
     expect((await notifier.parseBaplieContent(nameOnly)).needsIdentity, isTrue);
-    expect(notifier.resolveIdentity(null).success, isFalse);
+    expect((await notifier.resolveIdentity(null)).success, isFalse);
     expect(notifier.pendingVoyage, isNotNull);
   });
 }

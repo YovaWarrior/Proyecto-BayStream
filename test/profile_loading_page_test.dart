@@ -24,6 +24,8 @@ class _ProfileResponses implements LocalVesselRepository {
   final saved = <VesselProfile>[];
   List<VesselProfile> templates = [];
   @override
+  Future<Either<Failure, void>> saveVoyage(VesselVoyage voyage) async => const Right(null);
+  @override
   Future<Either<Failure, List<VesselProfile>>> getAllProfiles() async => Right(templates);
   @override
   Future<Either<Failure, VesselProfileLookup>> findProfileFor(

@@ -17,8 +17,14 @@ class VesselProfileLookup {
 
 /// Almacén propio, independiente de Firestore y sin tipos de Hive en el dominio.
 abstract class LocalVesselRepository {
+  /// Presupuesto de retención acordado en T-35. Los perfiles no tienen este límite.
+  static const recentVoyageLimit = 5;
+
+  /// Guarda por id; al añadir el sexto descarta el primero guardado.
+  /// Actualizar un id existente no lo convierte en un viaje nuevo.
   Future<Either<Failure, void>> saveVoyage(VesselVoyage voyage);
   Future<Either<Failure, VesselVoyage?>> getVoyageById(String id);
+  /// Del último viaje incorporado al más antiguo, no por fecha del BAPLIE.
   Future<Either<Failure, List<VesselVoyage>>> getAllVoyages();
   Future<Either<Failure, void>> deleteVoyage(String id);
 
