@@ -147,6 +147,24 @@ void main() {
     expect(find.text('Perfil modificado; pendiente de guardar.'), findsOneWidget);
   });
 
+  for (final entry in {75000.0: '75000', 62500.5: '62500.5'}.entries) {
+    testWidgets('T-54 el editor muestra ${entry.value} sin alterar el perfil', (tester) async {
+      VesselCallParameters? captured;
+      await openPage(tester, (value) => captured = value,
+          profile: VesselProfile(
+            identity: VesselIdentity(source: VesselIdentitySource.imo, value: '9000003'),
+            vesselName: 'ALFA', geometry: _proposal.copyWith(stackWeightLimitKg: entry.key),
+            origin: VesselProfileOrigin.declaredByUser, updatedAt: DateTime.utc(2026)));
+      final field = tester.widget<TextFormField>(find.byKey(const ValueKey('geometry-stack-limit')));
+      expect(field.controller!.text, entry.value);
+      expect(find.text('Perfil sin cambios.'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+      await tester.pumpAndSettle();
+      expect(captured!.geometry.stackWeightLimitKg, entry.key);
+      expect(captured!.changed, isFalse);
+    });
+  }
+
   testWidgets('un nivel con carga no se puede quitar', (tester) async {
     await openPage(tester, (_) {});
 

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
+import '../formatters/stack_weight_formatter.dart';
 
 /// Lo que la pantalla devuelve: la geometría del buque y el puerto de esta
 /// escala. El puerto no es geometría —el casco no cambia entre escalas— pero
@@ -124,9 +125,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
         (widget.loadingPorts.keys.isEmpty ? null : widget.loadingPorts.keys.first);
     _puertoElegido = widget.initialPortOfCall != null;
     _stackLimit = TextEditingController(
-      text: start.stackWeightLimitKg == null
-          ? ''
-          : start.stackWeightLimitKg!.toString(),
+      text: formatStackWeightLimit(start.stackWeightLimitKg),
     );
     _limitUnavailable =
         (widget.initial != null || widget.profileOnly ||
