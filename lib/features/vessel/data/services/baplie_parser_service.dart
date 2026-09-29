@@ -3,6 +3,7 @@ import '../../../../core/constants/baplie_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/entities/dangerous_goods.dart';
 
 /// Servicio para parsear archivos BAPLIE 2.2.1 (EDIFACT)
 /// 
@@ -516,11 +517,10 @@ class BaplieParserService {
           // DGS+IMD+clase+unNumber' -> Mercancías peligrosas
           if (containerBuilder != null) {
             final dgsResult = _parseDGS(segment);
-            if (dgsResult != null) {
-              containerBuilder.isDangerous = true;
-              containerBuilder.imdgClass = dgsResult.imdgClass;
-              containerBuilder.unNumber = dgsResult.unNumber;
-            }
+            containerBuilder.isDangerous = true;
+            containerBuilder.imdgClass = dgsResult.imdgClass;
+            containerBuilder.unNumber = dgsResult.unNumber;
+            containerBuilder.dangerousGoods.add(dgsResult.declaration);
           }
           break;
 
@@ -758,9 +758,8 @@ class BaplieParserService {
   /// - IMD = IMDG (International Maritime Dangerous Goods)
   /// - clase = Clase IMDG (ej: 3, 8, 9)
   /// - unNumber = Número ONU (ej: 1993, 2810)
-  _DgsParseResult? _parseDGS(String segment) {
+  _DgsParseResult _parseDGS(String segment) {
     final elements = _getElements(segment);
-    if (elements.length < 3) return null;
 
     String? imdgClass;
     String? unNumber;
@@ -777,9 +776,15 @@ class BaplieParserService {
       unNumber = _safeGetComponent(unComponents, 0);
     }
 
-    if (imdgClass == null && unNumber == null) return null;
-
-    return _DgsParseResult(imdgClass: imdgClass, unNumber: unNumber);
+    // C236 está en el elemento 10 del DGS (etiquetas de peligro).
+    // En A02/A04/A06: 3:0:0 o 2.1:0:0; los ceros no son clases.
+    // Un DGS incompleto se conserva para informar «no evaluado».
+    final labels = (_safeGetElement(elements, 10) ?? '').split(':')
+        .map((label) => label.trim())
+        .where((label) => label.isNotEmpty && label != '0');
+    return _DgsParseResult(DangerousGoods(unNumber: unNumber,
+      hazardClass: imdgClass, regulation: _safeGetElement(elements, 1) ?? '',
+      labels: labels));
   }
 
   /// Parsea segmento TMP (Temperature)
@@ -893,10 +898,10 @@ class _EqdParseResult {
 }
 
 class _DgsParseResult {
-  final String? imdgClass;
-  final String? unNumber;
-
-  _DgsParseResult({this.imdgClass, this.unNumber});
+  final DangerousGoods declaration;
+  String? get imdgClass => declaration.hazardClass;
+  String? get unNumber => declaration.unNumber;
+  _DgsParseResult(this.declaration);
 }
 
 class _TmpParseResult {
@@ -917,6 +922,7 @@ class _ContainerBuilder {
   bool isDangerous = false;
   String? imdgClass;
   String? unNumber;
+  final List<DangerousGoods> dangerousGoods = [];
   bool isReefer = false;
   double? temperature;
   String? temperatureUnit;
@@ -942,6 +948,7 @@ class _ContainerBuilder {
       isDangerous: isDangerous,
       imdgClass: imdgClass,
       unNumber: unNumber,
+      dangerousGoods: List.unmodifiable(dangerousGoods),
       isReefer: isReefer,
       temperature: temperature,
       temperatureUnit: temperatureUnit,

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
+import 'dangerous_goods.dart';
 
 /// Entidad que representa un contenedor
 /// 
@@ -56,6 +57,11 @@ class ContainerUnit extends Equatable {
   
   /// Número ONU si es peligroso
   final String? unNumber;
+
+  /// Todos los DGS, incluidos los repetidos dentro del mismo contenedor.
+  /// null identifica registros anteriores que solo conservaron el último DGS:
+  /// se pueden mostrar, pero no certifican que se conozca toda la carga peligrosa.
+  final List<DangerousGoods>? dangerousGoods;
   
   /// Indicador de contenedor refrigerado
   final bool isReefer;
@@ -100,6 +106,7 @@ class ContainerUnit extends Equatable {
     this.isDangerous = false,
     this.imdgClass,
     this.unNumber,
+    this.dangerousGoods,
     this.isReefer = false,
     this.temperature,
     this.temperatureUnit,
@@ -189,6 +196,7 @@ class ContainerUnit extends Equatable {
         isDangerous,
         imdgClass,
         unNumber,
+        dangerousGoods,
         isReefer,
         temperature,
         temperatureUnit,
@@ -216,6 +224,7 @@ class ContainerUnit extends Equatable {
     bool? isDangerous,
     String? imdgClass,
     String? unNumber,
+    List<DangerousGoods>? dangerousGoods,
     bool? isReefer,
     double? temperature,
     String? temperatureUnit,
@@ -242,6 +251,7 @@ class ContainerUnit extends Equatable {
       isDangerous: isDangerous ?? this.isDangerous,
       imdgClass: imdgClass ?? this.imdgClass,
       unNumber: unNumber ?? this.unNumber,
+      dangerousGoods: dangerousGoods ?? this.dangerousGoods,
       isReefer: isReefer ?? this.isReefer,
       temperature: temperature ?? this.temperature,
       temperatureUnit: temperatureUnit ?? this.temperatureUnit,
@@ -270,6 +280,8 @@ class ContainerUnit extends Equatable {
         'isDangerous': isDangerous,
         if (imdgClass != null) 'imdgClass': imdgClass,
         if (unNumber != null) 'unNumber': unNumber,
+        if (dangerousGoods != null)
+          'dangerousGoods': dangerousGoods!.map((d) => d.toJson()).toList(),
         'isReefer': isReefer,
         if (temperature != null) 'temperature': temperature,
         if (temperatureUnit != null) 'temperatureUnit': temperatureUnit,
@@ -302,6 +314,9 @@ class ContainerUnit extends Equatable {
         isDangerous: json['isDangerous'] as bool? ?? false,
         imdgClass: json['imdgClass'] as String?,
         unNumber: json['unNumber'] as String?,
+        dangerousGoods: json['dangerousGoods'] == null ? null : List.unmodifiable(
+          (json['dangerousGoods'] as List<dynamic>).map((d) =>
+            DangerousGoods.fromJson(Map<String, dynamic>.from(d as Map)))),
         isReefer: json['isReefer'] as bool? ?? false,
         temperature: (json['temperature'] as num?)?.toDouble(),
         temperatureUnit: json['temperatureUnit'] as String?,

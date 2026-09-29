@@ -14,6 +14,7 @@ import '../widgets/voyage_stats_view.dart';
 import 'vessel_geometry_page.dart';
 import 'vessel_profiles_page.dart';
 import 'recent_voyages_page.dart';
+import 'segregation_page.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -563,6 +564,12 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         children: [
           // Tarjeta resumen del viaje
           VoyageSummaryCard(voyage: voyage),
+          TextButton.icon(
+            icon: const Icon(Icons.fact_check_outlined),
+            label: const Text('Revisar segregación · 49 CFR'),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const SegregationPage())),
+          ),
           const SizedBox(height: 24),
           
           // Filtro por naviera
