@@ -1718,3 +1718,44 @@ T‑37. Importa más allá de la interfaz: el argumento de margen que justifica 
 
 **Nace T‑54** (0.25 h, contra holgura): el límite se muestra `75000.0` en los clientes
 nativos y `75000` en Web. Holgura usada fuera del compromiso: 5.25 h de 18.0.
+
+---
+
+### 10.18 · T-37 y T-54 commiteadas, en revisión · T-43 cerrada · falta el arranque en frío sin conexión (29-sep)
+
+**Commiteadas:** `411ee7c` (T‑37) y `ae72611` (T‑54). 209 pruebas, `analyze` en cero.
+
+**T‑43 pasa a Terminado.** Faltaba ejecutarla y ya se ejecutó: Codex corrió el build posterior
+a T‑43 en los tres clientes — Chrome con el build Web final, el APK release final
+**instalado y ejecutado** en el Honor X5d, y Windows cargando A01 y reabriéndolo desde
+Recientes.
+
+**T‑37 queda en revisión.** Ejecutada en Chrome con el recorrido completo (A01 a A06, cinco
+viajes, A01 fuera, seis perfiles conservados, homónimo ECO resuelto) y en Windows. **Falta el
+recorrido a mano en el Honor**, que hace Carlos mientras Timonel no está.
+
+**T‑54 queda en revisión.** El formateador da el mismo resultado en la VM de Dart y en
+JavaScript, y Chrome lo mostró bien con `75000` y `62500.5`. **Faltan dos cosas:** la
+inspección visual en Windows, que se interrumpió al perder el control de la ventana, y ver un
+límite fraccionario en el Honor.
+
+**Decisión de producto registrada: la retención es por orden de incorporación, no por uso.**
+Guardar el sexto viaje saca el que entró primero; abrir o actualizar uno no lo vuelve el más
+reciente. El orden persiste en `savedOrder` y no depende de la fecha del mensaje BAPLIE ni del
+orden de los UUID; las escrituras se serializan, probado con ocho concurrentes. Es la opción
+determinista; si en la operación real conviene que un viaje abierto se quede, se cambia a
+orden por uso. **Decide Carlos.**
+
+**Límite declarado:** los registros guardados antes de T‑37 no tienen ordinal, así que su
+orden original de incorporación no se puede reconstruir. Solo afecta datos de prueba.
+
+**Lo que nadie ha probado: el arranque en frío sin conexión.** La prueba sin red de Codex se
+hizo con la aplicación **ya cargada**, y el propio informe lo declara. Pero el caso de uso del
+proyecto es el muelle: un teléfono sin señal que se abre desde cero. RF‑031+ promete reabrir
+viajes sin conexión, y eso incluye arrancar la aplicación sin red. Se agrega al recorrido de
+Carlos en el Honor: modo avión, forzar la detención, abrir y reabrir un viaje desde Recientes.
+Si falla, es un hallazgo real sobre RF‑031+, no un detalle.
+
+**El bloque 7 queda libre para Codex.** Orden por riesgo: **T‑38 primero**, porque define el
+contrato de resultado que reúsan las demás (severidad, descripción, posición); **luego T‑41**,
+la candidata número uno a desbordarse; después T‑39, T‑40 y T‑42.

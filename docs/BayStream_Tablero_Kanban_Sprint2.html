@@ -140,8 +140,8 @@
   <header>
     <p class="eyebrow">Proyecto de Graduación II · 19 sep – 17 oct 2026</p>
     <h1>Sprint 2 — Perfil de buque persistente</h1>
-    <p class="sub">Estado del tablero al 28 de septiembre de 2026, décimo día del sprint. De las
-      35.0 horas comprometidas hay 17.0 terminadas y 1.5 en revisión.
+    <p class="sub">Estado del tablero al 29 de septiembre de 2026, undécimo día del sprint. De las
+      35.0 horas comprometidas hay 18.5 terminadas y 1.0 en revisión.
       Cada tarea terminada muestra el commit que la entrega y los clientes donde se verificó. La fotografía al abrir el sprint,
       con las veintiséis tareas por hacer, está en el documento del Sprint Backlog.</p>
   </header>
@@ -156,15 +156,9 @@
 
   <div class="tablero">
     <section class="col">
-      <header><h2>Por hacer</h2><span class="cuenta">11<small> +1</small> · 16.5 h</span></header>
+      <header><h2>Por hacer</h2><span class="cuenta">10 · 15.5 h</span></header>
       <p class="criterio">Tarea estimada y con criterio de terminado escrito.</p>
       <div class="cuerpo">
-        <div class="grupo">
-          <h3><span class="id">RF‑031+</span> Almacén local propio <span class="met">1 de 3 · 1.0 h</span></h3>
-          <div class="tareas">
-            <div class="t int"><span class="cod">T‑37</span><span class="txt">Listado de viajes recientes con apertura y eliminación</span><span class="h">1.00</span><span class="pie"><span class="capa">Interfaz</span></span></div>
-          </div>
-        </div>
         <div class="grupo">
           <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">5 de 5 · 8.0 h</span></h3>
           <div class="tareas">
@@ -195,12 +189,6 @@
             <div class="t inf"><span class="cod">T‑49</span><span class="txt">Firmar y publicar el paquete Android</span><span class="h">2.00</span><span class="pie"><span class="capa">Infraestructura</span></span></div>
           </div>
         </div>
-        <div class="grupo extra">
-          <h3>Fuera del compromiso · contra holgura <span class="met">1 de 5 · 0.25 h</span></h3>
-          <div class="tareas">
-            <div class="t int"><span class="cod">T‑54</span><span class="txt">Mostrar el límite de apilamiento igual en las tres plataformas</span><span class="h">0.25</span><span class="pie"><span class="capa">Interfaz</span></span></div>
-          </div>
-        </div>
       </div>
     </section>
     <section class="col curso">
@@ -211,19 +199,25 @@
       </div>
     </section>
     <section class="col">
-      <header><h2>En revisión</h2><span class="cuenta">1 · 1.5 h</span></header>
+      <header><h2>En revisión</h2><span class="cuenta">1<small> +1</small> · 1.0 h</span></header>
       <p class="criterio">Cambio escrito y pendiente de compilar y pasar las pruebas.</p>
       <div class="cuerpo">
         <div class="grupo">
-          <h3><span class="id">TC‑01</span> Revisión de calidad <span class="met">1 de 2 · 1.5 h</span></h3>
+          <h3><span class="id">RF‑031+</span> Almacén local propio <span class="met">1 de 3 · 1.0 h</span></h3>
           <div class="tareas">
-            <div class="t pru"><span class="cod">T‑43</span><span class="txt">Retirar las 49 advertencias de <code>flutter analyze</code></span><span class="h">1.50</span><span class="pie"><span class="capa">Prueba</span><span class="nota rev"><span class='hash'>5c024eb</span> · analyze en cero y seis dependencias menos; compila en los tres clientes, falta ejecutarla</span></span></div>
+            <div class="t int"><span class="cod">T‑37</span><span class="txt">Listado de viajes recientes con apertura y eliminación</span><span class="h">1.00</span><span class="pie"><span class="capa">Interfaz</span><span class="nota rev"><span class='hash'>411ee7c</span> · ejecutada en Chrome y Windows; falta el recorrido a mano en el Honor, con arranque sin conexión</span></span></div>
+          </div>
+        </div>
+        <div class="grupo extra">
+          <h3>Fuera del compromiso · contra holgura <span class="met">1 de 5 · 0.25 h</span></h3>
+          <div class="tareas">
+            <div class="t int"><span class="cod">T‑54</span><span class="txt">Mostrar el límite de apilamiento igual en las tres plataformas</span><span class="h">0.25</span><span class="pie"><span class="capa">Interfaz</span><span class="nota rev"><span class='hash'>ae72611</span> · bien en Chrome; falta verlo en Windows y un fraccionario en el Honor</span></span></div>
           </div>
         </div>
       </div>
     </section>
     <section class="col">
-      <header><h2>Terminado</h2><span class="cuenta">14<small> +4</small> · 17.0 h</span></header>
+      <header><h2>Terminado</h2><span class="cuenta">15<small> +4</small> · 18.5 h</span></header>
       <p class="criterio">Compila en las tres plataformas, pruebas en verde y sin advertencias nuevas.</p>
       <div class="cuerpo">
         <div class="grupo">
@@ -247,6 +241,12 @@
           <div class="tareas">
             <div class="t inf"><span class="cod">T‑35</span><span class="txt">Incorporar el motor de almacenamiento local</span><span class="h">1.00</span><span class="pie"><span class="capa">Infraestructura</span><span class="nota ok"><span class='hash'>388db74</span> · <code>hive_ce</code> elegido por medición</span></span></div>
             <div class="t dom"><span class="cod">T‑36</span><span class="txt">Esquema y serialización de viajes y perfiles</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>69afd4e</span></span></span></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3><span class="id">TC‑01</span> Revisión de calidad <span class="met">1 de 2 · 1.5 h</span></h3>
+          <div class="tareas">
+            <div class="t pru"><span class="cod">T‑43</span><span class="txt">Retirar las 49 advertencias de <code>flutter analyze</code></span><span class="h">1.50</span><span class="pie"><span class="capa">Prueba</span><span class="nota ok"><span class='hash'>5c024eb</span> · analyze en cero, seis dependencias menos; ejecutada en los tres clientes</span></span></div>
           </div>
         </div>
         <div class="grupo">
