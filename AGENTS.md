@@ -22,7 +22,7 @@
   contrástalas con el código y los datos reales. Si existe una contradicción,
   detente, presenta la evidencia y propone una corrección.
 - Para tareas relacionadas con alcance, sprint, seguridad o mediciones H5, lee
-  completo el `SPRINT-1.md` vigente antes de editar. Las correcciones posteriores
+  el `SPRINT-N.md` vigente (hoy `SPRINT-2.md`) antes de editar. Las correcciones posteriores
   de ese documento prevalecen sobre sus notas históricas.
 - Lee la versión actual de cada archivo objetivo antes de modificarlo. El árbol
   puede contener trabajo concurrente de Carlos o Yov; no restaures ni
@@ -48,8 +48,8 @@
 - No modifiques `lib/main.dart`, las opciones de Firebase ni crees
   `firebase_options.dart`, salvo revocación explícita de Carlos para una tarea
   concreta.
-- No adelantes RF-027 ni agregues autenticación, roles, comparación entre
-  viajes o sincronización de Windows fuera de una solicitud expresa.
+- No agregues autenticación, roles, comparación entre viajes o sincronización
+  de Windows fuera de una solicitud expresa.
 - No refactorices código funcional "de paso" y no agregues dependencias de
   producción sin autorización.
 - La skill `.claude/skills/formato-entregables/` es trabajo activo de Carlos y
@@ -57,6 +57,39 @@
   la plantilla vigente. Nunca la reemplaces por una versión anterior.
 - No modifiques `.claude/settings.local.json` ni lo incluyas en comandos para
   Git.
+
+## Trabajo en paralelo (desde el 30-sep)
+
+Capitán Codex y Timonel (Claude Code) pueden trabajar a la vez en esta misma
+carpeta, **una tarea cada uno**. Comparten el árbol de trabajo, la máquina, las
+herramientas de Flutter y el Honor, así que se reparten así:
+
+1. **Carriles de archivos.** Dos tareas en paralelo nunca tocan el mismo
+   archivo. Lo propio de cada tarea lleva su prefijo: el informe
+   `docs/<TAREA>-RESULTADOS.md`, los scripts `tool/<tarea>_*.dart` y las
+   evidencias en `build/<tarea>/`. `SPRINT-N.md`, `AGENTS.md`, `CLAUDE.md` y
+   `README.md` los mantiene Yov: no los edites.
+2. **`lib/`, `test/` y `pubspec.*` son de una tarea a la vez**, aunque sean
+   archivos distintos: comparten la compilación y la suite, y un cambio a
+   medias del otro te rompe las pruebas. Si tu tarea no los modifica, trátalos
+   como solo lectura.
+3. **Un comando de Flutter a la vez en la máquina.** `flutter build`, `test`,
+   `run` y `analyze` comparten `.dart_tool/` y `build/`. Si Flutter dice que
+   espera el bloqueo de otro comando, espera: no lo fuerces ni borres el
+   archivo de bloqueo. No sobrescribas los binarios de `build/windows`,
+   `build/web` o `build/app` que otra tarea abierta compiló.
+4. **Las mediciones mandan.** Mientras uno mide tiempos, el otro no compila, no
+   corre la suite ni abre la app en esa máquina. Quien mide avisa al empezar y
+   al terminar cada ventana de medición con una línea que empiece con
+   `SEMÁFORO:`, y Carlos pasa el aviso.
+5. **Un solo usuario por dispositivo y por app.** El Honor y la app de Windows,
+   con su almacén local, tienen un único usuario a la vez: abrir la misma app
+   dos veces puede bloquear el almacén. Se reservan a través de Carlos.
+6. **Git igual que siempre, un bloque por programador**, con solo tus rutas. Si
+   ves en el árbol cambios que no son tuyos, no los incluyas, no los toques y
+   no los deshagas: son del otro programador.
+7. **Carlos es el semáforo.** Los programadores no se hablan entre sí. Si dudas
+   de si algo choca, pregunta antes de ejecutar.
 
 ## Arquitectura y estilo del producto
 

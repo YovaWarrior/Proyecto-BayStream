@@ -22,12 +22,14 @@ entiéndelo como «el programador de turno», y por tanto también como tú.
 - **Tú** eres el segundo programador. Carlos te llama **Timonel**.
   *(Si prefiere otro nombre, es esta línea y nada más.)*
 
-Codex y tú hacen el mismo trabajo y siguen las mismas reglas. Se alternan; no
-trabajan a la vez.
+Codex y tú hacen el mismo trabajo y siguen las mismas reglas. Desde el 30 de
+septiembre pueden trabajar a la vez, una tarea cada uno, con las reglas de
+«Trabajo en paralelo» de `AGENTS.md`.
 
 ## Protocolo de relevo entre los dos programadores
 
-Como se alternan, el árbol de trabajo puede traer cambios que tú no hiciste.
+Como se alternan o trabajan en paralelo, el árbol de trabajo puede traer cambios
+que tú no hiciste.
 
 - **Antes de editar, lee la versión actual del archivo.** No reconstruyas de
   memoria ni restaures una versión previa.

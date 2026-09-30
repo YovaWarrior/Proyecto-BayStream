@@ -777,7 +777,7 @@ real, no en un emulador.
 
 ### Trabajo del segundo programador (Timonel) — fuera del compromiso, contra holgura
 
-Estas dos tareas **no cuentan contra los 57 pts / 35.0 h** del documento entregado el
+Estas tareas **no cuentan contra los 57 pts / 35.0 h** del documento entregado el
 19-sep. Salen de las 18 h de holgura, que existen justamente para esto. Van aparte porque
 tocan archivos que ningún bloque de RF‑036 toca, así que pueden avanzar sin chocar con el
 programador de turno.
@@ -929,6 +929,75 @@ es formatear el número explícitamente, con el mismo criterio en los tres clien
 
 **Terminada cuando:** el mismo perfil muestra el mismo texto del límite en Windows, Web y
 Android, con y sin decimales.
+
+---
+
+#### T-55 · Revisión cruzada de RF-027 contra su fuente y contra el corpus · 1.50 h
+
+**No toca `lib/`.** Lectura, pruebas existentes y scripts en `tool/`. Informe en
+`docs/T55-RESULTADOS.md`.
+
+**Por qué.** Codex escribió RF‑027 entero, de T‑38 a T‑42, y Timonel armó la fuente de T‑41
+(`docs/T41-SEGREGACION-FUENTE.md`). Nadie fuera del autor ha contrastado el código con esa
+fuente. Es el patrón de la doble prueba del Sprint 1: este proyecto ya tiene seis casos en que
+el segundo revisor encontró algo que el primero dio por bueno.
+
+**Qué revisar, en este orden:**
+
+1. **Una fila central que el buque puede no tener.** `VesselGeometry.orderedRows` incluye
+   siempre la fila 00 («Existe siempre, aunque el viaje no la cargue»), y
+   `DangerousGoodsValidator` mide la separación transversal por índice en esa lista
+   (`dangerous_goods_validator.dart:168-169`). En un buque sin fila 00, las filas 01 y 02 son
+   vecinas, pero el índice las separa por un hueco inexistente, y un par de código 2 en 01/02
+   podría salir **conforme**. Es una hipótesis por lectura de código, no un defecto
+   confirmado. Comprobar con un caso controlado si pasa, y en el corpus si algún archivo tiene
+   carga en 01 y 02 en la misma bahía y nivel sin usar nunca la 00.
+2. **Tomas de reefer y paridad de bahía.** `ReeferSocketValidator` busca la posición exacta
+   del contenedor (`profile.hasReeferSocket(p.toIsoCode())`). Un 40 pies llega en bahía par
+   (`0260184`) y un 20 pies en la impar vecina (`0250184` o `0270184`). Si el inventario se
+   declara en una notación y la carga llega en la otra, sale una alerta «sin toma» que el
+   criterio de T‑42 no admite. Contar cuántas de las 50 tomas propuestas de A01 vienen de un
+   40 y cuántas de un 20, y describir qué pasa si el mismo hueco físico recibe un 20 en otro
+   viaje.
+3. **Tabla de segregación contra su fuente.** Cada entrada de `segregation_rules.dart` contra
+   `docs/T41-SEGREGACION-FUENTE.md` y la edición 2024 de §176.83 (enlace en
+   `docs/BLOQUE7B-RESULTADOS.md`). Revisar los riesgos subsidiarios por (a)(6), las unidades
+   cerradas por (f)(3), y que ningún caso sin regla salga como conforme.
+4. **Un caso trazado a mano por validador** (T‑38, T‑39, T‑40 y T‑41) sobre `CORPUS_A01` o
+   `CORPUS_A03`, comparado con lo que muestra el panel de T‑42.
+
+Cada hallazgo se clasifica como **defecto confirmado** (con reproducción: archivo y posición,
+o script), **duda** (qué haría falta para resolverla) o **conforme**. **No se corrige nada**:
+según 9.1, un defecto se anota y se decide dónde entra. Las reproducciones van como scripts en
+`tool/`; no se agregan pruebas en rojo a `test/`.
+
+**Terminada cuando:** los cuatro puntos tienen veredicto y cada defecto confirmado tiene su
+reproducción.
+
+---
+
+#### T-56 · Declarar el inventario de tomas de reefer por rangos · 1.50 h
+
+**Toca:** la sección de tomas de `vessel_geometry_page.dart` y, si hace falta, una función
+pura en `domain/services/` con su prueba.
+
+**Por qué.** El criterio de T‑42 pide un perfil declarado completo, y hoy la única forma de
+declarar tomas es una a una: un campo de siete dígitos y «Agregar toma». Un inventario real de
+cientos de tomas no se carga así, o se carga con atajos que invalidan la declaración.
+
+**No empieza hasta que se cumplan dos condiciones.** Primero, que Codex entregue T‑44: esta
+tarea cambia `lib/`, y si Codex tuviera que recompilar, contaminaría la versión candidata. Segundo, que
+T‑55 y Carlos resuelvan el punto 2, es decir, qué número de bahía lleva una toma. El rango
+genera los códigos que el validador va a buscar; con la convención equivocada, cada toma sale
+como alerta falsa.
+
+**Qué:** agregar por rango (bahías desde–hasta, filas, niveles desde–hasta), con vista previa
+de cuántas tomas se agregarán y cuántas se descartan por caer fuera de la geometría
+declarada; y pegar una lista de códigos separados por comas o saltos de línea. Cargar por
+rango **no declara**: la declaración sigue exigiendo marcar la casilla que ya existe.
+
+**Terminada cuando:** se carga un inventario de al menos cien tomas en menos de un minuto en
+los tres clientes, y el conteo de la vista previa coincide con el del perfil guardado.
 
 ---
 
@@ -1866,3 +1935,46 @@ Lo único que Codex puede avanzar solo es T‑44, **con una condición:** su fic
 el binario a liberar, y ese binario cambia en T‑47. Se mide ahora sobre la versión candidata,
 rotulada con su commit, y después de T‑47 se repiten las mediciones que pasan por Firebase. Si
 la aceptación de T‑42 obliga a cambiar código, se repiten también las que ese cambio toque.
+
+---
+
+### 10.21 · T-55 y T-56 para Timonel · dos hipótesis sobre RF-027 (30-sep)
+
+**Timonel vuelve con créditos.** Lo comprometido que queda sin bloquear es solo T‑44, que
+tiene Codex. Timonel recibe dos tareas fuera del compromiso, contra holgura, como T‑50 a T‑54:
+
+- **T‑55**: revisión cruzada de RF‑027, sin tocar `lib/`. Puede correr en paralelo con
+  T‑44.
+- **T‑56**: carga de tomas por rangos. Espera a que Codex entregue T‑44 y a que se resuelva
+  la convención de bahía.
+
+La holgura gastada pasa de 5.25 h a 8.25 h, de 18 h.
+
+**Dos hipótesis por lectura de código, que T‑55 debe confirmar o descartar.** Aparecieron al
+preparar la aceptación de T‑42, preguntando qué otro camino llega a «conforme» o a «sin toma»:
+
+1. La geometría supone siempre una fila 00. En un buque sin fila central, la separación
+   transversal entre 01 y 02 se contaría con un hueco que no existe, y un par de código 2
+   podría salir conforme. Es la clase de error que T‑41 prometió no cometer: nada conforme
+   por omisión.
+2. El validador de tomas compara el código exacto de posición, y un mismo hueco físico
+   cambia de número de bahía según llegue un 20 o un 40. Si no se fija la convención, el
+   inventario declarado de ALFA produciría alertas falsas.
+
+Ninguna de las dos se da por defecto hasta que tenga reproducción. Las dos preguntas tienen
+además respuesta de planificador, que Carlos conoce sin mirar el código: si el buque de ALFA
+tiene fila 00, y cómo lista su documentación las tomas.
+
+**Trabajo en paralelo.** Carlos decide que los dos programadores trabajen a la vez. El límite
+de trabajo en curso pasa de una tarea a **una tarea por programador**. Las reglas para no
+chocar quedaron en `AGENTS.md`, en la sección «Trabajo en paralelo», que leen los dos al
+llegar. Lo esencial:
+
+- nunca dos tareas sobre el mismo archivo;
+- `lib/`, `test/` y `pubspec.*` son de una sola tarea a la vez;
+- un comando de Flutter a la vez;
+- mientras uno mide tiempos, el otro no ejecuta nada en esa máquina;
+- Carlos hace de semáforo.
+
+De paso, `AGENTS.md` dejó de mandar a leer `SPRINT-1.md` y de prohibir adelantar RF‑027, que
+ya está casi cerrado.
