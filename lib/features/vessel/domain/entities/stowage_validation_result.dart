@@ -2,7 +2,12 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../core/utils/iso_coordinate_parser.dart';
 
-enum StowageRule { stackWeight, dangerousGoodsSegregation }
+enum StowageRule {
+  stackWeight,
+  dangerousGoodsSegregation,
+  reeferSocket,
+  twentyOverForty,
+}
 
 /// Estado de evaluación y severidad son ejes distintos: no evaluar no equivale
 /// a aprobar. Las próximas reglas reutilizan este contrato, no otro tipo de alerta.

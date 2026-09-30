@@ -142,6 +142,14 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     return const AsyncValue.data(null);
   }
 
+  /// Una publicación también puede cambiar solo las tomas o su origen,
+  /// guardados en publishedProfile y no en la igualdad de VesselVoyage.
+  /// Riverpod 3 compara por ==: notificar cada nueva instantánea publicada
+  /// evita conservar validaciones calculadas con el perfil anterior.
+  @override
+  bool updateShouldNotify(AsyncValue<VesselVoyage?> previous,
+      AsyncValue<VesselVoyage?> next) => !identical(previous, next);
+
   /// Abre el selector de archivos, lee el contenido y parsea el BAPLIE
   /// Retorna un resultado indicando éxito, error o cancelación
   Future<LoadFileResult> loadVesselFromFile() async {
