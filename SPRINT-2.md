@@ -1759,3 +1759,50 @@ Si falla, es un hallazgo real sobre RF‑031+, no un detalle.
 **El bloque 7 queda libre para Codex.** Orden por riesgo: **T‑38 primero**, porque define el
 contrato de resultado que reúsan las demás (severidad, descripción, posición); **luego T‑41**,
 la candidata número uno a desbordarse; después T‑39, T‑40 y T‑42.
+
+---
+
+### 10.19 · RF-031+ completo · T-38 y T-41 cerradas · A03 tiene 2 posibles incumplimientos reales para revisar (30-sep)
+
+**T‑37 y T‑54 pasan a Terminado** (`46a136e`, `docs/RECORRIDO-CLIENTES-RESULTADOS.md`). Las
+nueve comprobaciones se hicieron **sobre la interfaz real de la aplicación de producción,
+conducida por Codex**: ADB en el Honor X5d y control de ventanas en Windows, leyendo
+controles y capturas. El informe lo dice expresamente: **no fue una revisión hecha por
+Carlos en persona.** Se registra así, sin llamarlo «a mano».
+
+**El arranque en frío sin conexión pasó, con rigor:** modo avión, Wi‑Fi apagado, sin red
+predeterminada (`Active default network: none`), detención forzada verificada sin proceso
+vivo; la aplicación arrancó y A06 abrió desde Recientes con su plano y sus sombras de 40 pies.
+Es el caso del muelle, y con él **RF‑031+ queda completo** (T‑35, T‑36 y T‑37).
+
+**T‑38 y T‑41 pasan a Terminado** (`50d4793`, `ea6daad`, `docs/BLOQUE7A-RESULTADOS.md`). 237
+pruebas, `analyze` en cero. Sondas ejecutadas en los tres clientes; la pantalla de
+segregación de A03 se revisó en Chrome, y en el Honor y Windows dentro del recorrido.
+
+- **T‑38 define `StowageValidationResult`:** regla, estado de evaluación, severidad,
+  descripción, posición y fuente, con estado y severidad independientes. Con el límite en
+  `null` da cero alertas; en A01, con 75 000 kg de prueba, 33 pilas lo exceden.
+- **T‑41 evalúa por número ONU con 49 CFR Parte 176**, cada par con su sección citada en la
+  interfaz. La pantalla abre con el descargo: «Apoyo a la decisión, no verificación de
+  cumplimiento… No es el Código IMDG ni se afirma equivalencia». Sin pares, dice «Esto no
+  declara el viaje conforme».
+- **Los dos casos obligatorios:** UN3084 incorpora su 5.1 subsidiario y exige código 2
+  frente a las cuatro clases 3 de su nivel. En las posiciones reales de A03 la separación
+  transversal alcanza un hueco completo, así que no alerta, y una prueba controlada con los
+  contenedores contiguos demuestra que sí alerta. UN1950 sobre UN3085 no da la falsa alarma
+  vertical y queda **no evaluado**, sin convertirse en conformidad.
+
+**Resultado sobre el corpus real:** A01 6 conformes; A02 3; A04 1; A05 y A06 un no evaluado
+cada uno; **A03, 253 pares: 151 conformes en las reglas evaluadas, 100 no evaluados y 2
+posibles incumplimientos.** Que el 40 % de A03 salga «no evaluado» no es una falla: el sistema
+dice lo que no puede decidir en vez de declararlo conforme, que es la postura escrita desde
+10.12.
+
+**Los 2 posibles incumplimientos son el dato más valioso del bloque y todavía nadie los
+revisó.** Son un hallazgo en un plano de carga real anonimizado. Si son reales, BayStream
+encontró algo que un plano en papel dejó pasar; si son falsos positivos, T‑41 tiene un
+defecto. **Lo decide Carlos como planificador**, con los dos pares listados por Codex.
+
+**Para T‑42:** hoy la pantalla lista los 253 resultados en orden de cálculo, y lo primero
+que se ve es «Conforme». El panel debe ordenar por severidad y poner los posibles
+incumplimientos arriba.
