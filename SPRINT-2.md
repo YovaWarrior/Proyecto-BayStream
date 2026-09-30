@@ -662,6 +662,18 @@ sigue en pie: un arcoíris no tiene orden perceptual, y aquí el orden es el dat
 **Terminada cuando:** sobre `CORPUS_A01` con un perfil declarado completo el panel muestra
 alertas reales y ninguna alerta cuyo origen no se pueda explicar.
 
+**Criterio redefinido el 30-sep (10.24), sin inventar datos:**
+
+- Sobre `CORPUS_A01`, con el perfil que el planificador puede declarar:
+  - fila 00 ausente en cubierta y en bodega;
+  - límite de apilamiento marcado como «No lo tengo»;
+  - tomas propuestas desde el archivo.
+
+  Con ese perfil, el panel no muestra ninguna alerta cuyo origen no se pueda explicar.
+- Las **alertas reales** se demuestran sobre `CORPUS_A03`, con los dos pares de segregación que
+  Carlos validó (10.20).
+- Se comprueba en los tres clientes, después de T‑58.
+
 ---
 
 ### TC-01 · Revisión de características de calidad (3.0 h · T-43, T-44)
@@ -977,6 +989,9 @@ reproducción.
 ---
 
 #### T-56 · Declarar el inventario de tomas de reefer por rangos · 1.50 h
+
+**Pasa al Sprint 3 (10.24).** Su especificación es la sección 3 de `docs/T59-RESULTADOS.md`:
+celda más extremo, tabla de pares en el perfil y validación por celda física.
 
 **Toca:** la sección de tomas de `vessel_geometry_page.dart` y, si hace falta, una función
 pura en `domain/services/` con su prueba.
@@ -2216,3 +2231,41 @@ en T‑58.
 
 El trabajo fuera del compromiso ya usa 12.75 h de las 18 de holgura: 12.25 h estimadas de T‑50
 a T‑59, más la media hora que T‑55 pasó de su estimación.
+
+---
+
+### 10.24 · T-59 cerrada · T-56 pasa al Sprint 3 · el criterio de T-42 se redefine sin inventar datos (30-sep)
+
+**T‑59 (`40fba22`), 1.1 h de 1.0.** No hay respuesta pública sobre en qué extremo de la celda va
+la toma de reefer. Yov contrastó las fuentes en el original:
+
+- **SMDG #79** (abril de 2025) dice textualmente: *«There is no standard for vessel profiles,
+  profile depends on software of owner»*.
+- El **survey de van Twiller et al.** (arXiv 2307.07573) solo dice *«Some cells have power plugs
+  for refrigerated containers»*.
+- Los códigos **RFA** y **RFF** de SMDG muestran que el motor del reefer se orienta a proa o a
+  popa según el embarque.
+
+Yov también verificó el corpus contra `CORPUS_A01.edi`:
+
+- Los pares con carga de 40 son 002 a 038 de cuatro en cuatro, más la 044.
+- La 041 va sola, con un contenedor de 20.
+- La 044 lleva 25 contenedores de 40.
+- Los nueve reefers de 20 están en la 021, y en la 023, a popa en la misma fila y el mismo
+  nivel, hay nueve 22G1 secos.
+
+**Decisiones de Carlos:**
+
+1. **T‑56 pasa al Sprint 3.** La sección 3 de `docs/T59-RESULTADOS.md` queda como su
+   especificación: guardar cada toma como celda más extremo, con la tabla de pares del buque en
+   el perfil, y validar por celda física. Hoy no hay un inventario real que cargar, y la holgura
+   que queda se reserva para el despliegue (T‑47 a T‑49, que son MUST).
+   - **Limitación documentada:** con un inventario **declarado**, que el mismo hueco físico
+     reciba el otro tamaño produce errores falsos (91 en el escenario de T‑55). Con el inventario
+     **propuesto**, que es el único que existe hoy, produce avisos con su origen explicado.
+   - Sin T‑56, el trabajo fuera del compromiso baja a **11.25 h de 18**.
+2. **El criterio de T‑42 se redefine, sin inventar datos.** El criterio original pedía A01 «con
+   un perfil declarado completo». Cumplirlo al pie de la letra obligaba a inventar el límite de
+   apilamiento y el plano de tomas de ALFA: Carlos no tiene esa documentación, y T‑59 mostró que
+   no es pública. El criterio nuevo está en la ficha de T‑42. Se acepta después de T‑58, porque
+   la declaración de la fila 00 no existe hasta entonces.
