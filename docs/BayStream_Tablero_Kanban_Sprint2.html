@@ -141,7 +141,7 @@
     <p class="eyebrow">Proyecto de Graduación II · 19 sep – 17 oct 2026</p>
     <h1>Sprint 2 — Perfil de buque persistente</h1>
     <p class="sub">Estado del tablero al 30 de septiembre de 2026, duodécimo día del sprint. De las
-      35.0 horas comprometidas hay 23.0 terminadas.
+      35.0 horas comprometidas hay 25.5 terminadas y 2.0 en revisión.
       Cada tarea terminada muestra el commit que la entrega y los clientes donde se verificó. La fotografía al abrir el sprint,
       con las veintiséis tareas por hacer, está en el documento del Sprint Backlog.</p>
   </header>
@@ -156,17 +156,9 @@
 
   <div class="tablero">
     <section class="col">
-      <header><h2>Por hacer</h2><span class="cuenta">8 · 12.0 h</span></header>
+      <header><h2>Por hacer</h2><span class="cuenta">5 · 7.5 h</span></header>
       <p class="criterio">Tarea estimada y con criterio de terminado escrito.</p>
       <div class="cuerpo">
-        <div class="grupo">
-          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">3 de 5 · 4.5 h</span></h3>
-          <div class="tareas">
-            <div class="t dom"><span class="cod">T‑39</span><span class="txt">Validar refrigerado en posición sin toma eléctrica</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span></span></div>
-            <div class="t dom"><span class="cod">T‑40</span><span class="txt">Validar el apilamiento de 20 pies sobre 40 pies</span><span class="h">1.50</span><span class="pie"><span class="capa">Dominio</span></span></div>
-            <div class="t int"><span class="cod">T‑42</span><span class="txt">Panel de alertas con severidad, descripción y posición</span><span class="h">2.00</span><span class="pie"><span class="capa">Interfaz</span></span></div>
-          </div>
-        </div>
         <div class="grupo">
           <h3><span class="id">TC‑01</span> Revisión de calidad <span class="met">1 de 2 · 1.5 h</span></h3>
           <div class="tareas">
@@ -197,14 +189,19 @@
       </div>
     </section>
     <section class="col">
-      <header><h2>En revisión</h2><span class="cuenta">0 · 0.0 h</span></header>
+      <header><h2>En revisión</h2><span class="cuenta">1 · 2.0 h</span></header>
       <p class="criterio">Cambio escrito y pendiente de compilar y pasar las pruebas.</p>
       <div class="cuerpo">
-        <div class="vacia">Sin tareas en esta columna.</div>
+        <div class="grupo">
+          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">1 de 5 · 2.0 h</span></h3>
+          <div class="tareas">
+            <div class="t int"><span class="cod">T‑42</span><span class="txt">Panel de alertas con severidad, descripción y posición</span><span class="h">2.00</span><span class="pie"><span class="capa">Interfaz</span><span class="nota rev"><span class='hash'>3318da4</span> · ejecutado en los tres clientes; falta aceptarlo con el perfil declarado completo de ALFA, los límites usados son de prueba</span></span></div>
+          </div>
+        </div>
       </div>
     </section>
     <section class="col">
-      <header><h2>Terminado</h2><span class="cuenta">18<small> +5</small> · 23.0 h</span></header>
+      <header><h2>Terminado</h2><span class="cuenta">20<small> +5</small> · 25.5 h</span></header>
       <p class="criterio">Compila en las tres plataformas, pruebas en verde y sin advertencias nuevas.</p>
       <div class="cuerpo">
         <div class="grupo">
@@ -232,10 +229,12 @@
           </div>
         </div>
         <div class="grupo">
-          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">2 de 5 · 3.5 h</span></h3>
+          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">4 de 5 · 6.0 h</span></h3>
           <div class="tareas">
             <div class="t dom"><span class="cod">T‑38</span><span class="txt">Validar el peso por pila contra el límite del perfil</span><span class="h">1.50</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>50d4793</span> · contrato común; con límite nulo, cero alertas</span></span></div>
-            <div class="t dom"><span class="cod">T‑41</span><span class="txt">Separación de peligrosas desde los segmentos DGS</span><span class="h">2.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>ea6daad</span> · por número ONU con 49 CFR 176; en A03, 2 posibles incumplimientos por revisar</span></span></div>
+            <div class="t dom"><span class="cod">T‑39</span><span class="txt">Validar refrigerado en posición sin toma eléctrica</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>d045e55</span> · error si el inventario es declarado, aviso si es propuesto</span></span></div>
+            <div class="t dom"><span class="cod">T‑40</span><span class="txt">Validar el apilamiento de 20 pies sobre 40 pies</span><span class="h">1.50</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>39bc24b</span> · cero casos en los seis archivos; los positivos, en pruebas controladas</span></span></div>
+            <div class="t dom"><span class="cod">T‑41</span><span class="txt">Separación de peligrosas desde los segmentos DGS</span><span class="h">2.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>ea6daad</span> · por número ONU con 49 CFR 176; en A03, 2 posibles incumplimientos que Carlos confirmó como alertas válidas</span></span></div>
           </div>
         </div>
         <div class="grupo">

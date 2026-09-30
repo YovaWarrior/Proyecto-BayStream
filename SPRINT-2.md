@@ -1806,3 +1806,63 @@ defecto. **Lo decide Carlos como planificador**, con los dos pares listados por 
 **Para T‑42:** hoy la pantalla lista los 253 resultados en orden de cálculo, y lo primero
 que se ve es «Conforme». El panel debe ordenar por severidad y poner los posibles
 incumplimientos arriba.
+
+---
+
+### 10.20 · T-39 y T-40 cerradas · T-42 espera un perfil real · las dos alertas de A03 son válidas (30-sep)
+
+**Commiteadas:** `d045e55` (T‑39), `39bc24b` (T‑40) y `3318da4` (T‑42),
+`docs/BLOQUE7B-RESULTADOS.md`. 260 pruebas, `analyze` en cero, sin dependencias nuevas. El
+panel se ejecutó y recorrió en los tres clientes, con el APK final instalado en el Honor.
+
+**T‑39 pasa a Terminado.** Una toma ausente en un inventario **declarado** es error; en uno
+**propuesto** es aviso, porque una cota inferior no prueba que falte el enchufe. Retirar solo
+la toma `0210804` del inventario de prueba produce exactamente una alerta, con la severidad
+según el origen.
+
+**T‑40 pasa a Terminado.** Los seis archivos del corpus tienen contenedores de 20 y de 40
+pies, y **ninguno produce un positivo**. No se fabricó uno: los casos positivos se cubren con
+pruebas controladas. Cero en datos reales es un resultado, no una ausencia de prueba.
+
+**Defecto real encontrado y corregido:** Riverpod 3 consideraba igual el viaje cuando solo
+cambiaban las tomas o su origen, que pertenecen al perfil, y el panel no se actualizaba.
+`VoyageNotifier.updateShouldNotify` ahora notifica cada instantánea nueva. Lo detectó una
+prueba adicional de actualización, no el usuario, y la regresión comprobó aviso → error al
+declarar el inventario.
+
+**T‑42 queda en revisión.** Ordena por severidad (error, aviso, información), conserva los no
+evaluados con su razón y su contador, lleva la severidad escrita además del tono, y tocar
+una alerta abre el plano en la posición correcta: verificado con `0030586` en A03 en los tres clientes, y con `0020108`
+en A01 en Windows y Honor; en Chrome, A01 corrió con límite nulo y dio 0/0/6. **Lo que falta es su criterio de terminado literal:** «sobre `CORPUS_A01` con un perfil
+declarado completo el panel muestra alertas reales y ninguna alerta cuyo origen no se pueda
+explicar». Todos los límites usados son **de prueba** (con 75 000 kg A01 da 33 excesos;
+con 62 500.5 kg, 47), y las 50 tomas vienen de la propuesta del archivo. El perfil completo de ALFA
+se le pidió a Carlos y no se ha recibido. **Al declararlo hay que decir a qué caso corresponde
+el límite:** el perfil guarda un solo límite de peso por pila para todo el buque
+(`geometry.stackWeightLimitKg`), y el manual de un buque real normalmente lo da por zona y por
+tamaño de contenedor. Esa simplificación va a las limitaciones de la tesis.
+
+**Las dos alertas de A03 son válidas, según Carlos como planificador.** Las dos están en
+cubierta, en filas contiguas:
+
+| Par | Carga A | Carga B | Posiciones | Regla |
+|---|---|---|---|---|
+| 1 | UN1170, clase 3, 40 pies | UN0012, clase 1.4S, 20 pies | 0020386 / 0030586 | código 2, §176.83(b) y (f)(3)-(4) |
+| 2 | UN3085, 5.1 con subsidiario 8, 40 pies | UN0303, clase 1.4G, 20 pies | 0260184 / 0270384 | código 2, §176.83(b), (a)(6) y (f)(3)-(4) |
+
+**Es el resultado más fuerte del sprint para la tesis:** un motor de validación encontró dos
+alertas de segregación en un plano de carga real, anonimizado, y un planificador de estiba
+profesional las juzgó válidas. Se reporta con los mismos límites que declaró Codex: **se
+aceptan como alertas de apoyo a la decisión, no como prueba de que el buque real incumplió
+el IMDG**; la separación se mide en huecos, no en metros, porque ni el EDI ni el perfil dan
+el paso entre huecos; la geometría usada es la propuesta mínima de A03; y las reglas se
+contrastaron con la edición oficial 2024 de §176.83 en GovInfo, sin certificar su vigencia a
+2026.
+
+**El camino crítico del sprint ya no son los agentes: es Carlos.** De lo comprometido que
+falta, casi todo espera una acción suya: el perfil real para aceptar T‑42, los pasos de
+consola de H‑06 para T‑46, y el proyecto de producción y la cuenta de tienda para TC‑04.
+Lo único que Codex puede avanzar solo es T‑44, **con una condición:** su ficha pide medir sobre
+el binario a liberar, y ese binario cambia en T‑47. Se mide ahora sobre la versión candidata,
+rotulada con su commit, y después de T‑47 se repiten las mediciones que pasan por Firebase. Si
+la aceptación de T‑42 obliga a cambiar código, se repiten también las que ese cambio toque.
