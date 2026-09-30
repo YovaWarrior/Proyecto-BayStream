@@ -804,7 +804,7 @@ class _BayGridWidget extends StatelessWidget {
               container.containerId == highlightedContainerId;
           final slotKey = '${row.toString().padLeft(2, '0')}'
               '${tier.toString().padLeft(2, '0')}';
-          return _ContainerCell(
+          final cell = _ContainerCell(
             key: ValueKey('cell-$row-$tier'),
             container: container,
             onTap: container != null ? () => onContainerTap(container) : null,
@@ -814,6 +814,9 @@ class _BayGridWidget extends StatelessWidget {
             isOccupiedByNeighbor: container == null &&
                 bay.slotsOccupiedByNeighbors.contains(slotKey),
           );
+          return isHighlighted
+              ? _RevealPosition(key: ValueKey(container.containerId), child: cell)
+              : cell;
         }),
         SizedBox(
           width: _tierWeightWidth,
@@ -837,6 +840,31 @@ class _BayGridWidget extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Espera la transición de pestaña y desplaza ambos ejes hasta la posición.
+class _RevealPosition extends StatefulWidget {
+  final Widget child;
+  const _RevealPosition({super.key, required this.child});
+
+  @override
+  State<_RevealPosition> createState() => _RevealPositionState();
+}
+
+class _RevealPositionState extends State<_RevealPosition> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
+      await Scrollable.ensureVisible(context,
+          alignment: 0.5, duration: const Duration(milliseconds: 200));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Determina si un contenedor coincide con el filtro de leyenda activo

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../data/services/export_service.dart';
 import '../../data/services/pdf_report_service.dart';
 import '../../domain/entities/entities.dart';
@@ -14,7 +15,7 @@ import '../widgets/voyage_stats_view.dart';
 import 'vessel_geometry_page.dart';
 import 'vessel_profiles_page.dart';
 import 'recent_voyages_page.dart';
-import 'segregation_page.dart';
+import 'stowage_alerts_page.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -243,6 +244,21 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     ref.read(highlightedContainerProvider.notifier).clear();
     ref.read(selectedBayProvider.notifier).select(bayNumber);
     _tabController.animateTo(1);
+  }
+
+  Future<void> _openAlerts(VesselVoyage voyage) async {
+    final position = await Navigator.of(context).push<IsoCoordinate>(
+      MaterialPageRoute(builder: (_) => const StowageAlertsPage()),
+    );
+    if (!mounted || position == null) return;
+    ref.read(selectedCarrierProvider.notifier).clear();
+    ref.read(selectedTypeFilterProvider.notifier).clear();
+    _openBayPlan(position.bay);
+    final matches = voyage.containers.where((c) => c.stowagePosition == position);
+    if (matches.isNotEmpty) {
+      ref.read(highlightedContainerProvider.notifier)
+          .highlight(matches.first.containerId);
+    }
   }
 
   /// Exporta el viaje desde el punto de entrada compartido por todos los formatos.
@@ -566,9 +582,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           VoyageSummaryCard(voyage: voyage),
           TextButton.icon(
             icon: const Icon(Icons.fact_check_outlined),
-            label: const Text('Revisar segregación · 49 CFR'),
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => const SegregationPage())),
+            label: const Text('Alertas de estiba'),
+            onPressed: () => _openAlerts(voyage),
           ),
           const SizedBox(height: 24),
           
