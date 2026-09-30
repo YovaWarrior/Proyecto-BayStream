@@ -991,6 +991,9 @@ T‑55 y Carlos resuelvan el punto 2, es decir, qué número de bahía lleva una
 genera los códigos que el validador va a buscar; con la convención equivocada, cada toma sale
 como alerta falsa.
 
+**Aviso de T‑55:** qué impares cubre cada bahía par depende del buque; ALFA tiene contenedores de
+40 pies en la bahía 044. La correspondencia sale de la numeración del buque, no de una fórmula.
+
 **Qué:** agregar por rango (bahías desde–hasta, filas, niveles desde–hasta), con vista previa
 de cuántas tomas se agregarán y cuántas se descartan por caer fuera de la geometría
 declarada; y pegar una lista de códigos separados por comas o saltos de línea. Cargar por
@@ -998,6 +1001,110 @@ rango **no declara**: la declaración sigue exigiendo marcar la casilla que ya e
 
 **Terminada cuando:** se carga un inventario de al menos cien tomas en menos de un minuto en
 los tres clientes, y el conteo de la vista previa coincide con el del perfil guardado.
+
+---
+
+#### T-57 · Mensajes de error en español, con causa y acción sugerida · 1.00 h
+
+**Toca:** `lib/features/vessel/presentation/providers/vessel_providers.dart`, las páginas de
+`presentation/pages/` que interpolan `$error`, y `data/repositories/vessel_repository_impl.dart`.
+
+**Por qué.** T‑44 encontró dos incumplimientos con la misma raíz. RNF‑002 pide la interfaz en
+español, y RNF‑006 pide mensajes «100% descriptivos con causa y acción sugerida». Hoy los fallos
+se envuelven en `StateError` y la presentación interpola `$error`, así que el usuario lee
+«Bad state: …» y ninguna acción (captura `build/t44/honor-invalid-result.png`).
+
+**Qué:**
+
+- Ningún mensaje visible muestra el `toString()` de una excepción de Dart.
+- Cada fallo conocido lleva causa y acción. Ejemplo: «El archivo no trae el nombre del buque
+  en el segmento TDT. Revisa que sea un BAPLIE completo o pide una nueva exportación.»
+- Un fallo desconocido lleva un mensaje genérico en español con acción. El detalle técnico va
+  al registro de depuración, no a la pantalla.
+
+No cambia la lógica del parser ni la de los validadores.
+
+**Terminada cuando:** el archivo inválido de T‑44 (`T44_INVALID.edi`) y un BAPLIE sin nombre de
+buque muestran causa y acción, sin «Bad state», en los tres clientes, y una prueba impide que
+vuelva a aparecer un prefijo de excepción en los mensajes de carga.
+
+---
+
+#### T-58 · Fila 00 declarada por zona, y dos ajustes de segregación · 2.00 h
+
+**Toca:** `vessel_geometry.dart`, `dangerous_goods_validator.dart`, la sección de geometría de
+`vessel_geometry_page.dart` y sus pruebas. **Empieza cuando se entregue T‑57**, porque las dos
+tocan `lib/`.
+
+**Por qué.** T‑55 confirmó que la geometría supone siempre una fila 00, y que un par de código 2
+en 02/01 sale **conforme** en un buque que no la tiene. Carlos aceptó además corregir la
+precedencia del «\*» y tratar los tanques como unidad cerrada (10.23).
+
+**Qué:**
+
+1. **Fila 00 por zona.** La geometría gana dos campos, `centerRowOnDeck` y `centerRowInHold`, de
+   tipo `bool?`: `true` si el buque la tiene, `false` si no la tiene, `null` si no está
+   declarado.
+   - `proposeFrom` pone `true` en la zona donde el viaje trae carga en la fila 00 (eso es
+     evidencia), y `null` donde no la trae (la ausencia no prueba nada).
+   - La separación transversal cuenta la fila 00 como hueco **solo si esa zona la declara
+     `true`**. Con `false` o `null`, las filas 01 y 02 son vecinas. Es la dirección
+     conservadora: una alerta de más, nunca un conforme de más.
+   - El editor muestra y guarda las dos declaraciones.
+   - Los perfiles ya guardados se abren con `null`: el valor por omisión va en el borde de
+     `fromJson`, igual que las anclas de nivel.
+   - El dibujo del plano y el del PDF no cambian: Baplie Viewer también dibuja la columna 00.
+2. **Precedencia del «\*».** La compatibilidad de §176.144 aplica solo al par 1.x/1.x. Si otra
+   combinación de clase o de etiqueta da código 2, gana el 2.
+3. **Tanques.** Se tratan como unidad cerrada. La inferencia y su fuente (§176.2) se escriben en
+   el comentario de `_problem`, y una prueba la fija.
+
+**Terminada cuando:**
+
+- Los casos de `tool/t55_fila_central.dart` y `tool/t55_tabla_segregacion.dart` pasan a ser
+  pruebas en `test/`, con el resultado corregido:
+  - 02/01 sin fila 00 declarada da posible incumplimiento;
+  - 02/01 con la fila 00 declarada da conforme;
+  - UN0012 con etiqueta 3 junto a UN0303 da posible incumplimiento.
+- Los totales del panel para A03 (2/100/151 en el bloque 7b) y para A01 no cambian, o se
+  explica por qué cambian.
+- Un perfil guardado antes de T‑58 abre sin error en los tres clientes.
+
+---
+
+#### T-59 · Averiguar cómo se documentan las tomas de reefer y qué bahía lleva una toma · 1.00 h
+
+**No toca `lib/`.** El informe va en `docs/T59-RESULTADOS.md` y los scripts en `tool/t59_*.dart`.
+Puede correr en paralelo con T‑57 y con T‑58.
+
+**Por qué.** T‑56 necesita una convención para el inventario de tomas, y Carlos no tiene la
+documentación de tomas de ALFA (10.23). El validador compara el código exacto de posición, y un
+mismo hueco físico cambia de número según llegue un 20 o un 40.
+
+**Qué:**
+
+1. **Fuentes públicas.** Cómo documenta la industria las tomas de reefer: planos de estiba,
+   perfiles de buque en el software de planificación, recomendaciones SMDG, literatura académica
+   sobre estiba. La pregunta concreta tiene dos partes:
+   - ¿La toma pertenece a un hueco de 20 (bahía impar), a un hueco de 40 (bahía par) o a un
+     extremo?
+   - ¿De qué extremo toma corriente un refrigerado de 40?
+
+   Cada afirmación lleva su fuente. Lo que no tenga fuente se marca como inferencia.
+2. **Corpus.** Para los cinco buques:
+   - dónde van los refrigerados de 20 dentro de cada par de bahías, y si es siempre el mismo
+     extremo;
+   - qué bahías impares cubre cada bahía par, derivado de las posiciones reales. Incluye la 044
+     de ALFA y las 50 posiciones de DELTA que salen del patrón.
+3. **Propuesta.** Una convención para el inventario de BayStream y una regla de búsqueda para el
+   validador que funcionen con cualquiera de las respuestas posibles. También qué dato tendría
+   que confirmar Carlos para ALFA.
+
+No cambia código. Decide Carlos.
+
+**Terminada cuando:** la pregunta tiene respuesta con fuentes, o queda declarado que no tiene
+respuesta pública; hay una tabla de correspondencia de bahías por buque; y hay una propuesta
+concreta para T‑56.
 
 ---
 
@@ -1978,3 +2085,134 @@ llegar. Lo esencial:
 
 De paso, `AGENTS.md` dejó de mandar a leer `SPRINT-1.md` y de prohibir adelantar RF‑027, que
 ya está casi cerrado.
+
+---
+
+### 10.22 · T-44 y T-55 entregadas: ningún RNF queda aprobado tal como está escrito, y dos defectos latentes del modelo (30-sep)
+
+**T‑44 (`c966fae`), medida sobre la versión candidata `1607263`.** Los tres binarios release
+tienen los mismos hashes que los del bloque 7b. De los ocho RNF del ERS aprobado, **ninguno
+queda aprobado**:
+
+- **No cumplen (4):**
+  - RNF‑001: 314.8 MB de memoria residente en Windows con A01, contra menos de 200 MB.
+  - RNF‑002: seis pasos hasta el plano en la primera carga, contra tres como máximo, y un
+    texto en inglés.
+  - RNF‑006: el mensaje de error da la causa pero no la acción sugerida.
+  - RNF‑008: pide el Código IMDG, y la segregación declara 49 CFR 176.
+- **No se pueden medir tal como están escritos (4):** RNF‑003, 004, 005 y 007. Les faltan
+  definiciones operativas (qué es «sin degradación», el denominador del 95 % o del 80 %) o
+  pruebas fuera del alcance (Android 8.0, pantallas de 27", 10 000 contenedores).
+
+Para la tesis esto es un resultado, no algo que esconder. Los RNF se escribieron en el Primer
+Entregable, antes de existir la forma de medirlos, y medirlos de verdad muestra cuáles no eran
+verificables. El paso siguiente es proponer en el documento el criterio operativo de cada uno,
+sin reescribir el ERS aprobado.
+
+**El número que T‑44 le debía a 10.1.** Se hicieron 35 aperturas del plano de bahía en el
+Honor: siete archivos, cinco repeticiones cada uno, APK release. Todas quedaron **por debajo de
+0.91 s**. Es una cota superior: la captura ADB tarda de 610 a 797 ms, así que el tiempo real es
+menor, aunque no alcanza a resolver los 100 ms de RNF‑001. Frente a los 5 s que Android da a un
+evento de entrada antes de declarar ANR, el cierre de T‑50 ya no descansa solo en «no se
+reprodujo».
+
+**Matices que quedan anotados.**
+
+- **Memoria.** El RNF no dice qué métrica usar. En Windows se midió el conjunto de trabajo, que
+  incluye páginas compartidas; en el Honor, PSS 164 MB y RSS 209 MB. Con la métrica comparable
+  (RSS), las dos plataformas pasan de 200 MB; con PSS, Android cumple.
+- **Los seis pasos vienen de RF‑036.** La primera carga de un buque sin perfil pregunta la
+  plantilla y el límite; con el perfil guardado, esas preguntas desaparecen. Se reporta como
+  incumplimiento literal y se explica como costo de una decisión de diseño.
+
+**Corrección al informe de T‑44: el error de Chrome en el puerto 8787 es de la sonda, no del
+producto.** El texto `BLOCK7_ERROR` solo existe en el manejador de errores de
+`tool/prepare_block7_probe.ps1`, y el `singleWhere` que lanza «Too many elements» está en
+`tool/block7_checks.dart:69`. El producto muestra sus errores como «No se pudo cargar el viaje:
+…». Lo que corrió en 8787, un origen de QA del bloque 7a, fue la sonda, no el binario
+candidato. No se probó el mecanismo (lo más probable es la caché del service worker de Flutter),
+pero el hallazgo se cierra: no hay un defecto del producto detrás.
+
+**El inglés de RNF‑002 sí es del producto.** La captura `build/t44/honor-invalid-result.png`
+muestra «No se pudo cargar el viaje: Bad state: No se encontró el nombre del buque en el
+segmento TDT». El «Bad state:» es el `toString()` de un `StateError` de Dart. El patrón aparece
+en más de quince lugares de `lib/`: los fallos se envuelven en `StateError` y la
+presentación interpola `$error`. Se abre **T‑57**, contra holgura.
+
+**T‑55 (`ceaf4c6`), 2.0 h de 1.5 estimadas.** Las dos hipótesis de 10.21 quedan confirmadas como
+**defectos del modelo**, con reproducción en `tool/t55_*.dart`. **Ninguna cambia hoy un
+resultado del corpus.**
+
+1. **Fila 00.** Un par de código 2 en las filas 02/01 sale conforme. ALFA, BRAVO y DELTA nunca
+   cargan la fila 00; CHARLIE y ECO la usan solo en cubierta. Si el perfil llega a declararla,
+   tiene que ser por zona.
+2. **Tomas de reefer.** Con el inventario marcado como declarado, que el mismo hueco físico
+   reciba el otro tamaño produce 91 errores en A01 (82 más 9). Además, qué impares cubre cada
+   bahía par depende del buque: ALFA tiene contenedores de 40 pies en la bahía 044. Por eso
+   T‑56 no puede calcular esa correspondencia con aritmética.
+
+La tabla de segregación coincide con la fuente y con la edición 2024 de §176.83 en los 28 pares
+y los 17 números ONU. Quedan un defecto de severidad baja (el código «\*» de 1.4/1.4 le gana al
+código 2 cuando hay una etiqueta C236) y una duda (los tanques se tratan como unidad cerrada).
+Las trazas a mano de T‑38 a T‑41 coinciden con el panel. Sale una duda nueva para las
+limitaciones de la tesis: el peso por pila parte en dos las 42 columnas mixtas de A01.
+
+Las hipótesis salieron de preguntar qué otro camino llega a «conforme»; la confirmación vino de
+un revisor que no escribió el código. Es el patrón de la doble prueba, otra vez.
+
+**Tablero.**
+
+- T‑55 pasa a Terminado.
+- T‑44 pasa a En revisión: está medida y reportada, pero su ficha pide el binario que se
+  publica, y lo que pasa por Firebase se repite después de T‑47.
+- T‑57 entra en Por hacer.
+- No queda nada en curso.
+
+**Cuatro decisiones de Carlos que salen de T‑55:**
+
+1. ¿ALFA tiene fila 00, y en qué zonas?
+2. ¿Las tomas se listan por hueco de 20, por hueco de 40 o por extremo? Esta es la que
+   destraba T‑56.
+3. ¿Se corrige la precedencia del «\*»?
+4. ¿Se aceptan los tanques como unidad cerrada?
+
+---
+
+### 10.23 · Respuestas de Carlos a T-55: ALFA no tiene fila 00; T-58 y T-59 (30-sep)
+
+**1. Fila 00: ALFA no la tiene, ni en cubierta ni en bodega.** Carlos mandó capturas de Baplie
+Viewer con `CORPUS_A01.edi` cargado. La conclusión es de Yov, con esta evidencia, y Carlos puede
+confirmarla a primera vista:
+
+- **Bahía 009/010 en cubierta.** Las filas 12 a 02 y 01 a 11 están ocupadas en los niveles 82 a
+  88, y la columna 00 está vacía en los cuatro niveles. Son seis filas por banda, doce en total.
+- **Bahía 009/010 en bodega.** Las filas 10 a 02 y 01 a 09 están ocupadas en los niveles 02 a
+  12, y la 00 está vacía en todos. Son cinco filas por banda, diez en total.
+- Nadie deja vacía la pila central de una bahía estibada por completo en todos sus niveles. Con
+  un número par de filas, la numeración no tiene fila central: la 00 solo existe cuando el
+  número de filas es impar.
+- T‑55 ya había contado cero posiciones en la fila 00 entre las 977 de A01.
+
+**Baplie Viewer también dibuja la columna 00** («0.0» de peso en las dos zonas). La columna vacía
+en el dibujo es una convención de presentación, así que el plano de BayStream no está mal por
+mostrarla. El error estaba solo en que el validador la contaba como hueco. Por eso T‑58 corrige
+la segregación y no toca el dibujo.
+
+**2. Convención de tomas: Carlos no la conoce.** Se delega a T‑59, una investigación sin tocar
+`lib/`, con fuentes públicas y con el corpus. La respuesta que valdría para ALFA sigue siendo la
+documentación de tomas del buque real; T‑59 propone una convención que resista cualquiera de las
+respuestas.
+
+**3. Precedencia del «\*»: se corrige** en T‑58.
+
+**4. Tanques como unidad cerrada: se aceptan.** La inferencia se escribe con su fuente, §176.2,
+en T‑58.
+
+**Orden por la regla de `lib/` (una tarea a la vez):**
+
+- Codex hace T‑57 y después T‑58.
+- Timonel hace T‑59 en paralelo, sin tocar `lib/`.
+- T‑56 espera a T‑59 y a la decisión de Carlos sobre la convención.
+
+El trabajo fuera del compromiso ya usa 12.75 h de las 18 de holgura: 12.25 h estimadas de T‑50
+a T‑59, más la media hora que T‑55 pasó de su estimación.
