@@ -1123,6 +1123,34 @@ concreta para T‑56.
 
 ---
 
+#### T-60 · La fila 00 que el propio viaje ocupa cuenta como existente · 0.50 h
+
+**Toca:** `dangerous_goods_validator.dart` y su prueba.
+
+**Por qué.** T‑58 cuenta la fila 00 como hueco solo si el perfil la declara `true`. Un perfil
+guardado antes, o uno propuesto desde un viaje sin carga en la 00, queda en `null`. Si después
+llega un viaje con contenedores **físicamente** en la 00, el validador sigue tratando 01 y 02
+como vecinas. Así salen las dos alertas nuevas del A03 histórico (10.27): la 0260084 está
+ocupada, así que el hueco existe y lleva carga. Es el escenario normal de RF‑036, un perfil que
+persiste entre viajes.
+
+**Qué:** cuando la declaración de la zona es `null`, la fila 00 cuenta como existente si **este
+viaje** tiene carga en la fila 00 de esa zona y en alguna de las bahías que ocupan los dos
+contenedores del par. La evidencia es por bahía, y no por zona, porque las bahías de proa
+pueden no tener fila central. Si el perfil declara un valor, `true` o `false`, se respeta. La
+descripción del resultado dice de dónde salió el hueco: «fila 00 declarada» o «fila 00 ocupada
+en este viaje».
+
+**Terminada cuando:**
+
+- El A03 histórico vuelve a 2/100/151, con su perfil todavía en `null`.
+- A01 sigue en 47/0/6.
+- Una prueba controlada con el perfil en `null` y carga en la 00 de la misma bahía da conforme
+  para el par 02/01.
+- La misma prueba sin carga en la 00 da posible incumplimiento, como en T‑58.
+
+---
+
 ## 6. Orden de ataque — por riesgo, no por número
 
 El orden numérico no es el orden de ejecución. En el Sprint 1 atacar primero lo más
@@ -2338,3 +2366,42 @@ recompile.
 **Mejora para el Sprint 3, no defecto:** un archivo que no es BAPLIE, como
 `T44_INVALID.edi`, recibe el mensaje de «no trae el nombre del buque en el segmento TDT». La
 acción sirve, pero la causa sería más exacta como «el archivo no es un BAPLIE».
+
+---
+
+### 10.27 · T-57 y T-58 cerradas · el A03 histórico revela un hueco en mi especificación de T-58 · nace T-60 (1-oct)
+
+**T‑57 pasa a Terminado.** Carlos cargó a mano en Chrome los dos archivos con el build Web final
+de T‑57 (`main.dart.js` SHA‑256 `50CD6971…`, servido en el puerto 8801), y los dos mostraron
+causa y acción sin «Bad state».
+
+**T‑58 (`3e721c9`) pasa a Terminado.** 272 pruebas y `analyze` en cero.
+
+- La fila 00 se declara por zona: `true`, `false` o `null`. La propuesta pone `true` solo donde
+  el archivo trae carga en la 00.
+- Con `null`, las filas 01 y 02 son vecinas. En bodega, el par queda «no evaluado», porque el
+  mamparo podría dar la separación.
+- El «\*» ya no le gana al código 2.
+- La inferencia sobre los tanques queda escrita con §176.2.
+- Los casos de las sondas de T‑55 pasaron a pruebas.
+- El perfil de ALFA guardado antes de T‑58 abrió sin error en los tres clientes y muestra
+  «No declarada» en las dos zonas.
+- Los totales: A01 queda en 47/0/6, y A03 con una propuesta nueva en 2/100/151.
+
+**El A03 histórico pasa a 4/98/151, y el defecto está en mi especificación, no en el código.**
+Los dos pares que se suman, `0260184 / 0260284` y `0260286 / 0260184`, cruzan 01/02 en la
+cubierta de la bahía 026, donde **la 0260084 está ocupada**. El hueco existe y tiene un
+contenedor dentro: son alertas falsas. El perfil histórico abre en `null`, y la especificación
+que escribí solo tomaba la evidencia del archivo al momento de proponer el perfil, no al
+validar. Pasa lo mismo con cualquier perfil que persiste entre viajes, el caso central de
+RF‑036, cuando un viaje posterior ocupa una 00 que el primero no tocó. Codex lo explicó como
+pedía la ficha; la corrección es mía.
+
+**Nace T‑60** (0.5 h, contra holgura): durante la validación, la 00 que el propio viaje ocupa
+cuenta como existente cuando la declaración es `null`, con evidencia por bahía. El trabajo fuera
+del compromiso queda en **11.75 h de 18**.
+
+**Para vigilar:** una corrida de la suite terminó con `pumpAndSettle timed out` en
+`recent_voyages_test.dart`, un archivo que T‑58 no tocó, y la repetición pasó. Es la primera
+señal de una prueba inestable. Si vuelve a pasar, se investiga antes de seguir sumando pruebas
+de interfaz.
