@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/vessel_repository_impl.dart';
 import '../../data/services/baplie_parser_service.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/current_profile_parameters.dart';
 import '../../domain/repositories/vessel_repository.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
 import '../../data/repositories/local_vessel_repository_factory.dart';
@@ -111,6 +112,11 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
 
   /// Perfil de la instantánea visible, nunca el borrador de otro buque.
   VesselProfile? get publishedProfile => _publishedProfile;
+
+  /// Parámetros del perfil vigente que no se aplicaron al reabrir el viaje
+  /// visible porque dejarían carga fuera del plano (T-61).
+  List<VesselParameter> get reopenKeptParameters => _reopenKeptParameters;
+  List<VesselParameter> _reopenKeptParameters = const [];
   bool get canChooseTemplate =>
       _pendingVoyage != null && _newProfile && _identityCandidates.isEmpty;
 
@@ -288,6 +294,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
         .fold((failure) => throw VesselOperationFailure(failure), (_) {});
     ref.invalidate(recentVoyagesProvider);
     _publishedProfile = profile;
+    _reopenKeptParameters = const [];
     _clearPending();
     state = AsyncValue.data(published);
   }
@@ -409,15 +416,26 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
           break;
         }
       }
-      // La geometría histórica del viaje no se ensancha ni se reemplaza al abrir.
+      // T-61: las dimensiones son las del viaje (la geometría histórica no se
+      // ensancha); los parámetros del buque salen del perfil vigente, salvo
+      // el que dejaría carga fuera del plano, que conserva el valor guardado.
+      final reopened = profile == null
+          ? null
+          : applyCurrentProfileParameters(
+              voyageGeometry: geometry,
+              profileGeometry: profile.geometry,
+              positions: voyage.stowagePositions);
+      final effective = reopened?.geometry ?? geometry;
       _publishedProfile = (profile ?? VesselProfile.proposeFrom(voyage))
-          .copyWith(geometry: geometry);
+          .copyWith(geometry: effective);
+      _reopenKeptParameters = reopened?.keptFromVoyage ?? const [];
       _clearPending();
       ref.read(selectedBayProvider.notifier).clear();
       ref.read(highlightedContainerProvider.notifier).clear();
       ref.read(selectedCarrierProvider.notifier).clear();
       ref.read(selectedTypeFilterProvider.notifier).clear();
-      state = AsyncValue.data(voyage);
+      state = AsyncValue.data(
+          effective == geometry ? voyage : voyage.withGeometry(effective));
       return null;
     } catch (error, stack) {
       return vesselErrorMessage(error, stack);
@@ -463,6 +481,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     if (_busy) return;
     _clearPending();
     _publishedProfile = null;
+    _reopenKeptParameters = const [];
     state = const AsyncValue.data(null);
   }
 }

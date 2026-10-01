@@ -20,12 +20,22 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
 
   Future<void> _open(VesselVoyage voyage) async {
     setState(() => _working = true);
-    final error = await ref
-        .read(voyageNotifierProvider.notifier)
-        .openRecentVoyage(voyage.id);
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    final error = await notifier.openRecentVoyage(voyage.id);
     if (!mounted) return;
     setState(() => _working = false);
     if (error == null) {
+      final kept = notifier.reopenKeptParameters;
+      if (kept.isNotEmpty) {
+        // T-61: el perfil vigente no se aplica si oculta carga; se dice cuál.
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            key: const ValueKey('reopen-kept-parameters'),
+            duration: const Duration(seconds: 10),
+            content: Text('No se aplicó del perfil vigente: '
+                '${kept.map((p) => p.label).join(', ')}. Dejaría contenedores '
+                'de este viaje fuera del plano; se conserva el valor guardado '
+                'con el viaje. Revisa el perfil del buque.')));
+      }
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context)

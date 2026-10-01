@@ -10,7 +10,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/local_profile_test_support.dart';
 
 void main() {
-  test('publicar guarda y reabrir conserva geometría histórica sin parser ni nube', () async {
+  // Reescrita en T-61: antes afirmaba que reabrir conservaba toda la geometría
+  // guardada aunque el perfil hubiera cambiado. Ahora se conservan las
+  // dimensiones y la carga, y los parámetros del buque salen del perfil vigente.
+  test('publicar guarda y reabrir conserva dimensiones y aplica el perfil vigente sin parser ni nube', () async {
     final store = await testProfileStore();
     final first = ProviderContainer(overrides: [
       localVesselRepositoryProvider.overrideWith((ref) async => store.repository),
@@ -24,7 +27,7 @@ void main() {
     final profile = notifier.currentProfile!;
     expect(original.vesselProfileKey, profile.key);
     first.dispose();
-    // El perfil puede cambiar entre viajes: reabrir conserva la instantánea.
+    // El perfil puede cambiar entre viajes: reabrir toma el límite vigente.
     await store.repository.saveProfile(profile.copyWith(stackWeightLimitKg: 75000));
     final offline = ProviderContainer(overrides: [
       localVesselRepositoryProvider.overrideWith((ref) async => store.repository),
@@ -33,12 +36,17 @@ void main() {
     try {
       final reader = offline.read(voyageNotifierProvider.notifier);
       expect(await reader.openRecentVoyage(original.id), isNull);
-      expect(reader.publishedVoyage, original);
-      expect(reader.publishedVoyage!.portOfCall, 'GTPBR');
+      final reopened = reader.publishedVoyage!;
+      expect(reopened.id, original.id);
+      expect(reopened.containers, original.containers);
+      expect(reopened.portOfCall, 'GTPBR');
+      expect(reopened.geometry,
+          original.geometry!.copyWith(stackWeightLimitKg: 75000));
+      expect(reader.reopenKeptParameters, isEmpty);
       expect(reader.currentProfile!.key, profile.key);
-      expect(reader.currentProfile!.geometry, original.geometry);
+      expect(reader.currentProfile!.geometry, reopened.geometry);
       expect(await reader.openRecentVoyage('no-existe'), isNotNull);
-      expect(reader.publishedVoyage, original);
+      expect(reader.publishedVoyage, reopened);
       expect(await reader.deleteRecentVoyage(original.id), isNull);
       expect((await store.repository.getAllVoyages()).getOrElse(() => []), isEmpty);
       expect((await store.repository.getAllProfiles()).getOrElse(() => []).single.key, profile.key);
