@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/entities.dart';
@@ -16,9 +17,10 @@ class LocalVesselRepositoryImpl implements LocalVesselRepository {
   Future<Either<Failure, T>> _guard<T>(FutureOr<T> Function() operation) async {
     try {
       return Right(await operation());
-    } catch (error) {
-      return Left(
-          CacheFailure(message: 'No se pudo acceder al almacén local: $error'));
+    } catch (error, stack) {
+      debugPrint('Error del almacén local: $error\n$stack');
+      return const Left(CacheFailure(
+          message: 'No se pudo acceder al almacén local. Inténtalo de nuevo.'));
     }
   }
 
@@ -87,9 +89,10 @@ class LocalVesselRepositoryImpl implements LocalVesselRepository {
         ));
       }
       return await _guard(() => _source.saveProfile(profile));
-    } catch (error) {
-      return Left(
-          CacheFailure(message: 'No se pudo guardar el perfil: $error'));
+    } catch (error, stack) {
+      debugPrint('Error al guardar el perfil local: $error\n$stack');
+      return const Left(CacheFailure(
+          message: 'No se pudo guardar el perfil local. Inténtalo de nuevo.'));
     } finally {
       completion.complete();
     }

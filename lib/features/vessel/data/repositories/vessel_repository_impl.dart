@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/entities.dart';
@@ -31,9 +32,10 @@ class VesselRepositoryImpl implements VesselRepository {
         lineNumber: e.lineNumber,
         segment: e.segment,
       ));
-    } catch (e) {
-      return Left(BaplieParsingFailure(
-        message: 'Error inesperado al parsear archivo: ${e.toString()}',
+    } catch (e, stack) {
+      debugPrint('Error inesperado al analizar BAPLIE: $e\n$stack');
+      return const Left(BaplieParsingFailure(
+        message: 'No se pudo interpretar el archivo BAPLIE.',
       ));
     }
   }
@@ -46,9 +48,10 @@ class VesselRepositoryImpl implements VesselRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       return const Right(null);
-    } catch (e) {
-      return Left(FirestoreFailure(
-        message: 'No se pudo guardar el viaje: $e',
+    } catch (e, stack) {
+      debugPrint('Error al guardar el viaje remoto: $e\n$stack');
+      return const Left(FirestoreFailure(
+        message: 'No se pudo guardar el viaje. Inténtalo de nuevo.',
       ));
     }
   }
@@ -59,12 +62,15 @@ class VesselRepositoryImpl implements VesselRepository {
       final snapshot = await _voyages.doc(id).get();
       final data = snapshot.data();
       if (!snapshot.exists || data == null) {
-        return Left(FirestoreFailure(message: 'Viaje no encontrado: $id'));
+        return const Left(FirestoreFailure(
+            message:
+                'El viaje no está disponible. Vuelve a la lista y selecciona otro.'));
       }
       return Right(VesselVoyage.fromJson(data));
-    } catch (e) {
-      return Left(FirestoreFailure(
-        message: 'No se pudo obtener el viaje: $e',
+    } catch (e, stack) {
+      debugPrint('Error al obtener el viaje remoto: $e\n$stack');
+      return const Left(FirestoreFailure(
+        message: 'No se pudo obtener el viaje. Inténtalo de nuevo.',
       ));
     }
   }
@@ -83,9 +89,10 @@ class VesselRepositoryImpl implements VesselRepository {
       return Right(snapshot.docs
           .map((document) => VesselVoyage.fromJson(document.data()))
           .toList());
-    } catch (e) {
-      return Left(FirestoreFailure(
-        message: 'No se pudieron obtener los viajes: $e',
+    } catch (e, stack) {
+      debugPrint('Error al listar los viajes remotos: $e\n$stack');
+      return const Left(FirestoreFailure(
+        message: 'No se pudieron obtener los viajes. Inténtalo de nuevo.',
       ));
     }
   }
@@ -95,9 +102,10 @@ class VesselRepositoryImpl implements VesselRepository {
     try {
       await _voyages.doc(id).delete();
       return const Right(null);
-    } catch (e) {
-      return Left(FirestoreFailure(
-        message: 'No se pudo eliminar el viaje: $e',
+    } catch (e, stack) {
+      debugPrint('Error al eliminar el viaje remoto: $e\n$stack');
+      return const Left(FirestoreFailure(
+        message: 'No se pudo eliminar el viaje. Inténtalo de nuevo.',
       ));
     }
   }

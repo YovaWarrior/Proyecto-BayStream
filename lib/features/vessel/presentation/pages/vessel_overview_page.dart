@@ -6,6 +6,7 @@ import '../../data/services/export_service.dart';
 import '../../data/services/pdf_report_service.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
+import '../formatters/vessel_error_message.dart';
 import '../widgets/voyage_summary_card.dart';
 import '../widgets/containers_list_view.dart';
 import '../widgets/empty_state_widget.dart';
@@ -52,18 +53,25 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         title: const Text('BayStream'),
         centerTitle: true,
         actions: [
-          IconButton(key: const ValueKey('recent-voyages'),
-            icon: const Icon(Icons.history), tooltip: 'Viajes recientes',
-            onPressed: () async {
-              final loadFile = await Navigator.of(context).push<bool>(MaterialPageRoute(
-                  builder: (_) => const RecentVoyagesPage()));
-              if (context.mounted && loadFile == true) await _loadBaplieFile(context);
-            }),
-          IconButton(key: const ValueKey('saved-profiles'),
-            icon: const Icon(Icons.directions_boat_outlined),
-            tooltip: 'Perfiles guardados',
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => const VesselProfilesPage()))),
+          IconButton(
+              key: const ValueKey('recent-voyages'),
+              icon: const Icon(Icons.history),
+              tooltip: 'Viajes recientes',
+              onPressed: () async {
+                final loadFile = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                        builder: (_) => const RecentVoyagesPage()));
+                if (context.mounted && loadFile == true) {
+                  await _loadBaplieFile(context);
+                }
+              }),
+          IconButton(
+              key: const ValueKey('saved-profiles'),
+              icon: const Icon(Icons.directions_boat_outlined),
+              tooltip: 'Perfiles guardados',
+              onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                      builder: (_) => const VesselProfilesPage()))),
           // Botón de búsqueda (solo si hay viaje cargado)
           if (hasVoyage)
             IconButton(
@@ -169,7 +177,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  error.toString(),
+                  vesselErrorMessage(error, stack),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.grey),
                 ),
@@ -197,10 +205,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             children: [
               // Pestaña 1: Lista de contenedores
               _buildContainersListTab(context, voyage),
-              
+
               // Pestaña 2: Bay Plan
               BayPlanView(voyage: voyage),
-              
+
               // Pestaña 3: Estadísticas
               VoyageStatsView(
                 voyage: voyage,
@@ -228,7 +236,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
   void _openSearch(BuildContext context, VesselVoyage voyage) {
     // Limpiar resaltado anterior
     ref.read(highlightedContainerProvider.notifier).clear();
-    
+
     showSearch<ContainerUnit?>(
       context: context,
       delegate: ContainerSearchDelegate(
@@ -254,9 +262,11 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     ref.read(selectedCarrierProvider.notifier).clear();
     ref.read(selectedTypeFilterProvider.notifier).clear();
     _openBayPlan(position.bay);
-    final matches = voyage.containers.where((c) => c.stowagePosition == position);
+    final matches =
+        voyage.containers.where((c) => c.stowagePosition == position);
     if (matches.isNotEmpty) {
-      ref.read(highlightedContainerProvider.notifier)
+      ref
+          .read(highlightedContainerProvider.notifier)
           .highlight(matches.first.containerId);
     }
   }
@@ -279,7 +289,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         );
         await Future<void>.delayed(Duration.zero);
         pdfBytes = await const PdfReportService().generate(
-          voyage, geometry: voyage.geometry!,
+          voyage,
+          geometry: voyage.geometry!,
         );
       }
 
@@ -298,12 +309,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           behavior: SnackBarBehavior.floating,
         ),
       );
-    } catch (error) {
+    } catch (error, stack) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('No se pudo exportar ${format.label}: $error'),
+          content: Text(
+              'No se pudo exportar ${format.label}. ${vesselErrorMessage(error, stack)}'),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -381,7 +393,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         content: Text(
           result.success
               ? 'Archivo "${result.fileName}" cargado correctamente'
-              : result.errorMessage ?? 'Error desconocido',
+              : result.errorMessage ?? unknownVesselErrorMessage,
         ),
         backgroundColor: result.success ? Colors.green : Colors.red,
         behavior: SnackBarBehavior.floating,
@@ -400,22 +412,31 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Perfil del buque nuevo'),
-          content: SizedBox(width: 480, child: SingleChildScrollView(child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Elige un punto de partida. Revisarás sus parámetros antes de guardar.'),
-              ListTile(key: const ValueKey('profile-from-file'),
-                title: const Text('Proponer desde el archivo'),
-                onTap: () => Navigator.pop(context, -1)),
-              for (var i = 0; i < profiles.length; i++)
-                ListTile(key: ValueKey('profile-template-${profiles[i].key}'),
-                  title: Text('Plantilla: ${profiles[i].vesselName}'),
-                  subtitle: Text(profiles[i].key),
-                  onTap: () => Navigator.pop(context, i)),
-            ],
-          ))),
-          actions: [TextButton(onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'))],
+          content: SizedBox(
+              width: 480,
+              child: SingleChildScrollView(
+                  child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                      'Elige un punto de partida. Revisarás sus parámetros antes de guardar.'),
+                  ListTile(
+                      key: const ValueKey('profile-from-file'),
+                      title: const Text('Proponer desde el archivo'),
+                      onTap: () => Navigator.pop(context, -1)),
+                  for (var i = 0; i < profiles.length; i++)
+                    ListTile(
+                        key: ValueKey('profile-template-${profiles[i].key}'),
+                        title: Text('Plantilla: ${profiles[i].vesselName}'),
+                        subtitle: Text(profiles[i].key),
+                        onTap: () => Navigator.pop(context, i)),
+                ],
+              ))),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'))
+          ],
         ),
       );
       if (!context.mounted) return false;
@@ -425,11 +446,11 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       }
       if (selection >= 0) notifier.useTemplate(profiles[selection]);
       return true;
-    } catch (error) {
+    } catch (error, stack) {
       notifier.discardPendingVoyage();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('No se pudieron leer las plantillas: $error')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(vesselErrorMessage(error, stack))));
       }
       return false;
     }
@@ -448,8 +469,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     if (target == null) return;
 
     final isEditing = notifier.pendingVoyage == null;
-    var profile =
-        notifier.currentProfile ?? VesselProfile.proposeFrom(target);
+    var profile = notifier.currentProfile ?? VesselProfile.proposeFrom(target);
     final proposal =
         VesselProfile.proposeFrom(target, parameters: profile.geometry)
             .geometry;
@@ -510,10 +530,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             initial: initial,
             profile: profile,
             fileName: fileName,
-            proposedReeferSocketCount:
-                profile.reeferSlotsOrigin == VesselProfileOrigin.proposedFromFile
-                    ? profile.reeferSlots.length
-                    : null,
+            proposedReeferSocketCount: profile.reeferSlotsOrigin ==
+                    VesselProfileOrigin.proposedFromFile
+                ? profile.reeferSlots.length
+                : null,
           ),
         ),
       );
@@ -537,7 +557,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       }
 
       final error = await notifier.confirmGeometry(result.geometry,
-          portOfCall: result.portOfCall, reeferSlots: result.reeferSlots,
+          portOfCall: result.portOfCall,
+          reeferSlots: result.reeferSlots,
           reeferSlotsOrigin: result.reeferSlotsOrigin);
       if (!context.mounted) return;
       if (error != null) {
@@ -546,8 +567,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           backgroundColor: Theme.of(context).colorScheme.error,
         ));
         initial = result.geometry;
-        profile = profile.copyWith(reeferSlots: result.reeferSlots,
-          reeferSlotsOrigin: result.reeferSlotsOrigin);
+        profile = profile.copyWith(
+            reeferSlots: result.reeferSlots,
+            reeferSlotsOrigin: result.reeferSlotsOrigin);
         continue;
       }
 
@@ -572,7 +594,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     final carriers = ref.watch(carriersListProvider);
     final selectedCarrier = ref.watch(selectedCarrierProvider);
     final filteredContainers = ref.watch(filteredContainersProvider);
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -586,7 +608,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             onPressed: () => _openAlerts(voyage),
           ),
           const SizedBox(height: 24),
-          
+
           // Filtro por naviera
           if (carriers.isNotEmpty) ...[
             Text(
@@ -631,7 +653,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             ),
             const SizedBox(height: 16),
           ],
-          
+
           // Título de la lista de contenedores
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -659,7 +681,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Lista de contenedores filtrados
           ContainersListView(containers: filteredContainers),
         ],
