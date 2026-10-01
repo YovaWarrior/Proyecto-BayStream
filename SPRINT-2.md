@@ -1192,6 +1192,49 @@ Se verifica en los tres clientes.
 
 ---
 
+#### T-62 · Preparar T-47: separar H5 de `main.dart` y analizar qué usa el producto de Firebase · 1.00 h
+
+**No toca `lib/`, `main.dart` ni los archivos congelados.** Informe en `docs/T62-RESULTADOS.md`,
+punto de entrada y script en `tool/`.
+
+**Por qué.** T‑47 es MUST y espera la consola. Al prepararla, Yov encontró tres cosas en el
+repositorio que conviene resolver antes de que Carlos termine el bloque 0:
+
+1. **Las pantallas de H5 no tienen punto de entrada versionado.** `LatencyTestScreen` y
+   `C3ReconciliationScreen` no se referencian desde ningún archivo, y `lib/main.dart` nunca las
+   tuvo en git (`git log -S`). La condición de 2.2, «la instrumentación de H5 sigue midiendo»,
+   hoy no tiene un procedimiento reproducible.
+2. **El producto casi no usa Firebase.** Fuera de los congelados, lo único que toca Firestore es
+   `vessel_repository_impl.dart`, y el producto solo llama a `parseBaplieFile`, que no va a la
+   red. Pero el constructor pide `FirebaseFirestore.instance`, así que el producto necesita
+   Firebase inicializado aunque nunca lo use. Eso cambia qué tiene que hacer T‑47 y si el
+   proyecto de producción necesita Firestore o solo Hosting.
+3. **El identificador `com.example.baystream`** aparece en `android/app/build.gradle.kts`, en la
+   ruta y el paquete de `MainActivity.kt` y en `windows/runner/Runner.rc`. Hay que confirmar la
+   lista completa.
+
+**Qué:**
+
+1. **Punto de entrada de H5 en `tool/`** que lance las dos pantallas congeladas sin modificarlas
+   e inicialice Firebase con opciones leídas de `--dart-define-from-file`, desde un archivo
+   **fuera** del repositorio (`C:\Proyectos\baystream-privado\h5-temporal.json`). Así H5 deja de
+   depender de `main.dart`, y T‑47 puede cambiarlo sin riesgo.
+2. **Verificar que abre** en Chrome contra el proyecto temporal. Antes de tocar nada, leer las dos
+   pantallas para saber qué escribe cada acción. **No ejecutar nada que agregue o borre documentos
+   en `latency_test`.** Si no queda claro, solo abrir las pantallas y comprobar la conexión con una
+   lectura.
+3. **Análisis para T‑47**, sin decidir: qué usa el producto de Firebase, las opciones posibles para
+   `main.dart` con sus consecuencias (RNF‑004, H‑04, H‑06, las pruebas existentes), y si el
+   proyecto de producción necesita Firestore. Decide Carlos.
+4. **Inventario del identificador:** cada archivo y línea que cambia cuando Carlos lo elija, para
+   que el cambio de T‑47 sea mecánico.
+
+**Terminada cuando:** el punto de entrada de H5 abre las dos pantallas contra el proyecto temporal
+sin alterar `latency_test`, y el informe trae las opciones de T‑47 y el inventario del
+identificador.
+
+---
+
 ## 6. Orden de ataque — por riesgo, no por número
 
 El orden numérico no es el orden de ejecución. En el Sprint 1 atacar primero lo más
@@ -2569,3 +2612,19 @@ el cuerpo puede quedarse con «satisfecha».
 cuatro que faltan (T‑46, T‑47, T‑48 y T‑49) esperan pasos de consola de Carlos, todos en la guía
 del bloque 0. Fuera del compromiso, de T‑50 a T‑61 (sin T‑56), van **12.75 h de 18** estimadas.
 Los agentes no tienen nada comprometido sin bloquear: descansan hasta que avance la consola.
+
+---
+
+### 10.31 · T-62 para Timonel: preparar T-47 mientras la consola avanza (1-oct)
+
+Con lo comprometido esperando la consola, Timonel prepara T‑47 sin tocar `lib/`. Yov encontró
+en el repositorio tres cosas que la ficha de T‑47 no contemplaba: las pantallas de H5 no tienen
+un punto de entrada versionado, el producto inicializa Firebase sin usarlo más que para crear una
+instancia de Firestore, y el identificador `com.example` aparece también en el recurso de
+Windows. El detalle está en la ficha de T‑62.
+
+Ningún cambio en `main.dart` ni en los congelados. El punto de entrada lee las opciones de un
+archivo fuera del repositorio; Carlos lo autoriza al mandar la tarea.
+
+El trabajo fuera del compromiso sube a **13.75 h de 18**. Quedan 4.25 h de holgura para lo que
+destape el despliegue.
