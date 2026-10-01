@@ -785,6 +785,11 @@ verifícalo tú.
 **Terminada cuando:** la aplicación se instala desde el canal público en un dispositivo
 real, no en un emulador.
 
+**Criterio redefinido el 1-oct (10.28):** el paquete firmado (`.aab`), con el identificador
+definitivo, se sube a la **prueba interna** de Google Play y se instala en el Honor desde Play,
+no por cable. La publicación en producción queda fuera del sprint, detrás de la prueba cerrada
+de 14 días que Google exige a las cuentas personales nuevas (10.25).
+
 ---
 
 ### Trabajo del segundo programador (Timonel) — fuera del compromiso, contra holgura
@@ -2405,3 +2410,40 @@ del compromiso queda en **11.75 h de 18**.
 `recent_voyages_test.dart`, un archivo que T‑58 no tocó, y la repetición pasó. Es la primera
 señal de una prueba inestable. Si vuelve a pasar, se investiga antes de seguir sumando pruebas
 de interfaz.
+
+---
+
+### 10.28 · T-60 cerrada · el criterio de T-49 se redefine a la prueba interna de Google Play · T-42 lista para aceptación (1-oct)
+
+**T‑60 (`5e67522`) pasa a Terminado.** 273 pruebas y `analyze` en cero.
+
+- El validador junta la ocupación de la fila 00 de **todos** los contenedores del viaje,
+  separada por zona y por bahía. Un 40 cuenta también para sus dos impares.
+- Con la declaración en `null`, la fila 00 solo cuenta como hueco si hay carga en la 00 de la
+  misma zona y en alguna bahía que ocupa el par.
+- La descripción dice de dónde salió el hueco.
+- En Windows release, el A03 histórico, con su perfil todavía en `null`, vuelve a **2/100/151**,
+  y A01 sigue en **47/0/6**.
+- Los hashes son de `app.so`, `main.dart.js` y el APK, como se pidió.
+
+**El criterio de T‑49 se redefine (decisión de Carlos, por recomendación de Yov).** El criterio
+anterior era «la aplicación se instala desde el canal público en un dispositivo real». El nuevo
+está en la ficha de T‑49. Las razones:
+
+- **Restricción externa con fuente oficial.** Una cuenta personal nueva de Google Play necesita
+  14 días de prueba cerrada con 12 testers, y una revisión de hasta 7 días, antes de producción
+  (10.25). Eso no cabe antes del 17-oct.
+- **El MUST no depende de la tienda.** TC‑04 dice «Despliegue en la nube **o** tienda de
+  aplicaciones», y T‑47 con T‑48, el cliente Web publicado, ya lo cumplen. T‑49 agrega el canal
+  Android.
+- **Se elige la interna y no la cerrada** porque la interna no tiene requisitos previos. La
+  cerrada exige completar la ficha de la tienda y pasar una revisión.
+
+En paralelo y **fuera del sprint**, el mismo paquete se sube a la prueba cerrada con 12 a 15
+testers, para que corran los 14 días. Producción queda para finales de octubre o inicios de
+noviembre. **Si Google no verifica la identidad de Carlos a tiempo**, T‑49 queda en revisión con
+esa causa escrita, sin evidencia sustituta.
+
+**T‑42 queda lista para su aceptación.** T‑58 y T‑60 dieron la declaración de la fila 00 que el
+criterio redefinido (10.24) necesitaba. La hace Timonel, que no escribió T‑42, sobre los binarios
+de T‑60 sin recompilar.
