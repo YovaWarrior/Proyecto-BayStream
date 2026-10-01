@@ -141,7 +141,7 @@
     <p class="eyebrow">Proyecto de Graduación II · 19 sep – 17 oct 2026</p>
     <h1>Sprint 2 — Perfil de buque persistente</h1>
     <p class="sub">Estado del tablero al 1 de octubre de 2026, decimotercer día del sprint. De las
-      35.0 horas comprometidas hay 25.5 terminadas y 3.5 en revisión.
+      35.0 horas comprometidas hay 27.5 terminadas y 1.5 en revisión.
       Cada tarea terminada muestra el commit que la entrega y los clientes donde se verificó. La fotografía al abrir el sprint,
       con las veintiséis tareas por hacer, está en el documento del Sprint Backlog.</p>
   </header>
@@ -170,13 +170,13 @@
           <div class="tareas">
             <div class="t inf"><span class="cod">T‑47</span><span class="txt">Proyecto de producción y retiro de credenciales del código</span><span class="h">1.50</span><span class="pie"><span class="capa">Infraestructura</span></span></div>
             <div class="t inf"><span class="cod">T‑48</span><span class="txt">Publicar el cliente Web</span><span class="h">1.50</span><span class="pie"><span class="capa">Infraestructura</span></span></div>
-            <div class="t inf"><span class="cod">T‑49</span><span class="txt">Firmar y publicar el paquete Android</span><span class="h">2.00</span><span class="pie"><span class="capa">Infraestructura</span></span></div>
+            <div class="t inf"><span class="cod">T‑49</span><span class="txt">Firmar y publicar el paquete Android</span><span class="h">2.00</span><span class="pie"><span class="capa">Infraestructura</span><span class="nota rev">Criterio redefinido (10.28): prueba interna de Google Play</span></span></div>
           </div>
         </div>
         <div class="grupo extra">
-          <h3>Fuera del compromiso · contra holgura <span class="met">1 de 10 · 0.5 h</span></h3>
+          <h3>Fuera del compromiso · contra holgura <span class="met">1 de 11 · 1.0 h</span></h3>
           <div class="tareas">
-            <div class="t dom"><span class="cod">T‑60</span><span class="txt">La fila 00 que el propio viaje ocupa cuenta como existente</span><span class="h">0.50</span><span class="pie"><span class="capa">Dominio</span></span></div>
+            <div class="t int"><span class="cod">T‑61</span><span class="txt">Al reabrir un viaje, los datos del buque salen del perfil vigente</span><span class="h">1.00</span><span class="pie"><span class="capa">Interfaz</span></span></div>
           </div>
         </div>
       </div>
@@ -189,15 +189,9 @@
       </div>
     </section>
     <section class="col">
-      <header><h2>En revisión</h2><span class="cuenta">2 · 3.5 h</span></header>
+      <header><h2>En revisión</h2><span class="cuenta">1 · 1.5 h</span></header>
       <p class="criterio">Cambio escrito y pendiente de compilar y pasar las pruebas.</p>
       <div class="cuerpo">
-        <div class="grupo">
-          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">1 de 5 · 2.0 h</span></h3>
-          <div class="tareas">
-            <div class="t int"><span class="cod">T‑42</span><span class="txt">Panel de alertas con severidad, descripción y posición</span><span class="h">2.00</span><span class="pie"><span class="capa">Interfaz</span><span class="nota rev"><span class='hash'>3318da4</span> · criterio redefinido sin inventar datos (10.24); se acepta después de T‑58</span></span></div>
-          </div>
-        </div>
         <div class="grupo">
           <h3><span class="id">TC‑01</span> Revisión de calidad <span class="met">1 de 2 · 1.5 h</span></h3>
           <div class="tareas">
@@ -207,7 +201,7 @@
       </div>
     </section>
     <section class="col">
-      <header><h2>Terminado</h2><span class="cuenta">20<small> +9</small> · 25.5 h</span></header>
+      <header><h2>Terminado</h2><span class="cuenta">21<small> +10</small> · 27.5 h</span></header>
       <p class="criterio">Compila en las tres plataformas, pruebas en verde y sin advertencias nuevas.</p>
       <div class="cuerpo">
         <div class="grupo">
@@ -235,12 +229,13 @@
           </div>
         </div>
         <div class="grupo">
-          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">4 de 5 · 6.0 h</span></h3>
+          <h3><span class="id">RF‑027</span> Validación de reglas de estiba <span class="met">5 de 5 · 8.0 h</span></h3>
           <div class="tareas">
             <div class="t dom"><span class="cod">T‑38</span><span class="txt">Validar el peso por pila contra el límite del perfil</span><span class="h">1.50</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>50d4793</span> · contrato común; con límite nulo, cero alertas</span></span></div>
             <div class="t dom"><span class="cod">T‑39</span><span class="txt">Validar refrigerado en posición sin toma eléctrica</span><span class="h">1.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>d045e55</span> · error si el inventario es declarado, aviso si es propuesto</span></span></div>
             <div class="t dom"><span class="cod">T‑40</span><span class="txt">Validar el apilamiento de 20 pies sobre 40 pies</span><span class="h">1.50</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>39bc24b</span> · cero casos en los seis archivos; los positivos, en pruebas controladas</span></span></div>
             <div class="t dom"><span class="cod">T‑41</span><span class="txt">Separación de peligrosas desde los segmentos DGS</span><span class="h">2.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>ea6daad</span> · por número ONU con 49 CFR 176; en A03, 2 posibles incumplimientos que Carlos confirmó como alertas válidas</span></span></div>
+            <div class="t int"><span class="cod">T‑42</span><span class="txt">Panel de alertas con severidad, descripción y posición</span><span class="h">2.00</span><span class="pie"><span class="capa">Interfaz</span><span class="nota ok"><span class='hash'>1487048</span> · aceptada por Timonel en los tres clientes: A01 0/0/6 sin datos inventados, A03 2/100/151</span></span></div>
           </div>
         </div>
         <div class="grupo">
@@ -256,7 +251,7 @@
           </div>
         </div>
         <div class="grupo extra">
-          <h3>Fuera del compromiso · contra holgura <span class="met">9 de 10 · 10.75 h</span></h3>
+          <h3>Fuera del compromiso · contra holgura <span class="met">10 de 11 · 11.25 h</span></h3>
           <div class="tareas">
             <div class="t pru"><span class="cod">T‑50</span><span class="txt">Reconciliar la detención (ANR) de Android en dispositivo real</span><span class="h">2.00</span><span class="pie"><span class="capa">Prueba</span><span class="nota ok"><span class='hash'>d2b5c15</span> · era del emulador, sin cambio de código</span></span></div>
             <div class="t dom"><span class="cod">T‑51</span><span class="txt">Retirar <code>maxRows</code> y <code>maxTiers</code> de <code>Bay</code></span><span class="h">0.50</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>aa27781</span></span></span></div>
@@ -266,6 +261,7 @@
             <div class="t pru"><span class="cod">T‑55</span><span class="txt">Revisión cruzada de RF‑027 contra su fuente y el corpus</span><span class="h">1.50</span><span class="pie"><span class="capa">Prueba</span><span class="nota ok"><span class='hash'>ceaf4c6</span> · 2 defectos latentes del modelo confirmados, sin impacto hoy en el corpus</span></span></div>
             <div class="t int"><span class="cod">T‑57</span><span class="txt">Mensajes de error en español, con causa y acción sugerida</span><span class="h">1.00</span><span class="pie"><span class="capa">Interfaz</span><span class="nota ok"><span class='hash'>7a034ee</span> · causa y acción en los tres clientes; Chrome confirmado a mano por Carlos</span></span></div>
             <div class="t dom"><span class="cod">T‑58</span><span class="txt">Fila 00 declarada por zona y dos ajustes de segregación</span><span class="h">2.00</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>3e721c9</span> · perfiles antiguos abren en los tres clientes; A01 47/0/6 y A03 2/100/151</span></span></div>
+            <div class="t dom"><span class="cod">T‑60</span><span class="txt">La fila 00 que el propio viaje ocupa cuenta como existente</span><span class="h">0.50</span><span class="pie"><span class="capa">Dominio</span><span class="nota ok"><span class='hash'>5e67522</span> · el A03 histórico vuelve a 2/100/151 sin declarar</span></span></div>
             <div class="t pru"><span class="cod">T‑59</span><span class="txt">Averiguar cómo se documentan las tomas de reefer</span><span class="h">1.00</span><span class="pie"><span class="capa">Prueba</span><span class="nota ok"><span class='hash'>40fba22</span> · sin respuesta pública; tabla de pares por buque; T‑56 pasa al Sprint 3</span></span></div>
           </div>
         </div>

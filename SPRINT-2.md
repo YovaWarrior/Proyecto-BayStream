@@ -1156,6 +1156,42 @@ en este viaje».
 
 ---
 
+#### T-61 · Al reabrir un viaje, los datos del buque salen del perfil vigente · 1.00 h
+
+**Toca:** la apertura de viajes guardados en `vessel_providers.dart` (alrededor de la línea 412),
+una función pura de combinación en el dominio y sus pruebas.
+
+**Por qué.** En la aceptación de T‑42, Timonel encontró que al reabrir un viaje guardado, los
+datos del buque salen de la copia de la geometría que se guardó con el viaje: el límite de
+apilamiento, la fila 00 por zona, la frontera cubierta/bodega y las anclas de nivel. Las tomas,
+en cambio, sí salen del perfil vigente. Si el planificador corrige el perfil desde «Perfiles
+guardados», un viaje viejo sigue validando con datos que ya borró. Carlos decidió que se use el
+perfil vigente (10.29).
+
+**Qué:**
+
+- Al reabrir se conservan las **dimensiones** del viaje: filas y niveles que su carga necesita.
+  La regla «la geometría histórica no se ensancha» sigue en pie.
+- Los **parámetros del buque** se toman del perfil guardado vigente: `stackWeightLimitKg`,
+  `centerRowOnDeck`, `centerRowInHold`, `deckTierFloor`, `firstHoldTier` y `firstDeckTier`.
+- Si aplicar un parámetro vigente dejaría algún contenedor del viaje fuera de la geometría (por
+  ejemplo, la fila 00 declarada `false` en un viaje con carga en la 00), se conserva el valor
+  guardado de ese parámetro y la interfaz lo dice. No se oculta carga.
+- Sin perfil guardado, no cambia nada.
+
+**Terminada cuando:**
+
+1. Con el perfil de ALFA editado desde «Perfiles guardados» (fila 00 «No existe» ×2, límite
+   «No lo tengo»), A01 reabierto desde Recientes sin haberlo abierto antes muestra esas
+   declaraciones y da 0/0/6.
+2. Con el límite cambiado a 62 500.5 kg en el perfil, el mismo viaje reabierto da 47/0/6.
+3. Una prueba cubre el caso en que un parámetro vigente dejaría carga fuera.
+4. A03 sigue en 2/100/151.
+
+Se verifica en los tres clientes.
+
+---
+
 ## 6. Orden de ataque — por riesgo, no por número
 
 El orden numérico no es el orden de ejecución. En el Sprint 1 atacar primero lo más
@@ -2447,3 +2483,49 @@ esa causa escrita, sin evidencia sustituta.
 **T‑42 queda lista para su aceptación.** T‑58 y T‑60 dieron la declaración de la fila 00 que el
 criterio redefinido (10.24) necesitaba. La hace Timonel, que no escribió T‑42, sobre los binarios
 de T‑60 sin recompilar.
+
+---
+
+### 10.29 · T-42 aceptada y cerrada · al reabrir, los viajes usarán el perfil vigente (T-61) (1-oct)
+
+**T‑42 pasa a Terminado** (`1487048`, `docs/T42-ACEPTACION-RESULTADOS.md`). La aceptación la hizo
+Timonel, que no escribió T‑42, sobre los binarios de T‑60 sin recompilar. Verificó los hashes,
+incluido el del APK ya instalado en el Honor. Con el criterio redefinido (10.24):
+
+- **A01**, con lo que el planificador puede declarar (fila 00 «No existe» en las dos zonas,
+  límite «No lo tengo» y tomas propuestas), da **0/0/6 en Windows, Honor y Chrome**. Son seis
+  pares conformes entre las cuatro unidades peligrosas, y no hay alertas de peso, de toma ni de
+  apilamiento. Cada tarjeta lleva su descripción y su fuente.
+- **A03** da **2/100/151 en los tres clientes**. Los dos pares que validó Carlos quedan arriba, y
+  el plano abre en 0020386 y en 0260184.
+- De los 100 «no evaluados», 99 son por grupos de segregación (§176.83(m)) y 1 por la excepción
+  de (a)(8). **Ninguno queda sin motivo.**
+- Las sondas de T‑55 confirman corregidos los dos defectos.
+
+**Límites que Timonel declara:**
+
+- No es el perfil real de ALFA. La regla de peso con un límite declarado quedó cubierta por el
+  bloque 7b, no por esta aceptación.
+- En Chrome leyó una sola tarjeta de «no evaluado». La muestra de diez la hizo en Windows y el
+  Honor, y la sonda revisó los 100.
+- El A03 del Honor es la variante `A03v_VGM`. Repite los mismos 23 DGS, así que el panel da lo
+  mismo.
+
+**Hallazgo: al reabrir un viaje guardado, los datos del buque salen de la copia guardada con el
+viaje, no del perfil vigente.** Yov lo verificó en el código: `vessel_providers.dart:412` toma el
+perfil guardado pero le reemplaza la geometría por la histórica del viaje. Como desde T‑29 el
+límite y, desde T‑58, la fila 00 viven **dentro** de la geometría, quedan congelados con el viaje.
+Las tomas, que viven en el perfil, sí se actualizan. Es una inconsistencia de diseño que nadie
+había medido. **Carlos decide usar el perfil vigente.** Nace **T‑61** (1.0 h, contra holgura). El
+trabajo fuera del compromiso queda en **12.75 h de 18**.
+
+**Para el Sprint 3, solo redacción:** varias tarjetas «No evaluado» empiezan con «Código 2:
+separación satisfecha en el modelo de huecos…» antes de la cláusula de los grupos. Quien lea solo
+el cuerpo puede quedarse con «satisfecha».
+
+**Estado del compromiso:**
+
+- **Terminado:** 21 tareas, 27.5 h.
+- **En revisión:** T‑44, que repite tras T‑47 lo que pasa por Firebase.
+- **Por hacer:** T‑46, T‑47, T‑48 y T‑49, las cuatro detrás de pasos de consola de Carlos (la
+  guía del bloque 0).
