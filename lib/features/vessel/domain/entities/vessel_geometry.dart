@@ -14,8 +14,14 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 /// Los parámetros de zona pertenecen al perfil del buque. Los valores por
 /// omisión de construcción y lectura histórica conservan la numeración ISO.
 class VesselGeometry extends Equatable {
-  /// Fila central del buque. Existe siempre, aunque el viaje no la cargue.
+  /// Columna central del dibujo; su existencia física se declara por zona.
   static const int centerRow = 0;
+
+  /// `null` significa que la existencia física de la fila 00 no se declaró.
+  final bool? centerRowOnDeck;
+  final bool? centerRowInHold;
+
+  static const Object _unchanged = Object();
 
   /// Primer nivel de bodega según la numeración ISO.
   final int firstHoldTier;
@@ -89,6 +95,8 @@ class VesselGeometry extends Equatable {
     required this.starboardRows,
     required this.holdTiers,
     required this.deckTiers,
+    this.centerRowOnDeck,
+    this.centerRowInHold,
     this.stackWeightLimitKg,
     this.deckTierFloor = 80,
     this.firstHoldTier = 2,
@@ -130,7 +138,7 @@ class VesselGeometry extends Equatable {
     final tier = position.tier;
 
     final rowFits = row == centerRow
-        ? true
+        ? (isDeckTier(tier) ? centerRowOnDeck : centerRowInHold) != false
         : row.isEven
             ? row <= portRows * 2
             : row <= starboardRows * 2 - 1;
@@ -169,6 +177,8 @@ class VesselGeometry extends Equatable {
     int? maxDeckTier;
     int? minHoldTier;
     int? minDeckTier;
+    var observedCenterOnDeck = false;
+    var observedCenterInHold = false;
 
     for (final position in positions) {
       final row = position.row;
@@ -182,9 +192,11 @@ class VesselGeometry extends Equatable {
 
       final tier = position.tier;
       if (basis.isDeckTier(tier)) {
+        if (row == centerRow) observedCenterOnDeck = true;
         maxDeckTier = math.max(maxDeckTier ?? tier, tier);
         minDeckTier = math.min(minDeckTier ?? tier, tier);
       } else {
+        if (row == centerRow) observedCenterInHold = true;
         maxHoldTier = math.max(maxHoldTier ?? tier, tier);
         minHoldTier = math.min(minHoldTier ?? tier, tier);
       }
@@ -196,6 +208,8 @@ class VesselGeometry extends Equatable {
       firstDeckTier: basis.firstDeckTier,
       portRows: maxPortRow ~/ 2,
       starboardRows: (maxStarboardRow + 1) ~/ 2,
+      centerRowOnDeck: observedCenterOnDeck ? true : null,
+      centerRowInHold: observedCenterInHold ? true : null,
       holdTiers: _anchoredRun(basis.firstHoldTier, minHoldTier, maxHoldTier),
       deckTiers: _anchoredRun(basis.firstDeckTier, minDeckTier, maxDeckTier),
     );
@@ -231,7 +245,8 @@ class VesselGeometry extends Equatable {
   @override
   List<Object?> get props =>
       [portRows, starboardRows, holdTiers, deckTiers, stackWeightLimitKg,
-       deckTierFloor, firstHoldTier, firstDeckTier];
+       deckTierFloor, firstHoldTier, firstDeckTier,
+       centerRowOnDeck, centerRowInHold];
 
   VesselGeometry copyWith({
     int? portRows,
@@ -242,6 +257,8 @@ class VesselGeometry extends Equatable {
     int? deckTierFloor,
     int? firstHoldTier,
     int? firstDeckTier,
+    Object? centerRowOnDeck = _unchanged,
+    Object? centerRowInHold = _unchanged,
   }) {
     return VesselGeometry(
       deckTierFloor: deckTierFloor ?? this.deckTierFloor,
@@ -249,6 +266,10 @@ class VesselGeometry extends Equatable {
       firstDeckTier: firstDeckTier ?? this.firstDeckTier,
       portRows: portRows ?? this.portRows,
       starboardRows: starboardRows ?? this.starboardRows,
+      centerRowOnDeck: identical(centerRowOnDeck, _unchanged)
+          ? this.centerRowOnDeck : centerRowOnDeck as bool?,
+      centerRowInHold: identical(centerRowInHold, _unchanged)
+          ? this.centerRowInHold : centerRowInHold as bool?,
       holdTiers: holdTiers ?? this.holdTiers,
       deckTiers: deckTiers ?? this.deckTiers,
       stackWeightLimitKg: stackWeightLimitKg ?? this.stackWeightLimitKg,
@@ -262,6 +283,8 @@ class VesselGeometry extends Equatable {
         firstDeckTier: firstDeckTier,
         portRows: portRows,
         starboardRows: starboardRows,
+        centerRowOnDeck: centerRowOnDeck,
+        centerRowInHold: centerRowInHold,
         holdTiers: holdTiers,
         deckTiers: deckTiers,
       );
@@ -272,6 +295,8 @@ class VesselGeometry extends Equatable {
         'firstDeckTier': firstDeckTier,
         'portRows': portRows,
         'starboardRows': starboardRows,
+        'centerRowOnDeck': centerRowOnDeck,
+        'centerRowInHold': centerRowInHold,
         'holdTiers': holdTiers,
         'deckTiers': deckTiers,
         if (stackWeightLimitKg != null)
@@ -284,6 +309,8 @@ class VesselGeometry extends Equatable {
         firstDeckTier: json['firstDeckTier'] as int? ?? 82,
         portRows: json['portRows'] as int,
         starboardRows: json['starboardRows'] as int,
+        centerRowOnDeck: json['centerRowOnDeck'] as bool?,
+        centerRowInHold: json['centerRowInHold'] as bool?,
         holdTiers: (json['holdTiers'] as List<dynamic>).cast<int>(),
         deckTiers: (json['deckTiers'] as List<dynamic>).cast<int>(),
         stackWeightLimitKg: (json['stackWeightLimitKg'] as num?)?.toDouble(),

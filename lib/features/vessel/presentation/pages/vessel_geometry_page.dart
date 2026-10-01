@@ -80,6 +80,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   late final TextEditingController _floor;
   late final TextEditingController _firstHold;
   late final TextEditingController _firstDeck;
+  bool? _centerRowOnDeck;
+  bool? _centerRowInHold;
   final _socketInput = TextEditingController();
   late Set<String> _sockets;
   bool _declareSockets = false;
@@ -118,6 +120,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     _floor = TextEditingController(text: '${start.deckTierFloor}');
     _firstHold = TextEditingController(text: '${start.firstHoldTier}');
     _firstDeck = TextEditingController(text: '${start.firstDeckTier}');
+    _centerRowOnDeck = start.centerRowOnDeck;
+    _centerRowInHold = start.centerRowInHold;
     _sockets = {...?widget.profile?.reeferSlots};
     _ocupados.addAll(widget.positions.map((p) => p.tier));
     _portOfCall = widget.initialPortOfCall ??
@@ -197,6 +201,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
       firstDeckTier: deck,
       portRows: port,
       starboardRows: starboard,
+      centerRowOnDeck: _centerRowOnDeck,
+      centerRowInHold: _centerRowInHold,
       holdTiers: _holdTiers,
       deckTiers: _deckTiers,
       stackWeightLimitKg:
@@ -289,6 +295,24 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             ),
             const SizedBox(height: 8),
             _buildCenterRowNote(context),
+            const SizedBox(height: 12),
+            _buildCenterRowSelector(
+              key: 'geometry-center-deck',
+              label: 'Fila 00 en cubierta',
+              value: _centerRowOnDeck,
+              occupied: widget.positions.any((p) => p.row == 0 &&
+                  (_buildGeometry() ?? _start).isDeckTier(p.tier)),
+              onChanged: (value) => setState(() => _centerRowOnDeck = value),
+            ),
+            const SizedBox(height: 12),
+            _buildCenterRowSelector(
+              key: 'geometry-center-hold',
+              label: 'Fila 00 en bodega',
+              value: _centerRowInHold,
+              occupied: widget.positions.any((p) => p.row == 0 &&
+                  !(_buildGeometry() ?? _start).isDeckTier(p.tier)),
+              onChanged: (value) => setState(() => _centerRowInHold = value),
+            ),
             const SizedBox(height: 24),
 
             Text('Niveles', style: textTheme.titleMedium),
@@ -479,7 +503,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
         Expanded(
           child: Text(
             'La fila 00 se dibuja siempre en el centro, venga ocupada o no, '
-            'como en el plano impreso.',
+            'como en el plano impreso. Declara si existe físicamente en cada '
+            'zona; sin declaración, 01 y 02 se consideran vecinas.',
             style: textTheme.bodySmall
                 ?.copyWith(color: colorScheme.onSurfaceVariant),
           ),
@@ -487,6 +512,35 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
       ],
     );
   }
+
+  Widget _buildCenterRowSelector({
+    required String key,
+    required String label,
+    required bool? value,
+    required bool occupied,
+    required ValueChanged<bool?> onChanged,
+  }) => DropdownButtonFormField<String>(
+        key: ValueKey(key),
+        initialValue: value == null ? 'unknown' : value ? 'yes' : 'no',
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        items: [
+          const DropdownMenuItem(value: 'unknown', child: Text('No declarada')),
+          const DropdownMenuItem(value: 'yes', child: Text('Sí existe')),
+          DropdownMenuItem(
+            value: 'no',
+            enabled: !occupied,
+            child: const Text('No existe'),
+          ),
+        ],
+        onChanged: (selection) => onChanged(switch (selection) {
+          'yes' => true,
+          'no' => false,
+          _ => null,
+        }),
+      );
 
   /// Sección de niveles de una zona, como chips quitables.
   ///
@@ -833,6 +887,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
       a.stackWeightLimitKg == b.stackWeightLimitKg &&
       a.portRows == b.portRows &&
       a.starboardRows == b.starboardRows &&
+      a.centerRowOnDeck == b.centerRowOnDeck &&
+      a.centerRowInHold == b.centerRowInHold &&
       _sameTiers(a.holdTierNumbers, b.holdTierNumbers) &&
       _sameTiers(a.deckTierNumbers, b.deckTierNumbers);
 

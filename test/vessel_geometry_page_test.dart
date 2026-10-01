@@ -147,6 +147,38 @@ void main() {
     expect(find.text('Perfil modificado; pendiente de guardar.'), findsOneWidget);
   });
 
+  testWidgets('T-58 editor guarda fila 00 por cubierta y bodega',
+      (tester) async {
+    VesselCallParameters? captured;
+    await openPage(tester, (value) => captured = value);
+
+    final deck = find.byKey(const ValueKey('geometry-center-deck'));
+    final hold = find.byKey(const ValueKey('geometry-center-hold'));
+    expect(deck, findsOneWidget);
+    expect(hold, findsOneWidget);
+    await tester.ensureVisible(deck);
+    await tester.tap(deck);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('No existe').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(hold);
+    await tester.tap(hold);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sí existe').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.byKey(const ValueKey('geometry-stack-limit')), '90000');
+    await tester.pumpAndSettle();
+    expect(confirmEnabled(tester), isTrue);
+    await tester.ensureVisible(find.byKey(const ValueKey('geometry-confirm')));
+    await tester.tap(find.byKey(const ValueKey('geometry-confirm')));
+    await tester.pumpAndSettle();
+
+    expect(captured!.geometry.centerRowOnDeck, isFalse);
+    expect(captured!.geometry.centerRowInHold, isTrue);
+    expect(captured!.changed, isTrue);
+  });
+
   for (final entry in {75000.0: '75000', 62500.5: '62500.5'}.entries) {
     testWidgets('T-54 el editor muestra ${entry.value} sin alterar el perfil', (tester) async {
       VesselCallParameters? captured;

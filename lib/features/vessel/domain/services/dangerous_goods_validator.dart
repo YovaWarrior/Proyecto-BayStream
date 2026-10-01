@@ -72,6 +72,8 @@ class DangerousGoodsValidator {
     }
     final sameUnit = a.id == b.id;
     final classesA = _classes(da, pa), classesB = _classes(db, pb);
+    final onlyClassOne = classesA.every((c) => c.startsWith('1.')) &&
+        classesB.every((c) => c.startsWith('1.'));
     var code = SegregationCode.substance;
     for (final x in classesA) {
       for (final y in classesB) {
@@ -80,7 +82,12 @@ class DangerousGoodsValidator {
           return result(ValidationStatus.notEvaluated,
               'Clase o etiqueta $x/$y fuera de la matriz documentada.');
         }
-        if (candidate.index > code.index) code = candidate;
+        // §176.144 solo resuelve el par 1.x/1.x. Una etiqueta de otra clase
+        // debe poder imponer el código 2 de §176.83(b).
+        if (candidate == SegregationCode.compatibility && !onlyClassOne) {
+          continue;
+        }
+        if (_priority(candidate) > _priority(code)) code = candidate;
       }
     }
     final details = <String>[];
@@ -123,7 +130,8 @@ class DangerousGoodsValidator {
     }
     // §176.83(a)(8): la excepción entre sustancias de la misma clase exige
     // confirmar ausencia de reacción peligrosa; no la inferimos de la clase.
-    if (pa.primary == pb.primary && code != SegregationCode.substance) {
+    if (pa.primary == pb.primary && code != SegregationCode.substance &&
+        !(pa.primary.startsWith('1.') && !onlyClassOne)) {
       references.add('49 CFR §176.83(a)(8)');
       return result(
           ValidationStatus.notEvaluated,
@@ -165,7 +173,14 @@ class DangerousGoodsValidator {
     // una unidad longitudinal es un hueco de 20 pies; el centro avanza media
     // unidad por número de bahía. Se compara el borde, no solo el centro.
     final longitudinalGap = (ca.bay - cb.bay).abs() / 2 - (sizeA + sizeB) / 40;
-    final rows = geometry.orderedRows;
+    final centerInBothZones =
+        (deckA ? geometry.centerRowOnDeck : geometry.centerRowInHold) == true &&
+        (deckB ? geometry.centerRowOnDeck : geometry.centerRowInHold) == true;
+    // Una 00 ocupada conserva su posición en la secuencia. Como hueco vacío
+    // entre 01 y 02 solo cuenta cuando ambas zonas la declaran físicamente.
+    final rows = centerInBothZones || ca.row == 0 || cb.row == 0
+        ? geometry.orderedRows
+        : [...geometry.portRowNumbers, ...geometry.starboardRowNumbers];
     final lateralGap = (rows.indexOf(ca.row) - rows.indexOf(cb.row)).abs() - 1;
     final overlaps = longitudinalGap < 0 && ca.row == cb.row;
     if (overlaps) {
@@ -213,8 +228,12 @@ class DangerousGoodsValidator {
         .any((x) => !SegregationRules.classes.contains(x))) {
       return 'Etiqueta de peligro fuera de la matriz documentada.';
     }
-    // §176.2: solo tipos de envolvente permanente reconocidos. 22K2 y
-    // unidades abiertas no se tratan como cerradas por omisión.
+    // Inferencia aceptada para T-58: §176.2 incluye el tanque portátil entre
+    // las unidades de transporte y define «cerrada» por contenido totalmente
+    // encerrado en estructuras permanentes. Tratamos un ISO T como tanque de
+    // pared permanente y, por ello, unidad cerrada; §176.2 no dice de forma
+    // explícita que todo tanque ISO T lo sea. 22K2 y unidades abiertas no se
+    // tratan como cerradas por omisión.
     if (c.isoSizeType == null ||
         !RegExp(r'^[24LM][0-9A-Z][GRT][0-9]$').hasMatch(c.isoSizeType!)) {
       return 'Tipo de unidad cerrada no confirmado (${c.isoSizeType ?? 'sin ISO'}).';
@@ -231,6 +250,13 @@ class DangerousGoodsValidator {
                 s != p.primary &&
                 s != '${p.primary}${p.compatibilityGroup ?? ''}')
             .map((s) => s == '1.4S' || s == '1.4G' ? '1.4' : s),
+      };
+
+  static int _priority(SegregationCode code) => switch (code) {
+        SegregationCode.substance => 0,
+        SegregationCode.compatibility => 1,
+        SegregationCode.away => 2,
+        SegregationCode.separated => 3,
       };
   static String _un(DangerousGoods d) => (d.unNumber ?? '').trim();
   static String _name(DangerousGoods d) =>

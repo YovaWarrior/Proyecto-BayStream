@@ -22,6 +22,8 @@ void main() {
       expect(geometry.starboardRows, 6, reason: 'filas 01 a 11');
       expect(geometry.holdTiers, [2, 4, 6, 8, 10, 12, 14], reason: 'niveles 02 a 14');
       expect(geometry.deckTiers, [82, 84, 86, 88, 90], reason: 'niveles 82 a 90');
+      expect(geometry.centerRowOnDeck, isNull);
+      expect(geometry.centerRowInHold, isNull);
     });
 
     test('la cubierta arranca en el 82, sin inventar una fila vacia debajo', () {
@@ -114,6 +116,17 @@ void main() {
 
       expect(geometry.portRows, 5, reason: 'filas 02 a 10');
       expect(geometry.starboardRows, 5, reason: 'filas 01 a 09');
+      expect(geometry.centerRowOnDeck, isNull);
+      expect(geometry.centerRowInHold, isTrue);
+    });
+
+    test('T-58 propone fila 00 solo en la zona donde observa carga', () {
+      final geometry = VesselGeometry.proposeFrom([
+        IsoCoordinateParser.parse('0060082'),
+        IsoCoordinateParser.parse('0060102'),
+      ]);
+      expect(geometry.centerRowOnDeck, isTrue);
+      expect(geometry.centerRowInHold, isNull);
     });
   });
 
@@ -145,6 +158,28 @@ void main() {
 
     test('los huecos por bahía son columnas por niveles', () {
       expect(geometry.slotsPerBay, 156, reason: '13 columnas x 12 niveles');
+    });
+
+    test('T-58 un perfil anterior abre con fila 00 no declarada por zona', () {
+      final historical = geometry.toJson()
+        ..remove('centerRowOnDeck')
+        ..remove('centerRowInHold');
+      final restored = VesselGeometry.fromJson(historical);
+      expect(restored.centerRowOnDeck, isNull);
+      expect(restored.centerRowInHold, isNull);
+      expect(restored.orderedRows, geometry.orderedRows);
+      expect(restored.slotsPerBay, geometry.slotsPerBay);
+    });
+
+    test('T-58 guarda y recupera las dos declaraciones independientes', () {
+      final declared = geometry.copyWith(
+        centerRowOnDeck: false, centerRowInHold: true);
+      final restored = VesselGeometry.fromJson(declared.toJson());
+      expect(restored, declared);
+      expect(restored.covers(IsoCoordinateParser.parse('0060082')), isFalse);
+      expect(restored.covers(IsoCoordinateParser.parse('0060002')), isTrue);
+      expect(restored.copyWith(centerRowInHold: null).centerRowInHold, isNull);
+      expect(restored.withoutStackWeightLimit().centerRowOnDeck, isFalse);
     });
   });
 
