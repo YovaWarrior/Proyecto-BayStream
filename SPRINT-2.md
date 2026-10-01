@@ -2304,3 +2304,37 @@ que es lo predeterminado en apps nuevas, Google guarda la clave con la que firma
 los usuarios, y **una clave de subida perdida se puede reemplazar** con una solicitud desde Play
 Console. La instrucción de respaldarla fuera del repositorio sigue en pie; la frase era
 exagerada.
+
+---
+
+### 10.26 · T-57 commiteada, en revisión: falta Chrome con el binario final (1-oct)
+
+**T‑57 (`7a034ee`).** 262 pruebas y `analyze` en cero.
+
+- Los fallos conocidos llegan tipados hasta la presentación (`VesselOperationFailure`).
+- Cada mensaje lleva causa y acción, en `presentation/formatters/vessel_error_message.dart`.
+- Lo desconocido muestra un texto genérico en español con acción, y el detalle va a
+  `debugPrint`.
+- La prueba nueva falla si un mensaje trae «Bad state», «Exception» o «FormatException». Cubre
+  también la carga real del `VoyageNotifier`.
+- Las únicas interpolaciones de excepciones que quedan en `lib/` están en
+  `c3_reconciliation_screen.dart`, que está congelado.
+
+**Queda en revisión** por la Definición de Terminado de los tres clientes. Con el binario final
+hay evidencia del Honor (los dos casos) y de Windows (el segundo caso). En Chrome los dos casos
+se vieron bien **antes** de la última recompilación; con el binario final, la automatización del
+selector de archivos no terminó, y Codex lo declara así. Lo cierra Carlos en dos minutos:
+eligiendo a mano los dos archivos en Chrome con el build Web de T‑57, antes de que T‑58 lo
+recompile.
+
+**Dos notas menores.**
+
+- El hash que el informe da para Windows es el de `baystream.exe`, el lanzador, y es idéntico
+  al de T‑44: el código Dart vive en `data/app.so`. Ese hash no prueba que se compiló de nuevo.
+  En adelante se reporta el de `app.so`.
+- Codex editó `docs/T44-RESULTADOS.md` dentro de T‑57 para aplicar la corrección de 10.22. Es su
+  propio informe y lo declaró; se acepta.
+
+**Mejora para el Sprint 3, no defecto:** un archivo que no es BAPLIE, como
+`T44_INVALID.edi`, recibe el mensaje de «no trae el nombre del buque en el segmento TDT». La
+acción sirve, pero la causa sería más exacta como «el archivo no es un BAPLIE».
