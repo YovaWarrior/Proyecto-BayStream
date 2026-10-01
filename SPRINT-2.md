@@ -2269,3 +2269,38 @@ Yov también verificó el corpus contra `CORPUS_A01.edi`:
    apilamiento y el plano de tomas de ALFA: Carlos no tiene esa documentación, y T‑59 mostró que
    no es pública. El criterio nuevo está en la ficha de T‑42. Se acepta después de T‑58, porque
    la declaración de la fila 00 no existe hasta entonces.
+
+---
+
+### 10.25 · Guía del bloque 0: dos hallazgos que cambian T-47 y T-49 (30-sep)
+
+Carlos tiene una guía paso a paso del bloque 0: la cuenta de Google Play, el proyecto de
+Firebase de producción, la clave de subida y la prueba de H‑06. Es un artefacto aparte, con
+casillas que recuerdan su avance. Al prepararla contra las fuentes oficiales aparecieron dos
+cosas que el brief no tenía.
+
+**1. El identificador de la app es `com.example.baystream`, y Google Play lo rechaza.** Play no
+admite identificadores que empiecen con `com.example`. Además, el identificador no se puede
+cambiar después de registrar la app Android en Firebase ni después de la primera subida a Play
+(documentación de Firebase y de Flutter). Carlos lo elige antes de crear el proyecto de
+producción. En código, el cambio va en T‑47: `applicationId`, `namespace` y el paquete de
+`MainActivity`. Para Android será otra app, así que los datos de prueba del Honor no pasan.
+
+**2. El criterio de T‑49, «se instala desde el canal público», no cabe antes del 17-oct.**
+Una cuenta personal de Play creada después del 13 de noviembre de 2023 necesita, antes de
+publicar en producción:
+
+- una prueba cerrada con al menos 12 testers inscritos durante 14 días seguidos;
+- una revisión de la solicitud de acceso, que suele tardar siete días o menos.
+
+El reloj arranca cuando el paquete ya está en la pista cerrada, y para eso hace falta T‑49.
+Aun con verificación rápida, producción queda hacia el 26-oct. Lo que sí cabe es instalar la
+app en el Honor desde la prueba interna o cerrada de Google Play. **Queda para que decida
+Carlos** si el criterio de T‑49 se redefine así en este sprint, con producción después.
+
+**Corrección mía a la ficha de T‑49.** Escribí que, si se pierde la clave de firma, «no hay
+forma de volver a publicar una actualización de esa aplicación, nunca». Con Play App Signing,
+que es lo predeterminado en apps nuevas, Google guarda la clave con la que firma lo que instalan
+los usuarios, y **una clave de subida perdida se puede reemplazar** con una solicitud desde Play
+Console. La instrucción de respaldarla fuera del repositorio sigue en pie; la frase era
+exagerada.
