@@ -34,12 +34,12 @@ void main() {
   const validator = DangerousGoodsValidator();
   test('T-41 DGS truncado conserva el peligro y produce no evaluado', () {
     const source = "TDT+20+V+1++NV:172:20+++9000003:146::PRUEBA'"
-      "LOC+147+0010182:::5'EQD+CN+TEST0000001+22G1+++5'DGS+IMD'UNT+5+1'";
+        "LOC+147+0010182:::5'EQD+CN+TEST0000001+22G1+++5'DGS+IMD'UNT+5+1'";
     final voyage = BaplieParserService().parse(source);
     expect(voyage.containers.single.isDangerous, isTrue);
     expect(voyage.containers.single.dangerousGoods, hasLength(1));
     expect(validator.validate(voyage.containers, testGeometry).single.status,
-      ValidationStatus.notEvaluated);
+        ValidationStatus.notEvaluated);
   });
   StowageValidationResult pair(ContainerUnit a, ContainerUnit b,
           {VesselGeometry geometry = testGeometry}) =>
@@ -67,7 +67,9 @@ void main() {
     expect(SegregationRules.code('6.1', '3'), isNull);
     expect(SegregationRules.unProfiles, hasLength(17));
   });
-  test('T-58 conserva las 17 entradas ONU contrastadas en t55_tabla_segregacion', () {
+  test(
+      'T-58 conserva las 17 entradas ONU contrastadas en t55_tabla_segregacion',
+      () {
     const expected = <String, (String, List<String>, String?, bool, List<int>)>{
       '0012': ('1.4', [], 'S', false, []),
       '0303': ('1.4', [], 'G', false, []),
@@ -97,23 +99,44 @@ void main() {
       expect(actual.groupCodes, entry.value.$5, reason: entry.key);
     }
   });
-  test('T-58 barrido T-55: ningún código 2 ni grupo queda conforme sin hueco', () {
+  test('T-58 barrido T-55: ningún código 2 ni grupo queda conforme sin hueco',
+      () {
     const source = <String, String>{
-      '1.4/1.4': '*', '1.4/2.1': '2', '1.4/3': '2',
-      '1.4/4.1': '2', '1.4/5.1': '2', '1.4/8': '2',
-      '1.4/9': 'X', '2.1/2.1': 'X', '2.1/3': '2',
-      '2.1/4.1': '1', '2.1/5.1': '2', '2.1/8': '1',
-      '2.1/9': 'X', '3/3': 'X', '3/4.1': 'X',
-      '3/5.1': '2', '3/8': 'X', '3/9': 'X',
-      '4.1/4.1': 'X', '4.1/5.1': '1', '4.1/8': '1',
-      '4.1/9': 'X', '5.1/5.1': 'X', '5.1/8': '2',
-      '5.1/9': 'X', '8/8': 'X', '8/9': 'X', '9/9': 'X',
+      '1.4/1.4': '*',
+      '1.4/2.1': '2',
+      '1.4/3': '2',
+      '1.4/4.1': '2',
+      '1.4/5.1': '2',
+      '1.4/8': '2',
+      '1.4/9': 'X',
+      '2.1/2.1': 'X',
+      '2.1/3': '2',
+      '2.1/4.1': '1',
+      '2.1/5.1': '2',
+      '2.1/8': '1',
+      '2.1/9': 'X',
+      '3/3': 'X',
+      '3/4.1': 'X',
+      '3/5.1': '2',
+      '3/8': 'X',
+      '3/9': 'X',
+      '4.1/4.1': 'X',
+      '4.1/5.1': '1',
+      '4.1/8': '1',
+      '4.1/9': 'X',
+      '5.1/5.1': 'X',
+      '5.1/8': '2',
+      '5.1/9': 'X',
+      '8/8': 'X',
+      '8/9': 'X',
+      '9/9': 'X',
     };
     const profiles = SegregationRules.unProfiles;
     Set<String> classes(String un) {
       final p = profiles[un]!;
       return {p.asClassNine ? '9' : p.primary, ...p.subsidiary};
     }
+
     bool needsTwo(String a, String b) {
       for (final x in classes(a)) {
         for (final y in classes(b)) {
@@ -122,6 +145,7 @@ void main() {
       }
       return false;
     }
+
     const cases = <(String, String, bool)>[
       ('0020182', '0020382', false),
       ('0020182', '0020184', false),
@@ -133,10 +157,10 @@ void main() {
     for (final (left, right, spaced) in cases) {
       for (var i = 0; i < uns.length; i++) {
         for (var j = i; j < uns.length; j++) {
-          final a = dangerous(uns[i], profiles[uns[i]]!.primary, left,
-              iso: '45G1');
-          final b = dangerous(uns[j], profiles[uns[j]]!.primary, right,
-              iso: '45G1');
+          final a =
+              dangerous(uns[i], profiles[uns[i]]!.primary, left, iso: '45G1');
+          final b =
+              dangerous(uns[j], profiles[uns[j]]!.primary, right, iso: '45G1');
           final result = pair(a, b);
           final hasGroups = profiles[uns[i]]!.groupCodes.isNotEmpty ||
               profiles[uns[j]]!.groupCodes.isNotEmpty;
@@ -151,28 +175,59 @@ void main() {
   test('T-58 casos sin regla de t55_tabla_segregacion no se aprueban', () {
     final partnerGoods = DangerousGoods(unNumber: '0012', hazardClass: '1.4');
     final partner = ContainerUnit(
-      id: 'P', containerId: 'P', isoSizeType: '45G1', isDangerous: true,
-      stowagePosition: const IsoCoordinate(
-          bay: 2, row: 9, tier: 82, rawCode: '0020982'),
+      id: 'P',
+      containerId: 'P',
+      isoSizeType: '45G1',
+      isDangerous: true,
+      stowagePosition:
+          const IsoCoordinate(bay: 2, row: 9, tier: 82, rawCode: '0020982'),
       dangerousGoods: [partnerGoods],
     );
     final valid = DangerousGoods(unNumber: '1170', hazardClass: '3');
     final cases = <(String, String?, String, DangerousGoods, bool)>[
       ('control', '45G1', '0020182', valid, true),
-      ('ONU fuera', '45G1', '0020182',
-          DangerousGoods(unNumber: '1203', hazardClass: '3'), false),
-      ('ONU ausente', '45G1', '0020182',
-          DangerousGoods(hazardClass: '3'), false),
-      ('clase contradictoria', '45G1', '0020182',
-          DangerousGoods(unNumber: '1170', hazardClass: '8'), false),
-      ('clase ausente', '45G1', '0020182',
-          DangerousGoods(unNumber: '1170'), false),
-      ('etiqueta no cubierta', '45G1', '0020182',
-          DangerousGoods(unNumber: '1170', hazardClass: '3',
-              labels: ['6.1']), false),
-      ('regulación no IMD', '45G1', '0020182',
-          DangerousGoods(unNumber: '1170', hazardClass: '3',
-              regulation: 'ADR'), false),
+      (
+        'ONU fuera',
+        '45G1',
+        '0020182',
+        DangerousGoods(unNumber: '1203', hazardClass: '3'),
+        false
+      ),
+      (
+        'ONU ausente',
+        '45G1',
+        '0020182',
+        DangerousGoods(hazardClass: '3'),
+        false
+      ),
+      (
+        'clase contradictoria',
+        '45G1',
+        '0020182',
+        DangerousGoods(unNumber: '1170', hazardClass: '8'),
+        false
+      ),
+      (
+        'clase ausente',
+        '45G1',
+        '0020182',
+        DangerousGoods(unNumber: '1170'),
+        false
+      ),
+      (
+        'etiqueta no cubierta',
+        '45G1',
+        '0020182',
+        DangerousGoods(unNumber: '1170', hazardClass: '3', labels: ['6.1']),
+        false
+      ),
+      (
+        'regulación no IMD',
+        '45G1',
+        '0020182',
+        DangerousGoods(unNumber: '1170', hazardClass: '3', regulation: 'ADR'),
+        false
+      ),
       ('techo abierto', '42U1', '0020182', valid, false),
       ('plataforma', '42P1', '0020182', valid, false),
       ('22K2', '22K2', '0010182', valid, false),
@@ -185,14 +240,17 @@ void main() {
     ];
     for (final (name, iso, position, goods, control) in cases) {
       final unit = ContainerUnit(
-        id: 'U', containerId: 'U', isoSizeType: iso,
+        id: 'U',
+        containerId: 'U',
+        isoSizeType: iso,
         stowagePosition: IsoCoordinateParser.tryParse(position),
-        isDangerous: true, dangerousGoods: [goods],
+        isDangerous: true,
+        dangerousGoods: [goods],
       );
       final result = validator.evaluatePair(
           unit, goods, partner, partnerGoods, testGeometry);
-      expect(result.status, control
-          ? ValidationStatus.conforming : ValidationStatus.notEvaluated,
+      expect(result.status,
+          control ? ValidationStatus.conforming : ValidationStatus.notEvaluated,
           reason: name);
     }
   });
@@ -286,8 +344,10 @@ void main() {
     final a = dangerous('0303', '1.4', '0010282');
     expect(pair(a, dangerous('1993', '3', '0010082')).status,
         ValidationStatus.nonConforming);
-    expect(pair(a, dangerous('1993', '3', '0010182'),
-        geometry: testGeometry.copyWith(centerRowOnDeck: true)).status,
+    expect(
+        pair(a, dangerous('1993', '3', '0010182'),
+                geometry: testGeometry.copyWith(centerRowOnDeck: true))
+            .status,
         ValidationStatus.conforming);
   });
 
@@ -295,16 +355,22 @@ void main() {
     final a = dangerous('1170', '3', '0020282', iso: '45G1');
     final b = dangerous('0012', '1.4', '0020182', iso: '45G1');
     expect(pair(a, b).status, ValidationStatus.nonConforming);
-    expect(pair(a, b, geometry: testGeometry.copyWith(centerRowOnDeck: false))
-        .status, ValidationStatus.nonConforming);
-    expect(pair(a, b, geometry: testGeometry.copyWith(centerRowOnDeck: true))
-        .status, ValidationStatus.conforming);
+    expect(
+        pair(a, b, geometry: testGeometry.copyWith(centerRowOnDeck: false))
+            .status,
+        ValidationStatus.nonConforming);
+    expect(
+        pair(a, b, geometry: testGeometry.copyWith(centerRowOnDeck: true))
+            .status,
+        ValidationStatus.conforming);
 
     final holdA = dangerous('1170', '3', '0020204', iso: '45G1');
     final holdB = dangerous('0012', '1.4', '0020104', iso: '45G1');
     expect(pair(holdA, holdB).status, ValidationStatus.notEvaluated);
-    expect(pair(holdA, holdB,
-        geometry: testGeometry.copyWith(centerRowInHold: true)).status,
+    expect(
+        pair(holdA, holdB,
+                geometry: testGeometry.copyWith(centerRowInHold: true))
+            .status,
         ValidationStatus.conforming);
 
     final controlled = <(String, String, ValidationStatus)>[
@@ -315,10 +381,50 @@ void main() {
       ('0020104', '0020304', ValidationStatus.notEvaluated),
     ];
     for (final (left, right, expected) in controlled) {
-      expect(pair(dangerous('1170', '3', left, iso: '45G1'),
-          dangerous('0012', '1.4', right, iso: '45G1')).status, expected,
+      expect(
+          pair(dangerous('1170', '3', left, iso: '45G1'),
+                  dangerous('0012', '1.4', right, iso: '45G1'))
+              .status,
+          expected,
           reason: '$left / $right, casos controlados de t55_fila_central');
     }
+  });
+
+  test('T-60 00 ocupada en la bahía y zona del par prueba el hueco', () {
+    final a = dangerous('1170', '3', '0260284', iso: '45G1');
+    final b = dangerous('0012', '1.4', '0260184', iso: '45G1');
+    ContainerUnit center(String position) => ContainerUnit(
+          id: 'center-$position',
+          containerId: 'center-$position',
+          isoSizeType: '45G1',
+          stowagePosition: IsoCoordinateParser.parse(position),
+        );
+    StowageValidationResult withVoyage(Iterable<ContainerUnit> units,
+            {VesselGeometry geometry = testGeometry}) =>
+        validator.validate(units, geometry).single;
+
+    expect(withVoyage([a, b]).status, ValidationStatus.nonConforming);
+    expect(withVoyage([a, b, center('0360084')]).status,
+        ValidationStatus.nonConforming,
+        reason: 'otra bahía de la misma zona no demuestra la fila central');
+    expect(withVoyage([a, b, center('0260004')]).status,
+        ValidationStatus.nonConforming,
+        reason: 'la misma bahía en bodega no demuestra la cubierta');
+
+    final observed = withVoyage([a, b, center('0260084')]);
+    expect(observed.status, ValidationStatus.conforming);
+    expect(observed.description, contains('fila 00 ocupada en este viaje'));
+
+    final declared = withVoyage([a, b],
+        geometry: testGeometry.copyWith(centerRowOnDeck: true));
+    expect(declared.status, ValidationStatus.conforming);
+    expect(declared.description, contains('fila 00 declarada'));
+    expect(
+        withVoyage([a, b, center('0260084')],
+                geometry: testGeometry.copyWith(centerRowOnDeck: false))
+            .status,
+        ValidationStatus.nonConforming,
+        reason: 'la declaración explícita false prevalece sobre la carga');
   });
 
   test('T-58 caso T-55: etiqueta 3 o 5.1 impone código 2 al par 1.4', () {
@@ -327,13 +433,14 @@ void main() {
     expect(pair(pure, b).status, ValidationStatus.conforming);
     expect(pair(dangerous('1170', '3', '0020182', iso: '45G1'), b).status,
         ValidationStatus.nonConforming);
-    expect(pair(dangerous('0012', '1.4', '0020182',
-        iso: '45G1', labels: ['3']),
-        dangerous('1170', '3', '0020382', iso: '45G1')).status,
+    expect(
+        pair(dangerous('0012', '1.4', '0020182', iso: '45G1', labels: ['3']),
+                dangerous('1170', '3', '0020382', iso: '45G1'))
+            .status,
         ValidationStatus.nonConforming);
     for (final label in ['3', '5.1']) {
-      final withLabel = dangerous('0012', '1.4', '0020182',
-          iso: '45G1', labels: [label]);
+      final withLabel =
+          dangerous('0012', '1.4', '0020182', iso: '45G1', labels: [label]);
       expect(pair(withLabel, b).status, ValidationStatus.nonConforming,
           reason: 'etiqueta $label');
       expect(pair(b, withLabel).status, ValidationStatus.nonConforming,

@@ -13,7 +13,15 @@ class DangerousGoodsValidator {
       Iterable<ContainerUnit> containers, VesselGeometry geometry) {
     final entries = <(ContainerUnit, DangerousGoods)>[];
     final results = <StowageValidationResult>[];
+    final occupiedCenterRows = <(bool, int)>{};
     for (final c in containers) {
+      final position = c.stowagePosition;
+      if (position != null && position.row == 0) {
+        final onDeck = geometry.isDeckTier(position.tier);
+        for (final bay in _occupiedBays(c)) {
+          occupiedCenterRows.add((onDeck, bay));
+        }
+      }
       if (!c.isDangerous && (c.dangerousGoods?.isEmpty ?? true)) continue;
       if (c.dangerousGoods == null || c.dangerousGoods!.isEmpty) {
         results.add(_result(
@@ -37,14 +45,16 @@ class DangerousGoodsValidator {
     for (var i = 0; i < entries.length; i++) {
       for (var j = i + 1; j < entries.length; j++) {
         results.add(evaluatePair(entries[i].$1, entries[i].$2, entries[j].$1,
-            entries[j].$2, geometry));
+            entries[j].$2, geometry,
+            occupiedCenterRows: occupiedCenterRows));
       }
     }
     return List.unmodifiable(results);
   }
 
   StowageValidationResult evaluatePair(ContainerUnit a, DangerousGoods da,
-      ContainerUnit b, DangerousGoods db, VesselGeometry geometry) {
+      ContainerUnit b, DangerousGoods db, VesselGeometry geometry,
+      {Set<(bool, int)> occupiedCenterRows = const {}}) {
     final references = <String>[
       '49 CFR §172.101 (${_name(da)}, ${_name(db)})',
       '49 CFR §176.83(b)',
@@ -130,7 +140,8 @@ class DangerousGoodsValidator {
     }
     // §176.83(a)(8): la excepción entre sustancias de la misma clase exige
     // confirmar ausencia de reacción peligrosa; no la inferimos de la clase.
-    if (pa.primary == pb.primary && code != SegregationCode.substance &&
+    if (pa.primary == pb.primary &&
+        code != SegregationCode.substance &&
         !(pa.primary.startsWith('1.') && !onlyClassOne)) {
       references.add('49 CFR §176.83(a)(8)');
       return result(
@@ -173,15 +184,34 @@ class DangerousGoodsValidator {
     // una unidad longitudinal es un hueco de 20 pies; el centro avanza media
     // unidad por número de bahía. Se compara el borde, no solo el centro.
     final longitudinalGap = (ca.bay - cb.bay).abs() / 2 - (sizeA + sizeB) / 40;
-    final centerInBothZones =
-        (deckA ? geometry.centerRowOnDeck : geometry.centerRowInHold) == true &&
-        (deckB ? geometry.centerRowOnDeck : geometry.centerRowInHold) == true;
-    // Una 00 ocupada conserva su posición en la secuencia. Como hueco vacío
-    // entre 01 y 02 solo cuenta cuando ambas zonas la declaran físicamente.
+    final pairBays = {..._occupiedBays(a), ..._occupiedBays(b)};
+    String? centerSource(bool onDeck) {
+      final declared =
+          onDeck ? geometry.centerRowOnDeck : geometry.centerRowInHold;
+      if (declared == true) return 'fila 00 declarada';
+      if (declared == false) return null;
+      return pairBays.any((bay) => occupiedCenterRows.contains((onDeck, bay)))
+          ? 'fila 00 ocupada en este viaje'
+          : null;
+    }
+
+    final sourceA = centerSource(deckA), sourceB = centerSource(deckB);
+    final centerInBothZones = sourceA != null && sourceB != null;
+    // Una 00 ocupada conserva su posición en la secuencia. Como hueco entre
+    // 01 y 02 cuenta si se declaró o si el viaje demuestra su existencia en
+    // una bahía ocupada por el par, siempre por la misma zona.
     final rows = centerInBothZones || ca.row == 0 || cb.row == 0
         ? geometry.orderedRows
         : [...geometry.portRowNumbers, ...geometry.starboardRowNumbers];
     final lateralGap = (rows.indexOf(ca.row) - rows.indexOf(cb.row)).abs() - 1;
+    final rowsWithoutCenter = [
+      ...geometry.portRowNumbers,
+      ...geometry.starboardRowNumbers
+    ];
+    final gapWithoutCenter =
+        (rowsWithoutCenter.indexOf(ca.row) - rowsWithoutCenter.indexOf(cb.row))
+                .abs() -
+            1;
     final overlaps = longitudinalGap < 0 && ca.row == cb.row;
     if (overlaps) {
       return result(
@@ -195,10 +225,19 @@ class DangerousGoodsValidator {
     details.add('Derivación por huecos, no medición: un hueco completo entre '
         'huellas en sentido longitudinal o transversal. §176.83(f)(4) exige '
         '6 m o 2,5 m respectivamente; confirmar el paso real del buque.');
+    if (longitudinalGap < 1 &&
+        centerInBothZones &&
+        lateralGap >= 1 &&
+        gapWithoutCenter < 1 &&
+        ca.row != 0 &&
+        cb.row != 0) {
+      details.add('Hueco transversal por '
+          '${sourceA == 'fila 00 declarada' && sourceB == 'fila 00 declarada' ? 'fila 00 declarada' : 'fila 00 ocupada en este viaje'}.');
+    }
     // Una separación horizontal puede conseguirse por cualquiera de los ejes.
     if (longitudinalGap >= 1 || lateralGap >= 1) {
       return pass(
-          'Código 2: separación satisfecha en el modelo de huecos declarado.');
+          'Código 2: separación satisfecha en el modelo de huecos evaluado.');
     }
     if (!deckA || !deckB) {
       return result(
@@ -211,6 +250,16 @@ class DangerousGoodsValidator {
         ValidationStatus.nonConforming,
         explain(
             'Posible incumplimiento: código 2 sin un hueco completo de separación entre las huellas.'));
+  }
+
+  // Las unidades largas en bahía par cubren las dos bahías impares contiguas.
+  // Se conserva además su número par para comparar dos posiciones BAPLIE.
+  static Set<int> _occupiedBays(ContainerUnit c) {
+    final bay = c.stowagePosition?.bay;
+    if (bay == null) return const {};
+    return c.sizeInFeet != null && c.sizeInFeet! >= 40 && bay.isEven
+        ? {bay - 1, bay, bay + 1}
+        : {bay};
   }
 
   static String? _problem(ContainerUnit c, DangerousGoods d) {
