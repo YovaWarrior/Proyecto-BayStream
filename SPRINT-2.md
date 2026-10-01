@@ -2529,3 +2529,43 @@ el cuerpo puede quedarse con «satisfecha».
 - **En revisión:** T‑44, que repite tras T‑47 lo que pasa por Firebase.
 - **Por hacer:** T‑46, T‑47, T‑48 y T‑49, las cuatro detrás de pasos de consola de Carlos (la
   guía del bloque 0).
+
+---
+
+### 10.30 · T-61 cerrada · dos hallazgos del entorno de prueba · lo comprometido que falta depende de la consola (1-oct)
+
+**T‑61 (`5df7e16`) pasa a Terminado.** 281 pruebas (273 más 8 nuevas) y `analyze` en cero.
+
+- Al reabrir desde Recientes, el viaje conserva sus dimensiones y toma del perfil vigente los
+  seis parámetros del buque.
+- La combinación es una función pura de dominio, `current_profile_parameters.dart`. Aplica los
+  parámetros uno por uno, empezando por la frontera, y conserva el valor guardado de cualquiera
+  que dejaría carga fuera del plano. Recientes lo avisa.
+- Una prueba comprueba que el panel se recalcula al reabrir después de editar solo el perfil,
+  que es la clase de defecto de Riverpod del bloque 7b.
+- Aceptada en los tres clientes con A01 editado solo desde «Perfiles guardados»: **47/0/6** con
+  62 500.5 kg y **0/0/6** con «No lo tengo». El editor del viaje reabierto muestra la fila 00 del
+  perfil, y A03 sigue en **2/100/151**.
+- **Una prueba se reescribió.** `recent_voyages_test.dart` afirmaba el contrato anterior: que
+  reabrir conservaba toda la geometría histórica. Ahora afirma el que pidió Carlos. Timonel
+  declara que ninguna aserción se borró sin reemplazo; se acepta porque el cambio de contrato
+  está decidido y escrito en 10.29.
+
+**Dos hallazgos del entorno de prueba, no del producto.**
+
+1. **Windows: la app lanzada por Codex usaba un almacén virtualizado.** Codex de escritorio es una
+   app empaquetada, y lo que lanza hereda la virtualización de archivos de Windows: el almacén
+   local quedaba en `%LOCALAPPDATA%\Packages\OpenAI.Codex_…\LocalCache\Local\BayStream`, no en el
+   `%LOCALAPPDATA%\BayStream` real. La lógica probada es la misma. Pero las pruebas de
+   persistencia en Windows que lanzó Codex (T‑37, T‑58) pudieron usar ese almacén y no el de
+   Carlos. No se comprobó caso por caso, y la tesis lo dice así. En adelante, cada informe dice qué almacén usó (regla agregada en
+   `AGENTS.md`).
+2. **Chrome: con la ventana minimizada, Flutter se congela.** Con la pestaña oculta, el navegador
+   detiene los cuadros de animación: los menús no abren y las capturas expiran. Explica los
+   tropiezos de T‑42 en Chrome. La ventana controlada tiene que quedar visible (regla agregada en
+   `AGENTS.md`).
+
+**Estado.** Lo comprometido va en **27.5 de 35 h**: 21 tareas terminadas y T‑44 en revisión. Las
+cuatro que faltan (T‑46, T‑47, T‑48 y T‑49) esperan pasos de consola de Carlos, todos en la guía
+del bloque 0. Fuera del compromiso, de T‑50 a T‑61 (sin T‑56), van **12.75 h de 18** estimadas.
+Los agentes no tienen nada comprometido sin bloquear: descansan hasta que avance la consola.

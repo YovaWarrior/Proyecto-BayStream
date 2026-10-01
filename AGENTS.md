@@ -111,6 +111,14 @@ herramientas de Flutter y el Honor, así que se reparten así:
   proporción al riesgo. No afirmes que una prueba pasó si no la ejecutaste.
 - Preserva las advertencias preexistentes y no introduzcas nuevas. No conviertas
   una tarea puntual en una limpieza general del proyecto.
+- En Windows, una app lanzada desde un agente empaquetado (por ejemplo, Codex de
+  escritorio) puede guardar su almacén local en
+  `%LOCALAPPDATA%\Packages\…\LocalCache\Local\BayStream` en vez de
+  `%LOCALAPPDATA%\BayStream`. En cada prueba de persistencia, el informe dice qué
+  almacén usó la app.
+- En Chrome, la ventana que controla la automatización tiene que quedar visible: con la
+  pestaña minimizada u oculta, Flutter deja de dibujar, los menús no abren y las capturas
+  expiran.
 - Durante trabajos largos, informa brevemente el avance y cualquier supuesto
   importante. Evita detenerte por preguntas que puedan resolverse mediante una
   inspección segura del proyecto.
