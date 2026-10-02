@@ -250,9 +250,9 @@ infiere de una sesión.
 10 000 contenedores ni se agregó un módulo.
 
 **Observación sobre las bahías:** el parser auxiliar cuenta 27 bahías en A01, y la app (Web y Honor),
-igual que Codex, muestra **34**. En A02 son 20 frente a 30. El parser auxiliar cuenta posiciones de
-La diferencia es la misma que ya mostraba `1607263`, y los contenedores coinciden en los siete
-archivos. No se investigó qué cuenta cada instrumento como «bahía»: queda anotado, no diagnosticado.
+igual que Codex, muestra **34**. En A02 son 20 frente a 30. La diferencia es la misma que ya mostraba
+`1607263`, y los contenedores coinciden en los siete archivos. No se investigó qué cuenta cada
+instrumento como «bahía»: queda anotado, no diagnosticado.
 
 ### RNF-008 · Estándares: **No cumple** el criterio literal IMDG
 
