@@ -2803,3 +2803,59 @@ reporta como cerrada mientras ningún disparo llegue al correo.
    los accesos anónimos, más una alerta de umbral sobre esa métrica.
 3. Si tampoco se dispara sin facturación, H‑06 cierra la mitad de alertas como limitación
    declarada.
+
+---
+
+### 10.36 · T-47 cerrada · la Web requiere conexión para arrancar en el Sprint 2 (1-oct, noche)
+
+**T‑47 (`ba7353a`) pasa a Terminado.** Yov la verificó contra el repositorio:
+
+- `lib/main.dart` lee seis opciones Web y cinco Android con `String.fromEnvironment`. No tiene
+  valores en duro ni de respaldo.
+- Si falta una opción, la app muestra un aviso en español y no inicializa Firebase. Una prueba
+  nueva lo fija: **282 pruebas**, `analyze` en cero.
+- El identificador **`gt.cmartinez.baystream`** está en `namespace`, en `applicationId` y en el
+  paquete de `MainActivity.kt`, que se movió a su carpeta nueva. Los metadatos de `Runner.rc`
+  también se ajustaron.
+- `.gitignore` protege `*.jks`, `*.keystore`, `key.properties` y `firebase-prod*.json`.
+- El commit no trae ninguna clave de producción. Las únicas claves que aparecen en el diff son
+  las del proyecto temporal, y aparecen como líneas eliminadas.
+- Ningún archivo privado está versionado. `pubspec.*` no cambió y no se agregó el plugin de
+  Gradle de Google Services.
+
+**Los tres criterios de la ficha se cumplen:**
+
+1. **Existe el proyecto de producción:** `baystream-app` (10.34).
+2. **`main.dart` no lleva claves escritas en duro.**
+3. **H5 sigue midiendo.** `tool/h5_main.dart`, recompilado sin cambios, abre las dos pantallas
+   congeladas, y la comprobación de solo lectura da `latency_test` = 103 antes y después.
+
+Con los binarios finales, A01 da 0/0/6 y A03 da 2/100/151 en los tres clientes. **Windows y el
+Honor arrancan sin red.** Codex declaró que el almacén de Windows fue el virtualizado de su
+paquete, como pide la regla de 10.30, y que en el Honor la app nueva convive con la vieja
+`com.example.baystream`, con su almacén aparte.
+
+**La Web no arranca sin red ni caché.** Carlos lo confirmó a mano: la página queda en blanco
+porque no puede bajar CanvasKit ni la fuente Roboto desde `gstatic`. El riesgo de Firebase que
+anticipó 10.32 no se pudo aislar, porque el arranque falla antes, al cargar el motor.
+
+**Decisión de Carlos: en el Sprint 2, la Web requiere conexión para arrancar.** Queda documentado
+como limitación:
+
+- El caso del muelle sin señal lo cubre Android, que sí arranca sin red.
+- Que la Web arranque sin red exigiría servir CanvasKit, Roboto y el SDK de Firebase desde el
+  propio Hosting, y eso pasa al Sprint 3.
+- La prueba se hizo con la caché desactivada. Es el peor caso: no dice qué pasa con un navegador
+  que ya abrió la app antes.
+
+**Para la tesis, sobre H‑04:** el repositorio es público, y las opciones del proyecto temporal
+siguen en el historial de git. Sacarlas de `main.dart` no las borra de ahí. Las claves web de
+Firebase no son secretas: lo que protege los datos son las reglas.
+
+**Lo que sigue en TC‑04:**
+
+- **T‑48** (publicar la Web) puede empezar ya.
+- **T‑49** se divide en dos partes:
+  - la **firma**: configurar `key.properties` y Gradle, y compilar el `.aab` firmado. Puede
+    empezar ya.
+  - la **subida a la prueba interna**: espera a que Google apruebe la identidad de Carlos.
