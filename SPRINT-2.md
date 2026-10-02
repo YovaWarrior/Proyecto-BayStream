@@ -3224,3 +3224,49 @@ revisó:
 fuera del compromiso sube a **17.0 h de 18**; queda 1 h de holgura.
 
 **Estado.** Lo comprometido sigue en **32.0 de 35 h**.
+
+---
+
+### 10.43 · T-65 cerrada: la app no usó la red en ninguna operación medida · la holgura queda en 17.0 de 18 h (2-oct)
+
+**T‑65 (`e76fe06`) pasa a Terminado.** Yov la verificó contra el repositorio: `lib/` sigue igual
+que en `ba7353a`, y `android/` solo tiene los cambios de T‑49.
+
+**V1, cerrada.** El árbol de dependencias release tiene 103 artefactos. No incluye Firebase
+Installations, Analytics, Crashlytics, Messaging, Remote Config, Performance ni anuncios. La única
+biblioteca capaz de transmitir por su cuenta es Cloud Firestore, y solo cuando el código la usa;
+el flujo del usuario no la usa.
+
+**V2, cerrada para las operaciones de la lista.** Se midió en el Honor con el APK `C9A91F86`:
+arranque en frío y siete operaciones, de abrir desde Recientes a 5 minutos en segundo plano. Se
+usaron cuatro instrumentos:
+
+- la sonda de T‑44;
+- un sondeo de sockets TCP y UDP;
+- los contadores del sistema por UID, que cuentan cada paquete, UDP incluido;
+- el historial de esos contadores.
+
+El resultado fue **cero en todo**. Los controles positivos demuestran que los instrumentos sí ven
+tráfico real.
+
+**Hallazgo de método.** En segundo plano, Android bloquea la red de la app
+(`blocked=APP_BACKGROUND`), así que un cero en ese tramo no prueba nada por sí solo. Timonel lo
+notó y agregó 5 minutos en primer plano y en reposo, con la red permitida, y también dio cero. Es
+un ejemplo de por qué un cero se reporta junto con lo que cada instrumento no puede ver.
+
+**Lo que cambia:**
+
+- **Seguridad de los datos.** «No recopila ni comparte» sigue siendo la respuesta, y de sus tres
+  dudas solo queda V3: el respaldo automático, que decide Carlos (D3).
+- **RNF‑004** gana la mitad Android que le faltaba según T‑63.
+- **Nace V10**, unos 0.5 h: lo que no entró en la lista (Perfiles guardados, exportar CSV y JSON,
+  Limpiar datos, otros archivos). No se hace en este sprint y pasa a la medición de RNF‑004 del
+  Sprint 3.
+- **El Honor quedó como estaba,** salvo un viaje duplicado de A01 que se eliminó de Recientes
+  (de 5 pasan a 4).
+
+**Holgura.** El trabajo fuera del compromiso va en **17.0 h de 18**. Timonel no toma más tareas
+extra en el Sprint 2; la hora que queda se reserva para imprevistos de T‑49, parte 2.
+
+**Estado.** Lo comprometido sigue en **32.0 de 35 h**. Faltan T‑46, la alerta de H‑06 con Carlos
+en la consola, y T‑49 parte 2, que espera a Google.
