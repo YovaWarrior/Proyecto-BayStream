@@ -45,6 +45,12 @@ app.*.map.json
 google-services.json
 GoogleService-Info.plist
 firebase_options.dart
+firebase-prod*.json
+
+# Firma Android privada
+*.jks
+*.keystore
+key.properties
 
 # Environment files
 .env

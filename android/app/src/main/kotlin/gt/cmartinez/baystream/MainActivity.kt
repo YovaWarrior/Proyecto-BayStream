@@ -1,4 +1,4 @@
-package com.example.baystream
+package gt.cmartinez.baystream
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
