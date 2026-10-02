@@ -1311,6 +1311,38 @@ verificación pendiente marcada, y existe el borrador de la política de privaci
 
 ---
 
+#### T-65 · Cerrar V1 y V2 de T-64: dependencias reales y red del Honor en todas las operaciones básicas · 1.25 h
+
+**No toca código.** Mide sobre el APK ya instalado en el Honor (`C9A91F86`, el de T‑44). Informe
+en `docs/T65-RESULTADOS.md`.
+
+**Por qué.** La respuesta de Seguridad de los datos que sostiene la evidencia es «no recopila ni
+comparte», pero T‑64 no la declara mientras V1 y V2 sigan abiertas. V2 es además la mitad Android
+de la medición que le falta a RNF‑004 según T‑63.
+
+**Qué:**
+
+1. **V1.** Leer el árbol de dependencias de la configuración release con Gradle, sin compilar la
+   app ni cambiar archivos versionados. Decir si aparece Firebase Installations, Analytics o
+   cualquier biblioteca que transmita por su cuenta.
+2. **V2.** En el Honor, con la sonda de T‑44 (`tool/t44_honor_red.ps1`) y además con los
+   contadores de tráfico por UID del sistema, que sí cuentan UDP, medir antes y después de cada
+   operación básica:
+   - abrir un viaje desde Recientes;
+   - la búsqueda y las estadísticas;
+   - el panel de validación;
+   - editar el perfil del buque;
+   - exportar el PDF;
+   - eliminar un viaje guardado de prueba;
+   - dejar la app unos minutos en segundo plano.
+3. Si aparece cualquier tráfico, se reporta con su destino y su momento, y se dice qué cambia en
+   T‑64.
+
+**Terminada cuando:** V1 tiene el árbol con su conclusión, y V2 cubre todas las operaciones de la
+lista con los dos instrumentos, con el resultado tal como salga.
+
+---
+
 ## 6. Orden de ataque — por riesgo, no por número
 
 El orden numérico no es el orden de ejecución. En el Sprint 1 atacar primero lo más
@@ -3154,5 +3186,41 @@ ahora.
 **Nace T‑64** (1.0 h, contra holgura), para Timonel: preparar las declaraciones de Play para la
 prueba cerrada, comprobadas contra el código. El trabajo fuera del compromiso sube a
 **15.75 h de 18**.
+
+**Estado.** Lo comprometido sigue en **32.0 de 35 h**.
+
+---
+
+### 10.42 · T-64 cerrada: «no recopila ni comparte» todavía no se puede declarar · nace T-65 (2-oct)
+
+**T‑64 (`ca1a3ab`) pasa a Terminado.** La corrección de T‑63 entró en el mismo commit. Yov la
+revisó:
+
+- **El inventario se leyó del binario, no se supuso.** El APK `C9A91F86` y, por cadenas, el
+  `.aab` piden solo `INTERNET` y `ACCESS_NETWORK_STATE`, sin `AD_ID`.
+- **Dos afirmaciones del borrador de la política, comprobadas por Yov en el repositorio.** El
+  manifiesto no fija `allowBackup`, así que el respaldo automático queda activo por omisión. La
+  app sí permite eliminar un viaje guardado.
+- **Cada declaración tiene una respuesta** con su evidencia y su fuente. Lo que no se puede
+  comprobar desde el repositorio está marcado de V1 a V9.
+- **La política de privacidad se trata como obligatoria.** Las páginas oficiales de Google se
+  contradicen, y el informe cita las dos versiones. Manda el formulario de Seguridad de los datos,
+  que la prueba cerrada exige y que pide el enlace a la política.
+
+**Lo que queda abierto:**
+
+- **Seguridad de los datos.** La evidencia sostiene «no recopila ni comparte», pero no se declara
+  hasta cerrar tres dudas:
+  - V1: las dependencias reales;
+  - V2: la red en todas las operaciones de Android;
+  - V3: el respaldo automático, que decide Carlos (D3).
+- **La política tiene que estar también dentro de la app**, y la app no la tiene. Es un cambio en
+  `lib/`, así que va al Sprint 3 (D4).
+- **El ícono de la app es el de Flutter** (D5). Cambiarlo toca `android/`, así que va al Sprint 3.
+- **Nueve decisiones de Carlos, D1 a D9.** Ninguna bloquea el Sprint 2: hacen falta cuando se abra
+  la prueba cerrada.
+
+**Nace T‑65** (1.25 h, contra holgura), para Timonel: cerrar V1 y V2 sin tocar código. El trabajo
+fuera del compromiso sube a **17.0 h de 18**; queda 1 h de holgura.
 
 **Estado.** Lo comprometido sigue en **32.0 de 35 h**.
