@@ -2862,7 +2862,7 @@ Firebase no son secretas: lo que protege los datos son las reglas.
 
 ---
 
-### 10.37 · T-49, parte 1: el `.aab` queda firmado con la clave de subida · Timonel repite T-44 mientras Google responde (2-oct)
+### 10.37 · T-49, parte 1: el `.aab` queda firmado con la clave de subida · Timonel repite T-44 mientras Google responde (1-oct, noche)
 
 **T‑49, parte 1 (`b93027f`), verificada por Yov contra el repositorio.**
 
@@ -2912,3 +2912,48 @@ entregue.
 
 **Estado.** Lo comprometido sigue en **29.0 de 35 h**: T‑48 y T‑49 en curso, T‑44 y T‑46 en
 revisión.
+
+---
+
+### 10.38 · T-48 cerrada · la Web está publicada en `baystream-app.web.app` (1-oct, noche)
+
+**T‑48 (`080d589`) pasa a Terminado.** Yov la verificó contra el repositorio y el informe:
+
+- `firebase.json` solo configura Hosting: publica `build/web` y reescribe toda ruta a
+  `/index.html`. No trae Firestore, y `firestore.rules`, que es del proyecto temporal, no se
+  desplegó. `.firebaserc` apunta a `baystream-app`.
+- El `main.dart.js` publicado tiene el mismo SHA‑256 que el local y que el de T‑47
+  (`4939E264…2C38`): `lib/` no cambió desde `ba7353a`. 282 pruebas en verde y `analyze` en cero.
+- Lo desplegó Carlos con `firebase deploy --only hosting --project baystream-app`. Codex no
+  desplegó.
+
+**El criterio de la ficha se cumple en el dominio real.** En `https://baystream-app.web.app`, A01
+da 0/0/6 y A03 da 2/100/151. Después de recargar la página, Recientes conserva los dos viajes y
+Perfiles guardados conserva ALFA y CHARLIE: el almacén local de T‑35 funciona en la versión
+publicada.
+
+**Red.** En la sesión que Carlos observó con DevTools, ninguna petición fue a
+`firestore.googleapis.com`. Sí se descargan los scripts `firebase-app.js` y
+`firebase-firestore-pipelines.js`: es descarga de código, no envío de datos del usuario, y la
+repetición de T‑44 tiene que separar las dos cosas (RNF‑004). Hubo además una petición fallida del
+service worker a la raíz del sitio, sin efecto visible; si se repite en T‑44, se registra.
+
+**Caché.** Hosting sirve todo con `no-cache, max-age=0, must-revalidate`. Una versión nueva llega
+en la siguiente visita, sin quedarse atrapada en caché; el costo es una revalidación por archivo
+al abrir. Es coherente con 10.36: la Web requiere conexión.
+
+**Sobre el método.** La automatización de Codex se detuvo cuando no pudo confirmar con certeza la
+URL de Chrome, y no intentó eludir el aviso; Carlos hizo esa comprobación a mano. El informe dice
+que la evidencia cubre esa sesión, no todos los flujos posibles.
+
+**`.gitignore` (lo que dejó pendiente 10.37).** Ahora cubre `.firebase/`, la caché que crea el
+despliegue, y `key.properties*` con excepción para `key.properties.example`. Comprobado con
+`git check-ignore`: `key.properties.txt` queda ignorado y la plantilla no.
+
+**Estado.** Lo comprometido va en **30.5 de 35 h**, con 23 tareas terminadas. Faltan:
+
+- **T‑44** (en revisión): Timonel la repite, y la Web ya se puede medir sobre el dominio real.
+- **T‑46** (en revisión): la mitad de alertas de H‑06, con Carlos en la consola.
+- **T‑49** (en curso): la subida a la prueba interna espera a Google.
+
+Codex queda sin tarea comprometida.
