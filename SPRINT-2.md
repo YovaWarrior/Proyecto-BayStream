@@ -2957,3 +2957,70 @@ despliegue, y `key.properties*` con excepción para `key.properties.example`. Co
 - **T‑49** (en curso): la subida a la prueba interna espera a Google.
 
 Codex queda sin tarea comprometida.
+
+---
+
+### 10.39 · T-44 cerrada: tres RNF no cumplen y cinco no se pueden medir tal como están escritos (1-oct, noche)
+
+**T‑44 (`d805443`), repetida por Timonel sobre `3ac98f6`, pasa a Terminado.** Yov la verificó
+contra el repositorio:
+
+- `lib/` es idéntico al de `ba7353a`. `analyze` está en cero y las 282 pruebas pasan.
+- Se midieron los binarios que publica TC‑04:
+  - `app.so` `C3097007…`, el mismo de T‑47;
+  - el `main.dart.js` publicado, `4939E264…`, el mismo de T‑48;
+  - un APK, `C9A91F86…`, firmado con el mismo certificado de subida que el `.aab` de T‑49.
+- El commit trae el informe, la variable `T44_OUT` en `tool/t44_honor_bay_plan.dart` (sin cambiar
+  el método) y la sonda nueva `tool/t44_honor_red.ps1`, que solo lee `/proc/net/tcp` por ADB.
+
+**Resultado frente a `1607263`.** RNF‑001, 002 y 008 siguen sin cumplirse. RNF‑003, 004, 005, 006
+y 007 no se pueden medir tal como están escritos. El único dictamen que cambia es el de
+**RNF‑006**, que pasa de «no cumple» a «no medible»: gracias a T‑57, el mensaje del archivo
+inválido ya trae causa y acción, y la app se recupera sin reiniciar. Pero un solo tipo de archivo
+corrupto no demuestra el «100 %» que pide el RNF.
+
+**Lo que esta medición agrega para la tesis:**
+
+- **La RAM de Windows depende del tamaño de la ventana.**
+  - Maximizada, 416.7–422.0 MB.
+  - A 1280×720, 209.0 MB recién restaurada y 199.4 MB después de navegar.
+  - Codex no registró el tamaño de la ventana, así que sus 314.8 MB no se comparan de forma
+    estricta. Un criterio operativo de RNF‑001 tiene que fijar esa condición.
+- **Los pasos dependen del contexto.** En la primera carga de un buque sin perfil hay 6 pasos en
+  la Web, porque ya existían otros perfiles y aparece el diálogo de plantilla, y 5 en el Honor
+  recién instalado. Con el perfil guardado hay 3 pasos, dentro del límite. Es el costo de RF‑036
+  que ya anotaba 10.22.
+- **RNF‑004 tiene evidencia propia por primera vez.**
+  - **Web.** Al arrancar hay 13 peticiones, todas `GET`: la propia app, el motor y el SDK de
+    Firebase desde `www.gstatic.com`, y las fuentes. Al cargar A01 y A02 y al usar el plano, las
+    estadísticas y la búsqueda no hubo **ninguna petición**, y ninguna fue a
+    `firestore.googleapis.com`.
+  - **Honor.** **0 conexiones TCP** durante el arranque en frío (120 s) y la carga de A01 (180 s).
+    El control positivo con GMS demuestra que la sonda sí ve conexiones.
+  - **Límites declarados:** la sonda no ve UDP ni QUIC, muestrea cada 250 ms y no ve las
+    peticiones del service worker.
+- **La memoria del Honor subió.** PSS pasó de 164 a 180 MB y RSS de 209 a 228 MB, tras los siete
+  archivos y A06. Queda reportado, sin explicar.
+
+**Dos cosas que quedan anotadas:**
+
+1. **El Honor perdió los datos de `gt.cmartinez.baystream`.** Para instalar el APK con la clave
+   de subida, Timonel desinstaló, con autorización de Carlos, la versión firmada con depuración de
+   T‑47. **Lo mismo pasará en T‑49, parte 2:** Play entrega la app firmada con la clave de Google,
+   así que antes de instalar desde Play hay que desinstalar la actual. Son datos de prueba.
+2. **El informe tiene una frase cortada** en la observación sobre las bahías de RNF‑007 («El parser
+   auxiliar cuenta posiciones de»). Timonel la corrige. La diferencia de bahías (27 contra 34 en
+   A01) viene desde `1607263` y queda anotada sin diagnosticar.
+
+**Queda para T‑49, parte 2:** la cifra de control sobre el APK que entrega Play (memoria y apertura
+del plano con A01), como prometía 10.37.
+
+**Para el Sprint 3:**
+
+- A 360 px de ancho, el título se trunca y la pastilla de vacíos queda cortada (RNF‑003).
+- La diferencia de bahías.
+
+**Estado.** Lo comprometido va en **32.0 de 35 h**, con 24 tareas terminadas. Faltan T‑46 (la
+alerta de H‑06, mañana con Carlos en la consola) y T‑49, parte 2 (espera a Google). El paso que
+sigue para la tesis es el que dejó 10.22: proponer en el documento el criterio operativo de cada
+RNF, sin reescribir el ERS aprobado.
