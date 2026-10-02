@@ -1241,6 +1241,41 @@ identificador.
 
 ---
 
+#### T-63 · Proponer el criterio operativo de cada RNF a partir de las dos mediciones · 1.00 h
+
+**No toca código, `docs/` ajenos ni el ERS aprobado.** Informe en `docs/T63-CRITERIOS-RNF.md`.
+
+**Por qué.** T‑44 midió dos veces (10.22 y 10.39) y ningún RNF queda aprobado tal como está
+escrito: tres no cumplen y cinco no se pueden medir. 10.22 dejó el paso siguiente: proponer en el
+documento el criterio operativo de cada uno, sin reescribir el ERS. Timonel hizo la segunda
+medición y sabe de primera mano dónde se rompe cada RNF.
+
+**Qué**, para cada uno de los ocho RNF:
+
+1. El texto literal (de la matriz de `docs/T44-RESULTADOS.md`) y por qué hoy no cumple o no se
+   puede medir.
+2. Una definición operativa: métrica, instrumento, condición (plataforma, dispositivo, tamaño de
+   ventana, archivo del corpus, estado del perfil) y un procedimiento que otro pueda repetir.
+3. El umbral. **Se conserva el del ERS.** Donde el ERS no da número o usa un término sin definir
+   («sin degradación», el denominador del 95 % o del 80 %), se proponen opciones con su fuente, y
+   decide Carlos.
+4. Qué dictaría ese criterio con los datos que ya existen, y qué medición nueva haría falta, con
+   su estimación.
+5. Si cabe en el Sprint 3 o queda fuera del alcance de la tesis.
+
+**Regla contra el sesgo.** Un criterio operativo define *cómo* se mide, no *cuánto* se exige.
+Ninguna propuesta puede bajar un umbral del ERS ni elegir una condición porque con ella el
+producto pasa. Si un criterio cambia un dictamen de T‑44, el informe lo dice en una línea propia y
+justifica la condición sin apoyarse en el resultado. Ejemplo: en RNF‑001, el tamaño de ventana de
+Windows se fija por el uso real del planificador, y lo decide Carlos; no por cuál da menos de
+200 MB.
+
+**Terminada cuando:** los ocho RNF tienen su propuesta, cada umbral nuevo trae fuente o queda
+marcado como decisión de Carlos, y una tabla final dice qué dictamen daría cada criterio con los
+datos actuales.
+
+---
+
 ## 6. Orden de ataque — por riesgo, no por número
 
 El orden numérico no es el orden de ejecución. En el Sprint 1 atacar primero lo más
@@ -3024,3 +3059,29 @@ del plano con A01), como prometía 10.37.
 alerta de H‑06, mañana con Carlos en la consola) y T‑49, parte 2 (espera a Google). El paso que
 sigue para la tesis es el que dejó 10.22: proponer en el documento el criterio operativo de cada
 RNF, sin reescribir el ERS aprobado.
+
+---
+
+### 10.40 · Sin correo de la alerta y sin respuesta de Google · el producto queda quieto · T-63 para Timonel (2-oct)
+
+**T‑46.** La alerta de registros de 10.35 no envió ningún correo en toda la noche. Se pasa al
+paso 2 de 10.35: una métrica basada en registros que cuente los accesos anónimos, más una alerta
+de umbral sobre esa métrica. La guía oficial de solución de problemas de alertas basadas en
+registros no menciona la facturación entre sus causas, así que la hipótesis del plan Spark sigue
+sin confirmar.
+
+**T‑49, parte 2.** Google aún no aprueba la identidad de Carlos. La ayuda de Play Console dice que
+la prueba interna puede empezar antes de completar la configuración de la app, y que las apps en
+pistas de prueba interna están exentas de la sección de Seguridad de los datos. Cuando llegue la
+aprobación, la subida no espera esas declaraciones; sí las pedirá la prueba cerrada del Sprint 3.
+
+**El producto queda quieto.** T‑44 midió los binarios finales, los mismos que publicaron T‑47 y
+T‑48. Cualquier cambio en `lib/` de aquí al cierre obligaría a repetir esas tres verificaciones.
+Por eso lo que queda del sprint para los programadores es análisis, no código. Los defectos de
+interfaz que encontró T‑44 a 360 px van al Sprint 3.
+
+**Nace T‑63** (1.0 h, contra holgura), para Timonel: proponer el criterio operativo de cada RNF a
+partir de las dos mediciones, con una regla explícita contra el sesgo. Con ella, el trabajo fuera
+del compromiso sube a **14.75 h de 18**.
+
+**Estado.** Lo comprometido sigue en **32.0 de 35 h**.
