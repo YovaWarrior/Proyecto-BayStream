@@ -763,6 +763,12 @@ funcionando, y el proyecto lo crea el autor, no tú.
 **Terminada cuando:** existe el proyecto de producción, `lib/main.dart` no lleva claves de
 producción escritas en duro, y la instrumentación de H5 sigue midiendo.
 
+**Decisión del 1-oct (10.32), opción B:** `main.dart` inicializa Firebase contra el proyecto de
+producción con opciones leídas por `--dart-define-from-file` desde un archivo fuera del repositorio.
+H5 corre por `tool/h5_main.dart` (T‑62). En la misma pasada se cambia el identificador con el
+inventario de `docs/T62-RESULTADOS.md`. Se prueba el arranque en frío sin red en los tres clientes;
+si Web falla, se reporta y se decide aparte.
+
 ---
 
 #### T-48 · Publicar el cliente Web en una dirección accesible · 1.50 h
@@ -2628,3 +2634,55 @@ archivo fuera del repositorio; Carlos lo autoriza al mandar la tarea.
 
 El trabajo fuera del compromiso sube a **13.75 h de 18**. Quedan 4.25 h de holgura para lo que
 destape el despliegue.
+
+---
+
+### 10.32 · T-62 cerrada · Carlos elige la opción B para T-47 (1-oct)
+
+**T‑62 (`318fcbd`) pasa a Terminado.** No tocó `lib/`, `main.dart` ni los congelados.
+
+- **H5 ya no depende de `main.dart`.** `tool/h5_main.dart` abre las dos pantallas congeladas con
+  opciones leídas por `--dart-define-from-file` desde
+  `C:\Proyectos\baystream-privado\h5-temporal.json`, fuera del repositorio. Ese archivo lo generó
+  `tool/t62_h5_opciones.ps1` sin imprimir los valores.
+- **Verificado en Chrome** contra `baystream-h5-temporal-20260814`, solo con lecturas:
+  `latency_test` tiene 103 documentos (99 de H5 más 4 de T‑45, como dice 10.10), y el documento de
+  C3 existe. Las dos pantallas abren, y no se ejecutó ninguna acción que escriba.
+- **Lo que el producto usa de Firebase:** nada más que `FirebaseFirestore.instance` en el
+  constructor de `VesselRepositoryImpl`. El producto solo llama a `parseBaplieFile`, que no va a
+  la red, y ninguna prueba inicializa Firebase. La pantalla C3 congelada usa la misma clase, así
+  que cualquier cambio va en el proveedor, no en la clase.
+- **Inventario del identificador:**
+  - `android/app/build.gradle.kts`, líneas 9 y 24;
+  - `MainActivity.kt`, línea 1, y además hay que mover la carpeta al paquete nuevo;
+  - `windows/runner/Runner.rc`, líneas 92 y 96, solo metadatos («com.example»).
+
+  No aparece en ningún otro archivo.
+- **Hallazgo para T‑49:** el `release` de Android hoy se firma con la clave de depuración
+  (`build.gradle.kts:34-36`).
+
+**Decisión de Carlos: opción B.** El producto inicializa Firebase contra el **proyecto de
+producción**, con las opciones leídas de un archivo fuera del repositorio. Yov había recomendado la
+opción A (el producto sin Firebase); la decisión es de Carlos. Lo que implica:
+
+- **H‑04 se cierra en el código fuente.** El binario Web sigue llevando las opciones, como
+  cualquier cliente de Firebase; no son secretas.
+- **El proyecto de producción necesita las apps Web y Android registradas, pero no Firestore.**
+  Crear una instancia de Firestore no contacta al servidor, y el producto no lee ni escribe nada.
+  Con eso, el paso de la guía del bloque 0 que crea la base de datos se puede omitir.
+- **RNF‑004:** en Web, la app sigue bajando el SDK de Firebase al iniciar, sin transmitir datos
+  del usuario. La medición de T‑44, cuando se repita, tiene que distinguir esa descarga.
+- **Riesgo que T‑47 debe medir:** en Web, `initializeApp` baja el SDK desde `gstatic` antes de
+  `runApp`. Sin conexión, el arranque en frío podría fallar. En Android el SDK es nativo y no se
+  descarga. T‑47 prueba el arranque en frío sin red en los tres clientes; si Web falla, lo reporta
+  sin corregirlo, y se decide aparte.
+- **H‑06** se queda en el proyecto temporal: el producto no usa Firestore, y Cloud Audit Logs no
+  registraría nada suyo. La prueba de consola de la guía sigue en pie para la evidencia de H5.
+
+**Antes de T‑47, Carlos respalda `h5-temporal.json`.** Después de T‑47, `main.dart` ya no tendrá
+esos valores. Siempre se pueden volver a copiar de la configuración del proyecto temporal en la
+consola, pero conviene no depender de eso.
+
+**Lo comprometido sigue esperando la consola.** T‑47 se hace en una sola pasada cuando estén el
+identificador y el proyecto de producción con sus dos apps. El trabajo fuera del compromiso queda
+en **13.75 h de 18**.
