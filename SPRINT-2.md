@@ -2859,3 +2859,56 @@ Firebase no son secretas: lo que protege los datos son las reglas.
   - la **firma**: configurar `key.properties` y Gradle, y compilar el `.aab` firmado. Puede
     empezar ya.
   - la **subida a la prueba interna**: espera a que Google apruebe la identidad de Carlos.
+
+---
+
+### 10.37 · T-49, parte 1: el `.aab` queda firmado con la clave de subida · Timonel repite T-44 mientras Google responde (2-oct)
+
+**T‑49, parte 1 (`b93027f`), verificada por Yov contra el repositorio.**
+
+- `android/app/build.gradle.kts` carga `android/key.properties` con `java.util.Properties` y crea
+  `signingConfigs.release` solo si el archivo existe. Sin él, firma con la clave de depuración y
+  Gradle avisa que Play lo rechazará. Es el patrón de la guía oficial de Flutter.
+- `android/key.properties.example` lleva marcadores, sin contraseña real.
+- El commit trae solo `build.gradle.kts`, la plantilla y el informe. `key.properties` está ignorado
+  (`android/.gitignore:12`); ni él ni el `.jks` están versionados. `lib/`, `test/` y `pubspec.*` no
+  cambiaron.
+- Ni el informe ni los registros de `build/t49/` contienen la contraseña.
+
+**Resultado.** El `.aab` pesa 47 027 711 bytes (SHA‑256 `C60FFF0C…679D`) y está firmado por
+`CN=Carlos Martinez, OU=BayStream` (`jarsigner`: `jar verified`), con `versionCode` 1 y
+`versionName` 1.0.0 tomados de `pubspec.yaml`. Certificado de subida: SHA‑1
+`D7:69:20:6A:…:94:F9`, SHA‑256 `4C:C0:F6:B1:…:20:C4`. Son públicos, y la consola de Play debe
+mostrar los mismos al recibir el primer paquete.
+
+**Hallazgo: el archivo de Carlos se llamaba `key.properties.txt`.** Es la segunda vez que Windows
+esconde una extensión; la primera fue `firebase-prod-web.txt.txt` (10.34). Con ese nombre, Gradle
+habría firmado con la clave de depuración y `.gitignore` no lo cubría: un archivo con la contraseña
+quedaba a un `git add` de distancia. Timonel lo renombró sin leerlo. Dos medidas:
+
+- Carlos activa en el Explorador *Vista → Mostrar → Extensiones de nombre de archivo*.
+- Cuando cierre T‑48, `.gitignore` pasa a cubrir `key.properties*` (con excepción para la
+  plantilla) y la carpeta `.firebase/` que crea el despliegue. Se deja para después de T‑48 para
+  no cruzarse con Codex, que puede estar tocando `.gitignore`.
+
+**T‑49 sigue En curso.** Falta la parte 2, que es el criterio de la ficha: subir el `.aab` a la
+prueba interna e instalarlo en el Honor desde Play. Espera a que Google apruebe la identidad de
+Carlos.
+
+**T‑44 se repite, ahora con Timonel.** Desde la medición sobre `1607263` cambió el código del
+producto (T‑57, T‑58, T‑60, T‑61 y T‑47). Por eso se repiten los ocho RNF, no solo lo que pasa por
+Firebase:
+
+- **Windows y Honor**, sobre el código de `b93027f`.
+- **Web**, sobre la versión publicada por T‑48 en `baystream-app.web.app`.
+- **En Android se mide un APK release** firmado con la misma clave de subida y compilado del mismo
+  código que el `.aab`. El APK que entrega Play lo genera Google desde el `.aab` y lo firma con su
+  propia clave; esa diferencia se declara. Cuando el Honor instale desde Play (T‑49, parte 2), se
+  repite una cifra de control.
+
+Que la mida un programador distinto del que la midió primero es, otra vez, la doble prueba.
+Timonel queda con dos tarjetas porque T‑49 espera a un tercero; T‑44 sigue En revisión hasta que
+entregue.
+
+**Estado.** Lo comprometido sigue en **29.0 de 35 h**: T‑48 y T‑49 en curso, T‑44 y T‑46 en
+revisión.
