@@ -2758,3 +2758,48 @@ proyecto de la evidencia, y la lectura basta para la decisión.
 **Queda la mitad de alertas de H‑06**, que son alertas en Cloud Monitoring sobre estos registros.
 No se investigó. Los registros quedan activos: en el plan Spark no hay cobro posible, y el volumen
 es mínimo.
+
+---
+
+### 10.35 · H-06, mitad de alertas: la política está bien configurada, pero no se disparó (1-oct, noche)
+
+Carlos creó en Cloud Monitoring, sobre el proyecto temporal, la política de alertas basada en
+registros **«BayStream H5 · Acceso anónimo a Firestore»**. Yov verificó su detalle en la consola:
+
+- **Consulta:** `protoPayload.serviceName="firestore.googleapis.com"` y
+  `protoPayload.authenticationInfo.principalEmail` igual a la cuenta de servicio de Firebase
+  Rules. Atrapa solo los accesos anónimos; las lecturas de Carlos con su cuenta quedan fuera.
+- **Gravedad:** Advertencia.
+- **Frecuencia:** una notificación cada 5 minutos como máximo.
+- **Cierre automático:** a los 30 minutos.
+- **Canal:** correo de Carlos.
+- **Documentación:** dice qué revisar (IP de origen y documento) y cita H‑06 y T‑46.
+- **Costo:** ninguno. Las alertas de registros no se cobran; el cobro de alertas que Google
+  anunció para septiembre de 2027 no las incluye.
+
+**Control positivo de la alerta: falló.** Se hicieron tres lecturas anónimas, a las 19:51, a las
+20:15 y a las 20:22. El detalle de la política muestra las seis entradas que coinciden con su
+consulta. Aun así, a las 20:29 Monitoring no tenía **ninguna alerta abierta**, y el Gmail de
+Carlos no tenía ningún correo de alerta, ni en Spam. Se descartaron las causas de la guía oficial
+de solución de problemas:
+
+- los registros no están excluidos;
+- la consulta encuentra las entradas;
+- no se extraen etiquetas;
+- no se alcanzó el límite diario.
+
+**La causa no está confirmada.** La hipótesis principal es que el proyecto temporal está en el
+plan Spark, sin cuenta de facturación. No se encontró una fuente que lo afirme para las alertas
+de registros en general.
+
+**T‑46 sigue en revisión.** H‑07 está cerrado. La mitad de registro de H‑06 está verificada
+(10.34). La mitad de alertas está configurada, pero su funcionamiento no se ha comprobado, y no se
+reporta como cerrada mientras ningún disparo llegue al correo.
+
+**Siguiente intento:**
+
+1. Revisar si la alerta se abrió tarde.
+2. Si no, probar el otro camino de Cloud Monitoring: una métrica basada en registros que cuente
+   los accesos anónimos, más una alerta de umbral sobre esa métrica.
+3. Si tampoco se dispara sin facturación, H‑06 cierra la mitad de alertas como limitación
+   declarada.
