@@ -103,8 +103,8 @@ Se conservan todos los del ERS: 5 s, 100 ms, 200 ms, 60 fps, 1 s y 200 MB. Lo qu
 define:
 
 **1.1 · «Gama media» — decide Carlos.**
-- (a) El **Honor X5d**, declarado por Carlos como dispositivo de referencia del usuario objetivo.
-  Es el único dispositivo Android con el que se midió.
+- (a) El **Honor X5d**. Es el único dispositivo Android con el que se midió; si representa la
+  gama media del planificador lo decide Carlos.
 - (b) Una clase objetiva: la [Android performance class](https://developer.android.com/topic/performance/performance-class)
   que el dispositivo declare, según el CDD.
 
