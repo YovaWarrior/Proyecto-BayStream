@@ -46,11 +46,14 @@ google-services.json
 GoogleService-Info.plist
 firebase_options.dart
 firebase-prod*.json
+# Cache local de firebase deploy (Hosting)
+.firebase/
 
-# Firma Android privada
+# Firma Android privada (tambien key.properties.txt y similares)
 *.jks
 *.keystore
-key.properties
+key.properties*
+!key.properties.example
 
 # Environment files
 .env
