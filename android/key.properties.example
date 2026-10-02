@@ -1,0 +1,10 @@
+# Plantilla de android/key.properties (ese archivo NO se versiona).
+# Copia este archivo a android/key.properties y escribe la contrasena real.
+# Gradle lo lee en android/app/build.gradle.kts; nadie mas debe abrirlo.
+#
+# storeFile: ruta a la clave de subida, FUERA del repositorio. En Windows usa
+# barras normales o dobles barras invertidas.
+storePassword=CAMBIAR_POR_LA_CONTRASENA_DEL_ALMACEN
+keyPassword=CAMBIAR_POR_LA_CONTRASENA_DE_LA_CLAVE
+keyAlias=upload
+storeFile=C:/Proyectos/baystream-privado/upload-keystore.jks
