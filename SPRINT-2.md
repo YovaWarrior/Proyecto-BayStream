@@ -2686,3 +2686,75 @@ consola, pero conviene no depender de eso.
 **Lo comprometido sigue esperando la consola.** T‑47 se hace en una sola pasada cuando estén el
 identificador y el proyecto de producción con sus dos apps. El trabajo fuera del compromiso queda
 en **13.75 h de 18**.
+
+---
+
+### 10.33 · Identificador definitivo: `gt.cmartinez.baystream` (1-oct)
+
+Carlos elige el identificador de la app: **`gt.cmartinez.baystream`**. Queda fijo para siempre al
+registrar la app Android en Firebase y en la primera subida a Google Play. T‑47 lo aplica con el
+inventario de `docs/T62-RESULTADOS.md`:
+
+- `applicationId` y `namespace` en `android/app/build.gradle.kts`;
+- el paquete de `MainActivity.kt`, cuya carpeta pasa a `kotlin/gt/cmartinez/baystream/`;
+- los metadatos de `windows/runner/Runner.rc`.
+
+Carlos sigue con la guía del bloque 0: primero la cuenta de Google Play, porque es lo que más tarda
+en resolverse por terceros.
+
+---
+
+### 10.34 · Bloque 0, primera sesión: cuenta de Play, proyecto de producción, clave de subida y H-06 verificado (1-oct, noche)
+
+Carlos hizo el bloque 0 guiado por Yov, con las páginas abiertas en su navegador. Él completó
+cada pantalla, aceptó los términos e hizo el pago y la verificación. Yov solo leyó las pantallas.
+
+**Google Play Console.**
+
+- Cuenta personal creada y pagada (25 USD), a nombre de **Carlos G. Martínez**, con el perfil
+  de pagos a su nombre legal tal como figura en el DPI.
+- Dispositivo Android verificado, con la app Play Console en el Honor.
+- **Pendiente de Google:** la verificación de identidad (el DPI ya está subido) y, después, la del
+  teléfono. Hasta entonces el botón «Crear aplicación» queda bloqueado. Es el plazo externo que
+  10.25 y 10.28 anticipaban.
+
+**Firebase de producción.**
+
+- Proyecto **`baystream-app`** en el plan Spark, sin Google Analytics y sin Gemini. La versión Web
+  se publicará en `baystream-app.web.app`.
+- Dos apps registradas: **Web**, con Hosting vinculado, y **Android**, con el paquete
+  `gt.cmartinez.baystream`.
+- Firestore no se creó, como dice 10.32.
+- La configuración Web y `google-services.json` están en `C:\Proyectos\baystream-privado\`,
+  fuera del repositorio. Ningún valor pasó por el chat.
+
+**Clave de subida de Android.** `upload-keystore.jks` (RSA de 2048 bits, alias `upload`, validez
+de 10 000 días) quedó en la carpeta privada. Está respaldada junto con los demás archivos privados
+en el Google Drive personal de Carlos, y la contraseña está guardada aparte.
+
+**H‑06 se cierra desde la consola, sin código.** Se siguió el procedimiento de
+`docs/T46-DEPENDENCIAS-Y-REGISTRO.md` en el proyecto temporal:
+
+1. **Paso 0.** Los cambios de reglas ya quedaban auditados sin configurar nada: `CreateRuleset` a
+   las 12:33:32 y `UpdateRelease` a las 12:33:33 del 25-sep, con la cuenta de Carlos, 24 segundos
+   antes de la sonda de T‑45.
+2. **Paso 1.** Carlos activó la lectura y la escritura de datos para «Firestore/Datastore API».
+   No pidió facturación.
+3. **Paso 2, control positivo.** Las lecturas de Carlos desde la consola aparecen como `Listen`,
+   con su correo. La primera apertura, a las 19:49, no quedó registrada, porque la configuración
+   tarda uno o dos minutos en propagarse.
+4. **Paso 3, la prueba.** La sonda anónima de las 19:51 devolvió dos 200 y **quedó registrada**:
+   `GetDocument` sobre `voyages/c3-measurement-voyage` y `ListDocuments` sobre `latency_test`. Las
+   dos entradas están atribuidas a la cuenta de servicio de Firebase Rules, con `auth` vacío, la
+   **IP de origen**, el agente (`curl`) y el documento leído.
+
+**La sospecha de T‑46 era falsa para Firestore.** La regla general de Cloud Audit Logs dice que
+los recursos accesibles sin iniciar sesión no generan registros, pero un acceso anónimo a Firestore
+sí se registra, porque pasa por Firebase Rules. Timonel no lo dio por hecho y dejó una prueba con
+control positivo y una regla de decisión: eso permitió llegar a esta respuesta en lugar de
+diferirla a T‑47. No se probaron `Write` anónimo ni `Listen` anónimo: haría falta escribir en el
+proyecto de la evidencia, y la lectura basta para la decisión.
+
+**Queda la mitad de alertas de H‑06**, que son alertas en Cloud Monitoring sobre estos registros.
+No se investigó. Los registros quedan activos: en el plan Spark no hay cobro posible, y el volumen
+es mínimo.
