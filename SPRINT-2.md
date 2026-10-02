@@ -1276,6 +1276,41 @@ datos actuales.
 
 ---
 
+#### T-64 · Preparar las declaraciones de Play para la prueba cerrada, comprobadas contra el código · 1.00 h
+
+**Solo documentos. No toca el producto, no compila y no entra a la consola.** Informe en
+`docs/T64-DECLARACIONES-PLAY.md`.
+
+**Por qué.** La prueba interna no espera las declaraciones de la app (10.40); la prueba cerrada sí,
+y sus 14 días con 12 probadores son lo más lento que queda antes de producción. Si las respuestas
+están listas y comprobadas cuando Google apruebe la identidad, Carlos las llena en una sola sesión.
+
+**Qué:**
+
+1. **Inventario de lo que la app hace con datos**, comprobado y no supuesto:
+   - los permisos del manifiesto fusionado del APK de T‑44 (`build/app/outputs/flutter-apk/`), leídos
+     con las herramientas del SDK de Android, sin compilar;
+   - las dependencias que podrían enviar datos (`firebase_core`, `cloud_firestore`), según la
+     página oficial de Firebase sobre la sección de Seguridad de los datos de Google Play;
+   - lo que mostró RNF‑004 en `docs/T44-FINAL-RESULTADOS.md`.
+2. **Una respuesta por declaración** de la sección Contenido de la app: anuncios, acceso a la app,
+   clasificación de contenido, público objetivo, Seguridad de los datos, y las que no apliquen, con
+   la razón. Cada respuesta cita el dato del inventario que la sostiene.
+3. **Política de privacidad.** Verificar con fuente oficial si es obligatoria para esta app.
+   Redactar el texto en español, corto y verdadero, con lo que muestra el inventario. Dónde
+   publicarla lo decide Carlos; no se crea ninguna página ni se despliega nada.
+4. **Lista ordenada de lo que Carlos hará en la consola**, y de lo que falta que no es código: la
+   ficha de la tienda (descripción, icono, capturas), el correo de contacto y los probadores.
+
+**Regla.** Nada se declara por suposición. Si una respuesta depende de algo que no se puede
+comprobar desde el repositorio, se marca como verificación pendiente. Ante la duda, se escribe la
+duda; no se elige la respuesta más cómoda.
+
+**Terminada cuando:** cada declaración tiene una respuesta propuesta con su evidencia, o una
+verificación pendiente marcada, y existe el borrador de la política de privacidad.
+
+---
+
 ## 6. Orden de ataque — por riesgo, no por número
 
 El orden numérico no es el orden de ejecución. En el Sprint 1 atacar primero lo más
@@ -3083,5 +3118,41 @@ interfaz que encontró T‑44 a 360 px van al Sprint 3.
 **Nace T‑63** (1.0 h, contra holgura), para Timonel: proponer el criterio operativo de cada RNF a
 partir de las dos mediciones, con una regla explícita contra el sesgo. Con ella, el trabajo fuera
 del compromiso sube a **14.75 h de 18**.
+
+**Estado.** Lo comprometido sigue en **32.0 de 35 h**.
+
+---
+
+### 10.41 · T-63 cerrada: 22 decisiones de Carlos y unas 57 h de medición pendiente · nace T-64 (2-oct)
+
+**T‑63 (`33c3c34`) pasa a Terminado.** Yov la revisó contra su ficha:
+
+- Los ocho RNF tienen definición operativa: métrica, instrumento, condición y procedimiento.
+- Los umbrales del ERS se conservan. Donde el ERS no define algo, hay opciones con fuente enlazada;
+  son **22 decisiones de Carlos**.
+- Cada opción que cambiaría un dictamen tiene su línea propia. Ninguna recomendación convierte un
+  «no cumple» en «cumple». En RNF‑002, Timonel recomienda la lectura literal del ERS aunque la otra
+  opción haría cumplir el RNF.
+- Los dictámenes de T‑44 siguen vigentes.
+
+**Una corrección.** El informe dice que el Honor X5d está «declarado por Carlos como dispositivo
+de referencia del usuario objetivo». Carlos no lo declaró. Se corrige: es el único dispositivo
+Android con el que se midió, y si representa la gama media del planificador lo decide Carlos (1.1).
+
+**Lo que más pesa para la planificación.** La medición nueva suma **unas 57 h** sin la prueba con
+usuarios ni IMDG, y unas 66 h con usuarios. Es más que la capacidad entera de un sprint (53 h en
+el Sprint 2). La planificación del Sprint 3 tiene que elegir qué RNF se miden y cuáles quedan como
+limitación declarada. Las 22 decisiones se toman ahí, empezando por las de los RNF elegidos, no
+ahora.
+
+**Dos hallazgos que van al Sprint 3**, porque el producto queda quieto (10.40):
+
+1. En la Web, «Confirmar y ver el plano» abre en la pestaña Lista, no en el plano.
+2. El corpus anonimizado puede tener dígitos de control ISO 6346 rotos. Las pruebas de RNF‑008
+   tienen que usar identificadores de prueba propios, no el corpus.
+
+**Nace T‑64** (1.0 h, contra holgura), para Timonel: preparar las declaraciones de Play para la
+prueba cerrada, comprobadas contra el código. El trabajo fuera del compromiso sube a
+**15.75 h de 18**.
 
 **Estado.** Lo comprometido sigue en **32.0 de 35 h**.
