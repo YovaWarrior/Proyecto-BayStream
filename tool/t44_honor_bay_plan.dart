@@ -73,7 +73,10 @@ Future<void> main(List<String> args) async {
     'medianUpperBoundMs': median,
     'maximumUpperBoundMs': upper.last,
   };
-  final file = File('build/t44/honor-${args.first.toLowerCase()}-bayplan.json');
+  // T44_OUT permite repetir la medición sin pisar la evidencia anterior;
+  // el método no cambia.
+  final outDir = Platform.environment['T44_OUT'] ?? 'build/t44';
+  final file = File('$outDir/honor-${args.first.toLowerCase()}-bayplan.json');
   await file.writeAsString(const JsonEncoder.withIndent('  ').convert(output));
   stdout.writeln(
       'Mediana superior: $median ms; máximo superior: ${upper.last} ms');
