@@ -742,7 +742,7 @@ lee bien puede comportarse distinto; eso ya pasó aquí.
 
 ---
 
-#### T-46 · Registro de eventos y análisis de dependencias (H-06 y H-07) · 1.00 h
+#### T-46 · Registro de eventos y análisis de dependencias (H-06 y H-07) · 1.00 h — ✓ CERRADA (alertas: limitación declarada, 10.44)
 
 Los dos hallazgos de severidad baja que quedan. **Sin dependencias nuevas** (regla 2.5): el
 análisis de dependencias se resuelve con lo que el SDK ya trae.
@@ -3270,3 +3270,58 @@ extra en el Sprint 2; la hora que queda se reserva para imprevistos de T‑49, p
 
 **Estado.** Lo comprometido sigue en **32.0 de 35 h**. Faltan T‑46, la alerta de H‑06 con Carlos
 en la consola, y T‑49 parte 2, que espera a Google.
+
+---
+
+### 10.44 · T-46 cerrada: la alerta automática queda como limitación declarada, con revisión manual (2-oct)
+
+**Lo que se comprobó hoy, con Carlos en la consola y Yov leyendo:**
+
+1. **La política de alertas de 10.35 nunca abrió una alerta**, ni siquiera tarde. La lista de
+   Monitoring, con las alertas cerradas a la vista, está vacía.
+2. **El otro camino tampoco se puede usar.** Al crear la métrica basada en registros, la consola
+   avisa: «Las métricas basadas en registros no se admiten sin una cuenta de facturación asociada a
+   este proyecto». El proyecto temporal está en el plan Spark, sin facturación.
+
+Para las métricas, la causa queda **confirmada por la consola**. Para la política de alertas
+basada en registros, la falta de facturación es la explicación más probable, pero ninguna fuente
+oficial la confirma: la guía de solución de problemas no la menciona.
+
+**Decisión de Carlos: declarar la limitación y no activar facturación.** Activarla exigiría
+asociar una tarjeta al proyecto temporal solo para esto. H‑06 queda así:
+
+- **Registro: cumple.** Cloud Audit Logs registra cada acceso anónimo a Firestore, con su método y
+  su IP de origen (10.34).
+- **Alertas automáticas: no disponibles en el plan gratuito.** Es una limitación declarada.
+- **Control que la reemplaza:** la consulta guardada **«H‑06 · accesos anonimos a Firestore»** en
+  el Explorador de registros del proyecto temporal, que es privada.
+
+**Procedimiento de revisión manual:**
+
+- **Cuándo:** antes y después de cada sesión de medición de H5, y una vez por semana mientras
+  exista el proyecto temporal.
+- **Cómo:** Explorador de registros → Biblioteca de consultas → Guardado → «H‑06 · accesos
+  anonimos a Firestore» → Ejecutar, con los últimos 7 días.
+- **Qué se busca:** cada entrada tiene que corresponder a una sesión conocida. Si alguna no
+  corresponde, se abre y se anotan la IP de origen (`callerIp`) y el documento. Después se
+  comprueba que `latency_test` siga en 103, y se revisan las reglas.
+
+**Primera revisión, 2‑oct.** Hubo 12 entradas en 7 días, todas conocidas:
+
+- 6 de las tres lecturas de prueba de Carlos del 1‑oct, a las 19:51, 20:15 y 20:22 (`GetDocument`
+  y `ListDocuments`);
+- 6 de las 21:10 y 21:12 (`RunAggregationQuery` y `Listen`), que coinciden en hora y tipo con la
+  comprobación de solo lectura de H5 en T‑47 (`latency_test` = 103).
+
+La política de alertas de 10.35 se deja activa. No estorba, deja constancia del intento y
+funcionaría si el proyecto llegara a tener facturación.
+
+**T‑46 pasa a Terminado.** H‑07 se cerró antes. En H‑06, el registro está verificado y las
+alertas quedan como limitación declarada, con un control manual que las reemplaza.
+
+**Para la tesis:** es el segundo caso del sprint en que el plan gratuito de Firebase decide el
+alcance de un control. El primero es que el proyecto de producción no tiene Firestore (10.32). Se
+reporta tal cual: el control que se pudo verificar, y el que no.
+
+**Estado.** Lo comprometido va en **33.0 de 35 h**, con 25 tareas terminadas. Solo falta T‑49,
+parte 2, que espera a que Google apruebe la identidad de Carlos.
