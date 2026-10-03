@@ -3325,3 +3325,39 @@ reporta tal cual: el control que se pudo verificar, y el que no.
 
 **Estado.** Lo comprometido va en **33.0 de 35 h**, con 25 tareas terminadas. Solo falta T‑49,
 parte 2, que espera a que Google apruebe la identidad de Carlos.
+
+---
+
+### 10.45 · T-49, parte 2: BayStream publicada en la prueba interna de Google Play · falta instalarla en el Honor (3-oct)
+
+**Lo que pasó en la consola.** Google verificó la identidad de Carlos el 2-oct, y el 3-oct Carlos
+verificó su teléfono de contacto. Con eso se desbloqueó la creación de apps. Yov fue leyendo cada
+pantalla desde Chrome; las aceptaciones, la lista de *testers* y la publicación las hizo Carlos.
+
+- **App creada:** «BayStream», paquete **`gt.cmartinez.baystream`**, Español (Latinoamérica),
+  gratuita. El formulario de Play ahora pide el nombre del paquete al crear la app, y ese nombre ya
+  no se puede cambiar.
+- **Lista de *testers*:** «Equipo BayStream», con un usuario, el Gmail de Carlos.
+- **Versión 1 (1.0.0)** con el `.aab` de T‑49. Antes de subirlo, Yov verificó en disco que su
+  SHA‑256 seguía siendo `C60FFF0C…679D` y que `lib/` no había cambiado desde `ba7353a`.
+- **Lo que mostró Play:** API 24 y posteriores, SDK objetivo 36, tres ABI y una descarga de 10.2 MB.
+  La revisión dio «Ya se puede publicar», sin errores ni advertencias.
+- **Publicada el 3-oct.** El canal de prueba interna queda **Activo**.
+- **Enlace para unirse:** `https://play.google.com/apps/internaltest/4700137266943390078`.
+- Mientras no se complete la ficha de la tienda, Play muestra el nombre temporal
+  «gt.cmartinez.baystream (unreviewed)». Es lo esperado en una prueba interna.
+
+**T‑49 sigue En curso.** Le falta su criterio de terminado (10.28): instalar la app en el Honor
+desde Play, arrancarla sin red y cargar A01. Antes hay que desinstalar la versión firmada con la
+clave de subida (10.39). Son unos minutos que Carlos dejó para después. Cuando llegue la evidencia,
+T‑49 pasa a Terminado y se toma la cifra de control sobre el APK que entrega Play (10.37).
+
+**Un aviso de la consola para revisar.** La lista de apps muestra un aviso sobre la verificación de
+desarrolladores de Android: Play intentó registrar automáticamente las apps de la cuenta. Hay que
+confirmar en «Verificación de desarrolladores de Android» que BayStream quedó registrada.
+
+**La entrega del 17-oct se actualizó con corte al 3-oct:** el documento, la presentación y el
+tablero.
+
+**Estado.** Lo comprometido sigue en **33.0 de 35 h**, con 25 tareas terminadas. De T‑49 solo falta
+comprobar la instalación desde Play.
