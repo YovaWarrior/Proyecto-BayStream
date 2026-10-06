@@ -97,12 +97,13 @@ class Bay extends Equatable {
     return keys;
   }
 
-  /// Peso total de contenedores en esta bahía
+  /// Peso total de contenedores en esta bahía.
+  /// Suma el peso efectivo (T-66): el VGM si viene y, si no, el bruto.
   double get totalWeight =>
-      containers.fold(0.0, (sum, c) => sum + (c.grossWeight ?? 0));
+      containers.fold(0.0, (sum, c) => sum + (c.effectiveWeight ?? 0));
 
-  /// Peso bruto acumulado por nivel (tier), en kilogramos.
-  /// Clave: número de nivel. Valor: suma de grossWeight de los contenedores de ese nivel.
+  /// Peso acumulado por nivel (tier), en kilogramos.
+  /// Clave: número de nivel. Valor: suma del peso efectivo de los contenedores de ese nivel.
   Map<int, double> get weightByTier {
     final weights = <int, double>{};
     for (final container in containers) {
@@ -110,14 +111,14 @@ class Bay extends Equatable {
       if (tier == null) continue;
       weights.update(
         tier,
-        (weight) => weight + (container.grossWeight ?? 0),
-        ifAbsent: () => container.grossWeight ?? 0,
+        (weight) => weight + (container.effectiveWeight ?? 0),
+        ifAbsent: () => container.effectiveWeight ?? 0,
       );
     }
     return weights;
   }
 
-  /// Peso bruto acumulado por fila en cubierta, en kilogramos.
+  /// Peso efectivo acumulado por fila en cubierta, en kilogramos.
   ///
   /// Una **pila** es la columna vertical de contenedores de una fila, y es la
   /// magnitud a la que aplica el límite de apilamiento. No es lo mismo que
@@ -132,7 +133,7 @@ class Bay extends Equatable {
   Map<int, double> get deckWeightByRow =>
       _weightByRow(geometry!.isDeckTier);
 
-  /// Peso bruto acumulado por fila en bodega, en kilogramos.
+  /// Peso efectivo acumulado por fila en bodega, en kilogramos.
   /// Ver [deckWeightByRow].
   Map<int, double> get holdWeightByRow =>
       _weightByRow((tier) => !geometry!.isDeckTier(tier));
@@ -144,8 +145,8 @@ class Bay extends Equatable {
       if (position == null || !enZona(position.tier)) continue;
       weights.update(
         position.row,
-        (weight) => weight + (container.grossWeight ?? 0),
-        ifAbsent: () => container.grossWeight ?? 0,
+        (weight) => weight + (container.effectiveWeight ?? 0),
+        ifAbsent: () => container.effectiveWeight ?? 0,
       );
     }
     return weights;

@@ -302,6 +302,11 @@ void main() {
       ).withGeometry(_geometry.copyWith(stackWeightLimitKg: limite));
     }
 
+    // T-66: la celda también muestra su peso en toneladas; la cabecera se
+    // busca sin las celdas para seguir probando lo que esta prueba prueba.
+    Finder enCabecera(String texto) => find.byWidgetPredicate((w) =>
+        w is Text && w.data == texto && w.key != const ValueKey('peso-celda'));
+
     testWidgets('la cabecera muestra el peso de cada pila', (tester) async {
       // Fila 01: 20 t en cubierta. Fila 03: 30 t en bodega.
       await pumpPlan(
@@ -309,8 +314,8 @@ void main() {
         viaje([conPeso('0060182', 20000), conPeso('0060302', 30000)]),
       );
 
-      expect(find.text('20.0'), findsOneWidget, reason: 'pila de cubierta');
-      expect(find.text('30.0'), findsOneWidget, reason: 'pila de bodega');
+      expect(enCabecera('20.0'), findsOneWidget, reason: 'pila de cubierta');
+      expect(enCabecera('30.0'), findsOneWidget, reason: 'pila de bodega');
     });
 
     testWidgets('sin límite declarado no se marca ninguna pila',
@@ -340,7 +345,7 @@ void main() {
         ], limite: 90000),
       );
 
-      expect(find.text('30.0'), findsNWidgets(4));
+      expect(enCabecera('30.0'), findsNWidgets(4));
       final marcadas = tester
           .widgetList<Container>(find.byType(Container))
           .where((c) =>
@@ -364,7 +369,7 @@ void main() {
         ], limite: 90000),
       );
 
-      expect(find.text('120.0'), findsOneWidget);
+      expect(enCabecera('120.0'), findsOneWidget);
       final marcadas = tester
           .widgetList<Container>(find.byType(Container))
           .where((c) =>

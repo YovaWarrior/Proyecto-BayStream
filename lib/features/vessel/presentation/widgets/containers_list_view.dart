@@ -219,15 +219,19 @@ class _ContainerCard extends StatelessWidget {
                     ),
                   ),
                   
-                  // Peso bruto
+                  // Peso efectivo (T-66): el rótulo dice de qué segmento viene
                   Expanded(
                     child: _buildInfoItem(
                       context,
                       Icons.scale,
-                      'Peso Bruto',
-                      container.grossWeight != null
-                          ? '${container.grossWeight!.toStringAsFixed(0)} kg'
-                          : 'N/A',
+                      container.weightSource == WeightSource.vgm
+                          ? 'Peso (VGM)'
+                          : container.weightSource == WeightSource.gross
+                              ? 'Peso bruto'
+                              : 'Peso',
+                      container.effectiveWeight != null
+                          ? '${container.effectiveWeight!.toStringAsFixed(0)} kg'
+                          : 'Sin peso',
                     ),
                   ),
                   
@@ -440,8 +444,13 @@ class _ContainerCard extends StatelessWidget {
               _buildDetailRow(context, 'Tamaño', '${container.sizeInFeet ?? "?"} pies'),
               _buildDetailRow(context, 'Estado', _getStatusText(container.status)),
               _buildDetailRow(context, 'Posición', container.stowagePosition?.displayFormat ?? 'Sin asignar'),
-              _buildDetailRow(context, 'Peso Bruto', '${container.grossWeight?.toStringAsFixed(0) ?? "N/A"} kg'),
-              _buildDetailRow(context, 'Peso VGM', '${container.vgmWeight?.toStringAsFixed(0) ?? "N/A"} kg'),
+              // T-66: cada peso con su fuente; si vienen los dos, los dos.
+              if (container.vgmWeight != null)
+                _buildDetailRow(context, 'Peso (VGM)', '${container.vgmWeight!.toStringAsFixed(0)} kg'),
+              if (container.grossWeight != null)
+                _buildDetailRow(context, 'Peso bruto', '${container.grossWeight!.toStringAsFixed(0)} kg'),
+              if (container.effectiveWeight == null)
+                _buildDetailRow(context, 'Peso', 'El archivo no trae peso'),
               _buildDetailRow(context, 'Puerto Carga', container.portOfLoading ?? 'N/A'),
               _buildDetailRow(context, 'Puerto Descarga', container.portOfDischarge ?? 'N/A'),
               

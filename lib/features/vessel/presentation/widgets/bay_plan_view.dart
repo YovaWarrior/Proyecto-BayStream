@@ -329,7 +329,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               _buildDetailRow('Tipo ISO', '${container.isoSizeType ?? "N/A"} (${container.sizeInFeet ?? "?"}ft)'),
               _buildDetailRow('Estado', container.status == ContainerStatus.full ? 'LLENO' : 
                              container.status == ContainerStatus.empty ? 'VACÍO' : 'Desconocido'),
-              _buildDetailRow('Peso Bruto', '${container.grossWeight?.toStringAsFixed(0) ?? "N/A"} kg'),
+              // T-66: cada peso con su fuente; si vienen los dos, los dos.
+              if (container.vgmWeight != null)
+                _buildDetailRow('Peso (VGM)', '${container.vgmWeight!.toStringAsFixed(0)} kg'),
+              if (container.grossWeight != null)
+                _buildDetailRow('Peso bruto', '${container.grossWeight!.toStringAsFixed(0)} kg'),
+              if (container.effectiveWeight == null)
+                _buildDetailRow('Peso', 'El archivo no trae peso'),
               _buildDetailRow('Puerto Carga', container.portOfLoading ?? 'N/A'),
               _buildDetailRow('Puerto Descarga', container.portOfDischarge ?? 'N/A'),
               
@@ -1012,30 +1018,53 @@ class _ContainerCell extends StatelessWidget {
               ]
             : null,
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (icon != null)
-            Icon(icon, size: 12, color: borderColor)
-          else
-            Text(
-              container!.sizeInFeet?.toString() ?? '',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: borderColor,
+      // T-66: tres líneas en 36 px útiles. El FittedBox solo reduce, nunca
+      // amplía: con la letra del sistema agrandada (Android) la celda encoge
+      // su contenido en vez de desbordarse y tapar a la vecina.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null)
+              Icon(icon, size: 12, color: borderColor)
+            else
+              Text(
+                container!.sizeInFeet?.toString() ?? '',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: borderColor,
+                  height: 1.1,
+                ),
               ),
-            ),
-          if (container!.operatorCode != null)
-            Text(
-              container!.operatorCode!,
-              style: TextStyle(
-                fontSize: 8,
-                color: borderColor,
+            if (container!.operatorCode != null)
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 44),
+                child: Text(
+                  container!.operatorCode!,
+                  style: TextStyle(
+                    fontSize: 8,
+                    color: borderColor,
+                    height: 1.1,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
-        ],
+            // Peso en toneladas con un decimal, como el plano impreso («28.7»).
+            if (container!.effectiveWeight != null)
+              Text(
+                (container!.effectiveWeight! / 1000).toStringAsFixed(1),
+                key: const ValueKey('peso-celda'),
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: borderColor,
+                  height: 1.1,
+                ),
+              ),
+          ],
+        ),
       ),
     );
 

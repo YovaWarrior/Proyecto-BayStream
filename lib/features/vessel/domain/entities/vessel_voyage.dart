@@ -106,11 +106,17 @@ class VesselVoyage extends Equatable {
   int get emptyContainers => 
       containers.where((c) => c.status == ContainerStatus.empty).length;
   
-  /// Peso total bruto de todos los contenedores (en kg)
+  /// Peso total del viaje (en kg): suma del peso efectivo de cada contenedor,
+  /// el VGM si viene y, si no, el bruto (T-66). Es el que se muestra.
+  double get totalWeight =>
+      containers.fold(0.0, (sum, c) => sum + (c.effectiveWeight ?? 0));
+
+  /// Suma cruda de `MEA+WT` de todos los contenedores (en kg).
+  /// No es el peso del viaje: un contenedor que solo trae VGM suma 0 aquí.
   double get totalGrossWeight =>
       containers.fold(0.0, (sum, c) => sum + (c.grossWeight ?? 0));
   
-  /// Peso total VGM de todos los contenedores (en kg)
+  /// Suma cruda de `MEA+VGM` de todos los contenedores (en kg)
   double get totalVgmWeight =>
       containers.fold(0.0, (sum, c) => sum + (c.vgmWeight ?? 0));
 

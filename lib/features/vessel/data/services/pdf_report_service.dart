@@ -156,9 +156,11 @@ class PdfReportService {
             children: [
               _metricCard('Contenedores', voyage.totalContainers.toString()),
               _metricCard('TEU', totalTeu(voyage).toString()),
+              // T-66: el total suma el VGM si viene y, si no, el bruto. La
+              // tabla de contenedores conserva las dos columnas crudas.
               _metricCard(
-                'Peso bruto',
-                '${(voyage.totalGrossWeight / 1000).toStringAsFixed(1)} t',
+                'Peso total',
+                '${(voyage.totalWeight / 1000).toStringAsFixed(1)} t',
               ),
               _metricCard(
                 'Peso VGM',
@@ -507,7 +509,7 @@ class PdfReportService {
             'Contenedor',
             'Tipo',
             'Estado',
-            'Peso t',
+            'Bruto t',
             'VGM t',
             'POL',
             'POD',

@@ -109,7 +109,7 @@ class VoyageSummaryCard extends StatelessWidget {
                   child: _buildStatItem(
                     context,
                     Icons.scale,
-                    _formatWeight(voyage.totalGrossWeight),
+                    _formatWeight(voyage.totalWeight),
                     'Peso Total',
                     colorScheme.tertiary,
                   ),

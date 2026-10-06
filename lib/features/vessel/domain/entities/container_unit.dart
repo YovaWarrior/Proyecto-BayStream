@@ -173,10 +173,29 @@ class ContainerUnit extends Equatable {
     }
   }
 
-  /// Peso neto (bruto - tara)
+  /// T-66 · Peso con que se muestra y se suma el contenedor: el VGM si el
+  /// archivo lo trae y, si no, el bruto de `MEA+WT`.
+  ///
+  /// Se prefiere el VGM porque es la masa bruta verificada que el Convenio
+  /// SOLAS exige para el plan de estiba. En `CORPUS_A07` 333 de 398
+  /// contenedores traen solo `VGM`, y en `CORPUS_A05` y `CORPUS_A08v_VGM`
+  /// todos: leer solo [grossWeight] los dejaba sin peso. Ningún archivo del
+  /// corpus trae los dos, así que la preferencia no cambia ningún total.
+  double? get effectiveWeight => vgmWeight ?? grossWeight;
+
+  /// De qué segmento salió [effectiveWeight]; `null` si el archivo no trae
+  /// ningún peso para este contenedor.
+  WeightSource? get weightSource => vgmWeight != null
+      ? WeightSource.vgm
+      : grossWeight != null
+          ? WeightSource.gross
+          : null;
+
+  /// Peso neto (peso efectivo - tara)
   double? get netWeight {
-    if (grossWeight == null) return null;
-    return grossWeight! - (tareWeight ?? 0);
+    final weight = effectiveWeight;
+    if (weight == null) return null;
+    return weight - (tareWeight ?? 0);
   }
 
   @override
@@ -338,6 +357,12 @@ enum ContainerStatus {
   full,    // '5' - Contenedor lleno
   empty,   // '4' - Contenedor vacío
   unknown,
+}
+
+/// Segmento del que sale el peso efectivo de un contenedor (T-66)
+enum WeightSource {
+  vgm,   // MEA+VGM - masa bruta verificada (SOLAS)
+  gross, // MEA+WT  - peso bruto declarado
 }
 
 /// Altura del contenedor

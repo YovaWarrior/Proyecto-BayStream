@@ -184,8 +184,8 @@ class _SummaryGrid extends StatelessWidget {
               color: Colors.deepPurple,
             ),
             _MetricCard(
-              label: 'Peso Bruto Total',
-              value: _formatTons(stats.totalGrossWeight),
+              label: 'Peso Total',
+              value: _formatTons(stats.totalWeight),
               icon: Icons.scale,
               color: Colors.orange,
             ),
@@ -261,13 +261,19 @@ class _MetricCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    value,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
-                    overflow: TextOverflow.ellipsis,
+                  // T-66: a 360 px «6940.6 t» se cortaba en «6940....». Una
+                  // cifra cortada es otra cifra: se reduce hasta caber.
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      value,
+                      maxLines: 1,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                    ),
                   ),
                   Text(
                     label,

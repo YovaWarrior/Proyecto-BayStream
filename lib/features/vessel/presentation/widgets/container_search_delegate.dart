@@ -406,9 +406,9 @@ class _ContainerSearchResultTile extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          if (container.grossWeight != null)
+          if (container.effectiveWeight != null)
             Text(
-              '${(container.grossWeight! / 1000).toStringAsFixed(1)}t',
+              '${(container.effectiveWeight! / 1000).toStringAsFixed(1)}t',
               style: TextStyle(
                 fontSize: 11,
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),

@@ -568,6 +568,7 @@ final voyageStatsProvider = Provider<VoyageStats?>((ref) {
         totalContainers: voyage.totalContainers,
         fullContainers: voyage.fullContainers,
         emptyContainers: voyage.emptyContainers,
+        totalWeight: voyage.totalWeight,
         totalGrossWeight: voyage.totalGrossWeight,
         totalVgmWeight: voyage.totalVgmWeight,
         totalBays: voyage.bays.length,
@@ -645,6 +646,8 @@ class VoyageStats {
   final int totalContainers;
   final int fullContainers;
   final int emptyContainers;
+  /// Peso efectivo del viaje (T-66): VGM si viene, si no el bruto.
+  final double totalWeight;
   final double totalGrossWeight;
   final double totalVgmWeight;
   final int totalBays;
@@ -653,6 +656,7 @@ class VoyageStats {
     required this.totalContainers,
     required this.fullContainers,
     required this.emptyContainers,
+    required this.totalWeight,
     required this.totalGrossWeight,
     required this.totalVgmWeight,
     required this.totalBays,
