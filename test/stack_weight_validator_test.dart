@@ -6,12 +6,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const vessel = Vessel(id: 'v', name: 'PRUEBA');
-  ContainerUnit cargo(String position, double? weight) => ContainerUnit(
-      id: position,
-      containerId: position,
-      isoSizeType: '22G1',
-      stowagePosition: IsoCoordinateParser.parse(position),
-      grossWeight: weight);
+  ContainerUnit cargo(String position, double? weight, {double? vgm}) =>
+      ContainerUnit(
+          id: position,
+          containerId: position,
+          isoSizeType: '22G1',
+          stowagePosition: IsoCoordinateParser.parse(position),
+          grossWeight: weight,
+          vgmWeight: vgm);
   VesselProfile profile(double? limit, {int floor = 80}) => VesselProfile(
       identity: vessel.profileIdentity,
       vesselName: vessel.name,
@@ -64,21 +66,99 @@ void main() {
         isEmpty);
   });
   test('T-38 igualdad no es exceso; cubierta y bodega no se suman', () {
-    expect(
-        validator.validate(
-            voyage([
-              cargo('0010182', 75000),
-              cargo('0010102', 75000),
-              cargo('0010104', null)
-            ]),
-            profile(75000)),
+    final result = validator.validate(
+        voyage([
+          cargo('0010182', 75000),
+          cargo('0010102', 75000),
+          cargo('0010104', null)
+        ]),
+        profile(75000));
+    expect(result.where((r) => r.status == ValidationStatus.nonConforming),
         isEmpty);
+    // T-67: la pila de bodega lleva un contenedor sin peso; ya no calla.
+    expect(result.single.status, ValidationStatus.notEvaluated);
+    expect(result.single.positions.map((p) => p.toIsoCode()),
+        ['0010102', '0010104']);
   });
   test('T-38 usa la frontera del perfil, no una constante local', () {
     final trip = voyage([cargo('0010180', 40000), cargo('0010182', 40000)]);
     expect(validator.validate(trip, profile(75000)), hasLength(1));
     expect(validator.validate(trip, profile(75000, floor: 82)), isEmpty);
   });
+  group('T-67 · peso efectivo y pesos faltantes', () {
+    test('excedida con pesos completos: el VGM cuenta en la suma', () {
+      final result = validator.validate(
+          voyage([
+            cargo('0010182', null, vgm: 40000),
+            cargo('0010184', null, vgm: 40000),
+          ]),
+          profile(75000));
+      expect(result.single.status, ValidationStatus.nonConforming);
+      expect(result.single.severity, ValidationSeverity.error);
+      expect(result.single.description, contains('80000.0 kg'));
+      expect(result.single.description, isNot(contains('no trae')));
+    });
+
+    test('VGM y bruto se suman juntos en la misma pila', () {
+      final result = validator.validate(
+          voyage([
+            cargo('0010182', 40000),
+            cargo('0010184', null, vgm: 40000),
+          ]),
+          profile(75000));
+      expect(result.single.status, ValidationStatus.nonConforming);
+      expect(result.single.description, contains('80000.0 kg'));
+    });
+
+    test('excedida con un peso faltante: posible incumplimiento, y lo dice',
+        () {
+      final result = validator.validate(
+          voyage([
+            cargo('0010182', 40000),
+            cargo('0010184', 40000),
+            cargo('0010186', null),
+          ]),
+          profile(75000));
+      expect(result.single.status, ValidationStatus.nonConforming);
+      expect(result.single.severity, ValidationSeverity.error);
+      expect(result.single.description,
+          contains('1 contenedor de esta pila no trae peso'));
+      expect(result.single.containerIds, ['0010182', '0010184', '0010186']);
+    });
+
+    test('no excedida con pesos faltantes: no evaluado, con la razón', () {
+      final result = validator.validate(
+          voyage([
+            cargo('0010182', 30000),
+            cargo('0010184', null),
+            cargo('0010186', null),
+          ]),
+          profile(75000));
+      expect(result.single.rule, StowageRule.stackWeight);
+      expect(result.single.status, ValidationStatus.notEvaluated);
+      expect(result.single.severity, ValidationSeverity.warning);
+      expect(result.single.description,
+          startsWith('2 contenedores de esta pila no traen peso'));
+      expect(result.single.positions.map((p) => p.toIsoCode()),
+          ['0010182', '0010184', '0010186']);
+    });
+
+    test('una pila completa y por debajo del límite sigue sin producir nada',
+        () {
+      expect(
+          validator.validate(
+              voyage([cargo('0010182', 30000), cargo('0010184', null, vgm: 30000)]),
+              profile(75000)),
+          isEmpty);
+    });
+
+    test('sin límite declarado, un peso faltante tampoco produce nada (C-7)',
+        () {
+      expect(validator.validate(voyage([cargo('0010182', null)]), profile(null)),
+          isEmpty);
+    });
+  });
+
   test('T-38 el contrato copia y protege sus colecciones', () {
     final positions = [IsoCoordinateParser.parse('0010182')];
     final ids = ['A'];
