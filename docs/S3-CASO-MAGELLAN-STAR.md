@@ -1,6 +1,6 @@
 # Caso real MAGELLAN STAR, viaje 26039S: la carga completa como prueba de aceptación del Sprint 3
 
-Yov · 6-oct-2026 · Material entregado por Carlos el 5 y el 6-oct. Los archivos originales traen números de contenedor, líneas y agencias reales: **no entran al repositorio**. Este documento usa solo números de orden del listado, posiciones y conteos. Las líneas se nombran A, B, C y D.
+Yov · 6-oct-2026, con las respuestas de Carlos de la noche del 6-oct · Material entregado por Carlos el 5 y el 6-oct. Los archivos originales traen números de contenedor, líneas y agencias reales: **no entran al repositorio**. Este documento usa solo números de orden del listado, posiciones y conteos. Las líneas se nombran A, B, C y D.
 
 ## 1. Las cuatro fuentes
 
@@ -40,7 +40,7 @@ Esto es lo que la app reemplaza:
 - **Lleno cargado.** Se encierra en un círculo su número de orden, en el listado y sobre su celda del plano.
 - **Vacío cargado.** Se escribe su número de orden en la celda reservada donde quedó. Cada grupo se marca con un color de resaltador y una leyenda, por ejemplo «17×40'HC VACÍOS» y la línea.
 - **Conteos.** Al margen de cada sección se anota cuántos movimientos tiene (cubierta y bodega), y al pie de la bahía el total («30 MOVS»).
-- **Lo que no se usa.** Las secciones sin movimiento se tachan con una X grande. En la bahía 29/30 hay además X pequeñas en celdas sueltas; qué significan queda por confirmar con Carlos.
+- **Lo que no se usa.** Las secciones sin movimiento se tachan con una X grande. Las X pequeñas en celdas sueltas (bahía 29/30) marcan contenedores de paso que no se tocan (Carlos, 6-oct). El plano impreso solo muestra lo que se carga en el puerto (viene filtrado por puerto de carga), así que el tarjador tacha a mano las celdas que ocupa la carga de paso. En la app esas celdas salen ocupadas desde el BAPLIE, marcadas como «a bordo», y el tarjador no tiene que tacharlas.
 - **Correcciones.** Se hacen con corrector líquido y se reescribe encima.
 
 ## 4. Vacíos: una regla que la app puede aplicar sola
@@ -93,7 +93,7 @@ La tabla se transcribió de las fotos. La comprobación por programa confirma tr
 - **En papel:** corrector sobre la celda 014-01-08 y «128» reescrito; en 014-01-02 el número tachado y «145» anotado fuera de la celda.
 - **En la app:** es un cambio de posición pedido desde el muelle y aprobado por la oficina. Queda en la bitácora, y el BAPLIE de salida debe llevar las dos posiciones intercambiadas.
 
-**Corrección en 007-08-08.** La celda tiene corrector y el «64» escrito encima. También hay corrector bajo la cuadrícula de la bahía 07, y la leyenda de vacíos de esa bahía parece corregida de 3 a 5. Qué se escribió primero queda por confirmar con Carlos. En la app equivale a cancelar un registro y hacer otro, con los dos pasos en la bitácora.
+**Corrección en 007-08-08.** Carlos había escrito mal el número de orden del vacío y lo corrigió a 64 con corrector (6-oct). En la app es corregir una asignación: se cancela la primera y se registra la buena, con los dos pasos en la bitácora.
 
 ## 6. Diferencias entre el listado y el plan
 
@@ -160,27 +160,28 @@ El resultado esperado:
 3. Un BAPLIE de salida igual al esperado: 460 posiciones, 55 números completados, el intercambio aplicado y los pesos del listado.
 4. Con sincronización, la oficina ve los 176 movimientos.
 
-## 9. Código IMDG: capítulos 7.2 y 7.4 recibidos
+## 9. Código IMDG: la edición vigente (42-24)
 
-**Qué es la copia.**
-- Es un extracto en español convertido a Word, y su pie de página dice **«CÓDIGO IMDG (Enm. 36-12)»**: la edición de 2012.
-- La edición obligatoria desde el 1-ene-2026 es la Enmienda 42-24.
-- Desde la 37-14, la Lista de Mercancías Peligrosas separa estiba (16a) y segregación (16b) con códigos SG (7.2.8). La 39-18 marcó en la columna 16b, con códigos SGG, el grupo de segregación de cada número ONU.
-- Esas disposiciones dependen del número ONU y no están en este extracto.
-
-**Qué sirve.**
-- La tabla de segregación general 7.2.4: 17 clases. La conversión salió limpia: simétrica, solo con valores 1–4, X y \*.
-- Las tablas de buques portacontenedores 7.4.3.2 (con tapas de escotilla) y 7.4.3.3 (sin tapas).
-- La tabla de grupos de compatibilidad de la clase 1 (7.2.7).
+**Qué se recibió.**
+- El 6-oct llegó primero un extracto de los capítulos 7.2 y 7.4 en Word. Su pie dice «Enm. 36-12»: la edición de 2012. Ya no hace falta.
+- Esa misma noche llegaron las páginas de la **Enmienda 42-24 (edición de 2024)**, obligatoria desde el 1-ene-2026: un PDF de 18 páginas, hecho de imágenes y sin texto. Contiene:
+  - el capítulo 7.2 completo: tabla de segregación 7.2.4, códigos de grupo SGG (7.2.5.2), cuadros de exenciones (7.2.6.3), clase 1 (7.2.7), códigos de segregación SG1–SG78 (7.2.8) y el diagrama de decisión del anexo;
+  - el capítulo 7.4: estiba (7.4.2) y las tablas de buques portacontenedores 7.4.3.2 (con bodegas cerradas por tapas) y 7.4.3.3 (sin tapas).
+- RF-027+ se implementa directamente con la 42-24.
 
 **Cómo se usa.**
-- Se pasa de 49 CFR §176.83 a una revisión por clase.
-- El `DGS` da la clase; la tabla 7.2.4 da el nivel de segregación (1 a 4); la tabla 7.4.3.2 da la distancia exigida en espacios de contenedor, en vertical y en horizontal, en cubierta y bajo cubierta.
+- RF-027 pasa de 49 CFR §176.83 a una revisión por clase.
+- El `DGS` del BAPLIE da la clase (y los peligros secundarios, si vienen). La tabla 7.2.4 da el nivel de segregación: 1 a 4, X o \*. La tabla 7.4.3.2 traduce el nivel a distancias en espacios de contenedor (6 m en longitudinal, 2.4 m en transversal), en vertical y en horizontal, en cubierta y bajo cubierta.
 - Si el contenedor es cerrado o abierto se deduce del código ISO.
+- **X** significa «consultar la Lista de Mercancías Peligrosas»: sin la Lista se declara «no evaluado».
+- La clase 9 tiene X en toda su fila y su columna. Por eso el caso real, que solo trae clase 9, sale «no evaluado» y no «sin requisito».
 
 **Qué falta.**
-- Para los niveles 3 y 4 se necesitan los mamparos (qué bahías forman cada bodega) en el perfil del buque.
-- Las disposiciones por número ONU (códigos SG, grupos de segregación, exenciones de 7.2.6) quedan como «no evaluado».
-- Antes de afirmar que la app cumple el IMDG vigente, hay que comparar estas tablas con la 42-24.
+- Los niveles 3 y 4 piden mamparos (qué bahías forman cada bodega) y, para el 4, una distancia de 24 m. Los dos tienen que estar en el perfil del buque.
+- Los códigos SG y SGG se asignan por número ONU en la columna 16b de la Lista. Las definiciones están en las páginas recibidas; la asignación por número ONU no. Quedan como «no evaluado».
 
-**Licencia.** El documento es una publicación de la OMI y el repositorio es público: se guarda en `C:\Proyectos\baystream-privado\` y nunca se versiona. El código lleva solo los valores de las tablas, con la referencia al capítulo.
+**Transcripción.** Las páginas son imágenes. Yov transcribe las tablas 7.2.4 y 7.4.3.2 antes de pasarlas a los programadores, y la transcripción se verifica dos veces:
+- la tabla 7.2.4 debe salir simétrica;
+- un programador vuelve a leer la transcripción contra la página, como doble prueba.
+
+**Licencia.** Las páginas son de la OMI y dicen «Contenido reservado exclusivamente para fines no comerciales», y el repositorio es público. El PDF se guarda en `C:\Proyectos\baystream-privado\` y nunca se versiona. El código lleva solo los valores de las tablas, con la referencia al capítulo.

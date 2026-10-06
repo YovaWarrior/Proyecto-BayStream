@@ -19,14 +19,14 @@ módulo de muelle y la segregación con el Código IMDG, al que COMAR tiene acce
 | 1.2 | «≥ 60 fps» | (b) **p90** del tiempo de cuadro ≤ 16.67 ms | Recomendación de T‑63: un promedio esconde los tirones que el usuario ve. |
 | 1.3 | «MB» | **MB del SI** (10⁶ bytes) | Significado normalizado. No cambia el dictamen. |
 | 1.4 | Métrica de RAM | **A:** `WorkingSet64` en Windows y RSS en Android | Es el único par que mide lo mismo en las dos plataformas. |
-| 1.4 | Ventana de Windows | (a) **maximizada en el monitor del planificador** | Así trabaja el planificador. Resolución: **confirma Carlos**. |
+| 1.4 | Ventana de Windows | (a) **maximizada en una laptop de 1920×1080**, con la escala que Windows recomienda en esa pantalla, registrada | Así trabaja el planificador: en la pantalla de su laptop, de 14 a 17", a 1920×1080 (Carlos, 6-oct). |
 | 1.4 | Archivo | (a) **sintético de 5 000**, declarado, más los archivos reales | El ERS pide hasta 5 000 y el corpus llega a 979. El sintético es carga de prueba, no un viaje. También se informan los archivos reales del MAGELLAN STAR, anonimizados. |
 | 2.1 | Primera visualización | (i) **sin perfil** | Lectura literal; es la primera experiencia. Con perfil se informa aparte, sin dictamen. |
 | 2.2 | «El plano de estiba» | (a) **la rejilla del Bay Plan** | Lectura literal. Que «Confirmar y ver el plano» abra Lista se corrige en el Sprint 3 como defecto de interfaz, no para ganar un paso. |
 | 2.4 | Denominador de Material 3 | (a) **controles interactivos** | Material 3 define componentes; la rejilla de bahías no tiene equivalente y se declara excluida por eso. |
 | 2.5 | Participantes | **cinco**, de operaciones de COMAR, durante la prueba piloto, con el cuestionario SUS que cita el ERS | NN/g recomienda cinco; el jefe de Carlos permite la prueba piloto. Sin participantes, queda como limitación. |
 | 3.1 | Denominador del 95 % | (b) **`lib/` más el nativo escrito a mano** | «Reescribir código» incluye el nativo; es la lectura más exigente. |
-| 3.2 | Qué representa 27" | **2560×1440 al 100 %** | Es la resolución nativa más común de un panel de 27". Se prueba además el monitor del planificador. |
+| 3.2 | Qué representa 27" | **2560×1440 al 100 %** | Es la resolución nativa más común de un panel de 27". Se prueba además 1920×1080, la pantalla real de los planificadores. |
 | 3.3 | «Funcional» | (a) **ningún texto ni control cortado o tapado** | Un control cortado no es funcional en el muelle. **Cambia el dictamen:** la parte responsiva pasa a *no cumple* a 360 px hasta que se corrija. |
 | 4.1 | Operaciones básicas | **la lista de T‑63** (módulos 1 a 4) | Las operaciones de sincronización no son básicas: transmiten por diseño y se miden con 4.3. |
 | 4.2 | Descarga del motor y del SDK | (a) **no es transmisión de datos** | El ERS habla de archivos e información comercial; bajar código público no los lleva. |
@@ -62,11 +62,13 @@ se mida se declara.
 
 - 6.1 (b), la disponibilidad longitudinal: hacen falta semanas de uso.
 - La capacidad con un archivo **real** de 10 000 contenedores: solo hay sintéticos.
-- Windows 10, si no hay una máquina virtual con licencia: no se sustituye por Windows 11.
+- Windows 10, si no se consigue una máquina para la prueba corta. Sigue en uso en COMAR, aunque la mayoría ya tiene Windows 11 (Carlos, 6-oct). Se mide en Windows 11, y Windows 10 no se da por cumplido con esa medición.
 - Las disposiciones especiales del IMDG por número ONU, hasta tener la Lista de Mercancías
   Peligrosas en datos.
 
-## Confirma Carlos
+## Confirmado por Carlos (6-oct)
 
-1. La resolución del monitor en que trabaja el planificador (1.4 y 3.2).
-2. Si hay una máquina con Windows 10 o una licencia para una virtual (3).
+1. **Pantalla:** los planificadores usan la de su laptop, de 14 a 17", a 1920×1080. Ajusta 1.4 y 3.2.
+2. **Windows:** Windows 10 sigue en uso, pero la mayoría ya tiene Windows 11.
+
+**Pendiente:** una máquina de COMAR con Windows 10, unos 15 minutos, para una prueba corta: instalar, abrir A01 y recorrer el Bay Plan.

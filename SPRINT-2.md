@@ -3492,3 +3492,59 @@ Queda para que Carlos lo confirme. Es justo el tipo de cruce que hoy se hace a o
 **Sprint 3.** La propuesta suma dos tareas y llega a ≈ 199.5 h:
 - anonimizar las cuatro fuentes y armar la salida esperada (≈ 2.5 h);
 - leer clase y números ONU del texto libre del listado (≈ 0.5 h).
+
+### 10.49 · T-49 terminada: el Sprint 2 cierra 26 de 26 tareas y 35.0 de 35 h · respuestas de Carlos · el IMDG vigente (42-24) · la prueba de campo entra a la entrega del 17-oct (6-oct)
+
+**Evidencia de T-49.** Carlos mandó capturas del Honor con el modo avión activo (ícono en la barra de estado, 4:26–4:27):
+- La app que instaló desde Play (10.46) abre sin red.
+- Carga un archivo y dibuja el plano. En lugar de A01 cargó el plan de carga real del MAGELLAN STAR («PRE STOWAGE … 2.2»): 405 contenedores y 24 bahías.
+
+**Cómo se lee esa evidencia.**
+- 10.45 pedía esta comprobación porque Play agregó una verificación de licencia que nuestro paquete no traía. La comprobación queda hecha: la verificación no impide arrancar ni trabajar sin red.
+- El archivo es otro, y se declara. A01 ya se había medido en T-44 sobre el APK de lanzamiento.
+- La cifra de control de 10.37 se toma como control funcional: la app arranca sin red y abre un archivo de 460 posiciones. No se tomó una cifra numérica sobre el APK que entrega Play. La diferencia de firma (Google firma con su propia clave) queda declarada, como en 10.37.
+
+**T-49 pasa a Terminado.** El Sprint 2 cierra **26 de 26 tareas y 35.0 de 35 h**.
+- Tablero: `docs/BayStream_Tablero_Kanban_Sprint2.html`, al 6-oct.
+
+**Las mismas capturas confirman en Android tres de los cuatro defectos de 10.46 y 10.47.**
+- Son 405 posiciones y no 460: faltan las 55 celdas reservadas.
+- El peso total es 0 kg, porque esa variante del plan trae solo `VGM`.
+- Las cifras de peso por fila de la bahía 14 salen en 0.0.
+
+**Tres de los cuatro defectos estaban al alcance del corpus.**
+- `CORPUS_A05` trae los 736 pesos solo como `VGM`, y eso basta para los dos primeros.
+- `CORPUS_A02` es un plano de llegada (`LOC+5` HNPCR, `LOC+61` GTSTC), igual al del MAGELLAN STAR.
+- Ninguna verificación del sprint los detectó: la aceptación revisaba las reglas de estiba, no los datos que el planificador lee en pantalla.
+- El cuarto, las celdas reservadas, sí era nuevo: ningún archivo del corpus trae un `EQD` sin número.
+- Pasa a la retrospectiva.
+
+**Respuestas de Carlos.**
+- **X pequeñas en la bahía 29/30:** son contenedores de paso que no se tocan. El plano impreso viene filtrado por puerto de carga y no los muestra. En la app salen ocupados desde el BAPLIE.
+- **Corrector en 007-08-08:** Carlos escribió mal el número de orden del vacío y lo corrigió a 64. En la app es corregir una asignación, con la bitácora.
+- **Pantallas:** los planificadores usan su laptop, de 14 a 17", a 1920×1080. Ajusta 1.4 y 3.2 de `docs/T63-DECISIONES-RNF.md`.
+- **Windows:** Windows 10 sigue en uso, pero la mayoría tiene Windows 11. Se mide en Windows 11; para Windows 10 se pide una prueba corta en una máquina de COMAR, o queda como limitación.
+- **Prueba de campo en la entrega del 17-oct:** sí.
+
+**Entrega del 17-oct, con corte al 6-oct.**
+- **Documento** (SHA-256 `738a8991…`, 42 páginas):
+  - 26 de 26 tareas y TC-04 terminado;
+  - nuevo apartado III.G, «Prueba de campo con una operación real»: Tabla 89 con los cuatro defectos, el hallazgo del corpus y la escala de 176 movimientos;
+  - la doble prueba pasa a la Tabla 90;
+  - una viñeta en «lo que no funcionó» y otra en «lo que cambia»;
+  - un párrafo en las conclusiones;
+  - la primera limitación ahora es la de la prueba de campo.
+- **Sin datos reales:** el buque no se nombra y no hay números de contenedor.
+- **Las 82 confirmaciones** siguen contadas al 3-oct, y el texto ahora lo dice con la fecha explícita.
+- **Presentación** (SHA-256 `13d9f64b…`, 14 diapositivas): cifras 26/26, 35.0 h y 57/57; nueva diapositiva 11, «Prueba de campo con una operación real»; retrospectiva, H3 y cierre actualizados.
+- `verificar_formato.py`: 0 fallas y 0 avisos.
+
+**IMDG 42-24.**
+- Carlos dejó en `docs/` las páginas de la edición de 2024: 18 páginas en imagen, con el capítulo 7.2 completo (7.2.4, SGG, 7.2.6, clase 1, SG1–SG78 y anexo) y el 7.4 (tablas 7.4.3.2 y 7.4.3.3).
+- Con eso RF-027+ se implementa directo de la vigente, y el extracto 36-12 ya no hace falta.
+- La clase 9 tiene X en toda su fila: el caso real dará «no evaluado».
+- Yov transcribe las tablas antes de pasarlas a los programadores.
+- El PDF no se versiona y pasa a `baystream-privado`, igual que el extracto anterior.
+- Detalle: §9 de `docs/S3-CASO-MAGELLAN-STAR.md`.
+
+**Siguiente.** Con T-49 cerrada se abre el Sprint 3 en la rama `sprint-3` (opción A): `SPRINT-3.md` y las primeras tareas.
