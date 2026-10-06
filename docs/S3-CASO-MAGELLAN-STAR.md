@@ -142,23 +142,38 @@ La tabla se transcribió de las fotos. La comprobación por programa confirma tr
   - Las 284 posiciones que siguen a bordo, sin cambios.
 - **RF-027+, segregación.** El caso real solo tiene clase 9 (una carga y una a bordo), así que no ejercita la tabla de segregación. Las pruebas de IMDG necesitan casos sintéticos.
 
-## 8. Prueba de aceptación propuesta
+## 8. Prueba de aceptación
 
-Para usar el caso como prueba, primero hay que anonimizar las cuatro fuentes, con el mismo procedimiento del corpus A01–A06:
-- números de contenedor ficticios con dígito de control válido, iguales en las cuatro fuentes;
-- líneas y agencias reemplazadas por A–D.
+**Las fuentes ya están anonimizadas (T-71, 6-oct)**, en la carpeta del corpus, fuera del repositorio:
 
-Con el plan y el listado anonimizados, se reproducen los 176 eventos:
-- 120 confirmaciones de llenos;
-- 56 vacíos con la asignación de la sección 4;
-- el intercambio de la sección 5.
+| Archivo | Qué es |
+|---|---|
+| `CORPUS_A07.edi` | Plano de llegada (398 contenedores) |
+| `CORPUS_A08.edi` · `CORPUS_A08v_VGM.edi` | Plan de carga, con peso `WT` o `VGM` (460 posiciones, 55 reservas) |
+| `LISTADO_A08.xlsx` | Listado de la agencia, sin logotipos ni metadatos del autor |
+| `CASO_A08_EVENTOS.json` | 177 eventos: 120 llenos confirmados, 56 vacíos asignados y el intercambio de la sección 5 |
+| `CASO_A08_ESTADO_FINAL.csv` | Las 460 posiciones al terminar, con contenedor, tipo, puertos, línea y peso |
 
-El resultado esperado:
+**Cómo se anonimizó.**
+- Números de contenedor ficticios con dígito de control ISO 6346 válido, los mismos en los cuatro archivos. Los 284 que siguen a bordo coinciden entre la llegada y el plan de carga.
+- Líneas LNA … LNG. La línea B conserva su rareza real: LNB en el listado y LINB en el plan.
+- Agencias AGENCIA 1 … 4.
+- Buque BUQUE GOLF, viaje VIAJE007A, emisores y referencias ficticios, fechas corridas a 2025.
+- Reservas y sellos reemplazados por valores ficticios.
+- Puertos, posiciones, tipos, pesos y peligrosas sin cambios.
 
+Un programa comparó cada archivo anonimizado con su original, posición por posición: posición, tipo, puertos, peso, estado, peligrosas y temperatura son idénticos, y ningún número real quedó en los archivos. La tabla de correspondencia no se guardó en ninguna parte.
+
+**Los eventos no están en el orden real.** HORA no viene en el listado: los eventos siguen el número de orden. La asignación de cada vacío y el intercambio sí son los del plano final.
+
+**El resultado esperado.**
 1. Los conteos por bahía y por sección de la tabla de la sección 2.
 2. Ninguna violación de grupo.
-3. Un BAPLIE de salida igual al esperado: 460 posiciones, 55 números completados, el intercambio aplicado y los pesos del listado.
-4. Con sincronización, la oficina ve los 176 movimientos.
+3. El estado final de `CASO_A08_ESTADO_FINAL.csv` en las 460 posiciones (T-76).
+4. Un BAPLIE de salida que, releído, coincide con ese estado, incluidos los pesos del listado (T-82).
+5. Con sincronización, la oficina ve los 176 movimientos (T-79).
+
+La corrección de 007-08-08 no se reproduce, porque no se sabe qué número se escribió primero; se prueba con un caso sintético.
 
 ## 9. Código IMDG: la edición vigente (42-24)
 

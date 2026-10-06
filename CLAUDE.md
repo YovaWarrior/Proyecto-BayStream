@@ -90,49 +90,31 @@ verificado por conteo directo de segmentos. El fixture de `test/` tiene 7
 contenedores, todos en bodega y en niveles pares: **no sirve para validar nada
 que dependa de cubierta, de paridad de niveles o de escala.**
 
-## Estado al cerrar el Sprint 1
+Desde el 6 de octubre la carpeta trae también **el caso de una escala real**,
+anonimizado por Yov: `CORPUS_A07.edi` (plano de llegada, 398 contenedores),
+`CORPUS_A08.edi` y `CORPUS_A08v_VGM.edi` (plan de carga, 460 posiciones con 55
+celdas reservadas), `LISTADO_A08.xlsx` (el listado de la agencia) y la operación
+completa en `CASO_A08_EVENTOS.json` y `CASO_A08_ESTADO_FINAL.csv`. Qué es cada uno
+y cómo se usa: `SPRINT-3.md`, 2.4, y `docs/S3-CASO-MAGELLAN-STAR.md`. **Nada de esa
+carpeta se copia al repositorio**, que es público.
 
-*(Actualizado el 4 de septiembre — Timonel avisó que esta sección se había
-quedado atrás y mandaba a buscar dos bugs que ya no existen. Antes de este
-párrafo, decía «tres defectos abiertos» con el indicador lleno/vacío y los
-refrigerados incluidos; los dos ya están cerrados.)*
+## Estado al abrir el Sprint 3 (6 de octubre)
 
-Las cinco funcionalidades del sprint están entregadas y verificadas. Compila en
-Windows, Android y Web, y las 202 pruebas pasan. Desde T‑43 (27 de
-septiembre) `flutter analyze` reporta **cero incidencias**, sin ningún
-`// ignore:`; antes eran 49. Esa es la línea base: **no introduzcas ninguna.**
+El Sprint 2 cerró con **26 de 26 tareas**: perfil de buque persistente, almacén
+local propio, validación de estiba con tres estados, calidad, seguridad y
+despliegue. **282 pruebas** en verde y `flutter analyze` en **cero**, sin ningún
+`// ignore:`: esa es la línea base, no introduzcas ninguna incidencia. La Web está
+publicada y Android está en la prueba interna de Google Play.
 
-Detalle completo de todo lo cerrado —incluido lo de esta sección— en
-`docs/HALLAZGOS-PLANO-REAL.md`; esto es solo el resumen para orientarse rápido.
+La primera prueba de campo con una escala real encontró **cuatro defectos** que
+abren el Sprint 3 (T-66 … T-69): pesos que solo vienen como VGM, peso por pila que
+calla cuando falta un peso, la escala mal propuesta en planos de llegada y las
+celdas reservadas que el lector descarta. Tres se podían ver con el corpus y nadie
+los buscó, porque la aceptación revisaba las reglas y no lo que el planificador lee
+en pantalla. **Mira la pantalla.**
 
-1. **El indicador lleno/vacío se leía mal — ✓ cerrado (`09599c8`).** Se leía
-   por valor desde el índice 4 en vez de por posición fija en el 6. Llegó a
-   perder 269 de 315 contenedores llenos en `CORPUS_A03`. Corregido y
-   verificado contra los seis archivos primarios.
-2. **Los refrigerados no se detectaban — ✓ cerrado (`c101fb5`/`206545c`).**
-   `TMP` se descartaba en silencio cuando llegaba antes que su `EQD` —pasaba
-   en el 100 % de los casos del corpus—, y el tipo ISO con `R` nunca marcaba
-   `isReefer`. Corregido y verificado: 327 refrigerados, 238 con temperatura,
-   exacto contra el corpus.
-3. **Detención en Android — ✓ cerrado (T‑50, 19 de septiembre), sin cambio
-   de código.** Verificado en el **POCO X3 NFC real** (Android 12, MIUI 14)
-   con `CORPUS_A01` completo, bahía 038 y cambios rápidos de bahía, `logcat`
-   en vivo: **sin ANR** en `713da5a` debug —el commit y el modo exactos de la
-   auditoría—, en `713da5a` release ni en `a3dbc99` release. El ANR se vio
-   una sola vez: emulador Pixel 8 Pro API 36.1, APK debug, por Codex, que
-   dejó anotado que en el POCO solo confirmó el arranque porque MIUI bloquea
-   la inyección de eventos; nadie había abierto el plano en un dispositivo
-   real hasta el 19 de septiembre. **La «confirmación» del 4 de septiembre
-   no existió**: fue una frase de Timonel —«el de Android sigue vivo»— en
-   una lista de qué seguía abierto, sin reproducción detrás; se leyó como
-   evidencia. La matriz completa está en `docs/HALLAZGOS-PLANO-REAL.md`,
-   sección 4 y corrección 7 del registro.
-
-Ninguno de los tres se corrigió antes de la revisión del 29 de agosto, por
-decisión deliberada: la doble prueba se ejecutó sobre el commit `713da5a` y
-tocarlos habría invalidado esa evidencia. Los tres se tomaron después: los
-dos primeros en las tareas de cierre de septiembre y el de Android en T‑50
-del Sprint 2, donde resultó no ser un defecto del producto sino del emulador.
+Los defectos de fondo del Sprint 1 (lleno/vacío, refrigerados, el ANR que era del
+emulador) están cerrados; su historia está en `docs/HALLAZGOS-PLANO-REAL.md`.
 
 ## Sobre umbrales y datos que el archivo no trae
 

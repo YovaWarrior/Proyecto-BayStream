@@ -22,7 +22,7 @@
   contrástalas con el código y los datos reales. Si existe una contradicción,
   detente, presenta la evidencia y propone una corrección.
 - Para tareas relacionadas con alcance, sprint, seguridad o mediciones H5, lee
-  el `SPRINT-N.md` vigente (hoy `SPRINT-2.md`) antes de editar. Las correcciones posteriores
+  el `SPRINT-N.md` vigente (hoy `SPRINT-3.md`, en la rama `sprint-3`) antes de editar. Las correcciones posteriores
   de ese documento prevalecen sobre sus notas históricas.
 - Lee la versión actual de cada archivo objetivo antes de modificarlo. El árbol
   puede contener trabajo concurrente de Carlos o Yov; no restaures ni
@@ -31,7 +31,8 @@
 ## Prohibición de Git y publicaciones
 
 - Codex **no ejecuta** `git add`, `git commit`, `git push`, `git tag`,
-  `git checkout`, `git restore` ni operaciones equivalentes.
+  `git checkout`, `git switch`, `git restore` ni operaciones equivalentes.
+  Desde el 7-oct se trabaja en la rama `sprint-3`: no cambies de rama.
 - Codex **nunca ejecuta `git status`** en este repositorio; históricamente puede
   dejar un `index.lock` que bloquea la terminal de Carlos.
 - Solo cuando sea imprescindible para una inspección se permiten consultas de
@@ -49,7 +50,9 @@
   `firebase_options.dart`, salvo revocación explícita de Carlos para una tarea
   concreta.
 - No agregues autenticación, roles, comparación entre viajes o sincronización
-  de Windows fuera de una solicitud expresa.
+  de Windows fuera de una solicitud expresa. En el Sprint 3, las tareas T-79,
+  T-80, T-81 y T-96 de `SPRINT-3.md` son esa solicitud; fuera de ellas, la
+  regla sigue.
 - No refactorices código funcional "de paso" y no agregues dependencias de
   producción sin autorización.
 - La skill `.claude/skills/formato-entregables/` es trabajo activo de Carlos y
