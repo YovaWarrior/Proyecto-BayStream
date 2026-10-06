@@ -3446,11 +3446,49 @@ De los 176 a cargar:
 La importación del listado necesita una tabla de equivalencias que el usuario pueda corregir.
 
 **Una diferencia que la app podría señalar.**
-- Lo que dice el listado: en la fila 127, CAAU5241381 es «DANGEROUS CARGO IMO 9 UN 3082, 3077».
+- Lo que dice el listado: la fila 127 es «DANGEROUS CARGO IMO 9 UN 3082, 3077».
 - Lo que trae el plan: un solo `DGS` (UN 3077) para ese contenedor.
 
 Queda para que Carlos lo confirme. Es justo el tipo de cruce que hoy se hace a ojo.
 
-**Pesos.** El VGM del listado coincide con el `MEA` del plan; por ejemplo, CSNU8885835 tiene 20 800 kg en ambos. Los vacíos reservados llevan una tara nominal (2.1–2.2 t y 3.7–3.8 t), mientras el listado trae la tara real de cada contenedor.
+**Pesos.** El VGM del listado coincide con el `MEA` del plan; por ejemplo, la fila 1 tiene 20 800 kg en ambos. Los vacíos reservados llevan una tara nominal (2.1–2.2 t y 3.7–3.8 t), mientras el listado trae la tara real de cada contenedor.
 
 **Datos reales.** Igual que en 10.46: los tres archivos (llegada, plan de carga y listado) no entran al repositorio sin anonimizar.
+
+### 10.48 · El listado en Excel y el plano final cierran el caso MAGELLAN STAR · el IMDG recibido es la edición 36-12 · corrección a 10.47 (6-oct)
+
+**Qué llegó.**
+- El listado de exportación en Excel: 176 filas en cuatro agencias.
+- Nueve fotos del plano de carga impreso al terminar la operación (4 y 5-oct), con las anotaciones del tarjador.
+- Un extracto de los capítulos 7.2 y 7.4 del Código IMDG, que Carlos dejó en `docs/` sin versionar.
+
+**Todo cuadra.**
+- En las nueve bahías, los movimientos anotados a mano coinciden con las cargas del plan, en cubierta y en bodega: 176 = 120 llenos + 56 vacíos.
+- Los 120 llenos del listado están en el plan uno a uno.
+- Los 56 vacíos forman los mismos seis grupos (tipo, puerto y línea) que las 56 celdas reservadas. Cada vacío quedó en una celda de su grupo, sin excepción.
+
+**Dos eventos reales para el módulo de muelle.**
+- **Un intercambio.** Dos llenos de la bahía 14, del mismo tipo, puerto, línea y peso, cambiaron de celda entre sí; en papel se corrigió con corrector.
+- **Una corrección.** En la celda 007-08-08 hay corrector y un número reescrito. Queda por confirmar qué se escribió primero.
+
+**Corrección a 10.47.**
+- 10.47 decía que el VGM del listado coincide con el `MEA` del plan. Eso se comprobó con un solo contenedor. Con el listado completo, el plan trae el VGM **truncado a la centena de kilos** en los 120 llenos: 47 difieren hasta en 98 kg, y en total el plan pesa 2.4 t menos.
+- Para el BAPLIE de salida manda el listado.
+- 10.47 también publicó dos números de contenedor reales en el commit 92c321d. Este repositorio es público. Esta versión los quita; en la historia de ese commit siguen, y reescribirla es decisión de Carlos.
+
+**IMDG.**
+- El pie de página del extracto dice «Enm. 36-12»: es la edición de 2012. La obligatoria desde el 1-ene-2026 es la 42-24.
+- Sus tablas por clase (7.2.4, 7.4.3.2 y 7.4.3.3) sirven para pasar RF-027 de 49 CFR §176.83 al IMDG. Antes de afirmar cumplimiento con la edición vigente hay que compararlas con la 42-24.
+- Lo que depende del número ONU no viene en el extracto (los códigos SG desde la 37-14 y los códigos SGG de grupo de segregación desde la 39-18). Queda como «no evaluado».
+- El documento es una publicación de la OMI, y este repositorio es público: no se versiona y pasa a `C:\Proyectos\baystream-privado\`.
+
+**Detalle.** `docs/S3-CASO-MAGELLAN-STAR.md` reúne lo siguiente, sin números de contenedor ni nombres de líneas:
+- los conteos por bahía;
+- la asignación observada de los 56 vacíos;
+- las equivalencias de códigos;
+- las particularidades del Excel;
+- la prueba de aceptación propuesta para RF-037, RF-038 y RF-039.
+
+**Sprint 3.** La propuesta suma dos tareas y llega a ≈ 199.5 h:
+- anonimizar las cuatro fuentes y armar la salida esperada (≈ 2.5 h);
+- leer clase y números ONU del texto libre del listado (≈ 0.5 h).
