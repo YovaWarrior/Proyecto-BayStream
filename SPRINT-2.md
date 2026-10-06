@@ -3361,3 +3361,96 @@ tablero.
 
 **Estado.** Lo comprometido sigue en **33.0 de 35 h**, con 25 tareas terminadas. De T‑49 solo falta
 comprobar la instalación desde Play.
+
+### 10.46 · Prueba de campo con el plano de llegada real del MAGELLAN STAR: tres defectos para el Sprint 3 · H3 corregida en la entrega del 17-oct · evidencia de T-49 (5-oct)
+
+**Evidencia de T‑49.** Carlos mandó capturas del Honor:
+- En «Administrar apps» de Play aparece `gt.cmartinez.baystream (unreviewed)`, de 25 MB.
+- La app abre.
+
+Con eso se cumple el criterio de 10.28: instalada desde Play, no por cable. Falta lo que 10.45 agregó, arrancarla sin red y cargar A01. Se pidió una captura más, y T‑49 sigue En curso hasta recibirla.
+
+La verificación de desarrolladores de Android ya está confirmada: BayStream aparece «Registrada», con fecha 3‑oct. Queda cerrado lo pendiente de 10.45.
+
+**Prueba de campo.** Carlos abrió en la Web publicada, desde su iPhone, el BAPLIE de llegada real del MAGELLAN STAR, viaje 26039S:
+- BAPLIE 2.2 (`SMDG22`) con 398 contenedores;
+- `LOC+5` HNPCR y `LOC+61` GTSTC;
+- 114 contenedores a descargar en Santo Tomás.
+
+Es la primera vez que el producto se usa con el archivo de una operación real, fuera del corpus. De ahí salieron tres defectos, los tres confirmados sobre el archivo y el código:
+
+1. **Los pesos no salen.**
+   - Qué trae el archivo: 333 de los 398 contenedores (84 %) traen el peso solo como `MEA+VGM`; los otros 65 traen `MEA+WT`.
+   - Qué hace el código: el lector guarda el VGM en `vgmWeight`, pero el detalle, la lista, la búsqueda y los totales por bahía y por fila leen solo `grossWeight`.
+   - Resultado: «N/A kg» y bahías con 0.0 t.
+2. **El peso por pila subestima, sin avisar.**
+   - Qué hace el código: `StackWeightValidator` usa `deckWeightByRow` y `holdWeightByRow`, que cuentan 0 por cada contenedor sin `WT`.
+   - Resultado: con un archivo como este, la regla no dispara aunque la pila esté excedida, y tampoco lo declara «no evaluado». Contradice el principio de RF‑027: una regla sin datos no se presenta como conforme.
+   - Alcance: los resultados medidos del sprint no cambian, porque A01 y A03 traen `WT`.
+3. **«De paso» queda invertido en un plano de llegada.**
+   - Qué hace el código: `isInTransit` compara el puerto de carga con el puerto de escala, y la escala se propone desde `LOC+5`.
+   - El problema: en un BAPLIE de llegada, `LOC+5` es el puerto anterior (HNPCR) y la escala real es `LOC+61` (GTSTC).
+   - Resultado con la escala propuesta: los 114 contenedores que se descargan en Santo Tomás salen grises como «de paso», y los 138 que siguen a bordo, cargados en HNPCR, salen como operados.
+   - Por qué: la regla actual solo sirve para planos de salida. En un plano de descarga hay que comparar el puerto de descarga con la escala.
+
+**Mejoras que pidió Carlos en la misma prueba:**
+- modo claro y oscuro en los tres clientes;
+- poder ocultar los iconos de la barra superior mientras se ve el plano;
+- el selector de archivos del iPhone que no deja elegir `.edi` (hallazgo del mismo día).
+
+**Nada de esto se corrige en el Sprint 2.** El producto está congelado (10.40) y la entrega del 17‑oct describe la versión medida. Los tres defectos abren el Sprint 3, antes del módulo de muelle, porque el módulo se apoya en ellos:
+- marcar lo que se descarga necesita saber qué se descarga;
+- la validación preventiva necesita los pesos.
+
+**Datos reales.** El plano de llegada, el plan de carga y el listado de exportación del MAGELLAN STAR traen números de contenedor y operadores reales. No entran al repositorio sin anonimizar, con el mismo procedimiento del corpus A01–A06.
+
+**Corrección en la entrega del 17‑oct (aprobada por Carlos).** El párrafo de H3 decía que el Sprint 2 construyó el instrumento de esa hipótesis. Según el cuarto objetivo específico y los casos de uso CU04 y CU10, ese instrumento es el módulo de muelle, y ningún requerimiento funcional lo había recogido. Se corrigió en:
+- **el documento:** el párrafo y una viñeta nueva en la retrospectiva. Quedan 39 páginas y el verificador da 0/0. Hash `26899cc8…`;
+- **la presentación:** diapositivas 11, 12 y 13. Hash `78453e61…`.
+
+**Sprint 3 (decidido el 5‑oct).**
+- **Cuándo:** se abre sobre una rama de Git en cuanto cierre T‑49, y la versión del Incremento 2 queda intacta para el 17‑oct.
+- **Alcance:** entra todo, en orden de prioridad.
+  - Primero, el módulo de muelle sincronizado: marcar lo que baja, registrar lo que sube (incluidos los vacíos), cancelar movimientos, y oficina y muelle en tiempo real.
+  - Después vienen, en orden:
+    - tapas de escotilla;
+    - plan de carga y cambios de oficina;
+    - BAPLIE de salida;
+    - versiones de BAPLIE;
+    - segregación con el Código IMDG (COMAR tiene acceso);
+    - búsqueda por voz;
+    - el resto del ERS.
+- **Dependencias nuevas:** Carlos autorizó las que hacen falta.
+- **Dónde está el detalle:** en el artefacto «Sprint 3 de BayStream» y, en cuanto se abra el sprint, en `SPRINT-3.md`.
+
+### 10.47 · El plan de carga real del MAGELLAN STAR confirma cómo llegan los vacíos · un cuarto defecto (5-oct)
+
+**Los archivos.** El capitán del buque le mandó al jefe de Carlos el plan de carga, «PRE STOWAGE BAPLIE», en dos versiones: «2.0» y «2.2». Son el mismo plan:
+- las dos cabeceras dicen `SMDG20`;
+- la única diferencia está en los 460 segmentos `MEA`: el «2.0» usa `WT` y el «2.2» usa `VGM`.
+
+**Lo que trae.** 460 posiciones con `LOC+5` GTSTC:
+- **176 a cargar en Santo Tomás.** Son las 176 filas del listado de exportación impreso.
+- **284 que siguen a bordo.** Cuadra con el plano de llegada: 398 − 114 descargados = 284.
+
+De los 176 a cargar:
+- **120 llenos**, cada uno con su número.
+- **56 vacíos.** 55 de ellos vienen **sin número de contenedor** (`EQD+CN++22G1+++4`). Son celdas reservadas: traen tipo, puerto de descarga, peso nominal y operador. Es lo que en el plano impreso aparece como «KWL/STC E 2.1 22G1». El tarjador las llena con un contenedor del listado.
+
+**Cuarto defecto.** El lector descarta en silencio el `EQD` sin número (`containerId == null → return null`). Al abrir este plan, las 55 celdas reservadas no aparecen. Falta confirmar si sus `LOC` y `MEA` contaminan al contenedor vecino. RF‑038 depende de que el lector las conserve como reservas.
+
+**El listado y el BAPLIE no usan los mismos códigos.**
+- **Tipos:** el listado dice 40HC, 20ST, 40RF y 40ST; el BAPLIE, 45G1, 22G1, 45R1 y 42G1.
+- **Puertos:** el mismo contenedor figura con descarga COMNG en el listado y COSPC en el plan.
+
+La importación del listado necesita una tabla de equivalencias que el usuario pueda corregir.
+
+**Una diferencia que la app podría señalar.**
+- Lo que dice el listado: en la fila 127, CAAU5241381 es «DANGEROUS CARGO IMO 9 UN 3082, 3077».
+- Lo que trae el plan: un solo `DGS` (UN 3077) para ese contenedor.
+
+Queda para que Carlos lo confirme. Es justo el tipo de cruce que hoy se hace a ojo.
+
+**Pesos.** El VGM del listado coincide con el `MEA` del plan; por ejemplo, CSNU8885835 tiene 20 800 kg en ambos. Los vacíos reservados llevan una tara nominal (2.1–2.2 t y 3.7–3.8 t), mientras el listado trae la tara real de cada contenedor.
+
+**Datos reales.** Igual que en 10.46: los tres archivos (llegada, plan de carga y listado) no entran al repositorio sin anonimizar.
