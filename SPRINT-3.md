@@ -743,3 +743,17 @@ Después se sigue en el orden de su tabla, alternando, y cada programador acepta
 3. Codex hace T-70c en cuanto Carlos haga los pasos de consola.
 
 T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
+
+### 10.6 · T-69 entregada, en revisión (7-oct)
+
+**T-69 (`8a87219`), de Codex, pasa a En revisión.**
+
+- **Cifras de la ficha.** A08 y A08v_VGM dan **405 contenedores y 55 reservas**, y de A01 a A07 hay cero reservas. Comprobado en Windows, en el Honor a 360 dp y en Chrome.
+- **Resumen de la escala.** Con GTSTC dice «Se cargan 121 contenedores y 55 reservas (176 movimientos)». Los conteos de T-68 no cambian.
+- **Lo que no hacen las reservas.** No suman peso ni ocupación.
+- **Revisión de Yov.**
+  - `ReservedSlot` es una entidad de dominio aparte, sin número inventado.
+  - Su identidad es `R:` más la posición, como fijó T-79a.
+  - Guarda tipo, estado, puertos, línea, peso nominal, reefer y peligrosas.
+- **Pruebas.** **360 pruebas** y 31 de 31 contra el corpus, con `analyze` limpio y las tres compilaciones correctas. **El piso pasa a 360.**
+- **Lo que quedó pendiente.** No se pudo volver a abrir el detalle de una reserva después de recargar Chrome: la herramienta de control del navegador detuvo la acción porque no pudo confirmar la URL. Las 55 reservas sí se recuperaron. Esa comprobación pasa a la aceptación cruzada de Timonel.
