@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **39 tareas · ≈ 204 h estimadas** (al 7-oct, 10.3) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 205 h estimadas** (al 7-oct, 10.5) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -696,3 +696,50 @@ Si pasa, T-79 construye Windows con Firestore. Si no, la oficina usa la Web inst
 3. T-73 (Codex).
 
 Después se sigue en el orden de su tabla, alternando, y cada programador acepta la tarea anterior antes de tomar el carril. El segundo carril de `lib/` (sección 6) no hace falta por ahora: mientras uno programa, el otro adelanta diseño o pruebas fuera del carril. Se vuelve a ver en el punto de control del 14-oct.
+
+### 10.5 · T-70b no pasa: Windows no renovó la sesión contra el emulador · Carlos pide la prueba con el proyecto real (T-70c) (7-oct)
+
+**T-70b (`71eaa14`), de Timonel, pasa a Terminado con resultado «no pasa»: 3 de 4 criterios.**
+
+| Criterio | Resultado |
+|---|---|
+| Sesión larga | **Pasa:** 60.5 min, 120 de 120 escrituras de Chrome recibidas en Windows, mediana de 209 ms |
+| Cierre con pendientes | **Pasa,** por la persistencia del SDK: al reabrir, la escritura llegó en 2 s |
+| Memoria | **Pasa:** 90.3, 97.1 y 101.1 MB al inicio, a los 30 y a los 60 min |
+| Renovación del token | **No pasa:** 50 de 50 fallos con `[firebase_auth/unknown-error] An internal error has occurred.` |
+
+- **Qué pasó con el token.** En la hora no hubo renovación automática. Pasado el vencimiento, una escritura de Windows quedó pendiente y, al reabrir, Windows no reconectó hasta volver a iniciar sesión. Al hacerlo llegó todo: **no se perdió nada**.
+- **Causa probable:** Windows manda la renovación a `securetoken.googleapis.com` y no al emulador. Chrome, con el mismo emulador, renovó 3 de 3. En producción podría funcionar; T-70b no podía probarlo.
+- **Otros mensajes.** El `too_many_pings` apareció una vez, sin pérdidas. No hubo errores de hilo de Auth en la compilación de lanzamiento.
+- **Hallazgo para todos los clientes:** cuando el token no se renueva, el SDK no avisa a la app.
+
+**Falta de proceso.**
+- Timonel ejecutó `git status --porcelain` por descuido, y lo declaró.
+- Yov comprobó que no quedó `.git/index.lock`.
+- La regla de `.claude/settings.json` (`Bash(git status:*)`) no lo detuvo; es probable que entrara por otra herramienta o con otra forma del comando.
+- La prohibición sigue igual: la configuración no es la frontera, la regla sí (`CLAUDE.md`).
+
+**Decisión de Carlos: probar con el proyecto real antes de decidir Windows → nace T-70c.**
+- **Qué es:** 1.0 h, de Codex, después de T-69 y fuera del repositorio.
+- **Pasos previos de Carlos** en la consola de `baystream-app`, que T-79 necesita de todos modos:
+  - activar **Correo electrónico/contraseña** (T-79a, 6.2);
+  - crear **una cuenta de prueba**.
+  - No hace falta crear Firestore para esta prueba.
+- **La contraseña la escribe Carlos** en la app de la espiga. Ningún agente la ve, la escribe ni la guarda.
+- **Las opciones de producción** se pasan con `--dart-define-from-file` y la ruta del archivo privado, como en T-47: sin abrirlo ni imprimir su contenido.
+- **Pasa si:**
+  - **50 de 50 renovaciones forzadas** salen bien contra el servicio real;
+  - una sesión de **75 minutos** cruza el vencimiento con la renovación automática y sin error.
+- **Si pasa:** Windows sincroniza con Firestore en T-79, con la salvaguarda de abajo. Las pruebas largas de Windows en T-79 necesitarán la nube, porque el emulador no sirve para sesiones de más de una hora.
+- **Si no pasa:** la oficina usa la Web instalada, como dice 10.3.
+
+**Nuevo requisito de T-79, en los tres clientes.**
+- Si un movimiento lleva más de **5 minutos** pendiente con red disponible (umbral **PROVISIONAL**), la pantalla dice «sin confirmar desde las HH:MM» y ofrece volver a iniciar sesión.
+- La app no se fía solo de los errores del SDK.
+
+**Siguiente.**
+1. Termina T-70b: Flutter, la app de Windows y el Honor quedan libres. Codex cierra T-69.
+2. Con T-69 en un commit, Timonel acepta T-68 y T-69 y toma **T-72**.
+3. Codex hace T-70c en cuanto Carlos haga los pasos de consola.
+
+T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
