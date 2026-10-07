@@ -661,3 +661,38 @@ Se prueba sobre una copia de la espiga de T-70, con el emulador.
 | Memoria | El consumo al final de la hora no crece sin límite; se informa al inicio, a los 30 y a los 60 min |
 
 Si pasa, T-79 construye Windows con Firestore. Si no, la oficina usa la Web instalada y Carlos decide si se paga el cliente REST.
+
+### 10.4 · T-66 y T-67 terminadas · T-68 en revisión · T-69 pasa a Codex y T-72 a Timonel (7-oct)
+
+**T-66 y T-67 pasan a Terminado.** Codex las aceptó en el Honor a 360 dp antes de tocar código:
+- A07 da 6 940 578 kg y A08v_VGM 6 899 700 kg, con el peso visible en las celdas.
+- Con 90 000 kg, A08 y A08v_VGM dan las mismas 10 alertas.
+- No cambió su código durante la aceptación.
+
+**T-68 (`b2f3190`), de Codex, pasa a En revisión.**
+- Las cuatro filas de la ficha cuadran en Windows, en el Honor a 360 dp y en Chrome: A07 0/114/284, A02 0/303/503, A08 121/0/284 y A01 325/0/652.
+- El último puerto confirmado sobrevive al reinicio en los tres clientes, en una caja de ajustes aparte de los cinco viajes recientes.
+- En el Honor se usó una variante de prueba (`gt.cmartinez.baystream.t68`), sin tocar la app que vino de Play.
+- **320 pruebas** y `analyze` en cero, sin cambios en `pubspec`. **El piso pasa a 320.**
+- **Revisión de Yov.**
+  - `LOC+61` solo se acepta con forma de UN/LOCODE y solo en la cabecera.
+  - La preselección por historial solo elige entre `LOC+5` y `LOC+61`.
+  - «De paso» excluye ahora lo que se descarga en la escala.
+  - Un detalle menor: el calificador `'61'` va escrito a mano en lugar de una constante de `BaplieConstants`. Se ordena cuando otra tarea toque ese archivo; no justifica abrir otra.
+- **Falta la aceptación cruzada de Timonel**, después de T-70b.
+
+**El carril de `lib/` cambia de dueño.**
+- Timonel está en T-70b, fuera del repositorio. Para no detener el carril, **T-69 pasa a Codex**.
+- Timonel, al terminar T-70b, acepta T-68 y T-69 juntas, y toma **T-72**: la bitácora local que él mismo diseñó en T-79a.
+- La aceptación de T-68 sobre un árbol que ya incluye T-69 sigue valiendo: T-69 no cambia los conteos de contenedores.
+
+**Aclaración para T-69: las reservas en los conteos de T-68.**
+- En la escala, una reserva se cuenta por sus propios puertos, pero **aparte de los contenedores**: «Se cargan 121 contenedores y 55 reservas (176 movimientos)».
+- Los 121 de la tabla de T-68 no cambian.
+
+**Ola 2, orden del carril:**
+1. T-69 (Codex).
+2. T-72 (Timonel).
+3. T-73 (Codex).
+
+Después se sigue en el orden de su tabla, alternando, y cada programador acepta la tarea anterior antes de tomar el carril. El segundo carril de `lib/` (sección 6) no hace falta por ahora: mientras uno programa, el otro adelanta diseño o pruebas fuera del carril. Se vuelve a ver en el punto de control del 14-oct.
