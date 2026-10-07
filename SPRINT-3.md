@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **38 tareas · ≈ 204 h estimadas** (al 6-oct, 10.2) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **39 tareas · ≈ 204 h estimadas** (al 7-oct, 10.3) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -120,6 +120,7 @@ Carlos autorizó el 5-oct las que hacen falta para las funciones nuevas:
 - `firebase_auth`, para las cuentas de RF-034 (`cloud_firestore` y `firebase_core` ya están);
 - un paquete de reconocimiento de voz, para RF-041;
 - un lector de Excel, para importar el listado (RF-038), si hace falta.
+- `crypto` como dependencia directa, para la huella de las fuentes publicadas (10.3; ya era transitiva).
 
 Ninguna otra sin preguntar. Cada dependencia nueva se declara en el informe y en el bloque
 de commit, con su versión y por qué esa.
@@ -611,3 +612,52 @@ propuesto, cifras obtenidas contra las de la ficha y lo que quedó fuera.
 - Codex: aceptación cruzada de T-66 y T-67 (con Android), luego T-68.
 - Timonel: T-79a, sin tocar `lib/`, `test/` ni `pubspec.*`.
 - El total sube a ≈ 204.0 h por T-102.
+
+### 10.3 · T-79a cerrada · Carlos decide: la oficina sincroniza también en Windows, Firestore en Querétaro, cuentas desde la consola y `crypto` autorizada (7-oct)
+
+**T-79a (`3488237`), de Timonel, pasa a Terminado.**
+
+Yov revisó el diseño contra el código y lo acepta como base de T-72, T-79, T-80 y T-81. Lo esencial:
+- **La unidad que se sincroniza es la operación** (la escala), y la publica la oficina con sus fuentes.
+- **La bitácora es solo de anexar**, con nueve tipos de movimiento. Corregir reemplaza en una sola escritura.
+- **El estado no se guarda: se deriva** con una función pura del dominio. Los choques entre dispositivos salen como conflictos que la oficina ve.
+- **La cola vive en cajas propias de Hive**, fuera del límite de cinco viajes recientes, y el reenvío es idempotente.
+- **Las reglas propuestas** pasaron 51 de 51 casos en el emulador.
+- **Dos hallazgos del código que el diseño ya resuelve:**
+  - el `id` de cada contenedor es un UUID nuevo en cada lectura, así que la bitácora usa claves naturales (`C:` número, `R:` posición, `T:` tapa);
+  - el límite de cinco viajes podría borrar una bitácora si viviera dentro del viaje.
+- **Prueba central de T-79:** los 177 eventos del caso entre dos dispositivos dejan 178 documentos (la solicitud y la aprobación del intercambio son dos) y las 460 posiciones del estado final en los dos.
+- **Advertencia que se adopta:** las reglas de producción no se publican con `firebase deploy` mientras `firestore.rules` de la raíz sea el de H5. Se publican pegando la propuesta en la consola.
+
+**Decisiones de Carlos (7-oct):**
+
+1. **La oficina sincroniza también en la app de Windows.** No se adopta la recomendación de 10.2.
+   - Firebase dice que en Windows no es para producción, y T-70 vio dos errores nativos. Por eso **Windows usa el mismo adaptador de Firestore que Android y Web**, con tres condiciones:
+     - la cola propia en Hive de T-79a, que protege lo que se escribe aunque el plugin falle;
+     - **una prueba de resistencia antes de construir T-79 (T-70b)**, con criterios fijados de antemano;
+     - un respaldo si no pasa: la oficina usa la Web instalada desde Chrome o Edge como aplicación de Windows, con ventana e ícono propios.
+   - Un cliente REST propio para Windows (cuentas y Firestore por HTTP, consultando cada pocos segundos) queda como alternativa. Cuesta unas 5 h y no se empieza sin otra decisión.
+   - El adaptador sin sincronización de T-79a se conserva para el modo de un solo dispositivo.
+   - **T-93 (instalador de Windows) sube de importancia:** la oficina lo necesita para la prueba piloto.
+2. **Firestore en `northamerica-south1` (Querétaro).** Yov confirmó en la lista de ubicaciones de Firestore que existe. No se cambia después.
+3. **Las cuentas las crea Carlos en la consola** y las autoriza por UID con su rol. La app no tiene registro abierto.
+4. **`crypto` autorizada** como dependencia directa (2.7).
+
+**Horas.**
+- T-79 pasa de 12.0 a ≈ 14.0: 1.0 h que faltaba según T-79a y 1.0 h por Windows con cuentas.
+- T-80 baja a ≈ 5.5 y T-81 a ≈ 2.5, como propone T-79a.
+- **Nace T-70b** (1.5 h, contra las 2.0 que ahorran T-80 y T-81).
+- El total sigue en ≈ 204.0 h.
+
+**T-70b · Resistencia de Firebase en Windows · 1.5 h · Timonel, fuera del repositorio, en paralelo a T-68.**
+
+Se prueba sobre una copia de la espiga de T-70, con el emulador.
+
+| Criterio | Pasa si |
+|---|---|
+| Sesión larga | **60 min seguidos** con el listener abierto en Windows; escrituras del Honor o de Chrome cada 30 s; **0 documentos perdidos** y la app no se cae |
+| Renovación del token | **50 renovaciones forzadas** del token en Windows sin caída ni error que corte la sesión |
+| Cierre con pendientes | Una escritura hecha sin red, con la app cerrada a la fuerza, **llega al reabrir y reconectar**. Vale por la persistencia del SDK o por la cola en Hive del diseño; el informe dice cuál |
+| Memoria | El consumo al final de la hora no crece sin límite; se informa al inicio, a los 30 y a los 60 min |
+
+Si pasa, T-79 construye Windows con Firestore. Si no, la oficina usa la Web instalada y Carlos decide si se paga el cliente REST.
