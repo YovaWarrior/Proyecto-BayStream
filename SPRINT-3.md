@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 207.5 h estimadas** (al 7-oct, 10.9) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 205.4 h estimadas** (al 7-oct, 10.10) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -462,13 +462,38 @@ Los seis archivos de la tabla 2.4. Detalle de la operación en
 - [ ] El OR se lee en la celda a 360 dp. La tarea se acepta en Windows, en el Honor y en Chrome.
 - [ ] Piso de 405 pruebas, `analyze` en cero y los corpus de T-68, T-69, T-72 y T-73 en verde.
 
+#### T-75 · Descarga: marcar en el plano lo que baja, con re-estiba y deshacer · 4.0 h · Timonel (ficha completa, 7-oct)
+
+**Para qué.** Es lo que Carlos pidió como lo más importante: «chibolear» en el plano de llegada cada contenedor conforme baja. Hoy se hace con lapicero sobre el plano impreso. En BayStream, un toque lo marca, queda en la bitácora con quién y cuándo, y se puede deshacer sin borrar nada.
+
+**Qué hacer.**
+1. **Un modo «Descarga»** en el plano de llegada, la fuente `arrival_baplie` de la operación de T-74. Fuera de ese modo, tocar una celda sigue abriendo el detalle, como hoy. Dentro del modo, un toque registra un movimiento `discharge` con su posición (T-79a, 2.4).
+   - **Si el contenedor se descarga en esta escala**, se marca directo.
+   - **Si es de paso**, porque su puerto no es esta escala, aparece un aviso de re-estiba. Si se confirma, el movimiento lleva `restow: true` y un motivo opcional. Cuenta aparte, como re-estiba, no entre los 114.
+   - **Si la celda está vacía o es una reserva**, no pasa nada.
+2. **La marca se ve en la celda.** Descargado, pendiente y de paso se distinguen a 360 dp y en los dos temas, y no solo por el color.
+3. **Deshacer** con un movimiento `annul` (T-72), nunca borrando.
+   - Justo después de marcar, «Deshacer» queda a la vista unos segundos. Más tarde, se hace desde el detalle de la celda.
+   - `annul` exige motivo (T-79a): «Marcado por error» con un toque, o texto libre.
+4. **Pendientes de descarga por bahía**, calculados con el estado derivado de T-72. Se separan en cubierta y bodega, como los de carga de T-74, y las re-estibas van aparte.
+5. **Quién y cuándo**, en el detalle de la celda: la hora del movimiento y su autor, el que T-72 ya registra. Las cuentas llegan en T-79.
+6. **Deuda pequeña, de la incidencia de 10.10.** Los scripts de corpus de T-72 y T-73 crean sus almacenes temporales en el `build/` del repo. Hay que pasarlos al directorio temporal del sistema, como ya hace `tool/t74_corpus_test.dart`.
+
+**Terminada cuando:**
+- [ ] Con A07 confirmada en GTSTC, el modo Descarga muestra **114 pendientes: 66 en cubierta y 48 en bodega**, agrupados como el plano agrupa sus bahías. Por bahía del BAPLIE (cubierta/bodega): 003 3/0, 014 19/16, 021 0/12, 022 20/8, 023 0/12 y 030 24/0.
+- [ ] Marcar los 114 deja cero pendientes. Deshacerlos todos devuelve 114, y la bitácora conserva los 228 movimientos. En pantalla basta con una bahía completa; los 114 los cubre el corpus.
+- [ ] Un contenedor de paso pide confirmar la re-estiba. Confirmado, queda con `restow: true` y cuenta como re-estiba, no entre los 114.
+- [ ] Después de cerrar y reabrir la app, las marcas y los pendientes siguen iguales.
+- [ ] La tarea se acepta en Windows, en el Honor a 360 dp y en Chrome.
+- [ ] Piso de 412 pruebas, `analyze` en cero, los corpus de T-68 a T-74 en verde y el nuevo de T-75.
+
 
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-72** | RF-037 | 3.0 | Estado operativo de cada contenedor y reserva (planificado, movido, cancelado) y bitácora de movimientos: qué, cuándo, quién | Persistente y sin conexión; cada cambio queda en la bitácora con su hora |
 | **T-73** | RF-038 | 4.5 | Importar el listado Excel de la agencia, con tabla de equivalencias editable (tipos, puertos, códigos de línea) y lectura de peligrosas desde CONTENIDO | `LISTADO_A08.xlsx`: 176 filas, 120 llenos que cruzan con A08 y 56 vacíos en 6 grupos; LNB ↔ LINB, COMNG ↔ COSPC · **ficha completa arriba** |
 | **T-74** | RF-038 | 3.0 | Plan de carga: cruzar listado y plan; número de orden en cada celda; pendientes por bahía. **Desde T-73** la operación puede existir solo con la fuente `export_list`, porque el texto del BAPLIE no se conserva después de leerlo: T-74 guarda ese texto como fuente `loading_baplie` (y `arrival_baplie` si aplica) **en la misma operación**, no en una nueva · **ficha completa arriba** | Los 9 conteos por bahía de la sección 2 del caso, en cubierta y bodega; la operación queda con sus fuentes completas |
-| **T-75** | RF-037 | 4.0 | Descarga: tocar el contenedor y queda marcado; aviso de re-estiba si su puerto no es este; deshacer | Los 114 de `CORPUS_A07` se marcan y se deshacen sin perder la bitácora |
+| **T-75** | RF-037 | 4.0 | Descarga: tocar el contenedor y queda marcado; aviso de re-estiba si su puerto no es este; deshacer | Los 114 de `CORPUS_A07` se marcan y se deshacen sin perder la bitácora · **ficha completa arriba** |
 | **T-76** | RF-037 | 5.0 | Carga: confirmar un lleno por número de orden o de contenedor; asignar un vacío solo a una celda libre de su grupo; hora y marchamo; cancelar y corregir | Reproducir `CASO_A08_EVENTOS.json` deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv` |
 | **T-77** | RF-037 | 3.0 | Validación preventiva antes de confirmar: celda, 20/40, peso de la pila, posición del planificador para los llenos, grupo para los vacíos | Un vacío en una celda de otro grupo no se confirma sin motivo escrito |
 | **T-78** | RF-037 | 3.0 | Vista de avance para la oficina: descargados, cargados, pendientes y cancelados, por bahía | Cuadra con la bitácora en cada momento del caso |
@@ -922,3 +947,27 @@ T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
 - Timonel queda en pausa. Cuando Codex entregue T-74, Timonel la acepta y toma T-75, también en un chat nuevo.
 
 **El segundo carril** (`git worktree`, sección 6) **no se abre por ahora.** Duplicaría el gasto de tokens de Carlos y lo obligaría a mezclar. Se vuelve a evaluar al terminar T-76, contra el punto de control del 14-oct.
+
+### 10.10 · T-72 y T-73 terminadas · T-74 entregada, en revisión · T-75 pasa a Timonel (7-oct)
+
+**T-72 y T-73 pasan a Terminado.** Codex las aceptó en Windows, en el Honor y en Chrome (`docs/T74-RESULTADOS.md`, sección 2), en 0.45 h.
+
+**T-74, de Codex, pasa a En revisión** (commit `23525ae`).
+- **Las fuentes.** A07, A08 y el listado quedan en una sola operación con tres fuentes. Volver a leer A08v solo reemplaza `loading_baplie`, y se conservan el id, la fecha y la bitácora.
+- **El tipo de la fuente** sale de los conteos de T-68. Si es ambiguo, se pregunta: «Llegada» o «Carga».
+- **El modo «Número de orden»** muestra los 121 OR, incluido el OR 85, y las 55 reservas con su grupo. No queda ninguna celda de carga sin cruce.
+- **Los pendientes por bahía** reproducen la tabla de la sección 2 del caso en los tres clientes (82/94, 120/56). Bajan de 176 a 0 al aplicar la bitácora.
+  - Lleno o vacío se decide por el listado, y el OR 85 cuenta como vacío.
+  - 014-01-02 y 014-01-08 siguen en conflicto «fuera de plan» hasta T-80, sin carga pendiente.
+- **Validaciones.** **412 pruebas** (el piso nuevo), `analyze` en cero y los corpus en 26 de 26.
+- **Horas registradas.** 0.86 en lugar de 3.0. El total baja a ≈ 205.4 h.
+- **Revisión de Yov.**
+  - El commit no toca `main.dart` ni los congelados, y solo trae contenedores de prueba.
+  - El banco de aceptación (`lib/t74_client_acceptance.dart`) quedó en la copia privada, fuera del repo.
+  - **Tres pruebas existentes cambiaron** (perfiles, viajes recientes y escala). Ahora usan un repositorio en memoria, para no abrir el almacén real durante la suite, y la de borrar un viaje espera al proveedor. **Timonel confirma en su aceptación que ninguna perdió lo que comprobaba.**
+- **Incidencia que declaró Codex.** En su primera corrida, los scripts de corpus de T-72 y T-73 crearon almacenes temporales con contenido del corpus en el `build/` del repo. Los propios scripts los borraron, `build/` está fuera de Git y Codex repitió la corrida fuera del repo. **La causa se corrige en T-75**: los scripts pasan al directorio temporal del sistema.
+
+**El carril de `lib/` pasa a Timonel**, en un chat nuevo:
+1. Primero, la aceptación cruzada de T-74.
+2. Después, T-75 con su ficha completa de la sección 5.
+- Codex queda en pausa. Cuando Timonel entregue T-75, Codex la acepta y toma T-76.
