@@ -111,6 +111,19 @@ class HiveVesselDataSource {
     await _settings.flush();
   });
 
+  /// T-73 · Equivalencias del listado, en la misma caja de ajustes.
+  CodeEquivalences getCodeEquivalences() {
+    final record = _settings.get('codeEquivalences');
+    return record == null
+        ? CodeEquivalences.empty
+        : CodeEquivalences.fromJson(jsonDecode(record) as Map<String, dynamic>);
+  }
+
+  Future<void> saveCodeEquivalences(CodeEquivalences equivalences) => _writeVoyages(() async {
+    await _settings.put('codeEquivalences', jsonEncode(equivalences.toJson()));
+    await _settings.flush();
+  });
+
   List<VesselProfile> getAllProfiles() =>
       _profiles.values.map(_codec.decodeProfile).toList();
 

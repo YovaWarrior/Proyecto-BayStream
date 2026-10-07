@@ -33,6 +33,11 @@ abstract class LocalVesselRepository {
   Future<Either<Failure, String?>> getLastConfirmedPortOfCall();
   Future<Either<Failure, void>> setLastConfirmedPortOfCall(String? port);
 
+  /// T-73 · Tabla de equivalencias del listado de la agencia (tipos, puertos
+  /// y líneas). Es del dispositivo, como el último puerto confirmado.
+  Future<Either<Failure, CodeEquivalences>> getCodeEquivalences();
+  Future<Either<Failure, void>> saveCodeEquivalences(CodeEquivalences equivalences);
+
   Future<Either<Failure, VesselProfileLookup>> findProfileFor(Vessel vessel);
   /// Fuentes disponibles para edición o clonación. Leer no crea perfiles;
   /// un clon es un borrador hasta que el usuario confirma `saveProfile`.

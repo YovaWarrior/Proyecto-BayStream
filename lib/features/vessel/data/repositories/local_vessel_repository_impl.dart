@@ -49,6 +49,14 @@ class LocalVesselRepositoryImpl implements LocalVesselRepository {
       _guard(() => _source.setLastConfirmedPortOfCall(port));
 
   @override
+  Future<Either<Failure, CodeEquivalences>> getCodeEquivalences() =>
+      _guard(_source.getCodeEquivalences);
+
+  @override
+  Future<Either<Failure, void>> saveCodeEquivalences(CodeEquivalences equivalences) =>
+      _guard(() => _source.saveCodeEquivalences(equivalences));
+
+  @override
   Future<Either<Failure, List<VesselProfile>>> getAllProfiles() =>
       _guard(_source.getAllProfiles);
 

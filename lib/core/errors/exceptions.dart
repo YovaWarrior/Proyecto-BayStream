@@ -71,3 +71,13 @@ class CacheException extends BayStreamException {
     super.code,
   });
 }
+
+/// T-73 · El listado de la agencia no se puede leer como tabla.
+class ExportListParsingException extends BayStreamException {
+  final Object? cause;
+
+  const ExportListParsingException({required super.message, super.code, this.cause});
+
+  @override
+  String toString() => 'ExportListParsingException: $message${cause != null ? ' ($cause)' : ''}';
+}

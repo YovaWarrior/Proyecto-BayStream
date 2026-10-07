@@ -29,6 +29,15 @@ dependencies:
   # Almacén local RF-031+ (T-35): cinco exportaciones A01 superan 5 MiB.
   hive_ce: 2.20.0
 
+  # Listado de la agencia en Excel (T-73, RF-038; autorizado en 2.7 de SPRINT-3).
+  # Dart puro, también en Web. Fija: es la última que resuelve con archive 4
+  # y xml 6, que exigen pdf e image.
+  excel_community: 1.0.10
+  # Directa desde T-73 (autorizada en 2.7): el lector vuelve relativas las
+  # rutas absolutas de workbook.xml.rels, que excel_community no resuelve.
+  # Fija en la versión que ya traía el lock por pdf e image.
+  archive: 4.0.9
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

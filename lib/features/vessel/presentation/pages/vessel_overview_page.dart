@@ -14,6 +14,7 @@ import '../widgets/empty_state_widget.dart';
 import '../widgets/bay_plan_view.dart';
 import '../widgets/container_search_delegate.dart';
 import '../widgets/voyage_stats_view.dart';
+import 'export_list_import_page.dart';
 import 'vessel_geometry_page.dart';
 import 'vessel_profiles_page.dart';
 import 'recent_voyages_page.dart';
@@ -605,10 +606,26 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         children: [
           // Tarjeta resumen del viaje
           VoyageSummaryCard(voyage: voyage),
-          TextButton.icon(
-            icon: const Icon(Icons.fact_check_outlined),
-            label: const Text('Alertas de estiba'),
-            onPressed: () => _openAlerts(voyage),
+          Wrap(
+            children: [
+              TextButton.icon(
+                icon: const Icon(Icons.fact_check_outlined),
+                label: const Text('Alertas de estiba'),
+                onPressed: () => _openAlerts(voyage),
+              ),
+              // T-73: el listado de la agencia se cruza con lo que se carga aquí.
+              if (voyage.portOfCall != null &&
+                  voyage.cargoCountsFor(voyage.portOfCall).loaded +
+                          voyage.reservedCountsFor(voyage.portOfCall).loaded >
+                      0)
+                TextButton.icon(
+                  key: const ValueKey('open-export-list'),
+                  icon: const Icon(Icons.table_view),
+                  label: const Text('Listado de la agencia'),
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                      builder: (_) => const ExportListImportPage())),
+                ),
+            ],
           ),
           const SizedBox(height: 24),
 
