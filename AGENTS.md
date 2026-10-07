@@ -121,6 +121,9 @@ herramientas de Flutter y el Honor, así que se reparten así:
   almacén usó la app. Para usar el almacén real, abre la app con
   `Start-Process explorer.exe -ArgumentList <ruta del exe>`, no con
   `Start-Process <exe>`: así el proceso queda fuera del paquete (T-73, 10.9).
+- En Windows, una aceptación que registra movimientos usa un namespace propio del
+  almacén real (`tNNacc`, como `t75acc`), no la operación por defecto: la bitácora
+  es solo de anexar y lo que se registra ahí no se borra desde la app (10.11).
 - En Chrome, la ventana que controla la automatización tiene que quedar visible: con la
   pestaña minimizada u oculta, Flutter deja de dibujar, los menús no abren y las capturas
   expiran.

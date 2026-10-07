@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 205.4 h estimadas** (al 7-oct, 10.10) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 201.9 h estimadas** (al 7-oct, 10.11) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -487,6 +487,49 @@ Los seis archivos de la tabla 2.4. Detalle de la operación en
 - [ ] La tarea se acepta en Windows, en el Honor a 360 dp y en Chrome.
 - [ ] Piso de 412 pruebas, `analyze` en cero, los corpus de T-68 a T-74 en verde y el nuevo de T-75.
 
+#### T-76 · Carga: confirmar llenos y asignar vacíos desde el listado, con hora, marchamo y deshacer · 5.0 h · Codex (ficha completa, 7-oct)
+
+**Para qué.** Es la otra mitad de lo que Carlos pidió como lo más importante.
+- **Hoy, con un vacío,** el planificador busca el contenedor en el listado impreso, lee su número de orden, escribe ese número en la celda del plano donde lo cargan y revisa que el tipo, el puerto y la línea correspondan.
+- **Con un lleno,** el plano ya trae su posición y se marca al subir.
+
+T-76 hace lo mismo en BayStream con la bitácora de T-72, el listado de T-73 y el plano de T-74.
+
+**Qué hacer.**
+1. **Un modo «Carga»** en el plano de carga. Usa el **plan combinado**, el de llegada más el de carga, como la descarga de T-75. Así las cargas y las descargas conviven en la misma vista.
+2. **Confirmar un lleno**, que registra `load_full` con su `position`, su `order` y los datos opcionales.
+   - Se puede tocar la celda planificada, o buscar el contenedor por su **número de orden** o por **los últimos dígitos del contenedor**. La búsqueda resalta la celda y pide confirmar.
+   - Un lleno en una celda distinta de la planificada no se registra en T-76: eso es T-77, con motivo, o T-80.
+3. **Asignar un vacío**, que registra `assign_empty` con el `container`, la `tareKg` y el `order`.
+   - Se elige el OR del vacío en el listado. La app ya sabe su contenedor, tipo, puerto, línea y tara real.
+   - **Solo ofrece las celdas reservadas libres de su grupo**, primero las de la bahía que se está viendo. Una celda de otro grupo no se ofrece; elegirla con motivo es T-77.
+   - Ejemplo del caso: el **OR 12** va a `R:0030984`, con tara de **2 185 kg**.
+4. **Hora y marchamo**, los dos opcionales.
+   - La hora va en `payload.operatedAt` y por omisión es la de registro.
+   - El marchamo va en `seal`.
+5. **Deshacer y corregir.**
+   - Deshacer es un `annul`, como en T-75: un «Deshacer» inmediato y, después, desde el detalle, con motivo.
+   - Corregir es anular con motivo y registrar de nuevo, en un solo paso.
+   - `cancel_item` es de la oficina, en T-81. No va aquí.
+6. **La descarga del ocupante libera la celda, sin importar el orden.**
+   - **Por qué:** 54 de las 176 celdas de carga de A08 son celdas que A07 descarga, y T-75 lo midió. Hoy, una carga registrada antes que la descarga de su celda sale «celda ocupada».
+   - **La regla, en el derivador de T-72:** una celda queda libre para cargar si la bitácora tiene una descarga vigente de su ocupante de llegada, aunque esa descarga se haya registrado **después** de la carga. Es lo que pide T-79a: el estado no depende del orden de llegada, y dos dispositivos pueden registrar la descarga y la carga en cualquier orden.
+   - Si la descarga no está, la carga queda en conflicto «celda ocupada». T-77 avisará antes de confirmar y ofrecerá registrar esa descarga.
+7. **Pendientes y avance.** Los pendientes de carga de T-74 y los de descarga de T-75 bajan con cada movimiento en la misma pantalla.
+
+**Terminada cuando:**
+- [ ] Reproducir los 176 eventos de `CASO_A08_EVENTOS.json`, sin el intercambio (que es de T-80), deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv`. Las únicas diferencias son 014-01-02 y 014-01-08, como en T-72.
+- [ ] Con las **114 descargas de A07 mezcladas en cualquier orden** con esas 176 cargas, el resultado es el mismo y no queda ninguna «celda ocupada». El corpus lo prueba con al menos tres órdenes distintos, entre ellos todas las cargas primero.
+- [ ] Una carga sin la descarga de su ocupante queda «celda ocupada», y se resuelve sola al registrar esa descarga.
+- [ ] En pantalla:
+  - un lleno se confirma por OR y por los últimos dígitos del contenedor;
+  - el OR 12 se asigna a `R:0030984`, con 2 185 kg de tara;
+  - un vacío no se ofrece en una celda de otro grupo;
+  - deshacer y corregir dejan la bitácora completa;
+  - después de cerrar y reabrir, todo sigue igual.
+- [ ] La tarea se acepta en Windows, en el Honor a 360 dp y en Chrome. En Windows, la aceptación usa un namespace propio del almacén (`AGENTS.md`).
+- [ ] Piso de 420 pruebas, `analyze` en cero, los corpus de T-68 a T-75 en verde y el nuevo de T-76.
+
 
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
@@ -494,7 +537,7 @@ Los seis archivos de la tabla 2.4. Detalle de la operación en
 | **T-73** | RF-038 | 4.5 | Importar el listado Excel de la agencia, con tabla de equivalencias editable (tipos, puertos, códigos de línea) y lectura de peligrosas desde CONTENIDO | `LISTADO_A08.xlsx`: 176 filas, 120 llenos que cruzan con A08 y 56 vacíos en 6 grupos; LNB ↔ LINB, COMNG ↔ COSPC · **ficha completa arriba** |
 | **T-74** | RF-038 | 3.0 | Plan de carga: cruzar listado y plan; número de orden en cada celda; pendientes por bahía. **Desde T-73** la operación puede existir solo con la fuente `export_list`, porque el texto del BAPLIE no se conserva después de leerlo: T-74 guarda ese texto como fuente `loading_baplie` (y `arrival_baplie` si aplica) **en la misma operación**, no en una nueva · **ficha completa arriba** | Los 9 conteos por bahía de la sección 2 del caso, en cubierta y bodega; la operación queda con sus fuentes completas |
 | **T-75** | RF-037 | 4.0 | Descarga: tocar el contenedor y queda marcado; aviso de re-estiba si su puerto no es este; deshacer | Los 114 de `CORPUS_A07` se marcan y se deshacen sin perder la bitácora · **ficha completa arriba** |
-| **T-76** | RF-037 | 5.0 | Carga: confirmar un lleno por número de orden o de contenedor; asignar un vacío solo a una celda libre de su grupo; hora y marchamo; cancelar y corregir | Reproducir `CASO_A08_EVENTOS.json` deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv` |
+| **T-76** | RF-037 | 5.0 | Carga: confirmar un lleno por número de orden o de contenedor; asignar un vacío solo a una celda libre de su grupo; hora y marchamo; cancelar y corregir | Reproducir `CASO_A08_EVENTOS.json` deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv` · **ficha completa arriba** |
 | **T-77** | RF-037 | 3.0 | Validación preventiva antes de confirmar: celda, 20/40, peso de la pila, posición del planificador para los llenos, grupo para los vacíos | Un vacío en una celda de otro grupo no se confirma sin motivo escrito |
 | **T-78** | RF-037 | 3.0 | Vista de avance para la oficina: descargados, cargados, pendientes y cancelados, por bahía | Cuadra con la bitácora en cada momento del caso |
 
@@ -971,3 +1014,40 @@ T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
 1. Primero, la aceptación cruzada de T-74.
 2. Después, T-75 con su ficha completa de la sección 5.
 - Codex queda en pausa. Cuando Timonel entregue T-75, Codex la acepta y toma T-76.
+
+### 10.11 · T-74 terminada · T-75 entregada, en revisión · T-76 pasa a Codex (7-oct)
+
+**T-74 pasa a Terminado.** Timonel la aceptó en Windows, en el Honor y en Chrome, en 0.32 h: una operación con tres fuentes, los 121 OR, las 55 reservas con su grupo, la tabla de 9 bahías y los pendientes de 176 a 0.
+- **Las tres pruebas existentes que cambió Codex** no pierden nada. La de viajes recientes quedó más estricta.
+- **Una observación, que no es defecto.** La fuente `export_list` mide 51 775 caracteres en la Web y 52 547 en Windows y Android, porque la Web escribe `3900` donde las otras escriben `3900.0`. El contenido es el mismo.
+- **Nota para T-79:** la huella SHA-256 de las fuentes se calcula sobre el texto publicado tal cual. Ningún dispositivo vuelve a serializar la fuente antes de comprobarla.
+
+**T-75, de Timonel, pasa a En revisión** (commit `4bfa268`).
+- **Las cifras.** A07 en GTSTC da 114 pendientes (66/48), con el conteo por bahía de la ficha.
+- **En los tres clientes pasan** una bahía completa, el «Deshacer» inmediato y desde el detalle, la re-estiba aparte y la reapertura. El tema claro se vio en Chrome y el oscuro en Windows y en el Honor.
+- **El corpus** marca los 114 (quedan 0), los anula (vuelven a 114, con 228 movimientos) y registra una re-estiba (229 movimientos).
+- **Validaciones.** **420 pruebas** (el piso nuevo), `analyze` en cero, los corpus en 28 de 28 y sin dependencias.
+- **Horas.** 0.46 en lugar de 4.0. El total baja a ≈ 201.9 h.
+- **La deuda de 10.10 queda pagada.** Los scripts de corpus de T-72 y T-73 usan ahora el directorio temporal del sistema.
+- **Decisiones de Timonel, aceptadas.**
+  - El autor es «Muelle (sin cuenta)» hasta T-79.
+  - La descarga se deriva sobre el plan combinado.
+  - La vista de carga de T-74 deja fuera las descargas, para no contarlas como conflictos.
+- **Para T-97:** la fila del detalle no se adapta si el texto no cabe, por ejemplo con letra del sistema muy grande.
+
+**El almacén real de Windows ya tiene movimientos de prueba.**
+- **Lo que hay.** La operación de BUQUE GOLF guarda las 176 cargas de la aceptación de Codex y 7 movimientos de T-75. Además existe el namespace `t75acc`.
+- **No se pueden borrar desde la app**, porque la bitácora es solo de anexar.
+- **Regla nueva en `AGENTS.md`:** toda aceptación que registre movimientos en Windows usa un namespace propio del almacén real (`tNNacc`), como hizo Timonel.
+- **Antes de la prueba piloto (T-101)**, el almacén de Carlos tiene que quedar limpio. Cómo se hace se decide con T-78 o T-79.
+
+**T-76 trae una regla nueva para el derivador.**
+- **El problema.** 54 de las 176 celdas de carga de A08 son celdas que A07 descarga. Una carga registrada antes que la descarga de su celda sale «celda ocupada».
+- **La regla.** La descarga vigente del ocupante de llegada libera la celda, aunque se haya registrado después de la carga. Así el estado no depende del orden de registro, como exige T-79a.
+- **Si falta la descarga**, sigue el conflicto, y T-77 ofrecerá registrarla.
+- La ficha completa está en la sección 5.
+
+**El carril de `lib/` pasa a Codex**, en un chat nuevo:
+1. Primero, la aceptación cruzada de T-75.
+2. Después, T-76.
+- Timonel queda en pausa. Cuando Codex entregue T-76, Timonel la acepta y toma T-77.
