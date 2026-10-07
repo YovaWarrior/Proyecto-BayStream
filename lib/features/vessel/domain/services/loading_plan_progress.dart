@@ -65,6 +65,34 @@ class LoadingPlanProgress {
         Map.unmodifiable(bays), unmatched);
   }
 
+  /// T-75 · Lo que esta proyección deriva: la carga. Las descargas de T-75 y
+  /// las anulaciones que las deshacen se dejan fuera, porque el plan de carga
+  /// no trae el plano de llegada y las contaría como «fuera del plan».
+  static List<Movement> loadingMovements(Iterable<Movement> movements) {
+    final byId = {for (final m in movements) m.id: m};
+    final excluded = <String>{
+      for (final m in byId.values)
+        if (m.type == MovementType.discharge) m.id
+    };
+    // Una anulación de una anulación de una descarga también es de descarga.
+    var grew = true;
+    while (grew) {
+      grew = false;
+      for (final m in byId.values) {
+        if (m.type == MovementType.annul &&
+            !excluded.contains(m.id) &&
+            excluded.contains(m.annuls)) {
+          excluded.add(m.id);
+          grew = true;
+        }
+      }
+    }
+    return [
+      for (final m in byId.values)
+        if (!excluded.contains(m.id)) m
+    ];
+  }
+
   String label(String key) => labels[key] ?? '—';
   BayLoadingPending? forBay(int number) {
     for (final bay in bays.values) {

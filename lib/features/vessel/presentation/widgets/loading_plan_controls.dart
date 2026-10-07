@@ -5,22 +5,32 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/loading_plan_progress.dart';
 import '../formatters/vessel_error_message.dart';
 import '../pages/export_list_import_page.dart';
+import '../providers/discharge_provider.dart';
 import '../providers/loading_plan_provider.dart';
+import 'discharge_controls.dart';
+
+/// Modos de vista del plano. «Descarga» (T-75) solo existe en un plano de
+/// llegada; fuera de ese modo, tocar una celda abre el detalle, como siempre.
+enum BayPlanMode { content, order, discharge }
 
 class LoadingPlanControls extends ConsumerWidget {
   final VesselVoyage voyage;
   final int? selectedBay;
-  final bool orderMode;
-  final ValueChanged<bool> onModeChanged;
+  final BayPlanMode mode;
+  final ValueChanged<BayPlanMode> onModeChanged;
   const LoadingPlanControls(
       {super.key,
       required this.voyage,
       required this.selectedBay,
-      required this.orderMode,
+      required this.mode,
       required this.onModeChanged});
+
+  bool get orderMode => mode == BayPlanMode.order;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final discharge = offersDischarge(voyage);
+    final dischargeMode = discharge && mode == BayPlanMode.discharge;
     final progress = voyage.portOfCall == null
         ? null
         : ref.watch(loadingPlanProgressProvider(voyage));
@@ -31,25 +41,42 @@ class LoadingPlanControls extends ConsumerWidget {
             spacing: 12,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              DropdownButton<bool>(
+              DropdownButton<BayPlanMode>(
                 key: const ValueKey('bay-plan-display-mode'),
-                value: orderMode,
-                items: const [
-                  DropdownMenuItem(value: false, child: Text('Contenido')),
-                  DropdownMenuItem(value: true, child: Text('Número de orden'))
+                value: !discharge && mode == BayPlanMode.discharge
+                    ? BayPlanMode.content
+                    : mode,
+                items: [
+                  const DropdownMenuItem(
+                      value: BayPlanMode.content, child: Text('Contenido')),
+                  const DropdownMenuItem(
+                      value: BayPlanMode.order, child: Text('Número de orden')),
+                  if (discharge)
+                    const DropdownMenuItem(
+                        value: BayPlanMode.discharge, child: Text('Descarga')),
                 ],
                 onChanged: (value) {
                   if (value != null) onModeChanged(value);
                 },
               ),
-              TextButton.icon(
-                onPressed:
-                    progress?.hasValue == true ? () => _table(context) : null,
-                icon: const Icon(Icons.table_chart_outlined),
-                label: const Text('Pendientes por bahía'),
-              ),
+              if (dischargeMode)
+                TextButton.icon(
+                  key: const ValueKey('discharge-table-button'),
+                  onPressed: () => showDischargeTable(context, voyage),
+                  icon: const Icon(Icons.table_chart_outlined),
+                  label: const Text('Pendientes de descarga'),
+                )
+              else
+                TextButton.icon(
+                  onPressed:
+                      progress?.hasValue == true ? () => _table(context) : null,
+                  icon: const Icon(Icons.table_chart_outlined),
+                  label: const Text('Pendientes por bahía'),
+                ),
             ]),
-        if (voyage.portOfCall == null)
+        if (dischargeMode)
+          DischargeSummary(voyage: voyage, selectedBay: selectedBay)
+        else if (voyage.portOfCall == null)
           const Text('Confirma la escala para ver el plan de carga.')
         else if (progress!.hasError)
           Text(vesselErrorMessage(progress.error!, progress.stackTrace))

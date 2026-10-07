@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/discharge_progress.dart';
 import '../../domain/services/loading_plan_progress.dart';
+import '../providers/discharge_provider.dart';
 import '../providers/loading_plan_provider.dart';
 import '../providers/vessel_providers.dart';
+import 'discharge_controls.dart';
 import 'loading_plan_controls.dart';
 import 'reserved_slot_details.dart';
 
@@ -21,7 +24,7 @@ class BayPlanView extends ConsumerStatefulWidget {
 
 class _BayPlanViewState extends ConsumerState<BayPlanView> {
   int? _selectedBayNumber;
-  bool _orderMode = false;
+  BayPlanMode _mode = BayPlanMode.content;
   final ScrollController _bayScrollController = ScrollController();
 
   @override
@@ -53,6 +56,12 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     final progress = widget.voyage.portOfCall == null
         ? null
         : ref.watch(loadingPlanProgressProvider(widget.voyage)).value;
+    // T-75: la bitácora de descarga solo se abre en el modo Descarga.
+    final dischargeMode =
+        _mode == BayPlanMode.discharge && offersDischarge(widget.voyage);
+    final discharge = dischargeMode
+        ? ref.watch(dischargeProgressProvider(widget.voyage)).value
+        : null;
 
     // Escuchar cambios en la bahía seleccionada desde búsqueda o perfil.
     ref.listen<int?>(selectedBayProvider, (previous, next) {
@@ -76,8 +85,8 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         LoadingPlanControls(
             voyage: widget.voyage,
             selectedBay: _selectedBayNumber,
-            orderMode: _orderMode,
-            onModeChanged: (value) => setState(() => _orderMode = value)),
+            mode: _mode,
+            onModeChanged: (value) => setState(() => _mode = value)),
         // Selector de bahías
         _buildBaySelector(sortedBayNumbers),
         const Divider(height: 1),
@@ -87,17 +96,24 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
           child: _selectedBayNumber != null
               ? _BayGridWidget(
                   bay: widget.voyage.bays[_selectedBayNumber]!,
-                  onContainerTap: _showContainerDetails,
+                  onContainerTap: dischargeMode
+                      ? (container) => onDischargeTap(
+                          context, ref, widget.voyage, container,
+                          openDetails: () => _showContainerDetails(container))
+                      : _showContainerDetails,
                   reservedSlots:
                       widget.voyage.getReservedSlotsInBay(_selectedBayNumber!),
                   reservedNeighbors:
                       reservedNeighbors[_selectedBayNumber] ?? const {},
-                  onReservedSlotTap: (slot) =>
-                      showReservedSlotDetails(context, slot),
+                  // En el modo Descarga, una reserva no se opera.
+                  onReservedSlotTap: dischargeMode
+                      ? (_) {}
+                      : (slot) => showReservedSlotDetails(context, slot),
                   highlightedContainerId: highlightedContainerId,
                   activeTypeFilter: activeTypeFilter,
                   isInTransit: widget.voyage.isInTransit,
-                  orderMode: _orderMode,
+                  orderMode: _mode == BayPlanMode.order,
+                  discharge: discharge,
                   progress: progress,
                   portOfCall: widget.voyage.portOfCall,
                 )
@@ -429,7 +445,12 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   ],
                 ),
               ],
-              
+
+              // T-75: estado en la escala, quién y cuándo, y deshacer.
+              if (offersDischarge(widget.voyage))
+                DischargeDetailSection(
+                    voyage: widget.voyage, container: container),
+
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -467,6 +488,9 @@ class _BayGridWidget extends StatelessWidget {
   final Bay bay;
   final bool orderMode;
   final LoadingPlanProgress? progress;
+
+  /// T-75: solo en el modo Descarga; marca cada contenedor del plano de llegada.
+  final DischargeProgress? discharge;
   final String? portOfCall;
   final Function(ContainerUnit) onContainerTap;
   final List<ReservedSlot> reservedSlots;
@@ -487,6 +511,7 @@ class _BayGridWidget extends StatelessWidget {
     required this.isInTransit,
     this.orderMode = false,
     this.progress,
+    this.discharge,
     this.portOfCall,
     this.highlightedContainerId,
     this.activeTypeFilter,
@@ -944,6 +969,9 @@ class _BayGridWidget extends StatelessWidget {
                     container.portOfLoading == portOfCall
                 ? progress?.label('C:${container.containerId}') ?? '—'
                 : null,
+            dischargeMark: container == null
+                ? null
+                : discharge?.markOf(container.containerId),
             onTap: container != null ? () => onContainerTap(container) : null,
             isHighlighted: isHighlighted,
             activeTypeFilter: activeTypeFilter,
@@ -1110,6 +1138,10 @@ bool _containerMatchesFilter(
 /// Widget de celda individual de contenedor (optimizado para rendimiento)
 class _ContainerCell extends StatelessWidget {
   final String? orderLabel;
+
+  /// T-75: marca del modo Descarga. Icono y rótulo, además del color, para
+  /// que se lea a 360 dp y en los dos temas.
+  final DischargeMark? dischargeMark;
   final ContainerUnit? container;
   final VoidCallback? onTap;
   final bool isHighlighted;
@@ -1131,6 +1163,7 @@ class _ContainerCell extends StatelessWidget {
     this.isInTransit = false,
     this.isOccupiedByNeighbor = false,
     this.orderLabel,
+    this.dischargeMark,
   });
 
   @override
@@ -1216,6 +1249,49 @@ class _ContainerCell extends StatelessWidget {
       cellColor = scheme.primaryContainer;
       borderColor = scheme.primary;
     }
+    final mark = dischargeMark;
+    var borderWidth = 2.0;
+    var markColor = scheme.onSurface;
+    if (mark != null) {
+      (cellColor, markColor, borderColor, borderWidth) = switch (mark) {
+        DischargeMark.pending => (
+            scheme.primaryContainer,
+            scheme.onPrimaryContainer,
+            scheme.primary,
+            2.0
+          ),
+        DischargeMark.discharged => (
+            scheme.surfaceContainerHighest,
+            scheme.onSurfaceVariant,
+            scheme.outline,
+            1.0
+          ),
+        DischargeMark.transit => (
+            scheme.surface,
+            scheme.onSurfaceVariant,
+            scheme.outlineVariant,
+            1.0
+          ),
+        DischargeMark.restowed => (
+            scheme.secondaryContainer,
+            scheme.onSecondaryContainer,
+            scheme.secondary,
+            2.0
+          ),
+        DischargeMark.cancelled => (
+            scheme.surfaceContainerHighest,
+            scheme.onSurfaceVariant,
+            scheme.outline,
+            1.0
+          ),
+        DischargeMark.conflict => (
+            scheme.errorContainer,
+            scheme.onErrorContainer,
+            scheme.error,
+            2.0
+          ),
+      };
+    }
     final cell = Container(
       width: 50,
       height: 40,
@@ -1225,7 +1301,7 @@ class _ContainerCell extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
           color: isHighlighted ? Colors.yellow.shade700 : borderColor,
-          width: isHighlighted ? 3 : 2,
+          width: isHighlighted ? 3 : borderWidth,
         ),
         boxShadow: isHighlighted
             ? [
@@ -1240,7 +1316,26 @@ class _ContainerCell extends StatelessWidget {
       // T-66: tres líneas en 36 px útiles. El FittedBox solo reduce, nunca
       // amplía: con la letra del sistema agrandada (Android) la celda encoge
       // su contenido en vez de desbordarse y tapar a la vecina.
-      child: orderLabel != null
+      child: mark != null
+          ? Semantics(
+              label: '${container!.containerId}, '
+                  '${container!.stowagePosition?.toIsoCode()}, '
+                  '${dischargeMarkText(mark)}',
+              child: FittedBox(
+                key: ValueKey('discharge-${mark.name}'),
+                fit: BoxFit.scaleDown,
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(dischargeMarkIcon(mark), size: 15, color: markColor),
+                  Text(dischargeMarkLabel(mark),
+                      style: TextStyle(
+                          fontSize: 9,
+                          height: 1.1,
+                          fontWeight: FontWeight.bold,
+                          color: markColor)),
+                ]),
+              ),
+            )
+          : orderLabel != null
           ? Semantics(
               label:
                   '${container!.containerId}, ${container!.stowagePosition?.toIsoCode()}, $orderLabel',

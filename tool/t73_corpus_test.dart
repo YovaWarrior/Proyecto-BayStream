@@ -93,8 +93,9 @@ void main() {
 
       // Guardado: equivalencias en el almacén local y el listado como fuente
       // export_list de la operación. Al reabrir, una segunda importación no pide nada.
-      final root = await Directory('build/t73/corpus-stores').create(recursive: true);
-      final directory = await root.createTemp('a08_');
+      // T-75: el almacén temporal lleva contenido del corpus; vive en el
+      // directorio temporal del sistema, nunca en el build/ del repositorio.
+      final directory = await Directory.systemTemp.createTemp('baystream_t73_caso_');
       final namespace = 't73_corpus_${DateTime.now().microsecondsSinceEpoch}';
       var local = LocalVesselRepositoryImpl(
           await HiveVesselDataSource.open(directory: directory.path, namespace: namespace));

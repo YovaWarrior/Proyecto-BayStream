@@ -42,8 +42,9 @@ void main() {
               as Map<String, dynamic>)['eventos'] as List)
           .cast<Map<String, dynamic>>();
 
-      final root = await Directory('build/t72/corpus-stores').create(recursive: true);
-      final directory = await root.createTemp('a08_');
+      // T-75: el almacén temporal lleva contenido del corpus; vive en el
+      // directorio temporal del sistema, nunca en el build/ del repositorio.
+      final directory = await Directory.systemTemp.createTemp('baystream_t72_caso_');
       final namespace = 't72_corpus_${DateTime.now().microsecondsSinceEpoch}';
       var minute = 0;
       DateTime clock() => DateTime.utc(2025, 10, 4, 8).add(Duration(minutes: minute++));
