@@ -8,6 +8,7 @@ import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
 import '../formatters/vessel_error_message.dart';
 import '../widgets/voyage_summary_card.dart';
+import '../widgets/reserved_slots_list_view.dart';
 import '../widgets/containers_list_view.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/bay_plan_view.dart';
@@ -611,6 +612,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           ),
           const SizedBox(height: 24),
 
+          if (voyage.reservedSlots.isNotEmpty) ...[
+            ReservedSlotsListView(reservedSlots: voyage.reservedSlots),
+            const SizedBox(height: 16),
+          ],
           // Filtro por naviera
           if (carriers.isNotEmpty) ...[
             Text(

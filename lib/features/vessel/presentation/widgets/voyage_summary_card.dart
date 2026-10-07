@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
+import 'voyage_call_summary.dart';
 
 /// Tarjeta que muestra el resumen del viaje cargado
 /// Incluye información del buque, número de viaje y estadísticas
@@ -117,16 +118,23 @@ class VoyageSummaryCard extends StatelessWidget {
               ],
             ),
             
+            if (voyage.reservedSlots.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                '${voyage.totalContainers} contenedores · '
+                '${voyage.totalReservedSlots} celdas reservadas',
+                key: const ValueKey('voyage-reserved-count'),
+              ),
+            ],
             // Información adicional si está disponible
             if (voyage.portOfCall != null) ...[
               const SizedBox(height: 16),
               Text('Escala: ${voyage.portOfCall}',
                   style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 4),
-              Text(
-                '${voyage.cargoCountsFor(voyage.portOfCall).discharged} se descargan · '
-                '${voyage.cargoCountsFor(voyage.portOfCall).loaded} se cargan · '
-                '${voyage.containersInTransit} de paso',
+              VoyageCallSummary(
+                voyage: voyage,
+                port: voyage.portOfCall,
                 key: const ValueKey('voyage-call-split'),
               ),
             ],

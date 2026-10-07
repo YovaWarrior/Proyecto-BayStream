@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
+import 'reserved_slot_details.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
 /// Permite navegar entre bahías y ver la disposición de contenedores
@@ -44,6 +45,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     final sortedBayNumbers = widget.voyage.bays.keys.toList()..sort();
     final highlightedContainerId = ref.watch(highlightedContainerProvider);
     final activeTypeFilter = ref.watch(selectedTypeFilterProvider);
+    final reservedNeighbors = widget.voyage.neighborReservedSlots();
 
     // Escuchar cambios en la bahía seleccionada desde búsqueda o perfil.
     ref.listen<int?>(selectedBayProvider, (previous, next) {
@@ -74,6 +76,12 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               ? _BayGridWidget(
                   bay: widget.voyage.bays[_selectedBayNumber]!,
                   onContainerTap: _showContainerDetails,
+                  reservedSlots:
+                      widget.voyage.getReservedSlotsInBay(_selectedBayNumber!),
+                  reservedNeighbors:
+                      reservedNeighbors[_selectedBayNumber] ?? const {},
+                  onReservedSlotTap: (slot) =>
+                      showReservedSlotDetails(context, slot),
                   highlightedContainerId: highlightedContainerId,
                   activeTypeFilter: activeTypeFilter,
                   isInTransit: widget.voyage.isInTransit,
@@ -115,6 +123,8 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               itemBuilder: (context, index) {
                 final bayNumber = bayNumbers[index];
                 final bay = widget.voyage.bays[bayNumber]!;
+                final reservedCount =
+                    widget.voyage.getReservedSlotsInBay(bayNumber).length;
                 final isSelected = bayNumber == _selectedBayNumber;
                 
                 // Sin geometria declarada no hay porcentaje que mostrar; se
@@ -137,7 +147,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                           ),
                         ),
                         Text(
-                          '${bay.containers.length}',
+                          reservedCount == 0
+                              ? '${bay.containers.length}'
+                              : '${bay.containers.length} · $reservedCount reservas',
                           style: const TextStyle(fontSize: 10),
                         ),
                       ],
@@ -202,11 +214,34 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             const SizedBox(width: 16),
             _buildLegendItem(
                 Colors.blueGrey.shade200, 'Ocupado por 40 pies', null, activeFilter),
+            if (widget.voyage.totalReservedSlots > 0) ...[
+              const SizedBox(width: 16),
+              _buildReservedLegendItem(),
+            ],
             const SizedBox(width: 16),
             _buildLegendItem(Colors.grey.shade300, 'Sin contenedor', null, activeFilter),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildReservedLegendItem() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(2),
+            border: Border.all(color: colorScheme.onSurfaceVariant, width: 2),
+          ),
+        ),
+        const SizedBox(width: 4),
+        const Text('Celda reservada', style: TextStyle(fontSize: 12)),
+      ],
     );
   }
 
@@ -416,6 +451,9 @@ class _BayGridWidget extends StatelessWidget {
 
   final Bay bay;
   final Function(ContainerUnit) onContainerTap;
+  final List<ReservedSlot> reservedSlots;
+  final Map<String, ReservedSlot> reservedNeighbors;
+  final void Function(ReservedSlot) onReservedSlotTap;
   final String? highlightedContainerId;
   final LegendFilterType? activeTypeFilter;
 
@@ -425,6 +463,9 @@ class _BayGridWidget extends StatelessWidget {
   const _BayGridWidget({
     required this.bay,
     required this.onContainerTap,
+    required this.reservedSlots,
+    required this.reservedNeighbors,
+    required this.onReservedSlotTap,
     required this.isInTransit,
     this.highlightedContainerId,
     this.activeTypeFilter,
@@ -450,6 +491,10 @@ class _BayGridWidget extends StatelessWidget {
         positionMap['${pos.row}-${pos.tier}'] = container;
       }
     }
+    final reservedPositionMap = <String, ReservedSlot>{
+      for (final slot in reservedSlots)
+        '${slot.stowagePosition.row}-${slot.stowagePosition.tier}': slot,
+    };
 
     // C-2 · Orden fijo de columnas: pares descendentes hacia babor, la fila 00
     // en el centro, e impares ascendentes hacia estribor. La fila 00 se dibuja
@@ -467,6 +512,10 @@ class _BayGridWidget extends StatelessWidget {
     final outsideGeometry = containers.where((container) {
       final pos = container.stowagePosition;
       if (pos == null) return true;
+      return !drawnRows.contains(pos.row) || !drawnTiers.contains(pos.tier);
+    }).toList();
+    final outsideReserved = reservedSlots.where((slot) {
+      final pos = slot.stowagePosition;
       return !drawnRows.contains(pos.row) || !drawnTiers.contains(pos.tier);
     }).toList();
 
@@ -491,7 +540,9 @@ class _BayGridWidget extends StatelessWidget {
             ),
           ),
           Text(
-            '${bay.containers.length} contenedores | ${(bay.totalWeight / 1000).toStringAsFixed(1)} ton',
+            '${bay.containers.length} contenedores'
+            '${reservedSlots.isEmpty ? '' : ' · ${reservedSlots.length} celdas reservadas'}'
+            ' | ${(bay.totalWeight / 1000).toStringAsFixed(1)} ton',
             style: TextStyle(color: Colors.grey[600]),
           ),
           const SizedBox(height: 16),
@@ -499,6 +550,10 @@ class _BayGridWidget extends StatelessWidget {
           // Carga que la geometría declarada no alcanza a representar
           if (outsideGeometry.isNotEmpty) ...[
             _buildOutsideGeometryNotice(context, outsideGeometry),
+            const SizedBox(height: 16),
+          ],
+          if (outsideReserved.isNotEmpty) ...[
+            _buildOutsideReservedNotice(context, outsideReserved),
             const SizedBox(height: 16),
           ],
 
@@ -544,7 +599,8 @@ class _BayGridWidget extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             ...deckTiers.map((tier) => _buildTierRow(
-              context, tier, rows, positionMap, highlightedContainerId, activeTypeFilter,
+              context, tier, rows, positionMap, reservedPositionMap,
+              highlightedContainerId, activeTypeFilter,
             )),
           ],
           
@@ -581,13 +637,34 @@ class _BayGridWidget extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             ...holdTiers.map((tier) => _buildTierRow(
-              context, tier, rows, positionMap, highlightedContainerId, activeTypeFilter,
+              context, tier, rows, positionMap, reservedPositionMap,
+              highlightedContainerId, activeTypeFilter,
             )),
           ],
           ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildOutsideReservedNotice(
+      BuildContext context, List<ReservedSlot> outside) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      key: const ValueKey('outside-reserved-geometry-notice'),
+      constraints: const BoxConstraints(maxWidth: 520),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        '${outside.length} celdas reservadas fuera de la geometría declarada: '
+        '${outside.take(6).map((slot) => slot.stowagePosition.toIsoCode()).join(', ')}'
+        '${outside.length > 6 ? ' y ${outside.length - 6} más' : ''}.',
+        style: TextStyle(color: colorScheme.onErrorContainer),
       ),
     );
   }
@@ -777,6 +854,7 @@ class _BayGridWidget extends StatelessWidget {
     int tier,
     List<int> rows,
     Map<String, ContainerUnit> positionMap,
+    Map<String, ReservedSlot> reservedPositionMap,
     String? highlightedContainerId,
     LegendFilterType? activeTypeFilter,
   ) {
@@ -810,6 +888,26 @@ class _BayGridWidget extends StatelessWidget {
               container.containerId == highlightedContainerId;
           final slotKey = '${row.toString().padLeft(2, '0')}'
               '${tier.toString().padLeft(2, '0')}';
+          final reservation = reservedPositionMap[key];
+          final reservedNeighbor = reservedNeighbors[slotKey];
+          if (container == null && reservation != null) {
+            return _ReservedCell(
+              key: ValueKey('reserved-${reservation.key}'),
+              slot: reservation,
+              onTap: () => onReservedSlotTap(reservation),
+            );
+          }
+          if (container == null &&
+              !bay.slotsOccupiedByNeighbors.contains(slotKey) &&
+              reservedNeighbor != null) {
+            return _ReservedCell(
+              key: ValueKey(
+                  'reserved-shadow-${bay.bayNumber}-$slotKey-${reservedNeighbor.key}'),
+              slot: reservedNeighbor,
+              isNeighbor: true,
+              onTap: () => onReservedSlotTap(reservedNeighbor),
+            );
+          }
           final cell = _ContainerCell(
             key: ValueKey('cell-$row-$tier'),
             container: container,
@@ -844,6 +942,72 @@ class _BayGridWidget extends StatelessWidget {
                 ),
         ),
       ],
+    );
+  }
+}
+
+/// Una reserva conserva el contorno y el destino, sin fingir carga ni peso.
+class _ReservedCell extends StatelessWidget {
+  final ReservedSlot slot;
+  final VoidCallback onTap;
+  final bool isNeighbor;
+
+  const _ReservedCell({
+    super.key,
+    required this.slot,
+    required this.onTap,
+    this.isNeighbor = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      label: '${isNeighbor ? 'Extensión de 40 pies de la reserva' : 'Celda reservada'} '
+          '${slot.key}, ${slot.isoSizeType ?? 'tipo no declarado'}, '
+          '${slot.portOfDischarge ?? 'puerto no declarado'}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 50,
+          height: 40,
+          margin: const EdgeInsets.all(2),
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: colorScheme.onSurfaceVariant,
+              width: isNeighbor ? 1 : 2,
+            ),
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isNeighbor)
+                  Text("40' reserva",
+                      style: TextStyle(
+                          fontSize: 8,
+                          height: 1.1,
+                          color: colorScheme.onSurfaceVariant)),
+                Text(slot.isoSizeType ?? '?',
+                    style: TextStyle(
+                        fontSize: 10,
+                        height: 1.1,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurfaceVariant)),
+                Text(slot.portOfDischarge ?? '?',
+                    style: TextStyle(
+                        fontSize: 9,
+                        height: 1.1,
+                        color: colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

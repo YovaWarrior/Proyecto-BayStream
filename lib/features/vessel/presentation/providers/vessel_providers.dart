@@ -584,7 +584,9 @@ final voyageStatsProvider = Provider<VoyageStats?>((ref) {
         totalWeight: voyage.totalWeight,
         totalGrossWeight: voyage.totalGrossWeight,
         totalVgmWeight: voyage.totalVgmWeight,
-        totalBays: voyage.bays.length,
+        totalBays: voyage.bays.values.where((bay) =>
+            bay.containers.isNotEmpty ||
+            bay.slotsOccupiedByNeighbors.isNotEmpty).length,
       );
     },
     orElse: () => null,

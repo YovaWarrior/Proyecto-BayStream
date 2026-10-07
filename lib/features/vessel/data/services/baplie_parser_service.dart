@@ -42,10 +42,15 @@ class BaplieParserService {
     final metadata = _parseMetadata(segments);
     
     // Extraer contenedores (grupos LOC+147 -> EQD -> MEA)
-    final containers = _parseContainers(segments);
+    final cargo = _parseCargo(segments);
+    final containers = cargo.containers;
     
     // Organizar contenedores por bahías
     final bays = _organizeBays(containers);
+    for (final slot in cargo.reservedSlots) {
+      final number = slot.stowagePosition.bay;
+      bays.putIfAbsent(number, () => Bay(bayNumber: number, is40FtBay: number.isEven));
+    }
 
     return VesselVoyage(
       id: _uuid.v4(),
@@ -55,6 +60,7 @@ class BaplieParserService {
       portOfOrigin: _findPlaceOfDeparture(segments),
       portOfNextCall: _findNextPortOfCall(segments),
       containers: containers,
+      reservedSlots: cargo.reservedSlots,
       bays: bays,
       metadata: metadata,
     );
@@ -282,7 +288,7 @@ class BaplieParserService {
       final location = _parseLOC(segment);
       if (location == null) continue;
       if (location.qualifier == BaplieConstants.locStowageCell) break;
-      if (location.qualifier != '61') continue;
+      if (location.qualifier != BaplieConstants.locNextPortOfCall) continue;
       final code = location.locationCode;
       if (code != null && RegExp(r'^[A-Z]{2}[A-Z0-9]{3}$').hasMatch(code)) {
         return code;
@@ -405,8 +411,10 @@ class BaplieParserService {
   /// 3. EQD+CN (datos del contenedor)
   /// 
   /// Por esto, acumulamos los pesos temporalmente hasta encontrar el EQD
-  List<ContainerUnit> _parseContainers(List<String> segments) {
+  ({List<ContainerUnit> containers, List<ReservedSlot> reservedSlots})
+      _parseCargo(List<String> segments) {
     final containers = <ContainerUnit>[];
+    final reservedSlots = <ReservedSlot>[];
     
     IsoCoordinate? currentPosition;
     String? currentPortOfLoading;
@@ -418,8 +426,25 @@ class BaplieParserService {
     double? pendingTareWeight;
     
     _TmpParseResult? pendingTemperature;
+    String? pendingOperatorCode;
+    final pendingDangerousGoods = <DangerousGoods>[];
 
     _ContainerBuilder? containerBuilder;
+
+    // Cierra ambos tipos de grupo sin fabricar un número para una reserva.
+    void finishGroup() {
+      final builder = containerBuilder;
+      if (builder != null) {
+        if (builder.containerId != null) {
+          containers.add(builder.build(_uuid.v4(), currentPosition,
+              currentPortOfLoading, currentPortOfDischarge));
+        } else if (currentPosition != null) {
+          reservedSlots.add(builder.buildReserved(currentPosition,
+              currentPortOfLoading, currentPortOfDischarge));
+        }
+      }
+      containerBuilder = null;
+    }
 
     for (int i = 0; i < segments.length; i++) {
       final segment = segments[i];
@@ -432,15 +457,7 @@ class BaplieParserService {
             switch (locResult.qualifier) {
               case BaplieConstants.locStowageCell: // 147
                 // Guardar contenedor anterior cuando viene nueva posición de estiba
-                if (containerBuilder != null && containerBuilder.containerId != null) {
-                  containers.add(containerBuilder.build(
-                    _uuid.v4(),
-                    currentPosition,
-                    currentPortOfLoading,
-                    currentPortOfDischarge,
-                  ));
-                  containerBuilder = null;
-                }
+                finishGroup();
                 // Reiniciar datos para nuevo grupo de contenedor
                 currentPosition = locResult.coordinate;
                 currentPortOfLoading = null;
@@ -450,6 +467,8 @@ class BaplieParserService {
                 pendingVgmWeight = null;
                 pendingTareWeight = null;
                 pendingTemperature = null;
+                pendingOperatorCode = null;
+                pendingDangerousGoods.clear();
                 break;
               case BaplieConstants.locPortOfLoading: // 9
                 currentPortOfLoading = locResult.locationCode;
@@ -467,16 +486,17 @@ class BaplieParserService {
           _parseMEA(segment, tempBuilder);
           
           // Guardar en pendientes o aplicar al contenedor si ya existe
-          if (containerBuilder != null) {
+          final builder = containerBuilder;
+          if (builder != null) {
             // Ya tenemos EQD, aplicar directamente
             if (tempBuilder.grossWeight != null) {
-              containerBuilder.grossWeight = tempBuilder.grossWeight;
+              builder.grossWeight = tempBuilder.grossWeight;
             }
             if (tempBuilder.vgmWeight != null) {
-              containerBuilder.vgmWeight = tempBuilder.vgmWeight;
+              builder.vgmWeight = tempBuilder.vgmWeight;
             }
             if (tempBuilder.tareWeight != null) {
-              containerBuilder.tareWeight = tempBuilder.tareWeight;
+              builder.tareWeight = tempBuilder.tareWeight;
             }
           } else {
             // EQD aún no llegó, guardar como pendiente
@@ -496,59 +516,74 @@ class BaplieParserService {
           final eqdResult = _parseEQD(segment);
           if (eqdResult != null) {
             // Crear nuevo contenedor
-            containerBuilder = _ContainerBuilder()
+            final builder = _ContainerBuilder()
               ..containerId = eqdResult.containerId
               ..isoSizeType = eqdResult.isoSizeType
               ..status = eqdResult.status
+              ..operatorCode = pendingOperatorCode
               ..isReefer = _isReeferIsoType(eqdResult.isoSizeType);
+            builder.dangerousGoods.addAll(pendingDangerousGoods);
+            if (pendingDangerousGoods.isNotEmpty) {
+              builder.isDangerous = true;
+              builder.imdgClass = pendingDangerousGoods.last.hazardClass;
+              builder.unNumber = pendingDangerousGoods.last.unNumber;
+            }
             
             // Aplicar pesos pendientes (MEA vino antes del EQD)
             if (pendingGrossWeight != null) {
-              containerBuilder.grossWeight = pendingGrossWeight;
+              builder.grossWeight = pendingGrossWeight;
             }
             if (pendingVgmWeight != null) {
-              containerBuilder.vgmWeight = pendingVgmWeight;
+              builder.vgmWeight = pendingVgmWeight;
             }
             if (pendingTareWeight != null) {
-              containerBuilder.tareWeight = pendingTareWeight;
+              builder.tareWeight = pendingTareWeight;
             }
             if (pendingTemperature != null) {
-              containerBuilder.isReefer = true;
-              containerBuilder.temperature = pendingTemperature.temperature;
-              containerBuilder.temperatureUnit = pendingTemperature.unit;
+              builder.isReefer = true;
+              builder.temperature = pendingTemperature.temperature;
+              builder.temperatureUnit = pendingTemperature.unit;
             }
+            containerBuilder = builder;
           }
           break;
 
         case 'NAD':
           // NAD+CA+ZIM:172:20' -> Carrier (Naviera)
-          if (containerBuilder != null) {
-            final operatorCode = _parseNAD(segment);
-            if (operatorCode != null) {
-              containerBuilder.operatorCode = operatorCode;
+          final operatorCode = _parseNAD(segment);
+          final builder = containerBuilder;
+          if (operatorCode != null) {
+            if (builder != null) {
+              builder.operatorCode = operatorCode;
+            } else {
+              pendingOperatorCode = operatorCode;
             }
           }
           break;
 
         case 'DGS':
           // DGS+IMD+clase+unNumber' -> Mercancías peligrosas
-          if (containerBuilder != null) {
-            final dgsResult = _parseDGS(segment);
-            containerBuilder.isDangerous = true;
-            containerBuilder.imdgClass = dgsResult.imdgClass;
-            containerBuilder.unNumber = dgsResult.unNumber;
-            containerBuilder.dangerousGoods.add(dgsResult.declaration);
+          final dgsResult = _parseDGS(segment);
+          final builder = containerBuilder;
+          if (builder != null) {
+            builder.isDangerous = true;
+            builder.imdgClass = dgsResult.imdgClass;
+            builder.unNumber = dgsResult.unNumber;
+            builder.dangerousGoods.add(dgsResult.declaration);
+          } else {
+            pendingDangerousGoods.add(dgsResult.declaration);
           }
           break;
 
         case 'TMP':
           // TMP+2+temperatura:CEL' -> Temperatura de reefer
           final tmpResult = _parseTMP(segment);
+          final builder = containerBuilder;
           if (tmpResult != null) {
-            if (containerBuilder != null) {
-              containerBuilder.isReefer = true;
-              containerBuilder.temperature = tmpResult.temperature;
-              containerBuilder.temperatureUnit = tmpResult.unit;
+            if (builder != null) {
+              builder.isReefer = true;
+              builder.temperature = tmpResult.temperature;
+              builder.temperatureUnit = tmpResult.unit;
             } else {
               pendingTemperature = tmpResult;
             }
@@ -557,30 +592,15 @@ class BaplieParserService {
 
         case 'UNT':
           // Fin del mensaje, guardar último contenedor
-          if (containerBuilder != null && containerBuilder.containerId != null) {
-            containers.add(containerBuilder.build(
-              _uuid.v4(),
-              currentPosition,
-              currentPortOfLoading,
-              currentPortOfDischarge,
-            ));
-            containerBuilder = null;
-          }
+          finishGroup();
           break;
       }
     }
 
     // Guardar último contenedor si no fue procesado por UNT
-    if (containerBuilder != null && containerBuilder.containerId != null) {
-      containers.add(containerBuilder.build(
-        _uuid.v4(),
-        currentPosition,
-        currentPortOfLoading,
-        currentPortOfDischarge,
-      ));
-    }
+    finishGroup();
 
-    return containers;
+    return (containers: containers, reservedSlots: reservedSlots);
   }
 
   /// Obtiene el tipo de segmento (primeros 3 caracteres)
@@ -659,8 +679,6 @@ class BaplieParserService {
     // contenedores llenos leídos como vacíos en CORPUS_A01 y 269 en
     // CORPUS_A03. La posición es la que identifica el campo, no su valor.
     final status = _parseContainerStatus(_safeGetElement(elements, 6));
-
-    if (containerId == null) return null;
 
     return _EqdParseResult(
       containerId: containerId,
@@ -903,7 +921,7 @@ class _LocParseResult {
 }
 
 class _EqdParseResult {
-  final String containerId;
+  final String? containerId;
   final String? isoSizeType;
   final ContainerStatus status;
 
@@ -943,6 +961,24 @@ class _ContainerBuilder {
   bool isReefer = false;
   double? temperature;
   String? temperatureUnit;
+
+  ReservedSlot buildReserved(IsoCoordinate position, String? portOfLoading,
+      String? portOfDischarge) => ReservedSlot(
+    stowagePosition: position,
+    isoSizeType: isoSizeType,
+    status: status,
+    portOfLoading: portOfLoading,
+    portOfDischarge: portOfDischarge,
+    operatorCode: operatorCode,
+    nominalWeight: vgmWeight ?? grossWeight,
+    isReefer: isReefer,
+    temperature: temperature,
+    temperatureUnit: temperatureUnit,
+    isDangerous: isDangerous,
+    imdgClass: imdgClass,
+    unNumber: unNumber,
+    dangerousGoods: List.unmodifiable(dangerousGoods),
+  );
 
   ContainerUnit build(
     String id,

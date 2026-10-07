@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import 'vessel.dart';
 import 'container_unit.dart';
+import 'reserved_slot.dart';
 import 'bay.dart';
 import 'vessel_geometry.dart';
 
@@ -39,6 +40,9 @@ class VesselVoyage extends Equatable {
   
   /// Lista de todos los contenedores en el buque
   final List<ContainerUnit> containers;
+
+  /// Posiciones previstas sin número de contenedor; no son carga a bordo.
+  final List<ReservedSlot> reservedSlots;
   
   /// Mapa de bahías organizadas por número.
   ///
@@ -55,7 +59,9 @@ class VesselVoyage extends Equatable {
   ///
   /// La extensión la hace [withGeometry], no el parser: depende de la
   /// geometría declarada tanto como el resto del plano. Recién parseado, el
-  /// mapa sigue teniendo solo las bahías con carga propia.
+  /// mapa incluye la carga propia. T-69 añade además las bahías con reservas
+  /// y sus proyecciones para dibujarlas, sin sumar ocupación. Por tanto,
+  /// `bays.length` cuenta bahías del plan, no bahías físicamente ocupadas.
   final Map<int, Bay> bays;
   
   /// Metadatos adicionales del mensaje BAPLIE
@@ -91,6 +97,7 @@ class VesselVoyage extends Equatable {
     this.portOfDestination,
     this.messageDate,
     this.containers = const [],
+    this.reservedSlots = const [],
     this.bays = const {},
     this.metadata,
     this.geometry,
@@ -100,6 +107,11 @@ class VesselVoyage extends Equatable {
 
   /// Total de contenedores en el buque
   int get totalContainers => containers.length;
+
+  int get totalReservedSlots => reservedSlots.length;
+
+  List<ReservedSlot> getReservedSlotsInBay(int bayNumber) => reservedSlots
+      .where((slot) => slot.stowagePosition.bay == bayNumber).toList();
   
   /// Contenedores llenos
   int get fullContainers => 
@@ -159,6 +171,7 @@ class VesselVoyage extends Equatable {
       );
     }
 
+    _addReservedBays(updated, geometry);
     return copyWith(
       geometry: geometry,
       portOfCall: portOfCall,
@@ -193,9 +206,38 @@ class VesselVoyage extends Equatable {
     return shadows;
   }
 
-  /// Posiciones de estiba ocupadas en este viaje, para deducir la geometría.
-  Iterable<IsoCoordinate> get stowagePositions =>
-      containers.map((c) => c.stowagePosition).whereType<IsoCoordinate>();
+  /// Proyección de reservas largas en las impares vecinas, solo para dibujar.
+  /// Se mantiene separada de [neighborOccupiedSlots]: no ocupa físicamente.
+  Map<int, Map<String, ReservedSlot>> neighborReservedSlots() {
+    final shadows = <int, Map<String, ReservedSlot>>{};
+    for (final slot in reservedSlots) {
+      final position = slot.stowagePosition;
+      if (position.bay.isOdd || (slot.sizeInFeet ?? 0) < 40) continue;
+      final key = '${position.rowPadded}${position.tierPadded}';
+      for (final number in [position.bay - 1, position.bay + 1]) {
+        if (number < 1) continue;
+        shadows.putIfAbsent(number, () => {})[key] = slot;
+      }
+    }
+    return shadows;
+  }
+
+  void _addReservedBays(Map<int, Bay> target, VesselGeometry? geometry) {
+    final numbers = {
+      ...reservedSlots.map((slot) => slot.stowagePosition.bay),
+      ...neighborReservedSlots().keys,
+    };
+    for (final number in numbers) {
+      target.putIfAbsent(number, () => Bay(bayNumber: number,
+          is40FtBay: number.isEven, geometry: geometry));
+    }
+  }
+
+  /// Evidencia de posiciones del plan para geometría; no es la ocupación.
+  Iterable<IsoCoordinate> get stowagePositions sync* {
+    yield* containers.map((c) => c.stowagePosition).whereType<IsoCoordinate>();
+    yield* reservedSlots.map((slot) => slot.stowagePosition);
+  }
 
   /// Puertos de carga del archivo (`LOC+9`) con su conteo, del más frecuente
   /// al menos frecuente.
@@ -253,6 +295,15 @@ class VesselVoyage extends Equatable {
         c.portOfDischarge != port).length,
   );
 
+  /// Operaciones previstas de las reservas, aparte de los contenedores.
+  ({int loaded, int discharged, int transit}) reservedCountsFor(String? port) => (
+    loaded: port == null ? 0 : reservedSlots.where((s) => s.portOfLoading == port).length,
+    discharged: port == null ? 0 : reservedSlots.where((s) => s.portOfDischarge == port).length,
+    transit: port == null ? 0 : reservedSlots.where((s) =>
+        s.portOfLoading != null && s.portOfLoading != port &&
+        s.portOfDischarge != port).length,
+  );
+
   /// Indica si el contenedor ya venía a bordo y no se opera en esta escala.
   ///
   /// Es lo que el planificador tacha a mano en el plano impreso. Sin puerto de
@@ -282,6 +333,7 @@ class VesselVoyage extends Equatable {
         portOfDestination,
         messageDate,
         containers,
+        reservedSlots,
         bays,
         metadata,
         geometry,
@@ -299,6 +351,7 @@ class VesselVoyage extends Equatable {
     String? portOfDestination,
     DateTime? messageDate,
     List<ContainerUnit>? containers,
+    List<ReservedSlot>? reservedSlots,
     Map<int, Bay>? bays,
     BaplieMetadata? metadata,
     VesselGeometry? geometry,
@@ -316,6 +369,7 @@ class VesselVoyage extends Equatable {
       portOfDestination: portOfDestination ?? this.portOfDestination,
       messageDate: messageDate ?? this.messageDate,
       containers: containers ?? this.containers,
+      reservedSlots: reservedSlots ?? this.reservedSlots,
       bays: bays ?? this.bays,
       metadata: metadata ?? this.metadata,
       geometry: geometry ?? this.geometry,
@@ -325,7 +379,8 @@ class VesselVoyage extends Equatable {
   }
 
   /// Por defecto conserva el documento histórico de exportación y Firestore.
-  /// El almacén local omite las bahías, reconstruibles desde [containers].
+  /// El almacén local omite las bahías, reconstruibles desde [containers]
+  /// y [reservedSlots].
   Map<String, dynamic> toJson({bool includeBays = true}) => {
         'id': id,
         'vessel': vessel.toJson(),
@@ -336,6 +391,7 @@ class VesselVoyage extends Equatable {
         if (portOfDestination != null) 'portOfDestination': portOfDestination,
         if (messageDate != null) 'messageDate': messageDate!.toIso8601String(),
         'containers': containers.map((c) => c.toJson()).toList(),
+        'reservedSlots': reservedSlots.map((slot) => slot.toJson()).toList(),
         if (includeBays)
           'bays': bays.map((k, v) => MapEntry(k.toString(), v.toJson())),
         if (metadata != null) 'metadata': metadata!.toJson(),
@@ -383,6 +439,9 @@ class VesselVoyage extends Equatable {
             ? DateTime.parse(json['messageDate'] as String)
             : null,
         containers: containers,
+        reservedSlots: (json['reservedSlots'] as List<dynamic>?)
+            ?.map((s) => ReservedSlot.fromJson(s as Map<String, dynamic>)).toList()
+            ?? const [],
         bays: bays,
         metadata: json['metadata'] != null
             ? BaplieMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
@@ -391,7 +450,7 @@ class VesselVoyage extends Equatable {
     // También se reconstruyen sin geometría: la ocupación queda no calculable,
     // pero nunca se pierde la evidencia física ni se muestra un cero falso.
     final shadows = voyage.neighborOccupiedSlots();
-    return voyage.copyWith(bays: {
+    final restored = {
       for (final entry in bays.entries)
         entry.key: entry.value.copyWith(
           slotsOccupiedByNeighbors: shadows[entry.key] ?? const {},
@@ -404,7 +463,9 @@ class VesselVoyage extends Equatable {
             geometry: geometry,
             slotsOccupiedByNeighbors: entry.value,
           ),
-    });
+    };
+    voyage._addReservedBays(restored, geometry);
+    return voyage.copyWith(bays: restored);
   }
 
   static Map<int, Bay> _baysFromContainers(

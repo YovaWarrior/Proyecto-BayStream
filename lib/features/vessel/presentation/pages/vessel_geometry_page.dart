@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../formatters/stack_weight_formatter.dart';
+import '../widgets/voyage_call_summary.dart';
 
 /// Lo que la pantalla devuelve: la geometría del buque y el puerto de esta
 /// escala. El puerto no es geometría —el casco no cambia entre escalas— pero
@@ -692,6 +693,10 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     for (final port in widget.loadingPorts.keys) {
       if (!options.contains(port)) options.add(port);
     }
+    for (final slot in widget.voyage?.reservedSlots ?? const <ReservedSlot>[]) {
+      final port = slot.portOfLoading;
+      if (port != null && !options.contains(port)) options.add(port);
+    }
     return options;
   }
 
@@ -763,6 +768,18 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               ],
             ),
             const SizedBox(height: 12),
+            if (_portOfCall != null && widget.voyage != null &&
+                widget.voyage!.reservedSlots.isNotEmpty)
+              VoyageCallSummary(
+                voyage: widget.voyage!,
+                port: _portOfCall,
+                key: const ValueKey('port-split'),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: _puertoElegido ? FontWeight.bold : FontWeight.normal,
+                ),
+              )
+            else
             Text(
               _portOfCall == null
                   ? 'Sin puerto declarado no se distingue la carga de paso: el '

@@ -47,6 +47,11 @@ void main() {
       expect(voyage.containersInTransit, expected.transit);
       final split = '${expected.discharged} se descargan · '
           '${expected.loaded} se cargan · ${expected.transit} de paso';
+      // T-69 conserva las cifras de cajas y muestra las reservas por separado.
+      final reserved = parsed.reservedCountsFor(expected.port);
+      final displayed = parsed.reservedSlots.isEmpty ? split :
+          'Se cargan ${expected.loaded} contenedores y ${reserved.loaded} '
+          'reservas (${expected.loaded + reserved.loaded} movimientos)';
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -63,14 +68,14 @@ void main() {
       await tester.scrollUntilVisible(
           find.byKey(const ValueKey('port-split')), 300,
           scrollable: find.byType(Scrollable).first, maxScrolls: 30);
-      expect(find.text(split), findsOneWidget);
+      expect(find.text(displayed), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(MaterialApp(
           theme: ThemeData(fontFamily: 'Roboto'),
           home: Scaffold(
               body: SingleChildScrollView(
                   child: VoyageSummaryCard(voyage: voyage)))));
-      expect(find.text(split), findsOneWidget);
+      expect(find.text(displayed), findsOneWidget);
       expect(tester.takeException(), isNull);
       stdout.writeln('T-68 ${entry.key} ${expected.port}: $split');
     });

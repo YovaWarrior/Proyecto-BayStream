@@ -66,6 +66,9 @@ class BaplieConstants {
   /// declara como puerto para el que vale este plano.
   static const String locPlaceOfDeparture = '5';
 
+  /// Próximo puerto de escala declarado en la cabecera.
+  static const String locNextPortOfCall = '61';
+
   /// Puerto de carga (Port of Loading)
   static const String locPortOfLoading = '9';
   
