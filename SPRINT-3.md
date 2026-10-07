@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 205 h estimadas** (al 7-oct, 10.5) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 206 h estimadas** (al 7-oct, 10.7) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -395,10 +395,48 @@ Los seis archivos de la tabla 2.4. Detalle de la operación en
 
 ### Ola 2 · Operación en muelle y plan de carga, en un dispositivo (9–13 oct)
 
+#### T-73 · Importar el listado de la agencia, con equivalencias y peligrosas · 4.5 h · Timonel (ficha completa, 7-oct)
+
+**Para qué.** El muelle trabaja con el listado de la agencia: el número de orden, el contenedor, su tara real y su VGM exacto. Hoy ese listado existe solo en papel y en un Excel. T-73 lo convierte en la tercera fuente de la operación (`OperationSourceKind.exportList` de T-72), ya normalizado contra el plan.
+
+**El archivo** (`LISTADO_A08.xlsx` es el modelo; el de la agencia real tiene la misma forma):
+- **Cabecera.** Unas filas de título, luego la fila de encabezados: OR, CONTENEDOR, TIPO, POT, POD, TARA, PESO NETO, PESO VGM, REEFER TEMP, ORIG, F, E, CONTENIDO, HORA, MARCHAMO, OPR. Las columnas se ubican **por su encabezado**, no por su posición.
+- **Separadores de agencia.** Son filas de texto combinado con «CODIGO»; no son contenedores. Cada contenedor guarda a qué agencia pertenece.
+- **Lleno o vacío** se marca con una X en F o en E.
+- **PESO NETO** es una fórmula (VGM − TARA). En `LISTADO_A08.xlsx` la fórmula **no tiene valor guardado**, porque la anonimización reescribió el archivo: se **recalcula**, no se lee.
+- **HORA y MARCHAMO** pueden venir vacías.
+
+**Qué hacer.**
+1. **Leer el Excel** con un paquete autorizado en 2.7. Tiene que ser **Dart puro**, que funcione en Web, Windows y Android sin código nativo. Se declara en el informe con su versión y su licencia, y por qué ese.
+2. **Normalizar cada fila:** número de orden, contenedor, tipo, puertos, tara, VGM exacto (sin truncar), lleno o vacío, contenido, reefer, hora, marchamo, línea y agencia. Una fila que no se entienda se reporta con su número de fila; no se descarta en silencio.
+3. **Peligrosas desde CONTENIDO.** Leer la clase y los números ONU del texto libre: «IMO 9 UN 3082, 3077» da clase 9 y UN 3082 y 3077. Si el plan trae otros números para ese contenedor, **avisarlo**. En el caso, el OR 127 declara UN 3082 y 3077, y el plan solo trae 3077.
+4. **Tabla de equivalencias editable y persistente**, en el almacén local, para tipos, puertos y códigos de línea.
+   - **Se propone sola** a partir de los contenedores que están en el listado y en el plan a la vez. En el caso: 40HC → 45G1, 20ST → 22G1, 40ST → 42G1, COMNG → COSPC y LNB → LINB.
+   - Lo que no se puede inferir, porque ningún contenedor de ese tipo está en los dos, **se pide al usuario**. En el caso, 40RF → 45R1. El usuario confirma o corrige antes de aplicar.
+5. **Cruce con el plan.**
+   - Cada lleno del listado se busca en el plan por su número.
+   - Cada vacío se asigna a su **grupo** de reservas (tipo, puerto de descarga y línea, ya traducidos).
+   - Lo que no cruza se informa: llenos del listado que no están en el plan, llenos del plan que no están en el listado, y vacíos sin grupo.
+6. **Guardar el listado normalizado** como fuente `exportList` de la operación, con las equivalencias ya aplicadas, como pide T-79a, 2.1.
+7. **Una pantalla de importación sencilla.** Elegir el archivo, ver el resumen y las equivalencias, confirmar. La operación en el muelle llega en T-74 a T-76.
+
+**Terminada cuando:**
+- [ ] `LISTADO_A08.xlsx` contra `CORPUS_A08` da:
+  - **176 filas en 4 agencias;**
+  - **120 llenos que cruzan uno a uno** con el plan;
+  - **56 vacíos en los 6 grupos de reservas** (20, 17, 9, 7, 2 y 1);
+  - cero filas sin entender.
+- [ ] Las cinco equivalencias se proponen solas, y 40RF → 45R1 se pide.
+- [ ] El OR 127 trae clase 9 y UN 3082 y 3077, con el aviso de que el plan no trae 3082.
+- [ ] El VGM se guarda exacto. Ejemplo: el OR 130 da **7 266.59 kg**, no los 7 200 del plan.
+- [ ] Las equivalencias confirmadas sobreviven al cierre de la app, y una segunda importación ya no las pide.
+- [ ] Se importa y se ve en los tres clientes.
+
+
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-72** | RF-037 | 3.0 | Estado operativo de cada contenedor y reserva (planificado, movido, cancelado) y bitácora de movimientos: qué, cuándo, quién | Persistente y sin conexión; cada cambio queda en la bitácora con su hora |
-| **T-73** | RF-038 | 4.5 | Importar el listado Excel de la agencia, con tabla de equivalencias editable (tipos, puertos, códigos de línea) y lectura de peligrosas desde CONTENIDO | `LISTADO_A08.xlsx`: 176 filas, 120 llenos que cruzan con A08 y 56 vacíos en 6 grupos; LNB ↔ LINB, COMNG ↔ COSPC |
+| **T-73** | RF-038 | 4.5 | Importar el listado Excel de la agencia, con tabla de equivalencias editable (tipos, puertos, códigos de línea) y lectura de peligrosas desde CONTENIDO | `LISTADO_A08.xlsx`: 176 filas, 120 llenos que cruzan con A08 y 56 vacíos en 6 grupos; LNB ↔ LINB, COMNG ↔ COSPC · **ficha completa arriba** |
 | **T-74** | RF-038 | 3.0 | Plan de carga: cruzar listado y plan; número de orden en cada celda; pendientes por bahía | Los 9 conteos por bahía de la sección 2 del caso, en cubierta y bodega |
 | **T-75** | RF-037 | 4.0 | Descarga: tocar el contenedor y queda marcado; aviso de re-estiba si su puerto no es este; deshacer | Los 114 de `CORPUS_A07` se marcan y se deshacen sin perder la bitácora |
 | **T-76** | RF-037 | 5.0 | Carga: confirmar un lleno por número de orden o de contenedor; asignar un vacío solo a una celda libre de su grupo; hora y marchamo; cancelar y corregir | Reproducir `CASO_A08_EVENTOS.json` deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv` |
@@ -757,3 +795,32 @@ T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
   - Guarda tipo, estado, puertos, línea, peso nominal, reefer y peligrosas.
 - **Pruebas.** **360 pruebas** y 31 de 31 contra el corpus, con `analyze` limpio y las tres compilaciones correctas. **El piso pasa a 360.**
 - **Lo que quedó pendiente.** No se pudo volver a abrir el detalle de una reserva después de recargar Chrome: la herramienta de control del navegador detuvo la acción porque no pudo confirmar la URL. Las 55 reservas sí se recuperaron. Esa comprobación pasa a la aceptación cruzada de Timonel.
+
+### 10.7 · T-68 y T-69 terminadas · T-72 entregada · T-73 pasa a Timonel (7-oct)
+
+**T-68 y T-69 pasan a Terminado.** Timonel las aceptó en Windows, en el Honor a 360 dp (variante `.t72`) y en Chrome.
+- T-68: las cuatro filas cuadran. GTSTC sale preseleccionado después de A08, y HNPCR como control cuando el último puerto era GTPBR.
+- T-69: 405 contenedores y 55 reservas en A08 y A08v, y cero de A01 a A07. El resumen dice «121 contenedores y 55 reservas (176 movimientos)».
+- **Se cerró lo pendiente de 10.6:** en Chrome, el detalle completo de una reserva sigue ahí después de recargar.
+
+**T-72, de Timonel, pasa a En revisión** (commit propuesto: «Sprint 3: T-72 bitacora local de movimientos y estado derivado, con la aceptacion de T-68 y T-69»).
+- **Lo construido.**
+  - Bitácora local solo de anexar en tres cajas de Hive.
+  - Plan combinado con claves `C:` y `R:`.
+  - Estado derivado que no depende del orden de llegada: descarga, carga, vacío, cancelar, anular y corregir, con seis tipos de conflicto.
+  - Exportación de la bitácora en JSON.
+- **El caso real.** Los 176 eventos, sin el intercambio, dan las 460 posiciones de `CASO_A08_ESTADO_FINAL.csv`. Solo 014-01-02 y 014-01-08 salen «fuera de plan», a la espera de T-80. Cuadran los nueve conteos por bahía (82 en cubierta y 94 en bodega).
+- **Revisión de Yov.** El bloque de commit incluye todo lo nuevo y lo modificado, y `main.dart` no se tocó. `Operation` guarda sus fuentes, con `exportList` lista para T-73.
+- **Validaciones.** **383 pruebas**, `analyze` en cero, 22 de 22 contra el corpus y sin dependencias nuevas. **El piso pasa a 383.**
+- **Horas.** ≈ 4.0 en lugar de 3.0, sin contar la aceptación. El total sube a ≈ 206 h.
+- **Incidencias que declaró Timonel.**
+  - Cerró con `/IM` dos instancias de BayStream, casi seguro abiertas por su propia herramienta.
+  - `flutter test --platform chrome` se colgó y lo reemplazó por la comprobación en Chrome.
+  - **El límite de prueba de 90 000 kg de T-66 quedó en el perfil BUQUE GOLF** del Windows de Carlos. **Carlos lo quita** desde «Perfiles guardados». Esa aceptación dejó además perfiles y viajes recientes del corpus (BUQUE ALFA a ECO), que pueden quedarse.
+- **Falta la aceptación cruzada de Codex**, después de T-70c.
+
+**El carril de `lib/` sigue con Timonel y T-73 pasa a él.** El plan de 10.4 era que T-73 fuera de Codex, pero Codex está en T-70c. Para no detener el carril, Timonel toma T-73, con la ficha completa en la sección 5. Codex, al terminar T-70c, acepta T-72 y T-73 juntas y toma **T-74**.
+
+**Pasos de consola que ya hizo Carlos** (no quedaron en 10.6). Activó correo y contraseña en `baystream-app` y creó una cuenta de prueba, que luego servirá como usuario de oficina. Firestore todavía no está creado.
+
+**Timonel abre un chat nuevo**, porque el anterior llegó a su límite de contexto. Su primer mensaje lo pone al día con este archivo.
