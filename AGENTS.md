@@ -118,7 +118,9 @@ herramientas de Flutter y el Honor, así que se reparten así:
   escritorio) puede guardar su almacén local en
   `%LOCALAPPDATA%\Packages\…\LocalCache\Local\BayStream` en vez de
   `%LOCALAPPDATA%\BayStream`. En cada prueba de persistencia, el informe dice qué
-  almacén usó la app.
+  almacén usó la app. Para usar el almacén real, abre la app con
+  `Start-Process explorer.exe -ArgumentList <ruta del exe>`, no con
+  `Start-Process <exe>`: así el proceso queda fuera del paquete (T-73, 10.9).
 - En Chrome, la ventana que controla la automatización tiene que quedar visible: con la
   pestaña minimizada u oculta, Flutter deja de dibujar, los menús no abren y las capturas
   expiran.

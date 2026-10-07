@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 206 h estimadas** (al 7-oct, 10.7) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 207.5 h estimadas** (al 7-oct, 10.9) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -433,12 +433,41 @@ Los seis archivos de la tabla 2.4. Detalle de la operación en
 - [ ] Las equivalencias confirmadas sobreviven al cierre de la app, y una segunda importación ya no las pide.
 - [ ] Se importa y se ve en los tres clientes.
 
+#### T-74 · El plan de carga en el plano: número de orden en cada celda y pendientes por bahía · 3.0 h · Codex (ficha completa, 7-oct)
+
+**Para qué.** Hoy el planificador busca cada contenedor en el listado impreso y escribe su número de orden en el plano. Con T-73 la app ya sabe qué OR le toca a cada contenedor y a qué grupo pertenece cada vacío. T-74 pone esa información en el plano y cuenta lo que falta por bahía.
+
+**Qué hacer.**
+1. **Las fuentes completas de la operación.**
+   - Al confirmar la escala de un BAPLIE, se guarda su texto en la operación de T-72 y T-73. La operación se identifica por buque, viaje y escala (`docs/T73-RESULTADOS.md`, 3.4).
+   - Si la operación ya existe, se conservan su `id`, su `createdAt` y sus otras fuentes, y solo se reemplaza la fuente de ese tipo. Si no existe, se crea.
+   - **El tipo de fuente sale de los conteos de T-68** en la escala confirmada: si solo hay cargas, es `loading_baplie`; si solo hay descargas, `arrival_baplie`; si hay las dos cosas o ninguna, se pregunta al usuario.
+   - **En el caso**, A07 (114 descargas en GTSTC) y A08 (121 cargas en GTSTC) tienen el mismo buque, BUQUE GOLF, y el mismo viaje, VIAJE007A. Por eso quedan en **una sola operación**, con tres fuentes: `arrival_baplie`, `loading_baplie` y `export_list`.
+2. **El número de orden en la celda**, como lo escribe hoy el planificador en el papel. Se elige con un modo de vista «Número de orden», junto a los que el plano ya tenga.
+   - **Lleno planificado:** muestra el OR del listado, cruzado por número de contenedor. Esto incluye el **OR 85**, un vacío que el plan ya trae con su número.
+   - **Reserva:** muestra su grupo en corto (tipo, puerto y línea), sin OR. El OR del vacío llega cuando se asigna, en T-76.
+   - **Celda de carga sin cruce:** muestra «—» y aparece en el resumen.
+   - El PDF no cambia en esta tarea.
+3. **Pendientes por bahía.** Se calculan con el **estado derivado de T-72**, no solo con el plan.
+   - Se separan por bahía, por cubierta y bodega, y por llenos y vacíos.
+   - Lleno o vacío se decide **por el listado** (F o E). Por eso el OR 85 cuenta como vacío.
+   - Se ven en el resumen de cada bahía y en una tabla de la operación.
+4. **Sin listado.** Si la operación todavía no tiene `export_list`, el modo «Número de orden» lo dice y ofrece importarlo (T-73). Los pendientes se calculan igual, solo con el plan.
+
+**Terminada cuando:**
+- [ ] A07, A08 y `LISTADO_A08.xlsx` quedan en una sola operación con sus tres fuentes. Reabrir la app no crea otra, y volver a leer A08 solo reemplaza `loading_baplie`.
+- [ ] Con A08 y el listado, los 121 contenedores por cargar muestran su OR (120 llenos y el OR 85), y las 55 reservas muestran su grupo. Ninguna celda de carga queda con «—».
+- [ ] Al empezar, los pendientes reproducen la tabla de la sección 2 del caso: las 9 bahías, 82 en cubierta y 94 en bodega, 120 llenos y 56 vacíos.
+- [ ] Al reproducir `CASO_A08_EVENTOS.json` en la bitácora de T-72, los pendientes bajan con cada evento y terminan en cero. Si el intercambio deja algo en 014-01-02 y 014-01-08, el informe explica qué queda; eso lo resuelve T-80.
+- [ ] El OR se lee en la celda a 360 dp. La tarea se acepta en Windows, en el Honor y en Chrome.
+- [ ] Piso de 405 pruebas, `analyze` en cero y los corpus de T-68, T-69, T-72 y T-73 en verde.
+
 
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-72** | RF-037 | 3.0 | Estado operativo de cada contenedor y reserva (planificado, movido, cancelado) y bitácora de movimientos: qué, cuándo, quién | Persistente y sin conexión; cada cambio queda en la bitácora con su hora |
 | **T-73** | RF-038 | 4.5 | Importar el listado Excel de la agencia, con tabla de equivalencias editable (tipos, puertos, códigos de línea) y lectura de peligrosas desde CONTENIDO | `LISTADO_A08.xlsx`: 176 filas, 120 llenos que cruzan con A08 y 56 vacíos en 6 grupos; LNB ↔ LINB, COMNG ↔ COSPC · **ficha completa arriba** |
-| **T-74** | RF-038 | 3.0 | Plan de carga: cruzar listado y plan; número de orden en cada celda; pendientes por bahía. **Desde T-73** la operación puede existir solo con la fuente `export_list`, porque el texto del BAPLIE no se conserva después de leerlo: T-74 guarda ese texto como fuente `loading_baplie` (y `arrival_baplie` si aplica) **en la misma operación**, no en una nueva | Los 9 conteos por bahía de la sección 2 del caso, en cubierta y bodega; la operación queda con sus fuentes completas |
+| **T-74** | RF-038 | 3.0 | Plan de carga: cruzar listado y plan; número de orden en cada celda; pendientes por bahía. **Desde T-73** la operación puede existir solo con la fuente `export_list`, porque el texto del BAPLIE no se conserva después de leerlo: T-74 guarda ese texto como fuente `loading_baplie` (y `arrival_baplie` si aplica) **en la misma operación**, no en una nueva · **ficha completa arriba** | Los 9 conteos por bahía de la sección 2 del caso, en cubierta y bodega; la operación queda con sus fuentes completas |
 | **T-75** | RF-037 | 4.0 | Descarga: tocar el contenedor y queda marcado; aviso de re-estiba si su puerto no es este; deshacer | Los 114 de `CORPUS_A07` se marcan y se deshacen sin perder la bitácora |
 | **T-76** | RF-037 | 5.0 | Carga: confirmar un lleno por número de orden o de contenedor; asignar un vacío solo a una celda libre de su grupo; hora y marchamo; cancelar y corregir | Reproducir `CASO_A08_EVENTOS.json` deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv` |
 | **T-77** | RF-037 | 3.0 | Validación preventiva antes de confirmar: celda, 20/40, peso de la pila, posición del planificador para los llenos, grupo para los vacíos | Un vacío en una celda de otro grupo no se confirma sin motivo escrito |
@@ -865,3 +894,31 @@ T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
   - Chrome.
 
 **Codex espera.** Cuando Timonel entregue T-73, Codex abre un **chat nuevo**, porque el actual viene desde T-70. Ahí hace la aceptación cruzada de T-72 y T-73, y luego T-74.
+
+### 10.9 · T-73 entregada y commiteada, en revisión · T-74 pasa a Codex con ficha completa (7-oct)
+
+**T-73, de Timonel, pasa a En revisión.** El commit es `04ecbab`, «Sprint 3: T-73 importar el listado de la agencia con equivalencias, peligrosas y cruce con el plan».
+- **Las cifras de la ficha cuadran.** Pasan en los tres clientes, con la persistencia probada en cada uno:
+  - en **Windows**, sobre el almacén real;
+  - en el **Honor** a 360 dp, con la variante `.t73`;
+  - en **Chrome**, en un origen local nuevo.
+- **Antes, en Windows, Timonel quitó el límite de prueba de 90 000 kg** de BUQUE GOLF. Después de reiniciar, sigue sin límite.
+- **Validaciones.** **405 pruebas** (el piso nuevo), `analyze` en cero, el corpus de T-73 en 2 de 2 y el de T-68, T-69 y T-72 en 22 de 22.
+- **Dependencias.** `excel_community 1.0.10` y `archive 4.0.9` directas, las dos con versión fija. En el lock solo cambian esas dos entradas.
+- **Revisión de Yov sobre el commit.** Toca 23 archivos y ninguno es `main.dart` ni los congelados de H5. Los únicos números de contenedor son de prueba (TSTU) o del corpus anonimizado (XQ). Los fixtures son sintéticos.
+- **La identidad de la operación** queda en `docs/T73-RESULTADOS.md`, 3.4: buque, viaje y escala. Cuadra con T-79a, donde el `operationId` es un UUID v4 que crea quien publica.
+- **Horas.** ≈ 6.0 en lugar de 4.5, sin medir con precisión. El total sube a ≈ 207.5 h.
+- **Detalles menores, para T-77, T-78 o si sobra tiempo:**
+  - la lista de 176 filas se pliega cuando sale de la vista;
+  - en Android, esas filas forman un solo nodo de accesibilidad.
+
+**Regla nueva en `AGENTS.md`.** La app de Windows se abre con `Start-Process explorer.exe -ArgumentList <exe>`, no con `Start-Process <exe>`.
+- Lanzada desde el PowerShell de un agente empaquetado, la app usa el almacén redirigido del paquete y no el real.
+- A Timonel le pasó en esta aceptación. Lo corrigió cerrando por PID.
+
+**El carril de `lib/` pasa a Codex**, en un chat nuevo:
+1. Primero, la aceptación cruzada de T-72 y T-73 (sección 6).
+2. Después, T-74 con su ficha completa de la sección 5. La ficha agrega guardar los BAPLIE como fuentes de la operación, en la misma operación.
+- Timonel queda en pausa. Cuando Codex entregue T-74, Timonel la acepta y toma T-75, también en un chat nuevo.
+
+**El segundo carril** (`git worktree`, sección 6) **no se abre por ahora.** Duplicaría el gasto de tokens de Carlos y lo obligaría a mezclar. Se vuelve a evaluar al terminar T-76, contra el punto de control del 14-oct.
