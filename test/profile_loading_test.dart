@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/local_profile_test_support.dart';
+import 'support/t74_movement_log_support.dart';
+import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
 
 void main() {
   late ProviderContainer container;
@@ -16,6 +18,7 @@ void main() {
   setUp(() async {
     store = await testProfileStore();
     container = ProviderContainer(overrides: [
+      movementLogRepositoryProvider.overrideWith((ref) async => T74MemoryLog()),
       vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),
       localVesselRepositoryProvider
           .overrideWith((ref) async => store.repository),
@@ -37,7 +40,7 @@ void main() {
         notifier.currentProfile!.origin, VesselProfileOrigin.proposedFromFile);
     final geometry = notifier.currentProfile!.geometry;
     expect(
-        await notifier.confirmGeometry(geometry, portOfCall: 'GTPBR'), isNull);
+        await notifier.confirmGeometry(geometry, portOfCall: 'GTPBR', sourceKind: OperationSourceKind.loadingBaplie), isNull);
     final previousId = notifier.publishedVoyage!.id;
     expect(notifier.currentProfile!.origin, VesselProfileOrigin.declaredByUser);
     final second = await notifier.parseBaplieContent(profileTestEdi);
@@ -176,3 +179,4 @@ void main() {
     expect(notifier.pendingVoyage, isNotNull);
   });
 }
+

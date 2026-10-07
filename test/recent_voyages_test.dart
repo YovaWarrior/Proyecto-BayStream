@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/local_profile_test_support.dart';
+import 'support/t74_movement_log_support.dart';
+import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
 
 void main() {
   // Reescrita en T-61: antes afirmaba que reabrir conservaba toda la geometría
@@ -16,13 +18,14 @@ void main() {
   test('publicar guarda y reabrir conserva dimensiones y aplica el perfil vigente sin parser ni nube', () async {
     final store = await testProfileStore();
     final first = ProviderContainer(overrides: [
+      movementLogRepositoryProvider.overrideWith((ref) async => T74MemoryLog()),
       localVesselRepositoryProvider.overrideWith((ref) async => store.repository),
       vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),
     ]);
     final notifier = first.read(voyageNotifierProvider.notifier);
     await notifier.parseBaplieContent(profileTestEdi);
     expect((await store.repository.getAllVoyages()).getOrElse(() => []), isEmpty);
-    await notifier.confirmGeometry(notifier.currentProfile!.geometry, portOfCall: 'GTPBR');
+    await notifier.confirmGeometry(notifier.currentProfile!.geometry, portOfCall: 'GTPBR', sourceKind: OperationSourceKind.loadingBaplie);
     final original = notifier.publishedVoyage!;
     final profile = notifier.currentProfile!;
     expect(original.vesselProfileKey, profile.key);
@@ -30,6 +33,7 @@ void main() {
     // El perfil puede cambiar entre viajes: reabrir toma el límite vigente.
     await store.repository.saveProfile(profile.copyWith(stackWeightLimitKg: 75000));
     final offline = ProviderContainer(overrides: [
+      movementLogRepositoryProvider.overrideWith((ref) async => T74MemoryLog()),
       localVesselRepositoryProvider.overrideWith((ref) async => store.repository),
       vesselRepositoryProvider.overrideWith((ref) => throw StateError('Sin archivo ni red')),
     ]);
@@ -66,6 +70,7 @@ void main() {
       await store.repository.saveProfile(profile);
       await store.repository.saveVoyage(voyage);
       final container = ProviderContainer(overrides: [
+      movementLogRepositoryProvider.overrideWith((ref) async => T74MemoryLog()),
         localVesselRepositoryProvider.overrideWith((ref) async => store.repository),
         vesselRepositoryProvider.overrideWith((ref) => throw StateError('El listado no lee archivos')),
       ]);
@@ -89,11 +94,11 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
         // Deja que el flush real del archivo termine fuera del reloj de widgets.
-        for (var attempt = 0; attempt < 100; attempt++) {
-          if ((await store.repository.getAllVoyages()).getOrElse(() => []).isEmpty) break;
+        for (var attempt = 0; attempt < 500; attempt++) {
+          if (container.read(recentVoyagesProvider).value?.isEmpty == true) break;
           await Future<void>.delayed(const Duration(milliseconds: 10));
         }
-        await Future<void>.delayed(const Duration(milliseconds: 20));
+        expect(container.read(recentVoyagesProvider).value, isEmpty);
         await tester.pumpAndSettle();
         expect(find.byType(EmptyStateWidget), findsOneWidget);
         expect((await store.repository.getAllProfiles()).getOrElse(() => []), [profile]);
@@ -107,3 +112,4 @@ void main() {
     });
   });
 }
+

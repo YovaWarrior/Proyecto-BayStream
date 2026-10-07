@@ -7,6 +7,8 @@ import '../../data/repositories/vessel_repository_impl.dart';
 import '../../data/services/baplie_parser_service.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/current_profile_parameters.dart';
+import '../../domain/services/operation_sources.dart';
+import 'movement_log_provider.dart';
 import '../../domain/repositories/vessel_repository.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
 import '../../data/repositories/local_vessel_repository_factory.dart';
@@ -107,6 +109,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   bool _newProfile = false;
   bool _busy = false;
   String _fileName = 'BAPLIE';
+  String? _pendingBaplieText;
   String? _lastConfirmedPortOfCall;
   String? get lastConfirmedPortOfCall => _lastConfirmedPortOfCall;
 
@@ -220,13 +223,16 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       final voyage = result.fold(
           (failure) => throw VesselOperationFailure(failure), (v) => v);
       final local = await ref.read(localVesselRepositoryProvider.future);
-      _lastConfirmedPortOfCall = voyage.portOfNextCall == null ? null :
-          (await local.getLastConfirmedPortOfCall()).fold(
-              (failure) => throw VesselOperationFailure(failure), (port) => port);
+      _lastConfirmedPortOfCall = voyage.portOfNextCall == null
+          ? null
+          : (await local.getLastConfirmedPortOfCall()).fold(
+              (failure) => throw VesselOperationFailure(failure),
+              (port) => port);
       final lookupResult = await local.findProfileFor(voyage.vessel);
       final lookup = lookupResult.fold(
           (failure) => throw VesselOperationFailure(failure), (v) => v);
       _pendingVoyage = voyage;
+      _pendingBaplieText = content;
       _fileName = fileName;
       _nameMatchConfirmed = false;
       _identityCandidates = lookup.nameCandidates;
@@ -282,7 +288,11 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     _newProfile = saved == null;
     _pendingProfile = saved ?? VesselProfile.proposeFrom(voyage);
     // Con dos escalas posibles, conocer el casco no confirma dónde está el buque.
-    if (voyage.portOfNextCall == null && saved != null &&
+    if (voyage.portOfNextCall == null &&
+        saved != null &&
+        (voyage.proposedPortOfCall == null ||
+            OperationSources.baplieKind(voyage, voyage.proposedPortOfCall!) !=
+                null) &&
         saved.geometry.coversAll(voyage.stowagePositions)) {
       await _publish(voyage, saved, voyage.proposedPortOfCall);
       return LoadFileResult.success(_fileName);
@@ -293,11 +303,25 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   /// Único punto de publicación: siempre inyecta la geometría del perfil.
   Future<void> _publish(
       VesselVoyage voyage, VesselProfile profile, String? portOfCall,
-      {bool confirmedCall = false}) async {
+      {bool confirmedCall = false, OperationSourceKind? sourceKind}) async {
     final published = voyage
         .withGeometry(profile.geometry, portOfCall: portOfCall)
-        .copyWith(vesselProfileKey: profile.key, clearPortOfCall: portOfCall == null);
+        .copyWith(
+            vesselProfileKey: profile.key, clearPortOfCall: portOfCall == null);
     final local = await ref.read(localVesselRepositoryProvider.future);
+    final text = _pendingBaplieText;
+    if (text != null && portOfCall != null) {
+      final kind =
+          OperationSources.baplieKind(voyage, portOfCall) ?? sourceKind;
+      if (kind == null || kind == OperationSourceKind.exportList) {
+        throw const VesselActionRequired(
+            'Elige si este BAPLIE es de llegada o de carga.');
+      }
+      final log = await ref.read(movementLogRepositoryProvider.future);
+      await OperationSources.save(log, published, portOfCall,
+          OperationSource(kind: kind, fileName: _fileName, content: text));
+      ref.read(operationSourcesRevisionProvider.notifier).changed();
+    }
     (await local.saveVoyage(published))
         .fold((failure) => throw VesselOperationFailure(failure), (_) {});
     if (confirmedCall) {
@@ -318,6 +342,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   /// ya publicado. Solo delega en `_publish` después de guardar correctamente.
   Future<String?> confirmGeometry(VesselGeometry geometry,
       {String? portOfCall,
+      OperationSourceKind? sourceKind,
       Set<String>? reeferSlots,
       VesselProfileOrigin? reeferSlotsOrigin}) async {
     if (_busy) {
@@ -333,6 +358,12 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     if (!geometry.coversAll(target.stowagePositions)) {
       return 'La geometría deja posiciones del archivo fuera del plano. '
           'Amplía las filas o niveles para incluirlas.';
+    }
+    if (_pendingBaplieText != null &&
+        portOfCall != null &&
+        OperationSources.baplieKind(target, portOfCall) == null &&
+        (sourceKind == null || sourceKind == OperationSourceKind.exportList)) {
+      return 'Elige si este BAPLIE es de llegada o de carga.';
     }
     final profile = (currentProfile ?? VesselProfile.proposeFrom(target))
         .copyWith(
@@ -350,7 +381,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
           (failure) => vesselFailureMessage(failure), (_) => null);
       if (error != null) return error;
       ref.invalidate(savedVesselProfilesProvider);
-      await _publish(target, profile, portOfCall, confirmedCall: true);
+      await _publish(target, profile, portOfCall,
+          confirmedCall: true, sourceKind: sourceKind);
       return null;
     } catch (error, stack) {
       return vesselErrorMessage(error, stack);
@@ -483,6 +515,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
 
   void _clearPending() {
     _pendingVoyage = null;
+    _pendingBaplieText = null;
     _pendingProfile = null;
     _identityCandidates = const [];
     _nameMatchConfirmed = false;
@@ -584,9 +617,11 @@ final voyageStatsProvider = Provider<VoyageStats?>((ref) {
         totalWeight: voyage.totalWeight,
         totalGrossWeight: voyage.totalGrossWeight,
         totalVgmWeight: voyage.totalVgmWeight,
-        totalBays: voyage.bays.values.where((bay) =>
-            bay.containers.isNotEmpty ||
-            bay.slotsOccupiedByNeighbors.isNotEmpty).length,
+        totalBays: voyage.bays.values
+            .where((bay) =>
+                bay.containers.isNotEmpty ||
+                bay.slotsOccupiedByNeighbors.isNotEmpty)
+            .length,
       );
     },
     orElse: () => null,
@@ -661,6 +696,7 @@ class VoyageStats {
   final int totalContainers;
   final int fullContainers;
   final int emptyContainers;
+
   /// Peso efectivo del viaje (T-66): VGM si viene, si no el bruto.
   final double totalWeight;
   final double totalGrossWeight;

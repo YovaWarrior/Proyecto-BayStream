@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/local_profile_test_support.dart';
+import 'support/t74_movement_log_support.dart';
+import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
 
 const _header = "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
     "LOC+5+HNPCR:139:6'";
@@ -115,6 +117,7 @@ void main() {
       () async {
     final store = await testProfileStore();
     final scope = ProviderContainer(overrides: [
+      movementLogRepositoryProvider.overrideWith((ref) async => T74MemoryLog()),
       vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),
       localVesselRepositoryProvider
           .overrideWith((ref) async => store.repository),
@@ -125,7 +128,7 @@ void main() {
           (await notifier.parseBaplieContent(_arrival)).needsGeometry, isTrue);
       expect(
           await notifier.confirmGeometry(notifier.currentProfile!.geometry,
-              portOfCall: 'GTSTC'),
+              portOfCall: 'GTSTC', sourceKind: OperationSourceKind.arrivalBaplie),
           isNull);
       final id = notifier.publishedVoyage!.id;
       expect(
@@ -216,3 +219,5 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 }
+
+

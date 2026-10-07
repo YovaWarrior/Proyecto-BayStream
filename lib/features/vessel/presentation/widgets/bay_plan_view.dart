@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/loading_plan_progress.dart';
+import '../providers/loading_plan_provider.dart';
 import '../providers/vessel_providers.dart';
+import 'loading_plan_controls.dart';
 import 'reserved_slot_details.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
@@ -18,6 +21,7 @@ class BayPlanView extends ConsumerStatefulWidget {
 
 class _BayPlanViewState extends ConsumerState<BayPlanView> {
   int? _selectedBayNumber;
+  bool _orderMode = false;
   final ScrollController _bayScrollController = ScrollController();
 
   @override
@@ -27,10 +31,10 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     if (widget.voyage.bays.isNotEmpty) {
       final sortedBayNumbers = widget.voyage.bays.keys.toList()..sort();
       final requestedBay = ref.read(selectedBayProvider);
-      _selectedBayNumber = requestedBay != null &&
-              widget.voyage.bays.containsKey(requestedBay)
-          ? requestedBay
-          : sortedBayNumbers.first;
+      _selectedBayNumber =
+          requestedBay != null && widget.voyage.bays.containsKey(requestedBay)
+              ? requestedBay
+              : sortedBayNumbers.first;
     }
   }
 
@@ -46,6 +50,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     final highlightedContainerId = ref.watch(highlightedContainerProvider);
     final activeTypeFilter = ref.watch(selectedTypeFilterProvider);
     final reservedNeighbors = widget.voyage.neighborReservedSlots();
+    final progress = widget.voyage.portOfCall == null
+        ? null
+        : ref.watch(loadingPlanProgressProvider(widget.voyage)).value;
 
     // Escuchar cambios en la bahía seleccionada desde búsqueda o perfil.
     ref.listen<int?>(selectedBayProvider, (previous, next) {
@@ -57,7 +64,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         });
       }
     });
-    
+
     if (sortedBayNumbers.isEmpty) {
       return const Center(
         child: Text('No hay bahías disponibles'),
@@ -66,10 +73,15 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
 
     return Column(
       children: [
+        LoadingPlanControls(
+            voyage: widget.voyage,
+            selectedBay: _selectedBayNumber,
+            orderMode: _orderMode,
+            onModeChanged: (value) => setState(() => _orderMode = value)),
         // Selector de bahías
         _buildBaySelector(sortedBayNumbers),
         const Divider(height: 1),
-        
+
         // Grid de la bahía seleccionada con scroll normal
         Expanded(
           child: _selectedBayNumber != null
@@ -85,10 +97,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   highlightedContainerId: highlightedContainerId,
                   activeTypeFilter: activeTypeFilter,
                   isInTransit: widget.voyage.isInTransit,
+                  orderMode: _orderMode,
+                  progress: progress,
+                  portOfCall: widget.voyage.portOfCall,
                 )
               : const Center(child: Text('Selecciona una bahía')),
         ),
-        
+
         // Leyenda
         _buildLegend(),
       ],
@@ -450,6 +465,9 @@ class _BayGridWidget extends StatelessWidget {
   static const double _tierWeightWidth = 88;
 
   final Bay bay;
+  final bool orderMode;
+  final LoadingPlanProgress? progress;
+  final String? portOfCall;
   final Function(ContainerUnit) onContainerTap;
   final List<ReservedSlot> reservedSlots;
   final Map<String, ReservedSlot> reservedNeighbors;
@@ -467,6 +485,9 @@ class _BayGridWidget extends StatelessWidget {
     required this.reservedNeighbors,
     required this.onReservedSlotTap,
     required this.isInTransit,
+    this.orderMode = false,
+    this.progress,
+    this.portOfCall,
     this.highlightedContainerId,
     this.activeTypeFilter,
   });
@@ -894,6 +915,9 @@ class _BayGridWidget extends StatelessWidget {
             return _ReservedCell(
               key: ValueKey('reserved-${reservation.key}'),
               slot: reservation,
+              orderLabel: orderMode && reservation.portOfLoading == portOfCall
+                  ? progress?.label(reservation.key) ?? '—'
+                  : null,
               onTap: () => onReservedSlotTap(reservation),
             );
           }
@@ -904,6 +928,10 @@ class _BayGridWidget extends StatelessWidget {
               key: ValueKey(
                   'reserved-shadow-${bay.bayNumber}-$slotKey-${reservedNeighbor.key}'),
               slot: reservedNeighbor,
+              orderLabel:
+                  orderMode && reservedNeighbor.portOfLoading == portOfCall
+                      ? progress?.label(reservedNeighbor.key) ?? '—'
+                      : null,
               isNeighbor: true,
               onTap: () => onReservedSlotTap(reservedNeighbor),
             );
@@ -911,6 +939,11 @@ class _BayGridWidget extends StatelessWidget {
           final cell = _ContainerCell(
             key: ValueKey('cell-$row-$tier'),
             container: container,
+            orderLabel: orderMode &&
+                    container != null &&
+                    container.portOfLoading == portOfCall
+                ? progress?.label('C:${container.containerId}') ?? '—'
+                : null,
             onTap: container != null ? () => onContainerTap(container) : null,
             isHighlighted: isHighlighted,
             activeTypeFilter: activeTypeFilter,
@@ -919,7 +952,8 @@ class _BayGridWidget extends StatelessWidget {
                 bay.slotsOccupiedByNeighbors.contains(slotKey),
           );
           return isHighlighted
-              ? _RevealPosition(key: ValueKey(container.containerId), child: cell)
+              ? _RevealPosition(
+                  key: ValueKey(container.containerId), child: cell)
               : cell;
         }),
         SizedBox(
@@ -928,7 +962,8 @@ class _BayGridWidget extends StatelessWidget {
               ? null
               : Container(
                   margin: const EdgeInsets.only(left: 6),
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -948,6 +983,7 @@ class _BayGridWidget extends StatelessWidget {
 
 /// Una reserva conserva el contorno y el destino, sin fingir carga ni peso.
 class _ReservedCell extends StatelessWidget {
+  final String? orderLabel;
   final ReservedSlot slot;
   final VoidCallback onTap;
   final bool isNeighbor;
@@ -957,6 +993,7 @@ class _ReservedCell extends StatelessWidget {
     required this.slot,
     required this.onTap,
     this.isNeighbor = false,
+    this.orderLabel,
   });
 
   @override
@@ -964,7 +1001,8 @@ class _ReservedCell extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
-      label: '${isNeighbor ? 'Extensión de 40 pies de la reserva' : 'Celda reservada'} '
+      label:
+          '${isNeighbor ? 'Extensión de 40 pies de la reserva' : 'Celda reservada'} '
           '${slot.key}, ${slot.isoSizeType ?? 'tipo no declarado'}, '
           '${slot.portOfDischarge ?? 'puerto no declarado'}',
       child: GestureDetector(
@@ -986,23 +1024,33 @@ class _ReservedCell extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (isNeighbor)
-                  Text("40' reserva",
+                if (orderLabel != null)
+                  Text(orderLabel!,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                          fontSize: 8,
+                          fontSize: 9,
+                          height: 1.1,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurfaceVariant))
+                else ...[
+                  if (isNeighbor)
+                    Text("40' reserva",
+                        style: TextStyle(
+                            fontSize: 8,
+                            height: 1.1,
+                            color: colorScheme.onSurfaceVariant)),
+                  Text(slot.isoSizeType ?? '?',
+                      style: TextStyle(
+                          fontSize: 10,
+                          height: 1.1,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurfaceVariant)),
+                  Text(slot.portOfDischarge ?? '?',
+                      style: TextStyle(
+                          fontSize: 9,
                           height: 1.1,
                           color: colorScheme.onSurfaceVariant)),
-                Text(slot.isoSizeType ?? '?',
-                    style: TextStyle(
-                        fontSize: 10,
-                        height: 1.1,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurfaceVariant)),
-                Text(slot.portOfDischarge ?? '?',
-                    style: TextStyle(
-                        fontSize: 9,
-                        height: 1.1,
-                        color: colorScheme.onSurfaceVariant)),
+                ],
               ],
             ),
           ),
@@ -1061,6 +1109,7 @@ bool _containerMatchesFilter(
 
 /// Widget de celda individual de contenedor (optimizado para rendimiento)
 class _ContainerCell extends StatelessWidget {
+  final String? orderLabel;
   final ContainerUnit? container;
   final VoidCallback? onTap;
   final bool isHighlighted;
@@ -1081,6 +1130,7 @@ class _ContainerCell extends StatelessWidget {
     this.activeTypeFilter,
     this.isInTransit = false,
     this.isOccupiedByNeighbor = false,
+    this.orderLabel,
   });
 
   @override
@@ -1161,6 +1211,11 @@ class _ContainerCell extends StatelessWidget {
       borderColor = Colors.grey.shade500;
     }
 
+    final scheme = Theme.of(context).colorScheme;
+    if (orderLabel != null) {
+      cellColor = scheme.primaryContainer;
+      borderColor = scheme.primary;
+    }
     final cell = Container(
       width: 50,
       height: 40,
@@ -1185,51 +1240,71 @@ class _ContainerCell extends StatelessWidget {
       // T-66: tres líneas en 36 px útiles. El FittedBox solo reduce, nunca
       // amplía: con la letra del sistema agrandada (Android) la celda encoge
       // su contenido en vez de desbordarse y tapar a la vecina.
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null)
-              Icon(icon, size: 12, color: borderColor)
-            else
-              Text(
-                container!.sizeInFeet?.toString() ?? '',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: borderColor,
-                  height: 1.1,
-                ),
+      child: orderLabel != null
+          ? Semantics(
+              label:
+                  '${container!.containerId}, ${container!.stowagePosition?.toIsoCode()}, $orderLabel',
+              child: Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                if (orderLabel!.startsWith('OR '))
+                  Text('OR',
+                      style: TextStyle(
+                          fontSize: 9,
+                          height: 1,
+                          color: scheme.onPrimaryContainer)),
+                Text(orderLabel!.replaceFirst('OR ', ''),
+                    style: TextStyle(
+                        fontSize: 18,
+                        height: 1.1,
+                        fontWeight: FontWeight.bold,
+                        color: scheme.onPrimaryContainer)),
+              ])),
+            )
+          : FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null)
+                    Icon(icon, size: 12, color: borderColor)
+                  else
+                    Text(
+                      container!.sizeInFeet?.toString() ?? '',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: borderColor,
+                        height: 1.1,
+                      ),
+                    ),
+                  if (container!.operatorCode != null)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 44),
+                      child: Text(
+                        container!.operatorCode!,
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: borderColor,
+                          height: 1.1,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  // Peso en toneladas con un decimal, como el plano impreso («28.7»).
+                  if (container!.effectiveWeight != null)
+                    Text(
+                      (container!.effectiveWeight! / 1000).toStringAsFixed(1),
+                      key: const ValueKey('peso-celda'),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: borderColor,
+                        height: 1.1,
+                      ),
+                    ),
+                ],
               ),
-            if (container!.operatorCode != null)
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 44),
-                child: Text(
-                  container!.operatorCode!,
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: borderColor,
-                    height: 1.1,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            // Peso en toneladas con un decimal, como el plano impreso («28.7»).
-            if (container!.effectiveWeight != null)
-              Text(
-                (container!.effectiveWeight! / 1000).toStringAsFixed(1),
-                key: const ValueKey('peso-celda'),
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w600,
-                  color: borderColor,
-                  height: 1.1,
-                ),
-              ),
-          ],
-        ),
-      ),
+            ),
     );
 
     return GestureDetector(

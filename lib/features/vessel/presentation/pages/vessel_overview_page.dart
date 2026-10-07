@@ -5,6 +5,7 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../data/services/export_service.dart';
 import '../../data/services/pdf_report_service.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/operation_sources.dart';
 import '../providers/vessel_providers.dart';
 import '../formatters/vessel_error_message.dart';
 import '../widgets/voyage_summary_card.dart';
@@ -560,7 +561,43 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         return;
       }
 
+      OperationSourceKind? sourceKind;
+      if (!isEditing &&
+          result.portOfCall != null &&
+          OperationSources.baplieKind(target, result.portOfCall!) == null) {
+        final counts = target.cargoCountsFor(result.portOfCall);
+        final slots = target.reservedCountsFor(result.portOfCall);
+        sourceKind = await showDialog<OperationSourceKind>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Tipo de BAPLIE'),
+            content: Text('En ${result.portOfCall} hay '
+                '${counts.loaded + slots.loaded} cargas y '
+                '${counts.discharged + slots.discharged} descargas. '
+                'Indica qué plano representa este archivo.'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar')),
+              TextButton(
+                  onPressed: () =>
+                      Navigator.pop(context, OperationSourceKind.arrivalBaplie),
+                  child: const Text('Llegada')),
+              FilledButton(
+                  onPressed: () =>
+                      Navigator.pop(context, OperationSourceKind.loadingBaplie),
+                  child: const Text('Carga')),
+            ],
+          ),
+        );
+        if (!context.mounted) return;
+        if (sourceKind == null) {
+          notifier.discardPendingVoyage();
+          return;
+        }
+      }
       final error = await notifier.confirmGeometry(result.geometry,
+          sourceKind: sourceKind,
           portOfCall: result.portOfCall,
           reeferSlots: result.reeferSlots,
           reeferSlotsOrigin: result.reeferSlotsOrigin);
@@ -622,8 +659,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                   key: const ValueKey('open-export-list'),
                   icon: const Icon(Icons.table_view),
                   label: const Text('Listado de la agencia'),
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                      builder: (_) => const ExportListImportPage())),
+                  onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                          builder: (_) => const ExportListImportPage())),
                 ),
             ],
           ),

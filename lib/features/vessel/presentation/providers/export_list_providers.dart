@@ -1,35 +1,22 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../data/repositories/export_list_repository_impl.dart';
-import '../../data/repositories/local_vessel_repository_factory.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/repositories/export_list_repository.dart';
 import '../../domain/repositories/movement_log_repository.dart';
 import '../../domain/services/export_list_cross_checker.dart';
+import '../../domain/services/operation_sources.dart';
+import 'movement_log_provider.dart';
+export 'movement_log_provider.dart' show movementLogRepositoryProvider;
 import '../formatters/vessel_error_message.dart';
 import 'vessel_providers.dart';
 
 final exportListRepositoryProvider =
     Provider<ExportListRepository>((ref) => const ExportListRepositoryImpl());
-
-/// T-73 · La bitácora local de T-72, donde vive la operación con sus fuentes.
-final movementLogRepositoryProvider = FutureProvider<MovementLogRepository>((ref) async {
-  var disposed = false;
-  MovementLogRepository? repository;
-  ref.onDispose(() {
-    disposed = true;
-    if (repository != null) unawaited(repository.close());
-  });
-  repository = await openMovementLogRepository();
-  if (disposed) await repository.close();
-  return repository;
-});
 
 /// Lo que la pantalla de importación muestra.
 class ExportListImportState {
@@ -87,9 +74,9 @@ class ExportListImportState {
       );
 }
 
-final exportListImportProvider =
-    NotifierProvider.autoDispose<ExportListImportNotifier, ExportListImportState>(
-        ExportListImportNotifier.new);
+final exportListImportProvider = NotifierProvider.autoDispose<
+    ExportListImportNotifier,
+    ExportListImportState>(ExportListImportNotifier.new);
 
 /// T-73 · Importa el listado de la agencia contra el plan de carga abierto.
 class ExportListImportNotifier extends Notifier<ExportListImportState> {
@@ -99,17 +86,9 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
   VesselVoyage? get _plan => ref.read(voyageNotifierProvider).value;
 
   /// Operación de la escala del plan abierto: buque, viaje y puerto.
-  Future<Operation?> _operation(MovementLogRepository log, VesselVoyage plan) async {
-    final operations = (await log.getOperations())
-        .fold((failure) => throw VesselOperationFailure(failure), (o) => o);
-    for (final operation in operations) {
-      if (operation.vesselName == plan.vessel.name &&
-          operation.voyageNumber == plan.voyageNumber &&
-          operation.portOfCall == plan.portOfCall) {
-        return operation;
-      }
-    }
-    return null;
+  Future<Operation?> _operation(
+      MovementLogRepository log, VesselVoyage plan) async {
+    return OperationSources.find(log, plan, plan.portOfCall!);
   }
 
   /// Lee el listado que ya se guardó en la operación, para verlo sin el Excel.
@@ -121,13 +100,17 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
       final operation = await _operation(log, plan);
       final source = operation?.source(OperationSourceKind.exportList);
       if (source == null || !ref.mounted) return;
-      final saved = ExportList.fromJson(jsonDecode(source.content) as Map<String, dynamic>);
+      final saved = ExportList.fromJson(
+          jsonDecode(source.content) as Map<String, dynamic>);
       state = state.copyWith(
         saved: saved,
-        savedCrossCheck: ExportListCrossChecker.crossCheck(saved, plan, plan.portOfCall!),
+        savedCrossCheck:
+            ExportListCrossChecker.crossCheck(saved, plan, plan.portOfCall!),
       );
     } catch (error, stack) {
-      if (ref.mounted) state = state.copyWith(error: vesselErrorMessage(error, stack));
+      if (ref.mounted) {
+        state = state.copyWith(error: vesselErrorMessage(error, stack));
+      }
     }
   }
 
@@ -158,7 +141,8 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
     }
     state = state.copyWith(busy: true);
     try {
-      final list = (await ref.read(exportListRepositoryProvider)
+      final list = (await ref
+              .read(exportListRepositoryProvider)
               .parseExportList(bytes, fileName: fileName))
           .fold((failure) => throw _ListFailure(failure), (l) => l);
       final local = await ref.read(localVesselRepositoryProvider.future);
@@ -167,11 +151,17 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
       final proposals = ExportListCrossChecker.propose(list, plan,
           portOfCall: plan.portOfCall!, saved: saved);
       if (!ref.mounted) return;
-      state = _withCrossCheck(state.copyWith(list: list, proposals: proposals, busy: false), plan);
+      state = _withCrossCheck(
+          state.copyWith(list: list, proposals: proposals, busy: false), plan);
     } on _ListFailure catch (e) {
-      if (ref.mounted) state = state.copyWith(busy: false, error: e.failure.message);
+      if (ref.mounted) {
+        state = state.copyWith(busy: false, error: e.failure.message);
+      }
     } catch (error, stack) {
-      if (ref.mounted) state = state.copyWith(busy: false, error: vesselErrorMessage(error, stack));
+      if (ref.mounted) {
+        state = state.copyWith(
+            busy: false, error: vesselErrorMessage(error, stack));
+      }
     }
   }
 
@@ -188,13 +178,16 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
         plan);
   }
 
-  ExportListImportState _withCrossCheck(ExportListImportState s, VesselVoyage plan) {
+  ExportListImportState _withCrossCheck(
+      ExportListImportState s, VesselVoyage plan) {
     final list = s.list;
     if (list == null) return s;
-    final normalized = list.normalized(ExportListCrossChecker.tableOf(s.proposals));
+    final normalized =
+        list.normalized(ExportListCrossChecker.tableOf(s.proposals));
     return s.copyWith(
       normalized: normalized,
-      crossCheck: ExportListCrossChecker.crossCheck(normalized, plan, plan.portOfCall!),
+      crossCheck:
+          ExportListCrossChecker.crossCheck(normalized, plan, plan.portOfCall!),
     );
   }
 
@@ -220,25 +213,15 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
           .fold((failure) => throw VesselOperationFailure(failure), (_) {});
 
       final log = await ref.read(movementLogRepositoryProvider.future);
-      final existing = await _operation(log, plan);
+
       final source = OperationSource(
         kind: OperationSourceKind.exportList,
         fileName: normalized.fileName,
         content: jsonEncode(normalized.toJson()),
       );
-      final operation = Operation(
-        id: existing?.id ?? const Uuid().v4(),
-        vesselName: plan.vessel.name,
-        voyageNumber: plan.voyageNumber,
-        portOfCall: plan.portOfCall!,
-        createdAt: existing?.createdAt ?? (clock ?? DateTime.now)(),
-        sources: [
-          ...?existing?.sources.where((s) => s.kind != OperationSourceKind.exportList),
-          source,
-        ],
-      );
-      (await log.saveOperation(operation))
-          .fold((failure) => throw VesselOperationFailure(failure), (_) {});
+      await OperationSources.save(log, plan, plan.portOfCall!, source,
+          clock: clock);
+      ref.read(operationSourcesRevisionProvider.notifier).changed();
       if (!ref.mounted) return null;
       state = ExportListImportState(
         saved: normalized,
