@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **37 tareas · ≈ 203 h estimadas** · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **38 tareas · ≈ 204 h estimadas** (al 6-oct, 10.2) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -174,12 +174,12 @@ buque con la app, a sincronizar muelle y oficina, o a la entrega del 24-oct, se 
 | **RF-040** | Tapas de escotilla *(nuevo)* | Pedido de Carlos, 5-oct | 8.0 | T-83, T-84 |
 | **RF-027+** | Segregación con el Código IMDG 42-24 | ERS · 10.49 | 10.0 | T-85 |
 | **BAP** | Versiones de BAPLIE (2.x y 3.1) | Pedido de Carlos, 5-oct | 13.0 | T-86, T-87 |
-| **USO** | Uso fuera del aula: Play, iPhone, tema, barra, Web sin conexión, instalador | Prueba de campo · Play | 12.5 | T-88 … T-93 |
+| **USO** | Uso fuera del aula: Play, iPhone, tema, barra, Web sin conexión, instalador, peso en el PDF | Prueba de campo · Play | 13.5 | T-88 … T-93, T-102 |
 | **RF-041** | Búsqueda por voz *(nuevo)* | Pedido de Carlos, 5-oct | 4.5 | T-94 |
 | **ERS** | RF-028, RF-029, T-56 y el título a 360 px | ERS · Sprint 2 | 17.0 | T-95, T-96, T-56, T-97 |
 | **TC** | RNF (T-63), manual (TC-02), presentación final (TC-05) | Curso | 63.0 | T-98 … T-100 |
 | **PIL** | Prueba piloto en una escala real | Permiso de COMAR | 4.0 | T-101 |
-| | **Total** | | **≈ 203.0** | **37 tareas** |
+| | **Total** | | **≈ 204.0** | **38 tareas** |
 
 Las horas con ≈ son estimación; se corrigen al abrir cada ola. RF-028 y RF-029 completan
 funciones COULD del ERS que el Sprint 2 dejó fuera.
@@ -438,6 +438,7 @@ el 24-oct siempre hay algo que funciona.
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo y la fuente desde el propio sitio |
 | **T-93** | USO | 2.5 | Instalador de Windows |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo |
+| **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2) |
 
 ### Ola 6 · Resto del ERS
 
@@ -564,3 +565,49 @@ propuesto, cifras obtenidas contra las de la ficha y lo que quedó fuera.
   fuera del repositorio. Luego el carril pasa como dice la sección 6.
 - **Estimación corregida**: T-69 sube de 1.5 a 3.0 h (entidad nueva, persistencia y
   dibujo), y la espiga T-70 suma 2.0 h. El total pasa de ≈ 199.5 a ≈ 203.0 h.
+
+### 10.2 · T-66 y T-67 entregadas, en revisión · T-70 cerrada: Firebase no está hecho para producción en Windows (6-oct, noche)
+
+**T-66 (`86bc491`) y T-67 (`77e5880`), de Timonel, pasan a En revisión.**
+- Las cinco cifras de T-66 cuadran: A07 6 940 578 kg, A05 11 210 489 kg, A08 y A08v 6 899 700 kg, A01 8 366 089 kg sin cambio. Ningún contenedor queda sin peso.
+- T-67: con un límite de prueba de 90 000 kg, A08 y A08v dan las mismas 10 alertas (antes 10 y 0). También coinciden entre 50 y 80 t. El «no evaluado» se probó con fixtures sintéticos, porque el corpus no trae contenedores sin peso.
+- Yov revisó el código: peso efectivo `vgmWeight ?? grossWeight`, con su fuente; `netWeight` sobre el peso efectivo; la exportación sigue con sus tres columnas crudas; el validador sigue la ficha.
+- **300 pruebas** (282 + 18) y `analyze` en cero, sin dependencias nuevas. **El piso pasa a 300.**
+- Revisado en pantalla en Windows y en la Web a 800 y 360 px. A 360 px el peso de Estadísticas salía cortado y se corrigió dentro de T-66.
+- **Falta Android.** El Honor estaba reservado para T-70. Lo cierra Codex en la aceptación cruzada, antes de T-68. Con eso pasan a Terminado.
+
+**Lo que Timonel anotó fuera de alcance y adónde va.**
+- La cabecera de pesos por pila no marca una pila incompleta («28.7+?») → con T-77.
+- `ContainerSlot.canAccept` compara `grossWeight` y nadie la llama → si T-77 la usa, con `effectiveWeight`.
+- Las celdas del PDF no muestran el peso → **nace T-102** (1.0 h, ola 5): peso en las celdas del plano impreso, como en el papel.
+- El rótulo «Total Contenedores» se corta a 360 px → con T-97.
+
+**T-70 (`65ee908`), de Codex, pasa a Terminado.**
+- En el emulador local, Windows, el Honor y Chrome pasaron los 9 controles: cuenta, sesión, escritura, escucha, escritura sin conexión y reconexión, con los mismos 16 documentos confirmados en cada uno.
+- Versiones que resuelven junto con BayStream: `firebase_core` 4.13.0, `firebase_auth` 6.5.7 y `cloud_firestore` 6.8.0.
+- Diez escrituras locales, solo orientativas (no es H5): de Windows a Chrome, mediana 24.45 ms; de Windows al Honor, 69.62 ms.
+- **Windows mostró errores nativos:** Auth envía mensajes desde un hilo que no es el de la plataforma, y Firestore recibió un `too_many_pings`.
+- Yov confirmó en la guía oficial de Firebase para Flutter: «Firebase on Windows is not intended for production use cases, only local development workflows».
+- La cola probada era en memoria. **Que una escritura sobreviva a cerrar la app no se probó.**
+
+**Decisión pendiente de Carlos: la oficina en Chrome.**
+- **Recomendación de Codex y de Yov:**
+  - la sincronización corre en Android (muelle) y en la Web (oficina, en Chrome);
+  - la app de Windows sigue funcionando sin sincronizar: abre el BAPLIE, dibuja, valida y exporta;
+  - la Web ya está publicada y no necesita instalador.
+- **Lo que cambia:** T-93 (instalador de Windows) baja de importancia, y H4 declara la limitación de Windows con su fuente.
+- Un adaptador propio para Windows (un servidor intermedio) no cabe en el sprint.
+
+**Para T-79, desde ya.**
+- Cada movimiento se guarda primero en el almacén local, con un identificador estable, y queda pendiente hasta que Firestore lo confirme.
+- Se reintenta sin duplicar.
+- Se prueba cerrar y reiniciar sin red, el rechazo por permisos, la sesión vencida y las escrituras concurrentes.
+
+**Nace T-79a** (2.0 h, dentro de las 12.0 de T-79), para Timonel mientras Codex tiene el carril:
+- es el diseño escrito del registro de movimientos y su sincronización, solo documentos;
+- T-72 implementa la bitácora local con ese modelo y T-79 la sincroniza, así que el diseño va antes que las dos.
+
+**Siguiente.**
+- Codex: aceptación cruzada de T-66 y T-67 (con Android), luego T-68.
+- Timonel: T-79a, sin tocar `lib/`, `test/` ni `pubspec.*`.
+- El total sube a ≈ 204.0 h por T-102.
