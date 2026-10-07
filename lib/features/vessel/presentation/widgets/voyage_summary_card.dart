@@ -118,6 +118,18 @@ class VoyageSummaryCard extends StatelessWidget {
             ),
             
             // Información adicional si está disponible
+            if (voyage.portOfCall != null) ...[
+              const SizedBox(height: 16),
+              Text('Escala: ${voyage.portOfCall}',
+                  style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 4),
+              Text(
+                '${voyage.cargoCountsFor(voyage.portOfCall).discharged} se descargan · '
+                '${voyage.cargoCountsFor(voyage.portOfCall).loaded} se cargan · '
+                '${voyage.containersInTransit} de paso',
+                key: const ValueKey('voyage-call-split'),
+              ),
+            ],
             if (voyage.metadata != null) ...[
               const SizedBox(height: 16),
               const Divider(),

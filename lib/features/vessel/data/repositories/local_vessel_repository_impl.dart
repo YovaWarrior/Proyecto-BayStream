@@ -41,6 +41,14 @@ class LocalVesselRepositoryImpl implements LocalVesselRepository {
       _guard(() => _source.deleteVoyage(id));
 
   @override
+  Future<Either<Failure, String?>> getLastConfirmedPortOfCall() =>
+      _guard(_source.getLastConfirmedPortOfCall);
+
+  @override
+  Future<Either<Failure, void>> setLastConfirmedPortOfCall(String? port) =>
+      _guard(() => _source.setLastConfirmedPortOfCall(port));
+
+  @override
   Future<Either<Failure, List<VesselProfile>>> getAllProfiles() =>
       _guard(_source.getAllProfiles);
 

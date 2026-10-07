@@ -107,6 +107,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   bool _newProfile = false;
   bool _busy = false;
   String _fileName = 'BAPLIE';
+  String? _lastConfirmedPortOfCall;
+  String? get lastConfirmedPortOfCall => _lastConfirmedPortOfCall;
 
   VesselProfile? get currentProfile => _pendingProfile ?? _publishedProfile;
 
@@ -218,6 +220,9 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       final voyage = result.fold(
           (failure) => throw VesselOperationFailure(failure), (v) => v);
       final local = await ref.read(localVesselRepositoryProvider.future);
+      _lastConfirmedPortOfCall = voyage.portOfNextCall == null ? null :
+          (await local.getLastConfirmedPortOfCall()).fold(
+              (failure) => throw VesselOperationFailure(failure), (port) => port);
       final lookupResult = await local.findProfileFor(voyage.vessel);
       final lookup = lookupResult.fold(
           (failure) => throw VesselOperationFailure(failure), (v) => v);
@@ -276,7 +281,9 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     final voyage = _pendingVoyage!;
     _newProfile = saved == null;
     _pendingProfile = saved ?? VesselProfile.proposeFrom(voyage);
-    if (saved != null && saved.geometry.coversAll(voyage.stowagePositions)) {
+    // Con dos escalas posibles, conocer el casco no confirma dónde está el buque.
+    if (voyage.portOfNextCall == null && saved != null &&
+        saved.geometry.coversAll(voyage.stowagePositions)) {
       await _publish(voyage, saved, voyage.proposedPortOfCall);
       return LoadFileResult.success(_fileName);
     }
@@ -285,13 +292,19 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
 
   /// Único punto de publicación: siempre inyecta la geometría del perfil.
   Future<void> _publish(
-      VesselVoyage voyage, VesselProfile profile, String? portOfCall) async {
+      VesselVoyage voyage, VesselProfile profile, String? portOfCall,
+      {bool confirmedCall = false}) async {
     final published = voyage
         .withGeometry(profile.geometry, portOfCall: portOfCall)
-        .copyWith(vesselProfileKey: profile.key);
+        .copyWith(vesselProfileKey: profile.key, clearPortOfCall: portOfCall == null);
     final local = await ref.read(localVesselRepositoryProvider.future);
     (await local.saveVoyage(published))
         .fold((failure) => throw VesselOperationFailure(failure), (_) {});
+    if (confirmedCall) {
+      (await local.setLastConfirmedPortOfCall(portOfCall))
+          .fold((failure) => throw VesselOperationFailure(failure), (_) {});
+      _lastConfirmedPortOfCall = portOfCall;
+    }
     ref.invalidate(recentVoyagesProvider);
     _publishedProfile = profile;
     _reopenKeptParameters = const [];
@@ -337,7 +350,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
           (failure) => vesselFailureMessage(failure), (_) => null);
       if (error != null) return error;
       ref.invalidate(savedVesselProfilesProvider);
-      await _publish(target, profile, portOfCall);
+      await _publish(target, profile, portOfCall, confirmedCall: true);
       return null;
     } catch (error, stack) {
       return vesselErrorMessage(error, stack);

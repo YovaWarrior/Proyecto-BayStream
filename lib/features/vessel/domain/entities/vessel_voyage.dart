@@ -24,10 +24,12 @@ class VesselVoyage extends Equatable {
   
   /// Puerto de salida declarado en la cabecera del archivo (`LOC+5`).
   ///
-  /// Es el puerto para el que vale este plano, dicho por el propio archivo.
-  /// De ahí se propone [portOfCall]: no hace falta adivinarlo contando los
-  /// `LOC+9` de la carga.
+  /// El mismo plano puede utilizarse en la salida o en la llegada siguiente.
   final String? portOfOrigin;
+
+  /// Próximo puerto declarado en la cabecera (`LOC+61`), si es un UN/LOCODE.
+  /// Es opcional para conservar la lectura de los viajes guardados anteriores.
+  final String? portOfNextCall;
   
   /// Puerto de destino
   final String? portOfDestination;
@@ -85,6 +87,7 @@ class VesselVoyage extends Equatable {
     required this.voyageNumber,
     this.direction = VoyageDirection.unknown,
     this.portOfOrigin,
+    this.portOfNextCall,
     this.portOfDestination,
     this.messageDate,
     this.containers = const [],
@@ -230,6 +233,26 @@ class VesselVoyage extends Equatable {
     return loadingPortCounts.keys.isEmpty ? null : loadingPortCounts.keys.first;
   }
 
+  /// El historial del dispositivo solo propone una de las dos escalas del
+  /// mensaje. Un puerto ajeno o un archivo sin LOC+61 conserva la propuesta.
+  String? suggestPortOfCall(String? lastConfirmedPort) {
+    if (portOfNextCall != null && lastConfirmedPort != null &&
+        (lastConfirmedPort == portOfOrigin ||
+            lastConfirmedPort == portOfNextCall)) {
+      return lastConfirmedPort;
+    }
+    return proposedPortOfCall;
+  }
+
+  /// Conteos independientes: carga y descarga se reconocen por sus LOC+9/11.
+  ({int loaded, int discharged, int transit}) cargoCountsFor(String? port) => (
+    loaded: port == null ? 0 : containers.where((c) => c.portOfLoading == port).length,
+    discharged: port == null ? 0 : containers.where((c) => c.portOfDischarge == port).length,
+    transit: port == null ? 0 : containers.where((c) =>
+        c.portOfLoading != null && c.portOfLoading != port &&
+        c.portOfDischarge != port).length,
+  );
+
   /// Indica si el contenedor ya venía a bordo y no se opera en esta escala.
   ///
   /// Es lo que el planificador tacha a mano en el plano impreso. Sin puerto de
@@ -238,7 +261,8 @@ class VesselVoyage extends Equatable {
   bool isInTransit(ContainerUnit container) =>
       portOfCall != null &&
       container.portOfLoading != null &&
-      container.portOfLoading != portOfCall;
+      container.portOfLoading != portOfCall &&
+      container.portOfDischarge != portOfCall;
 
   /// Contenedores que se operan en esta escala.
   int get containersAtCall =>
@@ -254,6 +278,7 @@ class VesselVoyage extends Equatable {
         voyageNumber,
         direction,
         portOfOrigin,
+        portOfNextCall,
         portOfDestination,
         messageDate,
         containers,
@@ -270,6 +295,7 @@ class VesselVoyage extends Equatable {
     String? voyageNumber,
     VoyageDirection? direction,
     String? portOfOrigin,
+    String? portOfNextCall,
     String? portOfDestination,
     DateTime? messageDate,
     List<ContainerUnit>? containers,
@@ -277,6 +303,7 @@ class VesselVoyage extends Equatable {
     BaplieMetadata? metadata,
     VesselGeometry? geometry,
     String? portOfCall,
+    bool clearPortOfCall = false,
     String? vesselProfileKey,
   }) {
     return VesselVoyage(
@@ -285,13 +312,14 @@ class VesselVoyage extends Equatable {
       voyageNumber: voyageNumber ?? this.voyageNumber,
       direction: direction ?? this.direction,
       portOfOrigin: portOfOrigin ?? this.portOfOrigin,
+      portOfNextCall: portOfNextCall ?? this.portOfNextCall,
       portOfDestination: portOfDestination ?? this.portOfDestination,
       messageDate: messageDate ?? this.messageDate,
       containers: containers ?? this.containers,
       bays: bays ?? this.bays,
       metadata: metadata ?? this.metadata,
       geometry: geometry ?? this.geometry,
-      portOfCall: portOfCall ?? this.portOfCall,
+      portOfCall: clearPortOfCall ? null : portOfCall ?? this.portOfCall,
       vesselProfileKey: vesselProfileKey ?? this.vesselProfileKey,
     );
   }
@@ -304,6 +332,7 @@ class VesselVoyage extends Equatable {
         'voyageNumber': voyageNumber,
         'direction': direction.name,
         if (portOfOrigin != null) 'portOfOrigin': portOfOrigin,
+        if (portOfNextCall != null) 'portOfNextCall': portOfNextCall,
         if (portOfDestination != null) 'portOfDestination': portOfDestination,
         if (messageDate != null) 'messageDate': messageDate!.toIso8601String(),
         'containers': containers.map((c) => c.toJson()).toList(),
@@ -348,6 +377,7 @@ class VesselVoyage extends Equatable {
           orElse: () => VoyageDirection.unknown,
         ),
         portOfOrigin: json['portOfOrigin'] as String?,
+        portOfNextCall: json['portOfNextCall'] as String?,
         portOfDestination: json['portOfDestination'] as String?,
         messageDate: json['messageDate'] != null
             ? DateTime.parse(json['messageDate'] as String)

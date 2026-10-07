@@ -38,6 +38,10 @@ class VesselGeometryPage extends StatefulWidget {
   /// Puertos de carga del archivo con su conteo, del más frecuente al menos.
   final Map<String, int> loadingPorts;
 
+  /// Viaje que aporta LOC+61 y los conteos de carga, descarga y tránsito.
+  final VesselVoyage? voyage;
+  final String? lastConfirmedPortOfCall;
+
   /// Puerto de salida declarado por el archivo (`LOC+5`), si lo trae.
   ///
   /// Es la propuesta principal, por delante del puerto de carga más
@@ -58,6 +62,8 @@ class VesselGeometryPage extends StatefulWidget {
     required this.proposal,
     this.positions = const [],
     this.loadingPorts = const {},
+    this.voyage,
+    this.lastConfirmedPortOfCall,
     this.declaredPort,
     this.initialPortOfCall,
     this.initial,
@@ -125,6 +131,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     _sockets = {...?widget.profile?.reeferSlots};
     _ocupados.addAll(widget.positions.map((p) => p.tier));
     _portOfCall = widget.initialPortOfCall ??
+        widget.voyage?.suggestPortOfCall(widget.lastConfirmedPortOfCall) ??
         widget.declaredPort ??
         (widget.loadingPorts.keys.isEmpty ? null : widget.loadingPorts.keys.first);
     _puertoElegido = widget.initialPortOfCall != null;
@@ -675,16 +682,13 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     );
   }
 
-  /// Puertos elegibles: primero el que declara el archivo, después los
-  /// puertos de carga de la propia mercancía.
-  ///
-  /// El declarado va primero porque es el único que el archivo afirma; los
-  /// otros salen de contar dónde se cargó cada caja, y en `CORPUS_A01` el más
-  /// contado no es el de la escala.
+  /// Primero salida y llegada declaradas, luego los puertos de carga.
   List<String> get _portOptions {
     final options = <String>[];
     final declared = widget.declaredPort;
     if (declared != null && declared.isNotEmpty) options.add(declared);
+    final next = widget.voyage?.portOfNextCall;
+    if (next != null && !options.contains(next)) options.add(next);
     for (final port in widget.loadingPorts.keys) {
       if (!options.contains(port)) options.add(port);
     }
@@ -694,16 +698,16 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   /// Puerto de esta escala: el dato que separa la carga que se opera aquí de
   /// la que ya venía a bordo.
   ///
-  /// El archivo lo declara en la cabecera (`LOC+5`) y esa es la propuesta. Si
-  /// no lo trae se cae a contar puertos de carga, que es una apuesta y se
-  /// rotula como tal.
+  /// El mensaje describe la salida y, si trae LOC+61, la llegada siguiente.
   Widget _buildPortOfCallSection(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final declared = widget.declaredPort;
+    final next = widget.voyage?.portOfNextCall;
     final total = widget.loadingPorts.values.fold(0, (a, b) => a + b);
     final enEscala = _portOfCall == null ? 0 : widget.loadingPorts[_portOfCall] ?? 0;
-    final dePaso = total - enEscala;
+    final counts = widget.voyage?.cargoCountsFor(_portOfCall) ??
+        (loaded: enEscala, discharged: 0, transit: total - enEscala);
 
     return Card(
       child: Padding(
@@ -714,7 +718,10 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             Text('Puerto de esta escala', style: textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
-              declared == null
+              declared != null && next != null
+                  ? 'El archivo se emitió al salir de $declared rumbo a $next: '
+                      'para la salida, la escala es $declared; para la llegada, $next.'
+                  : declared == null
                   ? 'El archivo no declara puerto de salida. Se propone el '
                       'puerto de carga más frecuente, que es una apuesta; '
                       'corrígelo si la escala es otra.'
@@ -760,11 +767,11 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               _portOfCall == null
                   ? 'Sin puerto declarado no se distingue la carga de paso: el '
                       'plano muestra todo igual.'
-                  : widget.loadingPorts.isEmpty
+                  : widget.loadingPorts.isEmpty && widget.voyage == null
                       ? 'El archivo no dice dónde se cargó cada contenedor, '
                           'así que la carga de paso no se puede separar.'
-                      : '$enEscala se operan en esta escala y $dePaso ya vienen '
-                          'a bordo, de paso.',
+                      : '${counts.discharged} se descargan · '
+                          '${counts.loaded} se cargan · ${counts.transit} de paso',
               key: const ValueKey('port-split'),
               style: textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,

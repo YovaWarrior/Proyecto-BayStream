@@ -53,6 +53,7 @@ class BaplieParserService {
       voyageNumber: vesselInfo.voyageNumber,
       direction: _determineDirection(segments),
       portOfOrigin: _findPlaceOfDeparture(segments),
+      portOfNextCall: _findNextPortOfCall(segments),
       containers: containers,
       bays: bays,
       metadata: metadata,
@@ -274,9 +275,25 @@ class BaplieParserService {
     return null;
   }
 
+  /// Próxima escala declarada en la cabecera, antes de la primera celda.
+  String? _findNextPortOfCall(List<String> segments) {
+    for (final segment in segments) {
+      if (_getSegmentType(segment) != BaplieConstants.segmentLOC) continue;
+      final location = _parseLOC(segment);
+      if (location == null) continue;
+      if (location.qualifier == BaplieConstants.locStowageCell) break;
+      if (location.qualifier != '61') continue;
+      final code = location.locationCode;
+      if (code != null && RegExp(r'^[A-Z]{2}[A-Z0-9]{3}$').hasMatch(code)) {
+        return code;
+      }
+    }
+    return null;
+  }
+
   /// Puerto de salida declarado en la cabecera (`LOC+5`, e3227 = 5).
   ///
-  /// Es el único puerto que el archivo afirma por sí mismo: dice para qué
+  /// Es el puerto que el archivo declara para la salida: dice para qué
   /// salida vale este plano. Los `LOC+9` de cada contenedor dicen otra cosa
   /// —dónde se cargó cada caja, incluida la que ya venía a bordo— y por eso el
   /// más frecuente puede no ser el de la escala. En `CORPUS_A01` el `LOC+5`

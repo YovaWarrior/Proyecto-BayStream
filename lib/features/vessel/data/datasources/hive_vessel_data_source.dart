@@ -6,14 +6,15 @@ import '../../domain/entities/entities.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
 import 'local_vessel_codec.dart';
 
-/// Dos cajas del mismo motor: perfiles por clave natural y viajes por UUID.
+/// Perfiles, viajes y preferencias del dispositivo en el mismo motor local.
 class HiveVesselDataSource {
   final Box<String> _profiles;
   final Box<String> _voyages;
+  final Box<String> _settings;
   final LocalVesselCodec _codec = const LocalVesselCodec();
   Future<void> _voyageWrites = Future.value();
 
-  HiveVesselDataSource._(this._profiles, this._voyages);
+  HiveVesselDataSource._(this._profiles, this._voyages, this._settings);
 
   /// En Windows/Android se inyecta el directorio privado de la aplicación.
   /// En Web, `directory: null` utiliza IndexedDB del origen actual.
@@ -27,7 +28,13 @@ class HiveVesselDataSource {
     try {
       final voyages =
           await Hive.openBox<String>('${namespace}_voyages', path: directory);
-      return HiveVesselDataSource._(profiles, voyages);
+      try {
+        final settings = await Hive.openBox<String>('${namespace}_settings', path: directory);
+        return HiveVesselDataSource._(profiles, voyages, settings);
+      } catch (_) {
+        await voyages.close();
+        rethrow;
+      }
     } catch (_) {
       await profiles.close();
       rethrow;
@@ -93,6 +100,17 @@ class HiveVesselDataSource {
     await _profiles.flush();
   }
 
+  String? getLastConfirmedPortOfCall() => _settings.get('lastConfirmedPortOfCall');
+
+  Future<void> setLastConfirmedPortOfCall(String? port) => _writeVoyages(() async {
+    if (port == null) {
+      await _settings.delete('lastConfirmedPortOfCall');
+    } else {
+      await _settings.put('lastConfirmedPortOfCall', port);
+    }
+    await _settings.flush();
+  });
+
   List<VesselProfile> getAllProfiles() =>
       _profiles.values.map(_codec.decodeProfile).toList();
 
@@ -101,7 +119,11 @@ class HiveVesselDataSource {
     try {
       await _voyages.close();
     } finally {
-      await _profiles.close();
+      try {
+        await _profiles.close();
+      } finally {
+        await _settings.close();
+      }
     }
   }
 }

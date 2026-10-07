@@ -525,6 +525,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             proposal: proposal,
             positions: target.stowagePositions.toList(),
             loadingPorts: target.loadingPortCounts,
+            voyage: target,
+            lastConfirmedPortOfCall: notifier.lastConfirmedPortOfCall,
             declaredPort: target.portOfOrigin,
             initialPortOfCall: target.portOfCall,
             initial: initial,

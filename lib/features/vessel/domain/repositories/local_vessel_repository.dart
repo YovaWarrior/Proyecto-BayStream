@@ -28,6 +28,11 @@ abstract class LocalVesselRepository {
   Future<Either<Failure, List<VesselVoyage>>> getAllVoyages();
   Future<Either<Failure, void>> deleteVoyage(String id);
 
+  /// Preferencia del dispositivo, independiente del buque y de la retención
+  /// de viajes. Solo se escribe al confirmar una escala; null la borra.
+  Future<Either<Failure, String?>> getLastConfirmedPortOfCall();
+  Future<Either<Failure, void>> setLastConfirmedPortOfCall(String? port);
+
   Future<Either<Failure, VesselProfileLookup>> findProfileFor(Vessel vessel);
   /// Fuentes disponibles para edición o clonación. Leer no crea perfiles;
   /// un clon es un borrador hasta que el usuario confirma `saveProfile`.

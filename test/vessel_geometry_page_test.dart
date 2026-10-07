@@ -373,7 +373,7 @@ void main() {
         reason: 'GTPBR es el mas frecuente con 3',
       );
       expect(
-        find.text('3 se operan en esta escala y 2 ya vienen a bordo, de paso.'),
+        find.text('0 se descargan · 3 se cargan · 2 de paso'),
         findsOneWidget,
       );
     });
@@ -393,7 +393,7 @@ void main() {
       );
       expect(find.text('PAMIT'), findsOneWidget);
       expect(
-        find.text('0 se operan en esta escala y 5 ya vienen a bordo, de paso.'),
+        find.text('0 se descargan · 0 se cargan · 5 de paso'),
         findsOneWidget,
       );
     });
@@ -450,7 +450,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('2 se operan en esta escala y 3 ya vienen a bordo, de paso.'),
+        find.text('0 se descargan · 2 se cargan · 3 de paso'),
         findsOneWidget,
       );
     });
