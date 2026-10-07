@@ -119,8 +119,9 @@ Carlos autorizó el 5-oct las que hacen falta para las funciones nuevas:
 
 - `firebase_auth`, para las cuentas de RF-034 (`cloud_firestore` y `firebase_core` ya están);
 - un paquete de reconocimiento de voz, para RF-041;
-- un lector de Excel, para importar el listado (RF-038), si hace falta.
+- un lector de Excel, para importar el listado (RF-038), si hace falta. Es `excel_community 1.0.10`, con versión fija (T-73).
 - `crypto` como dependencia directa, para la huella de las fuentes publicadas (10.3; ya era transitiva).
+- `archive` como dependencia directa (T-73; Carlos, 7-oct; ya era transitiva en 4.0.9 y no se mueve). Sirve para corregir las rutas absolutas de `workbook.xml.rels` que `excel_community` no resuelve.
 
 Ninguna otra sin preguntar. Cada dependencia nueva se declara en el informe y en el bloque
 de commit, con su versión y por qué esa.
@@ -437,7 +438,7 @@ Los seis archivos de la tabla 2.4. Detalle de la operación en
 |---|---|---:|---|---|
 | **T-72** | RF-037 | 3.0 | Estado operativo de cada contenedor y reserva (planificado, movido, cancelado) y bitácora de movimientos: qué, cuándo, quién | Persistente y sin conexión; cada cambio queda en la bitácora con su hora |
 | **T-73** | RF-038 | 4.5 | Importar el listado Excel de la agencia, con tabla de equivalencias editable (tipos, puertos, códigos de línea) y lectura de peligrosas desde CONTENIDO | `LISTADO_A08.xlsx`: 176 filas, 120 llenos que cruzan con A08 y 56 vacíos en 6 grupos; LNB ↔ LINB, COMNG ↔ COSPC · **ficha completa arriba** |
-| **T-74** | RF-038 | 3.0 | Plan de carga: cruzar listado y plan; número de orden en cada celda; pendientes por bahía | Los 9 conteos por bahía de la sección 2 del caso, en cubierta y bodega |
+| **T-74** | RF-038 | 3.0 | Plan de carga: cruzar listado y plan; número de orden en cada celda; pendientes por bahía. **Desde T-73** la operación puede existir solo con la fuente `export_list`, porque el texto del BAPLIE no se conserva después de leerlo: T-74 guarda ese texto como fuente `loading_baplie` (y `arrival_baplie` si aplica) **en la misma operación**, no en una nueva | Los 9 conteos por bahía de la sección 2 del caso, en cubierta y bodega; la operación queda con sus fuentes completas |
 | **T-75** | RF-037 | 4.0 | Descarga: tocar el contenedor y queda marcado; aviso de re-estiba si su puerto no es este; deshacer | Los 114 de `CORPUS_A07` se marcan y se deshacen sin perder la bitácora |
 | **T-76** | RF-037 | 5.0 | Carga: confirmar un lleno por número de orden o de contenedor; asignar un vacío solo a una celda libre de su grupo; hora y marchamo; cancelar y corregir | Reproducir `CASO_A08_EVENTOS.json` deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv` |
 | **T-77** | RF-037 | 3.0 | Validación preventiva antes de confirmar: celda, 20/40, peso de la pila, posición del planificador para los llenos, grupo para los vacíos | Un vacío en una celda de otro grupo no se confirma sin motivo escrito |
@@ -816,7 +817,7 @@ T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
 - **Incidencias que declaró Timonel.**
   - Cerró con `/IM` dos instancias de BayStream, casi seguro abiertas por su propia herramienta.
   - `flutter test --platform chrome` se colgó y lo reemplazó por la comprobación en Chrome.
-  - **El límite de prueba de 90 000 kg de T-66 quedó en el perfil BUQUE GOLF** del Windows de Carlos. **Carlos lo quita** desde «Perfiles guardados». Esa aceptación dejó además perfiles y viajes recientes del corpus (BUQUE ALFA a ECO), que pueden quedarse.
+  - **El límite de prueba de 90 000 kg de T-66 quedó en el perfil BUQUE GOLF** del Windows de Carlos. **Timonel lo quita** desde «Perfiles guardados» al empezar la aceptación de T-73 en Windows. Carlos no pudo hacerlo a mano: la compilación de depuración que abrió no traía el archivo de opciones y se quedó en «Falta la configuración de Firebase», como corresponde desde T-47. Esa aceptación dejó además perfiles y viajes recientes del corpus (BUQUE ALFA a ECO), que pueden quedarse.
 - **Falta la aceptación cruzada de Codex**, después de T-70c.
 
 **El carril de `lib/` sigue con Timonel y T-73 pasa a él.** El plan de 10.4 era que T-73 fuera de Codex, pero Codex está en T-70c. Para no detener el carril, Timonel toma T-73, con la ficha completa en la sección 5. Codex, al terminar T-70c, acepta T-72 y T-73 juntas y toma **T-74**.
@@ -824,3 +825,43 @@ T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
 **Pasos de consola que ya hizo Carlos** (no quedaron en 10.6). Activó correo y contraseña en `baystream-app` y creó una cuenta de prueba, que luego servirá como usuario de oficina. Firestore todavía no está creado.
 
 **Timonel abre un chat nuevo**, porque el anterior llegó a su límite de contexto. Su primer mensaje lo pone al día con este archivo.
+
+### 10.8 · T-70c pasa: la oficina sincroniza en la app de Windows · T-73 pasa en el Honor (7-oct)
+
+**T-70c, de Codex, pasa a Terminado.** El commit propuesto es «Sprint 3: T-70c renovacion de sesion Windows validada contra Auth real», y su único archivo es `docs/T70c-RESULTADOS.md`.
+- **Dónde se probó.** Contra Auth real de `baystream-app`, en Windows release, con `firebase_core` 4.13.0 y `firebase_auth` 6.5.7.
+- **Los dos criterios de 10.5 pasan.**
+  - 50 de 50 renovaciones forzadas, sin error.
+  - Una sesión de 75 min 2 s. La renovación automática llegó a las 13:43:12, dos minutos antes del vencimiento de las 13:45:11.
+  - Cero errores en las dos.
+- **Cómo se hizo.** Carlos escribió la contraseña. No se tocó Firestore ni H5. La espiga y su evidencia quedan fuera del repo.
+- **Revisión de Yov.** El informe no trae correo, UID, tokens ni opciones privadas.
+- **Lo que no prueba.**
+  - No prueba Firestore en Windows.
+  - No anula la advertencia de Firebase de que Windows no es para producción.
+  - El fallo de T-70b contra el emulador no se repitió contra la nube, pero su causa no quedó demostrada.
+
+**Decisión: la oficina sincroniza en la app de Windows**, como Carlos fijó en 10.3 y 10.5 para el caso de que T-70c pasara. T-79 construye Windows con el adaptador previsto, y conserva:
+- la cola local durable de T-79a;
+- la salvaguarda en los tres clientes. Si un movimiento lleva más de 5 minutos pendiente con red, se muestra «sin confirmar desde las HH:MM» y se ofrece volver a iniciar sesión. El umbral sigue PROVISIONAL;
+- las pruebas largas de Windows contra la nube, no contra el emulador.
+
+**Respaldo y riesgo.**
+- Si Firestore falla en Windows durante T-79, la oficina usa la Web instalada desde Chrome o Edge.
+- El documento del 24-oct declara como riesgo que Firebase no da Windows por plataforma de producción.
+
+**T-73 avanza.**
+- **Carlos autorizó `archive`** como dependencia directa (2.7). `excel_community` no resuelve las rutas absolutas de `workbook.xml.rels`, como las que escribe openpyxl.
+- **Formas de Excel cubiertas.** Un segundo fixture tiene la forma de un archivo guardado desde Excel: `sharedStrings`, números double y el neto con valor en caché. `LISTADO_A08.xlsx` no se tocó.
+- **El Honor a 360 dp pasa** (variante `.t73`), con todas las cifras de la ficha:
+  - 4 agencias de 40, 18, 27 y 91 filas;
+  - 40RF → 45R1 pedida;
+  - el OR 127 con su aviso;
+  - el OR 130 con 7 266.59 kg de VGM y 3 366.59 kg de neto;
+  - las equivalencias guardadas, que ya no se piden en una segunda importación.
+- **Faltan:**
+  - repetir `analyze` y la suite, porque cambiaron tres textos después de la corrida de 405 de 405;
+  - Windows, empezando por quitar el límite de 90 000 kg;
+  - Chrome.
+
+**Codex espera.** Cuando Timonel entregue T-73, Codex abre un **chat nuevo**, porque el actual viene desde T-70. Ahí hace la aceptación cruzada de T-72 y T-73, y luego T-74.
