@@ -352,6 +352,22 @@ abstract class RemoteMovementStore {          // interno de data/
 
 **Por qué Windows no llama a Auth.** T-70 vio los errores de hilo de `firebase_auth` en Windows al usar Auth. Si el adaptador de Windows nunca crea `FirebaseAuth.instance`, no debería haber mensajes. Pero el plugin igual se enlaza en el binario de Windows al estar en `pubspec.yaml`, y eso **hay que comprobarlo en T-79** (prueba C8 de 7.3). Si aun así aparecen al arrancar, no hay forma de excluir una dependencia por plataforma en `pubspec.yaml`: se declara en H4 y en el informe.
 
+#### Apéndice 3.4-A · Windows después de T-70b (7-oct)
+
+**Qué condicionaba esta sección.** La decisión 10.3 mandaba que Windows usara el adaptador de Firestore **si T-70b pasaba**. **No pasó**: tres criterios de cuatro (`docs/T70b-RESULTADOS.md`).
+- Pasan la hora con el listener (120 de 120), el cierre forzado con pendientes (por la persistencia del SDK) y la memoria.
+- **Falla la renovación del token:** 50 de 50. Con el emulador, el SDK de Windows manda la renovación a `securetoken.googleapis.com` en vez de al emulador, y la sesión deja de poder escribir pasada la hora.
+
+**Lo que queda para T-79, mientras Carlos no decida otra cosa:**
+1. **La fábrica no cambia:** Windows → `LocalOnlyOperationSync` y `LocalSessionRepository`. La oficina sincroniza desde la Web instalada en Chrome o Edge, el respaldo de 10.3.
+2. **Si una prueba con un proyecto real** (T-70b, sección 6.3) mostrara que Windows renueva el token, el cambio es una línea de la fábrica: Windows → `FirestoreOperationSync` y `FirebaseSessionRepository`. El contrato de dominio no cambia. En ese caso Windows usaría la persistencia del SDK, que T-70b probó contra el cierre forzado, **además** de la cola en Hive, que sigue siendo la fuente de verdad (4.1).
+3. **Para todos los clientes, nuevo en 4.5.** El SDK puede quedarse sin token **sin avisar**: T-70b no vio ningún error en el listener ni en `idTokenChanges`. Por eso el motor no se fía solo de los códigos de error.
+   - Si un movimiento lleva **más de 5 minutos** pendiente con el listener recibiendo del servidor, el estado pasa a `SessionExpired`.
+   - La pantalla dice «sin confirmar desde las HH:MM · inicia sesión de nuevo».
+   - Iniciar sesión otra vez vacía la cola: T-70b lo comprobó, y no se perdió nada.
+   - El umbral de 5 minutos es **PROVISIONAL**.
+   - Prueba nueva para 7.1: el `RemoteMovementStore` falso deja de confirmar sin dar error.
+
 ## 4. La cola persistente
 
 ### 4.1 Dónde vive
