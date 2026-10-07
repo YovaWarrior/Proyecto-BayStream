@@ -1,0 +1,255 @@
+rules_version = '2';
+
+// PROPUESTA T-79a (Timonel, 6-oct-2026) para el proyecto de produccion
+// baystream-app. NO es firestore.rules de la raiz: ese archivo es del proyecto
+// de H5 y no se toca. Carlos la publica desde la consola cuando T-79 la haya
+// verificado en el emulador. Diseno completo en docs/T79a-DISENO.md.
+//
+// Principios:
+//  1. Solo entra quien esta en la lista de autorizados (authorized/{uid}),
+//     activo, con un rol: 'dock' (muelle) u 'office' (oficina). La lista la
+//     escribe Carlos desde la consola; ningun cliente puede escribirla.
+//  2. La bitacora es solo de anexar: un movimiento se crea una vez y nunca se
+//     edita ni se borra. Se anula con otro movimiento. La unica "actualizacion"
+//     permitida es el reenvio identico del propio autor (idempotencia de la
+//     cola), que solo puede tocar la hora de recepcion del servidor.
+//  3. Lo que no esta declarado aqui esta cerrado.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------- identidad
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function authorizedPath() {
+      return /databases/$(database)/documents/authorized/$(request.auth.uid);
+    }
+
+    // Una cuenta que existe en Authentication pero no esta en la lista no
+    // entra. Tampoco una que Carlos marco active == false.
+    function isAuthorized() {
+      return signedIn()
+        && exists(authorizedPath())
+        && get(authorizedPath()).data.active == true;
+    }
+
+    function role() {
+      return get(authorizedPath()).data.role;
+    }
+
+    function isOffice() {
+      return isAuthorized() && role() == 'office';
+    }
+
+    // ------------------------------------------------------------------ formatos
+
+    function isUuid(value) {
+      return value is string
+        && value.matches('^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$');
+    }
+
+    // Posicion de estiba ISO (BBBRRTT); algunos archivos la traen de 6 cifras.
+    function isPosition(value) {
+      return value is string && value.matches('^[0-9]{6,7}$');
+    }
+
+    function isReason(value) {
+      return value is string && value.size() >= 1 && value.size() <= 300;
+    }
+
+    function optional(m, key, kind) {
+      return !(key in m)
+        || (kind == 'string' && m[key] is string && m[key].size() <= 60)
+        || (kind == 'int' && m[key] is int && m[key] > 0)
+        || (kind == 'timestamp' && m[key] is timestamp)
+        || (kind == 'uuid' && isUuid(m[key]));
+    }
+
+    // ---------------------------------------------------- lista de autorizados
+
+    // Cada usuario lee solo su propio registro, para conocer su rol.
+    match /authorized/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    // --------------------------------------------------------------- operaciones
+
+    // Una operacion es una escala de un buque: la publica la oficina con sus
+    // fuentes (BAPLIE de llegada, plan de carga, listado normalizado).
+    match /operations/{operationId} {
+      allow get, list: if isAuthorized();
+      allow create: if isOffice() && validNewOperation(operationId);
+      allow update: if isOffice() && validClosing();
+      allow delete: if false;
+
+      function validNewOperation(id) {
+        let d = request.resource.data;
+        let fields = ['id', 'schema', 'vessel', 'voyage', 'portOfCall', 'status',
+                      'createdBy', 'createdAt', 'profile', 'sources'];
+        return d.keys().hasOnly(fields) && d.keys().hasAll(fields)
+          && d.id == id && isUuid(id)
+          && d.schema == 1
+          && d.vessel is string && d.vessel.size() <= 80
+          && d.voyage is string && d.voyage.size() <= 40
+          && d.portOfCall is string && d.portOfCall.matches('^[A-Z]{2}[A-Z0-9]{3}$')
+          && d.status == 'open'
+          && d.createdBy == request.auth.uid
+          && d.createdAt == request.time
+          && d.profile is map
+          && d.sources is map;
+      }
+
+      // Cerrar es la unica edicion: abierta -> cerrada, una vez, con quien y cuando.
+      function validClosing() {
+        let d = request.resource.data;
+        return resource.data.status == 'open'
+          && d.status == 'closed'
+          && d.closedBy == request.auth.uid
+          && d.closedAt == request.time
+          && d.diff(resource.data).affectedKeys().hasOnly(['status', 'closedBy', 'closedAt']);
+      }
+
+      // Fuentes: el texto del BAPLIE en trozos y el listado normalizado. Se
+      // escriben en el mismo lote que la operacion (getAfter la ve) y no cambian.
+      match /sources/{sourceId} {
+        allow get, list: if isAuthorized();
+        allow create: if isOffice() && validSource(operationId, sourceId);
+        allow update, delete: if false;
+      }
+
+      function validSource(opId, id) {
+        let d = request.resource.data;
+        let op = getAfter(/databases/$(database)/documents/operations/$(opId)).data;
+        let fields = ['id', 'kind', 'sha256', 'part', 'parts', 'content',
+                      'createdBy', 'createdAt'];
+        return op.status == 'open'
+          && d.keys().hasOnly(fields) && d.keys().hasAll(fields)
+          && d.id == id
+          && d.kind in ['arrival_baplie', 'loading_baplie', 'export_list']
+          && d.sha256 is string && d.sha256.matches('^[0-9a-f]{64}$')
+          && d.parts is int && d.parts >= 1 && d.parts <= 20
+          && d.part is int && d.part >= 0 && d.part < d.parts
+          && d.content is string && d.content.size() <= 900000
+          && d.createdBy == request.auth.uid
+          && d.createdAt == request.time;
+      }
+
+      // ---------------------------------------------------------- movimientos
+
+      match /movements/{movementId} {
+        allow get, list: if isAuthorized();
+        allow create: if isAuthorized() && validMovement(operationId, movementId);
+        // Reenvio de la cola: mismo autor, mismo contenido, solo cambia la hora
+        // en que el servidor lo recibio. No altera nada que use la derivacion.
+        allow update: if isAuthorized()
+          && resource.data.author.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['receivedAt'])
+          && request.resource.data.receivedAt == request.time;
+        allow delete: if false;
+      }
+
+      function dockTypes() {
+        return ['discharge', 'load_full', 'assign_empty', 'annul',
+                'request_change', 'hatch_cover'];
+      }
+
+      function officeTypes() {
+        return ['discharge', 'load_full', 'assign_empty', 'annul',
+                'request_change', 'hatch_cover',
+                'cancel_item', 'change_position', 'reject_change'];
+      }
+
+      function validMovement(opId, id) {
+        let d = request.resource.data;
+        let r = role();
+        let op = get(/databases/$(database)/documents/operations/$(opId)).data;
+        let fields = ['id', 'schema', 'operationId', 'type', 'target', 'payload',
+                      'author', 'deviceId', 'sequence', 'createdAt', 'receivedAt'];
+        return d.keys().hasOnly(fields) && d.keys().hasAll(fields)
+          && d.id == id && isUuid(id)
+          && d.schema == 1
+          && d.operationId == opId
+          && d.author is map
+          && d.author.keys().hasOnly(['uid', 'name', 'role'])
+          && d.author.keys().hasAll(['uid', 'name', 'role'])
+          && d.author.uid == request.auth.uid
+          && d.author.role == r
+          && d.author.name is string && d.author.name.size() >= 1 && d.author.name.size() <= 80
+          && isUuid(d.deviceId)
+          && d.sequence is int && d.sequence >= 1
+          && d.createdAt is timestamp
+          && d.createdAt <= request.time + duration.value(10, 'm')
+          && d.createdAt >= request.time - duration.value(7, 'd')
+          && d.receivedAt == request.time
+          // Abierta, o cerrada despues de que el movimiento se registro sin red.
+          && (op.status == 'open' || d.createdAt <= op.closedAt)
+          && (r == 'office' && d.type in officeTypes() || r == 'dock' && d.type in dockTypes())
+          && d.payload is map
+          && validPayload(opId, d.type, d.target, d.payload, r);
+      }
+
+      function validPayload(opId, type, target, p, r) {
+        return (type == 'discharge'
+            && target is string && target.matches('^C:[A-Z0-9]{1,17}$')
+            && p.keys().hasOnly(['position', 'restow', 'reason', 'operatedAt', 'corrects'])
+            && isPosition(p.position) && p.restow is bool
+            && (!('reason' in p) || isReason(p.reason))
+            && optional(p, 'operatedAt', 'timestamp') && optional(p, 'corrects', 'uuid'))
+          || (type == 'load_full'
+            && target is string && target.matches('^C:[A-Z0-9]{1,17}$')
+            && p.keys().hasOnly(['order', 'position', 'seal', 'operatedAt', 'corrects', 'reason'])
+            && isPosition(p.position)
+            && optional(p, 'order', 'int') && optional(p, 'seal', 'string')
+            && (!('reason' in p) || isReason(p.reason))
+            && optional(p, 'operatedAt', 'timestamp') && optional(p, 'corrects', 'uuid'))
+          || (type == 'assign_empty'
+            && target is string && target.matches('^R:[0-9]{6,7}$')
+            && p.keys().hasOnly(['order', 'container', 'tareKg', 'seal', 'operatedAt', 'corrects', 'reason'])
+            && p.container is string && p.container.matches('^[A-Z0-9]{1,17}$')
+            && p.tareKg is number && p.tareKg > 0 && p.tareKg < 15000
+            && optional(p, 'order', 'int') && optional(p, 'seal', 'string')
+            && (!('reason' in p) || isReason(p.reason))
+            && optional(p, 'operatedAt', 'timestamp') && optional(p, 'corrects', 'uuid'))
+          || (type == 'annul'
+            && (target == null || target is string)
+            && p.keys().hasOnly(['annuls', 'reason']) && p.keys().hasAll(['annuls', 'reason'])
+            && isUuid(p.annuls) && isReason(p.reason)
+            // El muelle solo anula movimientos de muelle; la oficina, cualquiera.
+            && (r == 'office'
+              || get(/databases/$(database)/documents/operations/$(opId)/movements/$(p.annuls)).data.type in dockTypes()))
+          || (type == 'cancel_item'
+            && target is string && target.matches('^(C:[A-Z0-9]{1,17}|R:[0-9]{6,7})$')
+            && p.keys().hasOnly(['reason']) && isReason(p.reason))
+          || (type == 'request_change'
+            && target == null
+            && p.keys().hasOnly(['changes', 'reason']) && p.keys().hasAll(['changes', 'reason'])
+            && p.changes is list && p.changes.size() >= 1 && p.changes.size() <= 4
+            && isReason(p.reason))
+          || (type == 'change_position'
+            && target == null
+            && p.keys().hasOnly(['changes', 'request', 'reason']) && p.keys().hasAll(['changes', 'reason'])
+            && p.changes is list && p.changes.size() >= 1 && p.changes.size() <= 4
+            && optional(p, 'request', 'uuid') && isReason(p.reason))
+          || (type == 'reject_change'
+            && target == null
+            && p.keys().hasOnly(['request', 'reason']) && p.keys().hasAll(['request', 'reason'])
+            && isUuid(p.request) && isReason(p.reason))
+          || (type == 'hatch_cover'
+            && target is string && target.matches('^T:[0-9]{1,3}-[1-9]$')
+            && p.keys().hasOnly(['action', 'operatedAt', 'corrects']) && p.keys().hasAll(['action'])
+            && p.action in ['remove', 'replace']
+            && optional(p, 'operatedAt', 'timestamp') && optional(p, 'corrects', 'uuid'));
+      }
+    }
+
+    // Todo lo demas, cerrado. Incluye 'voyages' y 'latency_test': en
+    // produccion no los usa ninguna pantalla; son del proyecto de H5.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
