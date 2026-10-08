@@ -133,6 +133,7 @@ Ejemplo de la aprobación del intercambio, como documento de Firestore:
 - **Regla de vigencia:** un movimiento está vigente si ningún movimiento vigente lo anula (`annuls`) ni lo corrige (`corrects`).
   - Anular una anulación restaura el original.
   - Las referencias siempre apuntan a un movimiento que el autor ya tenía, así que no hay ciclos y la regla se calcula por recursión, sin importar el orden de llegada.
+  - **Ampliada en T-76 (SPRINT-3, 10.12):** una corrección sustituye toda su cadena. Si se corrige A→B→C, C queda vigente y A no revive. Anular C restaura B, y anular esa anulación restaura C.
 
 ### 2.6 Propuesta: solo anexar
 

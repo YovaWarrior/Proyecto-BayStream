@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 201.9 h estimadas** (al 7-oct, 10.11) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 197.6 h estimadas** (al 8-oct, 10.12) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -509,7 +509,7 @@ T-76 hace lo mismo en BayStream con la bitácora de T-72, el listado de T-73 y e
    - El marchamo va en `seal`.
 5. **Deshacer y corregir.**
    - Deshacer es un `annul`, como en T-75: un «Deshacer» inmediato y, después, desde el detalle, con motivo.
-   - Corregir es anular con motivo y registrar de nuevo, en un solo paso.
+   - Corregir es **un movimiento nuevo con `payload.corrects`**, que deja sin efecto al corregido en la misma escritura (T-79a, 2.5). No se hace con `annul` más una carga nueva: serían dos escrituras, y si a la nube solo llegara la primera, la oficina vería un hueco. Es lo que T-72 ya implementa.
    - `cancel_item` es de la oficina, en T-81. No va aquí.
 6. **La descarga del ocupante libera la celda, sin importar el orden.**
    - **Por qué:** 54 de las 176 celdas de carga de A08 son celdas que A07 descarga, y T-75 lo midió. Hoy, una carga registrada antes que la descarga de su celda sale «celda ocupada».
@@ -530,6 +530,36 @@ T-76 hace lo mismo en BayStream con la bitácora de T-72, el listado de T-73 y e
 - [ ] La tarea se acepta en Windows, en el Honor a 360 dp y en Chrome. En Windows, la aceptación usa un namespace propio del almacén (`AGENTS.md`).
 - [ ] Piso de 420 pruebas, `analyze` en cero, los corpus de T-68 a T-75 en verde y el nuevo de T-76.
 
+#### T-77 · Validación antes de confirmar, con motivo escrito · 3.0 h · Timonel (ficha completa, 8-oct)
+
+**Para qué.** En el papel, el planificador revisa a ojo que en cada celda vaya el tipo, el puerto y la carga correctos. T-77 hace esa revisión **antes** de escribir en la bitácora. Lo que se puede justificar pide motivo escrito; lo que es físicamente imposible no se registra.
+
+**Qué hacer.**
+
+La validación se hace contra el **estado derivado del propio dispositivo** (T-79a): plan combinado, bitácora y perfil del buque. Va en los diálogos de confirmar de T-76.
+
+1. **No se puede registrar:**
+   - **20/40:** un contenedor de 40 pies en una posición de 20, o al revés, según la bahía par o impar de la posición.
+   - **Una celda que no existe** en la geometría del buque.
+2. **Se registra solo con motivo escrito**, que viaja en `payload.reason` y deja el conflicto a la vista (T-79a, tabla de conflictos):
+   - **Un lleno fuera de su posición planificada:** queda «fuera de plan».
+   - **Un vacío en una reserva de otro grupo** (tipo, puerto o línea distintos): queda «vacío de otro grupo».
+   - **El peso de la pila supera el límite del perfil**, con el cálculo de T-67 y el peso del listado. Se muestra el peso resultante contra el límite. Sin límite en el perfil, sale «no evaluado» y no se bloquea.
+3. **Celda ocupada por un contenedor que baja aquí y no se ha marcado.** Esto viene de 10.11.
+   - El aviso dice qué contenedor ocupa la celda y ofrece **«Marcar su descarga y cargar»**. Eso registra dos movimientos, `discharge` y luego la carga, con un solo toque.
+   - O se puede cancelar.
+   - Si el ocupante **no** baja en esta escala, la celda está ocupada de verdad: se trata como «fuera de plan» y pide motivo.
+4. **Los avisos se leen a 360 dp.** El campo de motivo es obligatorio para continuar en los casos del punto 2.
+
+**Terminada cuando:**
+- [ ] **Ningún falso aviso.** Validar los 176 eventos de carga del caso contra A08 da **exactamente 2 avisos**, los «fuera de plan» del OR 128 y el OR 145: el intercambio de 014-01-02 y 014-01-08 que resuelve T-80. Ningún otro.
+- [ ] **El grupo.** El OR 12 en una reserva de otro grupo no se confirma sin motivo. Con motivo, queda registrado y en conflicto.
+- [ ] **20/40.** Un 40 pies en una posición de 20 no se registra, ni con motivo.
+- [ ] **La celda ocupada.** Cargar en una de las 54 celdas que A07 descarga, sin marcar antes su descarga, ofrece «Marcar su descarga y cargar». Al aceptar quedan los dos movimientos y ningún conflicto.
+- [ ] **El peso de la pila.** En un namespace de prueba, con un límite de prueba de 90 000 kg en el perfil, cargar en la pila 014, bodega, fila 01 avisa con el peso resultante. Sin límite, sale «no evaluado».
+- [ ] La tarea se acepta en Windows (namespace propio), en el Honor a 360 dp y en Chrome.
+- [ ] Piso de 437 pruebas, `analyze` en cero, los corpus de T-68 a T-76 en verde y el nuevo de T-77.
+
 
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
@@ -538,7 +568,7 @@ T-76 hace lo mismo en BayStream con la bitácora de T-72, el listado de T-73 y e
 | **T-74** | RF-038 | 3.0 | Plan de carga: cruzar listado y plan; número de orden en cada celda; pendientes por bahía. **Desde T-73** la operación puede existir solo con la fuente `export_list`, porque el texto del BAPLIE no se conserva después de leerlo: T-74 guarda ese texto como fuente `loading_baplie` (y `arrival_baplie` si aplica) **en la misma operación**, no en una nueva · **ficha completa arriba** | Los 9 conteos por bahía de la sección 2 del caso, en cubierta y bodega; la operación queda con sus fuentes completas |
 | **T-75** | RF-037 | 4.0 | Descarga: tocar el contenedor y queda marcado; aviso de re-estiba si su puerto no es este; deshacer | Los 114 de `CORPUS_A07` se marcan y se deshacen sin perder la bitácora · **ficha completa arriba** |
 | **T-76** | RF-037 | 5.0 | Carga: confirmar un lleno por número de orden o de contenedor; asignar un vacío solo a una celda libre de su grupo; hora y marchamo; cancelar y corregir | Reproducir `CASO_A08_EVENTOS.json` deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv` · **ficha completa arriba** |
-| **T-77** | RF-037 | 3.0 | Validación preventiva antes de confirmar: celda, 20/40, peso de la pila, posición del planificador para los llenos, grupo para los vacíos | Un vacío en una celda de otro grupo no se confirma sin motivo escrito |
+| **T-77** | RF-037 | 3.0 | Validación preventiva antes de confirmar: celda, 20/40, peso de la pila, posición del planificador para los llenos, grupo para los vacíos | Un vacío en una celda de otro grupo no se confirma sin motivo escrito · **ficha completa arriba** |
 | **T-78** | RF-037 | 3.0 | Vista de avance para la oficina: descargados, cargados, pendientes y cancelados, por bahía | Cuadra con la bitácora en cada momento del caso |
 
 ### Ola 3 · Sincronización, cuentas y roles (13–17 oct)
@@ -1051,3 +1081,51 @@ T-70c suma 1.0 h: el total queda en ≈ 205.0 h y 40 tareas.
 1. Primero, la aceptación cruzada de T-75.
 2. Después, T-76.
 - Timonel queda en pausa. Cuando Codex entregue T-76, Timonel la acepta y toma T-77.
+
+**Corrección a la ficha de T-76.** Codex señaló que la ficha decía «corregir es anular y registrar de nuevo», y eso contradice T-79a 2.5 y el código de T-72. Queda así: **corregir usa `payload.corrects`, en una sola escritura, y deshacer usa `annul`**.
+
+### 10.12 · T-75 terminada · T-76 aceptada en Windows; el Honor y Chrome pasan a la aceptación de Timonel · T-77 a Timonel (8-oct)
+
+**T-75 pasa a Terminado.** Codex la aceptó en los tres clientes (`docs/T76-RESULTADOS.md`, sección 1):
+- 114 pendientes (66/48), con el conteo por bahía de la ficha;
+- en el corpus, 114 a 0, de vuelta a 114 con 228 movimientos, y 229 con la re-estiba;
+- 420 pruebas y `analyze` en cero.
+- La aceptación tomó ≈ 0.40 h.
+
+**T-76, de Codex, queda En revisión** (commit `21d73ab`, que Carlos ya subió). El commit no lleva el prefijo «Sprint 3:» de los demás; no se reescribe.
+- **El corpus.** Con A08 y A08v pasan cuatro escenarios: solo cargas, cargas antes de las descargas, descargas antes y todo intercalado.
+  - En todos dan las 460 posiciones del CSV, cero «celda ocupada» y cero pendientes.
+  - El OR 12 queda en `R:0030984` con 2 185 kg.
+  - Quedan los 2 «fuera de plan» del intercambio.
+- **Validaciones.** **437 pruebas** (el piso nuevo), `analyze` en cero y los corpus en 36 de 36.
+- **Windows, aceptado** en el namespace `t76acc`, con 14 movimientos después de reabrir:
+  - búsqueda por OR y por sufijo del contenedor;
+  - hora y marchamo;
+  - deshacer inmediato y desde el detalle;
+  - corrección con `corrects`;
+  - el OR 12 con sus cinco reservas libres, primero las de la bahía que se ve.
+- **El Honor quedó a medias. Chrome, sin hacer.**
+  - En el Honor apareció de pronto la pantalla de «Opciones del desarrollador». Codex detuvo los toques.
+  - En Chrome, la herramienta de pantalla de Codex se negó a seguir porque no pudo confirmar la URL. Codex no intentó saltarse el bloqueo.
+  - Además, Codex se quedó dos veces sin créditos.
+- **Horas.** ≈ 0.73 de trabajo activo en lugar de 5.0. El total baja a ≈ 197.6 h.
+
+**Dos reglas del derivador cambian con T-76.**
+1. **La descarga libera la celda en cualquier orden** (10.11). Si falta la descarga, sigue la «celda ocupada». Dos cargas en la misma celda siguen en conflicto.
+2. **Una corrección sustituye toda su cadena.** Carlos la autorizó durante T-76.
+   - Con la regla de T-79a 2.5, corregir A→B→C podía revivir A.
+   - Ahora C queda vigente, anular C restaura B y anular esa anulación restaura C.
+   - Se anotó en `docs/T79a-DISENO.md`, 2.5.
+
+**Incidencia que declaró Codex.** Una salida del corpus de T-72, con identificadores anonimizados, cayó en `build/t76/` del repo. Codex la movió de inmediato al directorio temporal del sistema. `build/` está fuera de Git.
+
+**Decisión: la aceptación de Timonel completa el Honor y Chrome.** Timonel hace la aceptación cruzada de T-76 en un chat nuevo. Además de comprobar lo de Windows, hace completos en el Honor y en Chrome los recorridos que faltan:
+- opcionales, corrección y deshacer desde el detalle;
+- el OR 12;
+- la reapertura.
+
+En Chrome usa su método de T-75: un Chrome propio con perfil aparte, servido en local y con la ventana visible. Así no se gasta otra sesión de Codex y el carril no se detiene.
+- **Si todo cuadra, T-76 pasa a Terminado**, con la aceptación en los tres clientes repartida entre los dos programadores.
+- **Si algo no cuadra**, Timonel se detiene y avisa. Codex lo arregla.
+
+**Después, Timonel toma T-77** (ficha completa en la sección 5). Codex queda en pausa hasta aceptar T-77 y tomar T-78.
