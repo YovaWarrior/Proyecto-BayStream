@@ -47,17 +47,24 @@ class MovementLogRepositoryImpl implements MovementLogRepository {
       return Left(ValidationFailure(message: problem, field: draft.type.wire));
     }
     return _guard(() async {
+      final registeredAt = _clock();
       final record = MovementRecord(
         Movement(
           id: const Uuid().v4(),
           operationId: draft.operationId,
           type: draft.type,
           target: draft.target,
-          payload: draft.payload,
+          payload: {
+            ...draft.payload,
+            if ((draft.type == MovementType.loadFull ||
+                    draft.type == MovementType.assignEmpty) &&
+                draft.payload['operatedAt'] == null)
+              'operatedAt': registeredAt.toUtc().toIso8601String(),
+          },
           author: author,
           deviceId: _source.deviceId,
           sequence: _source.nextSequence(),
-          createdAt: _clock(),
+          createdAt: registeredAt,
         ),
         _initialState,
       );

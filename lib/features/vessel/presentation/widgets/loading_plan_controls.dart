@@ -7,11 +7,13 @@ import '../formatters/vessel_error_message.dart';
 import '../pages/export_list_import_page.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_plan_provider.dart';
+import '../providers/loading_operation_provider.dart';
 import 'discharge_controls.dart';
+import 'loading_controls.dart';
 
 /// Modos de vista del plano. «Descarga» (T-75) solo existe en un plano de
 /// llegada; fuera de ese modo, tocar una celda abre el detalle, como siempre.
-enum BayPlanMode { content, order, discharge }
+enum BayPlanMode { content, order, discharge, loading }
 
 class LoadingPlanControls extends ConsumerWidget {
   final VesselVoyage voyage;
@@ -33,7 +35,9 @@ class LoadingPlanControls extends ConsumerWidget {
     final dischargeMode = discharge && mode == BayPlanMode.discharge;
     final progress = voyage.portOfCall == null
         ? null
-        : ref.watch(loadingPlanProgressProvider(voyage));
+        : mode == BayPlanMode.loading
+            ? ref.watch(loadingOperationProvider(voyage)).whenData((d) => d.progress)
+            : ref.watch(loadingPlanProgressProvider(voyage));
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -43,7 +47,8 @@ class LoadingPlanControls extends ConsumerWidget {
             children: [
               DropdownButton<BayPlanMode>(
                 key: const ValueKey('bay-plan-display-mode'),
-                value: !discharge && mode == BayPlanMode.discharge
+                value: (!discharge && mode == BayPlanMode.discharge) ||
+                        (voyage.portOfCall == null && mode == BayPlanMode.loading)
                     ? BayPlanMode.content
                     : mode,
                 items: [
@@ -54,6 +59,9 @@ class LoadingPlanControls extends ConsumerWidget {
                   if (discharge)
                     const DropdownMenuItem(
                         value: BayPlanMode.discharge, child: Text('Descarga')),
+                  if (voyage.portOfCall != null)
+                    const DropdownMenuItem(
+                        value: BayPlanMode.loading, child: Text('Carga')),
                 ],
                 onChanged: (value) {
                   if (value != null) onModeChanged(value);
@@ -74,7 +82,9 @@ class LoadingPlanControls extends ConsumerWidget {
                   label: const Text('Pendientes por bahía'),
                 ),
             ]),
-        if (dischargeMode)
+        if (mode == BayPlanMode.loading && voyage.portOfCall != null)
+          LoadingControls(voyage: voyage, selectedBay: selectedBay)
+        else if (dischargeMode)
           DischargeSummary(voyage: voyage, selectedBay: selectedBay)
         else if (voyage.portOfCall == null)
           const Text('Confirma la escala para ver el plan de carga.')
@@ -117,7 +127,9 @@ class LoadingPlanControls extends ConsumerWidget {
             child: SizedBox(
           height: MediaQuery.sizeOf(context).height * .8,
           child: Consumer(builder: (context, ref, _) {
-            final progress = ref.watch(loadingPlanProgressProvider(voyage));
+            final progress = mode == BayPlanMode.loading
+                ? ref.watch(loadingOperationProvider(voyage)).whenData((d) => d.progress)
+                : ref.watch(loadingPlanProgressProvider(voyage));
             return progress.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) =>

@@ -20,18 +20,26 @@ class OperationStateDeriver {
   }
 
   /// Un movimiento queda sin efecto si otro vigente lo anula o lo corrige.
-  /// Anular una anulación restaura el original. Las referencias apuntan
+  /// Una corrección sustituye toda su cadena anterior; anular la última
+  /// restaura la corrección previa. Anular una anulación restaura el original.
+  /// Las referencias apuntan
   /// siempre a algo que el autor ya tenía, así que no hay ciclos; aun así,
   /// un ciclo malformado no anula a nadie.
   Set<String> _voided(Map<String, Movement> byId) {
     final references = <String, List<String>>{};
     for (final m in byId.values) {
       final annuls = m.type == MovementType.annul ? m.annuls : null;
-      final corrects = m.type.canCorrect ? m.corrects : null;
-      for (final target in [annuls, corrects]) {
-        if (target != null && target != m.id) {
-          references.putIfAbsent(target, () => []).add(m.id);
-        }
+      if (annuls != null && annuls != m.id) {
+        references.putIfAbsent(annuls, () => []).add(m.id);
+      }
+      var target = m.type.canCorrect ? m.corrects : null;
+      final visited = {m.id};
+      while (target != null && visited.add(target)) {
+        references.putIfAbsent(target, () => []).add(m.id);
+        final previous = byId[target];
+        target = previous != null && previous.type.canCorrect
+            ? previous.corrects
+            : null;
       }
     }
     final memo = <String, bool>{};
@@ -88,6 +96,27 @@ class _Run {
   }
 
   OperationState apply(List<Movement> vigentes) {
+    // T-76: el ocupante de llegada deja libre su celda si tiene una
+    // descarga vigente, aunque otro dispositivo haya registrado antes la
+    // carga. Solo anticipamos la liberación: la descarga conserva su lugar
+    // en el orden total, sus duplicados, cancelaciones y posibles conflictos.
+    final departures = _Run(plan, voided);
+    for (final movement in vigentes) {
+      if (movement.type == MovementType.discharge) {
+        departures._discharge(movement);
+      } else if (movement.type == MovementType.cancelItem &&
+          plan.arrival.containsKey(movement.target)) {
+        departures._cancel(movement);
+      }
+    }
+    for (final arrival in plan.arrival.values) {
+      final departure = departures.items[arrival.key];
+      if (departure?.state == ItemState.moved &&
+          departure?.position == null &&
+          occupied[arrival.plannedPosition] == arrival.key) {
+        occupied.remove(arrival.plannedPosition);
+      }
+    }
     for (final m in vigentes) {
       switch (m.type) {
         case MovementType.discharge:

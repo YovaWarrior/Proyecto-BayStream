@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/discharge_progress.dart';
 import '../../domain/services/loading_plan_progress.dart';
+import '../../domain/services/loading_operation.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_plan_provider.dart';
+import '../providers/loading_operation_provider.dart';
 import '../providers/vessel_providers.dart';
 import 'discharge_controls.dart';
 import 'loading_plan_controls.dart';
+import 'loading_controls.dart';
 import 'reserved_slot_details.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
@@ -49,10 +52,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
 
   @override
   Widget build(BuildContext context) {
-    final sortedBayNumbers = widget.voyage.bays.keys.toList()..sort();
+    final loading = _mode == BayPlanMode.loading && widget.voyage.portOfCall != null
+        ? ref.watch(loadingOperationProvider(widget.voyage)).value : null;
+    final displayedVoyage = loading?.loading ?? widget.voyage;
+    final sortedBayNumbers = displayedVoyage.bays.keys.toList()..sort();
     final highlightedContainerId = ref.watch(highlightedContainerProvider);
     final activeTypeFilter = ref.watch(selectedTypeFilterProvider);
-    final reservedNeighbors = widget.voyage.neighborReservedSlots();
+    final reservedNeighbors = displayedVoyage.neighborReservedSlots();
     final progress = widget.voyage.portOfCall == null
         ? null
         : ref.watch(loadingPlanProgressProvider(widget.voyage)).value;
@@ -67,7 +73,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     ref.listen<int?>(selectedBayProvider, (previous, next) {
       if (next != null &&
           next != _selectedBayNumber &&
-          widget.voyage.bays.containsKey(next)) {
+          displayedVoyage.bays.containsKey(next)) {
         setState(() {
           _selectedBayNumber = next;
         });
@@ -88,45 +94,54 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             mode: _mode,
             onModeChanged: (value) => setState(() => _mode = value)),
         // Selector de bahías
-        _buildBaySelector(sortedBayNumbers),
+        _buildBaySelector(sortedBayNumbers, displayedVoyage),
         const Divider(height: 1),
 
         // Grid de la bahía seleccionada con scroll normal
         Expanded(
           child: _selectedBayNumber != null
               ? _BayGridWidget(
-                  bay: widget.voyage.bays[_selectedBayNumber]!,
-                  onContainerTap: dischargeMode
+                  bay: displayedVoyage.bays[_selectedBayNumber] ?? displayedVoyage.bays[sortedBayNumbers.first]!,
+                  loading: loading,
+                  onContainerTap: loading != null
+                      ? (container) => onLoadingContainerTap(context, ref, widget.voyage, container,
+                          selectedBay: _selectedBayNumber, openDetails: () => _showContainerDetails(container))
+                      : dischargeMode
                       ? (container) => onDischargeTap(
                           context, ref, widget.voyage, container,
                           openDetails: () => _showContainerDetails(container))
                       : _showContainerDetails,
                   reservedSlots:
-                      widget.voyage.getReservedSlotsInBay(_selectedBayNumber!),
+                      displayedVoyage.getReservedSlotsInBay(_selectedBayNumber!),
                   reservedNeighbors:
                       reservedNeighbors[_selectedBayNumber] ?? const {},
                   // En el modo Descarga, una reserva no se opera.
-                  onReservedSlotTap: dischargeMode
+                  onReservedSlotTap: loading != null
+                      ? (slot) => loading.movementOf(slot.key) != null
+                          ? showLoadingDetails(context, widget.voyage, slot.key)
+                          : chooseLoadingRow(context, ref, widget.voyage, empties: true,
+                              selectedBay: _selectedBayNumber, slot: slot)
+                      : dischargeMode
                       ? (_) {}
                       : (slot) => showReservedSlotDetails(context, slot),
                   highlightedContainerId: highlightedContainerId,
                   activeTypeFilter: activeTypeFilter,
-                  isInTransit: widget.voyage.isInTransit,
+                  isInTransit: displayedVoyage.isInTransit,
                   orderMode: _mode == BayPlanMode.order,
                   discharge: discharge,
-                  progress: progress,
+                  progress: loading?.progress ?? progress,
                   portOfCall: widget.voyage.portOfCall,
                 )
               : const Center(child: Text('Selecciona una bahía')),
         ),
 
         // Leyenda
-        _buildLegend(),
+        _buildLegend(displayedVoyage),
       ],
     );
   }
 
-  Widget _buildBaySelector(List<int> bayNumbers) {
+  Widget _buildBaySelector(List<int> bayNumbers, VesselVoyage displayedVoyage) {
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -153,9 +168,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               itemCount: bayNumbers.length,
               itemBuilder: (context, index) {
                 final bayNumber = bayNumbers[index];
-                final bay = widget.voyage.bays[bayNumber]!;
+                final bay = displayedVoyage.bays[bayNumber]!;
                 final reservedCount =
-                    widget.voyage.getReservedSlotsInBay(bayNumber).length;
+                    displayedVoyage.getReservedSlotsInBay(bayNumber).length;
                 final isSelected = bayNumber == _selectedBayNumber;
                 
                 // Sin geometria declarada no hay porcentaje que mostrar; se
@@ -213,7 +228,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     );
   }
 
-  Widget _buildLegend() {
+  Widget _buildLegend(VesselVoyage displayedVoyage) {
     final activeFilter = ref.watch(selectedTypeFilterProvider);
     return Container(
       padding: const EdgeInsets.all(12),
@@ -245,7 +260,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             const SizedBox(width: 16),
             _buildLegendItem(
                 Colors.blueGrey.shade200, 'Ocupado por 40 pies', null, activeFilter),
-            if (widget.voyage.totalReservedSlots > 0) ...[
+            if (displayedVoyage.totalReservedSlots > 0) ...[
               const SizedBox(width: 16),
               _buildReservedLegendItem(),
             ],
@@ -488,6 +503,7 @@ class _BayGridWidget extends StatelessWidget {
   final Bay bay;
   final bool orderMode;
   final LoadingPlanProgress? progress;
+  final LoadingOperation? loading;
 
   /// T-75: solo en el modo Descarga; marca cada contenedor del plano de llegada.
   final DischargeProgress? discharge;
@@ -511,6 +527,7 @@ class _BayGridWidget extends StatelessWidget {
     required this.isInTransit,
     this.orderMode = false,
     this.progress,
+    this.loading,
     this.discharge,
     this.portOfCall,
     this.highlightedContainerId,
@@ -936,6 +953,19 @@ class _BayGridWidget extends StatelessWidget {
               '${tier.toString().padLeft(2, '0')}';
           final reservation = reservedPositionMap[key];
           final reservedNeighbor = reservedNeighbors[slotKey];
+          final loadSlot = reservation ?? reservedNeighbor;
+          final loadKey = container == null ? loadSlot?.key : 'C:${container.containerId}';
+          if (loading != null && loadKey != null &&
+              loading!.plan.loading[loadKey]?.role == PlanRole.load) {
+            final loadHighlighted = isHighlighted || highlightedContainerId == loadKey;
+            final cell = LoadingCell(
+                key: ValueKey('loading-$loadKey'), itemKey: loadKey,
+                operation: loading!, highlighted: loadHighlighted,
+                onTap: container == null
+                    ? () => onReservedSlotTap(loadSlot!)
+                    : () => onContainerTap(container));
+            return loadHighlighted ? _RevealPosition(key: ValueKey(loadKey), child: cell) : cell;
+          }
           if (container == null && reservation != null) {
             return _ReservedCell(
               key: ValueKey('reserved-${reservation.key}'),
