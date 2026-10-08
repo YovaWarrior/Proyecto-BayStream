@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/load_check.dart';
 import '../../domain/services/loading_operation.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/discharge_provider.dart';
@@ -138,13 +139,22 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
   @override
   Widget build(BuildContext context) {
     final data = ref.watch(loadingOperationProvider(widget.voyage)).value;
+    // T-77: desde una reserva se ofrecen primero los vacíos de su grupo; los
+    // de otros grupos van después y piden motivo al confirmar.
+    final slot = widget.slot;
     final rows = data
             ?.search(query, empties: widget.empties)
             .where((row) =>
-                widget.slot == null ||
-                data.slots(row).any((s) => s.key == widget.slot!.key))
+                slot == null ||
+                data
+                    .candidateSlots(row, otherGroups: true)
+                    .any((s) => s.key == slot.key))
             .toList() ??
         [];
+    if (slot != null) {
+      rows.sort((a, b) => (_sameGroup(slot, a) ? 0 : 1)
+          .compareTo(_sameGroup(slot, b) ? 0 : 1));
+    }
     return SafeArea(
         child: SizedBox(
             height: MediaQuery.sizeOf(context).height * .8,
@@ -185,6 +195,7 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
                                 subtitle: Text(
                                     '${row.type} · ${row.pod} · ${row.line}'
                                     '${row.isEmpty ? '\nTara ${row.tareKg.toStringAsFixed(0)} kg' : ''}'
+                                    '${slot != null && !_sameGroup(slot, row) ? '\nOtro grupo: pide motivo' : ''}'
                                     '${operated ? '\nYa cargado' : ''}'),
                                 trailing: operated
                                     ? const Icon(Icons.check_circle_outline)
@@ -228,12 +239,32 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
       text: widget.correcting?.payload['seal'] as String?);
   final _hour = TextEditingController();
   final _reason = TextEditingController();
+
+  /// T-77: un lleno que quedó en otra celda que la planificada.
+  final _cell = TextEditingController();
+
+  /// T-77: ofrecer también reservas de otros grupos, que piden motivo.
+  bool otherGroups = false;
   DateTime date = DateTime.now();
   bool busy = false;
   String? error;
   @override
   void initState() {
     super.initState();
+    final data = ref.read(loadingOperationProvider(widget.voyage)).value;
+    final start = widget.position;
+    final numbered = data?.numbered(row);
+    if (numbered != null &&
+        start != null &&
+        start != numbered.plannedPosition) {
+      _cell.text = loadingPosition(start);
+    }
+    final slot = start == null ? null : data?.plan.loading['R:$start'];
+    if (numbered == null &&
+        slot?.reservedSlot != null &&
+        !_sameGroup(slot!.reservedSlot!, row)) {
+      otherGroups = true;
+    }
     final previous = widget.correcting;
     if (previous != null) {
       date =
@@ -250,7 +281,17 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
     _seal.dispose();
     _hour.dispose();
     _reason.dispose();
+    _cell.dispose();
     super.dispose();
+  }
+
+  /// La celda que se va a registrar: para un lleno, la planificada salvo que
+  /// se escriba otra; para un vacío, la reserva elegida.
+  String? target(LoadingOperation? data) {
+    final numbered = data?.numbered(row);
+    if (numbered == null) return position;
+    final typed = _cell.text.replaceAll(RegExp(r'[\s-]'), '');
+    return typed.isEmpty ? numbered.plannedPosition : typed;
   }
 
   Future<void> save() async {
@@ -271,12 +312,25 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
             int.parse(match[1]!), int.parse(match[2]!));
       }
       final data = ref.read(loadingOperationProvider(widget.voyage)).value!;
-      final draft = data.draft(row, position ?? '',
+      final at = target(data) ?? '';
+      final occupant = data.check(row, at, correcting: widget.correcting)
+          .dischargeFirst;
+      // Se arma antes de escribir: si la carga no pasa, no queda la descarga.
+      final draft = data.draft(row, at,
           operatedAt: operatedAt,
           seal: _seal.text.trim().isEmpty ? null : _seal.text.trim(),
           correcting: widget.correcting,
-          reason: _reason.text.trim());
+          reason: _reason.text.trim(),
+          dischargeOccupant: occupant != null);
       final repository = await ref.read(movementLogRepositoryProvider.future);
+      // T-77: «Marcar su descarga y cargar» son dos movimientos, en orden.
+      MovementRecord? discharged;
+      if (occupant != null) {
+        final first =
+            await appendMovement(repository, data.dischargeDraft(occupant));
+        if (first.error != null) throw StateError(first.error!);
+        discharged = first.record;
+      }
       final result = await appendMovement(repository, draft);
       if (result.error != null) throw StateError(result.error!);
       if (!mounted) return;
@@ -289,12 +343,16 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
             duration: const Duration(seconds: 6),
             persist: false,
             content: Text(
-                '${widget.correcting == null ? 'Carga registrada' : 'Carga corregida'} · OR ${row.order}'),
+                '${discharged != null ? 'Descarga y carga registradas' : widget.correcting == null ? 'Carga registrada' : 'Carga corregida'} · OR ${row.order}'),
             action: SnackBarAction(
                 label: 'Deshacer',
                 onPressed: () async {
-                  final error = await annulMovement(
+                  var error = await annulMovement(
                       repository, result.record!.movement, markedByMistake);
+                  if (error == null && discharged != null) {
+                    error = await annulMovement(
+                        repository, discharged.movement, markedByMistake);
+                  }
                   if (error != null) {
                     messenger.showSnackBar(SnackBar(content: Text(error)));
                   }
@@ -313,13 +371,23 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
   Widget build(BuildContext context) {
     final data = ref.watch(loadingOperationProvider(widget.voyage)).value;
     final numbered = data?.numbered(row);
-    final slots = data?.slots(row,
-            selectedBay: widget.selectedBay, correcting: widget.correcting) ??
+    final slots = data?.candidateSlots(row,
+            selectedBay: widget.selectedBay,
+            correcting: widget.correcting,
+            otherGroups: otherGroups) ??
         [];
-    final validPosition = numbered?.plannedPosition ??
-        (slots.any((s) => s.stowagePosition.toIsoCode() == position)
+    final validPosition = numbered != null
+        ? target(data)
+        : (slots.any((s) => s.stowagePosition.toIsoCode() == position)
             ? position
             : null);
+    // T-77: la revisión se hace antes de escribir, con cada cambio del diálogo.
+    final review = data == null || validPosition == null
+        ? null
+        : data.check(row, validPosition, correcting: widget.correcting);
+    final needsReason =
+        widget.correcting != null || (review?.needsReason ?? false);
+    final occupant = review?.dischargeFirst;
     final alternatives = widget.correcting?.type == MovementType.assignEmpty
         ? data?.list?.empties
                 .where((r) =>
@@ -369,13 +437,28 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                                   });
                                 }
                               }),
-                  if (numbered != null)
+                  if (numbered != null) ...[
                     Text(
-                        'Posición planificada: ${loadingPosition(numbered.plannedPosition)}')
-                  else ...[
-                    const Text(
-                        'Reservas libres del mismo tipo, puerto y línea.'),
-                    DropdownButtonFormField<String>(
+                        'Posición planificada: ${loadingPosition(numbered.plannedPosition)}'),
+                    TextField(
+                        key: const ValueKey('loading-cell'),
+                        controller: _cell,
+                        enabled: !busy,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                            labelText: 'Celda donde quedó (opcional)',
+                            helperText:
+                                'Vacío: la planificada. Otra celda (BBB-RR-TT) pide motivo.',
+                            helperMaxLines: 2)),
+                  ] else ...[
+                    Text(otherGroups
+                        ? 'Reservas libres: primero las de su grupo.'
+                        : 'Reservas libres del mismo tipo, puerto y línea.'),
+                    // Cambiar «otros grupos» cambia las opciones: el campo
+                    // se reinicia para no conservar una celda que ya no está.
+                    KeyedSubtree(
+                        key: ValueKey('loading-slots-$otherGroups'),
+                        child: DropdownButtonFormField<String>(
                         key: ValueKey('loading-position-${row.order}'),
                         isExpanded: true,
                         initialValue: validPosition,
@@ -385,8 +468,10 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                           for (final slot in slots)
                             DropdownMenuItem(
                                 value: slot.stowagePosition.toIsoCode(),
-                                child: Text(loadingPosition(
-                                    slot.stowagePosition.toIsoCode())))
+                                child: Text(
+                                    '${loadingPosition(slot.stowagePosition.toIsoCode())}'
+                                    '${_sameGroup(slot, row) ? '' : ' · otro grupo'}'
+                                    '${data?.state.occupancy.containsKey(slot.stowagePosition.toIsoCode()) == true ? ' · ocupada, baja aquí' : ''}'))
                         ],
                         onChanged: busy
                             ? null
@@ -401,10 +486,33 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                                           highlightedContainerProvider.notifier)
                                       .highlight('R:$value');
                                 }
-                              }),
+                              })),
+                    SwitchListTile(
+                        key: const ValueKey('loading-other-groups'),
+                        contentPadding: EdgeInsets.zero,
+                        value: otherGroups,
+                        onChanged: busy
+                            ? null
+                            : (value) => setState(() {
+                                  otherGroups = value;
+                                  final chosen = position == null
+                                      ? null
+                                      : data?.plan.loading['R:$position']
+                                          ?.reservedSlot;
+                                  if (!value &&
+                                      chosen != null &&
+                                      !_sameGroup(chosen, row)) {
+                                    position = null;
+                                  }
+                                }),
+                        title: const Text('Mostrar reservas de otros grupos'),
+                        subtitle: const Text('Piden motivo escrito.')),
                     if (slots.isEmpty)
                       const Text('No quedan reservas libres de este grupo.'),
                   ],
+                  if (review != null)
+                    _LoadCheckPanel(
+                        check: review, portOfCall: widget.voyage.portOfCall),
                   const SizedBox(height: 12),
                   TextField(
                       key: const ValueKey('loading-hour'),
@@ -435,14 +543,22 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                       enabled: !busy,
                       decoration: const InputDecoration(
                           labelText: 'Marchamo (opcional)')),
-                  if (widget.correcting != null)
+                  if (needsReason)
                     TextField(
-                        key: const ValueKey('loading-correction-reason'),
+                        key: ValueKey(widget.correcting != null
+                            ? 'loading-correction-reason'
+                            : 'loading-reason'),
                         controller: _reason,
                         enabled: !busy,
                         onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                            labelText: 'Motivo de la corrección')),
+                        decoration: InputDecoration(
+                            labelText: widget.correcting != null
+                                ? 'Motivo de la corrección'
+                                : 'Motivo (obligatorio)',
+                            helperText: review?.needsReason == true
+                                ? 'Viaja con el movimiento y deja el conflicto a la vista.'
+                                : null,
+                            helperMaxLines: 2)),
                   if (error != null)
                     Text(error!,
                         key: const ValueKey('loading-error'),
@@ -457,15 +573,68 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
               key: const ValueKey('loading-confirm'),
               onPressed: busy ||
                       validPosition == null ||
-                      (widget.correcting != null && _reason.text.trim().isEmpty)
+                      (review?.blocked ?? false) ||
+                      (needsReason && _reason.text.trim().isEmpty)
                   ? null
                   : save,
               child: Text(busy
                   ? 'Guardando…'
-                  : widget.correcting != null
-                      ? 'Guardar corrección'
-                      : 'Confirmar carga'))
+                  : occupant != null
+                      ? 'Marcar su descarga y cargar'
+                      : widget.correcting != null
+                          ? 'Guardar corrección'
+                          : 'Confirmar carga'))
         ]);
+  }
+}
+
+bool _sameGroup(ReservedSlot slot, ExportListRow row) =>
+    slot.isoSizeType == row.type &&
+    slot.portOfDischarge == row.pod &&
+    slot.operatorCode == row.line;
+
+/// T-77 · La revisión antes de confirmar. Cada línea lleva icono y texto,
+/// no solo color, y se ajusta al ancho para leerse a 360 dp.
+class _LoadCheckPanel extends StatelessWidget {
+  final LoadCheck check;
+  final String? portOfCall;
+  const _LoadCheckPanel({required this.check, this.portOfCall});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    Widget line(Key key, IconData icon, Color color, String text) => Padding(
+        key: key,
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 6),
+          Expanded(child: Text(text, style: TextStyle(color: color))),
+        ]));
+    final stack = check.stack;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      for (final issue in check.issues)
+        line(
+            ValueKey('load-issue-${issue.kind.name}'),
+            issue.blocks ? Icons.block : Icons.warning_amber,
+            issue.blocks ? scheme.error : scheme.tertiary,
+            '${issue.blocks ? 'No se registra' : 'Pide motivo'}: ${issue.message}'),
+      if (check.dischargeFirst != null)
+        line(
+            const ValueKey('load-discharge-first'),
+            Icons.south,
+            scheme.primary,
+            'La celda la ocupa ${check.dischargeFirst!.container?.containerId}, '
+            'que baja en ${portOfCall ?? 'esta escala'} y no se ha marcado. '
+            '«Marcar su descarga y cargar» registra las dos cosas.'),
+      if (stack != null && stack.status != StackWeightStatus.exceeded)
+        line(const ValueKey('load-stack'), Icons.scale_outlined,
+            scheme.onSurfaceVariant, stack.message),
+      if (check.issues.isEmpty && check.dischargeFirst == null)
+        line(const ValueKey('load-clean'), Icons.check_circle_outline,
+            scheme.onSurfaceVariant,
+            'Revisado: tipo, celda y grupo coinciden con el plan.'),
+    ]);
   }
 }
 
@@ -547,7 +716,8 @@ Future<void> showLoadingDetails(
                                   builder: (_) => _LoadingEntry(
                                       voyage: voyage,
                                       row: row,
-                                      position: state?.plannedPosition,
+                                      position: movement.position ??
+                                          state?.plannedPosition,
                                       selectedBay: state?.plannedPosition ==
                                               null
                                           ? null

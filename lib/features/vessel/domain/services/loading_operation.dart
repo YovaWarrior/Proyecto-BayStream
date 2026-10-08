@@ -1,6 +1,7 @@
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../entities/entities.dart';
 import 'discharge_progress.dart';
+import 'load_check.dart';
 import 'loading_plan_progress.dart';
 import 'operation_state_deriver.dart';
 
@@ -30,7 +31,8 @@ class LoadingOperation {
         portOfCall: loading.portOfCall!,
         arrival: arrival,
         loading: loading,
-        geometry: loading.geometry);
+        geometry: loading.geometry,
+        list: list);
     final state = const OperationStateDeriver().derive(plan, events);
     return LoadingOperation._(
         operationId,
@@ -144,20 +146,95 @@ class LoadingOperation {
     return null;
   }
 
+  /// T-77 · Revisa la carga contra el estado derivado, antes de escribir.
+  /// Con [correcting], la cadena corregida se retira de la vista previa.
+  LoadCheck check(ExportListRow row, String position, {Movement? correcting}) =>
+      LoadValidator(
+              plan: plan,
+              state: _before(correcting),
+              loading: loading,
+              list: list)
+          .check(row, position, numbered: numbered(row));
+
+  /// T-77 · Reservas que la pantalla ofrece a un vacío: primero las libres
+  /// de su grupo (las de [slots]), luego las de su grupo que ocupa un
+  /// contenedor que baja aquí sin marcar y, si [otherGroups], las libres de
+  /// otros grupos, que piden motivo.
+  List<ReservedSlot> candidateSlots(ExportListRow row,
+      {int? selectedBay, Movement? correcting, bool otherGroups = false}) {
+    final free = slots(row, selectedBay: selectedBay, correcting: correcting);
+    if (!row.isEmpty ||
+        numbered(row) != null ||
+        !available(row, correcting: correcting)) {
+      return free;
+    }
+    final before = _before(correcting);
+    final waiting = <ReservedSlot>[];
+    final others = <ReservedSlot>[];
+    for (final item in plan.loading.values) {
+      final slot = item.reservedSlot;
+      if (slot == null ||
+          item.role != PlanRole.load ||
+          free.contains(slot) ||
+          before[item.key]?.state != ItemState.planned) {
+        continue;
+      }
+      final occupant = before.occupancy[item.plannedPosition];
+      final leaving = occupant == null ||
+          (before['C:$occupant']?.role == PlanRole.discharge &&
+              before['C:$occupant']?.state == ItemState.planned);
+      if (!leaving) continue;
+      final sameGroup = slot.isoSizeType == row.type &&
+          slot.portOfDischarge == row.pod &&
+          slot.operatorCode == row.line;
+      if (sameGroup) {
+        waiting.add(slot);
+      } else if (otherGroups) {
+        others.add(slot);
+      }
+    }
+    int order(ReservedSlot a, ReservedSlot b) {
+      final selectedGroup =
+          selectedBay == null ? null : displayBay(selectedBay);
+      final aHere = displayBay(a.stowagePosition.bay) == selectedGroup;
+      final bHere = displayBay(b.stowagePosition.bay) == selectedGroup;
+      if (aHere != bHere) return aHere ? -1 : 1;
+      return a.stowagePosition
+          .toIsoCode()
+          .compareTo(b.stowagePosition.toIsoCode());
+    }
+
+    return [...free, ...waiting..sort(order), ...others..sort(order)];
+  }
+
+  /// T-77 · «Marcar su descarga y cargar»: la descarga del ocupante que baja
+  /// aquí, que se registra justo antes de la carga.
+  MovementDraft dischargeDraft(PlanItem occupant) {
+    if (operationId == null) {
+      throw StateError('La escala no tiene operación guardada.');
+    }
+    return MovementDraft.discharge(operationId!,
+        occupant.container!.containerId, occupant.plannedPosition);
+  }
+
+  /// Arma la carga después de revisarla (T-77). Lo imposible no se registra;
+  /// lo que pide motivo exige [reason]; si un contenedor que baja aquí ocupa
+  /// la celda, [dischargeOccupant] confirma que su descarga se registra antes.
   MovementDraft draft(ExportListRow row, String position,
       {String? seal,
       DateTime? operatedAt,
       Movement? correcting,
-      String? reason}) {
+      String? reason,
+      bool dischargeOccupant = false}) {
     if (operationId == null) {
       throw StateError('La escala no tiene operación guardada.');
     }
     if (list?.byOrder(row.order) != row) {
       throw StateError('El OR ya no está en el listado.');
     }
+    final hasReason = reason?.trim().isNotEmpty ?? false;
     if (correcting != null &&
-        (movementOf(correcting.target!)?.id != correcting.id ||
-            (reason?.trim().isEmpty ?? true))) {
+        (movementOf(correcting.target!)?.id != correcting.id || !hasReason)) {
       throw StateError(
           'La corrección exige un movimiento vigente y un motivo.');
     }
@@ -165,21 +242,36 @@ class LoadingOperation {
       throw StateError('El contenedor ya está operado.');
     }
     final item = numbered(row);
-    if (item != null) {
-      if (position != item.plannedPosition) {
-        throw StateError('Solo se confirma la posición planificada.');
+    if (item == null) {
+      final reservation = plan.loading['R:$position'];
+      if (reservation?.reservedSlot == null ||
+          reservation!.role != PlanRole.load) {
+        throw StateError('Un vacío se asigna a una celda reservada del plan.');
       }
+      if (_before(correcting)[reservation.key]?.state ==
+          ItemState.cancelled) {
+        throw StateError('La reserva está cancelada.');
+      }
+    }
+    final review = check(row, position, correcting: correcting);
+    if (review.blocked) {
+      throw StateError(review.issues.firstWhere((i) => i.blocks).message);
+    }
+    if (review.dischargeFirst != null && !dischargeOccupant) {
+      throw StateError('La celda la ocupa '
+          '${review.dischargeFirst!.container!.containerId}, que baja aquí: '
+          'marca primero su descarga.');
+    }
+    if (review.needsReason && !hasReason) {
+      throw StateError('Esta carga se registra solo con un motivo escrito.');
+    }
+    if (item != null) {
       return MovementDraft.loadFull(operationId!, row.containerId, position,
           order: row.order,
           seal: seal,
           operatedAt: operatedAt,
           corrects: correcting?.id,
-          reason: reason);
-    }
-    if (!slots(row, correcting: correcting)
-        .any((s) => s.stowagePosition.toIsoCode() == position)) {
-      throw StateError(
-          'La reserva debe estar libre y ser del mismo tipo, puerto y línea.');
+          reason: hasReason ? reason!.trim() : null);
     }
     return MovementDraft.assignEmpty(
         operationId!, position, row.containerId, row.tareKg,
@@ -187,6 +279,6 @@ class LoadingOperation {
         seal: seal,
         operatedAt: operatedAt,
         corrects: correcting?.id,
-        reason: reason);
+        reason: hasReason ? reason!.trim() : null);
   }
 }

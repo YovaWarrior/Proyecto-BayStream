@@ -299,6 +299,19 @@ class _Run {
         movementId: m.id);
     occupied[position] = key;
     emptiesAssigned[container] = key;
+    // T-77: lo que T-77 dejó pasar con motivo, u otro dispositivo sin aviso,
+    // queda asignado pero a la vista. Sin listado no se sabe el grupo.
+    final group = plan.emptyGroups[container];
+    final slot = plan.loading[key]?.reservedSlot;
+    if (group != null &&
+        slot != null &&
+        (group.type != slot.isoSizeType ||
+            group.pod != slot.portOfDischarge ||
+            group.line != slot.operatorCode)) {
+      _conflict(ConflictKind.otherGroup, key, m,
+          '$container (${group.type} · ${group.pod} · ${group.line}) quedó en una '
+          'reserva de ${slot.isoSizeType} · ${slot.portOfDischarge} · ${slot.operatorCode}.');
+    }
   }
 
   void _cancel(Movement m) {

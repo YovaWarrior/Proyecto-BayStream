@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import 'container_unit.dart';
+import 'export_list.dart';
 import 'reserved_slot.dart';
 import 'vessel_geometry.dart';
 import 'vessel_voyage.dart';
@@ -145,13 +146,21 @@ class OperationPlan {
   /// del ancla de cubierta (nivel 80) que usa `VesselGeometry`.
   final bool Function(int tier) isDeckTier;
 
-  OperationPlan._(this.portOfCall, this.arrival, this.loading, this.isDeckTier);
+  /// T-77 · Grupo de cada vacío del listado (tipo, puerto y línea, ya
+  /// traducidos), por número de contenedor. El listado es una fuente de la
+  /// operación, así que todos los dispositivos ven el mismo «vacío de otro
+  /// grupo». Vacío si la operación todavía no tiene listado.
+  final Map<String, ({String type, String pod, String line})> emptyGroups;
+
+  OperationPlan._(this.portOfCall, this.arrival, this.loading, this.isDeckTier,
+      this.emptyGroups);
 
   factory OperationPlan.build({
     required String portOfCall,
     VesselVoyage? arrival,
     VesselVoyage? loading,
     VesselGeometry? geometry,
+    ExportList? list,
   }) {
     final arrivalItems = <String, PlanItem>{};
     for (final c in arrival?.containers ?? const <ContainerUnit>[]) {
@@ -192,6 +201,10 @@ class OperationPlan {
       Map.unmodifiable(arrivalItems),
       Map.unmodifiable(loadingItems),
       deck == null ? (tier) => tier >= 80 : deck.isDeckTier,
+      Map.unmodifiable({
+        for (final row in list?.empties ?? const <ExportListRow>[])
+          row.containerId: row.group
+      }),
     );
   }
 
@@ -228,6 +241,10 @@ enum ConflictKind {
 
   /// Se operó un objeto cancelado, o se canceló uno ya movido.
   cancelledItem,
+
+  /// T-77 · Un vacío asignado a una reserva de otro grupo (tipo, puerto o
+  /// línea distintos). Queda asignado, con el motivo escrito a la vista.
+  otherGroup,
 }
 
 /// Un conflicto no se resuelve en silencio: la oficina lo ve y anula el

@@ -34,7 +34,7 @@ final loadingPlanProgressProvider = StreamProvider.autoDispose
         .withGeometry(voyage.geometry!, portOfCall: port);
   }
   final plan = OperationPlan.build(
-      loading: loading, portOfCall: port, geometry: voyage.geometry);
+      loading: loading, portOfCall: port, geometry: voyage.geometry, list: list);
   LoadingPlanProgress derive(Iterable<MovementRecord> records) =>
       LoadingPlanProgress.build(
           loading,
