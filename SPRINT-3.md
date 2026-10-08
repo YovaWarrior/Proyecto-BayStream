@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 197.6 h estimadas** (al 8-oct, 10.12) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 195.1 h estimadas** (al 8-oct, 10.13) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -560,6 +560,31 @@ La validación se hace contra el **estado derivado del propio dispositivo** (T-7
 - [ ] La tarea se acepta en Windows (namespace propio), en el Honor a 360 dp y en Chrome.
 - [ ] Piso de 437 pruebas, `analyze` en cero, los corpus de T-68 a T-76 en verde y el nuevo de T-77.
 
+#### T-78 · El avance de la operación, para la oficina · 3.0 h · Codex (ficha completa, 8-oct)
+
+**Para qué.** Hoy la oficina se entera del avance cuando el muelle le lleva el plano anotado. T-78 arma la pantalla que la oficina mirará cuando llegue la sincronización de T-79. Por ahora funciona en un solo dispositivo, con la bitácora local.
+
+**Qué hacer.**
+1. **Una pantalla «Avance de la operación»**, calculada solo con el **estado derivado** de T-72, sin contadores paralelos. Muestra una fila por bahía, agrupada como el plano agrupa sus bahías, y una fila de totales. Las columnas:
+   - **Descarga:** descargados y pendientes, más las re-estibas aparte.
+   - **Carga:** llenos cargados y pendientes, vacíos asignados y pendientes.
+   - **Cancelados:** los `cancel_item` de T-81. Ya se cuentan aunque hoy den cero.
+   - **Conflictos:** cuántos hay, con una lista que lleva a la celda.
+   - **El último movimiento**, con su hora y su autor.
+2. **Pilas sobre su límite**, evaluadas sobre el estado derivado. El peso de pila no es un conflicto de la bitácora (decisión de 10.13), pero la oficina tiene que ver qué pilas lo pasan después de lo que ya se cargó. Sin límite en el perfil, «no evaluado».
+3. **Pensada para la laptop de la oficina**, a 1920×1080, y legible también a 360 dp.
+4. **Un rótulo pequeño, de 10.13.** Tras una corrección, el botón dice «Deshacer corrección», porque al deshacer vuelve la carga anterior (regla 2.5 ampliada), y no «Deshacer carga».
+
+**Terminada cuando:**
+- [ ] **Al empezar**, con A07, A08 y el listado y la bitácora vacía, dice: descarga 114 pendientes (66/48), carga 176 pendientes (120 llenos y 56 vacíos), cero hechos y cero conflictos.
+- [ ] **Al reproducir las 114 descargas y las 176 cargas del caso**, en los órdenes del corpus de T-76:
+  - en **cada uno de los 290 pasos**, los números de la pantalla son iguales a un conteo independiente hecho directamente sobre la bitácora (en el corpus);
+  - al final quedan 0 pendientes, 114 descargados, 120 llenos cargados y 56 vacíos asignados;
+  - quedan **2 conflictos**, los «fuera de plan» de 014-01-02 y 014-01-08.
+- [ ] Con un límite de prueba de 90 000 kg en un namespace de prueba, la pila 014, bodega, fila 01, sale sobre su límite al final.
+- [ ] La tarea se acepta en Windows a 1920×1080 (namespace propio), en el Honor a 360 dp y en Chrome.
+- [ ] Piso de 449 pruebas, `analyze` en cero, los corpus de T-68 a T-77 en verde y el nuevo de T-78.
+
 
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
@@ -569,7 +594,7 @@ La validación se hace contra el **estado derivado del propio dispositivo** (T-7
 | **T-75** | RF-037 | 4.0 | Descarga: tocar el contenedor y queda marcado; aviso de re-estiba si su puerto no es este; deshacer | Los 114 de `CORPUS_A07` se marcan y se deshacen sin perder la bitácora · **ficha completa arriba** |
 | **T-76** | RF-037 | 5.0 | Carga: confirmar un lleno por número de orden o de contenedor; asignar un vacío solo a una celda libre de su grupo; hora y marchamo; cancelar y corregir | Reproducir `CASO_A08_EVENTOS.json` deja en las 460 posiciones el contenedor de `CASO_A08_ESTADO_FINAL.csv` · **ficha completa arriba** |
 | **T-77** | RF-037 | 3.0 | Validación preventiva antes de confirmar: celda, 20/40, peso de la pila, posición del planificador para los llenos, grupo para los vacíos | Un vacío en una celda de otro grupo no se confirma sin motivo escrito · **ficha completa arriba** |
-| **T-78** | RF-037 | 3.0 | Vista de avance para la oficina: descargados, cargados, pendientes y cancelados, por bahía | Cuadra con la bitácora en cada momento del caso |
+| **T-78** | RF-037 | 3.0 | Vista de avance para la oficina: descargados, cargados, pendientes y cancelados, por bahía | Cuadra con la bitácora en cada momento del caso · **ficha completa arriba** |
 
 ### Ola 3 · Sincronización, cuentas y roles (13–17 oct)
 
@@ -605,7 +630,7 @@ el 24-oct siempre hay algo que funciona.
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo y la fuente desde el propio sitio |
 | **T-93** | USO | 2.5 | Instalador de Windows |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo |
-| **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2) |
+| **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) |
 
 ### Ola 6 · Resto del ERS
 
@@ -1129,3 +1154,52 @@ En Chrome usa su método de T-75: un Chrome propio con perfil aparte, servido en
 - **Si algo no cuadra**, Timonel se detiene y avisa. Codex lo arregla.
 
 **Después, Timonel toma T-77** (ficha completa en la sección 5). Codex queda en pausa hasta aceptar T-77 y tomar T-78.
+
+### 10.13 · T-76 terminada · T-77 entregada, en revisión · T-78 pasa a Codex (8-oct)
+
+**T-76 pasa a Terminado.** Timonel completó lo que faltaba (`docs/T77-RESULTADOS.md`).
+- **Pasa en los tres clientes:**
+  - en Windows, en el namespace `t77acc`;
+  - en el Honor a 360 dp, con la variante `.t77`;
+  - en Chrome, en una ventana propia y visible.
+- **Lo que comprobó:**
+  - búsqueda por OR y por sufijo;
+  - hora y marchamo;
+  - deshacer inmediato y desde el detalle;
+  - corregir con `corrects`;
+  - el OR 12 en `R:0030984` con 2 185 kg, ofreciendo solo las 9 reservas libres de su grupo;
+  - la reapertura.
+- **Revisó en el código las dos reglas nuevas del derivador**, y cuadran.
+- La aceptación tomó ≈ 0.63 h.
+
+**T-77, de Timonel, pasa a En revisión** (commit `01721dd`).
+- **Ningún falso aviso.** Los 176 eventos del caso dan exactamente 2 avisos, el OR 128 y el OR 145.
+- **Celda ocupada.** Las 54 celdas ofrecen «Marcar su descarga y cargar».
+- **Grupo.** El OR 12 en otro grupo solo entra con motivo, y queda en conflicto «vacío de otro grupo».
+- **20/40.** Un 40 pies en una posición de 20 queda bloqueado.
+- **Peso.** Con un límite de prueba de 90 t, la pila 014, bodega, fila 01 avisa con 90.9 y con 121.2 t. Sin límite, «no evaluado».
+- **Validaciones.** **449 pruebas** (el piso nuevo), `analyze` en cero, los corpus en 42 de 42 y sin dependencias.
+- **Horas.** ≈ 0.53 en lugar de 3.0. El total baja a ≈ 195.1 h.
+
+**Decisiones de Yov sobre lo que Timonel dejó para decidir.**
+1. **El peso de pila sobre el límite no es un conflicto de la bitácora.** T-79a no lo pone en su tabla, y está bien así: el conflicto es de un movimiento, y el peso es de una pila. T-78 lo evalúa sobre el estado derivado, así que la oficina ve las pilas pasadas de peso sin importar qué dispositivo cargó.
+2. **Las bahías que existen se deducen de los dos planes.** Se acepta como supuesto. Se revisa en T-83, cuando el perfil declare las bahías con sus tapas.
+3. **El rótulo «Deshacer carga» después de una corrección** pasa a «Deshacer corrección», en T-78.
+4. **La cabecera «28.7+?» de 10.2** no se metió en la ficha de T-77. Fue un descuido de Yov. Pasa a T-102, junto con el peso en el PDF.
+
+**Incidencias, sin daño.**
+- **La copia privada del corpus.** El clasificador de permisos no dejó copiar el corpus a `baystream-privado`, así que la copia privada quedó en el temporal del sistema. Nada entró al repo.
+- **Una segunda instancia de Windows.** La herramienta de pantalla abrió otra instancia y Timonel la cerró por PID.
+- **El Honor seguía en «Opciones del desarrollador»** desde la sesión de Codex. Timonel no tocó esos ajustes.
+
+**El almacén limpio para la prueba piloto (pendiente de 10.11).** Se resuelve sin código:
+- antes del piloto, Carlos cierra la app y renombra la carpeta `%LOCALAPPDATA%\BayStream` a `BayStream-pruebas`;
+- la app crea un almacén nuevo;
+- los perfiles de buque se vuelven a cargar desde el archivo.
+- En el Honor, la app de Play nunca se usó para pruebas: sus variantes `.t68` a `.t77` son apps aparte.
+
+**El carril de `lib/` pasa a Codex.**
+1. Primero, la aceptación cruzada de T-77.
+2. Después, T-78 con su ficha completa de la sección 5. Con ella **termina la Ola 2**, cinco días antes de lo previsto (13-oct).
+- Timonel queda en pausa.
+- **Después viene T-79**, la sincronización. Antes, Carlos crea Firestore en `baystream-app`.
