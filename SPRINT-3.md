@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 195.1 h estimadas** (al 8-oct, 10.13) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 192.7 h estimadas** (al 9-oct, 10.14) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -598,9 +598,48 @@ La validación se hace contra el **estado derivado del propio dispositivo** (T-7
 
 ### Ola 3 · Sincronización, cuentas y roles (13–17 oct)
 
+#### T-79 · Sincronización: cuentas, Firestore, reglas y cola sin conexión · 10.0 h (12.0, de las que T-79a ya gastó 2.0) · Timonel (ficha completa, 9-oct)
+
+**Para qué.** Es lo que Carlos declaró obligatorio: el muelle marca y la oficina ve el avance en tiempo real. **El diseño ya está hecho y probado** en `docs/T79a-DISENO.md`, con su contrato, su cola, sus colecciones, sus reglas (51 de 51 en el emulador) y su plan de pruebas. T-79 lo construye con los cambios que se decidieron después:
+- **Windows sincroniza (10.8).** T-70c pasó contra Auth real. La fábrica de 3.4 da a Windows `FirestoreOperationSync` y `FirebaseSessionRepository`, como a Android y la Web, y el apéndice 3.4-A ya no aplica. La cola en Hive sigue siendo la fuente de verdad.
+- **La salvaguarda de 5 minutos (4.5, PROVISIONAL)** va en los tres clientes. Si un movimiento lleva más de 5 minutos pendiente con el listener recibiendo, la pantalla dice «sin confirmar desde las HH:MM · inicia sesión de nuevo».
+- **La huella SHA-256 de las fuentes** se calcula sobre el texto publicado tal cual (10.11). Ningún dispositivo vuelve a serializar una fuente antes de comprobarla.
+- **El autor deja de ser «Muelle (sin cuenta)»** (10.11). Con sesión, el autor es el `Operator` de `authorized/{uid}`.
+- **Sin cuenta, la app sigue funcionando en un solo dispositivo**, como hoy, y esos movimientos no se suben. Es el respaldo del punto de control del 14-oct. Los movimientos que ya existen sin cuenta se quedan locales, y la pantalla lo dice.
+
+**Qué hacer**, en el orden de T-79a, 8:
+1. **Sesión e inicio de sesión** (`SessionRepository`):
+   - correo y contraseña, y recuperar contraseña;
+   - el operador sale de `authorized/{uid}` (rol, nombre y `active`);
+   - se recuerda el último operador para arrancar sin red;
+   - sin registro abierto en la app: las cuentas las crea Carlos en la consola.
+2. **Publicar, unirse y cerrar** (`OperationSyncRepository`):
+   - la oficina publica la operación con sus fuentes en un solo lote;
+   - el muelle ve las operaciones abiertas, se une y verifica la huella;
+   - la oficina cierra la operación.
+3. **El motor de la cola** (`sync_engine.dart`, en Dart puro), según T-79a 4.1 a 4.6:
+   - idempotente: reenvía los mismos ids sin duplicar;
+   - confirma por el `set` y por el eco;
+   - maneja los estados de 3.3.
+4. **El estado en pantalla:** al día, enviando, sin red, sesión vencida, no autorizado y rechazados, con cuántos pendientes hay.
+5. **Las reglas.** El archivo final queda en `docs/T79a-firestore.rules.propuesta`, y `tool/t79_reglas.mjs` vuelve a pasar la batería de 5.4 en el emulador. **Las publica Carlos desde la consola** (T-79a, 6.4). Nunca con `firebase deploy`.
+6. **`lib/main.dart`.** Esta ficha lo autoriza **solo** para montar la sesión y los proveedores de sincronización, si no hay otra forma. Cada línea que cambie se declara en el informe. Los archivos congelados de H5 no se tocan.
+
+**Terminada cuando:**
+- [ ] **La suite (T-79a, 7.1)** pasa con el motor contra un `RemoteMovementStore` falso: sin red, reinicio sin duplicar, cuenta inactiva, sesión vencida, operación cerrada, cambio de usuario y el falso que deja de confirmar sin dar error.
+- [ ] **Las reglas** pasan en el emulador con la batería entera.
+- [ ] **Dos dispositivos contra el emulador** (T-79a, 7.3):
+  - C1, C2 y C4 a C7 pasan;
+  - en C2 caben los 177 eventos con modo avión y cierre forzado: 178 documentos, cada id una sola vez, y las 460 posiciones del CSV en los dos dispositivos;
+  - **C8 cambia:** Windows, como oficina, publica, ve el avance del Honor en tiempo real y no muestra los errores de hilo de `firebase_auth` de T-70.
+- [ ] **En producción** (T-79a, 7.4), después de los pasos de consola de Carlos: C9 con dos cuentas reales, la oficina en Windows y el muelle en el Honor, sobre una operación «PRUEBA T-79». C10 anota las lecturas y escrituras. Nada se publica en la Web antes del 17-oct.
+- [ ] **El modo de un solo dispositivo** sigue igual sin cuenta: los corpus de T-68 a T-78 dan lo mismo que hoy.
+- [ ] Piso de 459 pruebas, `analyze` en cero, los corpus en verde y el nuevo de T-79.
+
+
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
-| **T-79** | RF-032+ · RF-034 | 12.0 | Cuentas con correo y lista de autorizados; Firestore en `baystream-app`; reglas; cola sin conexión en el muelle | Dos dispositivos ven el mismo avance; uno sin red sube al volver; reglas verificadas en uso real |
+| **T-79** | RF-032+ · RF-034 | 12.0 | Cuentas con correo y lista de autorizados; Firestore en `baystream-app`; reglas; cola sin conexión en el muelle | Dos dispositivos ven el mismo avance; uno sin red sube al volver; reglas verificadas en uso real · **ficha completa arriba** |
 | **T-80** | RF-035 | 6.0 | Roles muelle y oficina; el muelle pide un cambio y la oficina lo aprueba | El intercambio 128 ↔ 145 del caso se pide desde el muelle y se aprueba desde la oficina |
 | **T-81** | RF-038 | 4.0 | Cambios desde la oficina: mover o cancelar contenedores, sincronizados al muelle | El muelle ve el cambio sin recargar el archivo |
 
@@ -639,7 +678,7 @@ el 24-oct siempre hay algo que funciona.
 | **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
 | **T-56** | ERS | 2.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2) |
-| **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003) |
+| **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.14: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular y «(0 cub. / 0 bod.)», que debe decir que son pendientes |
 
 ### Cierre · Calidad, entregables y piloto (21–24 oct)
 
@@ -1203,3 +1242,52 @@ En Chrome usa su método de T-75: un Chrome propio con perfil aparte, servido en
 2. Después, T-78 con su ficha completa de la sección 5. Con ella **termina la Ola 2**, cinco días antes de lo previsto (13-oct).
 - Timonel queda en pausa.
 - **Después viene T-79**, la sincronización. Antes, Carlos crea Firestore en `baystream-app`.
+
+### 10.14 · T-77 terminada · T-78 entregada: la Ola 2 queda completa en código · T-79 pasa a Timonel (9-oct)
+
+**T-77 pasa a Terminado.** Codex la aceptó en Windows, en el Honor y en Chrome (`docs/T78-RESULTADOS.md`, sección 1), en ≈ 0.50 h:
+- exactamente dos avisos;
+- el par descarga y carga;
+- motivo para un vacío de otro grupo;
+- el bloqueo 20/40;
+- el límite de prueba de la pila;
+- los corpus en 42 de 42.
+
+**T-78, de Codex, pasa a En revisión** (commit `1880266`).
+- **Una pantalla «Avance de la operación»** con el total y una fila por bahía, agrupadas como el plano. Muestra:
+  - descarga, con las re-estibas aparte;
+  - llenos y vacíos;
+  - cancelados y conflictos, con enlace a la celda;
+  - el último movimiento.
+- **Sale del estado derivado**, sin contadores paralelos.
+- **Las pilas sobre su límite** van aparte de los conflictos (10.13).
+- **El rótulo «Deshacer corrección».**
+- **El corpus compara los 290 prefijos** del caso en 6 corridas, 1 740 pasos, contra un conteo independiente que no usa el derivador. Al final: 114, 120 y 56 hechos, cero pendientes y los 2 conflictos.
+- **Validaciones.** **459 pruebas** (el piso nuevo), `analyze` en cero y los corpus en 48 de 48.
+- **Horas.** ≈ 0.58 en lugar de 3.0. El total baja a ≈ 192.7 h.
+- **Revisión de Yov sobre la captura de Windows.**
+  - Los números de cada bahía cuadran con la tabla del caso y con A07.
+  - Dos textos menores pasan a T-97: «1 cargados» en singular, y «(0 cub. / 0 bod.)», que no dice que son pendientes.
+
+**La Ola 2 queda completa en código el 8-oct**, cinco días antes de lo previsto. Se cierra cuando Timonel acepte T-78. Lo que tiene:
+- la descarga, la carga desde el listado y la validación;
+- el avance para la oficina;
+- todo en un dispositivo, con bitácora y deshacer.
+
+Ese es el respaldo del punto de control del 14-oct.
+
+**La Ola 3 se abre con T-79, de Timonel, en un chat nuevo**, con la ficha completa en la sección 5.
+1. Primero, la aceptación cruzada de T-78.
+2. Después, T-79, sobre el diseño de T-79a, con cuatro cambios decididos después:
+   - Windows sincroniza (10.8);
+   - la salvaguarda de 5 minutos;
+   - la huella sobre el texto publicado;
+   - sin cuenta, el modo de un solo dispositivo sigue.
+- **Las horas.** Las 12.0 de T-79 incluían las 2.0 de T-79a, así que la ficha cuenta 10.0.
+- **`lib/main.dart`.** La ficha lo autoriza solo para montar la sesión, y cada cambio se declara.
+- **Codex queda en pausa.** Después toma T-80, los roles y el intercambio 128 ↔ 145, que necesita la sincronización.
+
+**Lo que hace Carlos para T-79**, en la consola de `baystream-app` (T-79a, sección 6). Antes de cada paso, comprueba en el selector que el proyecto es `baystream-app`, nunca el de H5.
+- **6.1, Firestore:** edición Standard, `(default)`, `northamerica-south1` y modo de producción, si todavía no la creó.
+- **6.3, las cuentas:** dos, una de oficina y una de muelle, y un documento en `authorized/{uid}` por cuenta. Los correos y los UID nunca entran al repo.
+- **6.4, las reglas:** se publican desde la consola cuando Timonel las entregue probadas. Nunca con `firebase deploy`.
