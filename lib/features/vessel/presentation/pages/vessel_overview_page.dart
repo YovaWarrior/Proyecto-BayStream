@@ -15,6 +15,7 @@ import '../widgets/empty_state_widget.dart';
 import '../widgets/bay_plan_view.dart';
 import '../widgets/container_search_delegate.dart';
 import '../widgets/voyage_stats_view.dart';
+import '../widgets/sync_status_chip.dart';
 import 'export_list_import_page.dart';
 import 'vessel_geometry_page.dart';
 import 'vessel_profiles_page.dart';
@@ -75,6 +76,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                       builder: (_) => const VesselProfilesPage()))),
+          // T-79: cuenta, publicar y unirse; su icono dice el estado de envío.
+          const SyncAppBarButton(),
           // Botón de búsqueda (solo si hay viaje cargado)
           if (hasVoyage)
             IconButton(

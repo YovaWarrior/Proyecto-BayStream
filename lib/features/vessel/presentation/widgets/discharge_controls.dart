@@ -6,6 +6,7 @@ import '../../domain/services/discharge_progress.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/movement_log_provider.dart';
+import '../providers/sync_providers.dart';
 
 /// T-75 · Resumen del modo Descarga: la bahía elegida y la escala completa.
 class DischargeSummary extends ConsumerWidget {
@@ -160,11 +161,13 @@ Future<void> onDischargeTap(BuildContext context, WidgetRef ref,
     reason = answer.isEmpty ? null : answer;
   }
   final repository = await ref.read(movementLogRepositoryProvider.future);
+  final author = ref.read(movementAuthorProvider);
   final result = await appendMovement(
       repository,
       MovementDraft.discharge(
           progress.operationId!, container.containerId, position,
-          restow: restow, reason: reason));
+          restow: restow, reason: reason),
+      author);
   final record = result.record;
   messenger.hideCurrentSnackBar();
   if (record == null) {
@@ -181,8 +184,8 @@ Future<void> onDischargeTap(BuildContext context, WidgetRef ref,
     action: SnackBarAction(
         label: 'Deshacer',
         onPressed: () async {
-          final error =
-              await annulMovement(repository, record.movement, markedByMistake);
+          final error = await annulMovement(
+              repository, record.movement, markedByMistake, author);
           if (error != null) {
             messenger
                 .showSnackBar(SnackBar(content: Text('No se deshizo: $error')));
@@ -369,7 +372,8 @@ class DischargeDetailSection extends ConsumerWidget {
                 final reason =
                     await askAnnulReason(context, container.containerId);
                 if (reason == null) return;
-                final error = await annulMovement(repository, movement, reason);
+                final error = await annulMovement(repository, movement, reason,
+                    ref.read(movementAuthorProvider));
                 messenger
                   ..hideCurrentSnackBar()
                   ..showSnackBar(SnackBar(

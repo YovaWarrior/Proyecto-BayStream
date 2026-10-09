@@ -54,6 +54,9 @@ String vesselErrorMessage(Object error, [StackTrace? stack]) {
     return vesselFailureMessage(error.failure);
   }
   if (error is VesselActionRequired) return error.message;
+  // T-79 · Un aviso de dominio escrito para el usuario, como el de las
+  // fuentes de una operación publicada (OperationSources.save).
+  if (error is ValidationFailure) return error.message;
   debugPrint('Error de operación de buque: $error\n$stack');
   return unknownVesselErrorMessage;
 }

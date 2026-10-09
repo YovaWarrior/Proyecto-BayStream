@@ -7,6 +7,7 @@ import '../formatters/vessel_error_message.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
+import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import 'discharge_controls.dart';
 
@@ -323,15 +324,16 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
           reason: _reason.text.trim(),
           dischargeOccupant: occupant != null);
       final repository = await ref.read(movementLogRepositoryProvider.future);
+      final author = ref.read(movementAuthorProvider);
       // T-77: «Marcar su descarga y cargar» son dos movimientos, en orden.
       MovementRecord? discharged;
       if (occupant != null) {
-        final first =
-            await appendMovement(repository, data.dischargeDraft(occupant));
+        final first = await appendMovement(
+            repository, data.dischargeDraft(occupant), author);
         if (first.error != null) throw StateError(first.error!);
         discharged = first.record;
       }
-      final result = await appendMovement(repository, draft);
+      final result = await appendMovement(repository, draft, author);
       if (result.error != null) throw StateError(result.error!);
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
@@ -347,11 +349,11 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
             action: SnackBarAction(
                 label: 'Deshacer',
                 onPressed: () async {
-                  var error = await annulMovement(
-                      repository, result.record!.movement, markedByMistake);
+                  var error = await annulMovement(repository,
+                      result.record!.movement, markedByMistake, author);
                   if (error == null && discharged != null) {
-                    error = await annulMovement(
-                        repository, discharged.movement, markedByMistake);
+                    error = await annulMovement(repository,
+                        discharged.movement, markedByMistake, author);
                   }
                   if (error != null) {
                     messenger.showSnackBar(SnackBar(content: Text(error)));
@@ -697,7 +699,10 @@ Future<void> showLoadingDetails(
                             final repository = await ref
                                 .read(movementLogRepositoryProvider.future);
                             final error = await annulMovement(
-                                repository, movement, reason);
+                                repository,
+                                movement,
+                                reason,
+                                ref.read(movementAuthorProvider));
                             if (!context.mounted) return;
                             if (error != null) {
                               ScaffoldMessenger.of(context)

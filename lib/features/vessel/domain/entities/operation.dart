@@ -5,10 +5,17 @@ import 'container_unit.dart';
 import 'export_list.dart';
 import 'reserved_slot.dart';
 import 'vessel_geometry.dart';
+import 'vessel_profile.dart';
 import 'vessel_voyage.dart';
 
 /// T-72 · Una operación es una escala: un buque, un viaje y un puerto (T-79a 2.1).
 /// Lleva el texto de sus fuentes para abrirse sin red ni archivo.
+///
+/// T-79 · Una operación sin publicar es local: así trabaja el modo de un solo
+/// dispositivo. La oficina la publica con su perfil de buque, para que el
+/// muelle dibuje el plano sin declarar la geometría otra vez, y la cierra
+/// una vez. Los tres campos nuevos se leen con su valor por omisión en las
+/// operaciones guardadas antes.
 class Operation extends Equatable {
   final String id;
   final String vesselName;
@@ -16,6 +23,11 @@ class Operation extends Equatable {
   final String portOfCall;
   final DateTime createdAt;
   final List<OperationSource> sources;
+  final bool published;
+
+  /// Cuándo la cerró la oficina, con la hora del servidor; null si sigue abierta.
+  final DateTime? closedAt;
+  final VesselProfile? profile;
 
   Operation({
     required this.id,
@@ -24,7 +36,12 @@ class Operation extends Equatable {
     required this.portOfCall,
     required this.createdAt,
     Iterable<OperationSource> sources = const [],
+    this.published = false,
+    this.closedAt,
+    this.profile,
   }) : sources = List.unmodifiable(sources);
+
+  bool get closed => closedAt != null;
 
   OperationSource? source(OperationSourceKind kind) {
     for (final s in sources) {
@@ -33,11 +50,39 @@ class Operation extends Equatable {
     return null;
   }
 
-  @override
-  List<Object?> get props => [id, vesselName, voyageNumber, portOfCall, createdAt, sources];
+  Operation copyWith({
+    Iterable<OperationSource>? sources,
+    bool? published,
+    DateTime? closedAt,
+    VesselProfile? profile,
+  }) =>
+      Operation(
+        id: id,
+        vesselName: vesselName,
+        voyageNumber: voyageNumber,
+        portOfCall: portOfCall,
+        createdAt: createdAt,
+        sources: sources ?? this.sources,
+        published: published ?? this.published,
+        closedAt: closedAt ?? this.closedAt,
+        profile: profile ?? this.profile,
+      );
 
-  /// [includeContent] en falso deja solo el nombre de cada fuente: es lo que
-  /// lleva la exportación de la bitácora.
+  @override
+  List<Object?> get props => [
+        id,
+        vesselName,
+        voyageNumber,
+        portOfCall,
+        createdAt,
+        sources,
+        published,
+        closedAt,
+        profile
+      ];
+
+  /// [includeContent] en falso deja solo el nombre de cada fuente y quita el
+  /// perfil: es lo que lleva la exportación de la bitácora.
   Map<String, dynamic> toJson({bool includeContent = true}) => {
         'id': id,
         'vessel': vesselName,
@@ -45,6 +90,9 @@ class Operation extends Equatable {
         'portOfCall': portOfCall,
         'createdAt': createdAt.toUtc().toIso8601String(),
         'sources': sources.map((s) => s.toJson(includeContent: includeContent)).toList(),
+        'published': published,
+        if (closedAt != null) 'closedAt': closedAt!.toUtc().toIso8601String(),
+        if (includeContent && profile != null) 'profile': profile!.toJson(),
       };
 
   factory Operation.fromJson(Map<String, dynamic> json) => Operation(
@@ -55,6 +103,13 @@ class Operation extends Equatable {
         createdAt: DateTime.parse(json['createdAt'] as String),
         sources: (json['sources'] as List<dynamic>? ?? const [])
             .map((s) => OperationSource.fromJson(Map<String, dynamic>.from(s as Map))),
+        published: json['published'] as bool? ?? false,
+        closedAt: json['closedAt'] == null
+            ? null
+            : DateTime.parse(json['closedAt'] as String),
+        profile: json['profile'] == null
+            ? null
+            : VesselProfile.fromJson(Map<String, dynamic>.from(json['profile'] as Map)),
       );
 }
 

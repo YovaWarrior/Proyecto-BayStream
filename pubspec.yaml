@@ -16,7 +16,13 @@ dependencies:
   # Firebase / sincronización Offline-First
   firebase_core: ^4.4.0
   cloud_firestore: ^6.1.2
-  
+  # Cuentas de RF-034 (T-79, autorizada en 2.7). Fija en la versión que T-70
+  # y T-70c probaron con firebase_core 4.13.0 y cloud_firestore 6.8.0.
+  firebase_auth: 6.5.7
+  # Directa desde T-79 (autorizada en 10.3): huella SHA-256 de las fuentes
+  # publicadas. Fija en la versión que ya traía el lock como transitiva.
+  crypto: 3.0.7
+
   # Utilities
   equatable: ^2.0.5
   dartz: ^0.10.1

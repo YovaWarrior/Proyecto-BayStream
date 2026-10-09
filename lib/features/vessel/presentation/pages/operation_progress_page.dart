@@ -8,6 +8,7 @@ import '../formatters/vessel_error_message.dart';
 import '../providers/loading_operation_provider.dart';
 import '../widgets/discharge_controls.dart' show formatMovementTime;
 import '../widgets/loading_controls.dart' show loadingPosition;
+import '../widgets/sync_status_chip.dart';
 
 class OperationProgressPage extends ConsumerWidget {
   final VesselVoyage voyage;
@@ -44,6 +45,9 @@ class OperationProgressPage extends ConsumerWidget {
                     Text(
                         '${voyage.vessel.name} · ${voyage.voyageNumber} · ${voyage.portOfCall}',
                         style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    // T-79: la oficina ve aquí si el avance está al día.
+                    const SyncStatusChip(),
                     const SizedBox(height: 8),
                     if (!operation.plan.hasArrival)
                       const Text('Sin plano de llegada: descarga no evaluada.'),

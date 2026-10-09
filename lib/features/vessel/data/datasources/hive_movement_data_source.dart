@@ -74,6 +74,19 @@ class HiveMovementDataSource {
         await _movements.flush();
       });
 
+  /// T-79 · Lo que trae la nube llega por tandas: una sola escritura a disco.
+  Future<void> putMovements(Iterable<MovementRecord> records) => _write(() async {
+        await _movements.putAll({
+          for (final record in records) record.movement.id: _encodeMovement(record)
+        });
+        await _movements.flush();
+      });
+
+  MovementRecord? movement(String id) {
+    final record = _movements.get(id);
+    return record == null ? null : _decodeMovement(record);
+  }
+
   List<MovementRecord> movements(String operationId) => _movements.values
       .map(_decodeMovement)
       .where((r) => r.movement.operationId == operationId)

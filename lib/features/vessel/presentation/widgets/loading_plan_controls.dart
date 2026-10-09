@@ -12,6 +12,7 @@ import '../providers/loading_plan_provider.dart';
 import '../providers/loading_operation_provider.dart';
 import 'discharge_controls.dart';
 import 'loading_controls.dart';
+import 'sync_status_chip.dart';
 
 /// Modos de vista del plano. «Descarga» (T-75) solo existe en un plano de
 /// llegada; fuera de ese modo, tocar una celda abre el detalle, como siempre.
@@ -96,6 +97,7 @@ class LoadingPlanControls extends ConsumerWidget {
                   icon: const Icon(Icons.assignment_outlined),
                   label: const Text('Avance de la operación'),
                 ),
+              if (voyage.portOfCall != null) const SyncStatusChip(),
             ]),
         if (mode == BayPlanMode.loading && voyage.portOfCall != null)
           LoadingControls(voyage: voyage, selectedBay: selectedBay)

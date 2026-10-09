@@ -9,8 +9,9 @@ import '../formatters/vessel_error_message.dart';
 import 'movement_log_provider.dart';
 import 'vessel_providers.dart';
 
-/// T-75 · Quién registra mientras no haya cuentas (T-79). Es el autor que la
-/// bitácora de T-72 guarda; T-79 lo reemplaza por la cuenta del operador.
+/// T-75 · Quién registra sin cuenta: el modo de un solo dispositivo. Desde
+/// T-79, con sesión firma la cuenta (`movementAuthorProvider`), y lo que
+/// firma este autor se queda en el dispositivo.
 const dockOperator =
     MovementAuthor(name: 'Muelle (sin cuenta)', role: OperatorRole.dock);
 
@@ -67,12 +68,13 @@ final dischargeProgressProvider = StreamProvider.autoDispose
 
 /// Registra un movimiento en la bitácora. Devuelve el registrado o el
 /// mensaje del error; solo con el registrado la pantalla dice «registrado».
-/// Recibe el repositorio y no el `ref`, para que el «Deshacer» de un aviso
-/// funcione aunque la pestaña del plano ya no esté en pantalla.
+/// Recibe el repositorio y el autor, no el `ref`, para que el «Deshacer» de
+/// un aviso funcione aunque la pestaña del plano ya no esté en pantalla.
 Future<({MovementRecord? record, String? error})> appendMovement(
-    MovementLogRepository repository, MovementDraft draft) async {
+    MovementLogRepository repository, MovementDraft draft,
+    MovementAuthor author) async {
   try {
-    return (await repository.append(draft, dockOperator)).fold(
+    return (await repository.append(draft, author)).fold(
         (failure) => (record: null, error: failure.message),
         (record) => (record: record, error: null));
   } catch (error, stack) {
@@ -81,11 +83,12 @@ Future<({MovementRecord? record, String? error})> appendMovement(
 }
 
 /// Deshace un movimiento con `annul`, nunca borrando (T-72).
-Future<String?> annulMovement(
-    MovementLogRepository repository, Movement movement, String reason) async {
+Future<String?> annulMovement(MovementLogRepository repository,
+    Movement movement, String reason, MovementAuthor author) async {
   final result = await appendMovement(
       repository,
       MovementDraft.annul(movement.operationId, movement.id, reason,
-          target: movement.target));
+          target: movement.target),
+      author);
   return result.error;
 }

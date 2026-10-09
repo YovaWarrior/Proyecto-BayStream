@@ -15,15 +15,27 @@ class MovementLogRepositoryImpl implements MovementLogRepository {
   final HiveMovementDataSource _source;
   final DateTime Function() _clock;
 
-  /// Hasta T-79 ningún cliente sincroniza: todo nace `localOnly`.
-  final SendState _initialState;
-
   MovementLogRepositoryImpl(
     this._source, {
     DateTime Function()? clock,
-    SendState initialState = SendState.localOnly,
-  })  : _clock = clock ?? DateTime.now,
-        _initialState = initialState;
+  }) : _clock = clock ?? DateTime.now;
+
+  /// T-79 (T-79a 4.2) · Solo se sube lo que la nube puede aceptar y verificar:
+  /// un autor con cuenta, en una operación publicada, que no anule ni corrija
+  /// algo que se quedó en el dispositivo. Lo demás queda `localOnly`, que es
+  /// el modo de un solo dispositivo y el respaldo del 14-oct.
+  SendState _stateFor(MovementDraft draft, MovementAuthor author) {
+    if (author.uid == null) return SendState.localOnly;
+    final operation = _source.operation(draft.operationId);
+    if (operation == null || !operation.published) return SendState.localOnly;
+    for (final reference in [draft.payload['annuls'], draft.payload['corrects']]) {
+      if (reference is String &&
+          _source.movement(reference)?.state == SendState.localOnly) {
+        return SendState.localOnly;
+      }
+    }
+    return SendState.pending;
+  }
 
   Future<Either<Failure, T>> _guard<T>(FutureOr<T> Function() operation) async {
     try {
@@ -47,7 +59,12 @@ class MovementLogRepositoryImpl implements MovementLogRepository {
       return Left(ValidationFailure(message: problem, field: draft.type.wire));
     }
     return _guard(() async {
-      final registeredAt = _clock();
+      // T-79 · En milisegundos: la Web no guarda microsegundos, y el orden
+      // total por `createdAt` tiene que ser el mismo en los tres clientes.
+      final now = _clock();
+      final registeredAt = now.isUtc
+          ? DateTime.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch, isUtc: true)
+          : DateTime.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch);
       final record = MovementRecord(
         Movement(
           id: const Uuid().v4(),
@@ -66,13 +83,87 @@ class MovementLogRepositoryImpl implements MovementLogRepository {
           sequence: _source.nextSequence(),
           createdAt: registeredAt,
         ),
-        _initialState,
+        _stateFor(draft, author),
       );
       await _source.putMovement(record);
       _changes.add(draft.operationId);
       return record;
     });
   }
+
+  @override
+  Future<Either<Failure, List<MovementRecord>>> pendingOf(
+          String operationId, String authorUid) =>
+      _guard(() => _source
+          .movements(operationId)
+          .where((r) =>
+              r.state == SendState.pending && r.movement.author.uid == authorUid)
+          .toList()
+        ..sort((a, b) => a.movement.sequence.compareTo(b.movement.sequence)));
+
+  @override
+  Future<Either<Failure, void>> acceptRemote(Iterable<Movement> movements) =>
+      _guard(() async {
+        final changed = <MovementRecord>[];
+        for (final movement in movements) {
+          final local = _source.movement(movement.id);
+          if (local == null) {
+            changed.add(MovementRecord(movement, SendState.confirmed));
+          } else if (local.state != SendState.confirmed ||
+              local.movement.receivedAt != movement.receivedAt) {
+            // Lo propio se conserva tal como se registró: de la nube solo
+            // entra la hora de recepción.
+            changed.add(MovementRecord(
+                local.movement.withReceivedAt(
+                    movement.receivedAt ?? local.movement.receivedAt),
+                SendState.confirmed));
+          }
+        }
+        if (changed.isEmpty) return;
+        await _source.putMovements(changed);
+        for (final id in changed.map((r) => r.movement.operationId).toSet()) {
+          _changes.add(id);
+        }
+      });
+
+  @override
+  Future<Either<Failure, void>> markConfirmed(String id, {DateTime? receivedAt}) =>
+      _guard(() async {
+        final local = _source.movement(id);
+        if (local == null) return;
+        if (local.state == SendState.confirmed &&
+            (receivedAt == null || local.movement.receivedAt == receivedAt)) {
+          return;
+        }
+        await _source.putMovement(MovementRecord(
+            local.movement.withReceivedAt(receivedAt ?? local.movement.receivedAt),
+            SendState.confirmed));
+        _changes.add(local.movement.operationId);
+      });
+
+  @override
+  Future<Either<Failure, void>> markRejected(String id, String reason) =>
+      _guard(() async {
+        final local = _source.movement(id);
+        if (local == null || local.state == SendState.confirmed) return;
+        await _source.putMovement(
+            MovementRecord(local.movement, SendState.rejected, rejection: reason));
+        _changes.add(local.movement.operationId);
+      });
+
+  @override
+  Future<Either<Failure, int>> requeueRejected(String operationId) =>
+      _guard(() async {
+        final rejected = _source
+            .movements(operationId)
+            .where((r) => r.state == SendState.rejected)
+            .map((r) => MovementRecord(r.movement, SendState.pending))
+            .toList();
+        if (rejected.isEmpty) return 0;
+        await _source.putMovements(rejected);
+        _changes.add(operationId);
+        return rejected.length;
+      });
 
   @override
   Future<Either<Failure, List<MovementRecord>>> records(String operationId) =>

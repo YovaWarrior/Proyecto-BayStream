@@ -108,6 +108,20 @@ class Movement extends Equatable {
     this.receivedAt,
   }) : payload = Map.unmodifiable(payload);
 
+  /// T-79 · El mismo movimiento con la hora en que lo recibió la nube.
+  Movement withReceivedAt(DateTime? value) => Movement(
+        id: id,
+        operationId: operationId,
+        type: type,
+        target: target,
+        payload: payload,
+        author: author,
+        deviceId: deviceId,
+        sequence: sequence,
+        createdAt: createdAt,
+        receivedAt: value,
+      );
+
   String? get annuls => payload['annuls'] as String?;
   String? get corrects => payload['corrects'] as String?;
   String? get position => payload['position'] as String?;
