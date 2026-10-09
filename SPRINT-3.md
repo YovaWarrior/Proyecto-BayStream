@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 184.7 h estimadas** (al 9-oct, 10.15) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 185.2 h estimadas** (al 9-oct, 10.16) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -636,11 +636,49 @@ La validación se hace contra el **estado derivado del propio dispositivo** (T-7
 - [ ] **El modo de un solo dispositivo** sigue igual sin cuenta: los corpus de T-68 a T-78 dan lo mismo que hoy.
 - [ ] Piso de 459 pruebas, `analyze` en cero, los corpus en verde y el nuevo de T-79.
 
+#### T-80 · Roles: el muelle pide un cambio y la oficina lo aprueba o lo rechaza · 6.0 h · Codex (ficha completa, 9-oct)
+
+**Para qué.** Carlos lo pidió así: los llenos los posiciona el planificador de la línea, y el muelle tiene que pedir permiso a la oficina para cambiar algo. En el caso real pasó con el intercambio de los OR 128 y 145 en la bahía 14. Hoy la bitácora ya los registra, pero salen como dos «fuera de plan» (T-72 a T-79), porque nadie aprobó el cambio. **El diseño está en T-79a:** 2.4 (los tres tipos), 2.7.2 (las dos pasadas del derivador) y las reglas de 5.2. Las reglas de los dos roles ya se probaron en T-79.
+
+**Qué hacer.**
+1. **Cada pantalla según el rol.** El rol sale de `authorized/{uid}`, por el `Operator` de T-79.
+   - El **muelle** pide cambios.
+   - La **oficina** aprueba o rechaza.
+   - Sin cuenta, el modo de un solo dispositivo sigue como hoy y no ofrece nada de esto.
+2. **El muelle pide** con un `request_change`:
+   - de uno a cuatro cambios `{target, from, to}`, con motivo escrito;
+   - desde el detalle de una celda, o eligiendo dos contenedores para intercambiarlos;
+   - la solicitud se ve como **pendiente** en el muelle.
+3. **La oficina tiene una bandeja de solicitudes.** Ahí aprueba con un `change_position` que cita la solicitud en `request`, o rechaza con un `reject_change`, siempre con motivo.
+4. **El derivador hace sus dos pasadas** (T-79a, 2.7.2).
+   - Primero aplica los cambios vigentes sobre el plan publicado y obtiene el **plan efectivo**.
+   - Después evalúa las cargas y descargas contra ese plan.
+   - Así, una carga registrada antes de que llegue la aprobación deja de estar en conflicto cuando la aprobación llega.
+   - Un cambio cuyo `from` ya no coincide queda en conflicto.
+5. **T-77 valida contra el plan efectivo.** Un contenedor con cambio aprobado ya no pide motivo por ir a su posición nueva.
+6. **Las reglas** (decisión de 10.15).
+   - Se parte `validPayload` por tipo, para que una denegación corte pronto y no agote las 1 000 expresiones.
+   - Se agregan los casos de T-80, entre ellos `changes[]` con 4 elementos (permitido) y con 5 (negado).
+   - La batería pasa entera en el emulador.
+   - **Si el archivo cambia, Carlos lo vuelve a publicar desde la consola** y lo comprueba en el simulador, como el 9-oct. Nunca con `firebase deploy`.
+
+**Terminada cuando:**
+- [ ] **El caso completo cuadra.** Los 177 eventos del caso, con la solicitud y la aprobación, dan las 460 posiciones del CSV con **cero conflictos**, donde hoy salen 2. Pasa igual en al menos tres órdenes, incluida la aprobación después de las cargas.
+- [ ] **El rechazo.** Si la oficina rechaza, las cargas de 128 y 145 vuelven a salir «fuera de plan».
+- [ ] **Las reglas** pasan la batería entera, con los casos nuevos, en el emulador.
+- [ ] **En producción**, en `baystream-app` y sobre una operación «PRUEBA T-80»:
+  - el muelle en el Honor pide el intercambio 128 ↔ 145;
+  - la oficina en Windows lo aprueba;
+  - los dos ven el plan efectivo y cero conflictos;
+  - un segundo pedido se rechaza;
+  - Chrome muestra lo mismo.
+- [ ] Piso de 485 pruebas, `analyze` en cero, los corpus en verde y el nuevo de T-80.
+
 
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-79** | RF-032+ · RF-034 | 12.0 | Cuentas con correo y lista de autorizados; Firestore en `baystream-app`; reglas; cola sin conexión en el muelle | Dos dispositivos ven el mismo avance; uno sin red sube al volver; reglas verificadas en uso real · **ficha completa arriba** |
-| **T-80** | RF-035 | 6.0 | Roles muelle y oficina; el muelle pide un cambio y la oficina lo aprueba | El intercambio 128 ↔ 145 del caso se pide desde el muelle y se aprueba desde la oficina |
+| **T-80** | RF-035 | 6.0 | Roles muelle y oficina; el muelle pide un cambio y la oficina lo aprueba | El intercambio 128 ↔ 145 del caso se pide desde el muelle y se aprueba desde la oficina · **ficha completa arriba** |
 | **T-81** | RF-038 | 4.0 | Cambios desde la oficina: mover o cancelar contenedores, sincronizados al muelle | El muelle ve el cambio sin recargar el archivo |
 
 **Punto de control del 14-oct.** Si la sincronización no funciona para esa fecha, el
@@ -678,7 +716,7 @@ el 24-oct siempre hay algo que funciona.
 | **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
 | **T-56** | ERS | 2.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2) |
-| **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.14: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular y «(0 cub. / 0 bod.)», que debe decir que son pendientes |
+| **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web |
 
 ### Cierre · Calidad, entregables y piloto (21–24 oct)
 
@@ -1352,3 +1390,44 @@ Lo que comprobó:
    - publicar las reglas desde la pestaña Reglas y comprobarlas en el simulador.
 2. **Timonel hace C9 y C10.** Con eso, T-79 pasa a En revisión.
 3. **Codex** acepta T-79 y toma T-80, con su ficha completa, que Yov escribe al cerrar C9.
+
+### 10.16 · T-79 pasa en producción y queda En revisión · T-80 pasa a Codex (9-oct)
+
+**Los pasos de consola de Carlos quedaron hechos el 9-oct**, en `baystream-app`, con Yov guiándolos con capturas:
+- Firestore en `northamerica-south1`, en edición Standard y modo de producción.
+- Dos cuentas, una de oficina y una de muelle, cada una con su `authorized/{uid}`.
+- Las reglas de `docs/T79a-firestore.rules.propuesta`, publicadas sin cambios desde la consola.
+- **El simulador comprueba las reglas:**
+  - un `get` sin sesión sale denegado;
+  - con el UID de la oficina sale autorizado, y lo mismo con el de muelle;
+  - el detalle confirma que la regla lee `authorized` y que `active` es `true`.
+
+**T-79, de Timonel, pasa a En revisión** (commit `f098e58`, `docs/T79-RESULTADOS.md`, sección 7).
+- **C9 pasa.** Participaron cuatro clientes:
+  - la oficina en Windows, con el almacén real y el namespace `t79prod`;
+  - el muelle en el Honor, con la variante `.t79`;
+  - dos pestañas de Chrome compiladas en local. Nada se publicó.
+- **La operación «PRUEBA T-79»** tiene 20 movimientos con 20 ids distintos, todos confirmados en los cuatro clientes.
+- **El muelle no puede aprobar.** La pantalla no lo ofrece y, si se fuerza, la nube responde PERMISSION_DENIED.
+- **Una cuenta fuera de la lista** solo se probó en el simulador, por decisión de Carlos. Sale denegada.
+- **El corte de red de Windows (10.15).** Vuelve a «Al día» 36 s después de que regresa la red, sin cambios de código. Lo de 6.5 era cosa del emulador.
+- **Chrome.** La sesión sobrevive a recargar, y las dos pestañas no pierden ni duplican nada; registraron por turnos.
+- **C10.** 23 escrituras, exactas (1 operación, 2 fuentes y 20 movimientos), y 103 lecturas. Para el caso entero queda muy por debajo de la cuota gratuita.
+- **Un archivo nuevo, `tool/t79_c9_main.dart`.** Arranca Firebase igual que `lib/main.dart`, pero con un namespace propio, para no anexar movimientos de prueba en el almacén de Carlos.
+- **Horas.** ≈ 2.5 en total, en lugar de 10.0. El total queda en ≈ 185.2 h.
+
+**Abierto: las 48 eliminaciones de la pestaña Uso.**
+- Las reglas niegan `delete` en todo, y una denegación no cuenta como eliminación: la métrica es de borrados exitosos.
+- Ningún cliente puede borrar. Solo pueden hacerlo la consola o credenciales de administrador, y en el repo no hay rastro de la CLI de Firebase.
+- **Carlos comprueba en la consola** que los datos siguen completos: 2 documentos en `authorized`, y en «PRUEBA T-79» 2 fuentes y 20 movimientos. También mira a qué hora marca las eliminaciones la gráfica de Uso.
+- **Si falta algo, se detiene todo y se investiga antes de T-80.** Si no falta nada, se anota como observación del tablero de uso.
+
+**Otras decisiones.**
+- **Dos textos pasan a T-97:** el punto doble al final de un rechazo, y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web.
+- **La operación «PRUEBA T-79» se queda abierta en la nube.** Sirve de dato de prueba y no estorba al piloto, que usará otra operación.
+- **El código viejo de `voyages`.** `VesselRepositoryImpl.deleteVoyage` sigue intentando borrar en esa colección de la nube, que en producción está cerrada. No borra nada, porque las reglas lo niegan. Se anota para revisar en T-96 o en el cierre.
+
+**El carril de `lib/` pasa a Codex**, en un chat nuevo.
+1. Primero, la aceptación cruzada de T-79: la suite, las reglas en el emulador, los corpus y una sincronización corta en producción.
+2. Después, **T-80**, con su ficha completa en la sección 5.
+- Timonel queda en pausa. Después acepta T-80 y toma T-81.
