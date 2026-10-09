@@ -4,6 +4,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/discharge_progress.dart';
 import '../../domain/services/loading_plan_progress.dart';
 import '../../domain/services/loading_operation.dart';
+import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_plan_provider.dart';
 import '../providers/loading_operation_provider.dart';
@@ -92,6 +93,19 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             voyage: widget.voyage,
             selectedBay: _selectedBayNumber,
             mode: _mode,
+            onOperationCell: (cell) {
+              final bay = IsoCoordinateParser.parse(cell.position).bay;
+              setState(() {
+                _mode = cell.role == PlanRole.discharge
+                    ? BayPlanMode.discharge : BayPlanMode.loading;
+                _selectedBayNumber = bay;
+              });
+              ref.read(selectedBayProvider.notifier).select(bay);
+              ref.read(highlightedContainerProvider.notifier).highlight(
+                  cell.role == PlanRole.discharge && cell.key.startsWith('C:')
+                      ? cell.key.substring(2) : cell.displayKey);
+              ref.read(selectedTypeFilterProvider.notifier).clear();
+            },
             onModeChanged: (value) => setState(() => _mode = value)),
         // Selector de bahías
         _buildBaySelector(sortedBayNumbers, displayedVoyage),

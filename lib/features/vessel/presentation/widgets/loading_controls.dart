@@ -706,7 +706,8 @@ Future<void> showLoadingDetails(
                               Navigator.pop(context);
                             }
                           },
-                          child: const Text('Deshacer carga')),
+                          child: Text(movement.corrects == null
+                              ? 'Deshacer carga' : 'Deshacer corrección')),
                       if (row != null)
                         TextButton(
                             key: const ValueKey('loading-correct'),

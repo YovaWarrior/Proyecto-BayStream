@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
 import '../../domain/services/loading_plan_progress.dart';
+import '../../domain/services/operation_progress.dart';
 import '../formatters/vessel_error_message.dart';
 import '../pages/export_list_import_page.dart';
+import '../pages/operation_progress_page.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_plan_provider.dart';
 import '../providers/loading_operation_provider.dart';
@@ -20,12 +22,14 @@ class LoadingPlanControls extends ConsumerWidget {
   final int? selectedBay;
   final BayPlanMode mode;
   final ValueChanged<BayPlanMode> onModeChanged;
+  final ValueChanged<OperationCellLink>? onOperationCell;
   const LoadingPlanControls(
       {super.key,
       required this.voyage,
       required this.selectedBay,
       required this.mode,
-      required this.onModeChanged});
+      required this.onModeChanged,
+      this.onOperationCell});
 
   bool get orderMode => mode == BayPlanMode.order;
 
@@ -80,6 +84,17 @@ class LoadingPlanControls extends ConsumerWidget {
                       progress?.hasValue == true ? () => _table(context) : null,
                   icon: const Icon(Icons.table_chart_outlined),
                   label: const Text('Pendientes por bahía'),
+                ),
+              if (voyage.portOfCall != null)
+                TextButton.icon(
+                  key: const ValueKey('operation-progress-button'),
+                  onPressed: () async {
+                    final cell = await Navigator.of(context).push<OperationCellLink>(
+                        MaterialPageRoute(builder: (_) => OperationProgressPage(voyage: voyage)));
+                    if (cell != null) onOperationCell?.call(cell);
+                  },
+                  icon: const Icon(Icons.assignment_outlined),
+                  label: const Text('Avance de la operación'),
                 ),
             ]),
         if (mode == BayPlanMode.loading && voyage.portOfCall != null)
