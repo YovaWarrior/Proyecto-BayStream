@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 192.7 h estimadas** (al 9-oct, 10.14) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 184.7 h estimadas** (al 9-oct, 10.15) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1291,3 +1291,64 @@ Ese es el respaldo del punto de control del 14-oct.
 - **6.1, Firestore:** edición Standard, `(default)`, `northamerica-south1` y modo de producción, si todavía no la creó.
 - **6.3, las cuentas:** dos, una de oficina y una de muelle, y un documento en `authorized/{uid}` por cuenta. Los correos y los UID nunca entran al repo.
 - **6.4, las reglas:** se publican desde la consola cuando Timonel las entregue probadas. Nunca con `firebase deploy`.
+
+### 10.15 · T-78 terminada: la Ola 2 queda cerrada · T-79 pasa contra el emulador; falta producción (9-oct)
+
+**T-78 pasa a Terminado y la Ola 2 queda cerrada.** Timonel la aceptó en ≈ 0.32 h:
+- en Windows a 1920×1080, en el namespace `t79acc`;
+- en el Honor a 360 dp, con la variante `.t79`;
+- en Chrome.
+
+Lo que comprobó:
+- **Al empezar:** 114 por descargar (66/48) y 176 por cargar (120/56), con cero hechos.
+- **Al final:** 0 pendientes y 2 conflictos.
+- **Lo demás:** las 11 pilas sobre el límite de prueba van aparte, y aparece «Deshacer corrección».
+- **Corpus y suite:** 48 de 48 y 459 de 459.
+
+**T-79, de Timonel, queda En curso:** la parte del emulador está hecha y commiteada (`f959024`), y falta producción.
+- **Construido según T-79a**, con los cambios de esta ficha:
+  - sesión con `authorized/{uid}`;
+  - publicar, unirse y cerrar, con la huella SHA-256;
+  - el motor de la cola en Dart puro;
+  - el estado en pantalla con texto e icono, incluida la salvaguarda de 5 minutos;
+  - la pantalla «Nube y cuenta»;
+  - Windows con los adaptadores de Firestore.
+- **`lib/main.dart` no se tocó.** El archivo de reglas no cambió.
+- **Dependencias:** `firebase_auth 6.5.7` (la de T-70 y T-70c) y `crypto 3.0.7`, las dos ya autorizadas y con versión fija.
+- **Validaciones:**
+  - **485 pruebas**, el piso nuevo: 459 y 26 nuevas;
+  - `analyze` en cero;
+  - las reglas en el emulador, 54 de 54: los 51 de T-79a y 3 nuevos;
+  - los corpus, 50 de 50.
+- **Dos dispositivos contra el emulador:**
+  - **C1:** el Honor dibuja 405 contenedores y 55 reservas sin tener el archivo.
+  - **C2:** con un corte de red real y un cierre forzado, quedan 178 documentos con 178 ids distintos y las 460 posiciones en el Honor y en Windows.
+  - **C5 a C7 pasan.** C4 pasa en su primera parte.
+  - **C8:** Windows como oficina publica, ve el avance del Honor en tiempo real y cierra la operación, sin errores de hilo en su salida.
+- **La corrección que salió de C7.** El cierre y la autorización se leían de la caché del SDK. Ahora se leen del servidor, y sin red el movimiento sigue pendiente.
+- **Horas.** ≈ 1.5 en lugar de 10.0, sin C9 ni C10. Con ≈ 0.5 h estimadas para ellas, el total baja a ≈ 184.7 h.
+
+**Tres puntos abiertos y lo que se decide.**
+1. **Las denegaciones agotan el máximo de 1 000 expresiones** del motor de reglas.
+   - El resultado es el correcto, «denegado», y ninguna escritura válida se negó: entraron 13 en la batería y 182 del SDK real.
+   - **Decisión: Carlos publica las reglas tal como están.** El emulador aplica el mismo límite y las escrituras válidas pasaron.
+   - **En T-80**, que de todos modos agrega casos a las reglas, se parte `validPayload` por tipo de movimiento, para que una denegación corte pronto. La batería sirve de red.
+2. **Windows se quedó «Sin conexión» más de dos minutos** después de vaciar el emulador, sin ningún error.
+   - Puede ser la caché del SDK frente a un emulador vaciado, algo que en producción no pasa.
+   - **C9 lo comprueba de verdad:** se corta la red de Windows un minuto, se devuelve, y Windows tiene que volver a «Al día» en menos de un minuto.
+   - **Si no vuelve, T-79 no se cierra hasta corregirlo.**
+3. **C4 con dos pestañas** no se pudo probar en la Web contra el emulador, por el orden de arranque de Auth. Pasa a C9, en Chrome compilado en local contra `baystream-app`. Nada se publica en la Web antes del 17-oct.
+
+**Revisión de Yov sobre el commit `f959024`.**
+- No toca `main.dart`, las reglas ni los congelados.
+- No trae claves, correos ni opciones privadas.
+- Los contenedores son de prueba (TSTU) o del corpus anonimizado.
+- Las reglas propuestas niegan todo lo que no está listado (`match /{document=**}` en `false`).
+
+**Lo que sigue.**
+1. **Carlos**, en la consola de `baystream-app` (T-79a, sección 6):
+   - crear Firestore, si no lo hizo;
+   - crear la cuenta de muelle y los dos documentos `authorized/{uid}`;
+   - publicar las reglas desde la pestaña Reglas y comprobarlas en el simulador.
+2. **Timonel hace C9 y C10.** Con eso, T-79 pasa a En revisión.
+3. **Codex** acepta T-79 y toma T-80, con su ficha completa, que Yov escribe al cerrar C9.
