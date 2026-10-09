@@ -1,6 +1,6 @@
 # T-79 · Sincronización: cuentas, Firestore, reglas y cola sin conexión, con la aceptación de T-78
 
-Timonel · 8 y 9-oct-2026 · rama `sprint-3`, sobre `221b9f3` · carril de `lib/`, `test/`, `tool/` y `pubspec.*`
+Timonel · 8 y 9-oct-2026 · rama `sprint-3`, sobre `221b9f3`; C9 y C10 sobre `7806741` · carril de `lib/`, `test/`, `tool/` y `pubspec.*`
 
 ## 1. Resultado
 
@@ -8,7 +8,7 @@ Timonel · 8 y 9-oct-2026 · rama `sprint-3`, sobre `221b9f3` · carril de `lib/
 |---|---|
 | **Aceptación cruzada de T-78** (`1880266`, de Codex) | **PASA** en Windows a 1920×1080, en el Honor a 360 dp y en Chrome, antes de tocar `lib/` (sección 2). No se cambió su código |
 | **T-79** (suite, reglas, motor y dos dispositivos contra el emulador) | **Hecha y aceptada contra el emulador**: 7.1 y 7.2 completas; de 7.3, C1, C2 y C5 a C8 pasan, y C4 pasa en su primera parte (sección 6) |
-| **T-79 en producción** (C9 y C10) | **Pendiente de los pasos de consola de Carlos** (sección 7) |
+| **T-79 en producción** (C9 y C10, 9-oct) | **C9 PASA** en `baystream-app` con Windows, el Honor y dos pestañas de Chrome; el corte de red de Windows vuelve a «Al día» en **36 s**. **C10:** 23 escrituras, exactas, y 103 lecturas (sección 7) |
 
 - **Pruebas:** **485/485** en dos corridas seguidas (piso 459 + 26 nuevas). `flutter analyze` en **cero**, sin `// ignore:`.
 - **Reglas:** **54 de 54** en el emulador (los 51 casos de T-79a 5.4 y 3 nuevos), con 13 documentos en `movements`.
@@ -16,10 +16,13 @@ Timonel · 8 y 9-oct-2026 · rama `sprint-3`, sobre `221b9f3` · carril de `lib/
 - **Dependencias:** `firebase_auth` **6.5.7** y `crypto` **3.0.7** directas, con versión fija. **Cambian `pubspec.yaml` y `pubspec.lock`** (sección 3.6).
 - **`lib/main.dart` no se tocó**: no hizo falta (sección 3.5). Tampoco los congelados de H5 ni `docs/T79a-firestore.rules.propuesta`, que queda igual y es el archivo final.
 
-**Lo que queda abierto, y por qué:**
-1. **C9 y C10**, en `baystream-app`, esperan a que Carlos cree Firestore, la cuenta de muelle, la lista `authorized/{uid}` y publique las reglas.
-2. **C4, dos pestañas a la vez:** no se pudo probar contra el emulador en la Web (6.4). Pasa a producción.
-3. **Hallazgo de las reglas:** en el emulador, toda denegación de un movimiento agota el máximo de 1000 expresiones del motor de reglas. El resultado sigue siendo «denegado» y las escrituras válidas pasan, pero hay que mirarlo en producción (5.2).
+**Lo que quedó abierto el 9-oct en la madrugada, y cómo se cerró:**
+1. **C9 y C10** esperaban los pasos de consola de Carlos. **Hechos el 9-oct por la tarde** (sección 7).
+2. **C4, dos pestañas a la vez:** **pasa en producción** (7.4): nada se pierde ni se duplica, y la sesión sobrevive a recargar.
+3. **El límite de 1000 expresiones** (5.2): en producción el cliente solo recibe «Missing or insufficient permissions», sin el detalle. No se puede ver desde la app; queda para T-80, como decidió 10.15 (7.6).
+4. **Windows «Sin conexión» más de dos minutos** (6.5): **no se repite en producción**. Tras un corte real de red, vuelve a «Al día» en 36 s. No hizo falta tocar el código (7.3).
+
+**Lo que sigue abierto:** las **48 eliminaciones** que muestra la pestaña Uso no salen de la app ni de Carlos (7.7), y dos textos menores para T-97 (7.8).
 
 ## 2. Aceptación cruzada de T-78
 
@@ -314,25 +317,125 @@ No lo cambié: las reglas probadas son las que Carlos va a publicar.
 - Se registró A, la oficina cerró y se registró B. Para esta recomprobación, el cierre se hizo con la cuenta de oficina por la API del emulador, con las reglas aplicadas: Windows estaba en el caso de 6.5. El cierre desde la pantalla ya pasó en la primera corrida.
 - Con la red de vuelta, **A entró** (4 documentos) y **B quedó rechazado con «La operación se cerró antes de este movimiento.»**. El estado dice «Al día · 1 rechazado · operación cerrada».
 
-## 7. Producción (T-79a 7.4): lo que falta y cómo se hace
+## 7. Producción (T-79a 7.4): C9 y C10
 
-**C9 y C10 no se hicieron.** Necesitan los pasos de consola de Carlos en `baystream-app`; antes de cada uno, Carlos comprueba en el selector que el proyecto no es el de H5:
+9-oct, de ≈ 12:20 a ≈ 13:15. Antes, Carlos hizo en la consola de `baystream-app`:
+- Firestore en `northamerica-south1`, edición Standard y modo de producción;
+- **dos cuentas, una de oficina y una de muelle**, cada una con su `authorized/{uid}`;
+- las reglas de `docs/T79a-firestore.rules.propuesta`, publicadas desde la consola **sin cambios**.
 
-1. **6.1 Firestore**, si todavía no existe: edición Standard, `(default)`, `northamerica-south1` y modo de producción.
-2. **6.3 Cuentas.** Según 10.7, ya existe **una cuenta de prueba** creada por Carlos, que será la de oficina. Falta la de muelle, y **un documento `authorized/{uid}` por cuenta**, con `role` (`office` o `dock`), `name` y `active: true`. Yo no vi ni anoté correos ni UID.
-3. **6.4 Reglas:** pegar `docs/T79a-firestore.rules.propuesta` en la consola y publicar. Nunca con `firebase deploy`.
+**Carlos escribió las contraseñas** en la ventana de cada app (Windows, el Honor y Chrome). No vi ni anoté correos, UID ni contraseñas. Ninguna compilación lleva credenciales.
 
-**Después, C9:**
-- la oficina en la app de Windows y el muelle en el Honor, con la compilación de la app real (`lib/main.dart`) y `--dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json`, sin abrir ese archivo;
-- una operación «PRUEBA T-79» con unos diez movimientos y un intercambio;
-- **Carlos escribe las contraseñas** en la ventana de la app;
-- en el mismo C9, **en Chrome, compilado en local contra `baystream-app`**: las dos pestañas de C4 y que la sesión sobreviva a recargar. **Nada se publica en la Web antes del 17-oct.**
+### 7.1 Cómo se probó
 
-**C10:** las lecturas y escrituras de la pestaña Uso, frente a la estimación de T-79a 5.3.
+**El punto de entrada, `tool/t79_c9_main.dart` (nuevo, en el repositorio).**
+- Inicializa Firebase **igual que `lib/main.dart`**: las mismas opciones, leídas de `--dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json`. Ese archivo no se abrió.
+- **Solo cambia dos cosas**, por eso no es `lib/main.dart` tal cual:
+  - **el namespace** del almacén local, `t79prod`. Con `lib/main.dart` la oficina habría anexado movimientos de prueba en el almacén de Carlos (`baystream`), y la bitácora no se borra (AGENTS, 10.11);
+  - **un banco que se oculta**, para lo que la pantalla de T-79 todavía no ofrece: el intercambio, su aprobación y la aprobación forzada del muelle (T-80). Las cargas, la sesión, publicar y unirse se hicieron en la pantalla real.
+- **Sin `baystream-app` como proyecto no arranca**: nunca el de H5.
+- El banco **no lleva correos ni contraseñas**: las sesiones se abren en «Nube y cuenta».
+- **La operación «PRUEBA T-79»** es A08 con el buque renombrado al leerlo: `BUQUE GOLF` pasa a `PRUEBA T-79`. Se publica como `PRUEBA T-79 · VIAJE007A · GTSTC`, con el listado de A08.
+
+**Las compilaciones**, en la copia privada del banco (`%TEMP%\baystream_t79_acceptance\app`, corpus como assets, fuera del repo), todas en release:
+
+| Cliente | Cómo | Almacén |
+|---|---|---|
+| **Windows (oficina)** | Abierta con `explorer.exe`, PID 19012, cerrada por PID | **El real**, `%LOCALAPPDATA%\BayStream\vessel_store`, namespace **`t79prod`** |
+| **Honor (muelle)** | Variante **`.t79`**, instalada encima con `adb install -r` | Namespace `t79prod` de la variante |
+| **Chrome (oficina, C4)** | Compilado en local y servido en `http://localhost:8803`. Chrome propio con perfil aparte (`%TEMP%\baystream_t79_acceptance\chrome-c9`), manejado por el protocolo de depuración. **Nada se publicó en la Web** | IndexedDB del origen local, namespace `t79prod` |
+
+### 7.2 C9: resultados
+
+| Paso | Resultado |
+|---|---|
+| **Las sesiones** | Oficina en Windows y muelle en el Honor: «Cuenta autorizada», cada una con su rol. La lista de operaciones abiertas se lee sin error |
+| **Publicar** | Windows publicó «PRUEBA T-79» desde «Nube y cuenta»: «Operación publicada», «Al día» |
+| **Unirse** | El Honor la vio, **se unió y abrió el plan sin el archivo**: 405 contenedores, 55 reservas, 176 movimientos por cargar, «Al día» |
+| **Diez movimientos** | **3 cargas desde la pantalla real del Honor** (OR 1, 2 y 3, por «OR / últimos dígitos» → «Confirmar carga») y 6 con el banco. Las 9, confirmadas |
+| **El mismo avance** | Windows, en «Avance de la operación»: 9 cargados, 111 llenos pendientes, último movimiento de la cuenta de muelle. «Comprobar» da lo mismo en los dos: 9 registros, 9 confirmados, 167 pendientes de carga |
+| **El intercambio** | El muelle pidió el de las órdenes 128 ↔ 145 y la oficina lo aprobó al recibirlo. **Los dos movimientos, confirmados** y vistos por los dos clientes. Su efecto en el plano lo deriva T-80 |
+| **El muelle no aprueba** | **La pantalla no se lo ofrece**: en T-79 ningún rol tiene un control de aprobar (lo trae T-80). **Forzada con el banco**, por el mismo camino de la app: la nube la negó, «La nube rechazó este movimiento: PERMISSION_DENIED: Missing or insufficient permissions». El muelle dice «Al día · 1 rechazado». **A la oficina no le llegó**: Windows siguió con un solo `changePosition`, el suyo |
+| **Una cuenta fuera de la lista** | Carlos eligió comprobarlo **en el simulador de reglas**: un `get` de `operations/prueba`, autenticado con un UID inventado que no está en `authorized`, sale **denegado**. En la app no se probó con una tercera cuenta; la batería del emulador ya cubre los 9 casos de lectura (5.1) |
+
+### 7.3 El corte de red de Windows (10.15)
+
+**Cómo.** Carlos apagó la red de la PC desde la barra de tareas, la dejó así algo más de un minuto y la devolvió. Mientras tanto, un guion en segundo plano (en el scratchpad, fuera del repo):
+- cada 2 s anotó la hora y si la PC llegaba a `firestore.googleapis.com:443`;
+- capturó la franja de estado de la ventana de BayStream, con `PrintWindow`, aunque estuviera tapada;
+- 10 s después de la caída, hizo que el Honor, con su propia red, registrara 3 cargas.
+
+| Hora | Qué |
+|---|---|
+| 12:54:23 | Se cae la red de la PC |
+| 12:54:33 | El Honor registra 3 cargas |
+| 12:55:03 | Windows pasa a **«Sin conexión»** (40 s después de la caída) |
+| 12:55:49 | Vuelve la red |
+| **12:56:25** | Windows vuelve a **«Al día»**: **36 s después** de que volviera la red |
+
+- **PASA:** menos de un minuto, como pide 10.15.
+- **Las 3 cargas del Honor llegaron:** al terminar, Windows tenía 14 registros, 14 confirmados.
+- **No hizo falta corregir nada.** El caso de 6.5 (más de dos minutos sin conexión) fue contra un emulador vaciado y no se repite contra producción.
+- Los 40 s hasta «Sin conexión» son del SDK, que tarda en dar por perdida la conexión. No es parte del criterio.
+
+### 7.4 Chrome: dos pestañas y recarga (C4)
+
+| Paso | Resultado |
+|---|---|
+| Inicio de sesión de oficina en la pestaña A, unirse y abrir el plan | «Al día», 14 registros, igual que Windows y el Honor |
+| **Recargar la pestaña A** | **La sesión sobrevive**: «Carlos Oficina · office» sin volver a escribir nada |
+| **Pestaña B**, en el mismo origen | Entra **con la sesión ya abierta**, se une y ve los mismos 14 |
+| A registra 3 | B los recibe: **17 registros, 17 ids distintos, 17 confirmados** |
+| B registra 3 | A los recibe: **20, 20 y 20** en las dos |
+| Recargar la pestaña B | Sesión intacta; al reabrir el plan, otra vez 20, 20 y 20 |
+
+**Al final, los cuatro clientes cuadran:** Windows, las dos pestañas y el Honor tienen **20 registros con 20 ids distintos, todos confirmados**: 18 cargas, la solicitud y la aprobación. El Honor guarda, además, su aprobación forzada como rechazada (21 en su bitácora). Nada se perdió ni se duplicó.
+
+**Lo que no se probó:** las dos pestañas registrando **en el mismo instante**. Las dos escogerían los mismos contenedores, porque el banco toma los siguientes del caso que cada una conoce; en el dominio serían repetidos, no conflictos (T-79a 4.6). Se registró por turnos.
+
+### 7.5 C10: la pestaña Uso
+
+Carlos leyó en Firestore → Uso, al terminar C9:
+
+| Métrica | En la consola | Lo que explica la app |
+|---|---:|---|
+| **Escrituras** | **23** | **Exacto:** 1 operación + 2 fuentes (el plan y el listado, un trozo cada una) + 20 movimientos. La aprobación forzada no se escribió |
+| **Lecturas** | **103** | Cuatro clientes con sus listeners, la lista de operaciones, `authorized` de cada sesión, las lecturas del servidor del motor y los `get()` de las reglas (hasta tres por escritura de movimiento, 5.3) |
+| **Eliminaciones** | **48** | **Ninguna:** las reglas niegan todo borrado y el código no borra. Ver 7.7 |
+
+**Frente a la estimación de T-79a 5.3** (el caso entero: 178 movimientos, dos dispositivos, ≈ 200 escrituras y menos de 2 000 lecturas al día):
+- **Escrituras:** una por movimiento, como se diseñó. El caso entero daría 178 + 3.
+- **Lecturas:** 103 para 20 movimientos con **cuatro** clientes y varias recargas. Es del orden de cinco por movimiento; llevado a 178, **orientativamente**, queda dentro de las 2 000.
+- **La cuota sin costo** (20 000 escrituras y 50 000 lecturas al día) queda muy lejos.
+
+### 7.6 El límite de 1000 expresiones en producción
+
+- **Desde la app no se ve.** La aprobación forzada recibió solo «PERMISSION_DENIED: Missing or insufficient permissions». Producción no manda al cliente el motivo de una denegación, que el emulador sí da.
+- **El simulador tampoco lo mostró** en el `get` de 7.2, que no pasa por `validPayload`. Probar una escritura de movimiento en el simulador pide armar el sobre completo a mano, y no se hizo.
+- **Lo que sí se ve:** las escrituras válidas pasaron todas (20 de 20) y la inválida se negó.
+- **Queda como decidió 10.15:** T-80 parte `validPayload` por tipo. Las reglas no se cambiaron.
+
+### 7.7 Las 48 eliminaciones
+
+- Carlos dice que **no borró nada** en la consola.
+- **La app no puede borrar**: las reglas niegan `delete` en todo, y el código no lo intenta.
+- No sé de dónde salen. **No lo invento:** queda por aclarar en la consola (la métrica de borrados del día, o si la cifra es de otra columna).
+
+### 7.8 Dos textos para T-97
+
+- **El rechazo termina con un punto doble:** «…insufficient permissions..». El detalle del SDK ya trae su punto y el motor agrega otro.
+- **Al abrir un plano, la Web dice «Sin conexión» unos segundos**, hasta la primera respuesta del servidor. Sería más exacto «Conectando…».
+
+### 7.9 Lo que queda en la nube y en los dispositivos
+
+- **En `baystream-app`:** la operación «PRUEBA T-79», **abierta**, con sus 2 fuentes y 20 movimientos. No la cerré: cerrar no se deshace y C9 no lo pedía. Carlos puede borrarla desde la consola si quiere (T-79a 7.4).
+- **Windows, almacén real:** namespace `t79prod` y su caja `t79prod_session`, con uid, nombre y rol de la cuenta de oficina; nunca correo ni contraseña.
+- **Honor:** la variante `.t79` con `t79prod`. Quedó detenida y el teléfono en el inicio.
+- **Chrome:** el perfil aparte del temporal. El origen `localhost:8803` es solo de esta prueba.
 
 **Cuentas, sin correos ni UID:**
 - **Emulador:** 3 sintéticas, 1 de oficina y 2 de muelle.
-- **Producción:** 1 creada por Carlos según 10.7, que será la de oficina. La de muelle y la lista de autorizados, **por confirmar**.
+- **Producción:** 2, una de oficina y una de muelle, cada una en `authorized/{uid}`.
 
 ## 8. Pruebas, analyze y corpus
 
@@ -351,6 +454,8 @@ flutter test tool/t68_corpus_test.dart … tool/t79_corpus_test.dart --dart-defi
 
 **El modo de un solo dispositivo sigue igual.** Los 48 corpus de T-68 a T-78 dan lo mismo que antes: sin cuenta, todo nace `localOnly`.
 
+**Con C9 (9-oct):** solo se agregó `tool/t79_c9_main.dart`; `lib/`, `test/` y `pubspec.*` no cambiaron, así que la suite y los corpus no se repitieron. `flutter analyze --no-pub` sigue en **cero**, con el archivo nuevo.
+
 ## 9. Incidencias y lo que queda anotado
 
 - **La copia del banco.** El clasificador de permisos no dejó copiar el árbol completo al temporal, porque llevaba `android/key.properties`. Copié solo lo necesario. El corpus va como assets del banco, en el temporal, como en T-76 a T-78.
@@ -361,7 +466,10 @@ flutter test tool/t68_corpus_test.dart … tool/t79_corpus_test.dart --dart-defi
   - **Windows, almacén real:** `t79acc` (aceptación de T-78, 291 registros) y `t79run1` (C1, C2, C5 a C7 con el emulador), con su caja `t79run1_session`: uid, nombre y rol de la cuenta sintética del emulador.
   - **Windows, almacén del paquete:** `t79run2`.
   - **Honor:** la variante `.t79`, con `t79acc`, `t79run1` y `t79run2`.
+  - **Desde C9:** `t79prod` en el almacén real de Windows, en la variante `.t79` del Honor y en el Chrome aparte (7.9).
   - El perfil de BUQUE GOLF de Carlos no se tocó.
+- **C9: la variante `.t79` se reinstaló encima** con la compilación de producción. El banco no tiene `android/key.properties`, así que va firmada con la clave de depuración, como antes, y conserva el `usesCleartextTraffic` de su manifiesto del emulador; contra producción no se usa.
+- **C9: la captura de pantalla de Windows** tomaba primero la ventana de Claude, que estaba encima. El guion del corte pasó a capturar la ventana de BayStream con `PrintWindow`.
 
 ## 10. Horas
 
@@ -372,8 +480,9 @@ Hora de Guatemala, del reloj de la máquina. Excluye la pausa del 8-oct, ≈ 21:
 | Lecturas de CLAUDE.md, AGENTS.md, SPRINT-3, T-79a y los informes | antes de 19:30 | no cronometrada |
 | **Aceptación de T-78** (suite, corpus, banco y tres clientes) | 19:30 – 19:49 | **≈ 0.32 h** |
 | **T-79** (código, suite, reglas, corpus, dispositivos contra el emulador e informe) | 19:49 – 21:01 y 01:08 – 01:25 | **≈ 1.5 h** |
+| **C9 y C10** (punto de entrada, tres compilaciones, Windows, Honor, corte de red, Chrome e informe), 9-oct | ≈ 12:20 – 13:20 | **≈ 1.0 h** |
 
-**T-79 lleva ≈ 1.5 h frente a las 10.0 estimadas, sin contar C9 y C10.** Son horas de reloj con compilaciones y dispositivos; el informe se escribió en parte mientras compilaba.
+**T-79 suma ≈ 2.5 h frente a las 10.0 estimadas.** 10.15 contaba ≈ 0.5 h para C9 y C10; tomaron ≈ 1.0, por las tres compilaciones y el corte de red. Son horas de reloj con compilaciones y dispositivos, e incluyen las esperas de Carlos para las contraseñas y la red.
 
 ## 11. Archivos
 
@@ -395,6 +504,7 @@ Hora de Guatemala, del reloj de la máquina. Excluye la pausa del 8-oct, ≈ 21:
 - `tool/t79_corpus_test.dart`
 - `tool/t79_reglas.mjs`
 - `tool/t79_replay_main.dart`
+- `tool/t79_c9_main.dart` (C9, 9-oct)
 - `docs/T79-RESULTADOS.md` (este informe)
 
 **Modificados:**
@@ -419,4 +529,5 @@ Hora de Guatemala, del reloj de la máquina. Excluye la pausa del 8-oct, ≈ 21:
 **Evidencia, fuera del repositorio,** en `%TEMP%\baystream_t79_acceptance\evidence\`:
 - registros de suite, corpus, reglas y compilaciones;
 - `c2-timeline*.txt` y `c8-windows-*.txt`;
-- capturas en `windows/`, `honor/` y `chrome/`.
+- capturas en `windows/`, `honor/` y `chrome/`;
+- **C9:** `c9-*-build.txt`, `windows/c9-*.jpg`, `windows/corte1/` (registro `corte.log` y 239 capturas del corte), `honor/c9-*.png` y `chrome/c9-*.png`.
