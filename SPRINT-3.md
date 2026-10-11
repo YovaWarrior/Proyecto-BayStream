@@ -1421,6 +1421,13 @@ Lo que comprobó:
 - Ningún cliente puede borrar. Solo pueden hacerlo la consola o credenciales de administrador, y en el repo no hay rastro de la CLI de Firebase.
 - **Carlos comprueba en la consola** que los datos siguen completos: 2 documentos en `authorized`, y en «PRUEBA T-79» 2 fuentes y 20 movimientos. También mira a qué hora marca las eliminaciones la gráfica de Uso.
 - **Si falta algo, se detiene todo y se investiga antes de T-80.** Si no falta nada, se anota como observación del tablero de uso.
+- **Resultado de la revisión (11-oct).**
+  - **Los datos están completos.** Carlos lo comprobó en la consola: 2 documentos en `authorized`, y en «PRUEBA T-79» 2 fuentes y 20 movimientos.
+  - **Las horas, en Cloud Monitoring** (Firestore Instance → Document Deletes, hora de Guatemala):
+    - ≈ 48 borrados el **9-oct a las 9:25 a.m.**, mientras Carlos creaba Firestore y la colección `authorized` en la consola. Ningún agente usaba producción a esa hora: C9 empezó a las 12:20;
+    - ≈ 2 más a la **1:10 p.m.**, al final de C9. Con eso la pestaña Uso suma 50.
+  - **Ningún documento falta**, y las reglas no dejan borrar a ningún cliente. Se anota como observación, y T-80 sigue.
+  - **Para saber quién borra, si vuelve a pasar:** activar los registros de auditoría de escritura de datos de Firestore en IAM. Es un ajuste de Carlos, y opcional.
 
 **Otras decisiones.**
 - **Dos textos pasan a T-97:** el punto doble al final de un rechazo, y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web.
