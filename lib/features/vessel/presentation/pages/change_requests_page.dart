@@ -190,10 +190,17 @@ Future<void> showChangeRequest(BuildContext context, VesselVoyage voyage,
     Navigator.of(context).push<void>(MaterialPageRoute(
         builder: (_) => _RequestForm(voyage: voyage, target: target)));
 
+Future<void> showOfficeMove(BuildContext context, VesselVoyage voyage,
+        {required String target}) =>
+    Navigator.of(context).push<void>(MaterialPageRoute(
+        builder: (_) =>
+            _RequestForm(voyage: voyage, target: target, direct: true)));
+
 class _RequestForm extends ConsumerStatefulWidget {
   final VesselVoyage voyage;
   final String? target;
-  const _RequestForm({required this.voyage, this.target});
+  final bool direct;
+  const _RequestForm({required this.voyage, this.target, this.direct = false});
   @override
   ConsumerState<_RequestForm> createState() => _RequestFormState();
 }
@@ -205,8 +212,18 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
   ];
   final destinations = [TextEditingController(), TextEditingController()];
   final reason = TextEditingController();
-  bool swap = true, busy = false;
+  late bool swap = !widget.direct;
+  bool busy = false;
   String? error;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.direct) {
+      queries.removeLast().dispose();
+      destinations.removeLast().dispose();
+    }
+  }
+
   @override
   void dispose() {
     for (final c in [...queries, ...destinations, reason]) {
@@ -239,12 +256,8 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
     }
     return [
       for (var i = 0; i < items.length; i++)
-        PositionChange(
-            items[i]!.key,
-            items[i]!.plannedPosition,
-            destinations[i]
-                .text
-                .replaceAll(RegExp(r'[\s-]'), ''))
+        PositionChange(items[i]!.key, items[i]!.plannedPosition,
+            destinations[i].text.replaceAll(RegExp(r'[\s-]'), ''))
     ];
   }
 
@@ -261,8 +274,11 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
       if (operation == null || data == null) {
         throw StateError('La operación no está disponible.');
       }
-      final draft = const ChangeRequests()
-          .request(operation, actor, data, changes(data), reason.text);
+      final draft = widget.direct
+          ? const ChangeRequests()
+              .move(operation, actor, data, changes(data), reason.text)
+          : const ChangeRequests()
+              .request(operation, actor, data, changes(data), reason.text);
       (await repository.append(draft, actor!.author))
           .fold((failure) => throw StateError(failure.message), (_) {});
       if (mounted) Navigator.pop(context);
@@ -281,10 +297,13 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
     final data = ref.watch(loadingOperationProvider(widget.voyage)).value;
     final batch = data == null ? <PositionChange>[] : changes(data);
     return Scaffold(
-        appBar: AppBar(title: const Text('Pedir cambio')),
+        appBar: AppBar(
+            title:
+                Text(widget.direct ? 'Mover desde oficina' : 'Pedir cambio')),
         body: ListView(padding: const EdgeInsets.all(16), children: [
-          const Text(
-              'La oficina revisará la solicitud. El plan cambia cuando la apruebe.'),
+          Text(widget.direct
+              ? 'Cambia el plan de carga pendiente. El muelle verá el cambio al sincronizar.'
+              : 'La oficina revisará la solicitud. El plan cambia cuando la apruebe.'),
           SwitchListTile(
               key: const ValueKey('change-swap'),
               contentPadding: EdgeInsets.zero,
@@ -347,6 +366,12 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
             ]),
           for (final c in batch)
             Text('${_position(c.from)} → ${_position(c.to)}'),
+          if (widget.direct &&
+              data != null &&
+              batch.isNotEmpty &&
+              const ChangeRequests().review(data, batch) != null)
+            Text(const ChangeRequests().review(data, batch)!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
           TextField(
               key: const ValueKey('change-reason'),
               controller: reason,
@@ -370,7 +395,11 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
                           null
                   ? null
                   : save,
-              child: Text(busy ? 'Guardando…' : 'Enviar solicitud')),
+              child: Text(busy
+                  ? 'Guardando…'
+                  : widget.direct
+                      ? 'Confirmar movimiento'
+                      : 'Enviar solicitud')),
         ]));
   }
 }

@@ -11,6 +11,7 @@ import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import 'discharge_controls.dart';
+import 'office_plan_controls.dart';
 
 String loadingPosition(String value) => value.length == 7
     ? '${value.substring(0, 3)}-${value.substring(3, 5)}-${value.substring(5)}'
@@ -26,6 +27,10 @@ Future<void> onLoadingContainerTap(BuildContext context, WidgetRef ref,
   }
   final row = data?.list?.byContainer(container.containerId);
   if (row == null) {
+    if (ref.read(operatorProvider).value?.role == OperatorRole.office) {
+      await showLoadingDetails(context, voyage, 'C:${container.containerId}');
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content:
             Text('Este contenedor no tiene OR en el listado de agencia.')));
@@ -105,7 +110,10 @@ Future<void> openLoadingRow(
   final data = ref.read(loadingOperationProvider(voyage)).value;
   if (data == null) return;
   final numbered = data.numbered(row);
-  final key = numbered?.key ?? (slot == null ? null : data.plan.loadingItemAt(slot.stowagePosition.toIsoCode())?.key);
+  final key = numbered?.key ??
+      (slot == null
+          ? null
+          : data.plan.loadingItemAt(slot.stowagePosition.toIsoCode())?.key);
   if (key != null && data.movementOf(key) != null) {
     await showLoadingDetails(context, voyage, key);
     return;
@@ -154,8 +162,8 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
             .toList() ??
         [];
     if (slot != null) {
-      rows.sort((a, b) => (_sameGroup(slot, a) ? 0 : 1)
-          .compareTo(_sameGroup(slot, b) ? 0 : 1));
+      rows.sort((a, b) =>
+          (_sameGroup(slot, a) ? 0 : 1).compareTo(_sameGroup(slot, b) ? 0 : 1));
     }
     return SafeArea(
         child: SizedBox(
@@ -315,8 +323,8 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
       }
       final data = ref.read(loadingOperationProvider(widget.voyage)).value!;
       final at = target(data) ?? '';
-      final occupant = data.check(row, at, correcting: widget.correcting)
-          .dischargeFirst;
+      final occupant =
+          data.check(row, at, correcting: widget.correcting).dischargeFirst;
       // Se arma antes de escribir: si la carga no pasa, no queda la descarga.
       final draft = data.draft(row, at,
           operatedAt: operatedAt,
@@ -353,8 +361,8 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                   var error = await annulMovement(repository,
                       result.record!.movement, markedByMistake, author);
                   if (error == null && discharged != null) {
-                    error = await annulMovement(repository,
-                        discharged.movement, markedByMistake, author);
+                    error = await annulMovement(repository, discharged.movement,
+                        markedByMistake, author);
                   }
                   if (error != null) {
                     messenger.showSnackBar(SnackBar(content: Text(error)));
@@ -462,34 +470,34 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                     KeyedSubtree(
                         key: ValueKey('loading-slots-$otherGroups'),
                         child: DropdownButtonFormField<String>(
-                        key: ValueKey('loading-position-${row.order}'),
-                        isExpanded: true,
-                        initialValue: validPosition,
-                        decoration:
-                            const InputDecoration(labelText: 'Celda reservada'),
-                        items: [
-                          for (final slot in slots)
-                            DropdownMenuItem(
-                                value: slot.stowagePosition.toIsoCode(),
-                                child: Text(
-                                    '${loadingPosition(slot.stowagePosition.toIsoCode())}'
-                                    '${_sameGroup(slot, row) ? '' : ' · otro grupo'}'
-                                    '${data?.state.occupancy.containsKey(slot.stowagePosition.toIsoCode()) == true ? ' · ocupada, baja aquí' : ''}'))
-                        ],
-                        onChanged: busy
-                            ? null
-                            : (value) {
-                                setState(() => position = value);
-                                if (value != null && data != null) {
-                                  ref
-                                      .read(selectedBayProvider.notifier)
-                                      .select(data.bayOf(value));
-                                  ref
-                                      .read(
-                                          highlightedContainerProvider.notifier)
-                                      .highlight('R:$value');
-                                }
-                              })),
+                            key: ValueKey('loading-position-${row.order}'),
+                            isExpanded: true,
+                            initialValue: validPosition,
+                            decoration: const InputDecoration(
+                                labelText: 'Celda reservada'),
+                            items: [
+                              for (final slot in slots)
+                                DropdownMenuItem(
+                                    value: slot.stowagePosition.toIsoCode(),
+                                    child: Text(
+                                        '${loadingPosition(slot.stowagePosition.toIsoCode())}'
+                                        '${_sameGroup(slot, row) ? '' : ' · otro grupo'}'
+                                        '${data?.state.occupancy.containsKey(slot.stowagePosition.toIsoCode()) == true ? ' · ocupada, baja aquí' : ''}'))
+                            ],
+                            onChanged: busy
+                                ? null
+                                : (value) {
+                                    setState(() => position = value);
+                                    if (value != null && data != null) {
+                                      ref
+                                          .read(selectedBayProvider.notifier)
+                                          .select(data.bayOf(value));
+                                      ref
+                                          .read(highlightedContainerProvider
+                                              .notifier)
+                                          .highlight('R:$value');
+                                    }
+                                  })),
                     SwitchListTile(
                         key: const ValueKey('loading-other-groups'),
                         contentPadding: EdgeInsets.zero,
@@ -500,7 +508,8 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                                   otherGroups = value;
                                   final chosen = position == null
                                       ? null
-                                      : data?.plan.loadingItemAt(position!)
+                                      : data?.plan
+                                          .loadingItemAt(position!)
                                           ?.reservedSlot;
                                   if (!value &&
                                       chosen != null &&
@@ -567,15 +576,22 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                         key: const ValueKey('loading-error'),
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.error)),
+                  if (widget.correcting == null && numbered != null)
+                    OfficePlanActions(
+                        voyage: widget.voyage, itemKey: numbered.key),
                 ]))),
         actions: [
           if (numbered != null &&
               ref.watch(operatorProvider).value?.authorized == true &&
               ref.watch(operatorProvider).value?.role == OperatorRole.dock &&
               ref.watch(activeOperationProvider).value?.published == true)
-            TextButton(key: const ValueKey('request-change-loading-detail'),
-              onPressed: busy ? null : () => showChangeRequest(context, widget.voyage, target: numbered.key),
-              child: const Text('Pedir cambio')),
+            TextButton(
+                key: const ValueKey('request-change-loading-detail'),
+                onPressed: busy
+                    ? null
+                    : () => showChangeRequest(context, widget.voyage,
+                        target: numbered.key),
+                child: const Text('Pedir cambio')),
           TextButton(
               onPressed: busy ? null : () => Navigator.pop(context),
               child: const Text('Cancelar')),
@@ -641,7 +657,9 @@ class _LoadCheckPanel extends StatelessWidget {
         line(const ValueKey('load-stack'), Icons.scale_outlined,
             scheme.onSurfaceVariant, stack.message),
       if (check.issues.isEmpty && check.dischargeFirst == null)
-        line(const ValueKey('load-clean'), Icons.check_circle_outline,
+        line(
+            const ValueKey('load-clean'),
+            Icons.check_circle_outline,
             scheme.onSurfaceVariant,
             'Revisado: tipo, celda y grupo coinciden con el plan.'),
     ]);
@@ -670,7 +688,10 @@ Future<void> showLoadingDetails(
                           children: [
                         Text(state?.state == ItemState.moved
                             ? 'Cargado'
-                            : 'Pendiente'),
+                            : state?.state == ItemState.cancelled
+                                ? 'Cancelado'
+                                : 'Pendiente'),
+                        OfficePlanActions(voyage: voyage, itemKey: key),
                         if (state?.plannedPosition != null)
                           Text(
                               'Celda: ${loadingPosition(state!.plannedPosition!)}'),
@@ -696,11 +717,15 @@ Future<void> showLoadingDetails(
                       ])),
                   actions: [
                     if (ref.watch(operatorProvider).value?.authorized == true &&
-                        ref.watch(operatorProvider).value?.role == OperatorRole.dock &&
-                        ref.watch(activeOperationProvider).value?.published == true)
-                      TextButton(key: const ValueKey('request-change-detail'),
-                        onPressed: () => showChangeRequest(context, voyage, target: key),
-                        child: const Text('Pedir cambio')),
+                        ref.watch(operatorProvider).value?.role ==
+                            OperatorRole.dock &&
+                        ref.watch(activeOperationProvider).value?.published ==
+                            true)
+                      TextButton(
+                          key: const ValueKey('request-change-detail'),
+                          onPressed: () =>
+                              showChangeRequest(context, voyage, target: key),
+                          child: const Text('Pedir cambio')),
                     if (movement != null &&
                         (movement.type == MovementType.loadFull ||
                             movement.type == MovementType.assignEmpty)) ...[
@@ -726,7 +751,8 @@ Future<void> showLoadingDetails(
                             }
                           },
                           child: Text(movement.corrects == null
-                              ? 'Deshacer carga' : 'Deshacer corrección')),
+                              ? 'Deshacer carga'
+                              : 'Deshacer corrección')),
                       if (row != null)
                         TextButton(
                             key: const ValueKey('loading-correct'),
@@ -807,9 +833,11 @@ class LoadingCell extends StatelessWidget {
                     Icon(
                         conflict
                             ? Icons.warning_amber
-                            : loaded
-                                ? Icons.check_circle_outline
-                                : Icons.arrow_upward,
+                            : status?.state == ItemState.cancelled
+                                ? Icons.block
+                                : loaded
+                                    ? Icons.check_circle_outline
+                                    : Icons.arrow_upward,
                         size: 12,
                         color: foreground),
                     Text(label,

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/entities.dart';
+import 'office_plan_controls.dart';
 
 /// Detalle de la posición reservada del plan, sin número de contenedor.
-void showReservedSlotDetails(BuildContext context, ReservedSlot slot) {
+void showReservedSlotDetails(BuildContext context, ReservedSlot slot,
+    {VesselVoyage? voyage}) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -116,6 +118,8 @@ void showReservedSlotDetails(BuildContext context, ReservedSlot slot) {
                 ],
               ],
               const SizedBox(height: 24),
+              if (voyage?.portOfCall != null)
+                OfficePlanActions(voyage: voyage!, itemKey: slot.key),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(

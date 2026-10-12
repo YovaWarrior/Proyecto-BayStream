@@ -13,6 +13,8 @@ import 'discharge_controls.dart';
 import 'loading_plan_controls.dart';
 import 'loading_controls.dart';
 import 'reserved_slot_details.dart';
+import 'office_plan_controls.dart';
+import '../providers/sync_providers.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
 /// Permite navegar entre bahías y ver la disposición de contenedores
@@ -53,7 +55,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
 
   @override
   Widget build(BuildContext context) {
-    final loading = _mode == BayPlanMode.loading && widget.voyage.portOfCall != null
+    final loading = (_mode == BayPlanMode.loading || _mode == BayPlanMode.order) && widget.voyage.portOfCall != null
         ? ref.watch(loadingOperationProvider(widget.voyage)).value : null;
     final displayedVoyage = loading?.loading ?? widget.voyage;
     final sortedBayNumbers = displayedVoyage.bays.keys.toList()..sort();
@@ -131,13 +133,14 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                       reservedNeighbors[_selectedBayNumber] ?? const {},
                   // En el modo Descarga, una reserva no se opera.
                   onReservedSlotTap: loading != null
-                      ? (slot) => loading.movementOf(loading.plan.loadingItemAt(slot.stowagePosition.toIsoCode())!.key) != null
+                      ? (slot) => ref.read(operatorProvider).value?.role == OperatorRole.office ||
+                          loading.movementOf(loading.plan.loadingItemAt(slot.stowagePosition.toIsoCode())!.key) != null
                           ? showLoadingDetails(context, widget.voyage, loading.plan.loadingItemAt(slot.stowagePosition.toIsoCode())!.key)
                           : chooseLoadingRow(context, ref, widget.voyage, empties: true,
                               selectedBay: _selectedBayNumber, slot: slot)
                       : dischargeMode
                       ? (_) {}
-                      : (slot) => showReservedSlotDetails(context, slot),
+                      : (slot) => showReservedSlotDetails(context, slot, voyage: widget.voyage),
                   highlightedContainerId: highlightedContainerId,
                   activeTypeFilter: activeTypeFilter,
                   isInTransit: displayedVoyage.isInTransit,
@@ -479,6 +482,8 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               if (offersDischarge(widget.voyage))
                 DischargeDetailSection(
                     voyage: widget.voyage, container: container),
+              if (widget.voyage.portOfCall != null)
+                OfficePlanActions(voyage: widget.voyage, itemKey: 'C:${container.containerId}'),
 
               const SizedBox(height: 24),
               SizedBox(

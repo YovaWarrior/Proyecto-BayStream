@@ -17,8 +17,16 @@ class LoadingOperation {
   final LoadingPlanProgress progress;
   final DischargeProgress discharge;
 
-  LoadingOperation._(this.operationId, this.loading, this.plan, this._publishedPlan, this.list,
-      this.movements, this.state, this.progress, this.discharge);
+  LoadingOperation._(
+      this.operationId,
+      this.loading,
+      this.plan,
+      this._publishedPlan,
+      this.list,
+      this.movements,
+      this.state,
+      this.progress,
+      this.discharge);
 
   factory LoadingOperation.build({
     String? operationId,
@@ -40,10 +48,14 @@ class LoadingOperation {
     // también en otra bahía, con sus sombras de 40 pies y sus reservas.
     final projected = VesselVoyage.fromJson({
       ...loading.toJson(includeBays: false),
-      'containers': [for (final c in loading.containers)
-        (effective.loading['C:${c.containerId}']?.container ?? c).toJson()],
-      'reservedSlots': [for (final s in loading.reservedSlots)
-        (effective.loading[s.key]?.reservedSlot ?? s).toJson()],
+      'containers': [
+        for (final c in loading.containers)
+          (effective.loading['C:${c.containerId}']?.container ?? c).toJson()
+      ],
+      'reservedSlots': [
+        for (final s in loading.reservedSlots)
+          (effective.loading[s.key]?.reservedSlot ?? s).toJson()
+      ],
     });
     return LoadingOperation._(
         operationId,
@@ -86,8 +98,8 @@ class LoadingOperation {
     while (previous != null && replaced.add(previous.id)) {
       previous = previous.type.canCorrect ? byId[previous.corrects] : null;
     }
-    return const OperationStateDeriver().derive(
-        _publishedPlan, movements.where((movement) => !replaced.contains(movement.id)));
+    return const OperationStateDeriver().derive(_publishedPlan,
+        movements.where((movement) => !replaced.contains(movement.id)));
   }
 
   bool available(ExportListRow row, {Movement? correcting}) {
@@ -251,6 +263,11 @@ class LoadingOperation {
           'La corrección exige un movimiento vigente y un motivo.');
     }
     if (!available(row, correcting: correcting)) {
+      if (_before(correcting)['C:${row.containerId}']?.state ==
+          ItemState.cancelled) {
+        throw StateError(
+            'Cancelado por la oficina. Debe deshacer la cancelación antes de cargar.');
+      }
       throw StateError('El contenedor ya está operado.');
     }
     final item = numbered(row);
@@ -260,8 +277,7 @@ class LoadingOperation {
           reservation!.role != PlanRole.load) {
         throw StateError('Un vacío se asigna a una celda reservada del plan.');
       }
-      if (_before(correcting)[reservation.key]?.state ==
-          ItemState.cancelled) {
+      if (_before(correcting)[reservation.key]?.state == ItemState.cancelled) {
         throw StateError('La reserva está cancelada.');
       }
     }
@@ -286,7 +302,10 @@ class LoadingOperation {
           reason: hasReason ? reason!.trim() : null);
     }
     return MovementDraft.assignEmpty(
-        operationId!, plan.loadingItemAt(position)!.key.substring(2), row.containerId, row.tareKg,
+        operationId!,
+        plan.loadingItemAt(position)!.key.substring(2),
+        row.containerId,
+        row.tareKg,
         order: row.order,
         seal: seal,
         operatedAt: operatedAt,

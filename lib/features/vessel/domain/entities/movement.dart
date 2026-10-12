@@ -39,7 +39,10 @@ enum MovementType {
 
   /// Tipos que admiten `payload.corrects` (T-79a 2.4).
   bool get canCorrect =>
-      this == discharge || this == loadFull || this == assignEmpty || this == hatchCover;
+      this == discharge ||
+      this == loadFull ||
+      this == assignEmpty ||
+      this == hatchCover;
 }
 
 /// Rol de quien registra (T-80 lo exige con reglas; aquí solo se registra).
@@ -60,7 +63,8 @@ class MovementAuthor extends Equatable {
   @override
   List<Object?> get props => [uid, name, role];
 
-  Map<String, dynamic> toJson() => {'uid': uid, 'name': name, 'role': role.name};
+  Map<String, dynamic> toJson() =>
+      {'uid': uid, 'name': name, 'role': role.name};
 
   factory MovementAuthor.fromJson(Map<String, dynamic> json) => MovementAuthor(
         uid: json['uid'] as String?,
@@ -164,7 +168,8 @@ class Movement extends Equatable {
         'deviceId': deviceId,
         'sequence': sequence,
         'createdAt': createdAt.toUtc().toIso8601String(),
-        if (receivedAt != null) 'receivedAt': receivedAt!.toUtc().toIso8601String(),
+        if (receivedAt != null)
+          'receivedAt': receivedAt!.toUtc().toIso8601String(),
       };
 
   factory Movement.fromJson(Map<String, dynamic> json) {
@@ -178,7 +183,8 @@ class Movement extends Equatable {
       type: type,
       target: json['target'] as String?,
       payload: Map<String, Object?>.from(json['payload'] as Map? ?? const {}),
-      author: MovementAuthor.fromJson(Map<String, dynamic>.from(json['author'] as Map)),
+      author: MovementAuthor.fromJson(
+          Map<String, dynamic>.from(json['author'] as Map)),
       deviceId: json['deviceId'] as String,
       sequence: json['sequence'] as int,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -197,15 +203,19 @@ class MovementDraft extends Equatable {
   final String? target;
   final Map<String, Object?> payload;
 
-  MovementDraft._(this.operationId, this.type, this.target, Map<String, Object?> payload)
+  MovementDraft._(
+      this.operationId, this.type, this.target, Map<String, Object?> payload)
       : payload = Map.unmodifiable(
             Map.fromEntries(payload.entries.where((e) => e.value != null)));
 
   /// T-75: un contenedor del plano de llegada baja en esta escala.
   /// `restow` marca la re-estiba de un contenedor que no descarga aquí.
-  factory MovementDraft.discharge(String operationId, String containerId,
-          String position,
-          {bool restow = false, String? reason, String? corrects, DateTime? operatedAt}) =>
+  factory MovementDraft.discharge(
+          String operationId, String containerId, String position,
+          {bool restow = false,
+          String? reason,
+          String? corrects,
+          DateTime? operatedAt}) =>
       MovementDraft._(operationId, MovementType.discharge, 'C:$containerId', {
         'position': position,
         'restow': restow,
@@ -215,9 +225,13 @@ class MovementDraft extends Equatable {
       });
 
   /// T-76: se carga un contenedor que el plan trae con número.
-  factory MovementDraft.loadFull(String operationId, String containerId,
-          String position,
-          {int? order, String? seal, String? reason, String? corrects, DateTime? operatedAt}) =>
+  factory MovementDraft.loadFull(
+          String operationId, String containerId, String position,
+          {int? order,
+          String? seal,
+          String? reason,
+          String? corrects,
+          DateTime? operatedAt}) =>
       MovementDraft._(operationId, MovementType.loadFull, 'C:$containerId', {
         'position': position,
         'order': order,
@@ -230,8 +244,13 @@ class MovementDraft extends Equatable {
   /// T-76: un vacío del listado ocupa una celda reservada del plan.
   factory MovementDraft.assignEmpty(String operationId, String reservedPosition,
           String containerId, double tareKg,
-          {int? order, String? seal, String? reason, String? corrects, DateTime? operatedAt}) =>
-      MovementDraft._(operationId, MovementType.assignEmpty, 'R:$reservedPosition', {
+          {int? order,
+          String? seal,
+          String? reason,
+          String? corrects,
+          DateTime? operatedAt}) =>
+      MovementDraft._(
+          operationId, MovementType.assignEmpty, 'R:$reservedPosition', {
         'container': containerId,
         'tareKg': tareKg,
         'order': order,
@@ -242,36 +261,49 @@ class MovementDraft extends Equatable {
       });
 
   /// Deshace un movimiento anterior. El motivo es obligatorio.
-  factory MovementDraft.annul(String operationId, String movementId, String reason,
+  factory MovementDraft.annul(
+          String operationId, String movementId, String reason,
           {String? target}) =>
       MovementDraft._(operationId, MovementType.annul, target,
           {'annuls': movementId, 'reason': reason});
 
   /// T-81: un contenedor o reserva sale del plan de esta escala.
-  factory MovementDraft.cancelItem(String operationId, String target, String reason) =>
-      MovementDraft._(operationId, MovementType.cancelItem, target, {'reason': reason});
+  factory MovementDraft.cancelItem(
+          String operationId, String target, String reason) =>
+      MovementDraft._(operationId, MovementType.cancelItem, target,
+          {'reason': reason.trim()});
 
-  factory MovementDraft.requestChange(String operationId,
-          List<PositionChange> changes, String reason) =>
-      MovementDraft._(operationId, MovementType.requestChange, null,
-          {'changes': changes.map((c) => c.toJson()).toList(), 'reason': reason.trim()});
+  /// T-81: la oficina cambia el plan directamente, sin una solicitud.
+  factory MovementDraft.changePosition(
+          String operationId, List<PositionChange> changes, String reason) =>
+      MovementDraft._(operationId, MovementType.changePosition, null, {
+        'changes': changes.map((c) => c.toJson()).toList(),
+        'reason': reason.trim()
+      });
 
-  factory MovementDraft.approveChange(String operationId, Movement request,
-          String reason) =>
+  factory MovementDraft.requestChange(
+          String operationId, List<PositionChange> changes, String reason) =>
+      MovementDraft._(operationId, MovementType.requestChange, null, {
+        'changes': changes.map((c) => c.toJson()).toList(),
+        'reason': reason.trim()
+      });
+
+  factory MovementDraft.approveChange(
+          String operationId, Movement request, String reason) =>
       MovementDraft._(operationId, MovementType.changePosition, null, {
         'changes': request.payload['changes'],
         'request': request.id,
         'reason': reason.trim(),
       });
 
-  factory MovementDraft.rejectChange(String operationId, String request,
-          String reason) =>
+  factory MovementDraft.rejectChange(
+          String operationId, String request, String reason) =>
       MovementDraft._(operationId, MovementType.rejectChange, null,
           {'request': request, 'reason': reason.trim()});
 
   /// Para los tipos que se derivan después (T-80, T-84) y para importar.
-  factory MovementDraft.raw(String operationId, MovementType type, String? target,
-          Map<String, Object?> payload) =>
+  factory MovementDraft.raw(String operationId, MovementType type,
+          String? target, Map<String, Object?> payload) =>
       MovementDraft._(operationId, type, target, payload);
 
   static final _position = RegExp(r'^[0-9]{6,7}$');
@@ -281,7 +313,8 @@ class MovementDraft extends Equatable {
   /// Mensaje del primer problema de forma, o null si el borrador es válido.
   /// Las mismas comprobaciones que las reglas propuestas de T-79a (5.2).
   String? validate() {
-    bool hasReason() => (payload['reason'] as String?)?.trim().isNotEmpty ?? false;
+    bool hasReason() =>
+        (payload['reason'] as String?)?.trim().isNotEmpty ?? false;
     final corrects = payload['corrects'];
     if (corrects != null && !type.canCorrect) {
       return 'Este tipo de movimiento no admite corrección.';
@@ -289,26 +322,37 @@ class MovementDraft extends Equatable {
     switch (type) {
       case MovementType.discharge:
       case MovementType.loadFull:
-        if (!_container.hasMatch(target ?? '')) return 'Falta el número de contenedor.';
+        if (!_container.hasMatch(target ?? '')) {
+          return 'Falta el número de contenedor.';
+        }
         if (!_position.hasMatch(payload['position'] as String? ?? '')) {
           return 'La posición debe tener 6 o 7 cifras (BBBRRTT).';
         }
       case MovementType.assignEmpty:
-        if (!_reserved.hasMatch(target ?? '')) return 'Falta la celda reservada.';
+        if (!_reserved.hasMatch(target ?? '')) {
+          return 'Falta la celda reservada.';
+        }
         final container = payload['container'] as String? ?? '';
         if (!RegExp(r'^[A-Z0-9]{1,17}$').hasMatch(container)) {
           return 'Falta el número del vacío.';
         }
         final tare = payload['tareKg'];
-        if (tare is! num || tare <= 0 || tare >= 15000) return 'Tara fuera de rango.';
+        if (tare is! num || tare <= 0 || tare >= 15000) {
+          return 'Tara fuera de rango.';
+        }
       case MovementType.annul:
-        if ((payload['annuls'] as String?)?.isEmpty ?? true) return 'Falta el movimiento a anular.';
+        if ((payload['annuls'] as String?)?.isEmpty ?? true) {
+          return 'Falta el movimiento a anular.';
+        }
         if (!hasReason()) return 'Anular exige un motivo.';
       case MovementType.cancelItem:
-        if (!_container.hasMatch(target ?? '') && !_reserved.hasMatch(target ?? '')) {
+        if (!_container.hasMatch(target ?? '') &&
+            !_reserved.hasMatch(target ?? '')) {
           return 'Falta el contenedor o la reserva a cancelar.';
         }
-        if (!hasReason()) return 'Cancelar exige un motivo.';
+        if (!hasReason() || (payload['reason'] as String).length > 300) {
+          return 'Cancelar exige un motivo de hasta 300 caracteres.';
+        }
       case MovementType.requestChange:
       case MovementType.changePosition:
         if (target != null) return 'Un cambio lleva sus objetos en la lista.';
@@ -316,9 +360,12 @@ class MovementDraft extends Equatable {
           return 'Escribe un motivo de hasta 300 caracteres.';
         }
         final changes = PositionChange.readAll(payload['changes']);
-        if (changes == null) return 'Indica de uno a cuatro cambios válidos, sin repetir objetos ni destinos.';
+        if (changes == null) {
+          return 'Indica de uno a cuatro cambios válidos, sin repetir objetos ni destinos.';
+        }
       case MovementType.rejectChange:
-        if (target != null || payload['request'] is! String ||
+        if (target != null ||
+            payload['request'] is! String ||
             (payload['request'] as String).isEmpty) {
           return 'Falta la solicitud.';
         }
@@ -352,14 +399,19 @@ class PositionChange extends Equatable {
     for (final entry in value) {
       if (entry is! Map || entry.length != 3) return null;
       final target = entry['target'], from = entry['from'], to = entry['to'];
-      if (target is! String || from is! String || to is! String ||
+      if (target is! String ||
+          from is! String ||
+          to is! String ||
           !RegExp(r'^(C:[A-Z0-9]{1,17}|R:[0-9]{6,7})$').hasMatch(target) ||
           !MovementDraft._position.hasMatch(from) ||
-          !MovementDraft._position.hasMatch(to) || from.padLeft(7, '0') == to.padLeft(7, '0') ||
-          !targets.add(target) || !destinations.add(to.padLeft(7, '0'))) {
+          !MovementDraft._position.hasMatch(to) ||
+          from.padLeft(7, '0') == to.padLeft(7, '0') ||
+          !targets.add(target) ||
+          !destinations.add(to.padLeft(7, '0'))) {
         return null;
       }
-      result.add(PositionChange(target, from.padLeft(7, '0'), to.padLeft(7, '0')));
+      result.add(
+          PositionChange(target, from.padLeft(7, '0'), to.padLeft(7, '0')));
     }
     return List.unmodifiable(result);
   }

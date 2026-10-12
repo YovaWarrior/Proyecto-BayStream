@@ -5,6 +5,9 @@ import '../entities/entities.dart';
 
 /// T-77 · Lo que la revisión encuentra antes de confirmar una carga.
 enum LoadIssueKind {
+  /// T-81: la oficina retiró el objeto del plan.
+  cancelled,
+
   /// Un 40 pies en una posición de 20, o al revés. No se registra.
   size,
 
@@ -34,7 +37,9 @@ class LoadIssue extends Equatable {
 
   /// Lo físicamente imposible no se registra, ni con motivo.
   bool get blocks =>
-      kind == LoadIssueKind.size || kind == LoadIssueKind.unknownCell;
+      kind == LoadIssueKind.size ||
+      kind == LoadIssueKind.unknownCell ||
+      kind == LoadIssueKind.cancelled;
 
   @override
   List<Object?> get props => [kind, message];
@@ -166,8 +171,15 @@ class LoadValidator {
       issues.add(LoadIssue(LoadIssueKind.unknownCell, missing));
       return LoadCheck(position: position, issues: issues);
     }
-    final targetKey = numbered?.key ?? plan.loadingItemAt(position)?.key ?? 'R:$position';
+    final targetKey =
+        numbered?.key ?? plan.loadingItemAt(position)?.key ?? 'R:$position';
     final reservation = numbered == null ? plan.loading[targetKey] : null;
+    if (state[targetKey]?.state == ItemState.cancelled) {
+      return LoadCheck(position: position, issues: const [
+        LoadIssue(LoadIssueKind.cancelled,
+            'Cancelado por la oficina. Debe deshacer la cancelación antes de cargar.')
+      ]);
+    }
     final type = row.type;
     final length = nominalLength(type);
     final slotLength = coordinate.bay.isOdd ? 20 : 40;
@@ -277,8 +289,8 @@ class LoadValidator {
     return null;
   }
 
-  StackWeightCheck _stack(IsoCoordinate c, ExportListRow row,
-      PlanItem? numbered, String targetKey,
+  StackWeightCheck _stack(
+      IsoCoordinate c, ExportListRow row, PlanItem? numbered, String targetKey,
       {String? leaving}) {
     final deck = plan.isDeckTier(c.tier);
     var known = 0.0;
@@ -347,9 +359,10 @@ class LoadValidator {
     return order != null ? 'OR $order' : id ?? 'una reserva';
   }
 
-  String _occupantName(ItemStatus item) => item.kind == PlanItemKind.reservedSlot
-      ? 'el vacío ${item.assignedContainer}'
-      : item.key.substring(2);
+  String _occupantName(ItemStatus item) =>
+      item.kind == PlanItemKind.reservedSlot
+          ? 'el vacío ${item.assignedContainer}'
+          : item.key.substring(2);
 
   static String _shown(String value) => value.length == 7
       ? '${value.substring(0, 3)}-${value.substring(3, 5)}-${value.substring(5)}'
