@@ -796,13 +796,56 @@ y cualquier cambio de reglas. La generación es local y no escribe en Firestore.
 - [ ] **Calidad:** suite ≥ 508, analyze 0, corpus completo y reglas sin cambio (mismo
       SHA).
 
+#### T-86 · La versión por la cabecera: toda la familia 2.x se lee, el resto se rechaza con mensaje claro · 3.0 h · Codex (ficha completa, 11-oct)
+
+**Para qué.** Hoy el lector no mira la versión: abre cualquier archivo que estructure
+como BAPLIE, y una 1.x o una 3.x puede entrar a medias y confundir. T-82 le puso el
+control al escritor —admite SMDG20, SMDG21 y SMDG22, y rechaza lo demás—; T-86 le pone
+el mismo criterio a la entrada.
+
+**Qué construye.**
+
+1. **Detectar la versión en la cabecera, antes de parsear contenedores**: el `UNH` con
+   su versión, su liberación y su código de asociación (S009). La familia 2.x es la que
+   ya admite el escritor de T-82: **SMDG20, SMDG21 y SMDG22**
+   (`departure_baplie_writer.dart`).
+2. **Toda la familia 2.x se lee igual que hoy.** Las nueve fuentes 2.x del corpus
+   (A01–A08 salvo A06, más las variantes) siguen dando las mismas cifras de conteos y
+   pesos. SMDG21 no tiene espécimen en el corpus y se prueba con fixture sintético.
+3. **Lo demás se rechaza con un mensaje claro, antes de parsear.** El aviso dice el
+   archivo, la versión que trae y que la app lee la familia 2.x; no es un error genérico
+   de parseo. **A06 del corpus es SMDG15 (1.x) y pasa a rechazarse**: es el espécimen
+   real del rechazo. Las pruebas y los corpus que hoy la leen se reescriben para esperar
+   ese rechazo, y el informe dice cuáles.
+4. **Casos sintéticos, TSTU:** una cabecera 3.x y una sin `UNH` reconocible se rechazan
+   con el mismo mensaje. La 3.1 real la trae T-87, que necesita un archivo real.
+5. **Sin tocar:** el escritor de T-82 (ya hace su propio control), la persistencia, las
+   reglas y `lib/main.dart`.
+
+**Fuera de alcance:** leer BAPLIE 3.1 (T-87), admitir asociaciones 2.x más allá de las
+tres dichas sin un espécimen que las justifique, y cualquier cambio de reglas o
+Firebase.
+
+**Terminada cuando:**
+
+- [ ] Las fuentes 2.x del corpus leen igual que hoy: las mismas cifras de conteos y
+      pesos que los informes de T-66 y T-68, sin diferencias.
+- [ ] A06 (SMDG15) se rechaza con el mensaje claro antes de parsear; las pruebas y
+      corpus que la leían quedan reescritas y el informe las lista.
+- [ ] Los fixtures sintéticos: una cabecera 3.x y una sin `UNH` reconocible se rechazan;
+      un SMDG21 sintético se lee completo.
+- [ ] En los tres clientes, abrir A07 sigue igual y una 1.x o 3.x sintética muestra el
+      aviso (Windows, Honor a 360 dp y Chrome).
+- [ ] Piso de 524 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
+      cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-82** | RF-039 | 10.0 | BAPLIE de salida en la misma versión 2.x en que llegó, con lo cargado, re-estibado y cancelado; VGM y tara exactos del listado | Releído por el propio lector, coincide con `CASO_A08_ESTADO_FINAL.csv` en las 460 posiciones · **ficha completa arriba** |
 | **T-83** | RF-040 | 4.0 | Tapas en el perfil del buque, por bahía: sin tapa, una automática, o 1–3 de grúa con las filas que cubre cada una | Se declaran una vez por buque y se copian a otras bahías |
 | **T-84** | RF-040 | 4.0 | Tapas en la operación: quitar y reponer como movimientos; aviso al marcar bodega bajo tapa cerrada | Los movimientos de tapa cuentan en el avance |
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
-| **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro |
+| **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
 | **T-87** | BAP | 10.0 | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza |
 
 ### Ola 5 · Uso fuera del aula y voz
@@ -1608,3 +1651,18 @@ Lo que comprobó:
 - **Esperan la aceptación en lote de Timonel:** T-80 y T-81 (10.18).
 - **Los cancelados del BAPLIE de salida, decidido por Carlos (11-oct):** no van en el EDI, porque no están a bordo. La app muestra los cancelados vigentes con su motivo y deja copiar la lista, para reportarla aparte si la agencia la pide.
 - **T-82 pasa a Codex** con ficha completa (sección 5, Ola 4), en cuanto Carlos commitee esta decisión. La ficha precisa tres cosas sobre el borrador: la cabecera y la versión salen de la fuente `loading_baplie`; los pesos exactos del listado aplican a lo cargado y los de la llegada a lo que sigue a bordo; y la comparación con `CASO_A08_ESTADO_FINAL.csv` usa las columnas que ese CSV trae.
+
+### 10.20 · T-82 entregada, en revisión · Los de paso salen con los datos del plan de carga · T-86 a Codex (11-oct, noche)
+
+**T-82, de Codex, pasa a En revisión** (commit `98e94bd`), como fija 10.18.
+
+- **La contradicción y la decisión.** Contra el CSV, A07 difiere de los 284 de paso en POL de 127 contenedores, en POD de 189, en línea de 58 y en peso de 113 (grupos solapados; 256 con algún puerto distinto; posiciones, ISO y lleno/vacío sin diferencias). Ejemplo: 0020310 pesa 24 260 kg en A07 y 24 200 en el CSV. **Decisión de Carlos: el plan de carga (`loading_baplie`) manda en los de paso en todos los campos —POL, POD, línea, peso y peligrosas—, y la llegada queda como respaldo de lo que el plan no declare. El CSV no se toca**: es el plano real como quedó al terminar. La instrucción anterior de conservar los pesos de A07 quedó retirada, y la ficha se corrigió en el commit `667a045`. Antes de tocar el escritor, Codex verificó que A08 coincide con el CSV en **284/284 de paso y siete campos**, sin diferencias.
+- **El corpus, en A08 y A08v_VGM.** Reproducidos los 177 eventos y las 114 descargas, el BAPLIE generado se relee con el propio lector y da **460/460 en siete campos** (posición, contenedor, ISO, POL, POD, línea y peso); los de paso se cotejan además en WT/VGM, tara, lleno/vacío, peligrosas y temperatura contra el plan, y las 176 cargas contra el listado, incluidos los dos ONU del OR 127. El OR 12 queda en `R:0030984` con tara 2 185 kg. El OR 5 cancelado deja 459, no sale en el EDI y figura en la lista copiable con su motivo; `annul` devuelve 460 y vacía la lista. Texto idéntico en tres órdenes y en generar → leer → generar con reloj fijo. **Las nueve fuentes 2.x del corpus conservan su UNH; A06, que es SMDG15, se rechaza** — dato que aprovecha T-86.
+- **Defecto propio hallado y corregido:** el recorte de segmentos quitaba el espacio reservado de UNA; se conservó y quedó prueba de regresión.
+- **Clientes.** Windows de oficina, el Honor (`.t82`, modo sin cuenta) y Chrome visible guardaron y releyeron 460/460, con el portapapeles comprobado en Windows. La acción quedó en la pestaña de contenedores: en los controles del plano desplazaba una celda de la aceptación de T-75 a 360 dp, y se retiró esa integración sin editar las pruebas de T-75.
+- **Validaciones.** **524 pruebas** (el piso nuevo; 16 nuevas), `analyze` en cero, corpus 68/68 de T-68 a T-82 y **79/79 del sprint en dos corridas**. Las reglas no cambian: mismo SHA publicado el 11-oct.
+- **Horas.** 0.87 h transcurridas (≈0.80 documentadas) frente a 10.0 estimadas. El total lo recalcula Yov el miércoles (10.17); todas las tareas del sprint van muy por debajo de su estimación.
+- **Revisión del commit.** Los 11 archivos son los del informe, y solo `vessel_overview_page.dart` es un archivo tocado (+3 líneas); `loading_plan_controls.dart` no queda en el commit, como dice el informe. Sin `main.dart`, congelados, `pubspec.*` ni reglas. El diff no trae claves, correos ni UID, y `git ls-files` sigue sin rastrear nada del corpus.
+- **Incidencias declaradas, sin daño.** Chrome descargó primero en Descargas por su configuración; se comprobó fecha y tamaño, se movió a `%TEMP%` y no pasó por el repo. Una captura nativa tomó una ventana ajena con la app sin activar, y se descartó. **Observación para T-96:** el detalle del plano de llegada muestra las declaraciones de A07 (0020310: 24 260 kg) mientras la salida trae las vigentes del plan (24 200); la pantalla no se cambió.
+- **Esperan la aceptación en lote de Timonel:** T-80, T-81 y T-82.
+- **T-86 pasa a Codex** con ficha completa (sección 5, Ola 4). Con lo aprendido en T-82: **A06 del corpus es SMDG15 (1.x) y pasa a ser el espécimen real del rechazo**; las pruebas y corpus que hoy la leen se reescriben para esperar ese rechazo.
