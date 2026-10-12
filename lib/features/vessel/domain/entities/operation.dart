@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import 'container_unit.dart';
 import 'export_list.dart';
+import 'movement.dart';
 import 'reserved_slot.dart';
 import 'vessel_geometry.dart';
 import 'vessel_profile.dart';
@@ -182,6 +183,16 @@ class PlanItem extends Equatable {
     this.reservedSlot,
   });
 
+  PlanItem at(String position) {
+    final coordinate = IsoCoordinateParser.parse(position);
+    return PlanItem(key: key, kind: kind, role: role,
+        plannedPosition: coordinate.toIsoCode(),
+        container: container?.copyWith(stowagePosition: coordinate),
+        reservedSlot: reservedSlot == null ? null : ReservedSlot.fromJson({
+          ...reservedSlot!.toJson(), 'stowagePosition': coordinate.toJson(),
+        }));
+  }
+
   @override
   List<Object?> get props => [key, kind, role, plannedPosition];
 }
@@ -266,6 +277,13 @@ class OperationPlan {
   bool get hasArrival => arrival.isNotEmpty;
   bool get hasLoading => loading.isNotEmpty;
 
+  OperationPlan withPositions(Map<String, String> positions) => OperationPlan._(
+      portOfCall, arrival,
+      Map.unmodifiable({for (final entry in loading.entries)
+        entry.key: positions.containsKey(entry.key)
+            ? entry.value.at(positions[entry.key]!) : entry.value}),
+      isDeckTier, emptyGroups);
+
   /// El objeto que el plan de carga tiene en esa posición, si lo hay.
   PlanItem? loadingItemAt(String position) {
     for (final item in loading.values) {
@@ -300,6 +318,20 @@ enum ConflictKind {
   /// T-77 · Un vacío asignado a una reserva de otro grupo (tipo, puerto o
   /// línea distintos). Queda asignado, con el motivo escrito a la vista.
   otherGroup,
+
+  /// Un cambio obsoleto, malformado o incompatible con otro cambio vigente.
+  invalidChange,
+}
+
+enum ChangeRequestStatus { pending, approved, rejected, conflict }
+
+class ChangeRequest {
+  final Movement movement;
+  final ChangeRequestStatus status;
+  final Movement? decision;
+  const ChangeRequest(this.movement, this.status, {this.decision});
+  List<PositionChange> get changes =>
+      PositionChange.readAll(movement.payload['changes']) ?? const [];
 }
 
 /// Un conflicto no se resuelve en silencio: la oficina lo ve y anula el
@@ -433,6 +465,8 @@ class ProgressCount extends Equatable {
 
 /// Resultado de `OperationStateDeriver.derive`.
 class OperationState {
+  final OperationPlan? effectivePlan;
+  final List<ChangeRequest> requests;
   final Map<String, ItemStatus> items;
   final List<OperationConflict> conflicts;
 
@@ -448,13 +482,16 @@ class OperationState {
   final bool Function(int tier) _isDeckTier;
 
   OperationState({
+    this.effectivePlan,
+    Iterable<ChangeRequest> requests = const [],
     required Map<String, ItemStatus> items,
     required List<OperationConflict> conflicts,
     required List<String> duplicates,
     required List<String> notDerived,
     required Set<String> voided,
     required bool Function(int tier) isDeckTier,
-  })  : items = Map.unmodifiable(items),
+  })  : requests = List.unmodifiable(requests),
+        items = Map.unmodifiable(items),
         conflicts = List.unmodifiable(conflicts),
         duplicates = List.unmodifiable(duplicates),
         notDerived = List.unmodifiable(notDerived),

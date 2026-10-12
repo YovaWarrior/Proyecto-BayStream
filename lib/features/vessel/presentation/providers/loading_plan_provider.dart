@@ -39,7 +39,8 @@ final loadingPlanProgressProvider = StreamProvider.autoDispose
       LoadingPlanProgress.build(
           loading,
           const OperationStateDeriver().derive(plan,
-              LoadingPlanProgress.loadingMovements(records.map((r) => r.movement))),
+              LoadingPlanProgress.loadingMovements(records
+                  .where((r) => r.state != SendState.rejected).map((r) => r.movement))),
           list: list);
   if (operation == null) {
     yield derive(const []);

@@ -38,7 +38,7 @@ final loadingOperationProvider = StreamProvider.autoDispose
           arrival: arrival,
           loading: loading,
           list: list,
-          movements: records.map((r) => r.movement));
+          movements: records.where((r) => r.state != SendState.rejected).map((r) => r.movement));
   if (operation == null) {
     yield derive(const []);
     return;

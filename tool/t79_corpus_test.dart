@@ -220,10 +220,9 @@ void main() {
       expect(onDock.state.occupancy, expected, reason: 'las 460 posiciones en el muelle');
       expect(onOffice.state.occupancy, expected, reason: 'las 460 posiciones en la oficina');
       expect(onDock.progress.total, 0);
-      // Mientras T-80 no derive el cambio aprobado, el intercambio sigue a la
-      // vista como dos «fuera de plan», igual en los dos dispositivos.
-      expect(onDock.state.conflicts.map((c) => c.kind).toSet(), {ConflictKind.outOfPlan});
-      expect(onDock.state.conflicts, hasLength(2));
+      // T-80 deriva la aprobación contra el plan efectivo en ambos clientes.
+      expect(onDock.state.conflicts, isEmpty);
+      expect(onDock.state.requests.single.status, ChangeRequestStatus.approved);
       expect(onOffice.state.conflicts.map((c) => c.message).toList(),
           onDock.state.conflicts.map((c) => c.message).toList());
       expect(onDock.state.notDerived, onOffice.state.notDerived);
@@ -233,7 +232,7 @@ void main() {
           '${server.writes.length} escrituras (${server.identicalResends} reenvíos idénticos); '
           '$pendingAfterReopen pendientes al reabrir tras el cierre forzado; '
           '460/460 posiciones en muelle y oficina; ${onDock.state.conflicts.length} '
-          'conflictos fuera de plan hasta T-80.');
+          'conflictos contra el plan efectivo.');
 
       await approvals.cancel();
       await dockSync.stop();

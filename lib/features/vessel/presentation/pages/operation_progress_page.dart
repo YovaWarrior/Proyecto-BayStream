@@ -196,7 +196,7 @@ class OperationProgressPage extends ConsumerWidget {
                         'Peso actual a bordo; una pila sobre su límite se informa aparte de los conflictos.'),
                     if (operation.state.notDerived.isNotEmpty)
                       Text(
-                          '${operation.state.notDerived.length} movimientos todavía sin derivar (cambios y tapas).'),
+                          '${operation.state.notDerived.length} tapas todavía sin derivar (T-84).'),
                     if (operation.state.duplicates.isNotEmpty)
                       Text(
                           '${operation.state.duplicates.length} movimientos repetidos; no suman dos veces.'),

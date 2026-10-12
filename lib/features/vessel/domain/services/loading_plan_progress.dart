@@ -16,7 +16,7 @@ class LoadingPlanProgress {
 
   factory LoadingPlanProgress.build(VesselVoyage voyage, OperationState state,
       {ExportList? list}) {
-    final plan = OperationPlan.build(
+    final plan = state.effectivePlan ?? OperationPlan.build(
         loading: voyage,
         portOfCall: voyage.portOfCall!,
         geometry: voyage.geometry);
@@ -33,7 +33,8 @@ class LoadingPlanProgress {
           ExportListCrossChecker.crossCheck(list, voyage, voyage.portOfCall!);
       for (final group in cross.groups.where((g) => g.empties.isNotEmpty)) {
         for (final slot in group.reservedSlots) {
-          labels[slot.key] = '${group.type}\n${group.pod}\n${group.line}';
+          final item = plan.loadingItemAt(slot.stowagePosition.toIsoCode());
+          labels[item?.key ?? slot.key] = '${group.type}\n${group.pod}\n${group.line}';
         }
       }
     }

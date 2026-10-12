@@ -233,12 +233,13 @@ void main() {
     }
   });
 
-  test('cambios de posición y tapas se guardan, pero se derivan en T-80 y T-84', () {
+  test('T-80 detecta un cambio inválido; las tapas siguen pendientes de T-84', () {
     final state = derive([
       mv(MovementType.changePosition, null, {'changes': [], 'reason': 'x'}),
       mv(MovementType.hatchCover, 'T:3-1', {'action': 'remove'}),
     ]);
-    expect(state.notDerived, hasLength(2));
+    expect(state.notDerived, hasLength(1));
+    expect(state.conflicts.single.kind, ConflictKind.invalidChange);
     expect(state.items.values.every((s) => s.state == ItemState.planned), isTrue);
   });
 

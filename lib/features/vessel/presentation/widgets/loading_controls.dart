@@ -4,6 +4,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
 import '../../domain/services/loading_operation.dart';
 import '../formatters/vessel_error_message.dart';
+import '../pages/change_requests_page.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
@@ -104,7 +105,7 @@ Future<void> openLoadingRow(
   final data = ref.read(loadingOperationProvider(voyage)).value;
   if (data == null) return;
   final numbered = data.numbered(row);
-  final key = numbered?.key ?? slot?.key;
+  final key = numbered?.key ?? (slot == null ? null : data.plan.loadingItemAt(slot.stowagePosition.toIsoCode())?.key);
   if (key != null && data.movementOf(key) != null) {
     await showLoadingDetails(context, voyage, key);
     return;
@@ -260,7 +261,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
         start != numbered.plannedPosition) {
       _cell.text = loadingPosition(start);
     }
-    final slot = start == null ? null : data?.plan.loading['R:$start'];
+    final slot = start == null ? null : data?.plan.loadingItemAt(start);
     if (numbered == null &&
         slot?.reservedSlot != null &&
         !_sameGroup(slot!.reservedSlot!, row)) {
@@ -499,7 +500,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                                   otherGroups = value;
                                   final chosen = position == null
                                       ? null
-                                      : data?.plan.loading['R:$position']
+                                      : data?.plan.loadingItemAt(position!)
                                           ?.reservedSlot;
                                   if (!value &&
                                       chosen != null &&
@@ -568,6 +569,13 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                             color: Theme.of(context).colorScheme.error)),
                 ]))),
         actions: [
+          if (numbered != null &&
+              ref.watch(operatorProvider).value?.authorized == true &&
+              ref.watch(operatorProvider).value?.role == OperatorRole.dock &&
+              ref.watch(activeOperationProvider).value?.published == true)
+            TextButton(key: const ValueKey('request-change-loading-detail'),
+              onPressed: busy ? null : () => showChangeRequest(context, widget.voyage, target: numbered.key),
+              child: const Text('Pedir cambio')),
           TextButton(
               onPressed: busy ? null : () => Navigator.pop(context),
               child: const Text('Cancelar')),
@@ -687,6 +695,12 @@ Future<void> showLoadingDetails(
                                   color: Theme.of(context).colorScheme.error)),
                       ])),
                   actions: [
+                    if (ref.watch(operatorProvider).value?.authorized == true &&
+                        ref.watch(operatorProvider).value?.role == OperatorRole.dock &&
+                        ref.watch(activeOperationProvider).value?.published == true)
+                      TextButton(key: const ValueKey('request-change-detail'),
+                        onPressed: () => showChangeRequest(context, voyage, target: key),
+                        child: const Text('Pedir cambio')),
                     if (movement != null &&
                         (movement.type == MovementType.loadFull ||
                             movement.type == MovementType.assignEmpty)) ...[

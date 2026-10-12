@@ -10,13 +10,14 @@ class LoadingOperation {
   final String? operationId;
   final VesselVoyage loading;
   final OperationPlan plan;
+  final OperationPlan _publishedPlan;
   final ExportList? list;
   final List<Movement> movements;
   final OperationState state;
   final LoadingPlanProgress progress;
   final DischargeProgress discharge;
 
-  LoadingOperation._(this.operationId, this.loading, this.plan, this.list,
+  LoadingOperation._(this.operationId, this.loading, this.plan, this._publishedPlan, this.list,
       this.movements, this.state, this.progress, this.discharge);
 
   factory LoadingOperation.build({
@@ -34,15 +35,26 @@ class LoadingOperation {
         geometry: loading.geometry,
         list: list);
     final state = const OperationStateDeriver().derive(plan, events);
+    final effective = state.effectivePlan!;
+    // La fuente publicada permanece intacta. Esta proyección se reconstruye
+    // también en otra bahía, con sus sombras de 40 pies y sus reservas.
+    final projected = VesselVoyage.fromJson({
+      ...loading.toJson(includeBays: false),
+      'containers': [for (final c in loading.containers)
+        (effective.loading['C:${c.containerId}']?.container ?? c).toJson()],
+      'reservedSlots': [for (final s in loading.reservedSlots)
+        (effective.loading[s.key]?.reservedSlot ?? s).toJson()],
+    });
     return LoadingOperation._(
         operationId,
-        loading,
+        projected,
+        effective,
         plan,
         list,
         events,
         state,
-        LoadingPlanProgress.build(loading, state, list: list),
-        DischargeProgress.build(plan, state,
+        LoadingPlanProgress.build(projected, state, list: list),
+        DischargeProgress.build(effective, state,
             operationId: operationId, movements: events));
   }
 
@@ -75,7 +87,7 @@ class LoadingOperation {
       previous = previous.type.canCorrect ? byId[previous.corrects] : null;
     }
     return const OperationStateDeriver().derive(
-        plan, movements.where((movement) => !replaced.contains(movement.id)));
+        _publishedPlan, movements.where((movement) => !replaced.contains(movement.id)));
   }
 
   bool available(ExportListRow row, {Movement? correcting}) {
@@ -243,7 +255,7 @@ class LoadingOperation {
     }
     final item = numbered(row);
     if (item == null) {
-      final reservation = plan.loading['R:$position'];
+      final reservation = plan.loadingItemAt(position);
       if (reservation?.reservedSlot == null ||
           reservation!.role != PlanRole.load) {
         throw StateError('Un vacío se asigna a una celda reservada del plan.');
@@ -274,7 +286,7 @@ class LoadingOperation {
           reason: hasReason ? reason!.trim() : null);
     }
     return MovementDraft.assignEmpty(
-        operationId!, position, row.containerId, row.tareKg,
+        operationId!, plan.loadingItemAt(position)!.key.substring(2), row.containerId, row.tareKg,
         order: row.order,
         seal: seal,
         operatedAt: operatedAt,

@@ -131,8 +131,8 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                       reservedNeighbors[_selectedBayNumber] ?? const {},
                   // En el modo Descarga, una reserva no se opera.
                   onReservedSlotTap: loading != null
-                      ? (slot) => loading.movementOf(slot.key) != null
-                          ? showLoadingDetails(context, widget.voyage, slot.key)
+                      ? (slot) => loading.movementOf(loading.plan.loadingItemAt(slot.stowagePosition.toIsoCode())!.key) != null
+                          ? showLoadingDetails(context, widget.voyage, loading.plan.loadingItemAt(slot.stowagePosition.toIsoCode())!.key)
                           : chooseLoadingRow(context, ref, widget.voyage, empties: true,
                               selectedBay: _selectedBayNumber, slot: slot)
                       : dischargeMode
@@ -968,7 +968,9 @@ class _BayGridWidget extends StatelessWidget {
           final reservation = reservedPositionMap[key];
           final reservedNeighbor = reservedNeighbors[slotKey];
           final loadSlot = reservation ?? reservedNeighbor;
-          final loadKey = container == null ? loadSlot?.key : 'C:${container.containerId}';
+          final loadKey = container == null
+              ? (loadSlot == null ? null : loading?.plan.loadingItemAt(loadSlot.stowagePosition.toIsoCode())?.key ?? loadSlot.key)
+              : 'C:${container.containerId}';
           if (loading != null && loadKey != null &&
               loading!.plan.loading[loadKey]?.role == PlanRole.load) {
             final loadHighlighted = isHighlighted || highlightedContainerId == loadKey;

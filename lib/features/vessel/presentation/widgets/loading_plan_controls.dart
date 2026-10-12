@@ -7,6 +7,7 @@ import '../../domain/services/operation_progress.dart';
 import '../formatters/vessel_error_message.dart';
 import '../pages/export_list_import_page.dart';
 import '../pages/operation_progress_page.dart';
+import '../pages/change_requests_page.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_plan_provider.dart';
 import '../providers/loading_operation_provider.dart';
@@ -98,6 +99,7 @@ class LoadingPlanControls extends ConsumerWidget {
                   label: const Text('Avance de la operación'),
                 ),
               if (voyage.portOfCall != null) const SyncStatusChip(),
+              if (voyage.portOfCall != null) ChangeRequestsButton(voyage: voyage),
             ]),
         if (mode == BayPlanMode.loading && voyage.portOfCall != null)
           LoadingControls(voyage: voyage, selectedBay: selectedBay)
@@ -207,7 +209,7 @@ class LoadingPlanControls extends ConsumerWidget {
                               '${data.state.conflicts.length} conflictos en la bitácora; los pendientes respetan el estado derivado.'),
                         if (data.state.notDerived.isNotEmpty)
                           Text(
-                              '${data.state.notDerived.length} cambios de posición o tapas todavía sin derivar (T-80/T-84).'),
+                              '${data.state.notDerived.length} tapas todavía sin derivar (T-84).'),
                         TextButton(
                             onPressed: () => Navigator.pop(context),
                             child: const Text('Cerrar')),

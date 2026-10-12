@@ -5,9 +5,8 @@ import '../entities/operation.dart';
 /// (T-79a 2.7). Es una función pura: los mismos movimientos dan el mismo
 /// estado en cualquier dispositivo, en cualquier orden de llegada.
 ///
-/// Deriva descarga, carga, vacío, anular, corregir y cancelar. Los cambios
-/// de posición (T-80) y las tapas (T-84) se guardan, pero aquí se cuentan
-/// en [OperationState.notDerived] sin aplicarse.
+/// T-80: primero obtiene el plan efectivo; después evalúa las operaciones
+/// contra ese plan final, incluso si la aprobación se registró más tarde.
 class OperationStateDeriver {
   const OperationStateDeriver();
 
@@ -16,7 +15,8 @@ class OperationStateDeriver {
     final voided = _voided(byId);
     final vigentes = byId.values.where((m) => !voided.contains(m.id)).toList()
       ..sort(Movement.compareOrder);
-    return _Run(plan, voided).apply(vigentes);
+    final changes = _PlanChanges(plan, vigentes)..apply();
+    return _Run(changes.plan, voided, changes: changes).apply(vigentes);
   }
 
   /// Un movimiento queda sin efecto si otro vigente lo anula o lo corrige.
@@ -57,9 +57,90 @@ class OperationStateDeriver {
   }
 }
 
+class _PlanChanges {
+  OperationPlan plan;
+  final List<Movement> movements;
+  final requests = <String, ChangeRequest>{};
+  final conflicts = <OperationConflict>[];
+  _PlanChanges(this.plan, this.movements);
+
+  void problem(Movement m, String message, {String key = ''}) {
+    conflicts.add(OperationConflict(kind: ConflictKind.invalidChange,
+        key: key, movementId: m.id, message: message));
+  }
+
+  void apply() {
+    for (final m in movements.where((m) => m.type == MovementType.requestChange)) {
+      final valid = PositionChange.readAll(m.payload['changes']) != null;
+      requests[m.id] = ChangeRequest(m,
+          valid ? ChangeRequestStatus.pending : ChangeRequestStatus.conflict);
+      if (!valid) problem(m, 'Solicitud con cambios inválidos.');
+    }
+    for (final m in movements) {
+      if (m.type != MovementType.changePosition && m.type != MovementType.rejectChange) continue;
+      final reference = m.payload['request'];
+      final request = requests[reference];
+      if (reference != null && request == null) {
+        problem(m, 'La decisión cita una solicitud que no está vigente.');
+        continue;
+      }
+      if (request != null && request.status != ChangeRequestStatus.pending) {
+        problem(m, 'La solicitud ya tiene una decisión o está en conflicto.');
+        continue;
+      }
+      if (m.type == MovementType.rejectChange) {
+        if (request == null) {
+          problem(m, 'El rechazo no cita una solicitud.');
+        } else {
+          requests[request.movement.id] = ChangeRequest(request.movement,
+              ChangeRequestStatus.rejected, decision: m);
+        }
+        continue;
+      }
+      final batch = PositionChange.readAll(m.payload['changes']);
+      String? error;
+      String key = '';
+      if (batch == null) {
+        error = 'El cambio no contiene de uno a cuatro cambios válidos.';
+      } else if (request != null &&
+          (batch.length != request.changes.length ||
+              !batch.every((c) => request.changes.contains(c)))) {
+        error = 'La aprobación no coincide con lo solicitado.';
+      } else {
+        final targets = batch.map((c) => c.target).toSet();
+        for (final c in batch) {
+          key = c.target;
+          final item = plan.loading[c.target];
+          if (item == null) {
+            error = '${c.target} no está en el plan de carga.';
+          } else if (item.plannedPosition != c.from) {
+            error = '${c.target}: origen obsoleto; plan efectivo ${item.plannedPosition}, cambio desde ${c.from}.';
+          } else if (plan.loading.values.any((i) =>
+              !targets.contains(i.key) && i.plannedPosition == c.to)) {
+            error = '${c.to} está prevista para otro objeto del plan.';
+          }
+          if (error != null) break;
+        }
+      }
+      if (error != null) {
+        problem(m, error, key: key);
+      } else {
+        // Todo el lote se comprueba antes de aplicar: un intercambio es atómico.
+        plan = plan.withPositions({for (final c in batch!) c.target: c.to});
+      }
+      if (request != null) {
+        requests[request.movement.id] = ChangeRequest(request.movement,
+            error == null ? ChangeRequestStatus.approved : ChangeRequestStatus.conflict,
+            decision: m);
+      }
+    }
+  }
+}
+
 class _Run {
   final OperationPlan plan;
   final Set<String> voided;
+  final _PlanChanges? changes;
   final items = <String, ItemStatus>{};
 
   /// Posición → clave de lo que la ocupa ahora.
@@ -71,7 +152,7 @@ class _Run {
   final duplicates = <String>[];
   final notDerived = <String>[];
 
-  _Run(this.plan, this.voided) {
+  _Run(this.plan, this.voided, {this.changes}) {
     final keys = {...plan.arrival.keys, ...plan.loading.keys};
     for (final key in keys) {
       final arrival = plan.arrival[key];
@@ -96,6 +177,14 @@ class _Run {
   }
 
   OperationState apply(List<Movement> vigentes) {
+    for (final conflict in changes?.conflicts ?? const <OperationConflict>[]) {
+      conflicts.add(conflict);
+      final status = items[conflict.key];
+      if (status != null) {
+        items[conflict.key] = status.copyWith(
+            conflicts: [...status.conflicts, conflict.kind]);
+      }
+    }
     // T-76: el ocupante de llegada deja libre su celda si tiene una
     // descarga vigente, aunque otro dispositivo haya registrado antes la
     // carga. Solo anticipamos la liberación: la descarga conserva su lugar
@@ -132,11 +221,14 @@ class _Run {
         case MovementType.requestChange:
         case MovementType.changePosition:
         case MovementType.rejectChange:
+          break; // primera pasada
         case MovementType.hatchCover:
           notDerived.add(m.id);
       }
     }
     return OperationState(
+      effectivePlan: plan,
+      requests: changes?.requests.values ?? const [],
       items: items,
       conflicts: conflicts,
       duplicates: duplicates,

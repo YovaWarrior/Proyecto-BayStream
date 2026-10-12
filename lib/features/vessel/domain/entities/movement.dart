@@ -17,7 +17,7 @@ enum MovementType {
   annul('annul'),
   cancelItem('cancel_item'),
 
-  /// Se guardan y exportan desde ya, pero se derivan en T-80.
+  /// T-80 · Solicitudes y decisiones de la oficina.
   requestChange('request_change'),
   changePosition('change_position'),
   rejectChange('reject_change'),
@@ -251,6 +251,24 @@ class MovementDraft extends Equatable {
   factory MovementDraft.cancelItem(String operationId, String target, String reason) =>
       MovementDraft._(operationId, MovementType.cancelItem, target, {'reason': reason});
 
+  factory MovementDraft.requestChange(String operationId,
+          List<PositionChange> changes, String reason) =>
+      MovementDraft._(operationId, MovementType.requestChange, null,
+          {'changes': changes.map((c) => c.toJson()).toList(), 'reason': reason.trim()});
+
+  factory MovementDraft.approveChange(String operationId, Movement request,
+          String reason) =>
+      MovementDraft._(operationId, MovementType.changePosition, null, {
+        'changes': request.payload['changes'],
+        'request': request.id,
+        'reason': reason.trim(),
+      });
+
+  factory MovementDraft.rejectChange(String operationId, String request,
+          String reason) =>
+      MovementDraft._(operationId, MovementType.rejectChange, null,
+          {'request': request, 'reason': reason.trim()});
+
   /// Para los tipos que se derivan después (T-80, T-84) y para importar.
   factory MovementDraft.raw(String operationId, MovementType type, String? target,
           Map<String, Object?> payload) =>
@@ -293,7 +311,20 @@ class MovementDraft extends Equatable {
         if (!hasReason()) return 'Cancelar exige un motivo.';
       case MovementType.requestChange:
       case MovementType.changePosition:
+        if (target != null) return 'Un cambio lleva sus objetos en la lista.';
+        if (!hasReason() || (payload['reason'] as String).length > 300) {
+          return 'Escribe un motivo de hasta 300 caracteres.';
+        }
+        final changes = PositionChange.readAll(payload['changes']);
+        if (changes == null) return 'Indica de uno a cuatro cambios válidos, sin repetir objetos ni destinos.';
       case MovementType.rejectChange:
+        if (target != null || payload['request'] is! String ||
+            (payload['request'] as String).isEmpty) {
+          return 'Falta la solicitud.';
+        }
+        if (!hasReason() || (payload['reason'] as String).length > 300) {
+          return 'Escribe un motivo de hasta 300 caracteres.';
+        }
       case MovementType.hatchCover:
         break;
     }
@@ -302,6 +333,39 @@ class MovementDraft extends Equatable {
 
   @override
   List<Object?> get props => [operationId, type, target, payload];
+}
+
+/// Posiciones del plan efectivo en el momento de pedir el cambio. La clave
+/// de una reserva permanece la del plan publicado, aunque cambie de celda.
+class PositionChange extends Equatable {
+  final String target;
+  final String from;
+  final String to;
+  const PositionChange(this.target, this.from, this.to);
+
+  Map<String, Object?> toJson() => {'target': target, 'from': from, 'to': to};
+
+  static List<PositionChange>? readAll(Object? value) {
+    if (value is! List || value.isEmpty || value.length > 4) return null;
+    final result = <PositionChange>[];
+    final targets = <String>{}, destinations = <String>{};
+    for (final entry in value) {
+      if (entry is! Map || entry.length != 3) return null;
+      final target = entry['target'], from = entry['from'], to = entry['to'];
+      if (target is! String || from is! String || to is! String ||
+          !RegExp(r'^(C:[A-Z0-9]{1,17}|R:[0-9]{6,7})$').hasMatch(target) ||
+          !MovementDraft._position.hasMatch(from) ||
+          !MovementDraft._position.hasMatch(to) || from.padLeft(7, '0') == to.padLeft(7, '0') ||
+          !targets.add(target) || !destinations.add(to.padLeft(7, '0'))) {
+        return null;
+      }
+      result.add(PositionChange(target, from.padLeft(7, '0'), to.padLeft(7, '0')));
+    }
+    return List.unmodifiable(result);
+  }
+
+  @override
+  List<Object?> get props => [target, from, to];
 }
 
 /// Estado de envío (T-79a 4.2). `localOnly` es el normal sin sincronización:

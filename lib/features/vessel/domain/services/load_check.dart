@@ -166,7 +166,7 @@ class LoadValidator {
       issues.add(LoadIssue(LoadIssueKind.unknownCell, missing));
       return LoadCheck(position: position, issues: issues);
     }
-    final targetKey = numbered?.key ?? 'R:$position';
+    final targetKey = numbered?.key ?? plan.loadingItemAt(position)?.key ?? 'R:$position';
     final reservation = numbered == null ? plan.loading[targetKey] : null;
     final type = row.type;
     final length = nominalLength(type);
