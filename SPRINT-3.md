@@ -734,8 +734,12 @@ el 24-oct siempre hay algo que funciona.
      efectivo más los movimientos.
    - Produce el BAPLIE de lo que zarpa:
      - los ocupantes de llegada que no se descargaron, incluidos los de paso: las
-       **284 posiciones que siguen a bordo salen sin cambios**, como pide el caso
-       (sección 7 de `docs/S3-CASO-MAGELLAN-STAR.md`);
+       **284 posiciones que siguen a bordo salen sin re-estibar**, y sus declaraciones
+       —puertos, línea, peso, peligrosas— salen del **plan de carga** (fuente
+       `loading_baplie`), que es la información vigente al zarpar; la llegada queda
+       como respaldo de lo que el plan no declare. El caso real lo pide: A07 y A08
+       discrepan en esos campos en buena parte de los de paso y el CSV final trae los
+       valores del plan (decisión de Carlos, 11-oct);
      - los llenos cargados en su celda efectiva;
      - los vacíos asignados a reservas, con los datos del contenedor que sacó del
        listado;
@@ -750,9 +754,9 @@ el 24-oct siempre hay algo que funciona.
      correctos.
    - Si la versión no se reconoce, no genera y lo dice. T-86 amplía después la detección.
 3. **Por contenedor**, la posición, los puertos, el tipo ISO, lleno o vacío y las
-   peligrosas del listado. Los pesos: **el VGM y la tara exactos del listado** (con las
-   equivalencias de T-73) para lo cargado; **los del propio archivo de llegada** para lo
-   que sigue a bordo desde A07.
+   peligrosas. Para lo cargado, las peligrosas y **el VGM y la tara exactos del
+   listado** (con las equivalencias de T-73). Para lo que sigue a bordo, lo que declara
+   el plan de carga, con la llegada como respaldo.
    - Caso de control: el OR 12 va a `R:0030984`, con tara 2 185 kg.
 4. **La lista de cancelados.** Junto al archivo, la app muestra los cancelados vigentes
    con su motivo y deja copiarla, para reportarla aparte. Decisión de Carlos, 11-oct
@@ -777,8 +781,8 @@ y cualquier cambio de reglas. La generación es local y no escribe en Firestore.
   - el lector de BayStream (`baplie_parser_service.dart`) lo relee;
   - coincide con `CASO_A08_ESTADO_FINAL.csv` en **460/460 posiciones**, comparando
     posición, contenedor, tipo ISO, puertos, línea y peso; el lleno o vacío y las
-    peligrosas coinciden con el listado en lo cargado y con la llegada en lo que sigue
-    a bordo.
+    peligrosas coinciden con el listado en lo cargado y con el plan de carga en lo que
+    sigue a bordo.
 - [ ] **Ida y vuelta estable:** generar → leer → generar da el mismo texto con el reloj
       fijo.
 - [ ] **La versión de cabecera** sale igual que la de la fuente `loading_baplie`,
