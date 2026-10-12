@@ -93,15 +93,26 @@ void main() {
         isFalse);
   });
 
-  test('A05/A06 preguntan por identidad y no publican ni crean homónimo solos',
+  test('A06 se rechaza; un homónimo 2.x requiere confirmar la identidad',
       () async {
     const a05 =
-        "TDT+20++++NV4:172:ZZZ+++ZZC5603:103::BUQUE ECO:kingston JM++LINEA-A:LR'";
-    const a06 = "TDT+20+VIAJE004A++9000039:146::BUQUE ECO++NV3:172:20'";
+        "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20++++NV4:172:ZZZ+++ZZC5603:103::BUQUE ECO:kingston JM++LINEA-A:LR'";
+    const a06 = "UNH+1+BAPLIE:1:911:UN:SMDG15'"
+    "TDT+20+VIAJE004A++9000039:146::BUQUE ECO++NV3:172:20'";
     await notifier.parseBaplieContent(a05);
     await notifier.confirmGeometry(notifier.currentProfile!.geometry);
     final original = notifier.publishedVoyage;
-    final result = await notifier.parseBaplieContent(a06);
+    final rejected = await notifier.parseBaplieContent(a06, fileName: 'A06.edi');
+    expect(rejected.errorMessage, contains('A06.edi'));
+    expect(rejected.errorMessage, contains('SMDG15'));
+    expect(rejected.needsIdentity, isFalse);
+    expect(notifier.publishedVoyage, original);
+    expect((await store.repository.getAllProfiles()).getOrElse(() => []),
+        hasLength(1));
+    // Conserva la prueba de identidad con el mismo TDT en un mensaje 2.x.
+    final result = await notifier.parseBaplieContent(a06.replaceFirst(
+        'BAPLIE:1:911:UN:SMDG15', 'BAPLIE:D:95B:UN:SMDG20'));
     expect(result.needsIdentity, isTrue);
     expect(notifier.publishedVoyage, original);
     expect(await notifier.confirmGeometry(notifier.currentProfile!.geometry),

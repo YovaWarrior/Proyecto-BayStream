@@ -6,7 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('T-31 propone por ISO y TMP sin incorporar secos ni vecinos de 40 pies',
       () {
-    const edi = "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
+    const edi = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
         "LOC+147+0020182:::5'EQD+CN+ISO+42R1+++5'"
         "LOC+147+0020282:::5'TMP+2+-020:CEL'EQD+CN+TMP+42G1+++5'"
         "LOC+147+0020382:::5'EQD+CN+SECO+42G1+++5'";

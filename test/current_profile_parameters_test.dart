@@ -13,6 +13,7 @@ import 'support/local_profile_test_support.dart';
 
 /// Un 40 pies de 30 000 kg en cubierta (fila 02) y otro en la fila 00 de bodega.
 const _ediWithCenterRowCargo =
+    "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
     "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
     "LOC+147+0020182:::5'MEA+WT++KGM:30000'EQD+CN+TEST0000001+42G1+++5'"
     "LOC+147+0020002:::5'MEA+WT++KGM:30000'EQD+CN+TEST0000002+42G1+++5'";

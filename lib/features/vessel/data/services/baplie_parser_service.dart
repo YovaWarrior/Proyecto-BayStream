@@ -5,7 +5,7 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/entities/dangerous_goods.dart';
 
-/// Servicio para parsear archivos BAPLIE 2.2.1 (EDIFACT)
+/// Servicio para parsear la familia BAPLIE 2.x (EDIFACT).
 /// 
 /// Implementa el parsing según el estándar SMDG BAPLIE 2.2.1:
 /// - Separador de segmentos: `'` (comilla simple)
@@ -34,6 +34,9 @@ class BaplieParserService {
         message: 'No se encontraron segmentos válidos en el archivo',
       );
     }
+
+    // La cabecera decide si este lector aplica, antes del buque o la carga.
+    _validateVersion(segments);
 
     // Extraer información del buque (TDT)
     final vesselInfo = _parseVesselInfo(segments);
@@ -92,6 +95,39 @@ class BaplieParserService {
   /// Extrae los componentes de un elemento (separados por `:`)
   List<String> _getComponents(String element) {
     return element.split(BaplieConstants.componentSeparator);
+  }
+
+  /// UNH/S009: tipo, versión, liberación, agencia y asociación SMDG.
+  /// Mismo conjunto admitido por el escritor de salida de T-82.
+  void _validateVersion(List<String> segments) {
+    final headers = segments.where((s) => s.startsWith('UNH+')).toList();
+    final header = headers.firstOrNull;
+    final firstCargo = segments.indexWhere((s) => s.startsWith('LOC+147+'));
+    final end = segments.indexWhere((s) => s.startsWith('UNT+'));
+    final limit = firstCargo < 0 ? (end < 0 ? segments.length : end) : firstCargo;
+    final identifier = header == null
+        ? null
+        : _getElements(header).elementAtOrNull(2);
+    final components = identifier == null ? null : _getComponents(identifier);
+    if (headers.length == 1 &&
+        segments.indexOf(header!) < limit &&
+        components != null &&
+        components.length == 5 &&
+        components.take(4).join(':') == 'BAPLIE:D:95B:UN' &&
+        {'SMDG20', 'SMDG21', 'SMDG22'}.contains(components[4])) {
+      return;
+    }
+    final version = identifier == null || identifier.isEmpty
+        ? 'sin UNH/S009 reconocible'
+        : identifier;
+    throw BaplieParsingException(
+      code: 'unsupported_baplie_version',
+      segment: 'UNH',
+      message: 'Versión BAPLIE no admitida: $version. '
+          'BayStream lee la familia 2.x (SMDG20, SMDG21 y SMDG22). '
+          '${headers.length > 1 ? 'El archivo contiene más de un mensaje. ' : ''}'
+          'Pide una exportación compatible.',
+    );
   }
 
   /// Índice del bloque c222 (identificación del transporte) dentro del TDT.

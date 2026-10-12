@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 't86_corpus_support.dart';
 
 import 'package:baystream/core/utils/iso_coordinate_parser.dart';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
@@ -25,10 +26,12 @@ void main(List<String> args) {
   final out = <String, dynamic>{
     'A01': _a01(load('A01')),
     'paridadDeLas40PorArchivo': {
-      for (var i = 1; i <= 6; i++) 'A0$i': _evenBayPattern(load('A0$i')),
+      for (var i = 1; i <= 5; i++) 'A0$i': _evenBayPattern(load('A0$i')),
+      'A06': {'rejected': requireA06Rejection(
+          File('$dir/CORPUS_A06.edi').readAsStringSync())},
     },
-    'ECO_A05_contra_A06': _crossVoyage(load('A05'), load('A06')),
-    'ECO_A06_contra_A05': _crossVoyage(load('A06'), load('A05')),
+    'A05_contra_A01': _crossVoyage(load('A05'), load('A01')),
+    'A01_contra_A05': _crossVoyage(load('A01'), load('A05')),
   };
   stdout.writeln(const JsonEncoder.withIndent('  ').convert(out));
 }

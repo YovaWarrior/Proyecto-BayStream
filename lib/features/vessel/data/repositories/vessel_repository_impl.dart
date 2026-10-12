@@ -29,6 +29,7 @@ class VesselRepositoryImpl implements VesselRepository {
     } on BaplieParsingException catch (e) {
       return Left(BaplieParsingFailure(
         message: e.message,
+        code: e.code,
         lineNumber: e.lineNumber,
         segment: e.segment,
       ));

@@ -7,7 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   VesselVoyage voyage() {
     final parsed = BaplieParserService().parse(
-      "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
+      "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
       "LOC+147+0020182:::5'EQD+CN+TEST0000001+42G1+++5'"
       "LOC+147+0010282:::5'EQD+CN+TEST0000002+22G1+++5'",
     );

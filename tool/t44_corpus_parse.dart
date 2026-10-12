@@ -1,3 +1,4 @@
+import 't86_corpus_support.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -23,6 +24,10 @@ void main(List<String> args) {
   final results = <String, Object>{};
   for (final name in names) {
     final raw = File('${args.single}/CORPUS_$name.edi').readAsStringSync();
+    if (name == 'A06') {
+      results[name] = {'rejected': requireA06Rejection(raw)};
+      continue;
+    }
     final timesUs = <int>[];
     var containers = 0;
     var bays = 0;

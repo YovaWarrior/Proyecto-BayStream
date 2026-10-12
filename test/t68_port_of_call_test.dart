@@ -6,6 +6,7 @@ import 'package:baystream/features/vessel/presentation/pages/vessel_geometry_pag
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/widgets/voyage_summary_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,7 +14,8 @@ import 'support/local_profile_test_support.dart';
 import 'support/t74_movement_log_support.dart';
 import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
 
-const _header = "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
+const _header = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
     "LOC+5+HNPCR:139:6'";
 const _cargo = "LOC+147+0020182::5'LOC+9+HNPCR:139:6'"
     "LOC+11+GTSTC:139:6'EQD+CN+TEST0000001+42G1+++5'"
@@ -24,6 +26,12 @@ const _cargo = "LOC+147+0020182::5'LOC+9+HNPCR:139:6'"
 const _arrival = "${_header}LOC+61+GTSTC:139:6'$_cargo";
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    final font = FontLoader('Roboto')
+      ..addFont(rootBundle.load('assets/fonts/Roboto-Regular.ttf'));
+    await font.load();
+  });
   final parser = BaplieParserService();
   final voyage = parser.parse(_arrival);
 
@@ -209,6 +217,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(MaterialApp(
+        theme: ThemeData(fontFamily: 'Roboto'),
         home: Scaffold(
             body: SingleChildScrollView(
                 child: VoyageSummaryCard(

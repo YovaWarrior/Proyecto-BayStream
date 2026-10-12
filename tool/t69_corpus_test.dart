@@ -1,4 +1,5 @@
 import 'dart:io';
+import 't86_corpus_support.dart';
 
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
@@ -201,7 +202,12 @@ void main() {
 
   for (var number = 1; number <= 7; number++) {
     final name = 'A${number.toString().padLeft(2, '0')}';
-    test('T-69 $name: el corpus anterior conserva cero reservas', () {
+    test('T-69 $name: cero reservas en 2.x o rechazo de A06 1.x', () {
+      if (name == 'A06') {
+        expect(requireA06Rejection(
+            File('$corpus/CORPUS_$name.edi').readAsStringSync()), contains('SMDG15'));
+        return;
+      }
       final voyage = open(name);
       expect(voyage.totalContainers, greaterThan(0));
       expect(voyage.reservedSlots, isEmpty);

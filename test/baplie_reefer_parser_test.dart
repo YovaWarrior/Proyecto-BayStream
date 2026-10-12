@@ -10,7 +10,7 @@ void main() {
 
   test('conserva TMP cuando llega antes de EQD', () {
     const baplieContent = '''
-UNH+1+BAPLIE:D:95B:UN'
+UNH+1+BAPLIE:D:95B:UN:SMDG20'
 TDT+20+V001++++++:::TEST VESSEL'
 LOC+147+0210804::5'
 MEA+WT++KGM:22462'
@@ -30,7 +30,7 @@ UNT+9+1'
 
   test('marca refrigerado por tipo ISO R aunque no tenga TMP', () {
     const baplieContent = '''
-UNH+1+BAPLIE:D:95B:UN'
+UNH+1+BAPLIE:D:95B:UN:SMDG20'
 TDT+20+V001++++++:::TEST VESSEL'
 LOC+147+0210804::5'
 EQD+CN+REEF002+45R1++4+5'
@@ -46,7 +46,7 @@ UNT+5+1'
 
   test('no marca refrigerado sin TMP ni tipo ISO R', () {
     const baplieContent = '''
-UNH+1+BAPLIE:D:95B:UN'
+UNH+1+BAPLIE:D:95B:UN:SMDG20'
 TDT+20+V001++++++:::TEST VESSEL'
 LOC+147+0210804::5'
 EQD+CN+DRY0001+45G1++4+5'

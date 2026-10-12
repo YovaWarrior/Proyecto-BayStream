@@ -220,8 +220,12 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     try {
       final result =
           await ref.read(vesselRepositoryProvider).parseBaplieFile(content);
-      final voyage = result.fold(
-          (failure) => throw VesselOperationFailure(failure), (v) => v);
+      final voyage = result.fold((failure) {
+        if (failure.code == 'unsupported_baplie_version') {
+          throw VesselActionRequired('Archivo «$fileName»: ${failure.message}');
+        }
+        throw VesselOperationFailure(failure);
+      }, (v) => v);
       final local = await ref.read(localVesselRepositoryProvider.future);
       _lastConfirmedPortOfCall = voyage.portOfNextCall == null
           ? null

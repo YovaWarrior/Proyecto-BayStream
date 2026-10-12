@@ -19,6 +19,7 @@ void main() {
   late LocalVesselRepositoryImpl repository;
   const codec = LocalVesselCodec();
   final parsed = BaplieParserService().parse(
+    "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
     "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
     "LOC+147+0020182:::5'EQD+CN+TEST0000001+42G1+++5'",
   );

@@ -82,7 +82,7 @@ void main() {
     test('debe parsear archivo BAPLIE básico', () {
       const baplieContent = '''
 UNB+UNOA:2+SENDER+RECEIVER+230615:1200+123456'
-UNH+1+BAPLIE:D:95B:UN'
+UNH+1+BAPLIE:D:95B:UN:SMDG20'
 BGM+129+BAPLIE123+9'
 TDT+20+V001++++++CARRIER:::VESSEL MAYA'
 LOC+147+0120006:::5'
@@ -121,7 +121,7 @@ UNZ+1+123456'
 
     test('debe organizar contenedores en bahías', () {
       const baplieContent = '''
-UNH+1+BAPLIE:D:95B:UN'
+UNH+1+BAPLIE:D:95B:UN:SMDG20'
 TDT+20+V002++++++:::TEST VESSEL'
 LOC+147+0100102:::5'
 EQD+CN+CONT001+22G1+++5'
@@ -141,7 +141,7 @@ UNT+10+1'
 
     test('debe calcular estadísticas correctamente', () {
       const baplieContent = '''
-UNH+1+BAPLIE:D:95B:UN'
+UNH+1+BAPLIE:D:95B:UN:SMDG20'
 TDT+20+V003++++++:::STATS VESSEL'
 LOC+147+0100102:::5'
 EQD+CN+CONT001+22G1+++5'
@@ -169,7 +169,7 @@ UNT+10+1'
 
     test('debe lanzar excepción si no encuentra TDT', () {
       const invalidContent = '''
-UNH+1+BAPLIE:D:95B:UN'
+UNH+1+BAPLIE:D:95B:UN:SMDG20'
 LOC+147+0100102:::5'
 EQD+CN+CONT001+22G1+++5'
 UNT+4+1'
@@ -190,7 +190,7 @@ UNT+4+1'
     });
 
     String mensajeCon(String tdt) => [
-          "UNH+1+BAPLIE:D:95B:UN'",
+          "UNH+1+BAPLIE:D:95B:UN:SMDG20'",
           "$tdt'",
           "LOC+147+0060102:::5'",
           "EQD+CN+ABCU1234567+22G1+++5'",
@@ -296,7 +296,7 @@ UNT+4+1'
     });
 
     String mensajeCon(List<String> segmentos) => [
-          "UNH+1+BAPLIE:D:95B:UN'",
+          "UNH+1+BAPLIE:D:95B:UN:SMDG20'",
           "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'",
           ...segmentos.map((s) => "$s'"),
           "UNT+5+1'",
@@ -377,7 +377,7 @@ UNT+4+1'
     /// Envuelve segmentos EQD reales del corpus en un mensaje mínimo.
     String mensajeCon(List<String> segmentosEqd) {
       final buffer = StringBuffer()
-        ..writeln("UNH+1+BAPLIE:D:95B:UN'")
+        ..writeln("UNH+1+BAPLIE:D:95B:UN:SMDG20'")
         ..writeln("TDT+20+V001++++++CARRIER:::VESSEL MAYA'");
       for (var i = 0; i < segmentosEqd.length; i++) {
         buffer

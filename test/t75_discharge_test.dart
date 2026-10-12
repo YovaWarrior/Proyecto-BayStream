@@ -17,7 +17,8 @@ import 'support/t75_memory_log.dart';
 /// Plano de llegada sintético: emitido en HNPCR rumbo a GTSTC. Tres bajan en
 /// GTSTC en la bahía 03 (dos en cubierta y uno en bodega), uno baja en la
 /// bodega de la 14 y uno de 40 pies sigue a PAMIT en la cubierta de la 14.
-const _arrival = "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
+const _arrival = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
     "LOC+5+HNPCR:139:6'LOC+61+GTSTC:139:6'"
     "LOC+147+0030282::5'LOC+9+HNPCR:139:6'LOC+11+GTSTC:139:6'"
     "EQD+CN+TEST0000011+22G1+++5'"

@@ -1,3 +1,4 @@
+import 't86_corpus_support.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -17,8 +18,12 @@ void main(List<String> args) {
   final out = <String, dynamic>{};
   for (var i = 1; i <= 6; i++) {
     final name = 'A0$i';
-    final voyage = BaplieParserService()
-        .parse(File('${args.single}/CORPUS_$name.edi').readAsStringSync());
+    final source = File('${args.single}/CORPUS_$name.edi').readAsStringSync();
+    if (name == 'A06') {
+      out[name] = {'rejected': requireA06Rejection(source)};
+      continue;
+    }
+    final voyage = BaplieParserService().parse(source);
     out[name] = _analyze(voyage.vessel.name, voyage.containers.toList());
   }
   stdout.writeln(const JsonEncoder.withIndent('  ').convert(out));

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 't86_corpus_support.dart';
 import 'dart:math';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/data/services/export_list_parser_service.dart';
@@ -271,8 +272,12 @@ void main() {
     'A08',
     'A08v_VGM'
   ]) {
-    test('T-82 $name: conserva cabecera 2.x o rechaza versión 1.5', () {
+    test('T-82 $name: conserva cabecera 2.x o rechaza entrada 1.x', () {
       final source = File('$corpus/CORPUS_$name.edi').readAsStringSync();
+      if (name == 'A06') {
+        expect(requireA06Rejection(source), contains('SMDG15'));
+        return;
+      }
       final voyage = BaplieParserService().parse(source);
       final op = Operation(
           id: 'test',
@@ -288,17 +293,12 @@ void main() {
           ]);
       final state = const OperationStateDeriver().derive(
           OperationPlan.build(portOfCall: 'ZZZZZ', loading: voyage), []);
-      if (name == 'A06') {
-        expect(() => writer.generate(operation: op, state: state, now: clock),
-            throwsStateError);
-      } else {
-        final output = writer.generate(operation: op, state: state, now: clock);
-        final id =
-            RegExp(r'UNH\+[^+]+\+([^\x27]+)').firstMatch(source)!.group(1);
-        expect(output.text, contains('+$id\''));
-        expect(BaplieParserService().parse(output.text).containers,
-            hasLength(voyage.containers.length));
-      }
+      final output = writer.generate(operation: op, state: state, now: clock);
+      final id =
+          RegExp(r'UNH\+[^+]+\+([^\x27]+)').firstMatch(source)!.group(1);
+      expect(output.text, contains('+$id\''));
+      expect(BaplieParserService().parse(output.text).containers,
+          hasLength(voyage.containers.length));
     });
   }
 }

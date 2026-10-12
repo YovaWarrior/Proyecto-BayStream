@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 't86_corpus_support.dart';
 
 import 'package:baystream/core/errors/failures.dart';
 import 'package:baystream/features/vessel/data/datasources/hive_vessel_data_source.dart';
@@ -34,12 +35,17 @@ void main() {
     final voyages = <VesselVoyage>[];
     for (var i = 1; i <= 6; i++) {
       final file = File('$corpusDirectory/CORPUS_A0$i.edi');
+      if (i == 6) {
+        expect(requireA06Rejection(await file.readAsString()), contains('SMDG15'));
+        continue;
+      }
       final parsed =
           parser.parse(String.fromCharCodes(await file.readAsBytes()));
       expect(parsed.vessel.profileKey, keys[i - 1]);
       voyages.add(parsed);
     }
-    expect(voyages[4].vessel.matchIdentity(voyages[5].vessel),
+    expect(voyages[4].vessel.matchIdentity(const Vessel(
+        id: 'sintetico', name: 'BUQUE ECO', imoNumber: '9000039')),
         VesselIdentityMatch.requiresConfirmation);
     final parsed = voyages.first;
     final original = parsed.withGeometry(
@@ -78,8 +84,7 @@ void main() {
     expect(VesselProfile.fromJson(jsonDecode(jsonEncode(profile.toJson()))),
         profile);
 
-    final output =
-        await Directory('build/block2/corpus').create(recursive: true);
+    final output = await Directory.systemTemp.createTemp('t86_block2_');
     // Directorio y espacio de nombres propios para no tocar datos de la app.
     final directory = await output.createTemp('store_');
     final namespace = 'corpus_${DateTime.now().microsecondsSinceEpoch}';

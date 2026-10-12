@@ -12,7 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   // Cuatro contenedores, uno por caso: solo VGM, solo WT, los dos, ninguno.
   const edi = '''
-UNH+1+BAPLIE:D:95B:UN'
+UNH+1+BAPLIE:D:95B:UN:SMDG20'
 TDT+20+V066++++++:::BUQUE PESOS'
 LOC+147+0050182:::5'
 EQD+CN+SOLOVGM0001+22G1+++5'

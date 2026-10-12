@@ -5,14 +5,15 @@ import 'package:baystream/features/vessel/domain/entities/vessel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // Segmentos extraídos literalmente de CORPUS_A01 a CORPUS_A06.
+  // TDT anonimizados A01–A06 dentro de mensajes sintéticos 2.x.
+  // A06 completo ya no se admite; aquí se prueba la identidad, no su versión.
   const segments = [
-    "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'",
-    "TDT+20+VIAJE001A+++NV3:172:20+++9000015:146:11:BUQUE BRAVO'",
-    "TDT+20+VIAJE003A+++NV3:172:166+++ZZAB1:103:ZZZ:BUQUE CHARLIE'",
-    "TDT+20+VIAJE002A+++NAVE5:172:20+++9000027:146:11:BUQUE DELTA'",
-    "TDT+20++++NV4:172:ZZZ+++ZZC5603:103::BUQUE ECO:kingston JM++LINEA-A:LR'",
-    "TDT+20+VIAJE004A++9000039:146::BUQUE ECO++NV3:172:20'",
+    "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'",
+    "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+VIAJE001A+++NV3:172:20+++9000015:146:11:BUQUE BRAVO'",
+    "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+VIAJE003A+++NV3:172:166+++ZZAB1:103:ZZZ:BUQUE CHARLIE'",
+    "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+VIAJE002A+++NAVE5:172:20+++9000027:146:11:BUQUE DELTA'",
+    "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20++++NV4:172:ZZZ+++ZZC5603:103::BUQUE ECO:kingston JM++LINEA-A:LR'",
+    "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+VIAJE004A++9000039:146::BUQUE ECO++NV3:172:20'",
   ];
   const keys = [
     'imo:9000003',
@@ -25,7 +26,7 @@ void main() {
   final parser = BaplieParserService();
 
   for (var i = 0; i < segments.length; i++) {
-    test('TDT real A0${i + 1}: clave estable y UUID interno independiente', () {
+    test('TDT A0${i + 1} en 2.x: clave estable y UUID independiente', () {
       final first = parser.parse(segments[i]).vessel;
       final second = parser.parse(segments[i]).vessel;
       expect(first.profileKey, keys[i]);
@@ -39,7 +40,7 @@ void main() {
     });
   }
 
-  test('A05 y A06 homónimos requieren confirmación y nunca se fusionan solos',
+  test('TDT homónimos de A05/A06 en 2.x requieren confirmar la identidad',
       () {
     final a05 = parser.parse(segments[4]).vessel;
     final a06 = parser.parse(segments[5]).vessel;
@@ -73,7 +74,7 @@ void main() {
   test('un calificador desconocido no se interpreta como IMO por tener dígitos',
       () {
     final vessel =
-        parser.parse("TDT+20+V+++NV:172:20+++9000003:999::BUQUE ALFA'").vessel;
+        parser.parse("UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+V+++NV:172:20+++9000003:999::BUQUE ALFA'").vessel;
     expect(vessel.imoNumber, isNull);
     expect(vessel.callSign, isNull);
     expect(vessel.profileKey, 'name:BUQUE ALFA');

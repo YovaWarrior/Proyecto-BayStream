@@ -9,6 +9,7 @@ import 'package:baystream/features/vessel/presentation/providers/segregation_pro
 import 'package:baystream/features/vessel/presentation/providers/stack_weight_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 't86_corpus_support.dart';
 
 void require(bool value, String reason) {
   if (!value) throw StateError(reason);
@@ -28,6 +29,10 @@ Future<Map<String, dynamic>> checkBlock7(Map<String, String> sources,
   const dg = DangerousGoodsValidator();
   const weight = StackWeightValidator();
   for (final entry in sources.entries) {
+    if (entry.key == 'A06') {
+      metrics[entry.key] = {'rejected': requireA06Rejection(entry.value)};
+      continue;
+    }
     final parsed = BaplieParserService().parse(entry.value);
     final profile = VesselProfile.proposeFrom(parsed);
     final voyage = parsed
@@ -60,7 +65,7 @@ Future<Map<String, dynamic>> checkBlock7(Map<String, String> sources,
         state.name: results.where((r) => r.status == state).length
     };
   }
-  require(declarations == 34 && units == 30,
+  require(declarations == 33 && units == 29,
       'Corpus incompleto: $declarations DGS/$units unidades');
   final a03 = voyages['A03']!;
   require(metrics['A03']['dgs'] == 23 && metrics['A03']['dangerousUnits'] == 20,

@@ -20,6 +20,7 @@ const unknownVesselErrorMessage =
 
 String vesselFailureMessage(Failure failure) {
   if (failure is BaplieParsingFailure) {
+    if (failure.code == 'unsupported_baplie_version') return failure.message;
     if (failure.segment == 'TDT' ||
         failure.message.contains('nombre del buque')) {
       return 'El archivo no trae el nombre del buque en el segmento TDT. '

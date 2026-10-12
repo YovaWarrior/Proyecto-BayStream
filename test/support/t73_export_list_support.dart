@@ -7,7 +7,8 @@ import 'package:baystream/features/vessel/domain/entities/entities.dart';
 /// (tool/t73_listado_sintetico.py). Mismas rarezas que el caso real: el plan
 /// trunca un VGM, dice COSPC donde el listado dice COMNG, LINB donde dice LNB,
 /// trae un solo UN donde el listado declara dos y un vacío ya numerado.
-const t73PlanEdi = "TDT+20+T73+++LNX:172:20+++ZZG0073:103:ZZZ:BUQUE PRUEBA'"
+const t73PlanEdi = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20+T73+++LNX:172:20+++ZZG0073:103:ZZZ:BUQUE PRUEBA'"
     "LOC+5+GTSTC:139:6'"
     "LOC+147+0140282::5'MEA+WT++KGM:20800'LOC+9+GTSTC:139:6'LOC+11+COSPC:139:6'"
     "EQD+CN+TSTU0000014+45G1+++5'NAD+CA+LNX:172:20'"

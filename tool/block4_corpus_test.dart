@@ -53,7 +53,7 @@ void main() {
     final profileBytes = utf8.encode(record).length;
     expect(profileBytes, lessThan(1200));
     expect(profileBytes, lessThan(utf8.encode(voyageRecord).length));
-    final out = await Directory('build/block4').create(recursive: true);
+    final out = await Directory.systemTemp.createTemp('t86_block4_');
     final storeDirectory = await out.createTemp('corpus_');
     Future<HiveVesselDataSource> open() => HiveVesselDataSource.open(
         directory: storeDirectory.path, namespace: 't30_corpus');

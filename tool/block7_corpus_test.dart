@@ -15,7 +15,7 @@ void main() {
       final name = 'A0$n';
       sources[name] = await File('$corpus/CORPUS_$name.edi').readAsString();
     }
-    final root = await Directory('build/block7').create(recursive: true);
+    final root = await Directory.systemTemp.createTemp('t86_block7_');
     final directory = await root.createTemp('corpus_');
     try {
       final metrics = await checkBlock7(

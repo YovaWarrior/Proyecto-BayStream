@@ -13,7 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _header = "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
+const _header = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'"
     "LOC+5+GTSTC:139:6'";
 const _first = "LOC+147+0030182::5'LOC+9+HNPCR:139:6'"
     "LOC+11+GTSTC:139:6'MEA+WT++KGM:10000'"

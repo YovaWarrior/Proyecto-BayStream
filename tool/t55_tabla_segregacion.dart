@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 't86_corpus_support.dart';
 
 import 'package:baystream/core/utils/iso_coordinate_parser.dart';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
@@ -282,6 +283,10 @@ Map<String, dynamic> _compatibilityPrecedence() {
 Map<String, dynamic> _corpusIsoTypes(String dir) {
   final types = <String, int>{};
   for (var i = 1; i <= 6; i++) {
+    if (i == 6) {
+      requireA06Rejection(File('$dir/CORPUS_A06.edi').readAsStringSync());
+      continue;
+    }
     final v = BaplieParserService()
         .parse(File('$dir/CORPUS_A0$i.edi').readAsStringSync());
     for (final c in v.containers.where((c) =>

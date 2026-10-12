@@ -35,11 +35,10 @@ void main() {
     for (final bay in [5, 13, 15, 35, 39, 43, 45]) {
       expect(shadows['$bay'], isNotEmpty);
     }
-    await Directory('build/t53').create(recursive: true);
-    await Directory('output/pdf').create(recursive: true);
+    final out = await Directory.systemTemp.createTemp('t86_t53_');
     const service = PdfReportService();
-    await File('output/pdf/T53-CORPUS_A01.pdf').writeAsBytes(await service.generate(declared, geometry: geometry));
-    await File('build/t53/metrics.json').writeAsString(jsonEncode({
+    await File('${out.path}/T53-CORPUS_A01.pdf').writeAsBytes(await service.generate(declared, geometry: geometry));
+    await File('${out.path}/metrics.json').writeAsString(jsonEncode({
       'containers': declared.totalContainers, 'weight': declared.totalGrossWeight,
       'bays': bays, 'shadows': shadows, 'rows': geometry.orderedRows,
       'tiers': [...geometry.deckTierNumbers, ...geometry.holdTierNumbers],
@@ -54,7 +53,7 @@ void main() {
       voyageNumber: 'QA', containers: [empty, oog], bays: {1: Bay(bayNumber: 1,
         containers: [empty, oog], geometry: small, slotsOccupiedByNeighbors: const {'0282', '0182'})});
     // 0282 tiene carga propia y sombra: el PDF debe dibujar el contenedor.
-    await File('output/pdf/T53-contraste.pdf').writeAsBytes(await service.generate(comparison, geometry: small));
+    await File('${out.path}/T53-contraste.pdf').writeAsBytes(await service.generate(comparison, geometry: small));
     expect(comparison.totalContainers, 2);
     expect(service.sortedContainers(declared).length, 977);
   });

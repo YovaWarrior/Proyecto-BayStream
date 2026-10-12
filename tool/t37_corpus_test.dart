@@ -17,7 +17,7 @@ void main() {
     expect(parsed.totalContainers, 977);
     final profile = VesselProfile.proposeFrom(parsed);
     final voyage = parsed.withGeometry(profile.geometry).copyWith(vesselProfileKey: profile.key);
-    final root = await Directory('build/t37/corpus-stores').create(recursive: true);
+    final root = await Directory.systemTemp.createTemp('t86_t37_');
     final directory = await root.createTemp('a01_');
     Future<LocalVesselRepositoryImpl> open() async => LocalVesselRepositoryImpl(
         await HiveVesselDataSource.open(directory: directory.path, namespace: 'corpus'));

@@ -33,7 +33,8 @@ ContainerUnit dangerous(String un, String hazard, String position,
 void main() {
   const validator = DangerousGoodsValidator();
   test('T-41 DGS truncado conserva el peligro y produce no evaluado', () {
-    const source = "TDT+20+V+1++NV:172:20+++9000003:146::PRUEBA'"
+    const source = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20+V+1++NV:172:20+++9000003:146::PRUEBA'"
         "LOC+147+0010182:::5'EQD+CN+TEST0000001+22G1+++5'DGS+IMD'UNT+5+1'";
     final voyage = BaplieParserService().parse(source);
     expect(voyage.containers.single.isDangerous, isTrue);
@@ -520,7 +521,8 @@ void main() {
         contains('histórico'));
   });
   test('T-41 parser conserva cada DGS, C236 y el roundtrip JSON/Hive', () {
-    const source = "TDT+20+V+1++NV:172:20+++9000003:146::PRUEBA'"
+    const source = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    "TDT+20+V+1++NV:172:20+++9000003:146::PRUEBA'"
         "LOC+147+0010182:::5'EQD+CN+TEST0000001+22G1+++5'"
         "DGS+IMD+3+1993++I+++++3:5.1:0'DGS+IMD+9+3082++III'"
         "LOC+147+0030182:::5'EQD+CN+TEST0000002+22G1+++5'UNT+8+1'";

@@ -1,3 +1,4 @@
+import 't86_corpus_support.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -87,6 +88,10 @@ Map<String, dynamic> _corpus(String dir) {
   for (var i = 1; i <= 6; i++) {
     final name = 'A0$i';
     final raw = File('$dir/CORPUS_$name.edi').readAsStringSync();
+    if (name == 'A06') {
+      result[name] = {'rejected': requireA06Rejection(raw)};
+      continue;
+    }
     final parsed = BaplieParserService().parse(raw);
     final profile = VesselProfile.proposeFrom(parsed);
     final geometry = profile.geometry;

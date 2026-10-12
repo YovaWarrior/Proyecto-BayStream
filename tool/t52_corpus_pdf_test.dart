@@ -36,7 +36,7 @@ void main() {
     final voyage = parsed.withGeometry(declared);
     expect(voyage.totalContainers, 977);
     expect(voyage.bays, hasLength(34));
-    final out = await Directory('output/pdf').create(recursive: true);
+    final out = await Directory.systemTemp.createTemp('t86_t52_');
     const service = PdfReportService();
     await File('${out.path}/T52-CORPUS_A01.pdf')
         .writeAsBytes(await service.generate(voyage, geometry: declared));
@@ -87,8 +87,7 @@ void main() {
           .map((b) => b.bayNumber)
           .toList(),
     };
-    await Directory('build/t52').create(recursive: true);
-    await File('build/t52/metrics.json').writeAsString(jsonEncode(metrics));
+    await File('${out.path}/metrics.json').writeAsString(jsonEncode(metrics));
     stdout.writeln('T52_CORPUS ${jsonEncode(metrics)}');
   });
 }
