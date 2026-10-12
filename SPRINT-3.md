@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 185.2 h estimadas** (al 9-oct, 10.16) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 179.8 h estimadas** (al 12-oct, 10.18) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -674,12 +674,47 @@ La validación se hace contra el **estado derivado del propio dispositivo** (T-7
   - Chrome muestra lo mismo.
 - [ ] Piso de 485 pruebas, `analyze` en cero, los corpus en verde y el nuevo de T-80.
 
+#### T-81 · La oficina mueve o cancela, y el muelle lo ve sin recargar · 4.0 h · Codex (ficha completa, 12-oct)
+
+**Para qué.** Carlos lo contó así: su jefe a veces mueve o cancela llenos desde la oficina, y esos cambios tienen que llegar al muelle. T-80 ya hizo el camino con permiso: el muelle pide y la oficina aprueba. T-81 hace el camino directo: **la oficina cambia el plan por su cuenta**. El diseño ya existe en T-79a, 2.4: `change_position` **sin** `request` y `cancel_item`. Las reglas publicadas el 11-oct ya los permiten solo a la oficina, y el derivador de T-80 ya aplica el plan efectivo.
+
+**Qué hacer.**
+1. **«Mover» en la oficina.** Desde el detalle de un contenedor o de una reserva **pendiente** del plan de carga:
+   - se elige la posición nueva, o se intercambian dos objetos;
+   - el motivo es obligatorio;
+   - se registra un `change_position` sin `request`, con 1 a 4 cambios.
+   - Antes de confirmar, valida igual que T-77, contra el plan efectivo: 20/40, celda ocupada y grupo en las reservas.
+   - Un objeto ya cargado no se ofrece para mover.
+2. **«Cancelar» en la oficina.** Para un contenedor o una reserva pendiente que ya no embarca: un `cancel_item` con motivo.
+   - En el plano queda marcado como **cancelado**: deja de contar como pendiente y aparece en la columna «Cancelados» de T-78.
+3. **Deshacer, desde la oficina.** Con `annul`, como en T-75. Anular una cancelación devuelve el objeto a pendiente, y anular un movimiento restaura la posición anterior.
+4. **El muelle lo ve en tiempo real, sin recargar el archivo.**
+   - El plano, el modo «Número de orden» y los pendientes cambian solos.
+   - Si el muelle intenta cargar algo cancelado, T-77 lo avisa («cancelado por la oficina») y no lo registra sin motivo.
+5. **El muelle no puede.** La pantalla del muelle no ofrece mover ni cancelar. Forzado, la nube lo niega: la regla ya existe y solo se comprueba.
+6. **Solo el plan de carga.** Cancelar o mover una descarga queda fuera de esta tarea.
+
+**Terminada cuando:**
+- [ ] **El corpus**, sobre el caso:
+  - cancelar el OR 5 deja 175 cargas pendientes, y su celda vacía al final;
+  - mover el OR 1 a una celda libre compatible deja su carga allí sin conflicto;
+  - anular las dos cosas devuelve el estado de hoy, con 460/460;
+  - todo da lo mismo en al menos tres órdenes.
+- [ ] **En producción**, sobre una operación «PRUEBA T-81»:
+  - la oficina en Windows mueve un contenedor y cancela otro;
+  - el Honor y Chrome lo ven sin recargar, con los pendientes y «Cancelados» correctos;
+  - el muelle intenta cargar el cancelado y T-77 lo frena;
+  - la oficina anula la cancelación y vuelve a pendiente;
+  - un `cancel_item` forzado desde el muelle sale PERMISSION_DENIED.
+- [ ] Las reglas no cambian. Si hiciera falta cambiarlas, Codex se detiene y avisa: Carlos las publica.
+- [ ] Piso de 498 pruebas, `analyze` en cero, los corpus en verde y el nuevo de T-81.
+
 
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-79** | RF-032+ · RF-034 | 12.0 | Cuentas con correo y lista de autorizados; Firestore en `baystream-app`; reglas; cola sin conexión en el muelle | Dos dispositivos ven el mismo avance; uno sin red sube al volver; reglas verificadas en uso real · **ficha completa arriba** |
 | **T-80** | RF-035 | 6.0 | Roles muelle y oficina; el muelle pide un cambio y la oficina lo aprueba | El intercambio 128 ↔ 145 del caso se pide desde el muelle y se aprueba desde la oficina · **ficha completa arriba** |
-| **T-81** | RF-038 | 4.0 | Cambios desde la oficina: mover o cancelar contenedores, sincronizados al muelle | El muelle ve el cambio sin recargar el archivo |
+| **T-81** | RF-038 | 4.0 | Cambios desde la oficina: mover o cancelar contenedores, sincronizados al muelle | El muelle ve el cambio sin recargar el archivo · **ficha completa arriba** |
 
 **Punto de control del 14-oct.** Si la sincronización no funciona para esa fecha, el
 módulo de muelle se entrega **en un solo dispositivo**, con exportación de la bitácora. Así
@@ -1438,3 +1473,48 @@ Lo que comprobó:
 1. Primero, la aceptación cruzada de T-79: la suite, las reglas en el emulador, los corpus y una sincronización corta en producción.
 2. Después, **T-80**, con su ficha completa en la sección 5.
 - Timonel queda en pausa. Después acepta T-80 y toma T-81.
+
+### 10.17 · El tablero Kanban del Sprint 3 (11-oct)
+
+**Carlos pidió el tablero, como en los sprints anteriores.** Está en `docs/BayStream_Tablero_Kanban_Sprint3.html`. Yov lo publica también como página («BayStream Kanban Sprint 3») y lo actualiza con cada decisión.
+- **Lleva el formato del Sprint 2:**
+  - cuatro columnas: Por hacer, En curso, En revisión y Terminado;
+  - las tareas, agrupadas por elemento;
+  - la capa de cada tarea;
+  - en las terminadas, el commit y la cifra del caso real que la aceptó.
+- **Al 11-oct:**
+  - 15 tareas terminadas, con 41.5 h estimadas;
+  - T-79 en revisión;
+  - T-80 en curso;
+  - 23 por hacer.
+- **Dos sumas distintas, y las dos son correctas.**
+  - **206.5 h:** el tablero suma las estimaciones de las 40 tarjetas, con las horas de las tablas de la sección 5 más T-70b y T-70c.
+  - **≈ 185.2 h:** el encabezado de este archivo cambia la estimación de cada tarea terminada por sus horas reales.
+  - El tablero muestra la estimación en cada tarjeta, y las horas reales van en la nota.
+
+### 10.18 · T-79 terminada · T-80 en revisión · Timonel se ausenta tres días y Codex sigue solo · T-81 a Codex (12-oct)
+
+**Las reglas de T-80 están publicadas** (11-oct, 4:08 p.m.).
+- Carlos las publicó desde la consola.
+- Yov revisó antes el archivo: solo cambia `validPayload`, partido por tipo, y la validación de cada elemento de `changes[]`. El bloque final sigue negando todo lo demás.
+- Yov las comprobó en el simulador desde el Chrome de Carlos: leer sin sesión sale rechazado, y con la cuenta de muelle y con la de oficina sale autorizado.
+
+**T-79 pasa a Terminado.** Codex la aceptó en ≈ 0.29 h, con la suite, las reglas, los corpus y una sincronización corta en producción.
+
+**T-80, de Codex, pasa a En revisión** (commit `058847b`).
+- **En producción, sobre «PRUEBA T-80»:**
+  - el Honor pidió el intercambio 128 ↔ 145 y Windows lo aprobó;
+  - un segundo pedido se rechazó;
+  - el intento forzado del muelle de aprobar salió PERMISSION_DENIED, y el documento no existe en la nube.
+- **El estado final en Windows, el Honor y Chrome:** 180 movimientos confirmados, 460/460 posiciones y cero conflictos.
+- **Validaciones.** **498 pruebas** (el piso nuevo), `analyze` en cero, las reglas 69 de 69 y los corpus 54 de 54.
+- **Horas.** 0.56 en lugar de 6.0. El total queda en ≈ 179.8 h.
+- **Una precisión al diseño, aceptada.** Una aprobación que llega después de la carga **regulariza** esa carga, como piden la ficha y T-79a 2.7.2. La fila «cambio sobre algo ya movido» de la tabla de T-79a ya no se usa para ese caso.
+
+**Timonel no está disponible unos tres días**, hasta el 15-oct aproximadamente, según Carlos. Mientras tanto:
+- **Codex lleva el carril de `lib/` solo**, tarea tras tarea. No hay choque, porque es un solo programador.
+- **Sus tareas quedan En revisión.** Timonel hace la aceptación cruzada de todas juntas cuando vuelva, empezando por T-80.
+- **Yov revisa cada commit en cuanto llega:** el contenido, que no haya datos reales, `main.dart`, las dependencias y las cifras del informe.
+- Codex sigue aceptando cada tarea en los tres clientes, y en producción cuando aplique.
+- **Lo que sigue para Codex:** T-81 (ficha completa en la sección 5) y después la Ola 4, empezando por T-82 (el BAPLIE de salida).
+- **Yov empieza la transcripción del IMDG para T-85**, para que no frene la Ola 4.
