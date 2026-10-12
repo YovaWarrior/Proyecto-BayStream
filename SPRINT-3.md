@@ -722,9 +722,79 @@ el 24-oct siempre hay algo que funciona.
 
 ### Ola 4 · Salida, tapas, IMDG y versiones (17–21 oct)
 
+#### T-82 · BAPLIE de salida: lo que zarpa, en la misma versión en que llegó · 10.0 h · Codex (ficha completa, 11-oct)
+
+**Para qué.** Hoy, operaciones digita contenedor por contenedor en otro programa para mandar el BAPLIE con lo cargado y lo cancelado. Desde T-74 a T-81, BayStream ya sabe qué queda a bordo; T-82 lo escribe.
+
+**Qué construye.**
+
+1. **Un escritor en el dominio, en Dart puro y sin Flutter.**
+   - Toma el estado que deriva `OperationStateDeriver`
+     (`lib/features/vessel/domain/services/operation_state_deriver.dart`): el plan
+     efectivo más los movimientos.
+   - Produce el BAPLIE de lo que zarpa:
+     - los ocupantes de llegada que no se descargaron, incluidos los de paso: las
+       **284 posiciones que siguen a bordo salen sin cambios**, como pide el caso
+       (sección 7 de `docs/S3-CASO-MAGELLAN-STAR.md`);
+     - los llenos cargados en su celda efectiva;
+     - los vacíos asignados a reservas, con los datos del contenedor que sacó del
+       listado;
+     - las re-estibas y los `change_position` vigentes.
+   - Los cancelados y los pendientes no van.
+2. **La misma versión 2.x del archivo con que se armó la operación.**
+   - La cabecera, la versión de mensaje y el código de asociación salen de la fuente
+     `loading_baplie`: la salida describe la misma zarpada que el plan de carga. Si la
+     operación no tiene esa fuente, la acción lo dice y no genera.
+   - Copia los datos del buque y del viaje.
+   - Genera referencias de control nuevas, y los conteos de `UNT`/`UNZ` deben ser
+     correctos.
+   - Si la versión no se reconoce, no genera y lo dice. T-86 amplía después la detección.
+3. **Por contenedor**, la posición, los puertos, el tipo ISO, lleno o vacío y las
+   peligrosas del listado. Los pesos: **el VGM y la tara exactos del listado** (con las
+   equivalencias de T-73) para lo cargado; **los del propio archivo de llegada** para lo
+   que sigue a bordo desde A07.
+   - Caso de control: el OR 12 va a `R:0030984`, con tara 2 185 kg.
+4. **La lista de cancelados.** Junto al archivo, la app muestra los cancelados vigentes
+   con su motivo y deja copiarla, para reportarla aparte. Decisión de Carlos, 11-oct
+   (10.19).
+5. **La acción «Generar BAPLIE de salida»** queda en la oficina y en el modo sin cuenta,
+   no en el muelle.
+   - Si quedan pendientes, avisa cuántos hay y deja generar igual.
+   - Guarda con el mecanismo que ya usa la exportación a PDF
+     (`pdf_report_service.dart`): guardar en Windows, compartir o guardar en Android,
+     descargar en la Web.
+   - **Sin dependencias nuevas.** Si hace falta una, Codex se detiene y avisa a Carlos.
+
+**Fuera de alcance:** BAPLIE 3.1 (T-87), la detección de versión más allá de lo que ya
+lee el lector (T-86), la comparación entre llegada y salida (T-96), enviarlo por correo
+y cualquier cambio de reglas. La generación es local y no escribe en Firestore.
+
+**Terminada cuando:**
+
+- [ ] **Corpus, tanto A08 como A08v_VGM:**
+  - se reproducen los 177 eventos sobre A07, A08 y `LISTADO_A08.xlsx`;
+  - se genera el BAPLIE de salida;
+  - el lector de BayStream (`baplie_parser_service.dart`) lo relee;
+  - coincide con `CASO_A08_ESTADO_FINAL.csv` en **460/460 posiciones**, comparando
+    posición, contenedor, tipo ISO, puertos, línea y peso; el lleno o vacío y las
+    peligrosas coinciden con el listado en lo cargado y con la llegada en lo que sigue
+    a bordo.
+- [ ] **Ida y vuelta estable:** generar → leer → generar da el mismo texto con el reloj
+      fijo.
+- [ ] **La versión de cabecera** sale igual que la de la fuente `loading_baplie`,
+      comprobado con cada versión 2.x que haya en A01–A08.
+- [ ] **OR 12:** tara 2 185 kg en `R:0030984`.
+- [ ] **Cancelación:** el OR 5 cancelado con T-81 no aparece en el EDI y la lista
+      copiable lo muestra con su motivo; anulado, vuelve al EDI y la lista queda vacía.
+- [ ] **Tres clientes** (Windows de oficina, Honor y Chrome): el archivo se guarda y
+      BayStream lo abre.
+- [ ] **Las salidas del corpus van a `%TEMP%`**, nunca al repo.
+- [ ] **Calidad:** suite ≥ 508, analyze 0, corpus completo y reglas sin cambio (mismo
+      SHA).
+
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
-| **T-82** | RF-039 | 10.0 | BAPLIE de salida en la misma versión 2.x en que llegó, con lo cargado, re-estibado y cancelado; VGM y tara exactos del listado | Releído por el propio lector, coincide con `CASO_A08_ESTADO_FINAL.csv` en las 460 posiciones |
+| **T-82** | RF-039 | 10.0 | BAPLIE de salida en la misma versión 2.x en que llegó, con lo cargado, re-estibado y cancelado; VGM y tara exactos del listado | Releído por el propio lector, coincide con `CASO_A08_ESTADO_FINAL.csv` en las 460 posiciones · **ficha completa arriba** |
 | **T-83** | RF-040 | 4.0 | Tapas en el perfil del buque, por bahía: sin tapa, una automática, o 1–3 de grúa con las filas que cubre cada una | Se declaran una vez por buque y se copian a otras bahías |
 | **T-84** | RF-040 | 4.0 | Tapas en la operación: quitar y reponer como movimientos; aviso al marcar bodega bajo tapa cerrada | Los movimientos de tapa cuentan en el avance |
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
@@ -1518,3 +1588,19 @@ Lo que comprobó:
 - Codex sigue aceptando cada tarea en los tres clientes, y en producción cuando aplique.
 - **Lo que sigue para Codex:** T-81 (ficha completa en la sección 5) y después la Ola 4, empezando por T-82 (el BAPLIE de salida).
 - **Yov empieza la transcripción del IMDG para T-85**, para que no frene la Ola 4.
+
+### 10.19 · T-81 entregada, en revisión · T-82 pasa a Codex con ficha completa (11-oct, noche)
+
+**T-81, de Codex, pasa a En revisión** (commit `c31055d`), como fija 10.18 mientras Timonel no está.
+
+- **El corpus, en A08 y A08v_VGM.** Cancelar el OR 5 deja **175 cargas pendientes** y 1 cancelado, con su celda vacía al final; mover el OR 1 a una celda libre compatible deja su carga allí **sin conflicto**; anular ambos cambios antes de las cargas devuelve el caso a **460/460** posiciones, 0 pendientes, 0 cancelados y 0 conflictos. Todo en orden cronológico, inverso y mezclado con semilla fija.
+- **Una precisión al diseño, aceptada.** Anular un cambio **después** de registrada la carga restaura el plan y no mueve la carga física: el OR 1 queda «fuera de plan» y el OR 5 vuelve a pendiente; cargar el OR 5 y corregir el OR 1 con `corrects` devuelve 460/460. Es la semántica de T-79a vista al revés de la regularización de 10.18.
+- **Producción, sobre «PRUEBA T-81»:** la oficina en Windows movió el OR 1 (022-04-02 → 006-10-02) y canceló el OR 5; el Honor y Chrome lo recibieron sin recargar, con los pendientes y «Cancelados» correctos; el muelle no pudo cargar el cancelado (bloqueo de T-77); un `cancel_item` forzado desde el muelle dio **PERMISSION_DENIED**, sin documento en la nube ni registro local; la oficina anuló ambos y los tres clientes terminaron con 4 registros confirmados y 4 ids distintos; Windows los conservó al reabrir.
+- **Validaciones.** **508 pruebas** (el piso nuevo), `analyze` en cero y los corpus en 56 de 56. Las reglas no cambian: el informe confirma el SHA publicado el 11-oct a las 4:08 p. m.
+- **Horas.** 2.14 h transcurridas frente a las 4.0 estimadas, de las que 0.84 h de trabajo activo quedaron documentadas; el total del encabezado lo recalcula Yov el miércoles (10.17).
+- **Revisión del commit.** Los 14 archivos son los de la ficha: sin `main.dart`, sin congelados, sin `pubspec.*` ni reglas. El diff no trae claves, correos ni UID: las menciones de `apiKey` son lecturas de `String.fromEnvironment` del banco de aceptación, sin valores. `git ls-files` no rastrea ningún `.edi`, `.xlsx` ni `.csv` del corpus; los que hay son fixtures sintéticos y los registros de H5.
+- **La fecha del informe (11-oct) es correcta:** sus marcas de tiempo van de 18:09 a 20:18 y el commit es del 11-oct a las 20:20. No se edita el informe de Codex.
+- **Incidencias que declaró Codex, sin daño.** Lanzó una prueba de Flutter mientras Windows todavía compilaba, contra la regla de un comando a la vez; desde entonces los corre en serie. Y durante una inspección del Honor el aviso de guardar contraseña mostró un correo en la salida de la herramienta: se informó a Carlos, se borró el temporal y no entró al repo ni al informe.
+- **Esperan la aceptación en lote de Timonel:** T-80 y T-81 (10.18).
+- **Los cancelados del BAPLIE de salida, decidido por Carlos (11-oct):** no van en el EDI, porque no están a bordo. La app muestra los cancelados vigentes con su motivo y deja copiar la lista, para reportarla aparte si la agencia la pide.
+- **T-82 pasa a Codex** con ficha completa (sección 5, Ola 4), en cuanto Carlos commitee esta decisión. La ficha precisa tres cosas sobre el borrador: la cabecera y la versión salen de la fuente `loading_baplie`; los pesos exactos del listado aplican a lo cargado y los de la llegada a lo que sigue a bordo; y la comparación con `CASO_A08_ESTADO_FINAL.csv` usa las columnas que ese CSV trae.
