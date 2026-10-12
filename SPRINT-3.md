@@ -839,10 +839,59 @@ Firebase.
 - [ ] Piso de 524 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
+#### T-83 · Tapas de escotilla en el perfil del buque, por bahía · 4.0 h · Codex (ficha completa, 12-oct)
+
+**Para qué.** RF-040, pedido de Carlos del 5-oct: por bahía hay 1, 2 o 3 tapas de grúa;
+hay buques sin tapa (bodega abierta) y algunos con una sola tapa automática. Hoy el
+perfil (`VesselProfile`) no declara tapas: la app no sabe qué bodega está cerrada ni
+qué filas cubre cada tapa, y T-84 (quitar y reponer en la operación) y T-95
+(sobreestibas por tapa) lo necesitan. Con las tapas se revisa también el supuesto de
+10.13: las bahías se siguen deduciendo de los planes, pero lo que el plano no puede
+deducir —qué cierra cada tapa— pasa a declararlo el perfil.
+
+**Qué construye.**
+
+1. **Declaración por bahía de bodega en el perfil**, una de estas configuraciones:
+   - **sin tapa** (bodega abierta);
+   - **una tapa automática**;
+   - **de una a tres tapas de grúa**, cada una con las filas que cubre.
+   - Validez: las filas cubiertas de una bahía no se solapan y pertenecen a esa bahía
+     según la geometría con la que T-77 ya valida celdas y 20/40
+     (`vessel_geometry.dart`); una bahía sin bodega no declara tapas.
+2. **Persistencia retrocompatible:** los perfiles guardados hoy se leen sin tapas y la
+   app lo dice («sin declarar»); ninguna tapa se inventa por omisión.
+3. **Pantalla de edición en el perfil**, bahía por bahía, legible a 360 dp, con
+   **copiar a otras bahías**: se declara una vez por buque y se copia, como pide la
+   fila de la tabla.
+4. **El plano lo muestra:** en la vista de bahía, el contorno de cada tapa con sus
+   filas, en escala monocromática, distinguible a 360 dp, sin cambiar lo que hoy dibuja
+   el plano.
+5. **PROVISIONAL:** ningún buque del corpus declara tapas reales. Toda configuración de
+   prueba se marca como tal en el informe; la primera declaración real vendrá del buque
+   del piloto (T-101) o de la hoja de perfil que traiga Carlos.
+
+**Fuera de alcance:** quitar y reponer tapas como movimientos (T-84; el tipo
+`hatch_cover` ya existe en `movement.dart`), la segregación IMDG bajo tapa (T-85), las
+sobreestibas por tapa (T-95) y cualquier cambio de reglas o Firebase.
+
+**Terminada cuando:**
+
+- [ ] Un perfil con tapas se guarda, se reabre y queda igual en los tres clientes.
+- [ ] Las configuraciones se validan: sin tapa, automática y 1–3 de grúa con filas se
+      declaran; un solape de filas o una fila ajena a la bahía se rechaza con mensaje
+      claro.
+- [ ] Copiar la declaración de una bahía a otras funciona y se ve en el plano.
+- [ ] Un perfil guardado antes de T-83 se lee sin tapas y la app lo dice; ninguna
+      aparece inventada.
+- [ ] En el caso: BUQUE GOLF con A07/A08, tapas de prueba (PROVISIONAL) en las bahías
+      con bodega del caso, visibles en el plano en Windows, Honor a 360 dp y Chrome.
+- [ ] Piso de 547 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
+      cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-82** | RF-039 | 10.0 | BAPLIE de salida en la misma versión 2.x en que llegó, con lo cargado, re-estibado y cancelado; VGM y tara exactos del listado | Releído por el propio lector, coincide con `CASO_A08_ESTADO_FINAL.csv` en las 460 posiciones · **ficha completa arriba** |
-| **T-83** | RF-040 | 4.0 | Tapas en el perfil del buque, por bahía: sin tapa, una automática, o 1–3 de grúa con las filas que cubre cada una | Se declaran una vez por buque y se copian a otras bahías |
+| **T-83** | RF-040 | 4.0 | Tapas en el perfil del buque, por bahía: sin tapa, una automática, o 1–3 de grúa con las filas que cubre cada una | Se declaran una vez por buque y se copian a otras bahías · **ficha completa arriba** |
 | **T-84** | RF-040 | 4.0 | Tapas en la operación: quitar y reponer como movimientos; aviso al marcar bodega bajo tapa cerrada | Los movimientos de tapa cuentan en el avance |
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
 | **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
@@ -1666,3 +1715,19 @@ Lo que comprobó:
 - **Incidencias declaradas, sin daño.** Chrome descargó primero en Descargas por su configuración; se comprobó fecha y tamaño, se movió a `%TEMP%` y no pasó por el repo. Una captura nativa tomó una ventana ajena con la app sin activar, y se descartó. **Observación para T-96:** el detalle del plano de llegada muestra las declaraciones de A07 (0020310: 24 260 kg) mientras la salida trae las vigentes del plan (24 200); la pantalla no se cambió.
 - **Esperan la aceptación en lote de Timonel:** T-80, T-81 y T-82.
 - **T-86 pasa a Codex** con ficha completa (sección 5, Ola 4). Con lo aprendido en T-82: **A06 del corpus es SMDG15 (1.x) y pasa a ser el espécimen real del rechazo**; las pruebas y corpus que hoy la leen se reescriben para esperar ese rechazo.
+
+### 10.21 · T-86 entregada, en revisión · T-83 pasa a Codex con ficha completa (12-oct)
+
+**T-86, de Codex, pasa a En revisión** (commit `1b1be4b`), como fija 10.18.
+
+- **Cómo se aseguró la no-regresión.** Antes de editar el parser, Codex guardó en `%TEMP%` una referencia JSON de las nueve fuentes 2.x y después cotejó cada viaje completo —bahías, contenedores, reservas y metadatos—, excluyendo solo los UUID de cada lectura: **nueve de nueve, sin diferencias**. Los oráculos de T-66 y T-68 se repiten: A07 0/114/284, A02 0/303/503, A08 121/0/284 y A01 325/0/652.
+- **A06 declara `BAPLIE:1:911:UN:SMDG15`** y se rechaza en el `UNH`, antes de interpretar su TDT o su carga. El aviso dice el archivo, la versión que trae y que BayStream lee SMDG20, SMDG21 y SMDG22. Un rechazo conserva el viaje anterior y no llega al almacén.
+- **La adaptación fue grande y está documentada.** El commit toca 43 rutas porque A06 la leían pruebas y corpus desde los bloques históricos: la identidad del buque y los TDT de A01–A06 pasan a probarse dentro de mensajes sintéticos 2.x; los corpus y auxiliares históricos pasan a exigir el rechazo tipado (`requireA06Rejection`); el bloque 7 queda con 33 DGS y 29 unidades peligrosas de las cinco fuentes compatibles (A06 aportaba una declaración en una unidad). De paso, y declarado: las salidas de los corpus históricos de bloques 2/4/7 y T-37/52/53 pasan al temporal del sistema, y el fixture de T-68 usa Roboto porque Ahem desbordaba con los metadatos nuevos.
+- **Fixtures sintéticos nuevos:** `t86_smdg21.edi` se lee completo (con reefer y dos peligrosas); `t86_smdg31.edi` (una 3.x) y `t86_sin_unh.edi` se rechazan.
+- **Clientes.** Windows (`t86acc`), el Honor (`.t86`, 360×800 dp) y Chrome visible: A07 abre igual y los rechazos 1.x y 3.x muestran el aviso completo conservando el plano.
+- **Validaciones.** **547 pruebas** (el piso nuevo; 23 nuevas), `analyze` en cero, **97/97 corpus** (79 del sprint, 10 de T-86 y 8 históricos) y 6/6 auxiliares. El escritor de T-82, `lib/main.dart`, `pubspec.*` y las reglas no cambian: mismo SHA, y el informe lo prueba con los SHA de escritor, `main.dart` y `pubspec`.
+- **Horas.** 0.67 h transcurridas frente a 3.0 estimadas.
+- **Revisión del commit.** Las 43 rutas son las del informe y en `lib/` los cambios son quirúrgicos: el parser (+38), el repositorio (+1), el mensaje de error (+1) y los providers (+8). El diff no trae claves, correos ni UID, y los tres `.edi` nuevos rastreados son fixtures sintéticos TSTU.
+- **Incidencias declaradas, sin daño.** La descarga del SDK de C++ para Windows se quedó sin avanzar; se detuvo solo su CMake, con el PID comprobado como de la copia T-86, y se recompiló con el SDK 13.9.0 ya presente en la copia de T-82 —la misma versión que pide `firebase_core`—, sin cambiar dependencias. Un ADB emitió `FORTIFY` una vez sin perder la pantalla; la evidencia del aviso de Chrome se repitió porque el SnackBar caducaba.
+- **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82 y T-86.
+- **T-83 pasa a Codex** con ficha completa (sección 5, Ola 4): las tapas de escotilla en el perfil del buque, por bahía.
