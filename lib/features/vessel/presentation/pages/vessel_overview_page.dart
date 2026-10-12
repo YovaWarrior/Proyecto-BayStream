@@ -17,6 +17,7 @@ import '../widgets/container_search_delegate.dart';
 import '../widgets/voyage_stats_view.dart';
 import '../widgets/sync_status_chip.dart';
 import 'export_list_import_page.dart';
+import 'departure_baplie_page.dart';
 import 'vessel_geometry_page.dart';
 import 'vessel_profiles_page.dart';
 import 'recent_voyages_page.dart';
@@ -648,6 +649,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           VoyageSummaryCard(voyage: voyage),
           Wrap(
             children: [
+              if (voyage.portOfCall != null)
+                DepartureBaplieButton(voyage: voyage),
               TextButton.icon(
                 icon: const Icon(Icons.fact_check_outlined),
                 label: const Text('Alertas de estiba'),
