@@ -179,8 +179,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     try {
       // Abrir selector de archivos nativo
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['edi', 'txt', 'baplie'],
+        type: FileType.any,
         withData: true,
         dialogTitle: 'Seleccionar archivo BAPLIE',
       );
@@ -194,8 +193,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
 
       // Verificar que el archivo tenga contenido
       if (file.bytes == null || file.bytes!.isEmpty) {
-        return LoadFileResult.error(
-            'El archivo está vacío o no se pudo leer. Selecciona otra exportación BAPLIE.');
+        return LoadFileResult.error('Archivo «${file.name}»: $notBaplieFileMessage');
       }
 
       return parseBaplieContent(String.fromCharCodes(file.bytes!),
@@ -222,7 +220,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
           await ref.read(vesselRepositoryProvider).parseBaplieFile(content);
       final voyage = result.fold((failure) {
         if (failure.code == 'unsupported_baplie_version') {
-          throw VesselActionRequired('Archivo «$fileName»: ${failure.message}');
+          throw VesselActionRequired(
+              'Archivo «$fileName»: ${vesselFailureMessage(failure)}');
         }
         throw VesselOperationFailure(failure);
       }, (v) => v);

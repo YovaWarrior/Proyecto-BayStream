@@ -18,20 +18,22 @@ const unknownVesselErrorMessage =
     'No se pudo completar la operación por un error inesperado. '
     'Inténtalo de nuevo; si persiste, reinicia la aplicación.';
 
+const notBaplieFileMessage =
+    'Este archivo no parece un BAPLIE: no se reconoce su cabecera UNH/S009. '
+    'Selecciona una exportación BAPLIE completa.';
+
 String vesselFailureMessage(Failure failure) {
   if (failure is BaplieParsingFailure) {
+    if (failure.message.contains('sin UNH/S009 reconocible') ||
+        failure.message.contains('vacío') ||
+        failure.message.contains('segmentos válidos')) {
+      return notBaplieFileMessage;
+    }
     if (failure.code == 'unsupported_baplie_version') return failure.message;
     if (failure.segment == 'TDT' ||
         failure.message.contains('nombre del buque')) {
       return 'El archivo no trae el nombre del buque en el segmento TDT. '
           'Revisa que sea un BAPLIE completo o pide una nueva exportación.';
-    }
-    if (failure.message.contains('vacío')) {
-      return 'El archivo BAPLIE está vacío. Selecciona un archivo con datos e inténtalo de nuevo.';
-    }
-    if (failure.message.contains('segmentos válidos')) {
-      return 'El archivo no contiene segmentos BAPLIE válidos. '
-          'Revisa el formato o pide una nueva exportación.';
     }
     debugPrint('Fallo de análisis BAPLIE: ${failure.message}');
     return 'No se pudo interpretar el archivo BAPLIE. '
