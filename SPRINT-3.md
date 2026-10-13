@@ -1056,11 +1056,45 @@ que no molesten y cualquier cambio de reglas o Firebase.
 - [ ] Piso de 599 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
+#### T-90 · Interruptor de tema claro y oscuro, con barrido en claro · 2.0 h · Codex (ficha completa, 13-oct)
+
+**Para qué.** USO, de la prueba de campo. La app sigue el tema del sistema y las dos
+paletas existen desde la convención 2.8 (nada de colores que solo funcionen en
+oscuro). Falta elegir el tema desde la app: en el muelle, con sol, el modo claro
+ayuda; en la oficina de noche, el oscuro. Y el modo claro tiene que estar a la altura
+en todas las pantallas.
+
+**Qué construye.**
+
+1. **El interruptor de tema en «Parámetros», con tres estados:** claro, oscuro y
+   **seguir al sistema** (por omisión). Persistido por dispositivo en la caja de
+   ajustes, como `planToolbarCollapsed` de T-91 y el último puerto de T-68; no se
+   sincroniza.
+2. **El barrido en claro de las pantallas principales:** viajes recientes, plano con
+   A07 (plegada y desplegada, de T-91), detalle de contenedor y de reserva, modo
+   Número de orden, avance de la operación, importación del listado y perfil con
+   tapas. Lo que solo se lea bien en oscuro se corrige aquí, con `colorScheme`, sin
+   literales.
+3. **Sin cambios** en reglas, nube ni almacenamiento del viaje.
+
+**Fuera de alcance:** los textos de T-97, nuevos temas o colores de marca, y
+cualquier cambio de reglas o Firebase.
+
+**Terminada cuando:**
+
+- [ ] El interruptor funciona en los tres clientes: claro, oscuro y sistema, con
+      persistencia tras cerrar y reabrir, y el sistema manda mientras no se elija.
+- [ ] El barrido en claro pasa por las pantallas listadas sin textos ilegibles ni
+      elementos invisibles; el informe dice qué se corrigió.
+- [ ] Ambos temas a 360 dp en el Honor, con la barra plegada y desplegada.
+- [ ] Piso de 605 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
+      cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos), enlace en la app, ícono propio, decisión D3 |
 | **T-89** | USO | 1.0 | iPhone acepta .edi: sin filtro por extensión y validación por contenido (`UNB`/`UNH`) · **ficha completa arriba** |
-| **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes |
+| **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes · **ficha completa arriba** |
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo y la fuente desde el propio sitio |
 | **T-93** | USO | 2.5 | Instalador de Windows |
@@ -1985,3 +2019,18 @@ Lo que comprobó:
 - **Horas.** 0.94 h de pared en total frente a 1.0 estimada.
 - **El piso pasa a 599.** **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83, T-84, T-86, T-89 y T-102.
 - **T-91 pasa a Codex** con ficha completa (sección 5, Ola 5): la barra superior plegable. El desborde de la barra a 360 dp con viaje abierto, observado en T-89 y T-102, debe desaparecer al menos plegada; el texto que quede cortado con la barra expandida sigue siendo deuda de T-97.
+
+### 10.29 · T-91 entregada, en revisión: la barra del plano se pliega · T-90 a Codex con ficha completa (13-oct)
+
+**T-91, de Codex, pasa a En revisión** (commit `d836132`).
+
+- **Lo construido.** En Bay Plan, con un viaje abierto, la barra empieza plegada si no hay elección previa: solo «BayStream» y «Desplegar acciones». Un toque alterna; la elección se guarda como `planToolbarCollapsed` en la caja de ajustes, junto al último puerto de T-68, por dispositivo y sin sincronizarse. Desplegada devuelve las ocho acciones originales, con el botón de plegar fijo y una tira desplazable —necesaria en el Honor a 360 dp, donde la primera implementación dejaba el botón fuera de pantalla y se corrigió—. Fuera de Bay Plan la barra no cambia, y los modos de operación quedan intactos.
+- **La vista se conserva al alternar**, y no de oído: identidad del `State` y del `AsyncValue` del viaje, bahía, modo y posiciones de desplazamiento antes y después de dos toques, y **cero diferencias de píxeles** del cuerpo del plano en el Honor y en Chrome.
+- **Una precisión honesta:** la ficha mencionaba el zoom; Bay Plan no tiene zoom ni `InteractiveViewer`, y el informe no finge haberlo probado.
+- **La deuda de la barra, pagada donde tocaba:** plegada ya no desborda a 360 dp, en claro y en oscuro —era la observación de T-89 y T-102—. El título desplegada y los demás textos siguen siendo deuda de T-97, declarada.
+- **Validaciones.** **605 pruebas** (el piso nuevo; 6 nuevas), `analyze` en cero, corpus **110/110** (+2), y SHA idénticos de reglas, `lib/main.dart`, `pubspec.*`, lector, escritor y los dos congelados de H5. Sin dependencias nuevas.
+- **Clientes.** Windows (almacén real, `t91acc`, sin movimientos), Honor `.t91` a 360×800 y Chrome visible; ambos temas, ambas preferencias tras reapertura. Carlos ayudó a poner Chrome visible cuando la ventana dejó de dibujar, y quedó declarado.
+- **Horas.** 3.06 h de pared con una interrupción de sesión de 2.03 h (la ventana entre 13:19 y 15:21); descontada, ≈1.03 h más la redacción, frente a 1.5 estimadas.
+- **Revisión del commit.** Las 10 rutas son las del informe; el diff no trae claves, correos ni UID, y no se rastreó nada del corpus.
+- **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83, T-84, T-86, T-89, T-91 y T-102.
+- **T-90 pasa a Codex** con ficha completa: el interruptor de tema claro/oscuro. La app ya sigue el tema del sistema y las dos paletas existen desde la convención 2.8; T-90 pone el interruptor propio y barre las pantallas en claro.
