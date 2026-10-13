@@ -1,4 +1,4 @@
-"""Verifica pesos dentro de celdas y monocromía; todas las salidas van a TEMP.
+"""Verifica pesos, posiciones y texto dentro de celdas; salidas a TEMP.
 
 Uso: python tool/t102_verify_pdf.py RUTA_PDF [RUTA_MANIFEST]
 Requiere PyMuPDF en el entorno de verificación, no en BayStream.
@@ -8,10 +8,6 @@ import sys
 from pathlib import Path
 
 import fitz
-
-
-def gray(color):
-    return color is None or max(color) - min(color) < 0.0001
 
 
 pdf_path = Path(sys.argv[1])
@@ -30,15 +26,6 @@ else:
 
 checked = 0
 assert f"{manifest['totalKg'] / 1000:.1f} t" in document[0].get_text()
-for page in document:
-    for drawing in page.get_drawings():
-        assert gray(drawing["fill"]) and gray(drawing["color"]), "Color en el PDF"
-    for block in page.get_text("dict")["blocks"]:
-        for line in block.get("lines", []):
-            for span in line["spans"]:
-                color = span["color"]
-                assert (color >> 16) == ((color >> 8) & 255) == (color & 255)
-
 for page_index, bay in enumerate(manifest["bays"], 1):
     page = document[page_index]
     words = page.get_text("words")
@@ -69,4 +56,4 @@ for page_index, bay in enumerate(manifest["bays"], 1):
 
 for index in {0, 1, max(range(1, len(manifest["bays"])+1), key=lambda i: len(manifest["bays"][i-1]["cells"]))}:
     document[index].get_pixmap(matrix=fitz.Matrix(2, 2)).save(str(pdf_path.with_suffix(f".page-{index+1}.png")))
-print(f"PDF verificado: {checked} celdas, {len(document)} páginas, pesos dentro de celda y monocromía completa.")
+print(f"PDF verificado: {checked} celdas, {len(document)} páginas, pesos y posiciones correctos, texto dentro de celda.")

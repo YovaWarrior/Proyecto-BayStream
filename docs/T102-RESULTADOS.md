@@ -1,13 +1,46 @@
 # T-102 · Peso en PDF y pilas incompletas
 
-Capitán Codex · 13-oct-2026 · rama `sprint-3`, sobre `42e9a30`.
+Capitán Codex · 13-oct-2026 · rama `sprint-3`. Primera sesión sobre `42e9a30`;
+continuación 10.27 sobre `cd90409`, con T-102 inicial guardada en `fd87b66`.
 
-**Estado: En curso; implementación y validaciones completas, aceptación de
-apertura en visores pendiente.** No se marca En revisión todavía: se aplica el
-precedente de 10.22. Después de completar la aceptación propia pasa a En revisión
-para Timonel, conforme a 10.18. No se ejecutó Git de escritura.
+**Estado: En revisión para Timonel (10.18).** Carlos aceptó manualmente la
+paleta restaurada el 13-oct, con registro de recepción a las **12:45:07 de
+Guatemala**. No se marca Terminada hasta que Timonel la acepte. No se ejecutó
+Git de escritura.
 
-## Qué cambió y decisión de Carlos
+## Aceptación manual de Carlos y continuación 10.27
+
+Carlos confirmó el **13-oct-2026**, con revisión realizada **poco antes de las
+12:30 de Guatemala** (hora aproximada declarada por él), que abrió los PDF
+exportados y comprobó la portada: **6940.6 t, 398 contenedores, 290 llenos,
+108 vacíos, 12 reefer y 14 IMO**. Comprobó también la página 2, bahía 001:
+**2.3 + 6.9 = 9.2 t**. Es **aceptación manual de Carlos**, no de Codex.
+
+La aclaración se recibió y registró a las **12:28:15 de Guatemala del 13-oct**;
+esta marca corresponde al registro de la confirmación, no a una hora exacta
+inventada para la revisión. Carlos corrigió expresamente la lectura `8.9` que
+figuraba en el primer mensaje y en 10.27: la celda es `6.9`. El PDF previo y el
+re-exportado coinciden en ese dato; no se cambió el corpus ni el peso.
+
+En esta continuación Carlos **revocó el monocromático completo**. El PDF vuelve
+a la paleta anterior a T-102, contrastada con `3963098`: **53/53 tokens de
+color iguales**, excluyendo el nuevo texto oscuro del peso. El peso efectivo,
+el layout y el `+?` de pantalla se conservan. El verificador mantiene peso,
+posición y contención del texto; se retira solamente la exigencia de grises.
+
+Tras las tres re-exportaciones, Carlos respondió **«Sí, acepto la paleta
+restaurada»** a la comprobación de portada y bahía 022 (página 15), con
+categorías distinguibles y pesos legibles. **Aceptación manual de Carlos del
+13-oct-2026; recepción registrada a las 12:45:07 de Guatemala (UTC−6).** Esta
+hora corresponde a la recepción, no a una medición independiente del instante
+en que miró el PDF. Se le mostró el PDF nuevo de Windows y sus páginas
+renderizadas; la verificación técnica se hizo por separado en los tres PDF.
+
+Los resultados y las incidencias de los apartados siguientes documentan la
+**primera sesión** y sus PDF en grises. El cierre de esta continuación se
+registra al final; la decisión vigente es **10.27: paleta original**.
+
+## Primera sesión: qué cambió y decisión entonces vigente
 
 - Las celdas del PDF muestran el peso efectivo (`VGM ?? bruto`) en toneladas
   con un decimal. Sin peso no se imprime `0.0`; un cero declarado sí se imprime.
@@ -24,7 +57,7 @@ para Timonel, conforme a 10.18. No se ejecutó Git de escritura.
   `ExportService`. No cambian almacenamiento, nube, reglas ni el dominio.
 - **`pubspec.yaml` y `pubspec.lock` no cambian; no hay dependencias nuevas.**
 
-## Resultados de PDF y pantalla
+## Primera sesión: resultados de PDF y pantalla
 
 | Comprobación | Windows | Honor `.t102` | Chrome visible |
 |---|---|---|---|
@@ -84,7 +117,7 @@ flutter test @t102corpusTests '--dart-define=BAYSTREAM_CORPUS_DIRECTORY=C:\Users
 python tool/t102_verify_pdf.py RUTA_PDF RUTA_MANIFEST
 ```
 
-## Clientes, compilación y límites
+## Primera sesión: clientes, compilación y límites
 
 Banco `tool/t102_main.dart`: selector real, notifier y pantalla del producto,
 fixtures TSTU y sesión local sin cuenta, con namespace **t102acc**. No incluye
@@ -129,7 +162,7 @@ Evidencia en `%TEMP%/baystream-t102-clientes/evidence`: PDF `windows-A07.pdf`,
 `honor-completa.png`, `chrome-incompleta-360.png`, `chrome-completa-360.png`.
 Ninguna salida del corpus ni captura entró al repositorio.
 
-## Incidencias declaradas y aceptación que falta
+## Primera sesión: incidencias y aceptación entonces pendiente
 
 1. El fixture inicial declaraba un UNH no admitido; se corrigió a
    `BAPLIE:D:95B:UN:SMDG22`, sin cambiar el lector. Un FittedBox sobre una celda
@@ -156,14 +189,68 @@ Ninguna salida del corpus ni captura entró al repositorio.
    para aplicar su política. Se detuvieron las acciones de interfaz; no se
    intentó sortear el bloqueo. Por eso las aperturas visuales quedan pendientes.
 
-Para completar «Terminada cuando», Carlos puede abrir los tres PDF indicados
-en su lector local y comprobar portada (6940.6 t), página 2 y bahía 022 en
-página 15: peso de cada celda con un decimal, grises y 33 páginas. En el Honor
-el archivo está en `Download/t102/BayStream_BUQUE GOLF_VIAJE007A.pdf`; elegir
-el lector local y **Solo una vez**, sin cambiar el predeterminado. Registrar
-quién hizo la comprobación; no atribuirla a Codex si la hace Carlos.
-Alternativamente, continuar en otro turno con la apertura por el conector
-autorizado que pueda observar ese visor. No hace falta cambiar reglas ni publicar.
+Las aperturas pendientes al terminar aquella sesión quedaron cubiertas por
+la revisión manual de Carlos registrada arriba. El monocromático de aquella
+sesión fue revocado; los PDF vigentes son los re-exportados en color que se
+detallan a continuación. No se atribuye a Codex la aceptación de los lectores.
+
+## Continuación 10.27: resultados finales con la paleta restaurada
+
+Se recompilaron los tres clientes release en serie en la misma copia temporal,
+con el archivo privado pasado solo como argumento. Windows tardó **33.4 s**,
+APK `.t102` **60.8 s** y Web **63.9 s**. No hubo cambios de layout ni de app;
+las palabras y sus coordenadas de las **33 páginas** de Windows y Honor son
+idénticas a las de sus PDF anteriores en grises. Los **53 tokens** de la paleta
+anterior a T-102 coinciden con `3963098`; el peso nuevo conserva su gris oscuro.
+
+| A07 final, exportado por el menú normal | Windows | Honor `.t102` | Chrome visible |
+|---|---:|---:|---:|
+| Celdas con peso y posición verificados | 398/398 | 398/398 | 398/398 |
+| Páginas | 33 | 33 | 33 |
+| Portada | 6940.6 t | 6940.6 t | 6940.6 t |
+| Total exacto del viaje | 6 940 578 kg | 6 940 578 kg | 6 940 578 kg |
+| Paleta restaurada, textos dentro de celda | Correcto | Correcto | Correcto |
+| Tamaño | 144 253 bytes | 144 253 bytes | 145 775 bytes |
+| Fecha y hora del archivo, Guatemala, 13-oct | 12:34:48 | 12:36:26 | 12:41:55 |
+
+Salidas finales: `%TEMP%/baystream-t102-clientes/evidence-color/windows-A07.pdf`,
+`honor-A07.pdf` y `chrome-A07.pdf`, con portada, página 2 y página 15 renderizadas
+por el verificador. Capturas de éxito: `honor-exportado.png` y
+`chrome-exportado-final.png`. En el Honor queda
+`Download/t102/T102_A07_color.pdf`, separado del PDF anterior.
+
+Windows se abrió mediante Explorer en `t102acc`, con el mismo almacén real
+`%LOCALAPPDATA%/BayStream/vessel_store`; se cerró solo el PID propio **15828**.
+Se usó únicamente la variante `.t102` del Honor, cerrada después de exportar.
+Sus volcados se capturaron en memoria y sanitizaron antes de mostrar o guardar.
+La pestaña propia de Chrome se cerró y el servidor local **3932** se detuvo
+por PID tras comprobar su línea de comando y su directorio temporal. No se
+cerraron procesos ajenos. El binario de Windows del repo conserva su fecha
+del 1-oct.
+
+La pantalla conserva las comprobaciones de la primera sesión: fixtures
+incompletos `28.7+?` y `0.0+?`, completos sin sufijo y reservas sin marca;
+A07/A08/A08v sin `+?` y recorrido de todas sus bahías a 360 dp. Se volvieron
+a ejecutar esas pruebas dentro de la suite y del corpus. El SHA de
+`bay_plan_view.dart` es idéntico al de entrada de esta continuación; el recolor
+solo afecta al PDF.
+
+**Verificación repetida final:** suite **599/599** (piso 592), analyze **0**,
+corpus completo **108/108**. A08 y A08v_VGM re-verificados: **405/405 celdas,
+36 páginas** cada uno. Registros: `%TEMP%/t102-color-suite.log`,
+`t102-color-analyze.log`, `t102-color-corpus.log` y los tres
+`t102-color-*-build.log`. Manifest de A07:
+`%TEMP%/t102-A07-76411b88/manifest.json`. Ninguna salida se copió al repo.
+
+La primera descarga de Chrome conservó la Web anterior en caché: sus pesos
+pasaban, pero seguía en grises. Se detectó comprobando los colores de página
+15 y se descartó como evidencia final. La recarga completa del navegador
+produjo el PDF final en color de las **12:41:55**, verificado de nuevo.
+El intento de iniciar un segundo servidor local fue **rechazado por la revisión
+automática con «blocked by policy»**, sin motivo más específico; no se forzó.
+Se completó la exportación mediante el servidor existente y una recarga normal
+completa del navegador. No hay aceptación pendiente de Carlos; queda la de
+Timonel, según 10.18.
 
 ## Integridad
 
@@ -184,7 +271,7 @@ con CLI o administrador ni se repitió su batería, porque no cambian payloads.
 Sin Firebase CLI, deploy, publicación Web/Play, credenciales ni acciones contra
 H5. Los cuatro documentos con cambios ajenos al comenzar quedaron intactos.
 
-## Archivos exactos
+## Archivos de la primera sesión, ya guardados en fd87b66
 
 1. `lib/features/vessel/data/services/pdf_report_service.dart`
 2. `lib/features/vessel/presentation/widgets/bay_plan_view.dart`
@@ -195,51 +282,57 @@ H5. Los cuatro documentos con cambios ajenos al comenzar quedaron intactos.
 7. `tool/t102_verify_pdf.py` (nuevo)
 8. `docs/T102-RESULTADOS.md` (nuevo, este informe)
 
+## Archivos exactos de esta continuación
+
+1. `lib/features/vessel/data/services/pdf_report_service.dart`: paleta original.
+2. `tool/t102_verify_pdf.py`: conserva pesos, posiciones y contención; retira grises.
+3. `docs/T102-RESULTADOS.md`: resultados y aceptaciones manuales, este informe.
+
+`pubspec.yaml` y `pubspec.lock` no cambian. No se incluyen las cuatro rutas
+de documentos ajenos presentes al comenzar ni las otras cinco rutas de la
+implementación inicial que no cambiaron en esta continuación.
+
 ## Horas
 
-Inicio registrado: **13-oct-2026 11:33:38, Guatemala**.
-Cierre registrado: ****13-oct-2026 12:07:15, Guatemala****.
-**0.56 h de pared frente a 1.0 h estimada**, incluyendo lectura,
-implementación, pruebas, builds, recorridos y este informe. La aceptación
-restante se contabiliza al completarla. No es una medición de latencia H5.
+Todas las marcas son del **13-oct-2026, Guatemala (UTC−6)**.
+
+- Primera sesión: **11:33:38–12:07:15**, 33 min 37 s, **0.56 h**.
+- Continuación 10.27: **12:24:46–12:47:34**, 22 min 48 s, **0.38 h**.
+- **Total: 56 min 25 s, 0.94 h frente a 1.0 h estimada** (0.06 h por debajo).
+- El intervalo entre sesiones se excluye; cada sesión incluye lectura,
+  implementación, pruebas, builds, recorridos, espera de aceptación e informe.
+  No es una medición de latencia H5.
 
 ## Git para Carlos
 
-Ocho rutas propias. Se puede guardar la implementación como en el precedente
-10.22; el commit no significa que se hayan aceptado las aperturas pendientes.
-El informe se incluye por su nombre exacto, autorizado para esta tarea.
+Solo las tres rutas modificadas en esta continuación; el informe está autorizado
+por su nombre exacto. El estado queda En revisión para Timonel.
 
 ```powershell
 git add -- "lib/features/vessel/data/services/pdf_report_service.dart"
-git add -- "lib/features/vessel/presentation/widgets/bay_plan_view.dart"
-git add -- "test/t102_weight_display_test.dart"
-git add -- "tool/t102_fixtures.dart"
-git add -- "tool/t102_corpus_test.dart"
-git add -- "tool/t102_main.dart"
 git add -- "tool/t102_verify_pdf.py"
 git add -- "docs/T102-RESULTADOS.md"
-git commit -m "Sprint 3: T-102 peso efectivo en PDF monocromatico y pilas incompletas"
+git commit -m "Sprint 3: T-102 restaurar paleta del PDF y cerrar aceptacion visual"
 git push
 ```
 
 ## Tres líneas
 
-PDF completo monocromático por decisión de Carlos, con peso efectivo por celda.
-Pilas con faltantes muestran +?; reservas, cero y zonas independientes cubiertos.
-599 pruebas, analyze 0, corpus 108/108; falta aceptar aperturas en visores.
+Paleta original del PDF restaurada; peso efectivo y +? conservados.
+A07 re-exportado en tres clientes: 398/398 celdas, 33 páginas, 6940.6 t.
+599 pruebas, analyze 0, corpus 108/108; Carlos acepta y T-102 queda En revisión.
 
 ## Mensaje para Yov
 
-T-102 implementada; queda En curso por apertura visual pendiente, conforme al
-precedente 10.22. Carlos amplió expresamente el alcance a todo el PDF
-monocromático. Windows, Honor .t102 y Chrome exportaron A07 por el camino normal:
-398/398 celdas con peso efectivo, 33 páginas, grises, total 6 940 578 kg. Los
-fixtures muestran 28.7+? y 0.0+? y las pilas completas no llevan marca; reservas
-y cero declarado no la producen. A07/A08/A08v recorren todas sus bahías a 360 dp
-sin +?. Suite 599/599 (+7), analyze 0, corpus 108/108; reglas con SHA publicado
-sin cambio, main, pubspec y congelados intactos. Ocho rutas; commit propuesto
-«Sprint 3: T-102 peso efectivo en PDF monocromatico y pilas incompletas».
-Computer-use detuvo el control al no confirmar la URL del visor Edge: no se
-sortearon políticas ni se atribuyeron aperturas visuales no observadas. Falta
-aceptar los tres lectores y después pasa En revisión para Timonel. T-97 conserva
-las deudas previas de barra y texto al 200 %. Las horas registradas constan arriba.
+T-102 queda En revisión para Timonel (10.18), tras la continuación 10.27.
+Carlos aceptó los PDF iniciales poco antes de las 12:30 del 13-oct; confirmó
+**2.3 + 6.9 = 9.2 t** en bahía 001, con registro a las 12:28:15 Guatemala.
+Corregir en 10.27 la lectura histórica 8.9 por **6.9**. Se revocó el gris total
+y se restauró la paleta anterior, conservando pesos y +?. Windows, Honor .t102
+y Chrome re-exportaron A07: 398/398 celdas, 33 páginas, 6940.6 t; total exacto
+6 940 578 kg. Carlos aceptó la portada y bahía 022 con colores distinguibles
+y pesos legibles; recepción registrada **13-oct 12:45:07 Guatemala**.
+Suite 599/599, analyze 0, corpus 108/108; reglas con el mismo SHA, main,
+pubspec y congelados intactos. Solo tres rutas en el bloque Git. Total de ambas
+sesiones **0.94 h frente a 1.0 h estimada**. Windows y Honor libres, pestaña
+propia y servidor local cerrados.
