@@ -954,10 +954,44 @@ sincroniza y lo cuenta en el avance.
 
 ### Ola 5 · Uso fuera del aula y voz
 
+#### T-89 · Que el archivo entre aunque no se llame .edi: sin filtro por extensión y validación por contenido · 1.0 h · Codex (ficha completa, 13-oct)
+
+**Para qué.** USO. En el iPhone (Safari, la Web publicada), el selector con filtro
+por extensión deja gris un archivo que no termina en `.edi`, y desde Mail o Archivos
+los BAPLIE llegan sin la extensión correcta: el usuario no puede ni elegirlos.
+BayStream ya valida el contenido por la cabecera desde T-86; el filtro por nombre
+estorba más de lo que ayuda.
+
+**Qué construye.**
+
+1. **Quitar el filtro por extensión del selector** en las tres plataformas: se puede
+   elegir cualquier archivo.
+2. **Validar por contenido.** Un archivo sin `UNB`/`UNH` legibles se rechaza con un
+   mensaje claro («este archivo no parece un BAPLIE»), sin crear viaje ni tocar el
+   almacén; el rechazo conserva el viaje anterior, como el de T-86. Si la cabecera
+   existe pero la versión no es de la familia 2.x, manda el aviso de T-86.
+3. **Sin tocar** el lector, el escritor ni las reglas.
+
+**Fuera de alcance:** BAPLIE 3.1 (T-87), cualquier cambio en la nube y el resto de la
+Ola 5.
+
+**Terminada cuando:**
+
+- [ ] En la Web (Chrome), un BAPLIE renombrado sin extensión y otro como `.txt` se
+      eligen, se validan y se abren igual que un `.edi` (A07 con sus cifras).
+- [ ] Un archivo de texto sin `UNB`/`UNH` se rechaza con el mensaje claro, sin crear
+      viaje; una 1.x o 3.x sintética sigue dando el aviso de T-86.
+- [ ] Regresión en los tres clientes: abrir un `.edi` normal sigue igual.
+- [ ] Si Carlos tiene un iPhone a mano, una comprobación manual suya con un archivo
+      sin extensión; si no, el informe lo declara y la primera comprobación real es
+      del piloto (T-101).
+- [ ] Piso de 580 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
+      cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos), enlace en la app, ícono propio, decisión D3 |
-| **T-89** | USO | 1.0 | iPhone acepta .edi: sin filtro por extensión y validación por contenido (`UNB`/`UNH`) |
+| **T-89** | USO | 1.0 | iPhone acepta .edi: sin filtro por extensión y validación por contenido (`UNB`/`UNH`) · **ficha completa arriba** |
 | **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes |
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano |
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo y la fuente desde el propio sitio |
@@ -1814,3 +1848,23 @@ Lo que comprobó:
 - **Revisión del commit.** `19ef763` toca solo el informe; el diff no trae claves, correos ni UID. Las tapas siguen **PROVISIONALES**.
 - **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83 y T-86. El piso pasa a **563**.
 - **T-84 pasa a Codex** con ficha completa (sección 5, Ola 4). Dos decisiones de diseño que lleva la ficha: el aviso de tapa cerrada **nunca bloquea** —las declaraciones son PROVISIONALES y un dato provisional no frena la operación— y los movimientos de tapa los registra **quien opera**, muelle u oficina, porque es un hecho observado, no un cambio de plan.
+
+### 10.24 · T-84 entregada, en revisión: las tapas se operan y sincronizan · Hallazgo: el perfil de T-83 no viajaba en Firestore · T-89 a Codex (13-oct)
+
+**T-84, de Codex, pasa a En revisión** (commit `7c845ba`).
+
+- **Las tapas como movimientos.** `hatch_cover` con `target: T:bahía-número` y `action: remove|replace`, la clave `T:` de T-79a; el estado se deriva de la bitácora, tras resolver anulaciones y correcciones. Quitar dos veces o reponer sin quitar queda en conflicto; `annul` deshace respetando el rol del movimiento anulado. Lo registran muelle y oficina: hecho observado, sin solicitud ni aprobación, como fijó la ficha.
+- **El aviso nunca bloquea.** Nombra la tapa y la bahía, marca PROVISIONAL y ofrece «Quitar tapa y continuar» o «Seguir sin quitarla». El toque combinado anexa tapa → (descarga) → carga como escrituras consecutivas durables, como el par de T-77, y el deshacer inmediato anula en orden inverso. No avisa en cubierta, en filas no cubiertas, con la tapa ya quitada, en bodega abierta ni en bahía sin declarar.
+- **El avance suma tapas** por bahía: declaradas, quitadas y repuestas. «Repuesta» cuenta tapas cuyo último movimiento aplicado es reponer; una tapa inicial puesta no cuenta. El corpus coteja el avance en cada prefijo.
+- **Corpus.** A08 y A08v_VGM dan **460/460** con tapas PROVISIONALES en las 21 bahías de bodega, tres órdenes de trabajo por bahía y tres de llegada de la bitácora; cada retirada y reposición conserva la ocupación anterior. Corpus completo **102/102**.
+- **Producción, «PRUEBA T-84»:** seis movimientos compartidos entre la oficina en Windows y el muelle en el Honor, en las dos direcciones y sin recargar; ambos terminan Al día y sin conflictos, con el avance de tapas **3/0/2** coincidente. Windows conservó aparte sus cinco movimientos locales previos, y el informe no los presenta como enviados.
+- **El hallazgo, para la revisión de Timonel y de Yov.** Publicar una operación con el perfil de tapas de T-83 tiraba Windows: dos caídas nativas (Event 1000, `KERNELBASE.dll`), porque Firestore Standard no admite arrays dentro de arrays y el JSON llevaba `covers: [[filas], [filas]]`. Era un defecto latente de T-83, cuya aceptación nunca publicó una operación. **Corrección en `data/`:** `FirestoreProfileCodec` convierte `covers` en un mapa por número solo al viajar y lo reconstruye al recibir; el JSON de Hive, el editor de T-83 y el dominio no cambian su representación, y los perfiles históricos se siguen leyendo. Con el codec, Windows publicó y quedó Al día sin repetir la caída; no se obtuvo pila nativa, así que el informe no lo presenta como traza de causa definitiva. Las operaciones publicadas antes de T-83 no traían tapas y no están afectadas.
+- **Reglas.** La batería de T-80 pasó **69/69** sin cambios y con el mismo SHA; las reglas ya exigían `profile is map` y admiten la representación nueva.
+- **Una prueba de T-72 se reescribió**, declarada: la tapa sin declarar ahora produce `invalidHatchCover` en vez de quedar sin derivar; la comprobación del cambio inválido se conserva y ninguna prueba se borró.
+- **Validaciones.** **580 pruebas** (el piso nuevo; 17 nuevas), `analyze` en cero, corpus 102/102 y el SHA de cada archivo de `lib/` cotejado entre repo y copia: 0 diferencias.
+- **Clientes.** Windows (`t84acc`), el Honor `.t84` a 360×800 dp y Chrome visible, esta vez sin bloqueo de política. El APK final se instaló con `-r` después de la entrada manual de Carlos y conservó sesión y almacén. El «Deshacer» fugaz no se alcanzó a probar en el teléfono y el informe no lo atribuye; la prueba de widget lo cubre.
+- **Incidencia recurrente declarada.** Durante la entrada de Carlos, un diálogo de Google para guardar contraseña entró en un volcado y mostró identificadores de cuenta. Codex informó, descartó el guardado, borró el temporal y no copió identificadores al informe. Es la segunda vez (T-81); queda anotada para que Yov valore un mitigamiento sistémico.
+- **Horas.** 1.12 h de pared frente a 4.0 estimadas.
+- **Revisión del commit.** Las 21 rutas son las del informe; sin `main.dart`, `pubspec.*`, reglas ni congelados; el diff no trae claves, correos ni UID, y no se rastrearon archivos del corpus.
+- **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83, T-84 y T-86.
+- **T-89 pasa a Codex** con ficha completa (sección 5, Ola 5, abierta por tiempo sobrante): sin filtro por extensión y validación por contenido. Con T-84, la **RF-040 queda completa en código**.
