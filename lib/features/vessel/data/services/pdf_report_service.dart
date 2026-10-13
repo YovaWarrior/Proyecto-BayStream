@@ -10,12 +10,12 @@ import '../../domain/entities/entities.dart';
 class PdfReportService {
   static const _pageMargin = 24.0;
   // Celda y leyenda comparten la misma paleta. OOG también cambia de claridad.
-  static const _emptyFill = PdfColors.orange100;
-  static const _emptyInk = PdfColors.orange;
-  static const _oogFill = PdfColors.deepPurple300;
-  static const _oogInk = PdfColors.deepPurple900;
-  static const _neighborFill = PdfColors.blueGrey100;
-  static const _neighborInk = PdfColors.blueGrey600;
+  static const _emptyFill = PdfColors.white;
+  static const _emptyInk = PdfColors.grey700;
+  static const _oogFill = PdfColors.grey400;
+  static const _oogInk = PdfColors.grey900;
+  static const _neighborFill = PdfColors.grey100;
+  static const _neighborInk = PdfColors.grey600;
 
   const PdfReportService();
 
@@ -90,7 +90,7 @@ class PdfReportService {
             padding:
                 const pw.EdgeInsets.symmetric(vertical: 28, horizontal: 24),
             decoration: const pw.BoxDecoration(
-              color: PdfColors.blueGrey900,
+              color: PdfColors.grey900,
               borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
             ),
             child: pw.Column(
@@ -118,7 +118,7 @@ class PdfReportService {
                 pw.Text(
                   '${voyage.vessel.name} - Viaje ${voyage.voyageNumber}',
                   style: const pw.TextStyle(
-                    color: PdfColors.blueGrey100,
+                    color: PdfColors.grey100,
                     fontSize: 14,
                   ),
                 ),
@@ -175,17 +175,17 @@ class PdfReportService {
           pw.SizedBox(height: 12),
           pw.Row(
             children: [
-              _specialCargoCard('Refrigerados', reeferCount, PdfColors.cyan700),
+              _specialCargoCard('Refrigerados', reeferCount, PdfColors.grey700),
               pw.SizedBox(width: 10),
               _specialCargoCard(
-                  'Peligrosos IMO', dangerousCount, PdfColors.red700),
+                  'Peligrosos IMO', dangerousCount, PdfColors.grey700),
               pw.SizedBox(width: 10),
               _specialCargoCard(
-                  'Fuera de gálibo', oogCount, PdfColors.orange700),
+                  'Fuera de gálibo', oogCount, PdfColors.grey700),
             ],
           ),
           pw.Spacer(),
-          pw.Divider(color: PdfColors.blueGrey200),
+          pw.Divider(color: PdfColors.grey200),
           _footer(context, voyage),
         ],
       ),
@@ -207,7 +207,7 @@ class PdfReportService {
                 style: pw.TextStyle(
                   fontSize: 18,
                   fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.blueGrey900,
+                  color: PdfColors.grey900,
                 ),
               ),
               pw.Text(
@@ -215,7 +215,7 @@ class PdfReportService {
                 '${(bay.totalWeight / 1000).toStringAsFixed(1)} t',
                 style: const pw.TextStyle(
                   fontSize: 10,
-                  color: PdfColors.blueGrey700,
+                  color: PdfColors.grey700,
                 ),
               ),
             ],
@@ -231,7 +231,7 @@ class PdfReportService {
           ),
           pw.SizedBox(height: 8),
           _bayLegend(),
-          pw.Divider(color: PdfColors.blueGrey200),
+          pw.Divider(color: PdfColors.grey200),
           _footer(context, voyage),
         ],
       ),
@@ -281,7 +281,7 @@ class PdfReportService {
           pw.Container(
             width: 30 + rows.length * (cellWidth + 1.6),
             height: 3,
-            color: PdfColors.brown400,
+            color: PdfColors.grey400,
           ),
           pw.SizedBox(height: 5),
         ],
@@ -328,7 +328,7 @@ class PdfReportService {
       margin: const pw.EdgeInsets.symmetric(vertical: 3),
       padding: const pw.EdgeInsets.symmetric(vertical: 2, horizontal: 8),
       decoration: const pw.BoxDecoration(
-        color: PdfColors.blueGrey50,
+        color: PdfColors.grey50,
         borderRadius: pw.BorderRadius.all(pw.Radius.circular(3)),
       ),
       child: pw.Text(
@@ -399,24 +399,36 @@ class PdfReportService {
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
       ),
       child: pw.Center(
-        child: pw.Column(
-          mainAxisSize: pw.MainAxisSize.min,
-          children: [
-            pw.Text(
-              label,
-              style: pw.TextStyle(
-                color: colors.$2,
-                fontSize: height < 15 ? 4.5 : 6,
-                fontWeight: pw.FontWeight.bold,
-              ),
-            ),
-            if (container?.operatorCode != null && height >= 17)
+        child: label.isEmpty ? pw.SizedBox() : pw.FittedBox(
+          fit: pw.BoxFit.scaleDown,
+          child: pw.Column(
+            mainAxisSize: pw.MainAxisSize.min,
+            children: [
               pw.Text(
-                container!.operatorCode!,
-                maxLines: 1,
-                style: pw.TextStyle(color: colors.$2, fontSize: 4.5),
+                label,
+                style: pw.TextStyle(
+                  color: colors.$2,
+                  fontSize: height < 15 ? 4.5 : 6,
+                  fontWeight: pw.FontWeight.bold,
+                ),
               ),
-          ],
+              if (container?.operatorCode != null && height >= 17)
+                pw.Text(
+                  container!.operatorCode!,
+                  maxLines: 1,
+                  style: pw.TextStyle(color: colors.$2, fontSize: 4.5),
+                ),
+              if (container?.effectiveWeight != null)
+                pw.Text(
+                  _tons(container!.effectiveWeight),
+                  style: pw.TextStyle(
+                    color: PdfColors.grey900,
+                    fontSize: height < 15 ? 4 : 5,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -424,18 +436,18 @@ class PdfReportService {
 
   (PdfColor, PdfColor) _containerColors(ContainerUnit? container) {
     if (container == null) return (PdfColors.grey200, PdfColors.grey300);
-    if (container.isDangerous) return (PdfColors.red100, PdfColors.red);
-    if (container.isReefer) return (PdfColors.cyan100, PdfColors.cyan);
+    if (container.isDangerous) return (PdfColors.grey300, PdfColors.grey900);
+    if (container.isReefer) return (PdfColors.grey100, PdfColors.grey800);
     if (container.isOverDimension) {
       return (_oogFill, _oogInk);
     }
     if (container.status == ContainerStatus.full) {
-      return (PdfColors.green100, PdfColors.green);
+      return (PdfColors.grey200, PdfColors.grey700);
     }
     if (container.status == ContainerStatus.empty) {
       return (_emptyFill, _emptyInk);
     }
-    return (PdfColors.grey100, PdfColors.grey);
+    return (PdfColors.grey100, PdfColors.grey700);
   }
 
   pw.Widget _bayLegend() {
@@ -443,10 +455,10 @@ class PdfReportService {
       spacing: 12,
       runSpacing: 4,
       children: [
-        _legendItem('Lleno', PdfColors.green100, PdfColors.green),
+        _legendItem('Lleno', PdfColors.grey200, PdfColors.grey700),
         _legendItem('Vacío', _emptyFill, _emptyInk),
-        _legendItem('IMO', PdfColors.red100, PdfColors.red),
-        _legendItem('Reefer', PdfColors.cyan100, PdfColors.cyan),
+        _legendItem('IMO', PdfColors.grey300, PdfColors.grey900),
+        _legendItem('Reefer', PdfColors.grey100, PdfColors.grey800),
         _legendItem('OOG', _oogFill, _oogInk),
         _legendItem('Vecino de 40 pies', _neighborFill, _neighborInk),
         _legendItem('Sin contenedor', PdfColors.grey200, PdfColors.grey300),
@@ -488,14 +500,14 @@ class PdfReportService {
               style: pw.TextStyle(
                 fontSize: 15,
                 fontWeight: pw.FontWeight.bold,
-                color: PdfColors.blueGrey900,
+                color: PdfColors.grey900,
               ),
             ),
             pw.Text(
               '${voyage.vessel.name} - ${voyage.voyageNumber}',
               style: const pw.TextStyle(
                 fontSize: 8,
-                color: PdfColors.blueGrey700,
+                color: PdfColors.grey700,
               ),
             ),
           ],
@@ -519,7 +531,7 @@ class PdfReportService {
           data: containers.map(_containerTableRow).toList(),
           headerCount: 1,
           headerDecoration:
-              const pw.BoxDecoration(color: PdfColors.blueGrey800),
+              const pw.BoxDecoration(color: PdfColors.grey800),
           headerStyle: pw.TextStyle(
             color: PdfColors.white,
             fontSize: 6.5,
@@ -530,10 +542,10 @@ class PdfReportService {
           cellStyle: const pw.TextStyle(fontSize: 6.2),
           cellPadding:
               const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 3),
-          oddRowDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey50),
+          oddRowDecoration: const pw.BoxDecoration(color: PdfColors.grey50),
           border: const pw.TableBorder(
             horizontalInside:
-                pw.BorderSide(color: PdfColors.blueGrey100, width: 0.4),
+                pw.BorderSide(color: PdfColors.grey100, width: 0.4),
           ),
           columnWidths: const {
             0: pw.FixedColumnWidth(48),
@@ -573,7 +585,7 @@ class PdfReportService {
       style: pw.TextStyle(
         fontSize: 15,
         fontWeight: pw.FontWeight.bold,
-        color: PdfColors.blueGrey800,
+        color: PdfColors.grey800,
       ),
     );
   }
@@ -591,14 +603,14 @@ class PdfReportService {
             style: pw.TextStyle(
               fontSize: 9,
               fontWeight: label ? pw.FontWeight.bold : pw.FontWeight.normal,
-              color: label ? PdfColors.blueGrey700 : PdfColors.black,
+              color: label ? PdfColors.grey700 : PdfColors.black,
             ),
           ),
         );
     return pw.TableRow(
       decoration: const pw.BoxDecoration(
         border: pw.Border(
-          bottom: pw.BorderSide(color: PdfColors.blueGrey100, width: 0.5),
+          bottom: pw.BorderSide(color: PdfColors.grey100, width: 0.5),
         ),
       ),
       children: [
@@ -615,8 +627,8 @@ class PdfReportService {
       width: 158,
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
-        color: PdfColors.blueGrey50,
-        border: pw.Border.all(color: PdfColors.blueGrey200),
+        color: PdfColors.grey50,
+        border: pw.Border.all(color: PdfColors.grey200),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(5)),
       ),
       child: pw.Column(
@@ -625,7 +637,7 @@ class PdfReportService {
           pw.Text(
             label,
             style:
-                const pw.TextStyle(fontSize: 8, color: PdfColors.blueGrey600),
+                const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
           ),
           pw.SizedBox(height: 4),
           pw.Text(
@@ -669,11 +681,11 @@ class PdfReportService {
       children: [
         pw.Text(
           'BayStream - ${voyage.vessel.name}',
-          style: const pw.TextStyle(fontSize: 7, color: PdfColors.blueGrey500),
+          style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey500),
         ),
         pw.Text(
           'Página ${context.pageNumber} de ${context.pagesCount}',
-          style: const pw.TextStyle(fontSize: 7, color: PdfColors.blueGrey500),
+          style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey500),
         ),
       ],
     );

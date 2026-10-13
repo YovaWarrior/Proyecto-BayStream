@@ -600,6 +600,15 @@ class _BayGridWidget extends StatelessWidget {
     // C-4 · Cubierta y bodega se calculan por separado, como ya hace el PDF.
     final deckTiers = geometry.deckTierNumbers;
     final holdTiers = geometry.holdTierNumbers;
+    // T-102: solo la carga propia sin peso vuelve incompleta una pila.
+    final missingDeckRows = <int>{};
+    final missingHoldRows = <int>{};
+    for (final container in containers) {
+      final position = container.stowagePosition;
+      if (position == null || container.effectiveWeight != null) continue;
+      (geometry.isDeckTier(position.tier) ? missingDeckRows : missingHoldRows)
+          .add(position.row);
+    }
 
     // Ningún contenedor puede desaparecer en silencio: los que no caen en
     // ninguna celda dibujada se cuentan y se muestran encima de la rejilla.
@@ -671,6 +680,7 @@ class _BayGridWidget extends StatelessWidget {
             context,
             rows: rows,
             weights: bay.deckWeightByRow,
+            missingRows: missingDeckRows,
             zona: 'cub.',
             limitKg: geometry.stackWeightLimitKg,
           ),
@@ -678,6 +688,7 @@ class _BayGridWidget extends StatelessWidget {
             context,
             rows: rows,
             weights: bay.holdWeightByRow,
+            missingRows: missingHoldRows,
             zona: 'bod.',
             limitKg: geometry.stackWeightLimitKg,
           ),
@@ -895,6 +906,7 @@ class _BayGridWidget extends StatelessWidget {
     BuildContext context, {
     required List<int> rows,
     required Map<int, double> weights,
+    required Set<int> missingRows,
     required String zona,
     required double? limitKg,
   }) {
@@ -925,14 +937,18 @@ class _BayGridWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(3),
                   )
                 : null,
-            child: Text(
-              (weight / 1000).toStringAsFixed(1),
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: excede ? FontWeight.bold : FontWeight.normal,
-                color: excede
-                    ? colorScheme.onErrorContainer
-                    : colorScheme.onSurfaceVariant,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '${(weight / 1000).toStringAsFixed(1)}${missingRows.contains(row) ? '+?' : ''}',
+                key: ValueKey('peso-pila-$zona-$row'),
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: excede ? FontWeight.bold : FontWeight.normal,
+                  color: excede
+                      ? colorScheme.onErrorContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           );
