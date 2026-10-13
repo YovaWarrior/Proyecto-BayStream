@@ -13,6 +13,10 @@ final loadingOperationProvider = StreamProvider.autoDispose
   final repository = await ref.watch(movementLogRepositoryProvider.future);
   final operation =
       await OperationSources.find(repository, voyage, voyage.portOfCall!);
+  ref.watch(voyageNotifierProvider);
+  final current = ref.read(voyageNotifierProvider.notifier).publishedProfile;
+  final profile = operation?.published == true ? operation?.profile :
+      current?.key == (voyage.vesselProfileKey ?? voyage.vessel.profileKey) ? current : null;
   Future<VesselVoyage?> source(OperationSourceKind kind) async {
     final text = operation?.source(kind)?.content;
     if (text == null) return null;
@@ -38,6 +42,7 @@ final loadingOperationProvider = StreamProvider.autoDispose
           arrival: arrival,
           loading: loading,
           list: list,
+          hatchCovers: profile?.hatchCovers ?? const {},
           movements: records.where((r) => r.state != SendState.rejected).map((r) => r.movement));
   if (operation == null) {
     yield derive(const []);

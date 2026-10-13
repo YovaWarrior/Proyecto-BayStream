@@ -12,6 +12,7 @@ import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import 'discharge_controls.dart';
 import 'office_plan_controls.dart';
+import 'hatch_operation_controls.dart';
 
 String loadingPosition(String value) => value.length == 7
     ? '${value.substring(0, 3)}-${value.substring(3, 5)}-${value.substring(5)}'
@@ -334,6 +335,17 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
           dischargeOccupant: occupant != null);
       final repository = await ref.read(movementLogRepositoryProvider.future);
       final author = ref.read(movementAuthorProvider);
+      if (!mounted) return;
+      final cover = data.state.closedCoverAt(at);
+      final remove = await confirmClosedHatch(context, cover);
+      if (remove == null) return;
+      MovementRecord? removed;
+      if (remove && cover != null) {
+        final first = await appendMovement(repository, MovementDraft.hatchCover(
+            data.operationId!, cover.bay, cover.number, remove: true), author);
+        if (first.error != null) throw StateError(first.error!);
+        removed = first.record;
+      }
       // T-77: «Marcar su descarga y cargar» son dos movimientos, en orden.
       MovementRecord? discharged;
       if (occupant != null) {
@@ -362,6 +374,10 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                       result.record!.movement, markedByMistake, author);
                   if (error == null && discharged != null) {
                     error = await annulMovement(repository, discharged.movement,
+                        markedByMistake, author);
+                  }
+                  if (error == null && removed != null) {
+                    error = await annulMovement(repository, removed.movement,
                         markedByMistake, author);
                   }
                   if (error != null) {

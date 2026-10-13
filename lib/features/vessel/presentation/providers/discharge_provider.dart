@@ -33,6 +33,10 @@ final dischargeProgressProvider = StreamProvider.autoDispose
   final port = voyage.portOfCall!;
   final repository = await ref.watch(movementLogRepositoryProvider.future);
   final operation = await OperationSources.find(repository, voyage, port);
+  ref.watch(voyageNotifierProvider);
+  final current = ref.read(voyageNotifierProvider.notifier).publishedProfile;
+  final profile = operation?.published == true ? operation?.profile :
+      current?.key == (voyage.vesselProfileKey ?? voyage.vessel.profileKey) ? current : null;
   final loadingSource = operation?.source(OperationSourceKind.loadingBaplie);
   VesselVoyage? loading;
   if (loadingSource != null) {
@@ -49,9 +53,10 @@ final dischargeProgressProvider = StreamProvider.autoDispose
       portOfCall: port,
       arrival: voyage,
       loading: loading,
+      hatchCovers: profile?.hatchCovers ?? const {},
       geometry: voyage.geometry);
   DischargeProgress derive(Iterable<MovementRecord> records) {
-    final movements = records.map((r) => r.movement).toList();
+    final movements = records.where((r) => r.state != SendState.rejected).map((r) => r.movement).toList();
     return DischargeProgress.build(
         plan, const OperationStateDeriver().derive(plan, movements),
         operationId: operation?.id, movements: movements);

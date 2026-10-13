@@ -1,5 +1,6 @@
 import '../entities/movement.dart';
 import '../entities/operation.dart';
+import '../entities/hatch_covers.dart';
 
 /// T-72 · Deriva el estado de la escala a partir del plan y la bitácora
 /// (T-79a 2.7). Es una función pura: los mismos movimientos dan el mismo
@@ -142,6 +143,7 @@ class _Run {
   final Set<String> voided;
   final _PlanChanges? changes;
   final items = <String, ItemStatus>{};
+  final hatchCovers = <String, HatchCoverStatus>{};
 
   /// Posición → clave de lo que la ocupa ahora.
   final occupied = <String, String>{};
@@ -153,6 +155,13 @@ class _Run {
   final notDerived = <String>[];
 
   _Run(this.plan, this.voided, {this.changes}) {
+    for (final entry in plan.hatchCovers.entries) {
+      for (var i = 0; i < entry.value.covers.length; i++) {
+        final cover = HatchCoverStatus(bay: entry.key, number: i + 1,
+            kind: entry.value.kind, rows: entry.value.covers[i]);
+        hatchCovers[cover.key] = cover;
+      }
+    }
     final keys = {...plan.arrival.keys, ...plan.loading.keys};
     for (final key in keys) {
       final arrival = plan.arrival[key];
@@ -223,10 +232,11 @@ class _Run {
         case MovementType.rejectChange:
           break; // primera pasada
         case MovementType.hatchCover:
-          notDerived.add(m.id);
+          _hatchCover(m);
       }
     }
     return OperationState(
+      hatchCovers: hatchCovers,
       effectivePlan: plan,
       requests: changes?.requests.values ?? const [],
       items: items,
@@ -236,6 +246,25 @@ class _Run {
       voided: voided,
       isDeckTier: plan.isDeckTier,
     );
+  }
+
+  void _hatchCover(Movement m) {
+    final cover = hatchCovers[m.target];
+    final action = m.payload['action'];
+    if (cover == null || !['remove', 'replace'].contains(action)) {
+      _conflict(ConflictKind.invalidHatchCover, m.target ?? '', m,
+          '${m.target}: tapa sin declarar o acción inválida.');
+      return;
+    }
+    final remove = action == 'remove';
+    if (cover.removed == remove) {
+      _conflict(ConflictKind.invalidHatchCover, cover.key, m,
+          'Bahía ${cover.bay} · ${cover.label}: '
+          '${remove ? 'ya está quitada' : 'no está quitada para reponerla'}.',
+          other: cover.movementId);
+      return;
+    }
+    hatchCovers[cover.key] = cover.operated(remove, m.id);
   }
 
   void _conflict(ConflictKind kind, String key, Movement m, String message,

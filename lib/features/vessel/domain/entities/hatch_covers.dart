@@ -6,6 +6,24 @@ import 'vessel_voyage.dart';
 
 enum HatchCoverKind { openHold, automatic, crane }
 
+/// Identidad natural de T-79a; la automática también ocupa el número 1.
+class HatchCoverStatus extends Equatable {
+  final int bay;
+  final int number;
+  final HatchCoverKind kind;
+  final Set<int> rows;
+  final bool removed;
+  final String? movementId;
+  const HatchCoverStatus({required this.bay, required this.number,
+    required this.kind, required this.rows, this.removed = false, this.movementId});
+  String get key => 'T:$bay-$number';
+  String get label => kind == HatchCoverKind.automatic ? 'Automática' : 'T$number';
+  HatchCoverStatus operated(bool remove, String id) => HatchCoverStatus(
+    bay: bay, number: number, kind: kind, rows: rows, removed: remove, movementId: id);
+  @override
+  List<Object?> get props => [bay, number, kind, rows, removed, movementId];
+}
+
 /// Declaración explícita: ausencia en el mapa del perfil significa sin declarar.
 class HatchCoverDeclaration extends Equatable {
   final HatchCoverKind kind;

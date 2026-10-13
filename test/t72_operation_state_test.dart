@@ -233,13 +233,14 @@ void main() {
     }
   });
 
-  test('T-80 detecta un cambio inválido; las tapas siguen pendientes de T-84', () {
+  test('T-80 detecta un cambio inválido; T-84 detecta una tapa sin declarar', () {
     final state = derive([
       mv(MovementType.changePosition, null, {'changes': [], 'reason': 'x'}),
       mv(MovementType.hatchCover, 'T:3-1', {'action': 'remove'}),
     ]);
-    expect(state.notDerived, hasLength(1));
-    expect(state.conflicts.single.kind, ConflictKind.invalidChange);
+    expect(state.notDerived, isEmpty);
+    expect(state.conflicts.map((c) => c.kind),
+        [ConflictKind.invalidChange, ConflictKind.invalidHatchCover]);
     expect(state.items.values.every((s) => s.state == ItemState.planned), isTrue);
   });
 

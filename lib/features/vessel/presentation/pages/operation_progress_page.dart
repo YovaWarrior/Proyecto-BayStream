@@ -9,6 +9,7 @@ import '../providers/loading_operation_provider.dart';
 import '../widgets/discharge_controls.dart' show formatMovementTime;
 import '../widgets/loading_controls.dart' show loadingPosition;
 import '../widgets/sync_status_chip.dart';
+import '../widgets/hatch_operation_controls.dart';
 
 class OperationProgressPage extends ConsumerWidget {
   final VesselVoyage voyage;
@@ -16,7 +17,11 @@ class OperationProgressPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-        appBar: AppBar(title: const Text('Avance de la operación')),
+        appBar: AppBar(title: const Text('Avance de la operación'), actions: [
+          IconButton(tooltip: 'Tapas en la operación', icon: const Icon(Icons.layers_outlined),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => HatchOperationPage(voyage: voyage)))),
+        ]),
         body: ref.watch(loadingOperationProvider(voyage)).when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) =>
@@ -58,8 +63,8 @@ class OperationProgressPage extends ConsumerWidget {
                         'Hechos y pendientes según el estado de la operación. Las re-estibas se muestran aparte.'),
                     const SizedBox(height: 12),
                     if (constraints.maxWidth >= 1000)
-                      SizedBox(
-                          width: double.infinity,
+                      SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
                           child: DataTable(
                             horizontalMargin: 12,
                             columnSpacing: 24,
@@ -73,6 +78,7 @@ class OperationProgressPage extends ConsumerWidget {
                                 'Carga · vacíos',
                                 'Cancelados',
                                 'Conflictos',
+                                'Tapas\nPROVISIONAL',
                                 'Último movimiento'
                               ])
                                 DataColumn(label: Text(label))
@@ -95,6 +101,7 @@ class OperationProgressPage extends ConsumerWidget {
                                           '${row.emptyLoaded} asignados\n${row.emptyPending} pendientes')),
                                       DataCell(Text('${row.cancelled}')),
                                       DataCell(Text('${row.conflicts}')),
+                                      DataCell(SizedBox(width: 140, child: Text(_covers(row)))),
                                       DataCell(SizedBox(
                                           width: 230,
                                           child: Text(_last(row.last)))),
@@ -128,6 +135,7 @@ class OperationProgressPage extends ConsumerWidget {
                                   Text(
                                       'Cancelados: ${row.cancelled} · Conflictos: ${row.conflicts}'),
                                   Text('Último movimiento: ${_last(row.last)}'),
+                                  Text('Tapas PROVISIONALES: ${_covers(row)}'),
                                 ],
                               )),
                         )
@@ -194,9 +202,6 @@ class OperationProgressPage extends ConsumerWidget {
                           style: TextStyle(color: colors.error)),
                     const Text(
                         'Peso actual a bordo; una pila sobre su límite se informa aparte de los conflictos.'),
-                    if (operation.state.notDerived.isNotEmpty)
-                      Text(
-                          '${operation.state.notDerived.length} tapas todavía sin derivar (T-84).'),
                     if (operation.state.duplicates.isNotEmpty)
                       Text(
                           '${operation.state.duplicates.length} movimientos repetidos; no suman dos veces.'),
@@ -211,6 +216,9 @@ class OperationProgressPage extends ConsumerWidget {
       '(${row.dischargeDeck.pending} cub. / ${row.dischargeHold.pending} bod.) · '
       '${row.restows} re-estibas';
 
+  String _covers(BayOperationProgress row) => '${row.coversDeclared} declaradas · '
+      '${row.coversRemoved} quitadas · ${row.coversReplaced} repuestas';
+
   String _last(Movement? movement) {
     if (movement == null) return 'Sin movimientos';
     final label = switch (movement.type) {
@@ -223,7 +231,7 @@ class OperationProgressPage extends ConsumerWidget {
       MovementType.requestChange => 'Solicitud de cambio',
       MovementType.changePosition => 'Cambio de posición',
       MovementType.rejectChange => 'Cambio rechazado',
-      MovementType.hatchCover => 'Tapa',
+      MovementType.hatchCover => '${movement.payload['action'] == 'remove' ? 'Quitar' : 'Reponer'} tapa ${movement.target}',
     };
     return '$label · ${formatMovementTime(movement.createdAt)}\n${movement.author.name}';
   }

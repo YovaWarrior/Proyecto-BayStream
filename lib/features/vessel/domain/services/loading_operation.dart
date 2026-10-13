@@ -34,6 +34,7 @@ class LoadingOperation {
     required VesselVoyage loading,
     ExportList? list,
     Iterable<Movement> movements = const [],
+    Map<int, HatchCoverDeclaration> hatchCovers = const {},
   }) {
     final events = List<Movement>.unmodifiable(movements);
     final plan = OperationPlan.build(
@@ -41,6 +42,7 @@ class LoadingOperation {
         arrival: arrival,
         loading: loading,
         geometry: loading.geometry,
+        hatchCovers: hatchCovers,
         list: list);
     final state = const OperationStateDeriver().derive(plan, events);
     final effective = state.effectivePlan!;

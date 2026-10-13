@@ -16,6 +16,7 @@ import 'reserved_slot_details.dart';
 import 'office_plan_controls.dart';
 import '../providers/sync_providers.dart';
 import 'hatch_cover_diagram.dart';
+import 'hatch_operation_controls.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
 /// Permite navegar entre bahías y ver la disposición de contenedores
@@ -183,6 +184,11 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             tooltip: 'Anterior',
           ),
           // Lista de bahías
+          if (widget.voyage.portOfCall != null)
+            IconButton(key: const ValueKey('hatch-operation-button'),
+                tooltip: 'Tapas en la operación', icon: const Icon(Icons.layers_outlined),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => HatchOperationPage(voyage: widget.voyage, initialBay: _selectedBayNumber)))),
           Expanded(
             child: ListView.builder(
               controller: _bayScrollController,

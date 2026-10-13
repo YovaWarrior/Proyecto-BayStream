@@ -301,6 +301,11 @@ class MovementDraft extends Equatable {
       MovementDraft._(operationId, MovementType.rejectChange, null,
           {'request': request, 'reason': reason.trim()});
 
+  factory MovementDraft.hatchCover(String operationId, int bay, int number,
+          {required bool remove}) =>
+      MovementDraft._(operationId, MovementType.hatchCover, 'T:$bay-$number',
+          {'action': remove ? 'remove' : 'replace'});
+
   /// Para los tipos que se derivan después (T-80, T-84) y para importar.
   factory MovementDraft.raw(String operationId, MovementType type,
           String? target, Map<String, Object?> payload) =>
@@ -373,7 +378,11 @@ class MovementDraft extends Equatable {
           return 'Escribe un motivo de hasta 300 caracteres.';
         }
       case MovementType.hatchCover:
-        break;
+        if (!RegExp(r'^T:[0-9]{1,3}-[1-9]$').hasMatch(target ?? '') ||
+            !['remove', 'replace'].contains(payload['action']) ||
+            payload.keys.any((k) => !['action', 'operatedAt', 'corrects'].contains(k))) {
+          return 'Indica una tapa y la acción quitar o reponer.';
+        }
     }
     return null;
   }

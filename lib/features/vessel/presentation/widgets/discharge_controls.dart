@@ -7,6 +7,7 @@ import '../formatters/vessel_error_message.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
+import 'hatch_operation_controls.dart';
 
 /// T-75 · Resumen del modo Descarga: la bahía elegida y la escala completa.
 class DischargeSummary extends ConsumerWidget {
@@ -161,7 +162,21 @@ Future<void> onDischargeTap(BuildContext context, WidgetRef ref,
     reason = answer.isEmpty ? null : answer;
   }
   final repository = await ref.read(movementLogRepositoryProvider.future);
+  if (!context.mounted) return;
+  final cover = progress.state.closedCoverAt(position);
+  final remove = await confirmClosedHatch(context, cover);
+  if (remove == null) return;
   final author = ref.read(movementAuthorProvider);
+  MovementRecord? removed;
+  if (remove && cover != null) {
+    final first = await appendMovement(repository, MovementDraft.hatchCover(
+        progress.operationId!, cover.bay, cover.number, remove: true), author);
+    if (first.error != null) {
+      messenger.showSnackBar(SnackBar(content: Text('No se quitó la tapa: ${first.error}')));
+      return;
+    }
+    removed = first.record;
+  }
   final result = await appendMovement(
       repository,
       MovementDraft.discharge(
@@ -184,8 +199,11 @@ Future<void> onDischargeTap(BuildContext context, WidgetRef ref,
     action: SnackBarAction(
         label: 'Deshacer',
         onPressed: () async {
-          final error = await annulMovement(
+          var error = await annulMovement(
               repository, record.movement, markedByMistake, author);
+          if (error == null && removed != null) {
+            error = await annulMovement(repository, removed.movement, markedByMistake, author);
+          }
           if (error != null) {
             messenger
                 .showSnackBar(SnackBar(content: Text('No se deshizo: $error')));

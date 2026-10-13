@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import 'container_unit.dart';
 import 'export_list.dart';
+import 'hatch_covers.dart';
 import 'movement.dart';
 import 'reserved_slot.dart';
 import 'vessel_geometry.dart';
@@ -218,8 +219,10 @@ class OperationPlan {
   /// grupo». Vacío si la operación todavía no tiene listado.
   final Map<String, ({String type, String pod, String line})> emptyGroups;
 
+  final Map<int, HatchCoverDeclaration> hatchCovers;
+
   OperationPlan._(this.portOfCall, this.arrival, this.loading, this.isDeckTier,
-      this.emptyGroups);
+      this.emptyGroups, this.hatchCovers);
 
   factory OperationPlan.build({
     required String portOfCall,
@@ -227,6 +230,7 @@ class OperationPlan {
     VesselVoyage? loading,
     VesselGeometry? geometry,
     ExportList? list,
+    Map<int, HatchCoverDeclaration> hatchCovers = const {},
   }) {
     final arrivalItems = <String, PlanItem>{};
     for (final c in arrival?.containers ?? const <ContainerUnit>[]) {
@@ -271,6 +275,7 @@ class OperationPlan {
         for (final row in list?.empties ?? const <ExportListRow>[])
           row.containerId: row.group
       }),
+      Map.unmodifiable(hatchCovers),
     );
   }
 
@@ -282,7 +287,7 @@ class OperationPlan {
       Map.unmodifiable({for (final entry in loading.entries)
         entry.key: positions.containsKey(entry.key)
             ? entry.value.at(positions[entry.key]!) : entry.value}),
-      isDeckTier, emptyGroups);
+      isDeckTier, emptyGroups, hatchCovers);
 
   /// El objeto que el plan de carga tiene en esa posición, si lo hay.
   PlanItem? loadingItemAt(String position) {
@@ -321,6 +326,7 @@ enum ConflictKind {
 
   /// Un cambio obsoleto, malformado o incompatible con otro cambio vigente.
   invalidChange,
+  invalidHatchCover,
 }
 
 enum ChangeRequestStatus { pending, approved, rejected, conflict }
@@ -465,6 +471,7 @@ class ProgressCount extends Equatable {
 
 /// Resultado de `OperationStateDeriver.derive`.
 class OperationState {
+  final Map<String, HatchCoverStatus> hatchCovers;
   final OperationPlan? effectivePlan;
   final List<ChangeRequest> requests;
   final Map<String, ItemStatus> items;
@@ -482,6 +489,7 @@ class OperationState {
   final bool Function(int tier) _isDeckTier;
 
   OperationState({
+    Map<String, HatchCoverStatus> hatchCovers = const {},
     this.effectivePlan,
     Iterable<ChangeRequest> requests = const [],
     required Map<String, ItemStatus> items,
@@ -490,7 +498,8 @@ class OperationState {
     required List<String> notDerived,
     required Set<String> voided,
     required bool Function(int tier) isDeckTier,
-  })  : requests = List.unmodifiable(requests),
+  })  : hatchCovers = Map.unmodifiable(hatchCovers),
+        requests = List.unmodifiable(requests),
         items = Map.unmodifiable(items),
         conflicts = List.unmodifiable(conflicts),
         duplicates = List.unmodifiable(duplicates),
@@ -499,6 +508,18 @@ class OperationState {
         _isDeckTier = isDeckTier;
 
   ItemStatus? operator [](String key) => items[key];
+
+  /// Una declaración PROVISIONAL solo avisa en la fila de bodega que cubre.
+  HatchCoverStatus? closedCoverAt(String position) {
+    final c = IsoCoordinateParser.parse(position);
+    if (_isDeckTier(c.tier)) return null;
+    for (final cover in hatchCovers.values) {
+      if (cover.bay == c.bay && cover.rows.contains(c.row) && !cover.removed) {
+        return cover;
+      }
+    }
+    return null;
+  }
 
   /// Qué hay en cada celda ahora: número de contenedor por posición. Una
   /// reserva cuenta solo si ya tiene su vacío; lo que bajó ya no está.

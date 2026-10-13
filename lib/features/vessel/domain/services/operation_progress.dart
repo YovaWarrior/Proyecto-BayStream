@@ -27,6 +27,19 @@ class OperationProgress {
     }
 
     final total = BayOperationProgress(0);
+    BayOperationProgress coverRow(int physical) {
+      final bay = operation.displayBay(physical);
+      final value = rows.putIfAbsent(bay, () => BayOperationProgress(bay));
+      if (physical != bay) value.paired = true;
+      return value;
+    }
+    for (final cover in state.hatchCovers.values) {
+      for (final target in [coverRow(cover.bay), total]) {
+        target.coversDeclared++;
+        if (cover.removed) target.coversRemoved++;
+        if (!cover.removed && cover.movementId != null) target.coversReplaced++;
+      }
+    }
     for (final item in state.items.values) {
       if (item.role == PlanRole.transit && !item.restow) continue;
       final at = item.state == ItemState.moved
@@ -55,6 +68,8 @@ class OperationProgress {
           movement?.position ?? item?.position ?? item?.plannedPosition;
       conflicts.add(ProgressConflict(conflict, position, movement));
       if (position != null) row(position).conflicts++;
+      final cover = state.hatchCovers[conflict.key];
+      if (cover != null) coverRow(cover.bay).conflicts++;
       total.conflicts++;
     }
     final ordered = events.values.toList()..sort(Movement.compareOrder);
@@ -69,6 +84,15 @@ class OperationProgress {
     for (final movement in ordered) {
       final position = positionOf(movement, {});
       if (position != null) row(position).last = movement;
+      int? coverBay(Movement m, Set<String> seen) {
+        if (!seen.add(m.id)) return null;
+        final match = RegExp(r'^T:([0-9]{1,3})-[1-9]$').firstMatch(m.target ?? '');
+        if (match != null) return int.parse(match[1]!);
+        final previous = events[m.annuls];
+        return previous == null ? null : coverBay(previous, seen);
+      }
+      final bay = coverBay(movement, {});
+      if (bay != null) coverRow(bay).last = movement;
     }
     total.last = ordered.isEmpty ? null : ordered.last;
 
@@ -150,6 +174,9 @@ class BayOperationProgress {
   ProgressCount emptyHold = const ProgressCount();
   int restows = 0;
   int conflicts = 0;
+  int coversDeclared = 0;
+  int coversRemoved = 0;
+  int coversReplaced = 0;
   Movement? last;
   BayOperationProgress(this.bay);
   String get label => '${bay.toString().padLeft(2, '0')}'

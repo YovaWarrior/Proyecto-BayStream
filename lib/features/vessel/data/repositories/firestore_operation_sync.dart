@@ -111,7 +111,7 @@ class FirestoreOperationSync implements OperationSyncRepository {
           'status': 'open',
           'createdBy': uid,
           'createdAt': FieldValue.serverTimestamp(),
-          'profile': profile.toJson(),
+          'profile': FirestoreProfileCodec.encode(profile),
           'sources': manifest,
         });
         await batch.commit().timeout(_networkTimeout);
@@ -215,8 +215,7 @@ class FirestoreOperationSync implements OperationSyncRepository {
         published: true,
         closedAt: (data['closedAt'] as Timestamp?)?.toDate(),
         profile: data['profile'] is Map
-            ? VesselProfile.fromJson(
-                jsonDecode(jsonEncode(data['profile'])) as Map<String, dynamic>)
+            ? FirestoreProfileCodec.decode(data['profile'] as Map)
             : null,
       );
       return (await _log.saveOperation(operation)).map((_) => operation);
@@ -398,6 +397,45 @@ class FirestoreRemoteMovementStore implements RemoteMovementStore {
         .doc(operationId)
         .get(const GetOptions(source: Source.server));
     return (doc.data()?['closedAt'] as Timestamp?)?.toDate();
+  }
+}
+
+/// T-84: Firestore Standard no admite arrays dentro de arrays. Solo en el
+/// transporte, las filas de cada tapa se guardan en un mapa por número;
+/// el perfil local conserva su JSON y la identidad T:bahía-número.
+class FirestoreProfileCodec {
+  const FirestoreProfileCodec._();
+
+  static Map<String, dynamic> encode(VesselProfile profile) {
+    final json = profile.toJson();
+    json['hatchCovers'] = {
+      for (final entry in profile.hatchCovers.entries)
+        '${entry.key}': {
+          'kind': entry.value.kind.name,
+          'covers': {
+            for (var i = 0; i < entry.value.covers.length; i++)
+              '${i + 1}': entry.value.covers[i].toList()..sort(),
+          },
+        },
+    };
+    return json;
+  }
+
+  static VesselProfile decode(Map data) {
+    final json = jsonDecode(jsonEncode(data)) as Map<String, dynamic>;
+    final declarations = json['hatchCovers'] as Map<String, dynamic>?;
+    for (final declaration in declarations?.values ?? const []) {
+      final covers = (declaration as Map<String, dynamic>)['covers'];
+      if (covers is Map<String, dynamic>) {
+        final numbers = covers.keys.map(int.parse).toList()..sort();
+        if (numbers.length > 3 ||
+            List.generate(numbers.length, (i) => i + 1).join(',') != numbers.join(',')) {
+          throw const FormatException('Numeración de tapas publicada inválida.');
+        }
+        declaration['covers'] = [for (final n in numbers) covers['$n']];
+      }
+    }
+    return VesselProfile.fromJson(json);
   }
 }
 

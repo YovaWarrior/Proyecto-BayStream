@@ -207,9 +207,6 @@ class LoadingPlanControls extends ConsumerWidget {
                         if (data.state.conflicts.isNotEmpty)
                           Text(
                               '${data.state.conflicts.length} conflictos en la bitácora; los pendientes respetan el estado derivado.'),
-                        if (data.state.notDerived.isNotEmpty)
-                          Text(
-                              '${data.state.notDerived.length} tapas todavía sin derivar (T-84).'),
                         TextButton(
                             onPressed: () => Navigator.pop(context),
                             child: const Text('Cerrar')),
