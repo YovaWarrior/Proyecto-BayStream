@@ -102,6 +102,14 @@ class HiveVesselDataSource {
 
   String? getLastConfirmedPortOfCall() => _settings.get('lastConfirmedPortOfCall');
 
+  bool getPlanToolbarCollapsed() =>
+      _settings.get('planToolbarCollapsed') != 'false';
+
+  Future<void> setPlanToolbarCollapsed(bool collapsed) => _writeVoyages(() async {
+    await _settings.put('planToolbarCollapsed', collapsed.toString());
+    await _settings.flush();
+  });
+
   Future<void> setLastConfirmedPortOfCall(String? port) => _writeVoyages(() async {
     if (port == null) {
       await _settings.delete('lastConfirmedPortOfCall');

@@ -49,6 +49,14 @@ class LocalVesselRepositoryImpl implements LocalVesselRepository {
       _guard(() => _source.setLastConfirmedPortOfCall(port));
 
   @override
+  Future<Either<Failure, bool>> getPlanToolbarCollapsed() =>
+      _guard(_source.getPlanToolbarCollapsed);
+
+  @override
+  Future<Either<Failure, void>> setPlanToolbarCollapsed(bool collapsed) =>
+      _guard(() => _source.setPlanToolbarCollapsed(collapsed));
+
+  @override
   Future<Either<Failure, CodeEquivalences>> getCodeEquivalences() =>
       _guard(_source.getCodeEquivalences);
 

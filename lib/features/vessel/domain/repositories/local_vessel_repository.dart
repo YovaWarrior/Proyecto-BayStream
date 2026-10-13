@@ -33,6 +33,11 @@ abstract class LocalVesselRepository {
   Future<Either<Failure, String?>> getLastConfirmedPortOfCall();
   Future<Either<Failure, void>> setLastConfirmedPortOfCall(String? port);
 
+  /// T-91 · Barra del plano plegada por dispositivo. Sin ajuste previo se
+  /// pliega; no depende del viaje ni se sincroniza con otros dispositivos.
+  Future<Either<Failure, bool>> getPlanToolbarCollapsed();
+  Future<Either<Failure, void>> setPlanToolbarCollapsed(bool collapsed);
+
   /// T-73 · Tabla de equivalencias del listado de la agencia (tipos, puertos
   /// y líneas). Es del dispositivo, como el último puerto confirmado.
   Future<Either<Failure, CodeEquivalences>> getCodeEquivalences();

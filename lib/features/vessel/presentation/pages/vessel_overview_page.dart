@@ -7,6 +7,7 @@ import '../../data/services/pdf_report_service.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/operation_sources.dart';
 import '../providers/vessel_providers.dart';
+import '../providers/plan_toolbar_provider.dart';
 import '../formatters/vessel_error_message.dart';
 import '../widgets/voyage_summary_card.dart';
 import '../widgets/reserved_slots_list_view.dart';
@@ -35,11 +36,20 @@ class VesselOverviewPage extends ConsumerStatefulWidget {
 class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isBayPlan = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    final isBayPlan = _tabController.index == 1;
+    if (_isBayPlan != isBayPlan) {
+      setState(() => _isBayPlan = isBayPlan);
+    }
   }
 
   @override
@@ -52,97 +62,138 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
   Widget build(BuildContext context) {
     final voyageAsync = ref.watch(voyageNotifierProvider);
     final hasVoyage = voyageAsync.hasValue && voyageAsync.value != null;
+    final showToolbarToggle = hasVoyage && _isBayPlan;
+    final toolbarCollapsed = showToolbarToggle &&
+        (ref.watch(planToolbarCollapsedProvider).value ?? true);
+
+    final toolbarActions = <Widget>[
+      IconButton(
+          key: const ValueKey('recent-voyages'),
+          icon: const Icon(Icons.history),
+          tooltip: 'Viajes recientes',
+          onPressed: () async {
+            final loadFile = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(
+                    builder: (_) => const RecentVoyagesPage()));
+            if (context.mounted && loadFile == true) {
+              await _loadBaplieFile(context);
+            }
+          }),
+      IconButton(
+          key: const ValueKey('saved-profiles'),
+          icon: const Icon(Icons.directions_boat_outlined),
+          tooltip: 'Perfiles guardados',
+          onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                  builder: (_) => const VesselProfilesPage()))),
+      // T-79: cuenta, publicar y unirse; su icono dice el estado de envío.
+      const SyncAppBarButton(),
+      // Botón de búsqueda (solo si hay viaje cargado)
+      if (hasVoyage)
+        IconButton(
+          icon: const Icon(Icons.search),
+          tooltip: 'Buscar contenedor',
+          onPressed: () => _openSearch(context, voyageAsync.value!),
+        ),
+      // Único punto de exportación para PDF, CSV y JSON
+      if (hasVoyage)
+        PopupMenuButton<VoyageExportFormat>(
+          icon: const Icon(Icons.download),
+          tooltip: 'Exportar viaje',
+          onSelected: (format) =>
+              _exportVoyage(context, voyageAsync.value!, format),
+          itemBuilder: (context) => const [
+            PopupMenuItem(
+              value: VoyageExportFormat.pdf,
+              child: ListTile(
+                leading: Icon(Icons.picture_as_pdf),
+                title: Text('PDF'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: VoyageExportFormat.csv,
+              child: ListTile(
+                leading: Icon(Icons.table_view),
+                title: Text('CSV'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: VoyageExportFormat.json,
+              child: ListTile(
+                leading: Icon(Icons.data_object),
+                title: Text('JSON'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+        ),
+      // Corregir la geometría declarada sin volver a cargar el archivo
+      if (hasVoyage)
+        IconButton(
+          key: const ValueKey('edit-geometry'),
+          icon: const Icon(Icons.straighten),
+          tooltip: 'Parámetros del buque',
+          onPressed: () => _askForGeometry(context),
+        ),
+      // Botón para cargar archivo BAPLIE
+      IconButton(
+        icon: const Icon(Icons.upload_file),
+        tooltip: 'Cargar archivo BAPLIE',
+        onPressed: () => _loadBaplieFile(context),
+      ),
+      // Botón para limpiar datos cargados
+      if (hasVoyage)
+        IconButton(
+          icon: const Icon(Icons.clear),
+          tooltip: 'Limpiar datos',
+          onPressed: () {
+            ref.read(voyageNotifierProvider.notifier).clearVoyage();
+            ref.read(highlightedContainerProvider.notifier).clear();
+            ref.read(selectedBayProvider.notifier).clear();
+          },
+        ),
+    ];
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: !toolbarCollapsed,
         title: const Text('BayStream'),
         centerTitle: true,
         actions: [
-          IconButton(
-              key: const ValueKey('recent-voyages'),
-              icon: const Icon(Icons.history),
-              tooltip: 'Viajes recientes',
+          if (!toolbarCollapsed)
+            if (showToolbarToggle)
+              // T-91: el botón queda fijo; todas las acciones se recuperan
+              // desplazándolas si no caben, sin modificar los textos de T-97.
+              SizedBox(
+                key: const ValueKey('plan-toolbar-actions'),
+                width: (MediaQuery.sizeOf(context).width - 48 -
+                        (Navigator.of(context).canPop() ? 56 : 0))
+                    .clamp(0.0, toolbarActions.length * 48.0),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: toolbarActions),
+                ),
+              )
+            else
+              ...toolbarActions,
+          if (showToolbarToggle)
+            IconButton(
+              key: const ValueKey('toggle-plan-toolbar'),
+              tooltip: toolbarCollapsed ? 'Desplegar acciones' : 'Plegar acciones',
+              icon: Icon(toolbarCollapsed ? Icons.expand_more : Icons.expand_less),
               onPressed: () async {
-                final loadFile = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute(
-                        builder: (_) => const RecentVoyagesPage()));
-                if (context.mounted && loadFile == true) {
-                  await _loadBaplieFile(context);
+                try {
+                  await ref.read(planToolbarCollapsedProvider.notifier).toggle();
+                } catch (error, stack) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('No se pudo guardar la preferencia. '
+                        '${vesselErrorMessage(error, stack)}'),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ));
                 }
-              }),
-          IconButton(
-              key: const ValueKey('saved-profiles'),
-              icon: const Icon(Icons.directions_boat_outlined),
-              tooltip: 'Perfiles guardados',
-              onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                      builder: (_) => const VesselProfilesPage()))),
-          // T-79: cuenta, publicar y unirse; su icono dice el estado de envío.
-          const SyncAppBarButton(),
-          // Botón de búsqueda (solo si hay viaje cargado)
-          if (hasVoyage)
-            IconButton(
-              icon: const Icon(Icons.search),
-              tooltip: 'Buscar contenedor',
-              onPressed: () => _openSearch(context, voyageAsync.value!),
-            ),
-          // Único punto de exportación para PDF, CSV y JSON
-          if (hasVoyage)
-            PopupMenuButton<VoyageExportFormat>(
-              icon: const Icon(Icons.download),
-              tooltip: 'Exportar viaje',
-              onSelected: (format) =>
-                  _exportVoyage(context, voyageAsync.value!, format),
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: VoyageExportFormat.pdf,
-                  child: ListTile(
-                    leading: Icon(Icons.picture_as_pdf),
-                    title: Text('PDF'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: VoyageExportFormat.csv,
-                  child: ListTile(
-                    leading: Icon(Icons.table_view),
-                    title: Text('CSV'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: VoyageExportFormat.json,
-                  child: ListTile(
-                    leading: Icon(Icons.data_object),
-                    title: Text('JSON'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-          // Corregir la geometría declarada sin volver a cargar el archivo
-          if (hasVoyage)
-            IconButton(
-              key: const ValueKey('edit-geometry'),
-              icon: const Icon(Icons.straighten),
-              tooltip: 'Parámetros del buque',
-              onPressed: () => _askForGeometry(context),
-            ),
-          // Botón para cargar archivo BAPLIE
-          IconButton(
-            icon: const Icon(Icons.upload_file),
-            tooltip: 'Cargar archivo BAPLIE',
-            onPressed: () => _loadBaplieFile(context),
-          ),
-          // Botón para limpiar datos cargados
-          if (hasVoyage)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              tooltip: 'Limpiar datos',
-              onPressed: () {
-                ref.read(voyageNotifierProvider.notifier).clearVoyage();
-                ref.read(highlightedContainerProvider.notifier).clear();
-                ref.read(selectedBayProvider.notifier).clear();
               },
             ),
         ],
