@@ -62,6 +62,8 @@ class VesselProfilesPage extends ConsumerWidget {
       if (!result.changed && draft == original) return;
       draft = draft.copyWith(
           geometry: result.geometry,
+          hatchCovers: result.hatchCovers,
+          observedHoldBayNumbers: result.observedHoldBayNumbers,
           reeferSlots: result.reeferSlots,
           reeferSlotsOrigin: result.reeferSlotsOrigin,
           origin: VesselProfileOrigin.declaredByUser,

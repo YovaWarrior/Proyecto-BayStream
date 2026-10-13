@@ -15,6 +15,7 @@ import 'loading_controls.dart';
 import 'reserved_slot_details.dart';
 import 'office_plan_controls.dart';
 import '../providers/sync_providers.dart';
+import 'hatch_cover_diagram.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
 /// Permite navegar entre bahías y ver la disposición de contenedores
@@ -55,6 +56,10 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(voyageNotifierProvider);
+    final profile = ref.read(voyageNotifierProvider.notifier).currentProfile;
+    final hatches = profile?.key == (widget.voyage.vesselProfileKey ?? widget.voyage.vessel.profileKey)
+        ? profile?.hatchCovers : null;
     final loading = (_mode == BayPlanMode.loading || _mode == BayPlanMode.order) && widget.voyage.portOfCall != null
         ? ref.watch(loadingOperationProvider(widget.voyage)).value : null;
     final displayedVoyage = loading?.loading ?? widget.voyage;
@@ -117,6 +122,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         Expanded(
           child: _selectedBayNumber != null
               ? _BayGridWidget(
+                  hatchCovers: hatches?[_selectedBayNumber],
                   bay: displayedVoyage.bays[_selectedBayNumber] ?? displayedVoyage.bays[sortedBayNumbers.first]!,
                   loading: loading,
                   onContainerTap: loading != null
@@ -520,6 +526,7 @@ class _BayGridWidget extends StatelessWidget {
   static const double _tierWeightWidth = 88;
 
   final Bay bay;
+  final HatchCoverDeclaration? hatchCovers;
   final bool orderMode;
   final LoadingPlanProgress? progress;
   final LoadingOperation? loading;
@@ -539,6 +546,7 @@ class _BayGridWidget extends StatelessWidget {
 
   const _BayGridWidget({
     required this.bay,
+    this.hatchCovers,
     required this.onContainerTap,
     required this.reservedSlots,
     required this.reservedNeighbors,
@@ -605,7 +613,17 @@ class _BayGridWidget extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+        if (hatchCovers != null && constraints.maxWidth < 600) ...[
+          SizedBox(width: constraints.maxWidth > 32 ? constraints.maxWidth - 32 : 0,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Tapas · bahía ${bay.bayNumber.toString().padLeft(2, '0')}'),
+              HatchCoverDiagram(key: const ValueKey('hatch-compact-plan'),
+                declaration: hatchCovers, rows: rows),
+            ])),
+          const SizedBox(height: 12),
+        ],
+        SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -616,7 +634,8 @@ class _BayGridWidget extends StatelessWidget {
           children: [
           // Título de la bahía
           Text(
-            'BAY ${bay.bayNumber.toString().padLeft(2, '0')}',
+            'BAY ${bay.bayNumber.toString().padLeft(2, '0')}'
+            '${hatchCovers == null ? ' · tapas sin declarar' : ''}',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -701,6 +720,12 @@ class _BayGridWidget extends StatelessWidget {
           ],
           
           // BODEGA (HOLD) - Tiers < 80
+          if (hatchCovers != null) ...[
+            SizedBox(width: _tierLabelWidth + rows.length * 54 + _tierWeightWidth,
+              child: Padding(padding: const EdgeInsets.only(left: _tierLabelWidth, right: _tierWeightWidth),
+                child: HatchCoverDiagram(declaration: hatchCovers, rows: rows, columnWidth: 54))),
+            const SizedBox(height: 8),
+          ],
           if (holdTiers.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -727,6 +752,7 @@ class _BayGridWidget extends StatelessWidget {
             ),
           ),
         ),
+        ]),
       ),
     );
   }

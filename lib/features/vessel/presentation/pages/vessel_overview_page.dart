@@ -603,6 +603,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       final error = await notifier.confirmGeometry(result.geometry,
           sourceKind: sourceKind,
           portOfCall: result.portOfCall,
+          hatchCovers: result.hatchCovers,
+          observedHoldBayNumbers: result.observedHoldBayNumbers,
           reeferSlots: result.reeferSlots,
           reeferSlotsOrigin: result.reeferSlotsOrigin);
       if (!context.mounted) return;
@@ -613,6 +615,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         ));
         initial = result.geometry;
         profile = profile.copyWith(
+            hatchCovers: result.hatchCovers,
+            observedHoldBayNumbers: result.observedHoldBayNumbers,
             reeferSlots: result.reeferSlots,
             reeferSlotsOrigin: result.reeferSlotsOrigin);
         continue;

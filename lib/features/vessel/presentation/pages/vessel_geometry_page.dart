@@ -8,12 +8,15 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../formatters/stack_weight_formatter.dart';
 import '../widgets/voyage_call_summary.dart';
+import 'hatch_covers_page.dart';
 
 /// Lo que la pantalla devuelve: la geometría del buque y el puerto de esta
 /// escala. El puerto no es geometría —el casco no cambia entre escalas— pero
 /// se confirma en el mismo paso porque es el otro dato que el archivo no trae.
 typedef VesselCallParameters = ({VesselGeometry geometry, String? portOfCall,
-  Set<String> reeferSlots, VesselProfileOrigin reeferSlotsOrigin, bool changed});
+  Set<String> reeferSlots, VesselProfileOrigin reeferSlotsOrigin,
+  Map<int, HatchCoverDeclaration> hatchCovers, Set<int> observedHoldBayNumbers,
+  bool changed});
 
 /// Pantalla de parámetros del buque, previa al plano.
 ///
@@ -93,6 +96,18 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   late Set<String> _sockets;
   bool _declareSockets = false;
   String? _socketError;
+  late Map<int, HatchCoverDeclaration> _hatches;
+  Set<int> _holdBays(VesselGeometry geometry) => {
+    ...?widget.profile?.observedHoldBayNumbers,
+    if (widget.voyage != null) ...observedHoldBays(widget.voyage!, geometry),
+  };
+  String? _hatchError(VesselGeometry geometry) {
+    for (final entry in _hatches.entries) {
+      final error = entry.value.validate(geometry, hasHold: _holdBays(geometry).contains(entry.key));
+      if (error != null) return 'Bahía ${entry.key}: $error';
+    }
+    return null;
+  }
   VesselGeometry get _start => widget.initial ?? widget.profile?.geometry ?? widget.proposal;
   VesselProfileOrigin get _socketOrigin => _declareSockets
       ? VesselProfileOrigin.declaredByUser
@@ -130,6 +145,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     _centerRowOnDeck = start.centerRowOnDeck;
     _centerRowInHold = start.centerRowInHold;
     _sockets = {...?widget.profile?.reeferSlots};
+    _hatches = {...?widget.profile?.hatchCovers};
     _ocupados.addAll(widget.positions.map((p) => p.tier));
     _portOfCall = widget.initialPortOfCall ??
         widget.voyage?.suggestPortOfCall(widget.lastConfirmedPortOfCall) ??
@@ -190,7 +206,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     // archivo quede fuera.
     return candidate.portRows >= widget.proposal.portRows &&
         candidate.starboardRows >= widget.proposal.starboardRows &&
-        candidate.coversAll(widget.positions);
+        candidate.coversAll(widget.positions) && _hatchError(candidate) == null;
   }
 
   VesselGeometry? _buildGeometry() {
@@ -225,7 +241,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     Navigator.of(context)
         .pop((geometry: geometry, portOfCall: _portOfCall,
           reeferSlots: Set<String>.unmodifiable(_sockets),
-          reeferSlotsOrigin: _socketOrigin, changed: _changed(geometry)));
+          reeferSlotsOrigin: _socketOrigin,
+          hatchCovers: Map<int, HatchCoverDeclaration>.unmodifiable(_hatches),
+          observedHoldBayNumbers: _holdBays(geometry), changed: _changed(geometry)));
   }
 
   @override
@@ -356,6 +374,19 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             const SizedBox(height: 24),
 
             if (widget.profile != null) _buildSockets(context),
+            if (candidate != null) ...[
+              const SizedBox(height: 16),
+              Text(_hatches.isEmpty ? 'Tapas: sin declarar' : 'Tapas: ${_hatches.length} bahías declaradas'),
+              if (_hatchError(candidate) != null) Text(_hatchError(candidate)!, style: TextStyle(color: colorScheme.error)),
+              OutlinedButton.icon(key: const ValueKey('profile-hatches'),
+                icon: const Icon(Icons.view_column_outlined), label: const Text('Editar tapas por bahía'),
+                onPressed: () async {
+                  final result = await Navigator.of(context).push<Map<int, HatchCoverDeclaration>>(
+                    MaterialPageRoute(builder: (_) => HatchCoversPage(geometry: candidate,
+                      holdBays: _holdBays(candidate), initial: _hatches)));
+                  if (mounted && result != null) setState(() => _hatches = result);
+                }),
+            ],
 
             if (candidate != null) _buildSummary(context, candidate),
             const SizedBox(height: 24),
@@ -917,6 +948,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
       _sameTiers(a.deckTierNumbers, b.deckTierNumbers);
 
   bool _changed(VesselGeometry geometry) => !_sameShapeAs(geometry, _start) ||
+      !mapEquals(_hatches, widget.profile?.hatchCovers ?? const <int, HatchCoverDeclaration>{}) ||
       !setEquals(_sockets, widget.profile?.reeferSlots ?? const <String>{}) ||
       _socketOrigin != (widget.profile?.reeferSlotsOrigin ?? VesselProfileOrigin.proposedFromFile);
 

@@ -9,6 +9,7 @@ export 'bay.dart';
 export 'container_slot.dart';
 export 'vessel_geometry.dart';
 export 'vessel_profile.dart';
+export 'hatch_covers.dart';
 export 'movement.dart';
 export 'operation.dart';
 export 'export_list.dart';

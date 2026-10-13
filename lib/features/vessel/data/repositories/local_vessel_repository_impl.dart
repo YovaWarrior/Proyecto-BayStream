@@ -82,6 +82,9 @@ class LocalVesselRepositoryImpl implements LocalVesselRepository {
     VesselProfile profile, {
     bool nameMatchConfirmed = false,
   }) async {
+    if (profile.hatchCoverError != null) {
+      return Left(CacheFailure(message: profile.hatchCoverError!, code: 'invalid_hatch_covers'));
+    }
     // Serializa comprobación + escritura para que dos cargas simultáneas no
     // introduzcan homónimos antes de que la otra escritura sea visible.
     final previous = _profileWrites;

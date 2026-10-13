@@ -290,7 +290,9 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   Future<LoadFileResult> _useProfile(VesselProfile? saved) async {
     final voyage = _pendingVoyage!;
     _newProfile = saved == null;
-    _pendingProfile = saved ?? VesselProfile.proposeFrom(voyage);
+    _pendingProfile = (saved ?? VesselProfile.proposeFrom(voyage)).copyWith(
+      observedHoldBayNumbers: {...?saved?.observedHoldBayNumbers,
+        ...observedHoldBays(voyage, saved?.geometry ?? VesselProfile.proposeFrom(voyage).geometry)});
     // Con dos escalas posibles, conocer el casco no confirma dónde está el buque.
     if (voyage.portOfNextCall == null &&
         saved != null &&
@@ -298,7 +300,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
             OperationSources.baplieKind(voyage, voyage.proposedPortOfCall!) !=
                 null) &&
         saved.geometry.coversAll(voyage.stowagePositions)) {
-      await _publish(voyage, saved, voyage.proposedPortOfCall);
+      await _publish(voyage, _pendingProfile!, voyage.proposedPortOfCall);
       return LoadFileResult.success(_fileName);
     }
     return LoadFileResult.needsGeometry(_fileName);
@@ -348,6 +350,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       {String? portOfCall,
       OperationSourceKind? sourceKind,
       Set<String>? reeferSlots,
+      Map<int, HatchCoverDeclaration>? hatchCovers,
+      Set<int>? observedHoldBayNumbers,
       VesselProfileOrigin? reeferSlotsOrigin}) async {
     if (_busy) {
       return 'Hay una operación en curso. Espera a que termine e inténtalo de nuevo.';
@@ -372,10 +376,14 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     final profile = (currentProfile ?? VesselProfile.proposeFrom(target))
         .copyWith(
             geometry: geometry,
+            hatchCovers: hatchCovers,
+            observedHoldBayNumbers: {...?observedHoldBayNumbers,
+              ...?currentProfile?.observedHoldBayNumbers, ...observedHoldBays(target, geometry)},
             reeferSlots: reeferSlots,
             reeferSlotsOrigin: reeferSlotsOrigin,
             origin: VesselProfileOrigin.declaredByUser,
             updatedAt: DateTime.now());
+    if (profile.hatchCoverError != null) return profile.hatchCoverError;
     _busy = true;
     try {
       final local = await ref.read(localVesselRepositoryProvider.future);
@@ -413,6 +421,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       return 'La geometría deja posiciones del viaje abierto fuera del plano. '
           'Amplía las filas o niveles para incluirlas.';
     }
+    if (edited.hatchCoverError != null) return edited.hatchCoverError;
     if (original == edited) return null;
     _busy = true;
     try {

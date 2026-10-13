@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'vessel.dart';
 import 'vessel_geometry.dart';
 import 'vessel_voyage.dart';
+import 'hatch_covers.dart';
 
 enum VesselProfileOrigin { template, proposedFromFile, declaredByUser }
 
@@ -12,6 +13,10 @@ class VesselProfile extends Equatable {
   final VesselIdentity identity;
   final String vesselName;
   final VesselGeometry geometry;
+  final Map<int, HatchCoverDeclaration> hatchCovers;
+
+  /// Cota inferior observada en los planes; no declara tapas ni bodegas vacías.
+  final Set<int> observedHoldBayNumbers;
 
   /// Códigos BBBRRTT únicos. Set para consulta O(1); JSON como lista ordenada
   /// de cadenas de siete dígitos, sin repetir objetos de coordenadas.
@@ -28,6 +33,8 @@ class VesselProfile extends Equatable {
     required this.identity,
     required this.vesselName,
     required VesselGeometry geometry,
+    Map<int, HatchCoverDeclaration> hatchCovers = const {},
+    Set<int> observedHoldBayNumbers = const {},
     Set<String> reeferSlots = const {},
     this.reeferSlotsOrigin = VesselProfileOrigin.proposedFromFile,
     required this.origin,
@@ -36,6 +43,8 @@ class VesselProfile extends Equatable {
           holdTiers: List<int>.unmodifiable(geometry.holdTiers),
           deckTiers: List<int>.unmodifiable(geometry.deckTiers),
         ),
+        hatchCovers = Map.unmodifiable(hatchCovers),
+        observedHoldBayNumbers = Set.unmodifiable(observedHoldBayNumbers),
         reeferSlots = Set<String>.unmodifiable(reeferSlots),
         updatedAt = updatedAt.toUtc();
 
@@ -51,6 +60,7 @@ class VesselProfile extends Equatable {
       identity: vessel.profileIdentity,
       vesselName: vessel.name,
       geometry: geometry,
+      // Otro buque requiere evidencia propia de sus bahías y tapas.
       reeferSlots: reeferSlots,
       origin: VesselProfileOrigin.template,
       reeferSlotsOrigin: VesselProfileOrigin.template,
@@ -69,6 +79,8 @@ class VesselProfile extends Equatable {
         vesselName: voyage.vessel.name,
         geometry: VesselGeometry.proposeFrom(voyage.stowagePositions,
             parameters: parameters),
+        observedHoldBayNumbers: observedHoldBays(voyage,
+            parameters ?? VesselGeometry.proposeFrom(voyage.stowagePositions)),
         // Cota inferior: no incluye posiciones secas, vecinas ni sin posición.
         reeferSlots: voyage.containers
             .where((container) => container.isReefer)
@@ -97,6 +109,8 @@ class VesselProfile extends Equatable {
     VesselIdentity? identity,
     String? vesselName,
     VesselGeometry? geometry,
+    Map<int, HatchCoverDeclaration>? hatchCovers,
+    Set<int>? observedHoldBayNumbers,
     int? deckTierFloor,
     int? firstHoldTier,
     int? firstDeckTier,
@@ -122,6 +136,9 @@ class VesselProfile extends Equatable {
       identity: identity ?? this.identity,
       vesselName: vesselName ?? this.vesselName,
       geometry: nextGeometry,
+      hatchCovers: hatchCovers ?? this.hatchCovers,
+      observedHoldBayNumbers:
+          observedHoldBayNumbers ?? this.observedHoldBayNumbers,
       reeferSlots: reeferSlots ?? this.reeferSlots,
       reeferSlotsOrigin: reeferSlotsOrigin ?? this.reeferSlotsOrigin,
       origin: origin ?? this.origin,
@@ -133,6 +150,11 @@ class VesselProfile extends Equatable {
         'identity': identity.toJson(),
         'vesselName': vesselName,
         'geometry': geometry.toJson(),
+        'hatchCovers': {
+          for (final bay in hatchCovers.keys.toList()..sort())
+            '$bay': hatchCovers[bay]!.toJson()
+        },
+        'observedHoldBayNumbers': observedHoldBayNumbers.toList()..sort(),
         'reeferSlots': reeferSlots.toList()..sort(),
         'reeferSlotsOrigin': reeferSlotsOrigin.name,
         'origin': origin.name,
@@ -145,6 +167,17 @@ class VesselProfile extends Equatable {
         vesselName: json['vesselName'] as String,
         geometry:
             VesselGeometry.fromJson(json['geometry'] as Map<String, dynamic>),
+        hatchCovers: (json['hatchCovers'] as Map<String, dynamic>?)?.map(
+                (key, value) => MapEntry(
+                    int.parse(key),
+                    HatchCoverDeclaration.fromJson(
+                        value as Map<String, dynamic>))) ??
+            {},
+        observedHoldBayNumbers:
+            (json['observedHoldBayNumbers'] as List<dynamic>?)
+                    ?.cast<int>()
+                    .toSet() ??
+                {},
         reeferSlots:
             (json['reeferSlots'] as List<dynamic>?)?.cast<String>().toSet() ??
                 {},
@@ -161,9 +194,22 @@ class VesselProfile extends Equatable {
         identity,
         vesselName,
         geometry,
+        hatchCovers,
+        observedHoldBayNumbers,
         reeferSlots,
         reeferSlotsOrigin,
         origin,
         updatedAt
       ];
+
+  String? get hatchCoverError {
+    for (final entry in hatchCovers.entries) {
+      final error = entry.value.validate(geometry,
+          hasHold: entry.key > 0 &&
+              entry.key <= 999 &&
+              observedHoldBayNumbers.contains(entry.key));
+      if (error != null) return 'Bahía ${entry.key}: $error';
+    }
+    return null;
+  }
 }
