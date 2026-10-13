@@ -1090,6 +1090,59 @@ cualquier cambio de reglas o Firebase.
 - [ ] Piso de 605 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
+#### T-94 · Búsqueda por voz: dictar el contenedor, o sus últimos dígitos, y encontrarlo · 4.5 h · Codex (ficha completa, 13-oct)
+
+**Para qué.** RF-041, pedido de Carlos del 5-oct. En el muelle, con las manos
+ocupadas, teclear los últimos dígitos es lento: la voz convierte la búsqueda de T-76
+(OR o últimos dígitos) en un dictado. **El paquete autorizado es `speech_to_text`
+(Carlos, 13-oct)**; es la primera dependencia nueva desde T-79.
+
+**Qué construye.**
+
+1. **Un botón de micrófono junto a la búsqueda del muelle** (la de T-76: OR o
+   últimos dígitos). Al pulsar, escucha; el transcript llega al campo **como
+   borrador**: el usuario confirma y nada se ejecuta solo con el reconocimiento.
+2. **Normalización del transcript, en el dominio:** dígitos (palabras 0–9 y
+   secuencias), las letras de los prefijos de contenedor con los nombres que produce
+   el reconocedor en español, y espacios y puntuación fuera. Lo que no normalice
+   queda como vino, editable a mano.
+3. **El reconocedor detrás de un contrato**, con una implementación falsa para las
+   pruebas: la suite no depende de micrófono ni de red.
+4. **Soporte real por plataforma:** la voz es del muelle. Donde la versión de
+   `speech_to_text` no tenga soporte (Windows y, si aplica, la Web), el botón no
+   aparece o se muestra «no disponible» sin romper nada; el informe documenta la
+   matriz de soporte de la versión usada.
+5. **Permiso de micrófono:** esta ficha autoriza añadir `RECORD_AUDIO` al manifest
+   de Android, cambio mínimo y declarado. La política de privacidad que lo menciona
+   es parte de T-88, de Yov.
+6. **Sin red, sin drama:** la búsqueda manual nunca depende de la voz. Si el
+   reconocimiento no está disponible sin conexión, la app lo dice y el micrófono
+   falla con claridad; nada de fingir fuera de línea.
+
+**Fuera de alcance:** dictar comandos de operación (cargar, descargar), idiomas que
+no sean español, subir el transcript a la nube (la búsqueda es local) y cualquier
+cambio de reglas.
+
+**Terminada cuando:**
+
+- [ ] **Pruebas automatizadas con recognizer falso:** la normalización cubre dígitos,
+      secuencias, letras de prefijo y ruido; el borrador llega al campo y no busca
+      hasta confirmar; sin soporte, el botón no aparece.
+- [ ] **Dictado real en el Honor (`.t94`), con la voz de Carlos:** un contenedor
+      completo del caso y otro por sus últimos dígitos; ambos quedan como borrador y
+      la búsqueda existente los encuentra. Codex documenta lo observado; la
+      aceptación del dictado es manual de Carlos.
+- [ ] **Sin soporte:** en Windows y, si aplica, Chrome, el botón no aparece o dice
+      «no disponible», y la búsqueda manual sigue igual.
+- [ ] **Modo avión en el Honor:** si el reconocimiento no está disponible, la app lo
+      dice y la búsqueda manual funciona igual.
+- [ ] **El permiso** `RECORD_AUDIO` queda en el manifest, declarado en el informe y
+      en el bloque de commit, con la implicación para T-88 anotada.
+- [ ] **La dependencia** `speech_to_text`, versión fijada, se declara con su versión
+      y por qué; `pubspec.yaml` y `pubspec.lock` cambian y se declara.
+- [ ] Piso del momento (el vigente tras T-90), `analyze` en cero, corpus completo en
+      verde y reglas sin cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos), enlace en la app, ícono propio, decisión D3 |
@@ -1098,7 +1151,7 @@ cualquier cambio de reglas o Firebase.
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo y la fuente desde el propio sitio |
 | **T-93** | USO | 2.5 | Instalador de Windows |
-| **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo |
+| **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
