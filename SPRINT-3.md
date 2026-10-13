@@ -988,6 +988,39 @@ Ola 5.
 - [ ] Piso de 580 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
+#### T-102 · El peso en el PDF como en el plano impreso, y las pilas incompletas marcadas · 1.0 h · Codex (ficha completa, 13-oct)
+
+**Para qué.** USO. Nace en 10.2 y pasa a T-102 en 10.13. En pantalla, las celdas
+muestran el peso con un decimal desde T-66 («28.7»), pero el PDF no lo trae, y el
+planificador imprime el PDF para trabajar. Y la cabecera de peso por pila no marca
+las pilas donde falta algún peso: una pila incompleta se ve igual que una completa.
+
+**Qué construye.**
+
+1. **Peso en las celdas del PDF**, en toneladas con un decimal, como el plano
+   impreso y como la celda de la app desde T-66: el **peso efectivo** (VGM si existe,
+   si no bruto). En el estilo monocromático del PDF actual, sin tocar lo demás.
+2. **«28.7+?» en la cabecera de peso por pila, en pantalla:** si algún contenedor de
+   la pila no trae ningún peso, la cabecera muestra la suma conocida en toneladas con
+   un decimal y el sufijo **«+?»**. Una pila completa sigue igual («28.7»). Las
+   reservas no cuentan para el «+?»: no suman peso desde T-69.
+3. **Sin cambios** en reglas, nube ni almacenamiento; el PDF se exporta por el mismo
+   camino de siempre.
+
+**Fuera de alcance:** el resto de la Ola 5, la comparación llegada/salida (T-96) y el
+IMDG (T-85).
+
+**Terminada cuando:**
+
+- [ ] El PDF de A07 muestra en cada celda el peso con un decimal, y el peso total del
+      viaje sigue siendo el del oráculo (A07: 6 940 578 kg).
+- [ ] En pantalla, una pila con un contenedor sin peso muestra «…+?» y una completa
+      no. En A07 y A08 no aparece «+?» (todos sus contenedores traen peso); la prueba
+      del caso usa fixtures sintéticos con y sin peso.
+- [ ] Los tres clientes exportan y abren el PDF, y la pantalla no se rompe a 360 dp.
+- [ ] Piso de 592 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
+      cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos), enlace en la app, ícono propio, decisión D3 |
@@ -997,7 +1030,7 @@ Ola 5.
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo y la fuente desde el propio sitio |
 | **T-93** | USO | 2.5 | Instalador de Windows |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo |
-| **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) |
+| **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -1868,3 +1901,19 @@ Lo que comprobó:
 - **Revisión del commit.** Las 21 rutas son las del informe; sin `main.dart`, `pubspec.*`, reglas ni congelados; el diff no trae claves, correos ni UID, y no se rastrearon archivos del corpus.
 - **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83, T-84 y T-86.
 - **T-89 pasa a Codex** con ficha completa (sección 5, Ola 5, abierta por tiempo sobrante): sin filtro por extensión y validación por contenido. Con T-84, la **RF-040 queda completa en código**.
+
+### 10.25 · T-89 entregada, en revisión · El peso llega al PDF: T-102 a Codex (13-oct)
+
+**T-89, de Codex, pasa a En revisión** (commit `3963098`).
+
+- **Qué cambió.** El selector BAPLIE comparte `FileType.any`, sin `allowedExtensions`: cualquier archivo se puede elegir en las tres plataformas. La validación sigue siendo la de T-86; su rechazo «sin UNH/S009» se traduce en presentación a un mensaje claro («Este archivo no parece un BAPLIE…»). **Una precisión aceptada:** se admite por `UNH`, que es lo que el lector ya exige; no se añadió un segundo analizador ni se exige `UNB` aparte.
+- **La Web, con el selector real.** Chrome eligió A07 sin extensión, como `.txt` y como `.edi`, con las cifras intactas (398 contenedores, 21 bahías, 6 940 578 kg y 0/114/284 en GTSTC); el almacén terminó con 3 viajes y 1 perfil, conservados tras los tres rechazos. Windows y el Honor abrieron un `.edi` con su diálogo nativo; los otros nombres quedan cubiertos por las pruebas de entrada, y el informe no los presenta como recorridos nativos.
+- **Los rechazos conservan todo:** texto sin cabecera y 1.x y 3.x sintéticas, sin crear viaje ni tocar el almacén, con los avisos de T-86 íntegros.
+- **iPhone.** Carlos no tiene uno: la comprobación queda para el piloto (T-101), y el informe no se atribuye una aceptación de Safari/iOS.
+- **Validaciones.** **592 pruebas** (el piso nuevo; 12 nuevas), `analyze` en cero, corpus **105/105** (los tres nombres de A07) y SHA idénticos de lector, escritor, reglas, `main.dart` y `pubspec.*`.
+- **La mitigación que faltaba.** El primer volcado del selector del Honor incluyó identificadores de cuenta de Drive —la tercera incidencia de esta clase, tras T-81 y T-84—. Codex informó, borró los temporales y cambió el método: `adb exec-out uiautomator dump /dev/tty`, capturado en memoria y con los identificadores ocultos antes de mostrar o guardar nada; las lecturas siguientes mostraron «cuenta oculta». **Queda como práctica estándar** para los volcados del Honor; Yov la confirma el miércoles.
+- **Observación para T-97:** la barra de acciones existente desborda a 360 dp con un viaje abierto (`RenderFlex`) y en el Honor la cabecera va apretada. No se cambió la pantalla.
+- **Horas.** 0.48 h de pared frente a 1.0 estimada.
+- **Revisión del commit.** Las 7 rutas son las del informe; sin `main.dart`, `pubspec.*`, reglas, lector ni escritor; el diff no trae claves, correos ni UID, y no se rastreó nada del corpus.
+- **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83, T-84, T-86 y T-89.
+- **T-102 pasa a Codex** con ficha completa: el peso en las celdas del PDF como en el plano impreso y la marca «+?» en las pilas con pesos faltantes — las dos deudas de 10.2 y 10.13.
