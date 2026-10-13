@@ -1021,12 +1021,47 @@ IMDG (T-85).
 - [ ] Piso de 592 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
+#### T-91 · Barra superior plegable: los iconos se esconden mientras se ve el plano · 1.5 h · Codex (ficha completa, 13-oct)
+
+**Para qué.** USO, de la prueba de campo. En el plano, los iconos de acciones junto al
+título quitan espacio justo donde hace falta ver bahías y celdas, y a 360 dp la barra
+llega apretada: con un viaje abierto desborda (observado en T-89 y T-102). La barra se
+pliega mientras se trabaja el plano y se despliega cuando se necesita.
+
+**Qué construye.**
+
+1. **Un estado plegado de la barra superior en la vista del plano:** solo el título y
+   el botón de desplegar; los iconos de acciones quedan ocultos.
+2. **Desplegar y plegar con un toque**, sin recargar el plano ni perder el estado de
+   la vista (bahía, modo, zoom). La elección se recuerda por dispositivo, en el
+   almacén de ajustes, como el último puerto de escala de T-68.
+3. **Al plegar no se pierde ninguna acción:** se recuperan al desplegar. Los modos de
+   operación (Descarga, Carga, Tapas, Número de orden) y sus controles no cambian.
+4. **A 360 dp y en los dos temas:** plegada, la barra no desborda. El título cortado y
+   los demás textos de la barra siguen siendo deuda de T-97 y no se tocan aquí.
+
+**Fuera de alcance:** los textos de T-97 (título sin truncar, fila del detalle,
+«1 cargados», «(0 cub. / 0 bod.)», punto doble, «Conectando…»), las demás pantallas
+que no molesten y cualquier cambio de reglas o Firebase.
+
+**Terminada cuando:**
+
+- [ ] En el plano de A07, en los tres clientes: plegada muestra solo el título y el
+      botón; desplegada, todas las acciones; alternar no recarga el plano ni pierde la
+      vista.
+- [ ] El desborde observado a 360 dp con viaje abierto desaparece al menos plegada;
+      lo que quede expandido se declara para T-97, no se arregla de paso.
+- [ ] La preferencia sobrevive cerrar y reabrir la app en cada cliente.
+- [ ] Los dos temas, con colores de `colorScheme`, sin literales.
+- [ ] Piso de 599 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
+      cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos), enlace en la app, ícono propio, decisión D3 |
 | **T-89** | USO | 1.0 | iPhone acepta .edi: sin filtro por extensión y validación por contenido (`UNB`/`UNH`) · **ficha completa arriba** |
 | **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes |
-| **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano |
+| **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo y la fuente desde el propio sitio |
 | **T-93** | USO | 2.5 | Instalador de Windows |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo |
@@ -1939,3 +1974,14 @@ Lo que comprobó:
 - **La decisión de sesión se revoca.** El PDF monocromático completo, pedido por Carlos durante la sesión de T-102, no le gustó al verlo: con todo en grises, la leyenda (lleno, vacío, IMO, reefer, OOG, vecino de 40 pies, sin contenedor) casi no distingue categorías. **El PDF vuelve a la paleta de colores que traía antes de T-102**, conservando el peso efectivo por celda y el «+?» en pantalla. La comprobación de grises del verificador se adapta: siguen los pesos y la geometría, no la monocromía.
 - **T-102 sigue En curso** hasta el recolor, la re-verificación y una mirada rápida de Carlos a la portada y a una bahía cargada (la 022, página 15). Con eso pasa a En revisión.
 - **Cómo llegó a pasar esto, para el registro:** la ficha decía «estilo monocromático del PDF actual» por suponer que ya lo era; el PDF real traía paleta, en sesión se pidió todo gris, y visto el resultado se revoca. La regla de la app (escalas monocromáticas en pantalla) no cambia: esto es solo del PDF.
+
+### 10.28 · T-102 en revisión: el PDF volvió al color y Carlos lo aceptó · T-91 a Codex con ficha completa (13-oct)
+
+**T-102, de Codex, pasa a En revisión** (commits `fd87b66` la implementación y `4c41f67` el recolor y el cierre de la aceptación).
+
+- **El recolor de 10.27, cumplido.** El PDF volvió a su paleta anterior en portada, rejilla, leyenda, tabla y pie, con los pesos por celda intactos; el verificador dejó de exigir grises y siguió comprobando pesos, posiciones y que ningún texto sale de la celda. **Tres exportaciones verificadas tras el cambio:** 398/398 celdas, 33 páginas y `6940.6 t` de portada.
+- **Las dos aceptaciones manuales de Carlos** constan en el informe con sus horas: la de los pesos —portada y bahía 001: `2.3` y `6.9`, que suman los `9.2 t` del encabezado— y la de la paleta restaurada, con portada y bahía 022. La corrección del `6.9` quedó registrada en 10.27 y en el informe.
+- **Validaciones finales.** **599 pruebas**, `analyze` en cero y corpus **108/108**; reglas, `lib/main.dart` y `pubspec.*` sin cambios.
+- **Horas.** 0.94 h de pared en total frente a 1.0 estimada.
+- **El piso pasa a 599.** **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83, T-84, T-86, T-89 y T-102.
+- **T-91 pasa a Codex** con ficha completa (sección 5, Ola 5): la barra superior plegable. El desborde de la barra a 360 dp con viaje abierto, observado en T-89 y T-102, debe desaparecer al menos plegada; el texto que quede cortado con la barra expandida sigue siendo deuda de T-97.
