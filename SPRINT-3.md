@@ -888,11 +888,66 @@ sobreestibas por tapa (T-95) y cualquier cambio de reglas o Firebase.
 - [ ] Piso de 547 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
+#### T-84 · Tapas en la operación: quitar y reponer como movimientos, con aviso bajo tapa cerrada · 4.0 h · Codex (ficha completa, 12-oct)
+
+**Para qué.** RF-040, la otra mitad: las tapas que T-83 puso en el perfil se usan
+durante la operación. En el papel, el planificador sabe qué tapas están puestas y en
+qué orden se quitan para trabajar la bodega. T-84 lo registra en la bitácora con el
+tipo `hatch_cover` —que existe desde T-72 y cuya clave natural es `T:` (T-79a)—, lo
+sincroniza y lo cuenta en el avance.
+
+**Qué construye.**
+
+1. **Quitar y reponer tapas como movimientos** `hatch_cover` en la bitácora, con
+   bahía, tapa (T1–T3 o la automática) y acción (quitar o reponer).
+   - El estado de cada tapa **se deriva** de la bitácora, como todo lo demás: no se
+     guarda.
+   - Quitar una tapa ya quitada queda en conflicto; reponer una tapa que no está
+     quitada, igual. Deshacer es `annul`, como siempre.
+   - Lo registra **quien opera**, muelle u oficina: es un hecho observado, no un
+     cambio de plan; no hay solicitud ni aprobación.
+2. **El aviso bajo tapa cerrada.** Al confirmar una descarga o una carga en una celda
+   de bodega cuya tapa declarada cubre esa fila y sigue puesta, un aviso nombra la
+   tapa y ofrece **«Quitar tapa y continuar»**, que registra el `hatch_cover` y el
+   movimiento en un solo toque, como el par de T-77; o se sigue sin quitarla.
+   - **Nunca bloquea:** las declaraciones de tapas son PROVISIONALES (T-83) y un dato
+     provisional no puede frenar la operación.
+   - Las bahías «sin declarar» no avisan; las celdas de cubierta tampoco.
+3. **El avance de T-78 suma las tapas:** por bahía, cuántas tapas tiene declaradas,
+   cuántas quitadas y cuántas repuestas, aparte de descarga y carga; el último
+   movimiento ya las incluye.
+4. **Sincronizado:** los movimientos de tapa suben por la cola de T-79 como los demás
+   y llegan al otro cliente sin recargar. En modo sin cuenta quedan locales.
+5. **Las reglas no cambian:** `hatch_cover` es uno de los nueve tipos de T-79a. Si el
+   payload no pasa las reglas publicadas, Codex se detiene y avisa a Carlos.
+
+**Fuera de alcance:** sobreestibas por tapa (T-95), segregación IMDG bajo tapa
+(T-85), declarar tapas (T-83, ya hecho) y cualquier cambio de reglas.
+
+**Terminada cuando:**
+
+- [ ] **Corpus:** con tapas PROVISIONALES declaradas en las bahías con bodega del
+      caso, reproducir el caso intercalando quitar tapa → trabajar la bahía →
+      reponer tapa da el mismo **460/460** del CSV; los movimientos de tapa no
+      alteran contenedores. En al menos tres órdenes.
+- [ ] **El aviso:** marcar una descarga de bodega con su tapa puesta avisa y ofrece
+      «Quitar tapa y continuar»; con la tapa quitada, no avisa; una bahía «sin
+      declarar» no avisa; nunca bloquea.
+- [ ] **Conflictos:** quitar dos veces o reponer sin haber quitado queda en conflicto;
+      `annul` restaura.
+- [ ] **Avance:** las tapas cuentan por bahía (declaradas, quitadas, repuestas) y
+      cuadran con la bitácora en cada paso, como en T-78.
+- [ ] **Sincronización:** en producción, sobre una operación «PRUEBA T-84», el muelle
+      quita una tapa y la oficina lo ve sin recargar, y al revés.
+- [ ] **Tres clientes:** Windows, Honor a 360 dp y Chrome.
+- [ ] Piso de 563 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
+      cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-82** | RF-039 | 10.0 | BAPLIE de salida en la misma versión 2.x en que llegó, con lo cargado, re-estibado y cancelado; VGM y tara exactos del listado | Releído por el propio lector, coincide con `CASO_A08_ESTADO_FINAL.csv` en las 460 posiciones · **ficha completa arriba** |
 | **T-83** | RF-040 | 4.0 | Tapas en el perfil del buque, por bahía: sin tapa, una automática, o 1–3 de grúa con las filas que cubre cada una | Se declaran una vez por buque y se copian a otras bahías · **ficha completa arriba** |
-| **T-84** | RF-040 | 4.0 | Tapas en la operación: quitar y reponer como movimientos; aviso al marcar bodega bajo tapa cerrada | Los movimientos de tapa cuentan en el avance |
+| **T-84** | RF-040 | 4.0 | Tapas en la operación: quitar y reponer como movimientos; aviso al marcar bodega bajo tapa cerrada | Los movimientos de tapa cuentan en el avance · **ficha completa arriba** |
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
 | **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
 | **T-87** | BAP | 10.0 | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza |
@@ -1746,3 +1801,16 @@ Lo que comprobó:
 - **Revisión del commit.** Las 15 rutas son las del informe y todas del carril de la ficha; el diff no trae claves, correos ni UID, y no se rastreó ningún archivo nuevo del corpus.
 - **Cómo sigue.** Codex continúa T-83 en otra sesión con la lista de «Continuación necesaria» de su informe: recompilar los tres clientes desde la fuente final, completar el Honor y aceptar Chrome —primero con su Chrome propio de perfil aparte; si el bloqueo persiste, prepara el recorrido manual exacto para que Carlos lo haga, y queda en el informe como aceptación manual de Carlos. Con «Terminada cuando» cumplido, la tarea pasa a En revisión y se escribe la ficha de T-84.
 - **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82 y T-86.
+
+### 10.23 · T-83 terminó su aceptación y pasa a En revisión · T-84 a Codex con ficha completa (12-oct, noche)
+
+**T-83, de Codex, pasa a En revisión** (commits `5c87e44` la implementación y `19ef763` el cierre de la aceptación; este último solo modifica el informe).
+
+- **La continuación de 10.22 se cumplió entera.** Los tres clientes pasaron desde la fuente final recompilada —Windows 34.2 s, APK `.t83` 74.3 s, Web 48.5 s, en serie—, y el SHA de cada archivo de `lib/` de la copia se cotejó contra el repositorio: **0 diferencias**. Con la misma fuente se re-corrieron la suite (**563/563**) y `analyze` (**0**); el corpus **100/100** de la primera sesión sigue valiendo porque la fuente no cambió.
+- **Honor, completo:** el perfil anterior reabrió con 0 bahías sin inventar ninguna; se revisaron sin tapa (01), automática (02) y 1–3 de grúa (03, 05, 06); los dos rechazos se leyeron completos a 360 dp («La fila 06 se solapa entre tapas»; «La fila 99 de la tapa 2 no pertenece a la geometría de bodega de esta bahía»), conservando el diagrama válido; la copia 03→06 guardó las 21 bahías; el resumen compacto mostró las tres tapas sin desplazamiento, y la reapertura cotejó «Perfil releído igual · 21 bahías · válido».
+- **Chrome, con un precedente de proceso.** El reintento del Chrome propio volvió a quedar «blocked by policy» y no se intentó saltárselo; **Carlos autorizó expresamente revisar su pestaña ya abierta** en la dirección local, el conector la seleccionó con la URL verificada y la ventana visible. El informe atribuye la aceptación a Codex mediante el conector y **no** la registra como aceptación manual de Carlos. Queda como método si el bloqueo reaparece. El recorrido fue completo: perfil histórico sin declarar, 21 bahías PROVISIONALES, rechazos, copia, resumen compacto a 360×800 verificado en el DOM y reapertura igual.
+- **Windows:** el binario recompilado re-verificado con dos reaperturas (PIDs 7212 y 33324) y el plano de 06 con T1 `10,08,06`, T2 `04,02,00,01` y T3 `03,05,07,09` alineados; `t83acc_movements.hive` terminó en 0 bytes.
+- **Horas.** 1.19 h registradas entre las dos sesiones frente a 4.0 estimadas, más el tramo inicial sin cronometraje declarado.
+- **Revisión del commit.** `19ef763` toca solo el informe; el diff no trae claves, correos ni UID. Las tapas siguen **PROVISIONALES**.
+- **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83 y T-86. El piso pasa a **563**.
+- **T-84 pasa a Codex** con ficha completa (sección 5, Ola 4). Dos decisiones de diseño que lleva la ficha: el aviso de tapa cerrada **nunca bloquea** —las declaraciones son PROVISIONALES y un dato provisional no frena la operación— y los movimientos de tapa los registra **quien opera**, muelle u oficina, porque es un hecho observado, no un cambio de plan.
