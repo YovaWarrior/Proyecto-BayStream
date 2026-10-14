@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 156.1 h estimadas** (al 14-oct, 10.33) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **41 tareas · ≈ 157.1 h estimadas** (al 14-oct, 10.35) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -960,6 +960,7 @@ sincroniza y lo cuenta en el avance.
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
 | **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
 | **T-87** | BAP | 10.0 | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza |
+| **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35) | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
 
 ### Ola 5 · Uso fuera del aula y voz
 
@@ -2284,3 +2285,22 @@ El piso de pruebas es 648.
 **Siguen bloqueadas:** T-87 espera un BAPLIE 3.1 real, y T-101 el permiso de COMAR.
 
 **Yov sigue en un chat nuevo.** Su arranque está en `docs/ARRANQUE-YOV.md`.
+
+### 10.35 · Carlos decide A06, D3 y el Incremento 2 · Nace T-103 · La transcripción del IMDG, precisada (14-oct)
+
+**Las tres decisiones abiertas de 10.34, tomadas por Carlos con la recomendación de Yov:**
+- **A06 (SMDG15) se lee con aviso. Nace T-103** (BAP, 1.0 h, Codex, después del 17-oct).
+  - El lector acepta `SMDG15` además de la familia 2.x y muestra un aviso visible: «Versión 1.5, leída con las reglas de 2.x; revisa pesos y peligrosas».
+  - El resto de la 1.x y la 3.x se siguen rechazando como en T-86, que se acepta tal como se construyó.
+  - **Terminada cuando** A06 vuelve a abrir con sus cifras de antes de T-86 y con el aviso, y los corpus que hoy exigen su rechazo pasan a exigir la lectura con aviso.
+- **D3: el respaldo automático de Android se desactiva.** Va dentro de T-88: `android:allowBackup="false"` y las reglas de extracción de datos que pida el SDK de destino, sin respaldo en la nube ni transferencia entre dispositivos. Las declaraciones de Play y la política dicen que el almacén local no se respalda.
+- **El Incremento 2 suma el avance del Sprint 3:** una diapositiva final y un párrafo en Conclusiones con lo que ya funciona en `sprint-3`, declarado como trabajo en curso, sin tocar resultados, tablas ni cifras medidas. Lo hace Yov el 16-oct.
+
+**La transcripción del IMDG todavía no existe y es tarea de Yov.** Lo verificó el relevo: ni el repositorio ni `baystream-privado` tienen un archivo del IMDG ni de transcripción.
+- **La fuente.** En `C:\Proyectos\baystream-privado\` hay dos archivos del IMDG: el extracto Word de la edición 2012, descartado (sección 9 del caso), y el **PDF de 18 páginas en imagen de la Enmienda 42-24**, que es de donde se transcribe.
+- **Se transcribe de esas páginas,** nunca de memoria ni de otra edición (sección 8).
+- **La transcripción vive en `baystream-privado`, no en el repo.** El repositorio es público, y las tablas 7.2.4 y 7.4.3.2 son material con derechos de la OMI. Al repo solo entran los casos sintéticos de prueba que derive T-85, igual que las páginas originales nunca entraron.
+- **Cómo la lee Yov sin abrir lo demás de esa carpeta.** Carlos copia el PDF a una subcarpeta propia (por ejemplo `baystream-privado\imdg\`) y conecta solo esa, o lo adjunta al chat. La transcripción se guarda en esa misma subcarpeta.
+- **Una pregunta de diseño para la ficha de T-85:** cómo llega la matriz al código sin publicarla en el repo. Puede ser un archivo privado que se lee al compilar, como las opciones de Firebase, aunque entonces viaja dentro de la app publicada; o puede bastar con los códigos de segregación como dato funcional. Yov la propone en la ficha y decide Carlos.
+
+**El sprint pasa a 41 tareas y ≈ 157.1 h.** El tablero suma T-103 en Por hacer, con 207.5 h estimadas.

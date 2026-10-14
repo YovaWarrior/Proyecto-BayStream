@@ -22,10 +22,10 @@ El repo está en la carpeta conectada `proyecto-baystream` (`C:\Proyectos\proyec
 2. **`AGENTS.md`** completo.
 3. **`SPRINT-3.md`:**
    - completas, las secciones 1–4 y 6–9;
-   - las decisiones **10.17 a 10.34** (las anteriores, cuando las necesites);
+   - las decisiones **10.17 a 10.35** (las anteriores, cuando las necesites);
    - de la sección 5, solo las fichas que vayas a usar.
 4. **`docs/LOTE-TIMONEL.md`:** la aceptación en lote que espera a Timonel.
-5. **`git log --oneline -15`.** El último commit tuyo es el de 10.33 y 10.34, si Carlos ya lo corrió.
+5. **`git log --oneline -15`.** El último commit tuyo es el de 10.35, si Carlos ya lo corrió.
 6. **Si hace falta el detalle:**
    - los informes `docs/T<NN>-RESULTADOS.md`;
    - la bitácora del relevo, en `docs/RELEVO-Yov-GLM.md`, que no se commitea;
@@ -33,20 +33,20 @@ El repo está en la carpeta conectada `proyecto-baystream` (`C:\Proyectos\proyec
 
 ## 3. Estado al 14-oct, 13:00
 
-- **Rama `sprint-3`.** El Sprint 3 corre del 7 al 24-oct: 40 tareas, con un encabezado de **≈ 156.1 h** (regla de 10.17).
+- **Rama `sprint-3`.** El Sprint 3 corre del 7 al 24-oct: 41 tareas, con un encabezado de **≈ 157.1 h** (regla de 10.17).
 
 | Columna | Tareas | Horas estimadas |
 |---|---:|---:|
 | Terminado | 16 | 53.5 |
 | En revisión | 12 | 42.0 |
 | En curso | 0 | 0.0 |
-| Por hacer | 12 | 111.0 |
+| Por hacer | 13 | 112.0 |
 
 - **En revisión, esperando el lote de Timonel (~15-oct):** T-80, T-81, T-82, T-83, T-84, T-86, T-89, T-90, T-91, T-94, T-97 y T-102.
 - **Pruebas:** **piso 648**, analyze en 0 y corpus **116/116** (31 archivos).
 - **Reglas de Firestore:** las publicadas el 11-oct, SHA `21894B7F…C9000` (`docs/T80-firestore.rules.propuesta`).
 - **Dependencia nueva del tramo:** `speech_to_text 7.2.0`, con `RECORD_AUDIO` (T-94).
-- **Por hacer:** T-92, T-93, T-88, T-85 (IMDG), T-87 (3.1 real), T-95, T-96, T-56, T-98, T-99, T-100 y T-101.
+- **Por hacer:** T-92, T-93, T-88, T-85 (IMDG), T-87 (3.1 real), T-95, T-96, T-56, T-98, T-99, T-100, T-101 y T-103.
 - **Velocidad:** el código del sprint sale a entre un tercio y un décimo de lo estimado. Las 57 h de RNF (T-98 y T-99) no se comprimen así.
 - **Kanban:**
   - página publicada «BayStream Kanban Sprint 3»: https://claude.ai/artifact/KBwriG1gs3wgK1rTMskBsF;
@@ -90,23 +90,27 @@ El repo está en la carpeta conectada `proyecto-baystream` (`C:\Proyectos\proyec
 
 ## 5. Prioridades, en este orden
 
-1. **Pregúntale a Carlos las tres decisiones abiertas de 10.34,** con tu recomendación, y regístralas en 10.35:
-   - A06/SMDG15: leerla con aviso (T-103) o mantener el rechazo;
-   - D3: desactivar el respaldo de Android o declararlo;
-   - si el Incremento 2 suma una diapositiva y un párrafo con el avance del Sprint 3.
+1. **Las tres decisiones de 10.34 ya están tomadas (10.35):**
+   - la 1.5 se lee con aviso (T-103, después del 17-oct);
+   - el respaldo de Android se desactiva dentro de T-88;
+   - el Incremento 2 suma una diapositiva y un párrafo con el avance del Sprint 3.
 2. **La ficha completa de T-92** (Web sin conexión: servir el motor de dibujo y las fuentes desde el propio sitio), y el prompt para Codex. Revisa en el repo cómo compila hoy la Web y lo que dice 10.36 de `SPRINT-2.md`.
 3. **15-oct:**
    - Carlos le da a Timonel el prompt de `docs/LOTE-TIMONEL.md`, sección 5.
    - Al recibir su informe, escribe la decisión que pasa las aceptadas a Terminado, revisa sus observaciones (las 21 bahías, el modo avión al arrancar y el codec) y regenera el tablero.
 4. **16-oct:**
    - las fichas de T-93 (la herramienta del instalador la autoriza Carlos antes) y de la parte de código de T-88;
-   - tu texto de la política de privacidad y de las declaraciones de Play: sincronización, micrófono opcional, voz procesada por el servicio del sistema o del navegador, y D3. Parte de `docs/T64-DECLARACIONES-PLAY.md` y `docs/T65-RESULTADOS.md`;
-   - la revisión final del Incremento 2 (`docs/BayStream_Incremento2_*`) y lo que Carlos decida en el punto 1. Las tablas nuevas empiezan en la 91.
+   - tu texto de la política de privacidad y de las declaraciones de Play: sincronización, micrófono opcional, voz procesada por el servicio del sistema o del navegador, y sin respaldo del almacén local (D3). Parte de `docs/T64-DECLARACIONES-PLAY.md` y `docs/T65-RESULTADOS.md`;
+   - la revisión final del Incremento 2 (`docs/BayStream_Incremento2_*`) con la diapositiva final y el párrafo en Conclusiones de 10.35. Si agregas una tabla, es la 91.
 5. **17-oct:** presentación del Incremento 2. Nada se publica antes.
 6. **Del 18 al 21-oct:**
    - Carlos mezcla `sprint-3` en la rama principal y publica la Web y la prueba interna de Play.
-   - Tú transcribes las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24 para T-85. Carlos dejó las páginas en `docs/`. Solo la matriz y las notas que el código necesita, verificadas contra la fuente.
-   - La Ola 6: T-56, T-96 y T-95, y T-103 si Carlos la aprueba.
+   - Tú transcribes las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24 para T-85 (10.35):
+     - desde el PDF de 18 páginas en imagen que está en `baystream-privado`, nunca de memoria ni de otra edición;
+     - la transcripción vive en `baystream-privado`, no en el repo, y al repo solo entran los casos sintéticos;
+     - pídele a Carlos que conecte solo una subcarpeta con el PDF o que te lo adjunte;
+     - en la ficha de T-85 propón cómo llega la matriz al código sin publicarla en el repo.
+   - La Ola 6 (T-56, T-96 y T-95) y T-103.
 7. **Del 21 al 24-oct:** T-98 y T-99 (RNF, según `docs/T63-DECISIONES-RNF.md`), T-100 (manual y presentación final), T-101 si COMAR da permiso, y la entrega del 24-oct.
 
 **Si falta tiempo, se corta desde abajo** (SPRINT-3.md, 4.2).
@@ -124,7 +128,7 @@ El repo está en la carpeta conectada `proyecto-baystream` (`C:\Proyectos\proyec
    - las cifras de «Terminada cuando»;
    - el piso de pruebas;
    - las horas.
-4. Escribes la decisión 10.NN; la siguiente es la **10.35**.
+4. Escribes la decisión 10.NN; la siguiente es la **10.36**.
 5. Escribes la ficha completa de la tarea que sigue.
 6. Le das a Carlos un resumen corto, el bloque de git y el prompt con modelo y esfuerzo.
 7. Actualizas el tablero y la fila del día en `claude/BayStream_Sprint3_Propuesta.md`.
@@ -135,7 +139,7 @@ El repo está en la carpeta conectada `proyecto-baystream` (`C:\Proyectos\proyec
   - `claude/herramientas/kanban_sprint2.apertura.html`.
 - Léelos con `project_read`, ponlos juntos en tu carpeta de trabajo y edita la lista `T`: estado, nota y commit de cada tarjeta.
 - Cambia `FECHA`, el día del sprint y el piso.
-- Corre `python3 build_kanban_s3.py`: tiene que sumar 40 tarjetas y 206.5 h.
+- Corre `python3 build_kanban_s3.py`: tiene que sumar 41 tarjetas y 207.5 h.
 - Publica `kanban_sprint3.html` con `url` = la página de arriba.
 - Copia la versión completa a `docs/` con `device_commit_files` y `force`.
 
@@ -143,4 +147,4 @@ El repo está en la carpeta conectada `proyecto-baystream` (`C:\Proyectos\proyec
 
 **Si tu chat se satura,** escribe un arranque como este, actualizado, para tu siguiente chat.
 
-Empieza leyendo, dime en cinco líneas qué entendiste y hazle a Carlos las tres preguntas del punto 1 de la sección 5.
+Empieza leyendo, dime en cinco líneas qué entendiste y sigue con la ficha de T-92.
