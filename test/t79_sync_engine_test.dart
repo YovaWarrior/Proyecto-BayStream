@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:baystream/features/vessel/data/datasources/hive_movement_data_source.dart';
 import 'package:baystream/features/vessel/data/repositories/local_only_operation_sync.dart';
@@ -73,6 +74,65 @@ void main() {
     directory = await Directory.systemTemp.createTemp('t79_cola_');
     namespace = 't79_${DateTime.now().microsecondsSinceEpoch}';
     now = DateTime.utc(2026, 10, 9, 8);
+  });
+
+  test('T-97 arranque y cache inicial son desconocidos; servidor, caida y reintento', () async {
+    final log = await open();
+    await log.saveOperation(published);
+    final cloud = _ObservedCloud()..authorization[dock.uid] = RemoteAuthorization.active;
+    final sync = engine(log, cloud);
+    await sync.start(dock);
+    expect(sync.current.state, SyncState.connecting);
+    cloud.observations.add(const RemoteSnapshot([], fromServer: false));
+    await settle();
+    expect(sync.current.state, SyncState.connecting);
+    now = now.add(const Duration(hours: 2));
+    sync.evaluate();
+    expect(sync.current.state, SyncState.connecting);
+    cloud.observations.add(const RemoteSnapshot([], fromServer: true));
+    await until(() async => sync.current.state == SyncState.upToDate);
+    cloud.observations.add(const RemoteSnapshot([], fromServer: false));
+    await until(() async => sync.current.state == SyncState.offline);
+    await sync.retry();
+    expect(sync.current.state, SyncState.connecting);
+    cloud.observations.add(const RemoteSnapshot([], fromServer: true));
+    await until(() async => sync.current.state == SyncState.upToDate);
+    expect(cloud.writes, isEmpty);
+    await sync.stop();
+    await cloud.dispose();
+    await log.close();
+  });
+
+  test('T-97 unavailable confirma la caida sin perder ni rechazar pendientes', () async {
+    final log = await open();
+    await log.saveOperation(published);
+    final cloud = _ObservedCloud()..online = false;
+    final sync = engine(log, cloud);
+    await sync.start(dock);
+    await load(log, 'TSTU0000097');
+    await until(() async => sync.current.pending == 1);
+    expect(sync.current.state, SyncState.connecting);
+    cloud.observations.addError(const RemoteStoreException(RemoteErrorKind.unavailable, 'unavailable'));
+    await until(() async => sync.current.state == SyncState.offline);
+    expect(sync.current.pending, 1);
+    expect(sync.current.rejected, 0);
+    expect((await records(log)).single.state, SendState.pending);
+    await sync.stop();
+    await cloud.dispose();
+    await log.close();
+  });
+
+  test('T-97 un rechazo con detalle puntuado termina en un solo punto', () async {
+    final log = await open();
+    await log.saveOperation(published);
+    final cloud = _PunctuatedDenial()..authorization[dock.uid] = RemoteAuthorization.active;
+    final sync = engine(log, cloud);
+    await sync.start(dock);
+    await load(log, 'TSTU0000097');
+    await until(() async => (await records(log)).single.state == SendState.rejected);
+    expect((await records(log)).single.rejection, 'La nube rechazó este movimiento: reglas.');
+    await sync.stop();
+    await log.close();
   });
 
   tearDown(() async {
@@ -153,7 +213,8 @@ void main() {
       await load(log, 'TSTU000000$i');
     }
     await until(() async => sync.current.pending == 3);
-    expect(sync.current.state, SyncState.offline);
+    expect(sync.current.state, SyncState.connecting,
+        reason: 'La caché inicial no confirma una caída de conexión');
     expect(cloud.docs, isEmpty);
     cloud.goOnline();
     await until(() async =>
@@ -364,7 +425,8 @@ void main() {
     await load(log, 'TSTU0000001');
     now = now.add(const Duration(hours: 2));
     sync.evaluate();
-    expect(sync.current.state, SyncState.offline);
+    expect(sync.current.state, SyncState.connecting,
+        reason: 'El tiempo transcurrido tampoco confirma una caída');
     await sync.stop();
     await log.close();
   });
@@ -389,3 +451,16 @@ VesselProfile _profile() => VesselProfile(
       origin: VesselProfileOrigin.declaredByUser,
       updatedAt: DateTime.utc(2026),
     );
+
+class _ObservedCloud extends FakeCloud {
+  final observations = StreamController<RemoteSnapshot>.broadcast();
+  Future<void> dispose() => observations.close();
+  @override
+  Stream<RemoteSnapshot> watch(String operationId) => observations.stream;
+}
+
+class _PunctuatedDenial extends FakeCloud {
+  @override
+  Future<void> put(Movement movement) => Future.error(const RemoteStoreException(
+    RemoteErrorKind.permissionDenied, 'permission-denied', 'reglas.'));
+}

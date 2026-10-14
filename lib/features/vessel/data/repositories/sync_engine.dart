@@ -83,6 +83,7 @@ class SyncEngine {
   bool _sessionExpired = false;
   bool _notAuthorized = false;
   bool _fromServer = false;
+  bool _connectionKnown = false;
   bool _closed;
   bool _stopped = false;
   DateTime? _onlineSince;
@@ -140,12 +141,16 @@ class SyncEngine {
     unawaited(_remote?.cancel());
     _remote = null;
     _fromServer = false;
+    _connectionKnown = false;
     _onlineSince = null;
     if (!on || _stopped) return;
     _remote = remote.watch(operation.id).listen(_onSnapshot, onError: _onWatchError);
   }
 
   Future<void> _onSnapshot(RemoteSnapshot snapshot) async {
+    // T-97: la caché inicial no prueba una caída. Tras recibir del servidor,
+    // volver a caché sí confirma que el listener perdió esa conexión.
+    if (snapshot.fromServer || _fromServer) _connectionKnown = true;
     if (snapshot.fromServer && !_fromServer) _onlineSince = _clock();
     if (!snapshot.fromServer) _onlineSince = null;
     _fromServer = snapshot.fromServer;
@@ -159,6 +164,7 @@ class SyncEngine {
     _fromServer = false;
     _onlineSince = null;
     if (error is RemoteStoreException) {
+      if (error.kind == RemoteErrorKind.unavailable) _connectionKnown = true;
       if (error.kind == RemoteErrorKind.unauthenticated) _sessionExpired = true;
       if (error.kind == RemoteErrorKind.permissionDenied) _notAuthorized = true;
     }
@@ -209,6 +215,9 @@ class SyncEngine {
       case RemoteErrorKind.unauthenticated:
         _sessionExpired = true;
       case RemoteErrorKind.unavailable:
+        _connectionKnown = true;
+        _fromServer = false;
+        _onlineSince = null;
         break;
       case RemoteErrorKind.invalid:
         await log.markRejected(movement.id,
@@ -245,8 +254,11 @@ class SyncEngine {
           await log.markRejected(
               movement.id, 'La operación se cerró antes de este movimiento.');
         } else {
+          // Solo el texto del rechazo: sin cambiar su clasificación ni el
+          // registro. Un detalle ya puntuado no recibe un segundo punto.
+          final detail = error.detail?.trim().replaceFirst(RegExp(r'\.+$'), '');
           await log.markRejected(movement.id,
-              'La nube rechazó este movimiento${error.detail == null ? '' : ': ${error.detail}'}.');
+              'La nube rechazó este movimiento${detail == null || detail.isEmpty ? '' : ': $detail'}.');
         }
     }
   }
@@ -301,7 +313,7 @@ class SyncEngine {
     } else if (since != null) {
       state = SyncState.unconfirmed;
     } else if (!_fromServer) {
-      state = SyncState.offline;
+      state = _connectionKnown ? SyncState.offline : SyncState.connecting;
     } else {
       state = own > 0 ? SyncState.sending : SyncState.upToDate;
     }

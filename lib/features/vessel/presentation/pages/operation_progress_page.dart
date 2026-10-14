@@ -5,6 +5,7 @@ import '../../domain/services/load_check.dart';
 import '../../domain/services/loading_operation.dart';
 import '../../domain/services/operation_progress.dart';
 import '../formatters/vessel_error_message.dart';
+import '../formatters/operation_text.dart';
 import '../providers/loading_operation_provider.dart';
 import '../widgets/discharge_controls.dart' show formatMovementTime;
 import '../widgets/loading_controls.dart' show loadingPosition;
@@ -17,7 +18,10 @@ class OperationProgressPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-        appBar: AppBar(title: const Text('Avance de la operación'), actions: [
+        appBar: AppBar(title: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text('Avance de la operación', maxLines: 2),
+        ), actions: [
           IconButton(tooltip: 'Tapas en la operación', icon: const Icon(Icons.layers_outlined),
               onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
                   builder: (_) => HatchOperationPage(voyage: voyage)))),
@@ -96,9 +100,9 @@ class OperationProgressPage extends ConsumerWidget {
                                           row.bay == 0 ? 'TOTAL' : row.label)),
                                       DataCell(Text(_discharge(row))),
                                       DataCell(Text(
-                                          '${row.fullLoaded} cargados\n${row.fullPending} pendientes')),
+                                          '${operationCount(row.fullLoaded, 'cargado', 'cargados')}\n${operationCount(row.fullPending, 'pendiente', 'pendientes')}')),
                                       DataCell(Text(
-                                          '${row.emptyLoaded} asignados\n${row.emptyPending} pendientes')),
+                                          '${operationCount(row.emptyLoaded, 'asignado', 'asignados')}\n${operationCount(row.emptyPending, 'pendiente', 'pendientes')}')),
                                       DataCell(Text('${row.cancelled}')),
                                       DataCell(Text('${row.conflicts}')),
                                       DataCell(SizedBox(width: 140, child: Text(_covers(row)))),
@@ -129,9 +133,9 @@ class OperationProgressPage extends ConsumerWidget {
                                           .titleMedium),
                                   Text('Descarga: ${_discharge(row)}'),
                                   Text(
-                                      'Llenos: ${row.fullLoaded} cargados · ${row.fullPending} pendientes'),
+                                      'Llenos: ${operationCount(row.fullLoaded, 'cargado', 'cargados')} · ${operationCount(row.fullPending, 'pendiente', 'pendientes')}'),
                                   Text(
-                                      'Vacíos: ${row.emptyLoaded} asignados · ${row.emptyPending} pendientes'),
+                                      'Vacíos: ${operationCount(row.emptyLoaded, 'asignado', 'asignados')} · ${operationCount(row.emptyPending, 'pendiente', 'pendientes')}'),
                                   Text(
                                       'Cancelados: ${row.cancelled} · Conflictos: ${row.conflicts}'),
                                   Text('Último movimiento: ${_last(row.last)}'),
@@ -187,10 +191,10 @@ class OperationProgressPage extends ConsumerWidget {
                     else ...[
                       Text(
                           'Límite del perfil: ${(limit / 1000).toStringAsFixed(1)} t. '
-                          '${exceeded.length} pilas sobre su límite.'),
+                          '${operationCount(exceeded.length, 'pila', 'pilas')} sobre su límite.'),
                       if (unknown > 0)
                         Text(
-                            '$unknown pilas no evaluadas por pesos faltantes.'),
+                            '${operationCount(unknown, 'pila no evaluada', 'pilas no evaluadas')} por pesos faltantes.'),
                     ],
                     for (final stack in exceeded)
                       Text(
@@ -204,20 +208,22 @@ class OperationProgressPage extends ConsumerWidget {
                         'Peso actual a bordo; una pila sobre su límite se informa aparte de los conflictos.'),
                     if (operation.state.duplicates.isNotEmpty)
                       Text(
-                          '${operation.state.duplicates.length} movimientos repetidos; no suman dos veces.'),
+                          '${operationCount(operation.state.duplicates.length, 'movimiento repetido', 'movimientos repetidos')}; no suman dos veces.'),
                     const SizedBox(height: 24),
                   ]),
             ));
   }
 
   String _discharge(BayOperationProgress row) =>
-      '${row.discharged} descargados · '
-      '${row.dischargePending} pendientes\n'
-      '(${row.dischargeDeck.pending} cub. / ${row.dischargeHold.pending} bod.) · '
-      '${row.restows} re-estibas';
+      '${operationCount(row.discharged, 'descargado', 'descargados')} · '
+      '${operationCount(row.dischargePending, 'pendiente', 'pendientes')}\n'
+      '${pendingZones(row.dischargeDeck.pending, row.dischargeHold.pending)} · '
+      '${operationCount(row.restows, 're-estiba', 're-estibas')}';
 
-  String _covers(BayOperationProgress row) => '${row.coversDeclared} declaradas · '
-      '${row.coversRemoved} quitadas · ${row.coversReplaced} repuestas';
+  String _covers(BayOperationProgress row) =>
+      '${operationCount(row.coversDeclared, 'declarada', 'declaradas')} · '
+      '${operationCount(row.coversRemoved, 'quitada', 'quitadas')} · '
+      '${operationCount(row.coversReplaced, 'repuesta', 'repuestas')}';
 
   String _last(Movement? movement) {
     if (movement == null) return 'Sin movimientos';

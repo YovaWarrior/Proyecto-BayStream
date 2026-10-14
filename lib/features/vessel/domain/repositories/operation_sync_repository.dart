@@ -13,6 +13,8 @@ enum SyncCapability { none, realtime }
 enum SyncState {
   /// Sin cuenta, sin publicar o sin la nube: modo de un solo dispositivo.
   localOnly,
+  /// Todavía no hay evidencia del servidor ni de una caída de conexión.
+  connecting,
   upToDate,
   sending,
   offline,

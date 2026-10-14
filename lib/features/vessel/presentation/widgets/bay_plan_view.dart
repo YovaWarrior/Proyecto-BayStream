@@ -17,6 +17,8 @@ import 'office_plan_controls.dart';
 import '../providers/sync_providers.dart';
 import 'hatch_cover_diagram.dart';
 import 'hatch_operation_controls.dart';
+import 'detail_text_row.dart';
+import '../formatters/operation_text.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
 /// Permite navegar entre bahías y ver la disposición de contenedores
@@ -167,7 +169,11 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
 
   Widget _buildBaySelector(List<int> bayNumbers, VesselVoyage displayedVoyage) {
     return Container(
-      height: 60,
+      key: const ValueKey('bay-selector'),
+      // Android puede escalar 10/12 sp más que 28 sp. Se miden las dos
+      // líneas que realmente lleva el chip, sin suponer escala lineal.
+      height: (32 + (MediaQuery.textScalerOf(context).scale(12) +
+              MediaQuery.textScalerOf(context).scale(10)) * 1.6).clamp(60.0, double.infinity),
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
@@ -190,7 +196,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                 onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
                     builder: (_) => HatchOperationPage(voyage: widget.voyage, initialBay: _selectedBayNumber)))),
           Expanded(
-            child: ListView.builder(
+            child: LayoutBuilder(builder: (context, constraints) => ListView.builder(
               controller: _bayScrollController,
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -211,7 +217,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: FilterChip(
-                    label: Column(
+                    label: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: (constraints.maxWidth - 112).clamp(1.0, double.infinity)),
+                      child: FittedBox(fit: BoxFit.scaleDown, child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
@@ -228,7 +236,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                           style: const TextStyle(fontSize: 10),
                         ),
                       ],
-                    ),
+                    ))),
                     selected: isSelected,
                     onSelected: (_) {
                       ref
@@ -238,7 +246,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   ),
                 );
               },
-            ),
+            )),
           ),
           // Flecha derecha
           IconButton(
@@ -457,13 +465,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   children: [
                     Icon(Icons.warning_amber, color: Theme.of(context).colorScheme.error),
                     const SizedBox(width: 8),
-                    Text(
+                    Expanded(child: Text(
                       'CARGA PELIGROSA - IMO ${container.imdgClass ?? ""}',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
+                    )),
                   ],
                 ),
                 if (container.unNumber != null)
@@ -480,13 +488,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   children: [
                     Icon(Icons.ac_unit, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 8),
-                    Text(
+                    Expanded(child: Text(
                       'REFRIGERADO: ${container.temperature?.toStringAsFixed(1) ?? "?"}°${container.temperatureUnit ?? "C"}',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
+                    )),
                   ],
                 ),
               ],
@@ -514,16 +522,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   }
 
   Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
+    return DetailTextRow(label: label, value: value);
   }
 }
 
@@ -657,8 +656,8 @@ class _BayGridWidget extends StatelessWidget {
             ),
           ),
           Text(
-            '${bay.containers.length} contenedores'
-            '${reservedSlots.isEmpty ? '' : ' · ${reservedSlots.length} celdas reservadas'}'
+            '${operationCount(bay.containers.length, 'contenedor', 'contenedores')}'
+            '${reservedSlots.isEmpty ? '' : ' · ${operationCount(reservedSlots.length, 'celda reservada', 'celdas reservadas')}'}'
             ' | ${(bay.totalWeight / 1000).toStringAsFixed(1)} ton',
             style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),

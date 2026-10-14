@@ -5,6 +5,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/repositories/operation_sync_repository.dart';
 import '../../domain/repositories/session_repository.dart';
 import '../formatters/vessel_error_message.dart';
+import '../formatters/operation_text.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
@@ -50,7 +51,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     if (!mounted) return;
     setState(() {
       _busy = false;
-      _message = error ?? done;
+      _message = error == null ? done : rejectionText(error);
     });
   }
 
@@ -187,7 +188,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     if (operation == null) {
       return const Text('Abre un plano con su escala confirmada para ver su operación.');
     }
-    final status = ref.watch(syncStatusProvider).value ?? SyncStatus.local;
+    final status = visibleSyncStatus(ref.watch(syncStatusProvider));
     final office = operator != null &&
         operator.authorized &&
         operator.role == OperatorRole.office;

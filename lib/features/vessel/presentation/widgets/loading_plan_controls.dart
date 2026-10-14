@@ -5,6 +5,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/loading_plan_progress.dart';
 import '../../domain/services/operation_progress.dart';
 import '../formatters/vessel_error_message.dart';
+import '../formatters/operation_text.dart';
 import '../pages/export_list_import_page.dart';
 import '../pages/operation_progress_page.dart';
 import '../pages/change_requests_page.dart';
@@ -122,7 +123,7 @@ class LoadingPlanControls extends ConsumerWidget {
                   child: const Text('Importar listado')),
             ])
           else if (orderMode)
-            Text('${progress.value!.unmatched} celdas de carga sin cruce (—).'),
+            Text('${operationCount(progress.value!.unmatched, 'celda de carga sin cruce', 'celdas de carga sin cruce')} (—).'),
         ],
       ]),
     );
@@ -134,8 +135,8 @@ class LoadingPlanControls extends ConsumerWidget {
         bay == null
             ? 'Pendientes de carga: 0 en esta bahía.'
             : 'Bahía ${bay.label} · pendientes de carga: '
-                'cubierta ${bay.deck} (${bay.deckFull} llenos / ${bay.deckEmpty} vacíos) · '
-                'bodega ${bay.hold} (${bay.holdFull} llenos / ${bay.holdEmpty} vacíos)',
+                'cubierta ${bay.deck} (${operationCount(bay.deckFull, 'lleno', 'llenos')} / ${operationCount(bay.deckEmpty, 'vacío', 'vacíos')}) · '
+                'bodega ${bay.hold} (${operationCount(bay.holdFull, 'lleno', 'llenos')} / ${operationCount(bay.holdEmpty, 'vacío', 'vacíos')})',
         key: const ValueKey('bay-loading-pending'));
   }
 
@@ -165,9 +166,9 @@ class LoadingPlanControls extends ConsumerWidget {
                             'Pendientes de carga · ${voyage.vessel.name} · ${voyage.voyageNumber} · ${voyage.portOfCall}',
                             style: Theme.of(context).textTheme.titleMedium),
                         Text(
-                            '${bays.length} bahías · ${data.total} pendientes · '
+                            '${operationCount(bays.length, 'bahía', 'bahías')} · ${operationCount(data.total, 'pendiente', 'pendientes')} · '
                             '${data.deck} en cubierta / ${data.hold} en bodega · '
-                            '${data.full} llenos / ${data.empty} vacíos',
+                            '${operationCount(data.full, 'lleno', 'llenos')} / ${operationCount(data.empty, 'vacío', 'vacíos')}',
                             key: const ValueKey('operation-loading-totals')),
                         if (data.list == null)
                           const Text('Sin listado: F/E según el plan.'),

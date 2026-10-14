@@ -162,14 +162,16 @@ class _SummaryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
+        final crossAxisCount = constraints.maxWidth > 600 ? 3 :
+            MediaQuery.textScalerOf(context).scale(12) > 18 ? 1 : 2;
         return GridView.count(
           crossAxisCount: crossAxisCount,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 1.8,
+          childAspectRatio: ((constraints.maxWidth - (crossAxisCount - 1) * 12) / crossAxisCount) /
+              (76 + MediaQuery.textScalerOf(context).scale(32)),
           children: [
             _MetricCard(
               label: 'Total Contenedores',
@@ -245,8 +247,10 @@ class _MetricCard extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Expanded(child: Row(children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -275,16 +279,12 @@ class _MetricCard extends StatelessWidget {
                           ),
                     ),
                   ),
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
                 ],
               ),
             ),
+            ])),
+            Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ],
         ),
       ),

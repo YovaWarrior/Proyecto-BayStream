@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/discharge_progress.dart';
 import '../formatters/vessel_error_message.dart';
+import '../formatters/operation_text.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
@@ -33,13 +34,13 @@ class DischargeSummary extends ConsumerWidget {
               ? 'Pendientes de descarga: 0 en esta bahía.'
               : 'Bahía ${bay.label} · pendientes de descarga: '
                   'cubierta ${bay.deckPending} · bodega ${bay.holdPending} · '
-                  'descargados ${bay.discharged}'
-                  '${bay.restows == 0 ? '' : ' · re-estibas ${bay.restows}'}',
+                  '${bay.discharged == 1 ? 'descargado' : 'descargados'} ${bay.discharged}'
+                  '${bay.restows == 0 ? '' : ' · ${operationCount(bay.restows, 're-estiba', 're-estibas')}'}',
           key: const ValueKey('bay-discharge-pending')),
       Text(
           'Escala ${voyage.portOfCall}: ${data.pending} por descargar '
-          '(${data.deckPending} cub. / ${data.holdPending} bod.) · '
-          '${data.discharged} descargados · ${data.restows} re-estibas',
+          '${pendingZones(data.deckPending, data.holdPending)} · '
+          '${operationCount(data.discharged, 'descargado', 'descargados')} · ${operationCount(data.restows, 're-estiba', 're-estibas')}',
           key: const ValueKey('operation-discharge-totals')),
       if (!data.canRegister)
         const Text('Esta escala todavía no tiene operación guardada: vuelve a '
@@ -76,9 +77,9 @@ void showDischargeTable(BuildContext context, VesselVoyage voyage) =>
                           'Pendientes de descarga · ${voyage.vessel.name} · ${voyage.voyageNumber} · ${voyage.portOfCall}',
                           style: Theme.of(context).textTheme.titleMedium),
                       Text(
-                          '${bays.length} bahías · ${data.pending} pendientes · '
+                          '${operationCount(bays.length, 'bahía', 'bahías')} · ${operationCount(data.pending, 'pendiente', 'pendientes')} · '
                           '${data.deckPending} en cubierta / ${data.holdPending} en bodega · '
-                          '${data.discharged} descargados · ${data.restows} re-estibas',
+                          '${operationCount(data.discharged, 'descargado', 'descargados')} · ${operationCount(data.restows, 're-estiba', 're-estibas')}',
                           key: const ValueKey(
                               'operation-discharge-table-totals')),
                       const Text('Cub. y Bod. = pendientes en cubierta y '

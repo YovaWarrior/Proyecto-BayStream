@@ -163,25 +163,26 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: !toolbarCollapsed,
-        title: const Text('BayStream'),
+        title: const FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text('BayStream', maxLines: 2),
+        ),
         centerTitle: true,
         actions: [
           if (!toolbarCollapsed)
-            if (showToolbarToggle)
-              // T-91: el botón queda fijo; todas las acciones se recuperan
-              // desplazándolas si no caben, sin modificar los textos de T-97.
+              // T-97: reserva espacio visible para el título. T-91 conserva
+              // su tira desplazable y el botón fijo con un toque.
               SizedBox(
                 key: const ValueKey('plan-toolbar-actions'),
-                width: (MediaQuery.sizeOf(context).width - 48 -
+                width: (MediaQuery.sizeOf(context).width - (showToolbarToggle ? 160 : 112) -
+                        (showToolbarToggle ? 48 : 0) -
                         (Navigator.of(context).canPop() ? 56 : 0))
                     .clamp(0.0, toolbarActions.length * 48.0),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(mainAxisSize: MainAxisSize.min, children: toolbarActions),
                 ),
-              )
-            else
-              ...toolbarActions,
+              ),
           if (showToolbarToggle)
             IconButton(
               key: const ValueKey('toggle-plan-toolbar'),

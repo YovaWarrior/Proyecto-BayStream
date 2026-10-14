@@ -20,6 +20,9 @@ String syncStatusText(SyncStatus status) {
   final parts = <String>[
     switch (status.state) {
       SyncState.localOnly => 'Solo este dispositivo',
+      SyncState.connecting => status.pending == 0
+          ? 'Conectando…'
+          : 'Conectando… · ${status.pending} por enviar',
       SyncState.upToDate => 'Al día',
       SyncState.sending => 'Enviando ${status.pending}',
       SyncState.offline => status.pending == 0
@@ -44,6 +47,7 @@ String syncStatusText(SyncStatus status) {
 
 IconData syncStatusIcon(SyncStatus status) => switch (status.state) {
       SyncState.localOnly => Icons.phone_android,
+      SyncState.connecting => Icons.cloud_sync_outlined,
       SyncState.upToDate =>
         status.rejected > 0 ? Icons.cloud_sync_outlined : Icons.cloud_done_outlined,
       SyncState.sending => Icons.cloud_upload_outlined,
@@ -63,13 +67,18 @@ bool syncStatusNeedsAction(SyncStatus status) =>
 Future<void> openCloudPage(BuildContext context) => Navigator.of(context)
     .push(MaterialPageRoute<void>(builder: (_) => const CloudPage()));
 
+/// Al cambiar de plano, el dato anterior no describe la conexión nueva.
+SyncStatus visibleSyncStatus(AsyncValue<SyncStatus> value) => value.isLoading
+    ? const SyncStatus(SyncState.connecting)
+    : value.value ?? const SyncStatus(SyncState.connecting);
+
 /// El estado de envío de la escala que se ve; lleva a «Nube y cuenta».
 class SyncStatusChip extends ConsumerWidget {
   const SyncStatusChip({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final status = ref.watch(syncStatusProvider).value ?? SyncStatus.local;
+    final status = visibleSyncStatus(ref.watch(syncStatusProvider));
     final colors = Theme.of(context).colorScheme;
     final alert = syncStatusNeedsAction(status);
     return ActionChip(
@@ -91,7 +100,7 @@ class SyncAppBarButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final status = ref.watch(syncStatusProvider).value ?? SyncStatus.local;
+    final status = visibleSyncStatus(ref.watch(syncStatusProvider));
     final alert = syncStatusNeedsAction(status);
     return IconButton(
       key: const ValueKey('cloud-page'),

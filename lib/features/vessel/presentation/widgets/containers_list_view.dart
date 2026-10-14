@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
+import 'detail_text_row.dart';
 
 /// Widget que muestra la lista de contenedores en tarjetas
 class ContainersListView extends StatelessWidget {
@@ -461,13 +462,13 @@ class _ContainerCard extends StatelessWidget {
                   children: [
                     Icon(Icons.warning_amber, color: Theme.of(context).colorScheme.error, size: 20),
                     const SizedBox(width: 8),
-                    Text(
+                    Expanded(child: Text(
                       'MERCANCÍA PELIGROSA',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
+                    )),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -482,13 +483,13 @@ class _ContainerCard extends StatelessWidget {
                   children: [
                     Icon(Icons.ac_unit, color: Theme.of(context).colorScheme.primary, size: 20),
                     const SizedBox(width: 8),
-                    Text(
+                    Expanded(child: Text(
                       'CONTENEDOR REFRIGERADO',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
-                    ),
+                    )),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -518,25 +519,6 @@ class _ContainerCard extends StatelessWidget {
 
   /// Construye una fila de detalle
   Widget _buildDetailRow(BuildContext context, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
+    return DetailTextRow(label: label, value: value, verticalPadding: 8);
   }
 }

@@ -4,6 +4,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
 import '../../domain/services/loading_operation.dart';
 import '../formatters/vessel_error_message.dart';
+import '../formatters/operation_text.dart';
 import '../pages/change_requests_page.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_operation_provider.dart';
@@ -58,15 +59,15 @@ class LoadingControls extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                        'Carga: ${data.progress.total} pendientes '
-                        '(${data.progress.full} llenos / ${data.progress.empty} vacíos).',
+                        'Carga: ${operationCount(data.progress.total, 'pendiente', 'pendientes')} '
+                        '(${operationCount(data.progress.full, 'lleno', 'llenos')} / ${operationCount(data.progress.empty, 'vacío', 'vacíos')}).',
                         key: const ValueKey('loading-operation-totals')),
                     if (bay != null)
                       Text(
                           'Bahía ${bay.label}: cubierta ${bay.deck} · bodega ${bay.hold}.'),
-                    Text('Descarga: ${data.discharge.pending} pendientes '
-                        '(${data.discharge.deckPending} cub. / ${data.discharge.holdPending} bod.) · '
-                        '${data.discharge.restows} re-estibas.'),
+                    Text('Descarga: ${operationCount(data.discharge.pending, 'pendiente', 'pendientes')} '
+                        '${pendingZones(data.discharge.deckPending, data.discharge.holdPending)} · '
+                        '${operationCount(data.discharge.restows, 're-estiba', 're-estibas')}.'),
                     if (data.list == null)
                       const Text(
                           'Importa el listado de agencia para operar por OR.'),

@@ -179,6 +179,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Cerrar'), findsOneWidget);
       expect(find.textContaining('En GTSTC: por descargar'), findsOneWidget);
+      await tester.ensureVisible(find.text('Cerrar'));
       await tester.tap(find.text('Cerrar'));
       await tester.pumpAndSettle();
       expect(log.of('op-t75'), isEmpty);
@@ -196,7 +197,7 @@ void main() {
       // Un toque marca; el «Deshacer» inmediato lo anula con motivo.
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
       await tester.pumpAndSettle();
-      expect(summary(), contains('cubierta 1 · bodega 1 · descargados 1'));
+      expect(summary(), contains('cubierta 1 · bodega 1 · descargado 1'));
       expect(find.text('DESC.'), findsOneWidget);
       expect(find.textContaining('Descargado · TEST0000011'), findsOneWidget);
       await tester.tap(find.text('Deshacer'));
@@ -227,6 +228,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('annul-with-reason')));
       await tester.pumpAndSettle();
       expect(log.of('op-t75').last.movement.reason, 'Era la de al lado');
+      await tester.ensureVisible(find.text('Cerrar'));
       await tester.tap(find.text('Cerrar'));
       await tester.pumpAndSettle();
       wide(false);
@@ -245,6 +247,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(summary(), contains('cubierta 0 · bodega 1 · descargados 0'));
       expect(find.text('PASO'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const ValueKey('cell-2-82')));
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
       await tester.pumpAndSettle();
       expect(find.textContaining('no se descarga en GTSTC'), findsOneWidget);
@@ -255,7 +258,7 @@ void main() {
       final restow = log.of('op-t75').last.movement;
       expect((restow.type, restow.payload['restow'], restow.reason),
           (MovementType.discharge, true, 'Despejar la bodega'));
-      expect(summary(), contains('re-estibas 1'));
+      expect(summary(), contains('1 re-estiba'));
       expect(find.text('RE-EST.'), findsOneWidget);
       expect(
           tester
@@ -263,7 +266,7 @@ void main() {
                   find.byKey(const ValueKey('operation-discharge-totals')))
               .data,
           contains(
-              '4 por descargar (2 cub. / 2 bod.) · 0 descargados · 1 re-estibas'));
+              '4 por descargar (2 pendientes en cubierta / 2 pendientes en bodega) · 0 descargados · 1 re-estiba'));
 
       // La tabla de la operación.
       await tester.tap(find.byKey(const ValueKey('discharge-table-button')));

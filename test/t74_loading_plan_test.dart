@@ -225,7 +225,7 @@ void main() {
       await tester.pumpAndSettle();
       if (withList) {
         expect(
-            find.textContaining('1 celdas de carga sin cruce'), findsOneWidget);
+            find.textContaining('1 celda de carga sin cruce'), findsOneWidget);
         expect(find.text('2'), findsWidgets); // OR 2 en bahía 03.
       } else {
         expect(find.text('Importar listado'), findsOneWidget);
