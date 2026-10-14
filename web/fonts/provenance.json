@@ -1,0 +1,23 @@
+[
+  {
+    "file": "roboto/v32/KFOmCnqEu92Fr1Me4GZLCzYlKw.woff2",
+    "url": "https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me4GZLCzYlKw.woff2",
+    "originalSha256": "35B02CA266B79EB4996590F15817425A1CE9EBF48F84471843233FF614656BF2",
+    "servedSha256": "35B02CA266B79EB4996590F15817425A1CE9EBF48F84471843233FF614656BF2",
+    "license": "LICENSE-Roboto.txt"
+  },
+  {
+    "file": "notosanssymbols/v43/rP2up3q65FkAtHfwd-eIS2brbDN6gxP34F9jRRCe4W3gfQ8gb_VFRkzrbQ.woff2",
+    "url": "https://fonts.gstatic.com/s/notosanssymbols/v43/rP2up3q65FkAtHfwd-eIS2brbDN6gxP34F9jRRCe4W3gfQ8gb_VFRkzrbQ.woff2",
+    "originalSha256": "08202E258EA583254C036CFF46A7077BB5AF4F82C41A6C0A6775F6E44D99F1AA",
+    "servedSha256": "08202E258EA583254C036CFF46A7077BB5AF4F82C41A6C0A6775F6E44D99F1AA",
+    "license": "LICENSE-NotoSansSymbols.txt"
+  },
+  {
+    "file": "notosanssymbols2/v24/I_uyMoGduATTei9eI8daxVHDyfisHr71-vrgfE71.woff2",
+    "url": "https://fonts.gstatic.com/s/notosanssymbols2/v24/I_uyMoGduATTei9eI8daxVHDyfisHr71-vrgfE71.woff2",
+    "originalSha256": "C90FBE98152BBB119A7E521A048C6AA6FC367879D6E3DAE6DB5A17582DE25EAD",
+    "servedSha256": "C90FBE98152BBB119A7E521A048C6AA6FC367879D6E3DAE6DB5A17582DE25EAD",
+    "license": "LICENSE-NotoSansSymbols2.txt"
+  }
+]

@@ -1,11 +1,12 @@
 {
-    "name": "baystream",
-    "short_name": "baystream",
+    "name": "BayStream",
+    "short_name": "BayStream",
+    "lang": "es",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "BayStream: plano de estiba y operación de carga marítima.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
