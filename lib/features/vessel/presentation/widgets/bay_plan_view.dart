@@ -259,6 +259,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
 
   Widget _buildLegend(VesselVoyage displayedVoyage) {
     final activeFilter = ref.watch(selectedTypeFilterProvider);
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -272,29 +273,29 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildLegendItem(Colors.green, 'Lleno', LegendFilterType.full, activeFilter),
+            _buildLegendItem(scheme.secondaryContainer, 'Lleno', LegendFilterType.full, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.orange, 'Vacío / OOG', LegendFilterType.empty, activeFilter),
+            _buildLegendItem(scheme.surfaceContainerHighest, 'Vacío / OOG', LegendFilterType.empty, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.red, 'IMO', LegendFilterType.imo, activeFilter),
+            _buildLegendItem(scheme.errorContainer, 'IMO', LegendFilterType.imo, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.cyan, 'Reefer', LegendFilterType.reefer, activeFilter),
+            _buildLegendItem(scheme.primaryContainer, 'Reefer', LegendFilterType.reefer, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.deepOrange, 'OOG', LegendFilterType.oog, activeFilter),
+            _buildLegendItem(scheme.tertiaryContainer, 'OOG', LegendFilterType.oog, activeFilter),
             if (widget.voyage.portOfCall != null) ...[
               const SizedBox(width: 16),
-              _buildLegendItem(Colors.grey.shade500, 'De paso',
+              _buildLegendItem(scheme.surface, 'De paso',
                   LegendFilterType.transit, activeFilter),
             ],
             const SizedBox(width: 16),
             _buildLegendItem(
-                Colors.blueGrey.shade200, 'Ocupado por 40 pies', null, activeFilter),
+                scheme.surfaceContainerHigh, 'Ocupado por 40 pies', null, activeFilter),
             if (displayedVoyage.totalReservedSlots > 0) ...[
               const SizedBox(width: 16),
               _buildReservedLegendItem(),
             ],
             const SizedBox(width: 16),
-            _buildLegendItem(Colors.grey.shade300, 'Sin contenedor', null, activeFilter),
+            _buildLegendItem(scheme.surfaceContainerLow, 'Sin contenedor', null, activeFilter),
           ],
         ),
       ),
@@ -351,7 +352,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                 color: color,
                 borderRadius: BorderRadius.circular(2),
                 border: Border.all(
-                  color: isActive ? Colors.black : Colors.black26,
+                  color: isActive ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.outline,
                   width: isActive ? 2 : 1,
                 ),
               ),
@@ -396,7 +397,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: Theme.of(context).colorScheme.outlineVariant,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -419,13 +420,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.indigo.withValues(alpha: 0.1),
+                        color: Theme.of(context).colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         container.operatorCode!,
-                        style: const TextStyle(
-                          color: Colors.indigo,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -454,12 +455,12 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    const Icon(Icons.warning_amber, color: Colors.red),
+                    Icon(Icons.warning_amber, color: Theme.of(context).colorScheme.error),
                     const SizedBox(width: 8),
                     Text(
                       'CARGA PELIGROSA - IMO ${container.imdgClass ?? ""}',
-                      style: const TextStyle(
-                        color: Colors.red,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -477,12 +478,12 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    const Icon(Icons.ac_unit, color: Colors.cyan),
+                    Icon(Icons.ac_unit, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       'REFRIGERADO: ${container.temperature?.toStringAsFixed(1) ?? "?"}°${container.temperatureUnit ?? "C"}',
-                      style: const TextStyle(
-                        color: Colors.cyan,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -518,7 +519,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600])),
+          Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
       ),
@@ -659,7 +660,7 @@ class _BayGridWidget extends StatelessWidget {
             '${bay.containers.length} contenedores'
             '${reservedSlots.isEmpty ? '' : ' · ${reservedSlots.length} celdas reservadas'}'
             ' | ${(bay.totalWeight / 1000).toStringAsFixed(1)} ton',
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
 
@@ -703,15 +704,15 @@ class _BayGridWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text(
+              child: Text(
                 '▲ CUBIERTA (DECK)',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
             ),
@@ -729,7 +730,7 @@ class _BayGridWidget extends StatelessWidget {
               height: 3,
               margin: const EdgeInsets.symmetric(horizontal: 40),
               decoration: BoxDecoration(
-                color: Colors.brown.shade400,
+                color: Theme.of(context).colorScheme.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -747,15 +748,15 @@ class _BayGridWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               decoration: BoxDecoration(
-                color: Colors.brown.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.secondaryContainer,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text(
+              child: Text(
                 '▼ BODEGA (HOLD)',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: Colors.brown,
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
                 ),
               ),
             ),
@@ -1279,13 +1280,11 @@ class _ContainerCell extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isOccupiedByNeighbor
-              ? Colors.blueGrey.shade100
-              : Colors.grey.shade200,
+              ? Theme.of(context).colorScheme.surfaceContainerHigh
+              : Theme.of(context).colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: isOccupiedByNeighbor
-                ? Colors.blueGrey.shade300
-                : Colors.grey.shade300,
+            color: Theme.of(context).colorScheme.outlineVariant,
           ),
         ),
         child: isOccupiedByNeighbor
@@ -1294,7 +1293,7 @@ class _ContainerCell extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blueGrey.shade400,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               )
             : null,
@@ -1304,30 +1303,38 @@ class _ContainerCell extends StatelessWidget {
     // Determinar color según estado y tipo
     Color cellColor;
     Color borderColor;
+    Color contentColor;
+    final scheme = Theme.of(context).colorScheme;
     IconData? icon;
 
     if (container!.isDangerous) {
-      cellColor = Colors.red.shade100;
-      borderColor = Colors.red;
+      cellColor = scheme.errorContainer;
+      borderColor = scheme.error;
+      contentColor = scheme.onErrorContainer;
       icon = Icons.warning_amber;
     } else if (container!.isReefer) {
-      cellColor = Colors.cyan.shade100;
-      borderColor = Colors.cyan;
+      cellColor = scheme.primaryContainer;
+      borderColor = scheme.primary;
+      contentColor = scheme.onPrimaryContainer;
       icon = Icons.ac_unit;
     } else if (container!.isOverDimension) {
       // RF-008: indicador visual para carga OOG (Out of Gauge)
-      cellColor = Colors.orange.shade100;
-      borderColor = Colors.orange;
+      cellColor = scheme.tertiaryContainer;
+      borderColor = scheme.tertiary;
+      contentColor = scheme.onTertiaryContainer;
       icon = Icons.open_in_full;
     } else if (container!.status == ContainerStatus.full) {
-      cellColor = Colors.green.shade100;
-      borderColor = Colors.green;
+      cellColor = scheme.secondaryContainer;
+      borderColor = scheme.secondary;
+      contentColor = scheme.onSecondaryContainer;
     } else if (container!.status == ContainerStatus.empty) {
-      cellColor = Colors.orange.shade100;
-      borderColor = Colors.orange;
+      cellColor = scheme.surfaceContainerHighest;
+      borderColor = scheme.outline;
+      contentColor = scheme.onSurface;
     } else {
-      cellColor = Colors.grey.shade100;
-      borderColor = Colors.grey;
+      cellColor = scheme.surfaceContainerLow;
+      borderColor = scheme.outline;
+      contentColor = scheme.onSurface;
     }
 
     // RF-011: atenuar contenedores que no coinciden con el filtro activo
@@ -1339,14 +1346,15 @@ class _ContainerCell extends StatelessWidget {
     // la bahia se lea de un vistazo como "lo que opero" contra "lo que sigue a
     // bordo". Es lo que el planificador tacha a mano en el plano impreso.
     if (isInTransit) {
-      cellColor = Colors.grey.shade50;
-      borderColor = Colors.grey.shade500;
+      cellColor = scheme.surface;
+      borderColor = scheme.outlineVariant;
+      contentColor = scheme.onSurfaceVariant;
     }
 
-    final scheme = Theme.of(context).colorScheme;
     if (orderLabel != null) {
       cellColor = scheme.primaryContainer;
       borderColor = scheme.primary;
+      contentColor = scheme.onPrimaryContainer;
     }
     final mark = dischargeMark;
     var borderWidth = 2.0;
@@ -1391,21 +1399,27 @@ class _ContainerCell extends StatelessWidget {
           ),
       };
     }
+    if (isHighlighted) {
+      cellColor = scheme.tertiaryContainer;
+      borderColor = scheme.tertiary;
+      contentColor = scheme.onTertiaryContainer;
+      markColor = contentColor;
+    }
     final cell = Container(
       width: 50,
       height: 40,
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: isHighlighted ? Colors.yellow.shade100 : cellColor,
+        color: cellColor,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: isHighlighted ? Colors.yellow.shade700 : borderColor,
+          color: borderColor,
           width: isHighlighted ? 3 : borderWidth,
         ),
         boxShadow: isHighlighted
             ? [
                 BoxShadow(
-                  color: Colors.yellow.withValues(alpha: 0.5),
+                  color: scheme.tertiary.withValues(alpha: 0.5),
                   blurRadius: 6,
                   spreadRadius: 1,
                 ),
@@ -1445,13 +1459,13 @@ class _ContainerCell extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 9,
                           height: 1,
-                          color: scheme.onPrimaryContainer)),
+                          color: contentColor)),
                 Text(orderLabel!.replaceFirst('OR ', ''),
                     style: TextStyle(
                         fontSize: 18,
                         height: 1.1,
                         fontWeight: FontWeight.bold,
-                        color: scheme.onPrimaryContainer)),
+                        color: contentColor)),
               ])),
             )
           : FittedBox(
@@ -1460,14 +1474,14 @@ class _ContainerCell extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null)
-                    Icon(icon, size: 12, color: borderColor)
+                    Icon(icon, size: 12, color: contentColor)
                   else
                     Text(
                       container!.sizeInFeet?.toString() ?? '',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: borderColor,
+                        color: contentColor,
                         height: 1.1,
                       ),
                     ),
@@ -1478,7 +1492,7 @@ class _ContainerCell extends StatelessWidget {
                         container!.operatorCode!,
                         style: TextStyle(
                           fontSize: 8,
-                          color: borderColor,
+                          color: contentColor,
                           height: 1.1,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -1492,7 +1506,7 @@ class _ContainerCell extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w600,
-                        color: borderColor,
+                        color: contentColor,
                         height: 1.1,
                       ),
                     ),

@@ -23,6 +23,7 @@ import 'vessel_geometry_page.dart';
 import 'vessel_profiles_page.dart';
 import 'recent_voyages_page.dart';
 import 'stowage_alerts_page.dart';
+import 'parameters_page.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -129,13 +130,16 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             ),
           ],
         ),
-      // Corregir la geometría declarada sin volver a cargar el archivo
-      if (hasVoyage)
-        IconButton(
+      // T-90: tema del dispositivo y acceso a la geometría del viaje vigente.
+      IconButton(
           key: const ValueKey('edit-geometry'),
           icon: const Icon(Icons.straighten),
-          tooltip: 'Parámetros del buque',
-          onPressed: () => _askForGeometry(context),
+          tooltip: 'Parámetros',
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => ParametersPage(
+              onVesselParameters: hasVoyage ? () => _askForGeometry(context) : null,
+            ),
+          )),
         ),
       // Botón para cargar archivo BAPLIE
       IconButton(
@@ -227,7 +231,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
                 const SizedBox(height: 16),
                 Text(
                   'Error al procesar archivo',
@@ -237,7 +241,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 Text(
                   vesselErrorMessage(error, stack),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
@@ -453,7 +457,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               ? 'Archivo "${result.fileName}" cargado correctamente'
               : result.errorMessage ?? unknownVesselErrorMessage,
         ),
-        backgroundColor: result.success ? Colors.green : Colors.red,
+        backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
       ),
@@ -680,7 +684,6 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 ? 'Parámetros del buque actualizados'
                 : 'Archivo "$fileName" cargado correctamente',
           ),
-          backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
         ),
@@ -791,13 +794,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                   _buildStatChip(
                     context,
                     '${filteredContainers.where((c) => c.status == ContainerStatus.full).length} llenos',
-                    Colors.green,
+                    Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
                   _buildStatChip(
                     context,
                     '${filteredContainers.where((c) => c.status == ContainerStatus.empty).length} vacíos',
-                    Colors.orange,
+                    Theme.of(context).colorScheme.secondary,
                   ),
                 ],
               ),

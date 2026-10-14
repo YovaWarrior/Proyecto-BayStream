@@ -46,7 +46,7 @@ const t91ActionTooltips = [
   'Nube y cuenta · Solo este dispositivo',
   'Buscar contenedor',
   'Exportar viaje',
-  'Parámetros del buque',
+  'Parámetros',
   'Cargar archivo BAPLIE',
   'Limpiar datos',
 ];

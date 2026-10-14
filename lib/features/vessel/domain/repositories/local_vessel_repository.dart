@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../entities/entities.dart';
+import '../entities/app_theme_preference.dart';
 
 /// Resultado de identidad: solo un identificador permite resolución automática.
 class VesselProfileLookup {
@@ -37,6 +38,10 @@ abstract class LocalVesselRepository {
   /// pliega; no depende del viaje ni se sincroniza con otros dispositivos.
   Future<Either<Failure, bool>> getPlanToolbarCollapsed();
   Future<Either<Failure, void>> setPlanToolbarCollapsed(bool collapsed);
+
+  /// T-90 · Sin elección previa, el tema sigue al sistema.
+  Future<Either<Failure, AppThemePreference>> getThemePreference();
+  Future<Either<Failure, void>> setThemePreference(AppThemePreference preference);
 
   /// T-73 · Tabla de equivalencias del listado de la agencia (tipos, puertos
   /// y líneas). Es del dispositivo, como el último puerto confirmado.

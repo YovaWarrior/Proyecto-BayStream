@@ -43,8 +43,8 @@ class _ContainerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final statusColor = _getStatusColor(container.status);
-    final typeColor = _getTypeColor(container.containerType);
+    final statusColor = _getStatusColor(container.status, colorScheme);
+    final typeColor = _getTypeColor(container.containerType, colorScheme);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -100,14 +100,14 @@ class _ContainerCard extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.indigo.withValues(alpha: 0.1),
+                                  color: colorScheme.primaryContainer,
                                   borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
+                                  border: Border.all(color: colorScheme.outlineVariant),
                                 ),
                                 child: Text(
                                   container.operatorCode!,
-                                  style: const TextStyle(
-                                    color: Colors.indigo,
+                                  style: TextStyle(
+                                    color: colorScheme.onPrimaryContainer,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 10,
                                   ),
@@ -134,19 +134,19 @@ class _ContainerCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
+                          color: colorScheme.errorContainer,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
+                          border: Border.all(color: colorScheme.error),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.warning_amber, color: Colors.red, size: 14),
+                            Icon(Icons.warning_amber, color: colorScheme.onErrorContainer, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               'IMO ${container.imdgClass ?? ""}',
-                              style: const TextStyle(
-                                color: Colors.red,
+                              style: TextStyle(
+                                color: colorScheme.onErrorContainer,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 10,
                               ),
@@ -161,19 +161,19 @@ class _ContainerCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.cyan.withValues(alpha: 0.1),
+                          color: colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Colors.cyan.withValues(alpha: 0.5)),
+                          border: Border.all(color: colorScheme.primary),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.ac_unit, color: Colors.cyan, size: 14),
+                            Icon(Icons.ac_unit, color: colorScheme.onPrimaryContainer, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               '${container.temperature?.toStringAsFixed(0) ?? "?"}°${container.temperatureUnit ?? "C"}',
-                              style: const TextStyle(
-                                color: Colors.cyan,
+                              style: TextStyle(
+                                color: colorScheme.onPrimaryContainer,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 10,
                               ),
@@ -255,11 +255,11 @@ class _ContainerCard extends StatelessWidget {
                   spacing: 8,
                   children: [
                     if (container.isDangerous)
-                      _buildWarningChip(context, Icons.warning, 'IMDG', Colors.red),
+                      _buildWarningChip(context, Icons.warning, 'IMDG', colorScheme.error),
                     if (container.isReefer)
-                      _buildWarningChip(context, Icons.ac_unit, 'Reefer', Colors.blue),
+                      _buildWarningChip(context, Icons.ac_unit, 'Reefer', colorScheme.primary),
                     if (container.isOverDimension)
-                      _buildWarningChip(context, Icons.open_in_full, 'OOG', Colors.orange),
+                      _buildWarningChip(context, Icons.open_in_full, 'OOG', colorScheme.tertiary),
                   ],
                 ),
               ],
@@ -339,14 +339,14 @@ class _ContainerCard extends StatelessWidget {
   }
 
   /// Obtiene el color según el estado del contenedor
-  Color _getStatusColor(ContainerStatus status) {
+  Color _getStatusColor(ContainerStatus status, ColorScheme scheme) {
     switch (status) {
       case ContainerStatus.full:
-        return Colors.green;
+        return scheme.primary;
       case ContainerStatus.empty:
-        return Colors.orange;
+        return scheme.secondary;
       case ContainerStatus.unknown:
-        return Colors.grey;
+        return scheme.onSurfaceVariant;
     }
   }
 
@@ -363,19 +363,19 @@ class _ContainerCard extends StatelessWidget {
   }
 
   /// Obtiene el color según el tipo de contenedor
-  Color _getTypeColor(ContainerType? type) {
+  Color _getTypeColor(ContainerType? type, ColorScheme scheme) {
     switch (type) {
       case ContainerType.reefer:
-        return Colors.blue;
+        return scheme.primary;
       case ContainerType.tank:
-        return Colors.purple;
+        return scheme.tertiary;
       case ContainerType.openTop:
-        return Colors.teal;
+        return scheme.secondary;
       case ContainerType.flatRack:
-        return Colors.brown;
+        return scheme.tertiary;
       case ContainerType.generalPurpose:
       default:
-        return Colors.blueGrey;
+        return scheme.onSurfaceVariant;
     }
   }
 
@@ -421,7 +421,7 @@ class _ContainerCard extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: Theme.of(context).colorScheme.outlineVariant,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -459,12 +459,12 @@ class _ContainerCard extends StatelessWidget {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    const Icon(Icons.warning_amber, color: Colors.red, size: 20),
+                    Icon(Icons.warning_amber, color: Theme.of(context).colorScheme.error, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'MERCANCÍA PELIGROSA',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -480,12 +480,12 @@ class _ContainerCard extends StatelessWidget {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    const Icon(Icons.ac_unit, color: Colors.cyan, size: 20),
+                    Icon(Icons.ac_unit, color: Theme.of(context).colorScheme.primary, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'CONTENEDOR REFRIGERADO',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.cyan,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

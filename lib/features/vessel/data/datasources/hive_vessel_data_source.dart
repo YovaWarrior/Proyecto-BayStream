@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:hive_ce/hive.dart';
 
 import '../../domain/entities/entities.dart';
+import '../../domain/entities/app_theme_preference.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
 import 'local_vessel_codec.dart';
 
@@ -107,6 +108,17 @@ class HiveVesselDataSource {
 
   Future<void> setPlanToolbarCollapsed(bool collapsed) => _writeVoyages(() async {
     await _settings.put('planToolbarCollapsed', collapsed.toString());
+    await _settings.flush();
+  });
+
+  AppThemePreference getThemePreference() => switch (_settings.get('themePreference')) {
+    'light' => AppThemePreference.light,
+    'dark' => AppThemePreference.dark,
+    _ => AppThemePreference.system,
+  };
+
+  Future<void> setThemePreference(AppThemePreference preference) => _writeVoyages(() async {
+    await _settings.put('themePreference', preference.name);
     await _settings.flush();
   });
 

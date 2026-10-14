@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/entities/app_theme_preference.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
 import '../datasources/hive_vessel_data_source.dart';
 
@@ -55,6 +56,14 @@ class LocalVesselRepositoryImpl implements LocalVesselRepository {
   @override
   Future<Either<Failure, void>> setPlanToolbarCollapsed(bool collapsed) =>
       _guard(() => _source.setPlanToolbarCollapsed(collapsed));
+
+  @override
+  Future<Either<Failure, AppThemePreference>> getThemePreference() =>
+      _guard(_source.getThemePreference);
+
+  @override
+  Future<Either<Failure, void>> setThemePreference(AppThemePreference preference) =>
+      _guard(() => _source.setThemePreference(preference));
 
   @override
   Future<Either<Failure, CodeEquivalences>> getCodeEquivalences() =>

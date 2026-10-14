@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../features/vessel/domain/entities/app_theme_preference.dart';
+import '../features/vessel/presentation/providers/theme_preference_provider.dart';
 import '../features/vessel/presentation/pages/vessel_overview_page.dart';
 
-class BayStreamApp extends StatelessWidget {
-  const BayStreamApp({super.key});
+class BayStreamApp extends ConsumerWidget {
+  final Widget home;
+  final TransitionBuilder? builder;
+  const BayStreamApp({super.key, this.home = const VesselOverviewPage(), this.builder});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final preference = ref.watch(themePreferenceProvider).value ?? AppThemePreference.system;
     return MaterialApp(
       title: 'BayStream',
       debugShowCheckedModeBanner: false,
@@ -27,8 +33,13 @@ class BayStreamApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      themeMode: ThemeMode.system,
-      home: const VesselOverviewPage(),
+      themeMode: switch (preference) {
+        AppThemePreference.system => ThemeMode.system,
+        AppThemePreference.light => ThemeMode.light,
+        AppThemePreference.dark => ThemeMode.dark,
+      },
+      builder: builder,
+      home: home,
     );
   }
 }

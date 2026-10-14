@@ -212,7 +212,7 @@ void main() {
       final colorPaso = (dePaso.decoration as BoxDecoration).color;
 
       expect(colorPaso, isNot(colorEscala));
-      expect(colorPaso, Colors.grey.shade50);
+      expect(colorPaso, Theme.of(tester.element(find.byType(BayPlanView))).colorScheme.surface);
     });
   });
 
