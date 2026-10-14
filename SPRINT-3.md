@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 179.8 h estimadas** (al 12-oct, 10.18) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **40 tareas · ≈ 156.1 h estimadas** (al 14-oct, 10.33) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -62,6 +62,9 @@ tarea que lo autorice por escrito en esta ficha.
   **Carlos** desde la consola. Tú redactas `firestore.rules` y los pasos.
 - **La espiga T-70 usa solo el emulador local de Firebase.** Ningún proyecto en la nube.
 - Las opciones de Firebase siguen fuera del código (T-47). No crees `firebase_options.dart`.
+- **Nada de listas dentro de listas en lo que viaja a Firestore** (10.33). Firestore no las admite, y en Windows
+  tumbaron la app al publicar las tapas (T-84). Si el dominio necesita una, el codec de `data/` la convierte en
+  mapa al viajar, como `FirestoreProfileCodec`; el dominio y Hive no cambian.
 
 ### 2.4 Datos reales: nunca en el repositorio
 
@@ -87,6 +90,11 @@ Los números de contenedor son ficticios con dígito de control ISO 6346 válido
 mismos en los cuatro archivos. Líneas y agencias van como LNA … LNG y AGENCIA 1 … 4; la línea B conserva la rareza real: LNB en el listado y LINB en el plan. Las
 pruebas del repositorio usan **fixtures sintéticos mínimos**; las pruebas contra el corpus
 leen la carpeta por `--dart-define=BAYSTREAM_CORPUS_DIRECTORY=...`, como en el Sprint 2.
+
+**Volcados y capturas del Honor, siempre sanitizados** (10.33, nace en T-89). Solo con
+`adb exec-out uiautomator dump /dev/tty`, capturado en memoria y con los identificadores de cuenta ocultos
+antes de mostrar o guardar nada. Si aparece un diálogo del sistema con datos de cuenta (guardar contraseña,
+selector de Drive), no se captura: se descarta y se declara en el informe.
 
 ### 2.5 Las pruebas deben seguir en verde — 282 al abrir el sprint
 
@@ -147,7 +155,8 @@ Sin cambios: no ejecutas `git add`, `commit`, `push`, `tag`, `checkout`, `restor
 una tarea a la vez.** En este sprint el carril de `lib/` pasa de un programador al otro
 según la sección 6, y quien no lo tiene trabaja en algo que no los toca: una espiga en
 otra carpeta, una aceptación, una medición o un informe. Un comando de Flutter a la vez en
-la máquina, con `SEMÁFORO:` cuando alguien mide.
+la máquina, con `SEMÁFORO:` cuando alguien mide. Vale también entre agentes (10.33): mientras uno compila o
+prueba, el otro no corre Flutter, y Carlos da el semáforo.
 
 ---
 
@@ -1145,7 +1154,7 @@ cambio de reglas.
 
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
-| **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos), enlace en la app, ícono propio, decisión D3 |
+| **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34) |
 | **T-89** | USO | 1.0 | iPhone acepta .edi: sin filtro por extensión y validación por contenido (`UNB`/`UNH`) · **ficha completa arriba** |
 | **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes · **ficha completa arriba** |
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
@@ -2173,4 +2182,105 @@ Lo que comprobó:
 - **Horas.** ≈1.65 h frente a 1.0, con el desvío explicado (la escala no lineal del Honor, la transición del motor, el ajuste final de Avance y la repetición de los tres builds) y el apagón de la laptop excluido y declarado.
 - **Revisión del commit.** Las 21 rutas son las del informe; el diff no trae claves, correos ni UID, y no se rastreó nada del corpus.
 - **Esperan la aceptación en lote de Timonel: doce tareas** — T-80, T-81, T-82, T-83, T-84, T-86, T-89, T-90, T-91, T-94, T-97 y T-102. El piso pasa a **648**.
-- **Cierre del relevo.** La collaborazione de relevo termina el 14-oct a las 13:00. Quedan en mesa de Yov: T-92, T-93, T-88 (que ahora también explica el micrófono opcional y el posible procesamiento remoto del servicio de voz), T-56 y T-95/T-96 de la Ola 6, el IMDG (T-85, con la transcripción), T-87 (archivo 3.1 real), T-101 (COMAR) y el cierre del curso (T-98 a T-100).
+- **Cierre del relevo.** El relevo termina el 14-oct a las 13:00. Quedan en mesa de Yov: T-92, T-93, T-88 (que ahora también explica el micrófono opcional y el posible procesamiento remoto del servicio de voz), T-56 y T-95/T-96 de la Ola 6, el IMDG (T-85, con la transcripción), T-87 (archivo 3.1 real), T-101 (COMAR) y el cierre del curso (T-98 a T-100).
+
+### 10.33 · Yov vuelve y ratifica el relevo · Horas, tablero y dos reglas nuevas (14-oct)
+
+**El relevo de GLM 5.3 terminó** el 14-oct a las 13:00. Corrió del 11-oct por la noche al 14-oct. Yov leyó entera su bitácora (`docs/RELEVO-Yov-GLM.md`, que no se commitea) y las decisiones 10.19 a 10.32, y revisó en el código los dos puntos de motor.
+
+**Se ratifican las decisiones 10.19 a 10.32**, con estas precisiones:
+- **10.20, los de paso salen con el plan de carga: ratificada.** El BAPLIE de salida continúa el plan del planner de la línea, que es la declaración vigente de lo que zarpa; la llegada es información más vieja. Las diferencias entre A07 y el plan son datos reales, no errores, y T-96 las tiene que mostrar: 127 en POL, 189 en POD, 58 en línea y 113 en peso.
+- **10.21, A06 rechazada: ratificada tal como se construyó, con una decisión pendiente de Carlos.** Rechazar la 1.x cumple la fila de T-86. Pero A06 se leía antes, y Carlos dijo que no hay que descartar versiones anteriores. Yov propone leer la SMDG15 con un aviso visible y seguir rechazando el resto de la 1.x y la 3.x (10.34).
+- **El origen de los criterios de T-86, precisado a pedido del propio relevo:**
+  - leer toda la familia 2.x y rechazar con mensaje claro vienen de la fila de T-86, escrita en la apertura;
+  - A06 como espécimen real nace del hallazgo de T-82;
+  - los fixtures sintéticos vienen de la fila y de la ficha.
+  - Una frase del resumen del relevo en el chat («los tres criterios nacieron de la ficha de T-82») era imprecisa. No está en ningún archivo, y 10.20 y 10.21 son correctas.
+- **10.23, el aviso de tapa cerrada nunca bloquea: ratificada.** Las tapas son PROVISIONALES, y un dato provisional no frena la operación. Si un día el perfil se toma de los documentos del buque, se reconsidera.
+- **10.23, la pestaña de Chrome autorizada por Carlos: ratificada solo como último recurso.** Aplica a la app en la dirección local, con la autorización de Carlos en ese momento y la URL verificada.
+- **10.24, el codec de Firestore: ratificada.**
+  - Firestore no admite listas dentro de listas.
+  - `FirestoreProfileCodec`, en `firestore_operation_sync.dart`, convierte `covers` en un mapa numerado solo al viajar y valida la numeración al recibir. El dominio y Hive no cambian.
+  - Queda como regla en 2.3.
+  - El derivador trata `hatch_cover` en el mismo `switch` que descargas, cargas y correcciones. El tipo existe desde T-72 (`08a7dfa`, y 10.3).
+- **10.32, `connecting` y `offline`: ratificada, con una observación para Timonel.**
+  - El motor muestra «Sin conexión» solo después de haber visto el servidor una vez (`_connectionKnown`).
+  - Un teléfono que arranca ya en modo avión muestra «Conectando…» mientras no llegue al servidor. Si tiene escrituras propias, pasa a «sin confirmar» a los 5 minutos.
+  - Es veraz y no hay temporizador que adivine. Timonel lo observa en el Honor y, si se queda así, se declara como comportamiento conocido en T-98.
+
+**Dos reglas nuevas en la sección 2:**
+- **Nada de listas dentro de listas en lo que viaja a Firestore** (2.3). T-56 lo respeta si guarda las tomas por rangos como pares.
+- **El volcado sanitizado del Honor es la práctica estándar** (2.4): `adb exec-out uiautomator dump /dev/tty`, en memoria y con los identificadores ocultos, como en T-89.
+  - Responde a cuatro incidencias de la misma clase: T-81, T-84, T-89 y el diálogo de guardar contraseña.
+  - Opcional para Carlos: que en el Honor de pruebas desactive él mismo la oferta de Google de guardar contraseñas.
+
+**Tres reglas se reafirman:**
+- **«Un comando de Flutter a la vez» sigue siendo regla dura.** Hubo dos avisos en el relevo (T-81 y T-102), sin daño. Con Timonel de vuelta, vale también entre agentes (2.10).
+- **Las interrupciones largas de sesión no cambian nada.** Hubo cuatro: T-81, T-91, T-90 y el apagón de T-97. Las horas se descuentan como lo hizo el relevo.
+- **El encabezado y el tablero son de Yov.** El relevo no los tocó, como estaba previsto.
+
+**Horas.**
+- Las once tareas del relevo suman ≈ 12.3 h de pared frente a 36.0 estimadas.
+- Con la regla de 10.17, el encabezado baja de ≈ 179.8 a **≈ 156.1 h**.
+- De esas, **111.0 h** son estimaciones de las doce tareas por hacer. 57 corresponden a la medición de RNF (T-98 y T-99), que no se comprime como el código.
+
+**El Kanban se regeneró al 14-oct.** Se publicó en la misma página y se copió en `docs/`.
+
+| Columna | Tareas | Horas estimadas |
+|---|---:|---:|
+| Terminado | 16 | 53.5 |
+| En revisión | 12 | 42.0 |
+| En curso | 0 | 0.0 |
+| Por hacer | 12 | 111.0 |
+
+El piso de pruebas es 648.
+
+**Un endurecimiento que salió de la auditoría del relevo.**
+- Las «21 bahías» de T-83 son un conteo verificado en pantalla en los tres clientes, pero ninguna prueba lo afirma.
+- Timonel lo anota en su aceptación sin arreglarlo de paso.
+- Se suma como caso de corpus, sobre A07 ∪ A08, en la próxima tarea que toque el perfil.
+
+### 10.34 · La recta al 17-oct y el lote de Timonel · Tres decisiones abiertas de Carlos (14-oct)
+
+**El 17-oct se presenta el Incremento 2 del Sprint 2,** con la rama principal congelada (2.2).
+- **Los entregables ya existen,** con corte al 6-oct:
+  - `docs/BayStream_Incremento2_Seguridad_Calidad.docx` (42 páginas, Tablas 77–90);
+  - `docs/BayStream_Incremento2_Presentacion.pptx` (14 diapositivas).
+- **Lo que falta:**
+  - la revisión final de Yov;
+  - la decisión de Carlos de abajo sobre el avance del Sprint 3;
+  - el índice, que Carlos genera en Word.
+
+**El orden de trabajo:**
+1. **14-oct, tarde y noche: Codex hace T-92** (la Web sin conexión), con ficha completa que escribe Yov antes.
+2. **15-oct: Timonel hace la aceptación en lote de las doce,** con el contexto y el prompt de `docs/LOTE-TIMONEL.md`. Mientras Timonel corre Flutter, Codex no.
+3. **16-oct:**
+   - **Codex:** T-93, el instalador de Windows (la herramienta la autoriza Carlos antes), y la parte de código de T-88: el enlace a la política, el ícono propio y D3 en el manifest.
+   - **Yov:** el texto de la política de privacidad y las declaraciones de Play, sobre `docs/T64-DECLARACIONES-PLAY.md` y `docs/T65-RESULTADOS.md`. Tienen que cubrir la sincronización, el micrófono opcional, la voz que procesa el servicio del sistema o del navegador, y D3. Además, la revisión final del Incremento 2.
+4. **17-oct: la presentación.** Nada se publica antes.
+5. **Del 18 al 21-oct:**
+   - Carlos mezcla `sprint-3` en la rama principal cuando el lote de Timonel esté aceptado, y publica la Web (con T-92) y la prueba interna de Play (con T-88).
+   - Yov transcribe las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24 y T-85 pasa a Codex.
+   - La Ola 6: T-56, T-96 y T-95, y T-103 si Carlos la aprueba.
+6. **Del 21 al 24-oct, el cierre:**
+   - T-98 y T-99, los RNF;
+   - T-100, el manual y la presentación final;
+   - T-101, si COMAR da permiso;
+   - la entrega del 24-oct.
+
+**Si falta tiempo, se corta desde abajo (4.2):** primero el piloto, después RF-028 y RF-029, y luego la segunda parte de RNF.
+
+**Tres decisiones de Carlos, abiertas.** Yov las preguntó el 14-oct y quedan escritas con su recomendación:
+- **A06, que es SMDG15:**
+  - leerla con un aviso visible: «Versión 1.5, leída con las reglas de 2.x; revisa pesos y peligrosas». Sería T-103, de ≈ 1 h, después del 17-oct (recomendado);
+  - o mantener el rechazo.
+- **D3, el respaldo automático de Android:**
+  - desactivarlo (recomendado). La nube ya respalda lo publicado, se evita restaurar una sesión o una bitácora vieja en otro teléfono, y la política queda más simple. Es una línea del manifest dentro de T-88;
+  - o dejarlo activo y declararlo.
+- **El Incremento 2:**
+  - sumar una diapositiva final y un párrafo en Conclusiones con lo que ya funciona en `sprint-3`, como trabajo en curso y sin tocar resultados ni tablas medidas (recomendado);
+  - o dejarlo como está.
+
+**Siguen bloqueadas:** T-87 espera un BAPLIE 3.1 real, y T-101 el permiso de COMAR.
+
+**Yov sigue en un chat nuevo.** Su arranque está en `docs/ARRANQUE-YOV.md`.
