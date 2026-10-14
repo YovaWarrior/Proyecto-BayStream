@@ -37,13 +37,19 @@ Se hacen una vez al empezar y otra al terminar:
 
 | Qué | Cifra esperada |
 |---|---|
-| `flutter test` completo en HEAD | **648/648** |
+| `flutter test` completo en HEAD | **648/648**, o el piso de T-92 si ya está en HEAD |
 | `flutter analyze` | **0** |
 | Todos los `tool/*corpus*test.dart` | **116/116** en 31 archivos |
 | SHA-256 de `docs/T80-firestore.rules.propuesta` | `21894B7F43E59F856045473731B795D21F8373C5AC8A1D9FFF324334AC3C9000` |
 | Batería de reglas `tool/t80_reglas.mjs`, contra el emulador local | **69/69** |
 | Dependencias: diferencia de `pubspec.*` desde `2dfc3ea` | solo `speech_to_text 7.2.0` y sus dos transitivas (T-94) |
 | `lib/main.dart` y los congelados de H5 | sin cambios desde `2dfc3ea` |
+
+**Si T-92 ya está en HEAD** (Codex la hace el 14-oct por la noche):
+- el piso es el que declara su informe, `docs/T92-RESULTADOS.md`;
+- la Web que compilas la trae: CanvasKit, las fuentes y el SDK de Firebase salen del propio sitio, y las comprobaciones de Chrome de este lote valen igual;
+- T-92 no entra en este lote. Su aceptación cruzada va aparte, después.
+- Si Codex todavía corre Flutter cuando empiezas, Carlos da el semáforo: uno a la vez.
 
 ---
 

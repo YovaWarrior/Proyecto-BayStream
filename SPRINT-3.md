@@ -1153,13 +1153,183 @@ cambio de reglas.
 - [ ] Piso del momento (el vigente tras T-90), `analyze` en cero, corpus completo en
       verde y reglas sin cambio (mismo SHA).
 
+#### T-92 · La Web arranca sin conexión: motor, fuentes y SDK de Firebase servidos desde el propio sitio · 3.0 h · Codex (ficha completa, 14-oct)
+
+**Para qué.** USO. Cierra la limitación de 10.36 de `SPRINT-2.md`: sin red, la Web
+queda en blanco porque baja de Google lo que necesita para arrancar. El muelle sin
+señal lo cubre Android, pero la Web es la del iPhone (T-89) y la de una laptop de
+oficina sin la app de Windows. Sirve también a T-88: con todo servido desde el sitio,
+la Web deja de pedir código y fuentes a terceros, y solo los servicios de datos de
+Firebase hablan con fuera.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 14-oct).**
+
+- Se compila con `flutter build web --release --no-pub
+  --dart-define-from-file=…\firebase-prod.json` (T-48), con Flutter 3.38.9 (motor
+  `587c18f8…`). Hosting publica `build/web` con `no-cache` en todo y la reescritura
+  `** → /index.html`.
+- `web/` es la plantilla de `flutter create`. `index.html` solo carga
+  `flutter_bootstrap.js` y no hay plantilla propia de ese archivo. El título y el
+  manifiesto dicen «baystream» y «A new Flutter project.».
+- **Al arrancar, la página pide tres cosas a Google:**
+  1. **CanvasKit**, a `www.gstatic.com/flutter-canvaskit/<motor>/`, aunque la
+     compilación ya deja una copia en `build/web/canvaskit/`.
+  2. **Roboto**, a `fonts.gstatic.com`. El motor la baja cuando `FontManifest.json`
+     no declara una familia «Roboto», y hoy solo declara `MaterialIcons`. Los
+     `assets/fonts/Roboto-*.ttf` son del PDF: no están declarados como familia.
+  3. **El SDK JS de Firebase**, a `www.gstatic.com/firebasejs/<versión>/`.
+     `firebase_core_web 3.10.0` inyecta `firebase-app.js`, `firebase-auth.js` y,
+     para Firestore, `firebase-firestore-pipelines.js` (T-48 vio el primero y el
+     último).
+- **El tercero es el que 10.36 no alcanzó a aislar, y es el que más pesa.**
+  `lib/main.dart` espera a `Firebase.initializeApp` antes de `runApp`. Si el SDK no
+  carga, la app nunca se dibuja, aunque CanvasKit y la fuente estén. Por eso no basta
+  con `--no-web-resources-cdn`.
+- **El service worker de Flutter ya existe** (`flutter_service_worker.js`).
+  - Al instalarse, guarda `main.dart.js`, `index.html`, `flutter_bootstrap.js` y los
+    dos manifiestos.
+  - Después guarda lo demás del propio origen a medida que se pide.
+  - Lo de otros dominios nunca lo guarda. Servir todo desde el sitio es lo que lo
+    vuelve útil.
+- `build/web` trae además `t54-format.html` y `t54-format.js`, de una tarea vieja.
+  Hosting los publicaría tal cual.
+
+**Qué construye.**
+
+1. **CanvasKit desde el sitio.** Se configura en el cargador (`canvasKitBaseUrl`),
+   dentro de una plantilla propia `web/flutter_bootstrap.js`, para que el comando de
+   T-48 no dependa de recordar una bandera. Se sigue compilando con dart2js, sin
+   `--wasm`.
+2. **Las fuentes desde el sitio.**
+   - `fontFallbackBaseUrl` apunta a una carpeta propia que replica las rutas que pide
+     el motor: Roboto y las fuentes de reserva que pida el recorrido completo de la
+     app (primer criterio de «Terminada cuando»).
+   - La ruta exacta de Roboto se toma del motor de la 3.38.9, no de memoria.
+   - **La tipografía de Android y Windows no cambia.** Nada de declarar una familia
+     «Roboto» en `pubspec.yaml`: en Android reemplazaría la fuente del sistema.
+3. **El SDK de Firebase desde el sitio**, en la versión exacta que pide
+   `firebase_core_web 3.10.0` (`supportedFirebaseJsSdkVersion`):
+   - Los módulos que hoy inyecta se bajan de `gstatic`, con su SHA-256, junto con
+     cualquier módulo que importen, recursivamente.
+   - Sus `import` absolutos a `https://www.gstatic.com/firebasejs/…` pasan a
+     relativos, para que haya **una sola instancia** de `firebase-app`. Es el defecto
+     conocido de servirlos tal cual (flutterfire #12204).
+   - La plantilla los importa y deja puestos `window.firebase_core`,
+     `window.firebase_auth` y `window.firebase_firestore` **antes de arrancar el
+     motor** (en `onEntrypointLoaded`, antes de `initializeEngine`). Al ver
+     `firebase_core`, `firebase_core_web` no inyecta nada.
+   - Así el orden no depende de una carrera, y los módulos se piden cuando el service
+     worker ya controla la página.
+   - El mecanismo se confirma en el código de la 3.10.0 del caché de pub, servicio
+     por servicio.
+4. **El service worker de Flutter, tal cual,** con la versión que pasa la plantilla
+   (`{{flutter_service_worker_version}}`). Nada de un service worker propio ni de
+   Workbox. El informe mide cuántas visitas con red hacen falta para arrancar sin
+   red. La meta es **una**.
+5. **Licencia y procedencia junto a cada archivo de terceros:** el SDK (Apache 2.0) y
+   las fuentes. Un `LEEME` dice la versión, la URL de origen, el SHA-256 antes y
+   después de reescribir los `import`, y cómo se actualiza cuando cambie
+   `firebase_core_web`.
+6. **El nombre en la Web:** «BayStream» en el título de la pestaña, en
+   `apple-mobile-web-app-title` y en `name` y `short_name` del manifiesto, con la
+   descripción en español y `lang="es"`. Los íconos no se tocan (T-88).
+7. **Dos herramientas de la tarea, sin dependencias nuevas:**
+   - Un servidor local para las pruebas (`tool/t92_*`). Sirve la compilación en
+     `localhost` con los tipos MIME correctos: el servidor de Python por defecto, en
+     Windows, puede servir `.js` como `text/plain`, y el navegador rechaza los
+     módulos.
+   - Un verificador del sitio compilado. Comprueba que CanvasKit y las fuentes salen
+     de rutas propias y que la ruta de Roboto es la del motor. También, que el SDK
+     está y figura en la lista del service worker, que no queda ningún `import`
+     absoluto y que no sobra ningún archivo.
+8. **Pruebas en `test/`, que dependen solo del repo y de los paquetes resueltos:**
+   - la versión servida del SDK es la que pide `firebase_core_web`;
+   - ningún módulo servido importa por URL absoluta;
+   - la plantilla toma CanvasKit, las fuentes y Firebase de rutas propias, y fija los
+     módulos antes de arrancar el motor;
+   - cada archivo de terceros trae su licencia.
+   - Lo que depende del SDK de Flutter o de la compilación va al verificador, no a la
+     suite.
+
+**Carril.**
+- La tarea toca `web/`, `test/t92_*`, `tool/t92_*` y `docs/T92-RESULTADOS.md`.
+- **No toca `lib/`, `lib/main.dart` ni `pubspec.*`:** lo que está en `web/` entra en
+  la compilación sin declararse.
+- `firebase.json`, solo si una prueba demuestra que hace falta, y declarado.
+- Compila hacia `build/t92/…`, no hacia `build/web`.
+- **No es una dependencia nueva:** el SDK, CanvasKit y Roboto ya los usa la app.
+  Cambia de dónde llegan.
+
+**Una consecuencia aceptada.** Con la base de fuentes propia, un carácter que no
+cubra ninguna fuente servida sale como un recuadro, también con red: hoy lo bajaría
+de Google. Un ejemplo es un emoji escrito en un motivo. La app está en español, y el
+recorrido fija qué se sirve. El informe lo declara para T-98.
+
+**Detente y avisa si:**
+- arrancar sin red exige tocar `lib/`;
+- el SDK servido no replica la inicialización: un servicio «no disponible» o dos
+  instancias de la app;
+- las fuentes exigen cambiar la tipografía de Android o Windows;
+- hace falta un service worker propio o una herramienta nueva;
+- el motor de la 3.38.9 no admite las rutas propias como las describe esta ficha.
+
+**Fuera de alcance:**
+- publicar: lo hace Carlos después del 17-oct;
+- los íconos y lo de Play (T-88);
+- un aviso de «instalar la app» y precargar el sitio entero;
+- el iPhone: no hay uno, y queda para el piloto;
+- cualquier cambio de reglas o de `lib/`;
+- los clientes de Windows y Android, que no se recompilan.
+
+**Terminada cuando:**
+
+- [ ] **El inventario, antes y después**, con el mismo recorrido, en `localhost`, con
+      Chrome visible y con red. El recorrido abre A07 y pasa por el plano, Lista,
+      Estadísticas y Avance, en los dos temas, y exporta el PDF.
+  - Antes, con la compilación de HEAD: las peticiones a `gstatic` y a
+    `fonts.gstatic.com`.
+  - Después: **ninguna petición de código ni de fuentes fuera del sitio**.
+  - Las que quedan son de datos (Auth, Firestore) u otras de Firebase, cada una
+    clasificada en el informe.
+- [ ] **Arranque sin red tras una visita, en el Chrome de la laptop:**
+  - Perfil limpio, una visita con red y A07 abierto.
+  - Después, el servidor detenido y los dominios externos bloqueados, sin cortar la
+    red de la máquina: por ejemplo, un Chrome propio con `--host-resolver-rules`.
+  - Al recargar, la app abre y A07 se reabre desde Recientes con sus cifras: 398
+    contenedores, 21 bahías, 6 940 578 kg y 0/114/284 en GTSTC.
+  - El texto se ve completo, y la consola no avisa de fuentes ni de caracteres sin
+    fuente.
+  - Si hacen falta dos visitas, el informe dice por qué.
+- [ ] **Lo mismo en el Chrome del Honor:** `adb reverse` al mismo servidor, una visita
+      con red, y después modo avión con el servidor detenido.
+- [ ] **La sincronización sigue igual con el SDK servido:**
+  - Con red, Carlos inicia la sesión de muelle en la Web local.
+  - «PRUEBA T-84» llega a «Al día» con los mismos conteos que con la compilación de
+    HEAD.
+  - Sin red, la sesión se conserva y el estado dice «Conectando…» (10.32). Al volver
+    la red, dice «Al día».
+  - Sin publicar nada.
+- [ ] **Una versión nueva reemplaza a la guardada.** Se recompila con otro número de
+      compilación. Una visita con red deja la nueva (`version.json`), y sin red abre
+      la nueva.
+- [ ] El verificador pasa sobre la compilación final. El informe da el tamaño que se
+      suma al repo y lo que baja la primera visita, antes y después.
+- [ ] **El bloque de publicación para Carlos**, para después del 17-oct:
+  - compilar limpio en `build/web`, sin los `t54-format.*`;
+  - correr el verificador;
+  - el `firebase deploy --only hosting` de T-48, que corre él;
+  - una comprobación de cinco minutos sobre `baystream-app.web.app`, en la laptop y
+    en el Honor.
+- [ ] Piso de **648** más las nuevas, `analyze` en cero y corpus **116/116**. Mismo
+      SHA de las reglas, de `lib/`, de `pubspec.*` y de los dos congelados de H5.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34) |
 | **T-89** | USO | 1.0 | iPhone acepta .edi: sin filtro por extensión y validación por contenido (`UNB`/`UNH`) · **ficha completa arriba** |
 | **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes · **ficha completa arriba** |
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
-| **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo y la fuente desde el propio sitio |
+| **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo, las fuentes y el SDK de Firebase desde el propio sitio · **ficha completa arriba** |
 | **T-93** | USO | 2.5 | Instalador de Windows |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
