@@ -1156,12 +1156,53 @@ cambio de reglas.
 
 ### Ola 6 · Resto del ERS
 
+#### T-97 · El título sin truncar y los textos acumulados del sprint · 1.0 h · Codex (ficha completa, 13-oct)
+
+**Para qué.** ERS y RNF-003. Son los textos que el sprint fue anotando decisión tras
+decisión: el título que se corta a 360 px y siete deudas más de palabras y
+disposición. Cada una es chica; juntas son la letra pequeña que el planificador lee
+todo el día.
+
+**Qué construye.** El catálogo completo, con su origen:
+
+1. **El título de la pantalla se lee completo a 360 dp** (RNF-003): sin «…». El
+   mecanismo lo elige el diseño (hasta dos líneas, tamaño adaptable). Con la barra
+   desplegada de T-91 también debe quedar espacio visible para él.
+2. **«Total Contenedores» no se corta a 360 dp** (10.2).
+3. **La fila del detalle se adapta** cuando el texto no cabe, incluso con la letra
+   del sistema muy grande (10.11): envolver o reducir, sin recortar.
+4. **Los contadores concuerdan en singular y plural** — hoy «1 cargados» (10.14).
+5. **«(0 cub. / 0 bod.)» dice que son pendientes** — por ejemplo «(0 pend. en
+   cubierta / 0 pend. en bodega)» o la forma que quede igual de clara (10.14).
+6. **El punto doble al final de un rechazo desaparece** (10.16).
+7. **En la Web, al abrir un plano, el estado dice «Conectando…» mientras averigua,**
+   y «Sin conexión» solo cuando lo sabe (10.16).
+8. **El selector de bahía no desborda con el texto al 200 %** (observado en T-102).
+
+Es todo presentación: sin cambios en reglas, nube ni almacenamiento.
+
+**Fuera de alcance:** textos o pantallas nuevas, el resto de la Ola 6 y cualquier
+cambio de reglas o Firebase.
+
+**Terminada cuando:**
+
+- [ ] Cada punto del catálogo se ve corregido, en los dos temas, con A07 abierto.
+- [ ] A 360 dp en el Honor: el título completo, «Total Contenedores» completo, la
+      fila del detalle con letra al 200 % sin cortar y el selector de bahía sin
+      desborde, con prueba de widget a escala 2.0 incluida.
+- [ ] La Web abre un plano y muestra «Conectando…» al empezar y «Sin conexión» solo
+      cuando lo confirma.
+- [ ] Los tres clientes muestran las pantallas tocadas, sin regresiones en la barra
+      de T-91 ni en los temas de T-90.
+- [ ] Piso de 635 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
+      cambio (mismo SHA).
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
 | **T-56** | ERS | 2.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2) |
-| **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web |
+| **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
 
 ### Cierre · Calidad, entregables y piloto (21–24 oct)
 
