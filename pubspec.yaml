@@ -28,6 +28,9 @@ dependencies:
   dartz: ^0.10.1
   uuid: ^4.3.3
   file_picker: ^10.3.10
+  # RF-041 (T-94): dictado breve en el muelle. Fija y compatible con el SDK
+  # actual; sin el soporte inicial de Windows introducido en 7.3.
+  speech_to_text: 7.2.0
 
   # Generación de reportes PDF multiplataforma (RF-025)
   pdf: 3.12.0

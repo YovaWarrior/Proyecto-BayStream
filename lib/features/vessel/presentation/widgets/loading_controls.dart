@@ -13,6 +13,7 @@ import '../providers/vessel_providers.dart';
 import 'discharge_controls.dart';
 import 'office_plan_controls.dart';
 import 'hatch_operation_controls.dart';
+import 'voice_search_field.dart';
 
 String loadingPosition(String value) => value.length == 7
     ? '${value.substring(0, 3)}-${value.substring(3, 5)}-${value.substring(5)}'
@@ -146,15 +147,15 @@ class _LoadingPicker extends ConsumerStatefulWidget {
 }
 
 class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
-  String query = '';
+  String? query = '';
   @override
   Widget build(BuildContext context) {
     final data = ref.watch(loadingOperationProvider(widget.voyage)).value;
     // T-77: desde una reserva se ofrecen primero los vacíos de su grupo; los
     // de otros grupos van después y piden motivo al confirmar.
     final slot = widget.slot;
-    final rows = data
-            ?.search(query, empties: widget.empties)
+    final rows = query == null ? <ExportListRow>[] : data
+            ?.search(query!, empties: widget.empties)
             .where((row) =>
                 slot == null ||
                 data
@@ -177,12 +178,8 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
                           ? 'Vacíos del listado'
                           : 'Confirmar carga por OR o contenedor',
                       style: Theme.of(context).textTheme.titleMedium),
-                  TextField(
-                      key: const ValueKey('loading-query'),
-                      decoration: const InputDecoration(
-                          labelText: 'OR o últimos dígitos'),
-                      onChanged: (value) => setState(() => query = value)),
-                  if (rows.isEmpty)
+                  VoiceSearchField(onQuery: (value) => setState(() => query = value)),
+                  if (rows.isEmpty && query != null)
                     const Padding(
                         padding: EdgeInsets.all(16),
                         child: Text('No hay coincidencias disponibles.')),
