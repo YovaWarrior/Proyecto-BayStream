@@ -2087,3 +2087,18 @@ Lo que comprobó:
 - **Revisión del commit.** Las 10 rutas son las del informe; el diff no trae claves, correos ni UID, y no se rastreó nada del corpus.
 - **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83, T-84, T-86, T-89, T-91 y T-102.
 - **T-90 pasa a Codex** con ficha completa: el interruptor de tema claro/oscuro. La app ya sigue el tema del sistema y las dos paletas existen desde la convención 2.8; T-90 pone el interruptor propio y barre las pantallas en claro.
+
+### 10.30 · T-90 entregada, en revisión: claro, oscuro y sistema · T-94 a Codex (13-oct, noche)
+
+**T-90, de Codex, pasa a En revisión** (commit `fd4352d`).
+
+- **Lo construido.** «Parámetros» ofrece claro, oscuro y **seguir al sistema** —la elección inicial y la recuperación ante valor desconocido—; `themePreference` persiste en la caja de ajustes junto a la barra de T-91 y el último puerto; `BayStreamApp` aplica el `ThemeMode`; el enum vive en el dominio sin Flutter, y un fallo de guardado se informa sin afirmar persistencia.
+- **El barrido en claro, con tabla de correcciones:** celdas del plano emparejadas (llenos, vacíos, IMO, reefer, OOG, desconocido, tránsito), el OR y el resaltado con contenedores del esquema, la rejilla y la leyenda, la lista y el detalle, y la pantalla principal. Sin literales RGB y `pubspec` sin cambios. **Contraste ≥ 4.5:1 comprobado en 803 pesos por tema (1 606 comprobaciones)**, declarado como esa muestra y no como auditoría general de accesibilidad.
+- **Aceptación en los tres clientes** con selectores reales y A07/A08 con sus cifras: las tres elecciones persisten tras reaperturas, el barrido pasó por las pantallas de la ficha —con el OR 123 visible en Número de orden y el listado importado 120/120 y 56/56— y la barra de A07 a 360 dp en claro y oscuro en el Honor. Honradez declarada: la alternancia del tema del sistema se probó en el widget del `BayStreamApp` real y no cambiando el sistema operativo; en Chrome la confirmación de la importación no se alcanzó por desplazamiento y se usó el importador desde el banco, sin atribuirse una confirmación manual; dos capturas de Chrome quedaron fuera de la evidencia por un viewport equivocado y las negras de Windows no se usaron.
+- **Dos fallos corregidos antes de la corrida final:** el estilo de estado desconocido coincidía con tránsito (regresión C5a) y el banco reutilizaba un árbol con un `ProviderScope` ya dispuesto.
+- **Validaciones.** **612 pruebas** (el piso nuevo; 7 nuevas), corpus **112/112** en 29 archivos, incluidos los PDF —patrón `*corpus*test.dart`—, `analyze` en cero, y SHA idénticos de reglas, `lib/main.dart`, `pubspec.*`, lector, escritor y los dos congelados de H5.
+- **Horas.** ≈1.6 h activas frente a 2.0 estimadas, con una interrupción de sesión de ≈3.1 h descontada y declarada —la tercera interrupción larga del sprint: patrón conocido del límite de chat—.
+- **T-97 conserva sus deudas** de disposición (recortes de títulos y textos, espacio del título con la barra expandida); no son de contraste y no se arreglaron de paso.
+- **Revisión del commit.** Las 17 rutas son las del informe; el diff no trae claves, correos ni UID, y no se rastreó nada del corpus.
+- **Esperan la aceptación en lote de Timonel:** T-80, T-81, T-82, T-83, T-84, T-86, T-89, T-90, T-91 y T-102. El piso pasa a **612**.
+- **T-94 pasa a Codex** con la ficha completa de la sección 5: la búsqueda por voz con `speech_to_text`, confirmado por Carlos. Es la primera dependencia nueva desde T-79: `pubspec.yaml` y `pubspec.lock` cambian y se declara, y la ficha autoriza `RECORD_AUDIO` en el manifest de Android, con la implicación para la política de privacidad de T-88 anotada.
