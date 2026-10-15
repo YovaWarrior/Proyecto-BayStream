@@ -51,6 +51,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Instalador MSIX de Windows (T-93, autorizado en 2.7 de SPRINT-3). Fija y
+  # solo de desarrollo: no entra en la app compilada.
+  msix: 3.18.0
 
 flutter:
   uses-material-design: true
@@ -58,3 +61,25 @@ flutter:
   assets:
     - assets/fonts/Roboto-Regular.ttf
     - assets/fonts/Roboto-Medium.ttf
+
+# Instalador de Windows (T-93). Sin secretos: la huella del certificado llega por
+# la linea de comandos en tool/t93_msix.ps1 (--signtool-options). Nombres de las
+# opciones confirmados en lib/src/configuration.dart de msix 3.18.0.
+msix_config:
+  display_name: BayStream
+  publisher_display_name: Carlos Martínez
+  identity_name: gt.cmartinez.baystream
+  # Exactamente el sujeto del certificado autofirmado de Carlos.
+  publisher: CN=BayStream
+  msix_version: 1.0.0.0
+  # Solo red saliente. Sin microfono: en Windows no hay voz (T-94).
+  capabilities: internetClient
+  # Icono actual de Windows; el propio es de T-88.
+  logo_path: windows/runner/resources/app_icon.ico
+  # El paquete se arma sobre la compilacion Release hecha antes con las
+  # definiciones de Firebase, nunca con una compilacion propia sin ellas.
+  build_windows: false
+  # La herramienta no toca los almacenes de certificados: eso lo hace Carlos.
+  install_certificate: false
+  output_path: build/t93
+  output_name: BayStream
