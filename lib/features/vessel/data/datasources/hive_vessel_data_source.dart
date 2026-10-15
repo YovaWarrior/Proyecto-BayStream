@@ -6,6 +6,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/entities/app_theme_preference.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
 import 'local_vessel_codec.dart';
+import 'local_store_compaction.dart';
 
 /// Perfiles, viajes y preferencias del dispositivo en el mismo motor local.
 class HiveVesselDataSource {
@@ -67,7 +68,9 @@ class HiveVesselDataSource {
     await _voyages.flush();
     // En disco, quitar una clave deja un registro histórico hasta compactar.
     // El presupuesto de cinco no debe acumular los viajes descartados en el log.
-    if (excess > 0 || existing != null) await _voyages.compact();
+    if (excess > 0 || existing != null) {
+      await compactLocalStore(_voyages.compact);
+    }
   });
 
   VesselVoyage? getVoyageById(String id) {
@@ -93,7 +96,7 @@ class HiveVesselDataSource {
   Future<void> deleteVoyage(String id) => _writeVoyages(() async {
     await _voyages.delete(id);
     await _voyages.flush();
-    await _voyages.compact();
+    await compactLocalStore(_voyages.compact);
   });
 
   Future<void> saveProfile(VesselProfile profile) async {

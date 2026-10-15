@@ -66,6 +66,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     final showToolbarToggle = hasVoyage && _isBayPlan;
     final toolbarCollapsed = showToolbarToggle &&
         (ref.watch(planToolbarCollapsedProvider).value ?? true);
+    final tabLabelStyle = Theme.of(context).textTheme.titleSmall!;
+    final tabHeight = 42 + MediaQuery.textScalerOf(context)
+        .scale(tabLabelStyle.fontSize ?? 14) * (tabLabelStyle.height ?? 1.5);
 
     final toolbarActions = <Widget>[
       IconButton(
@@ -205,10 +208,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         bottom: hasVoyage
             ? TabBar(
                 controller: _tabController,
-                tabs: const [
-                  Tab(icon: Icon(Icons.list), text: 'Lista'),
-                  Tab(icon: Icon(Icons.grid_view), text: 'Bay Plan'),
-                  Tab(icon: Icon(Icons.bar_chart), text: 'Estadísticas'),
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                labelStyle: tabLabelStyle,
+                tabs: [
+                  Tab(height: tabHeight, icon: const Icon(Icons.list), text: 'Lista'),
+                  Tab(height: tabHeight, icon: const Icon(Icons.grid_view), text: 'Bay Plan'),
+                  Tab(height: tabHeight, icon: const Icon(Icons.bar_chart), text: 'Estadísticas'),
                 ],
               )
             : null,
@@ -782,8 +788,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           ],
 
           // Título de la lista de contenedores
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 'Contenedores (${filteredContainers.length})',
@@ -791,6 +799,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               ),
               // Chip con estadísticas rápidas
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildStatChip(
                     context,

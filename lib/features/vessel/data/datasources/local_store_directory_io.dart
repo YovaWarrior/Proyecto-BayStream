@@ -13,6 +13,11 @@ Future<String> localStoreDirectory() async {
     }
     root = path;
   } else if (Platform.isWindows) {
+    if (Platform.environment['FLUTTER_TEST'] == 'true') {
+      throw StateError('El almacén real de Windows está bloqueado bajo flutter test '
+          '(FLUTTER_TEST=true). Sobrescribe localVesselRepositoryProvider y '
+          'movementLogRepositoryProvider con un directorio temporal.');
+    }
     final path = Platform.environment['LOCALAPPDATA'];
     if (path == null || path.isEmpty) {
       throw StateError('Windows no tiene LOCALAPPDATA');

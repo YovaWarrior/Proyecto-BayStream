@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:baystream/features/vessel/data/datasources/hive_movement_data_source.dart';
+import 'package:baystream/features/vessel/data/repositories/movement_log_repository_impl.dart';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
+import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -41,10 +44,13 @@ void main() {
         await File('$corpusDirectory/CORPUS_A01.edi').readAsBytes());
     final parsed = BaplieParserService().parse(content);
     final store = await testProfileStore();
+    final movements = MovementLogRepositoryImpl(await HiveMovementDataSource.open(
+        directory: store.directory.path, namespace: 'block3_movements'));
     ProviderContainer open() => ProviderContainer(overrides: [
           vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),
           localVesselRepositoryProvider
               .overrideWith((ref) async => store.repository),
+          movementLogRepositoryProvider.overrideWith((ref) async => movements),
         ]);
     var container = open();
     try {
@@ -91,6 +97,7 @@ void main() {
           'perfil recuperado sin preguntar; posición $outside bloqueada sin ampliar.');
     } finally {
       container.dispose();
+      await movements.close();
       await store.repository.close();
       await store.directory.delete(recursive: true);
     }

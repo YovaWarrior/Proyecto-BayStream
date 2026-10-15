@@ -40,9 +40,7 @@ void main() {
       );
 
   setUp(() async {
-    final root =
-        await Directory('build/block2/test-stores').create(recursive: true);
-    directory = await root.createTemp('hive_');
+    directory = await Directory.systemTemp.createTemp('baystream_t104_repo_');
     namespace = 't36_${DateTime.now().microsecondsSinceEpoch}';
     repository = await open();
   });
@@ -81,6 +79,12 @@ void main() {
       repository.saveVoyage(voyage.copyWith(id: 'v$i'))]);
     for (final result in results) { value(result); }
     expect(value(await repository.getAllVoyages()).map((v) => v.id), ['v7', 'v6', 'v5', 'v4', 'v3']);
+    value(await repository.close());
+    repository = await open();
+    expect(value(await repository.getAllVoyages()).map((v) => v.id), ['v7', 'v6', 'v5', 'v4', 'v3']);
+    for (var i = 0; i < 3; i++) {
+      expect(value(await repository.getVoyageById('v$i')), isNull);
+    }
   });
 
   test('el registro lleva versión y guarda cada contenedor una sola vez', () {

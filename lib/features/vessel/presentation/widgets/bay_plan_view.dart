@@ -340,13 +340,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       borderRadius: BorderRadius.circular(4),
       onTap: () {
         if (type == null) {
-          // ignore: avoid_print
-          print('[BayPlan] Leyenda "Sin contenedor" no es filtrable');
           return;
         }
         ref.read(selectedTypeFilterProvider.notifier).toggle(type);
-        // ignore: avoid_print
-        print('[BayPlan] Toggle filtro leyenda: ${type.name}');
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),

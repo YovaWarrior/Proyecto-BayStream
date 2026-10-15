@@ -58,7 +58,9 @@ class VoyageSummaryCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
                           _buildInfoChip(
                             context,
@@ -66,7 +68,6 @@ class VoyageSummaryCard extends StatelessWidget {
                             'Viaje: ${voyage.voyageNumber}',
                           ),
                           if (voyage.vessel.flag != null) ...[
-                            const SizedBox(width: 8),
                             _buildInfoChip(
                               context,
                               Icons.flag,
@@ -85,11 +86,13 @@ class VoyageSummaryCard extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 16),
             
-            // Estadísticas en grid
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatItem(
+            // A letra grande cada indicador dispone del ancho completo.
+            LayoutBuilder(builder: (context, constraints) {
+              final stacked = constraints.maxWidth < 480 &&
+                  MediaQuery.textScalerOf(context).scale(12) > 18;
+              final width = stacked ? constraints.maxWidth : (constraints.maxWidth - 32) / 3;
+              return Wrap(spacing: 16, runSpacing: 16, children: [
+                SizedBox(width: width, child: _buildStatItem(
                     context,
                     Icons.inventory_2,
                     voyage.totalContainers.toString(),
@@ -97,8 +100,7 @@ class VoyageSummaryCard extends StatelessWidget {
                     colorScheme.primary,
                   ),
                 ),
-                Expanded(
-                  child: _buildStatItem(
+                SizedBox(width: width, child: _buildStatItem(
                     context,
                     Icons.view_module,
                     voyage.bays.length.toString(),
@@ -106,8 +108,7 @@ class VoyageSummaryCard extends StatelessWidget {
                     colorScheme.secondary,
                   ),
                 ),
-                Expanded(
-                  child: _buildStatItem(
+                SizedBox(width: width, child: _buildStatItem(
                     context,
                     Icons.scale,
                     _formatWeight(voyage.totalWeight),
@@ -115,8 +116,8 @@ class VoyageSummaryCard extends StatelessWidget {
                     colorScheme.tertiary,
                   ),
                 ),
-              ],
-            ),
+              ]);
+            }),
             
             if (voyage.reservedSlots.isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -142,7 +143,10 @@ class VoyageSummaryCard extends StatelessWidget {
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 12),
-              Row(
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Icon(
                     Icons.info_outline,
@@ -157,7 +161,6 @@ class VoyageSummaryCard extends StatelessWidget {
                     ),
                   ),
                   if (voyage.metadata!.messageType != null) ...[
-                    const SizedBox(width: 16),
                     Text(
                       'Tipo: ${voyage.metadata!.messageType}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -237,8 +240,8 @@ class VoyageSummaryCard extends StatelessWidget {
   /// Formatea el peso en toneladas o kilogramos
   String _formatWeight(double weightKg) {
     if (weightKg >= 1000) {
-      return '${(weightKg / 1000).toStringAsFixed(1)}t';
+      return '${(weightKg / 1000).toStringAsFixed(1)} t';
     }
-    return '${weightKg.toStringAsFixed(0)}kg';
+    return '${weightKg.toStringAsFixed(0)} kg';
   }
 }

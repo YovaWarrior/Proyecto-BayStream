@@ -65,7 +65,10 @@ class _ContainerCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Fila superior: ID y estado
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   // Icono de tipo de contenedor
                   Container(
@@ -83,11 +86,14 @@ class _ContainerCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   
                   // ID del contenedor y naviera
-                  Expanded(
-                    child: Column(
+                  Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
                               container.containerId,
@@ -125,7 +131,6 @@ class _ContainerCard extends StatelessWidget {
                             ),
                           ),
                       ],
-                    ),
                   ),
                   
                   // Indicadores especiales (IMO, Reefer)
@@ -208,21 +213,18 @@ class _ContainerCard extends StatelessWidget {
               const SizedBox(height: 12),
               
               // Fila inferior: Posición y peso
-              Row(
-                children: [
+              LayoutBuilder(builder: (context, constraints) {
+                final items = <Widget>[
                   // Posición de estiba
-                  Expanded(
-                    child: _buildInfoItem(
+                  _buildInfoItem(
                       context,
                       Icons.grid_view,
                       'Posición',
                       container.stowagePosition?.displayFormat ?? 'Sin asignar',
-                    ),
                   ),
                   
                   // Peso efectivo (T-66): el rótulo dice de qué segmento viene
-                  Expanded(
-                    child: _buildInfoItem(
+                  _buildInfoItem(
                       context,
                       Icons.scale,
                       container.weightSource == WeightSource.vgm
@@ -233,21 +235,26 @@ class _ContainerCard extends StatelessWidget {
                       container.effectiveWeight != null
                           ? '${container.effectiveWeight!.toStringAsFixed(0)} kg'
                           : 'Sin peso',
-                    ),
                   ),
                   
                   // Puerto destino
                   if (container.portOfDischarge != null)
-                    Expanded(
-                      child: _buildInfoItem(
+                    _buildInfoItem(
                         context,
                         Icons.location_on,
                         'Destino',
                         container.portOfDischarge!,
-                      ),
                     ),
-                ],
-              ),
+                ];
+                // Las etiquetas pequeñas crecen más que los títulos en Android.
+                final stacked = constraints.maxWidth < 480 &&
+                    MediaQuery.textScalerOf(context).scale(12) > 18;
+                return stacked
+                    ? Column(crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [for (final item in items)
+                          Padding(padding: const EdgeInsets.only(bottom: 8), child: item)])
+                    : Row(children: [for (final item in items) Expanded(child: item)]);
+              }),
               
               // Indicadores especiales
               if (container.isDangerous || container.isReefer || container.isOverDimension) ...[
@@ -298,7 +305,6 @@ class _ContainerCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

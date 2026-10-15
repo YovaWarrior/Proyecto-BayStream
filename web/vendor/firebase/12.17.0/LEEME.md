@@ -6,8 +6,9 @@ servidos. Se descargaron los tres módulos que inyecta ese paquete: app, auth y
 firestore-pipelines. Sus únicas dependencias externas de módulo son app.
 
 Se reemplazó la URL `https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js`
-por `./firebase-app.js`. También se reemplazan sus apariciones en comentarios:
-no hay otros cambios. Todos los servicios comparten así la misma instancia de
+por `./firebase-app.js` en los imports y en dos literales de código de
+`firebase-app.js`: `name$q` y el argumento de `Logger`. No hay otros cambios.
+Todos los servicios comparten así la misma instancia de
 app. Core conserva su cabecera de licencia. Los bundles de Auth y Firestore
 descargados no incluyen cabecera; `LICENSE.txt`, asociado a cada archivo en
 procedencia, incluye la licencia Apache 2.0 y los avisos del proyecto Firebase.

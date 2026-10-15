@@ -17,7 +17,8 @@ class EmptyStateWidget extends StatelessWidget {
     
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32.0),
+        // Reserva espacio para Cargar BAPLIE, también con letra grande.
+        padding: const EdgeInsets.fromLTRB(32, 32, 32, 128),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -81,7 +82,7 @@ class EmptyStateWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Seleccione un archivo .edi o .txt con formato BAPLIE 2.2.1 para visualizar el plan de estiba del buque.',
+                    'Seleccione un archivo BAPLIE para visualizar el plan de estiba del buque. Se valida por su contenido, sin importar la extensión.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
@@ -106,9 +107,9 @@ class EmptyStateWidget extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             
-            // Formatos soportados
+            // La versión se valida por la cabecera, no por el nombre del archivo.
             Text(
-              'Formatos soportados: .edi, .txt, .baplie',
+              'Contenido compatible: BAPLIE 2.x.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

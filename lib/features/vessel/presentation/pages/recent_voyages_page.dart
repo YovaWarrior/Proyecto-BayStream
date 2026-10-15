@@ -5,6 +5,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
 import '../providers/vessel_providers.dart';
 import '../formatters/vessel_error_message.dart';
+import '../formatters/operation_text.dart';
 import '../widgets/empty_state_widget.dart';
 
 /// Viajes de este dispositivo; la pantalla solo consulta el contrato local.
@@ -106,7 +107,7 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
                                   title: Text(
                                       '${voyage.vessel.name} · ${voyage.voyageNumber}'),
                                   subtitle: Text(
-                                      '${voyage.totalContainers} contenedores · ${voyage.bays.length} bahías'),
+                                      '${voyage.totalContainers} contenedores · ${operationCount(voyage.bays.length, 'bahía', 'bahías')}'),
                                   leading: const Icon(
                                       Icons.directions_boat_outlined),
                                   onTap: _working ? null : () => _open(voyage),
