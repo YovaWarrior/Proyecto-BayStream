@@ -2,7 +2,7 @@
 ///
 /// De aquí salen la pantalla «Política de privacidad» y `web/privacidad.html`
 /// (`tool/t88_privacidad.dart`). El texto es el de la ficha de T-88 en
-/// `SPRINT-3.md`, palabra por palabra, con la corrección de 10.46. Si una
+/// `SPRINT-3.md`, palabra por palabra, con las correcciones de 10.46 y 10.47. Si una
 /// frase deja de ser cierta frente al código, no se arregla aquí por cuenta
 /// propia: se reporta y la corrige Yov.
 ///
@@ -58,18 +58,24 @@ const List<PrivacyPolicySection> kPrivacyPolicySections = [
         'cuenta.'),
   ], [
     ('**Tu cuenta.** Tu correo y tu contraseña los gestiona Firebase '
-        'Authentication, de Google. BayStream no guarda tu contraseña. El '
-        'administrador registra además tu nombre, tu rol (muelle u oficina) y '
-        'si la cuenta está activa.'),
+        'Authentication, de Google. BayStream no guarda tu contraseña. Al '
+        'iniciar sesión, Firebase Authentication recibe también la dirección IP '
+        'de tu conexión y datos técnicos de la aplicación, para proteger las '
+        'cuentas contra el abuso, como lo describe Google. El administrador '
+        'registra además tu nombre, tu rol (muelle u oficina) y si la cuenta '
+        'está activa.'),
     ('**Lo que se envía a la nube.** Al publicar una operación, o al unirte a '
         'ella, se guardan en Cloud Firestore, de Google: los archivos de la '
         'operación, el perfil del buque y cada movimiento que registras, como '
         'descargas, cargas, re-estibas, tapas, solicitudes y aprobaciones. Cada '
-        'movimiento lleva tu nombre, tu rol, la hora y un identificador '
-        'aleatorio de la instalación de la aplicación, que no identifica tu '
-        'teléfono ni tu computadora.'),
-    ('**Quién lo ve.** Solo las cuentas autorizadas de BayStream, según su '
-        'rol, y el administrador. Las reglas de la base de datos lo exigen.'),
+        'movimiento lleva el identificador de tu cuenta, tu nombre, tu rol, la '
+        'hora y un identificador aleatorio de la instalación de la aplicación, '
+        'que no identifica tu teléfono ni tu computadora. La operación guarda '
+        'también qué cuenta la publicó y cuál la cerró.'),
+    ('**Quién lo ve.** Solo las cuentas autorizadas de BayStream y el '
+        'administrador. Todas las cuentas autorizadas pueden ver las '
+        'operaciones; el rol decide lo que cada una puede registrar o aprobar. '
+        'Las reglas de la base de datos lo exigen.'),
     ('**Dónde se guarda.** Los datos de la operación, en la región de Firebase '
         'en México (northamerica-south1); los de la cuenta, en Firebase '
         'Authentication. Las conexiones van cifradas.'),
@@ -102,13 +108,14 @@ const List<PrivacyPolicySection> kPrivacyPolicySections = [
     ('En Android, lo demás se borra al desinstalar la aplicación o al borrar '
         'sus datos desde los ajustes; en la Web, al borrar los datos del sitio '
         'en el navegador.'),
-    // 10.46 · Las dos rutas se verificaron en Windows sin abrir su contenido:
-    // la caché de Firestore vive en `firestore\[DEFAULT]\<proyecto>`.
+    // 10.46 y 10.47 · Las dos rutas se verificaron en Windows sin abrir su
+    // contenido: la caché de Firestore vive en `firestore\[DEFAULT]\<proyecto>`.
     ('En Windows, desinstalar puede dejar en tu carpeta de usuario los datos '
         'de BayStream y la copia de Firebase. Para quitarlos, cierra sesión '
-        'antes de desinstalar y borra la carpeta `AppData\\Local\\BayStream` y '
-        'la de BayStream dentro de `AppData\\Local\\firestore\\[DEFAULT]`.'),
-    'Cerrar sesión quita tu sesión del dispositivo.',
+        'antes de desinstalar y borra las carpetas `AppData\\Local\\BayStream` '
+        'y `AppData\\Local\\firestore\\[DEFAULT]\\baystream-app`.'),
+    ('Cerrar sesión quita tu sesión del dispositivo. Tu nombre y tu rol se '
+        'quedan guardados con lo demás, y se borran de la misma forma.'),
   ]),
   PrivacyPolicySection('Exportar.', [
     ('Cuando exportas un reporte (PDF, CSV o JSON) o el BAPLIE de salida, el '

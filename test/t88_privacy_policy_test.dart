@@ -132,9 +132,11 @@ void main() {
       testWidgets('T-88 la pantalla muestra el texto completo a 360 dp, '
           '${brightness.name}, letra $scale', (tester) async {
         await narrow(tester, scale: scale);
+        // 360 dp de ancho y alto de sobra: la lista se arma completa sin
+        // desplazarla, y cualquier desborde a ese ancho sale como excepción.
+        tester.view.physicalSize = const Size(720, 120000);
         await tester.pumpWidget(_app(const PrivacyPolicyPage(), brightness: brightness));
         await tester.pumpAndSettle();
-        final list = find.byKey(const ValueKey('privacy-policy-list'));
         final expected = [
           kPrivacyPolicyTitle,
           kPrivacyPolicyUpdated,
@@ -145,10 +147,7 @@ void main() {
           ],
         ];
         for (final text in expected) {
-          final found = find.text(text, findRichText: true);
-          await tester.scrollUntilVisible(found, 300, scrollable: find.descendant(
-              of: list, matching: find.byType(Scrollable)));
-          expect(found, findsOneWidget, reason: text);
+          expect(find.text(text, findRichText: true), findsOneWidget, reason: text);
         }
         expect(tester.takeException(), isNull);
       });
@@ -200,6 +199,14 @@ void main() {
         expect(body, contains('<exclude domain="$domain" path="." />'), reason: '$section $domain');
       }
     }
+  });
+
+  test('T-88 D9 en Windows: la ventana y el ejecutable dicen BayStream (10.47)', () {
+    final main = File('windows/runner/main.cpp').readAsStringSync();
+    expect(main, contains('window.Create(L"BayStream", origin, size)'));
+    final rc = File('windows/runner/Runner.rc').readAsStringSync();
+    expect(rc, contains(r'VALUE "FileDescription", "BayStream" "\0"'));
+    expect(rc, contains(r'VALUE "ProductName", "BayStream" "\0"'));
   });
 
   test('T-88 el script de T-93 da la indicación del .cer también con UnknownError', () {

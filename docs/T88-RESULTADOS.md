@@ -309,3 +309,76 @@ del diseño.
   - 14 archivos `t88acc_*` en el almacén real.
 - **La Web:** el servidor y las pestañas están cerrados.
 - **Git:** solo `log`, `show`, `diff --stat --ignore-cr-at-eol`, `ls-files` y `check-ignore`. No usé la CLI de Firebase, no toqué el proyecto de H5 y no publiqué nada.
+
+## Corrección (10.47)
+
+Timonel · 15-oct-2026 · sobre `7e55e12` (decisión 10.47), antes de la aceptación de Codex. ≈ 14:20–14:50.
+
+**Qué cambió:**
+- **Cinco cambios al texto**, copiados palabra por palabra de la ficha de T-88: «Tu cuenta», «Lo que se envía a la nube», «Quién lo ve», la ruta de Windows y «Cerrar sesión…».
+- **El nombre en Windows:** «BayStream» en el título de la ventana y en el ejecutable.
+- **Nada más de `windows/`.** 10.47 menciona también «el nombre del ejecutable»; lo resolví como `FileDescription` y `ProductName`, que es lo que pidió Carlos. `InternalName`, `OriginalFilename` (`baystream.exe`) y `CompanyName` no cambian.
+
+### Las cinco frases, contra el código
+
+Ninguna es falsa. Esta es la evidencia de cada una:
+
+| Frase nueva | Evidencia |
+|---|---|
+| **Tu cuenta:** Authentication recibe la IP y datos técnicos para proteger contra el abuso | Página de Firebase de divulgación para Play, sección 5 de este informe |
+| **Lo que se envía:** el identificador de la cuenta en cada movimiento, y quién publicó y quién cerró la operación | `FirestoreMovementCodec.encode` envía `author.uid`; `publish()` y `close()` escriben `createdBy` y `closedBy` (`firestore_operation_sync.dart`) |
+| **Quién lo ve:** todas las cuentas autorizadas ven las operaciones; el rol decide qué registran o aprueban | `T80-firestore.rules.propuesta`: `get, list: if isAuthorized()` en operaciones, fuentes y movimientos; `dockTypes()` y `officeTypes()` limitan lo que cada rol escribe |
+| **La ruta** `AppData\Local\firestore\[DEFAULT]\baystream-app` | Verificada fuera del paquete, sin abrir su contenido (sección 1) |
+| **Cerrar sesión…** «Tu nombre y tu rol se quedan guardados con lo demás, y se borran de la misma forma» | `signOut()` no borra `HiveLastOperatorStore`. Esa copia vive en `vessel_store` (`<ns>_session`), con el resto del almacén, y se borra igual. Además del nombre y el rol, guarda el uid |
+
+### Fuente y HTML
+
+- **El cotejo con la ficha da 25 líneas y 0 diferencias.** La ruta de Windows ya viene en la ficha.
+- `dart run tool/t88_privacidad.dart` regeneró `web/privacidad.html` (7 961 caracteres), y `--comprobar` termina con código **0**.
+
+### Pruebas
+
+- **Una prueba nueva:** «T-88 D9 en Windows: la ventana y el ejecutable dicen BayStream (10.47)».
+- **Una reescrita, sin cambiar lo que exige.** Las cuatro de la pantalla a 360 dp ya no desplazan la lista con `scrollUntilVisible`. Con el texto más largo, ese desplazamiento fallaba en `dragUntilVisible` al buscar el desplazable. Ahora la superficie mide 360 dp de ancho y 60 000 de alto: la lista se arma completa y se comprueban las 38 piezas a 1.0 y 2.0, en claro y oscuro. Un desborde a ese ancho sigue saliendo como excepción.
+- **Suite: 710/710** (709 + 1). T-88: 13/13. `analyze` en cero.
+- **El corpus no se repitió.** De `lib/` solo cambió una constante de texto que no lee ningún corpus.
+
+### Los clientes
+
+Volví a compilar las tres variantes en la copia de `%TEMP%`, con los cinco archivos actualizados.
+
+- **Honor `.t88`** (APK `4E590CA5…2B1B41`), a 360 dp y letra **2.0**:
+  - en oscuro y en claro, los volcados dan **38 de 38 piezas**, con las frases nuevas;
+  - la letra volvió a **1.0**;
+  - el tema de `.t88` quedó en claro, y la app cerrada.
+- **Chrome**, `/privacidad.html` servido desde `build/web`:
+  - 13 secciones, 10 viñetas, sin scripts ni `<link>`;
+  - las seis cadenas nuevas presentes;
+  - el HTML servido es idéntico al del repo (`cmp`).
+  - **Una observación de T-92.** El service worker quedó registrado en ese origen por la prueba anterior, y la primera carga entregó **la versión vieja** desde su caché. Después de `registration.update()`, la siguiente carga entregó la nueva. Esa actualización la forcé yo, así que no sé si se habría hecho sola en la siguiente visita.
+  - Para Hosting: quien ya abrió el sitio puede ver la política anterior en la primera carga después de una publicación.
+- **Windows con `t88acc`:**
+  - la ventana dice **«BayStream»** (`MainWindowTitle` y la barra);
+  - el `.exe` da `FileDescription` y `ProductName` = `BayStream`;
+  - la política, abierta desde el inicio de sesión, muestra las cinco frases;
+  - la app abrió sin sesión: no hay credencial `baystream-app.firebase.auth/[DEFAULT]`. Se cerró por PID.
+
+### Almacén real y protegidos
+
+- **El almacén real** (huella fuera del paquete, `powershell ← cmd ← explorer ← svchost`) tiene **354 archivos antes y 354 después**, todos con el mismo SHA.
+- Los 340 de la huella original siguen iguales; los 14 restantes son `t88acc_*`.
+- **Sin cambio frente a HEAD:** `lib/main.dart`, los congelados, `firestore.rules`, las reglas publicadas, `firebase.json`, `pubspec.yaml` y `pubspec.lock`.
+
+### Archivos de la corrección
+
+| Archivo | SHA-256 |
+|---|---|
+| `lib/core/constants/privacy_policy.dart` | `56FA53A3E4DE891D1F92036C6C915E37CFFBAC0CFEAF86E226C3851966BA9A06` |
+| `web/privacidad.html` | `7B86F47CDD02019F0722A7C5C9A08DEF069684865EE05029D2E63A0311F3AADD` |
+| `test/t88_privacy_policy_test.dart` | `E5573B07E48E3AD984F2E661862DF1F5B6B0AACF00F5336100298101F825D2D5` |
+| `windows/runner/main.cpp` | `B9DA8EEA375B23C371D6F22C71C55CEFC2653937B3B98DDEAEC467B0F8F5BA1B` |
+| `windows/runner/Runner.rc` | `9DAE39EF489533BDC20C5BD7F9067CDE7E24DB87F0DA9C8C0543A737634F8103` |
+
+Calculados sobre el árbol de trabajo. En `main.cpp` y `Runner.rc`, el editor dejó finales LF donde había CRLF. En el índice son LF y `diff --ignore-cr-at-eol` muestra solo las tres líneas.
+
+**Horas:** ≈ 0.5 h. T-88 suma ≈ 1.5 h frente a 2.5, sin el ícono.

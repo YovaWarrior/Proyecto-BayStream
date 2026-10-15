@@ -43,9 +43,9 @@ code { background: var(--codigo); padding: 0 4px; border-radius: 4px; font-famil
 <h2>Con cuenta, la operación se sincroniza.</h2>
 <p>Las cuentas las crea el administrador de BayStream para el personal de una operación portuaria: la aplicación no permite crearlas por tu cuenta.</p>
 <ul>
-<li><strong>Tu cuenta.</strong> Tu correo y tu contraseña los gestiona Firebase Authentication, de Google. BayStream no guarda tu contraseña. El administrador registra además tu nombre, tu rol (muelle u oficina) y si la cuenta está activa.</li>
-<li><strong>Lo que se envía a la nube.</strong> Al publicar una operación, o al unirte a ella, se guardan en Cloud Firestore, de Google: los archivos de la operación, el perfil del buque y cada movimiento que registras, como descargas, cargas, re-estibas, tapas, solicitudes y aprobaciones. Cada movimiento lleva tu nombre, tu rol, la hora y un identificador aleatorio de la instalación de la aplicación, que no identifica tu teléfono ni tu computadora.</li>
-<li><strong>Quién lo ve.</strong> Solo las cuentas autorizadas de BayStream, según su rol, y el administrador. Las reglas de la base de datos lo exigen.</li>
+<li><strong>Tu cuenta.</strong> Tu correo y tu contraseña los gestiona Firebase Authentication, de Google. BayStream no guarda tu contraseña. Al iniciar sesión, Firebase Authentication recibe también la dirección IP de tu conexión y datos técnicos de la aplicación, para proteger las cuentas contra el abuso, como lo describe Google. El administrador registra además tu nombre, tu rol (muelle u oficina) y si la cuenta está activa.</li>
+<li><strong>Lo que se envía a la nube.</strong> Al publicar una operación, o al unirte a ella, se guardan en Cloud Firestore, de Google: los archivos de la operación, el perfil del buque y cada movimiento que registras, como descargas, cargas, re-estibas, tapas, solicitudes y aprobaciones. Cada movimiento lleva el identificador de tu cuenta, tu nombre, tu rol, la hora y un identificador aleatorio de la instalación de la aplicación, que no identifica tu teléfono ni tu computadora. La operación guarda también qué cuenta la publicó y cuál la cerró.</li>
+<li><strong>Quién lo ve.</strong> Solo las cuentas autorizadas de BayStream y el administrador. Todas las cuentas autorizadas pueden ver las operaciones; el rol decide lo que cada una puede registrar o aprobar. Las reglas de la base de datos lo exigen.</li>
 <li><strong>Dónde se guarda.</strong> Los datos de la operación, en la región de Firebase en México (northamerica-south1); los de la cuenta, en Firebase Authentication. Las conexiones van cifradas.</li>
 <li><strong>Sin conexión.</strong> Los movimientos esperan en tu dispositivo y se envían cuando vuelve la red.</li>
 </ul>
@@ -61,8 +61,8 @@ code { background: var(--codigo); padding: 0 4px; border-radius: 4px; font-famil
 <li>En Android, estos datos no entran en la copia de seguridad de Google ni pasan a otro teléfono en una transferencia.</li>
 <li>Puedes borrar un viaje desde Recientes.</li>
 <li>En Android, lo demás se borra al desinstalar la aplicación o al borrar sus datos desde los ajustes; en la Web, al borrar los datos del sitio en el navegador.</li>
-<li>En Windows, desinstalar puede dejar en tu carpeta de usuario los datos de BayStream y la copia de Firebase. Para quitarlos, cierra sesión antes de desinstalar y borra la carpeta <code>AppData\Local\BayStream</code> y la de BayStream dentro de <code>AppData\Local\firestore\[DEFAULT]</code>.</li>
-<li>Cerrar sesión quita tu sesión del dispositivo.</li>
+<li>En Windows, desinstalar puede dejar en tu carpeta de usuario los datos de BayStream y la copia de Firebase. Para quitarlos, cierra sesión antes de desinstalar y borra las carpetas <code>AppData\Local\BayStream</code> y <code>AppData\Local\firestore\[DEFAULT]\baystream-app</code>.</li>
+<li>Cerrar sesión quita tu sesión del dispositivo. Tu nombre y tu rol se quedan guardados con lo demás, y se borran de la misma forma.</li>
 </ul>
 </section>
 <section>
