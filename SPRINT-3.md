@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.46) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.47) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1700,9 +1700,9 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 > **Los archivos que abres.** La aplicación lee los archivos que tú eliges: planos BAPLIE y listados de exportación en Excel. Contienen información comercial del buque, del viaje y de la carga, como números de contenedor, puertos, pesos, refrigerados y mercancías peligrosas. No están pensados para contener datos personales.
 >
 > **Con cuenta, la operación se sincroniza.** Las cuentas las crea el administrador de BayStream para el personal de una operación portuaria: la aplicación no permite crearlas por tu cuenta.
-> - **Tu cuenta.** Tu correo y tu contraseña los gestiona Firebase Authentication, de Google. BayStream no guarda tu contraseña. El administrador registra además tu nombre, tu rol (muelle u oficina) y si la cuenta está activa.
-> - **Lo que se envía a la nube.** Al publicar una operación, o al unirte a ella, se guardan en Cloud Firestore, de Google: los archivos de la operación, el perfil del buque y cada movimiento que registras, como descargas, cargas, re-estibas, tapas, solicitudes y aprobaciones. Cada movimiento lleva tu nombre, tu rol, la hora y un identificador aleatorio de la instalación de la aplicación, que no identifica tu teléfono ni tu computadora.
-> - **Quién lo ve.** Solo las cuentas autorizadas de BayStream, según su rol, y el administrador. Las reglas de la base de datos lo exigen.
+> - **Tu cuenta.** Tu correo y tu contraseña los gestiona Firebase Authentication, de Google. BayStream no guarda tu contraseña. Al iniciar sesión, Firebase Authentication recibe también la dirección IP de tu conexión y datos técnicos de la aplicación, para proteger las cuentas contra el abuso, como lo describe Google. El administrador registra además tu nombre, tu rol (muelle u oficina) y si la cuenta está activa.
+> - **Lo que se envía a la nube.** Al publicar una operación, o al unirte a ella, se guardan en Cloud Firestore, de Google: los archivos de la operación, el perfil del buque y cada movimiento que registras, como descargas, cargas, re-estibas, tapas, solicitudes y aprobaciones. Cada movimiento lleva el identificador de tu cuenta, tu nombre, tu rol, la hora y un identificador aleatorio de la instalación de la aplicación, que no identifica tu teléfono ni tu computadora. La operación guarda también qué cuenta la publicó y cuál la cerró.
+> - **Quién lo ve.** Solo las cuentas autorizadas de BayStream y el administrador. Todas las cuentas autorizadas pueden ver las operaciones; el rol decide lo que cada una puede registrar o aprobar. Las reglas de la base de datos lo exigen.
 > - **Dónde se guarda.** Los datos de la operación, en la región de Firebase en México (northamerica-south1); los de la cuenta, en Firebase Authentication. Las conexiones van cifradas.
 > - **Sin conexión.** Los movimientos esperan en tu dispositivo y se envían cuando vuelve la red.
 >
@@ -1712,8 +1712,8 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 > - En Android, estos datos no entran en la copia de seguridad de Google ni pasan a otro teléfono en una transferencia.
 > - Puedes borrar un viaje desde Recientes.
 > - En Android, lo demás se borra al desinstalar la aplicación o al borrar sus datos desde los ajustes; en la Web, al borrar los datos del sitio en el navegador.
-> - En Windows, desinstalar puede dejar en tu carpeta de usuario los datos de BayStream y la copia de Firebase. Para quitarlos, cierra sesión antes de desinstalar y borra la carpeta `AppData\Local\BayStream` y la de BayStream dentro de `AppData\Local\firestore`.
-> - Cerrar sesión quita tu sesión del dispositivo.
+> - En Windows, desinstalar puede dejar en tu carpeta de usuario los datos de BayStream y la copia de Firebase. Para quitarlos, cierra sesión antes de desinstalar y borra las carpetas `AppData\Local\BayStream` y `AppData\Local\firestore\[DEFAULT]\baystream-app`.
+> - Cerrar sesión quita tu sesión del dispositivo. Tu nombre y tu rol se quedan guardados con lo demás, y se borran de la misma forma.
 >
 > **Exportar.** Cuando exportas un reporte (PDF, CSV o JSON) o el BAPLIE de salida, el archivo se guarda: en Android y en Windows, donde tú decides con el selector de archivos del sistema; en la Web, como una descarga del navegador. Lo que hagas con él después queda fuera de BayStream.
 >
@@ -3499,3 +3499,42 @@ El piso de pruebas es 648.
 - Si alguna de sus tres frases era otra, no la toca: la reporta con su evidencia.
 
 **El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero no cambia.
+
+### 10.47 · T-88 entregada sin el ícono · Cinco cambios a la política y el título de la ventana de Windows, antes de la aceptación (15-oct)
+
+**Timonel entregó T-88 sin el ícono** (commit `b9eb72d`, `docs/T88-RESULTADOS.md`), en ≈ 1.0 h. Lo que entregó:
+- **La fuente única del texto** está en `lib/core/constants/privacy_policy.dart`, y el HTML lo arma `lib/core/utils/privacy_policy_html.dart`.
+- **`tool/t88_privacidad.dart`** escribe `web/privacidad.html`, y con `--comprobar` solo los compara.
+- **Las dos entradas:** Parámetros → «Política de privacidad», y Nube y cuenta → inicio de sesión → «Política de privacidad». Ninguna pide viaje ni sesión.
+- **Usó el texto de 10.46 palabra por palabra.** Solo ajustó la ruta de la caché de Firestore en Windows, después de verificarla sin abrir su contenido.
+- **D3:**
+  - `allowBackup="false"` y `dataExtractionRules`, que excluyen los nueve dominios en la nube y en la transferencia. Cita la documentación de Android.
+  - En el Honor, el paquete ya no tiene `ALLOW_BACKUP`.
+  - `bmgr` no sirve como prueba en ese teléfono, así que basta el manifiesto, como permite la ficha.
+- **D9:** «BayStream» bajo el ícono del Honor. La ventana de Windows todavía dice «baystream».
+- **Los clientes:** el Honor `.t88` a 360 dp, en claro y oscuro, a letra 1.0 y 2.0; Chrome con `/privacidad.html`; y Windows con `t88acc`. El almacén real conserva sus 340 archivos y suma solo los 14 de `t88acc`. Cerrar sesión en Windows sí quita la credencial guardada.
+- **Validaciones:** **709/709, el piso nuevo**; `analyze` en cero; corpus 118/118; y las sondas de T-93 en 0/1/1/1.
+- **El inventario del APK release:**
+  - no hay Installations, analítica, anuncios, informes de fallos ni mensajería;
+  - pero `firebase-auth 24.2.0` trae reCAPTCHA 18.6.1, que pide `READ_GSERVICES`, Play Integrity 1.3.0 y las bibliotecas de inicio de sesión con Google, que la app no usa;
+  - según Google, Authentication recopila la dirección IP;
+  - si el proyecto protege Authentication con reCAPTCHA Enterprise, lo confirma Carlos en la consola, sin cambiar nada.
+
+**Seis observaciones de Timonel, que Yov resuelve así:**
+1. **Los movimientos llevan el UID de la cuenta,** y la operación, quién la publicó y quién la cerró. Se agrega a la política.
+2. **Las dos cuentas leen lo mismo;** el rol solo limita lo que escriben. «Quién lo ve» se reescribe.
+3. **El selector de tema se desborda 2.5 px solo en `flutter test`.** En el Honor no pasa. Se anota, sin tarea.
+4. **El nombre y el rol se quedan después de cerrar sesión.** La política lo dice.
+5. **Authentication recibe la IP al iniciar sesión.** La política lo dice, en «Tu cuenta».
+6. **reCAPTCHA, Play Integrity y las bibliotecas de inicio de sesión de Google** van a las declaraciones de Play, que escribe Yov.
+
+**Además,** la ruta de Windows nombra directamente `baystream-app`, como sugirió Timonel.
+
+**Los cinco cambios ya están en la ficha de T-88.** Antes de la aceptación:
+- **Timonel los aplica,** junto con el título de la ventana de Windows y el nombre del ejecutable: «BayStream» en `windows/runner/main.cpp` y en `Runner.rc`.
+- **Después, Codex acepta T-88 completa,** salvo el ícono.
+- **El ícono** llega en una segunda entrega: lo integra Timonel y lo revisa Codex.
+
+**El correo de contacto (D2)** quedó en la fuente, como decidió Carlos. Es la dirección autorizada en 10.44.
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero no cambia: T-88 sigue en curso hasta su segunda entrega.
