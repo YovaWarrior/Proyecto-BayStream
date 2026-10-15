@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.45) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.46) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1708,12 +1708,14 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 >
 > **El micrófono, solo si lo usas.** La búsqueda de contenedores se puede dictar. El micrófono se pide únicamente cuando pulsas su botón, y puedes negarlo: escribir la búsqueda siempre funciona. El dictado lo hace el servicio de reconocimiento de voz de tu sistema, en Android, o de tu navegador, en la Web. Ese servicio puede enviar el audio a los servidores de su proveedor, como Google, según la política de ese proveedor. BayStream no graba ni guarda el audio, y el texto reconocido solo llena el campo de búsqueda: no se guarda ni se envía. En Windows no hay dictado.
 >
-> **Lo que se guarda en tu dispositivo.** Los viajes recientes, los perfiles de buque, la operación con su cola de movimientos, los datos de tu cuenta y tu preferencia de tema se guardan en el almacenamiento privado de la aplicación; en la Web, en el del navegador para el sitio de BayStream. Firebase guarda además tu sesión, para no pedirte la contraseña cada vez, y una copia de la operación para trabajar sin conexión.
+> **Lo que se guarda en tu dispositivo.** Los viajes recientes, los perfiles de buque, la operación con su cola de movimientos, los datos de tu cuenta y tu preferencia de tema se guardan en tu dispositivo: en Android, en el almacenamiento privado de la aplicación; en Windows, en la carpeta de datos de tu usuario; en la Web, en el almacenamiento del navegador para el sitio de BayStream. Firebase guarda además tu sesión, para no pedirte la contraseña cada vez, y en Android y en Windows, una copia de la operación para trabajar sin conexión.
 > - En Android, estos datos no entran en la copia de seguridad de Google ni pasan a otro teléfono en una transferencia.
-> - Puedes borrar un viaje desde Recientes. Lo demás se borra al desinstalar la aplicación, al borrar sus datos desde los ajustes de Android o, en la Web, al borrar los datos del sitio.
+> - Puedes borrar un viaje desde Recientes.
+> - En Android, lo demás se borra al desinstalar la aplicación o al borrar sus datos desde los ajustes; en la Web, al borrar los datos del sitio en el navegador.
+> - En Windows, desinstalar puede dejar en tu carpeta de usuario los datos de BayStream y la copia de Firebase. Para quitarlos, cierra sesión antes de desinstalar y borra la carpeta `AppData\Local\BayStream` y la de BayStream dentro de `AppData\Local\firestore`.
 > - Cerrar sesión quita tu sesión del dispositivo.
 >
-> **Exportar.** Cuando exportas un reporte (PDF, CSV o JSON) o el BAPLIE de salida, la aplicación abre el selector de archivos de tu sistema y guarda el archivo donde tú decides. Lo que hagas con él después queda fuera de BayStream.
+> **Exportar.** Cuando exportas un reporte (PDF, CSV o JSON) o el BAPLIE de salida, el archivo se guarda: en Android y en Windows, donde tú decides con el selector de archivos del sistema; en la Web, como una descarga del navegador. Lo que hagas con él después queda fuera de BayStream.
 >
 > **La Web.** La versión Web se sirve desde el sitio de BayStream en Firebase Hosting, de Google, incluidos el motor de dibujo, las fuentes y el SDK de Firebase: no carga código de otros sitios. Como cualquier servidor web, el alojamiento puede registrar datos técnicos de cada conexión, como la dirección IP.
 >
@@ -3478,3 +3480,22 @@ El piso de pruebas es 648.
 - 32 terminadas;
 - T-88 en curso;
 - 9 por hacer.
+
+### 10.46 · Tres frases de la política, corregidas para Windows y la Web (15-oct)
+
+**Timonel se detuvo,** como pide la ficha de T-88: tres frases de la política son falsas en Windows o en la Web. Sigue con lo que no depende de ellas.
+
+**Yov las corrigió en la ficha,** contra el código:
+- **Dónde se guarda:**
+  - en Windows, el almacén está en la carpeta de datos del usuario, que no es un almacenamiento privado de la app (10.37);
+  - en la Web, Firestore no guarda copia sin conexión, porque no se activa la persistencia;
+  - el texto ahora distingue las tres plataformas.
+- **Cómo se borra:**
+  - en Windows, desinstalar puede dejar la carpeta de BayStream y la caché de Firebase (10.37);
+  - el texto dice cómo quitarlas, y pide cerrar sesión antes de desinstalar.
+- **Exportar:**
+  - en la Web, `FilePicker.saveFile` no abre un selector: el navegador lo descarga.
+- **Timonel solo puede ajustar** los dos nombres de carpeta de Windows, tras verificarlos sin abrir su contenido, y lo declara.
+- Si alguna de sus tres frases era otra, no la toca: la reporta con su evidencia.
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero no cambia.
