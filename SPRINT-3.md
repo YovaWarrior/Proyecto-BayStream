@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **41 tareas · ≈ 155.3 h estimadas** (al 14-oct, 10.36) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **41 tareas · ≈ 153.7 h estimadas** (al 14-oct, 10.37) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2702,3 +2702,56 @@ El piso de pruebas es 648.
 - **T-93 pasa a Timonel** con ficha completa (sección 5, Ola 5), en cuanto Carlos cree el certificado. Su aceptación cruzada la hace Codex, después.
 - **Después de T-93, Timonel hace el lote de las doce** (`docs/LOTE-TIMONEL.md`), y por separado la aceptación de T-92.
 - **Codex queda libre del carril esta noche.** El 16-oct toma la parte de código de T-88, con su ficha, y acepta T-93.
+
+### 10.37 · T-93 entregada, en revisión: el instalador MSIX firmado · Dónde guarda los datos la app instalada depende de si la carpeta ya existía · Corrección de 10.36 (14-oct)
+
+**T-93, de Timonel, pasa a En revisión** (commit `25dbee5`). La acepta Codex, después del lote.
+
+- **Lo construido.**
+  - `msix 3.18.0`, fija, como dependencia de desarrollo. El lock suma solo `msix`, `cli_util 0.5.0`, `console 4.1.0` y `get_it 9.3.0`, sin mover nada existente.
+  - `msix_config`, sin secretos: `CN=BayStream`, `gt.cmartinez.baystream`, solo `internetClient`, `build_windows: false` e `install_certificate: false`.
+  - `tool/t93_msix.ps1` compila Release con las opciones de Firebase, arma el paquete y lo firma por la huella (`/fd SHA256 /sha1`). Falla si la firma no es de esa huella.
+  - Cinco pruebas fijan esa configuración.
+- **La aceptación**, sobre un almacén limpio salvo el primer arranque:
+  - el paquete 1.0.0.0 se instala y abre desde Inicio con Firebase;
+  - A07 da 398/21/`6940.6 t`/0-114-284 y se conserva al cerrar por PID;
+  - «PRUEBA T-84» llega a «Al día» con 4/3/`20.0 t`/0-3-1, sin movimientos;
+  - la 1.0.1.0 se instala encima y conserva el viaje, Recientes y la sesión;
+  - la desinstalación quedó documentada.
+  - Se instaló con `Add-AppxPackage`. El doble clic con App Installer no se probó.
+- **Un criterio no pasa tal como estaba escrito: «el almacén real con la misma huella».**
+  - El primer arranque escribió en `%LOCALAPPDATA%\BayStream`, en el namespace por defecto `baystream`, que pasó de 283 a 288 archivos: la operación y el viaje de A07, el perfil, los ajustes, la copia local del operador y cuatro `.lock`. A07 desplazó de Recientes al viaje más viejo de BUQUE GOLF.
+  - Los namespaces de las aceptaciones quedaron idénticos.
+  - Timonel se detuvo y avisó. Con el método que indicó Yov (copia en `%TEMP%`, renombre y devolución), hizo el resto sobre un almacén limpio. El real quedó idéntico a como estaba después del primer arranque (`6F6E95EB…`).
+  - **El criterio y su supuesto eran de Yov, no un defecto de T-93.**
+- **La causa, comprobada:** la regla de Windows 1903+ para el `AppData` de las apps empaquetadas. Solo se redirige lo que se crea nuevo; lo que ya existe se lee y se modifica en la ubicación real. El manifiesto no trae `unvirtualizedResources`.
+- **Corrección de 10.36, y de lo que Yov dijo en el chat a las 18:26:**
+  - **En una PC sin BayStream previo**, como la de la oficina y la del piloto, el almacén vive en la carpeta privada del paquete (`…\Packages\gt.cmartinez.baystream_…\LocalCache\Local\BayStream`). Se conserva al actualizar y **se borra al desinstalar**: antes de desinstalar hay que sincronizar hasta «Al día».
+  - **En una PC que ya tenía `%LOCALAPPDATA%\BayStream`**, por una copia de `Release` como en la laptop de Carlos, el paquete usa esa carpeta, la modifica y no la borra.
+  - La caché de Firestore (`%LOCALAPPDATA%\firestore`) sigue la misma regla.
+  - La sesión de Firebase vive en el Administrador de credenciales de Windows. La comparten la app instalada y la sin instalar, y queda después de desinstalar.
+  - Las instrucciones para una PC de oficina del informe (sección 7) ya lo dicen, y pasan al manual (T-100).
+- **Un hallazgo de proceso.**
+  - La consola de un agente empaquetado (Claude Code o Codex de escritorio) ve el almacén mezclado con la copia de su propio paquete: Timonel contó 297 archivos donde había 283.
+  - Por eso las huellas del almacén real se toman fuera del paquete, con un `.bat` lanzado por `explorer.exe`.
+  - **Queda como regla en `AGENTS.md`**, junto a la de abrir la app con `explorer.exe` (10.9).
+- **En la laptop de Carlos, la app quedó desinstalada.** Si la instala, va a usar y modificar su almacén real. Para usarla, mejor una PC sin la app previa, o apartar antes la carpeta.
+- **Los cinco archivos del primer arranque** se quedan en el almacén real. Carlos decide antes del piloto si limpia ese almacén (10.13).
+- **Fuera de la tarea, para el piloto (T-101) y el manual:**
+  - el doble clic con App Installer;
+  - Windows 10 en una PC de COMAR;
+  - el sello de tiempo de la firma. Sin él, el paquete se instala mientras el certificado esté vigente, que son tres años.
+- **Validaciones.** **660 pruebas** (el piso nuevo; 5 nuevas), `analyze` en cero y corpus **116/116**.
+  - 124 archivos protegidos guardan el mismo SHA-256: los 122 de `lib/`, `firestore.rules` y `firebase.json`.
+  - Los congelados no difieren de `m2-baseline`.
+- **La revisión del commit.**
+  - Las 5 rutas son las de la ficha: `pubspec.yaml`, `pubspec.lock`, `tool/t93_msix.ps1`, `test/t93_msix_config_test.dart` y el informe.
+  - No toca `lib/`, `windows/`, `main.dart`, las reglas ni los congelados.
+  - No hay `.pfx`, contraseña ni ruta de certificado. La huella del certificado está en el informe y no es secreta.
+  - El `.msix` y las evidencias quedan en `build/t93/`, que no se versiona.
+- **Horas.** ≈ 0.9 h frente a 2.5. El encabezado baja de ≈ 155.3 a **≈ 153.7 h**.
+
+**El orden desde aquí:**
+1. **Timonel hace el lote de las doce** en un chat nuevo (`docs/LOTE-TIMONEL.md`, piso 660). Mientras corre, nadie más usa la app de Windows ni aparta el almacén real.
+2. Después, Timonel acepta T-92 por separado.
+3. **Codex acepta T-93 después del lote,** con el almacén real apartado, y toma la parte de código de T-88 (16-oct).

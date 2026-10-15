@@ -37,20 +37,22 @@ Se hacen una vez al empezar y otra al terminar:
 
 | Qué | Cifra esperada |
 |---|---|
-| `flutter test` completo en HEAD | **655/655** (T-92 ya está en HEAD; si T-93 también, el piso de su informe) |
+| `flutter test` completo en HEAD | **660/660** (T-92 y T-93 ya están en HEAD) |
 | `flutter analyze` | **0** |
 | Todos los `tool/*corpus*test.dart` | **116/116** en 31 archivos |
 | SHA-256 de `docs/T80-firestore.rules.propuesta` | `21894B7F43E59F856045473731B795D21F8373C5AC8A1D9FFF324334AC3C9000` |
 | Batería de reglas `tool/t80_reglas.mjs`, contra el emulador local | **69/69** |
-| Dependencias: diferencia de `pubspec.*` desde `2dfc3ea` | solo `speech_to_text 7.2.0` y sus dos transitivas (T-94); si T-93 ya está en HEAD, también `msix` como dependencia de desarrollo y sus transitivas |
+| Dependencias: diferencia de `pubspec.*` desde `2dfc3ea` | `speech_to_text 7.2.0` y sus dos transitivas (T-94), y `msix 3.18.0` de desarrollo con `cli_util 0.5.0`, `console 4.1.0` y `get_it 9.3.0` (T-93) |
 | `lib/main.dart` y los congelados de H5 | sin cambios desde `2dfc3ea` |
 
-**T-92 ya está en HEAD** (`26bbfca`, 10.36), y T-93, que haces tú antes del lote, también lo estará cuando Carlos la commitee:
-- el piso es el del último informe: `docs/T92-RESULTADOS.md` da **655**, y `docs/T93-RESULTADOS.md`, si existe, el suyo;
+**T-92 (`26bbfca`) y T-93 (`25dbee5`) ya están en HEAD** (10.36 y 10.37):
+- el piso es **660**;
 - la Web que compilas trae T-92: CanvasKit, las fuentes y el SDK de Firebase salen del propio sitio, y las comprobaciones de Chrome de este lote valen igual;
-- T-93 deja en la laptop un **MSIX instalado**, con almacén propio dentro del paquete. **El lote no lo usa:** la app de Windows del lote es la que compilas desde HEAD, abierta con `explorer.exe` y en `tloteacc`. Desinstálalo o ciérralo antes de empezar, como decida Carlos;
+- el MSIX de T-93 quedó **desinstalado**. La app de Windows del lote es la que compilas desde HEAD, abierta con `explorer.exe` y en `tloteacc`. No instales el MSIX durante el lote;
+- el almacén real tiene cinco archivos del primer arranque de T-93 en el namespace por defecto `baystream`. Los `t*acc` están intactos;
+- **los conteos y las huellas del almacén real se toman fuera del paquete de Claude**, con un `.bat` lanzado por `explorer.exe`. Desde tu consola se ve mezclado (`AGENTS.md`, 10.37);
 - **T-92 y T-93 no entran en este lote.** T-92 la aceptas tú aparte, después; T-93 es tuya y la acepta Codex;
-- si Codex todavía corre Flutter cuando empiezas, Carlos da el semáforo: uno a la vez, y nadie pisa los binarios de `build/windows` del otro.
+- si Codex corre Flutter mientras tanto, Carlos da el semáforo: uno a la vez, y nadie pisa los binarios de `build/windows` del otro.
 
 ---
 
@@ -112,14 +114,14 @@ Con eso, Yov escribe la decisión que pasa las aceptadas a Terminado y regenera 
 ## 5. El prompt para Timonel (Claude Code, chat nuevo)
 
 ```
-Eres Timonel, programador de BayStream (Claude Code), y vuelves después de tres días. Trabajas en C:\Proyectos\proyecto-baystream, rama sprint-3. Tu contexto está en CLAUDE.md, que incluye AGENTS.md: léelos completos.
+Eres Timonel, programador de BayStream (Claude Code). Trabajas en C:\Proyectos\proyecto-baystream, rama sprint-3. Tu contexto está en CLAUDE.md, que incluye AGENTS.md: léelos completos.
 
-Hoy no programas: haces la aceptación cruzada en lote de doce tareas que Codex hizo mientras no estabas. Antes de tocar nada, lee completos:
+Hoy no programas: haces la aceptación cruzada en lote de doce tareas que Codex hizo mientras no estabas (T-93, que ya hiciste, no entra). Antes de tocar nada, lee completos:
 1. docs/LOTE-TIMONEL.md: el contexto, las reglas, las comprobaciones de cada tarea y lo que entregas.
-2. SPRINT-3.md: la sección 2 (con las reglas nuevas de 2.3, 2.4 y 2.10), la sección 6 («Aceptación cruzada»), las fichas de las doce tareas en la sección 5 y las decisiones 10.18 a 10.34.
+2. SPRINT-3.md: la sección 2 (con las reglas nuevas de 2.3, 2.4 y 2.10), la sección 6 («Aceptación cruzada»), las fichas de las doce tareas en la sección 5 y las decisiones 10.18 a 10.37.
 3. Los informes docs/T80-RESULTADOS.md … docs/T102-RESULTADOS.md, tanda por tanda, a medida que llegues a cada una.
 
-Comprueba que git log --oneline -3 muestra la rama sprint-3 con la decisión 10.34 o una posterior. Si no, detente y avisa.
+Comprueba que git log --oneline -3 muestra la rama sprint-3 con la decisión 10.37 o una posterior. Si no, detente y avisa.
 
 Haz las comprobaciones globales, luego las tres tandas en orden, y repite las globales al final. Aceptar no es corregir: si algo no cuadra, márcalo «no pasa» con la evidencia y sigue con lo que no dependa de ello. No tocas lib/, test/ ni pubspec.*.
 
@@ -129,6 +131,7 @@ Reglas que no cambian:
 - Compilas con --dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json, sin abrir ni imprimir ese archivo. Nunca abres android/key.properties.
 - La app de Windows se abre con Start-Process explorer.exe -ArgumentList <exe>, en el namespace tloteacc, y se cierra por PID. En el Honor usas la variante .tlote; para T-97 puedes usar la .t97, que ya está instalada.
 - Producción solo a través de la app, sobre las operaciones de prueba que ya existen. Nada de la CLI de Firebase ni credenciales de administrador, y nunca el proyecto de H5. Carlos inicia las sesiones.
+- Los conteos y las huellas del almacén de Windows se toman fuera del paquete de Claude, con un .bat lanzado por explorer.exe: desde tu consola el almacén se ve mezclado (AGENTS.md, 10.37). No instales el MSIX de T-93 durante el lote.
 - Los volcados del Honor, sanitizados (SPRINT-3.md 2.4).
 - El corpus, fuera del repo, y las salidas en %TEMP%. Nunca flutter test --platform chrome.
 

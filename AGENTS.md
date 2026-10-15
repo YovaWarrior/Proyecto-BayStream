@@ -121,6 +121,12 @@ herramientas de Flutter y el Honor, así que se reparten así:
   almacén usó la app. Para usar el almacén real, abre la app con
   `Start-Process explorer.exe -ArgumentList <ruta del exe>`, no con
   `Start-Process <exe>`: así el proceso queda fuera del paquete (T-73, 10.9).
+- En Windows, la consola de un agente empaquetado (Codex de escritorio, Claude Code)
+  ve `%LOCALAPPDATA%\BayStream` mezclado con la copia de su propio paquete (T-93:
+  297 archivos donde había 283). Para contar o tomar la huella del almacén real,
+  hazlo fuera del paquete: un `.bat` lanzado con `explorer.exe`, que anota su
+  proceso padre. La app instalada como MSIX usa esa carpeta si ya existe; en la
+  laptop de Carlos, apártala antes de instalarla (10.37).
 - En Windows, una aceptación que registra movimientos usa un namespace propio del
   almacén real (`tNNacc`, como `t75acc`), no la operación por defecto: la bitácora
   es solo de anexar y lo que se registra ahí no se borra desde la app (10.11).
