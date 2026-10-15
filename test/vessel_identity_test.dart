@@ -5,15 +5,15 @@ import 'package:baystream/features/vessel/domain/entities/vessel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // TDT anonimizados A01–A06 dentro de mensajes sintéticos 2.x.
-  // A06 completo ya no se admite; aquí se prueba la identidad, no su versión.
+  // TDT anonimizados A01–A06, cada uno con la versión de su archivo: A06 es
+  // la 1.5, que T-103 vuelve a leer con las reglas de 2.x.
   const segments = [
     "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+V01N+++NV2:172:20+++9000003:146:11:BUQUE ALFA'",
     "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+VIAJE001A+++NV3:172:20+++9000015:146:11:BUQUE BRAVO'",
     "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+VIAJE003A+++NV3:172:166+++ZZAB1:103:ZZZ:BUQUE CHARLIE'",
     "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+VIAJE002A+++NAVE5:172:20+++9000027:146:11:BUQUE DELTA'",
     "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20++++NV4:172:ZZZ+++ZZC5603:103::BUQUE ECO:kingston JM++LINEA-A:LR'",
-    "UNH+1+BAPLIE:D:95B:UN:SMDG20'TDT+20+VIAJE004A++9000039:146::BUQUE ECO++NV3:172:20'",
+    "UNH+1+BAPLIE:1:911:UN:SMDG15'TDT+20+VIAJE004A++9000039:146::BUQUE ECO++NV3:172:20'",
   ];
   const keys = [
     'imo:9000003',
@@ -26,7 +26,7 @@ void main() {
   final parser = BaplieParserService();
 
   for (var i = 0; i < segments.length; i++) {
-    test('TDT A0${i + 1} en 2.x: clave estable y UUID independiente', () {
+    test('TDT A0${i + 1}: clave estable y UUID independiente', () {
       final first = parser.parse(segments[i]).vessel;
       final second = parser.parse(segments[i]).vessel;
       expect(first.profileKey, keys[i]);
@@ -40,7 +40,7 @@ void main() {
     });
   }
 
-  test('TDT homónimos de A05/A06 en 2.x requieren confirmar la identidad',
+  test('TDT homónimos de A05 (2.x) y A06 (1.5) requieren confirmar la identidad',
       () {
     final a05 = parser.parse(segments[4]).vessel;
     final a06 = parser.parse(segments[5]).vessel;

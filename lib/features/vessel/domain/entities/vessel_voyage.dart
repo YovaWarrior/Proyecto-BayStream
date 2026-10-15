@@ -498,6 +498,20 @@ enum VoyageDirection {
   unknown,
 }
 
+/// T-103 · S009 de la 1.5, la única 1.x que admite el lector (10.35).
+const smdg15MessageIdentifier = 'BAPLIE:1:911:UN:SMDG15';
+
+/// Si el texto de [baplie] declara la 1.5 en su UNH. La salida de T-82 no se
+/// genera desde una fuente leída con las reglas de 2.x.
+bool declaresSmdg15(String baplie) =>
+    baplie
+        .split("'")
+        .map((segment) => segment.trim())
+        .firstWhere((segment) => segment.startsWith('UNH+'), orElse: () => '')
+        .split('+')
+        .elementAtOrNull(2) ==
+    smdg15MessageIdentifier;
+
 /// Metadatos del mensaje BAPLIE
 class BaplieMetadata extends Equatable {
   final String? messageReference;
@@ -515,6 +529,10 @@ class BaplieMetadata extends Equatable {
     this.recipientIdentification,
     this.preparationDateTime,
   });
+
+  /// T-103 · Leído con las reglas de 2.x. El lector solo admite versión 1 en
+  /// la 1.5, así que la versión guardada basta, también al reabrir el viaje.
+  bool get readWithV2Rules => messageVersion == '1';
 
   @override
   List<Object?> get props => [

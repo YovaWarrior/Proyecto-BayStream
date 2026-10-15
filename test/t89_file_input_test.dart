@@ -120,8 +120,9 @@ void main() {
       expect(storageOpened, isFalse);
     });
   }
+  // T-103: la 1.5 se lee; el rechazo de la 1.x se prueba con una sintética.
   for (final identifier in [
-    'BAPLIE:1:911:UN:SMDG15',
+    'BAPLIE:1:911:UN:SMDG10',
     'BAPLIE:D:13B:UN:SMDG31'
   ]) {
     test('T-89 cabecera $identifier conserva el aviso de T-86 sin almacenar',

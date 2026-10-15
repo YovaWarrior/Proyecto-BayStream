@@ -202,13 +202,12 @@ void main() {
 
   for (var number = 1; number <= 7; number++) {
     final name = 'A${number.toString().padLeft(2, '0')}';
-    test('T-69 $name: cero reservas en 2.x o rechazo de A06 1.x', () {
-      if (name == 'A06') {
-        expect(requireA06Rejection(
-            File('$corpus/CORPUS_$name.edi').readAsStringSync()), contains('SMDG15'));
-        return;
-      }
-      final voyage = open(name);
+    // T-103: A06 vuelve a leerse, como 1.5 con aviso.
+    test('T-69 $name: el corpus anterior conserva cero reservas', () {
+      final voyage = name == 'A06'
+          ? readA06WithNotice(
+              File('$corpus/CORPUS_$name.edi').readAsStringSync())
+          : open(name);
       expect(voyage.totalContainers, greaterThan(0));
       expect(voyage.reservedSlots, isEmpty);
       expect(voyage.totalReservedSlots, 0);

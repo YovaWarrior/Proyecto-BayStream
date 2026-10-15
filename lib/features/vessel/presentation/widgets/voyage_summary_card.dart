@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
 import 'voyage_call_summary.dart';
 
+/// T-103 · Aviso de un viaje leído desde una 1.5 (SMDG15), decisión 10.35.
+const smdg15Notice =
+    'Versión 1.5, leída con las reglas de 2.x; revisa pesos y peligrosas';
+
 /// Tarjeta que muestra el resumen del viaje cargado
 /// Incluye información del buque, número de viaje y estadísticas
 class VoyageSummaryCard extends StatelessWidget {
@@ -31,6 +35,35 @@ class VoyageSummaryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // T-103: fijo mientras el viaje esté abierto, también desde Recientes.
+            if (voyage.metadata?.readWithV2Rules ?? false) ...[
+              Container(
+                key: const ValueKey('voyage-smdg15-notice'),
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.warning_amber,
+                        color: colorScheme.onErrorContainer, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        smdg15Notice,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onErrorContainer,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             // Encabezado con icono y nombre del buque
             Row(
               children: [

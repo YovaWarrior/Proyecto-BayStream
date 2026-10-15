@@ -88,11 +88,10 @@ Map<String, dynamic> _corpus(String dir) {
   for (var i = 1; i <= 6; i++) {
     final name = 'A0$i';
     final raw = File('$dir/CORPUS_$name.edi').readAsStringSync();
-    if (name == 'A06') {
-      result[name] = {'rejected': requireA06Rejection(raw)};
-      continue;
-    }
-    final parsed = BaplieParserService().parse(raw);
+    // T-103: A06 vuelve a leerse, como 1.5 con aviso.
+    final parsed = name == 'A06'
+        ? readA06WithNotice(raw)
+        : BaplieParserService().parse(raw);
     final profile = VesselProfile.proposeFrom(parsed);
     final geometry = profile.geometry;
     final voyage = parsed.withGeometry(geometry);

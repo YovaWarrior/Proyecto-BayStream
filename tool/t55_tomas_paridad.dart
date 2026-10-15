@@ -21,17 +21,21 @@ void main(List<String> args) {
     throw ArgumentError('Indicar el directorio del corpus real');
   }
   final dir = args.single;
-  VesselVoyage load(String name) => BaplieParserService()
-      .parse(File('$dir/CORPUS_$name.edi').readAsStringSync());
+  // T-103: A06 vuelve a leerse, como 1.5 con aviso, y los cruces de los dos
+  // BUQUE ECO vuelven a ser los de antes de T-86.
+  VesselVoyage load(String name) {
+    final raw = File('$dir/CORPUS_$name.edi').readAsStringSync();
+    return name == 'A06'
+        ? readA06WithNotice(raw)
+        : BaplieParserService().parse(raw);
+  }
   final out = <String, dynamic>{
     'A01': _a01(load('A01')),
     'paridadDeLas40PorArchivo': {
-      for (var i = 1; i <= 5; i++) 'A0$i': _evenBayPattern(load('A0$i')),
-      'A06': {'rejected': requireA06Rejection(
-          File('$dir/CORPUS_A06.edi').readAsStringSync())},
+      for (var i = 1; i <= 6; i++) 'A0$i': _evenBayPattern(load('A0$i')),
     },
-    'A05_contra_A01': _crossVoyage(load('A05'), load('A01')),
-    'A01_contra_A05': _crossVoyage(load('A01'), load('A05')),
+    'ECO_A05_contra_A06': _crossVoyage(load('A05'), load('A06')),
+    'ECO_A06_contra_A05': _crossVoyage(load('A06'), load('A05')),
   };
   stdout.writeln(const JsonEncoder.withIndent('  ').convert(out));
 }

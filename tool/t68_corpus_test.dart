@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:baystream/core/errors/exceptions.dart';
 
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
@@ -81,11 +80,12 @@ void main() {
       stdout.writeln('T-68 ${entry.key} ${expected.port}: $split');
     });
   }
-  test('T-68 A04 tiene LOC+61 enmascarado; A06 se rechaza por SMDG15', () {
-    expect(open('A04').portOfNextCall, isNull);
-    expect(() => open('A06'), throwsA(isA<BaplieParsingException>()
-        .having((e) => e.code, 'código', 'unsupported_baplie_version')
-        .having((e) => e.message, 'versión', contains('SMDG15'))));
+  // T-103: A06 vuelve a leerse, como 1.5 con aviso, como antes de T-86.
+  test('T-68 A04 y A06 tienen LOC+61 enmascarado; A06 lee como 1.5', () {
+    for (final file in ['A04', 'A06']) {
+      expect(open(file).portOfNextCall, isNull);
+    }
+    expect(open('A06').metadata!.readWithV2Rules, isTrue);
   });
   test('T-68 A08 seguido de A07 propone GTSTC', () {
     final previous = open('A08');

@@ -272,13 +272,12 @@ void main() {
     'A08',
     'A08v_VGM'
   ]) {
-    test('T-82 $name: conserva cabecera 2.x o rechaza entrada 1.x', () {
+    // T-103: A06 se lee como 1.5 con aviso, pero su salida se sigue negando.
+    test('T-82 $name: conserva cabecera 2.x o rechaza versión 1.5', () {
       final source = File('$corpus/CORPUS_$name.edi').readAsStringSync();
-      if (name == 'A06') {
-        expect(requireA06Rejection(source), contains('SMDG15'));
-        return;
-      }
-      final voyage = BaplieParserService().parse(source);
+      final voyage = name == 'A06'
+          ? readA06WithNotice(source)
+          : BaplieParserService().parse(source);
       final op = Operation(
           id: 'test',
           vesselName: voyage.vessel.name,
@@ -293,12 +292,18 @@ void main() {
           ]);
       final state = const OperationStateDeriver().derive(
           OperationPlan.build(portOfCall: 'ZZZZZ', loading: voyage), []);
-      final output = writer.generate(operation: op, state: state, now: clock);
-      final id =
-          RegExp(r'UNH\+[^+]+\+([^\x27]+)').firstMatch(source)!.group(1);
-      expect(output.text, contains('+$id\''));
-      expect(BaplieParserService().parse(output.text).containers,
-          hasLength(voyage.containers.length));
+      expect(declaresSmdg15(source), name == 'A06');
+      if (name == 'A06') {
+        expect(() => writer.generate(operation: op, state: state, now: clock),
+            throwsStateError);
+      } else {
+        final output = writer.generate(operation: op, state: state, now: clock);
+        final id =
+            RegExp(r'UNH\+[^+]+\+([^\x27]+)').firstMatch(source)!.group(1);
+        expect(output.text, contains('+$id\''));
+        expect(BaplieParserService().parse(output.text).containers,
+            hasLength(voyage.containers.length));
+      }
     });
   }
 }

@@ -283,12 +283,9 @@ Map<String, dynamic> _compatibilityPrecedence() {
 Map<String, dynamic> _corpusIsoTypes(String dir) {
   final types = <String, int>{};
   for (var i = 1; i <= 6; i++) {
-    if (i == 6) {
-      requireA06Rejection(File('$dir/CORPUS_A06.edi').readAsStringSync());
-      continue;
-    }
-    final v = BaplieParserService()
-        .parse(File('$dir/CORPUS_A0$i.edi').readAsStringSync());
+    final raw = File('$dir/CORPUS_A0$i.edi').readAsStringSync();
+    // T-103: A06 vuelve a leerse, como 1.5 con aviso.
+    final v = i == 6 ? readA06WithNotice(raw) : BaplieParserService().parse(raw);
     for (final c in v.containers.where((c) =>
         c.isDangerous || (c.dangerousGoods?.isNotEmpty ?? false))) {
       final key = c.isoSizeType ?? 'sin ISO';

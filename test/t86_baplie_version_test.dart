@@ -40,7 +40,9 @@ void main() {
   test('T-86 repositorio real conserva el código de rechazo sin usar Firebase',
       () async {
     final result = await VesselRepositoryImpl(firestore: _NoCloud())
-        .parseBaplieFile(source.replaceFirst('SMDG21', 'SMDG15'));
+        // T-103: la 1.5 se lee; el rechazo usa una 1.x sintética.
+        .parseBaplieFile(source.replaceFirst(
+            'BAPLIE:D:95B:UN:SMDG21', 'BAPLIE:1:911:UN:SMDG10'));
     expect(
         result.fold((f) => f.code, (_) => null), 'unsupported_baplie_version');
   });
@@ -70,8 +72,12 @@ void main() {
       expect(voyage.totalWeight, 24200.5);
     });
   }
+  // T-103: la 1.5 exacta se lee; cualquier otra 1.x y las variantes de la
+  // 1.5 con otra versión o liberación se siguen rechazando.
   for (final identifier in [
-    'BAPLIE:1:911:UN:SMDG15',
+    'BAPLIE:1:911:UN:SMDG10',
+    'BAPLIE:D:95B:UN:SMDG15',
+    'BAPLIE:1:912:UN:SMDG15',
     'BAPLIE:D:13B:UN:SMDG31',
     'BAPLIE:D:95B:UN:SMDG99',
     'BAPLIE:D:96A:UN:SMDG21',
@@ -151,8 +157,12 @@ void main() {
     expect(scope.read(voyageNotifierProvider), previous);
     expect(storageOpened, isFalse);
   });
-  for (final association in ['SMDG15', 'SMDG31']) {
-    testWidgets('T-86 aviso real a 360 dp: $association y archivo completos',
+  // T-103: la 1.x del aviso es sintética; la 1.5 ya no se rechaza.
+  for (final identifier in [
+    'BAPLIE:1:911:UN:SMDG10',
+    'BAPLIE:D:13B:UN:SMDG31'
+  ]) {
+    testWidgets('T-86 aviso real a 360 dp: $identifier y archivo completos',
         (tester) async {
       final font = FontLoader('Roboto')
         ..addFont(rootBundle.load('assets/fonts/Roboto-Regular.ttf'));
@@ -164,8 +174,8 @@ void main() {
       await tester.pumpWidget(ProviderScope(
           overrides: [
             vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),
-            voyageNotifierProvider.overrideWith(() =>
-                _FixtureNotifier(source.replaceFirst('SMDG21', association))),
+            voyageNotifierProvider.overrideWith(() => _FixtureNotifier(
+                source.replaceFirst('BAPLIE:D:95B:UN:SMDG21', identifier))),
           ],
           child: MaterialApp(
               theme: ThemeData(fontFamily: 'Roboto'),
@@ -173,7 +183,7 @@ void main() {
       await tester.tap(find.byTooltip('Cargar archivo BAPLIE'));
       await tester.pumpAndSettle();
       expect(find.textContaining('T86_PRUEBA.edi'), findsOneWidget);
-      expect(find.textContaining(association), findsOneWidget);
+      expect(find.textContaining(identifier), findsOneWidget);
       expect(find.textContaining('familia 2.x'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

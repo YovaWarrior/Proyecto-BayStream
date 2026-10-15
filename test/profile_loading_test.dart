@@ -93,7 +93,8 @@ void main() {
         isFalse);
   });
 
-  test('A06 se rechaza; un homónimo 2.x requiere confirmar la identidad',
+  // T-103: A06 (1.5) vuelve a leerse, como antes de T-86, y pregunta igual.
+  test('A05/A06 preguntan por identidad y no publican ni crean homónimo solos',
       () async {
     const a05 =
         "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
@@ -103,16 +104,8 @@ void main() {
     await notifier.parseBaplieContent(a05);
     await notifier.confirmGeometry(notifier.currentProfile!.geometry);
     final original = notifier.publishedVoyage;
-    final rejected = await notifier.parseBaplieContent(a06, fileName: 'A06.edi');
-    expect(rejected.errorMessage, contains('A06.edi'));
-    expect(rejected.errorMessage, contains('SMDG15'));
-    expect(rejected.needsIdentity, isFalse);
-    expect(notifier.publishedVoyage, original);
-    expect((await store.repository.getAllProfiles()).getOrElse(() => []),
-        hasLength(1));
-    // Conserva la prueba de identidad con el mismo TDT en un mensaje 2.x.
-    final result = await notifier.parseBaplieContent(a06.replaceFirst(
-        'BAPLIE:1:911:UN:SMDG15', 'BAPLIE:D:95B:UN:SMDG20'));
+    expect(original!.metadata!.readWithV2Rules, isFalse);
+    final result = await notifier.parseBaplieContent(a06, fileName: 'A06.edi');
     expect(result.needsIdentity, isTrue);
     expect(notifier.publishedVoyage, original);
     expect(await notifier.confirmGeometry(notifier.currentProfile!.geometry),
@@ -123,6 +116,8 @@ void main() {
         (await store.repository.getAllProfiles())
             .getOrElse(() => <VesselProfile>[]),
         hasLength(2));
+    expect(notifier.publishedVoyage!.vessel.profileKey, 'imo:9000039');
+    expect(notifier.publishedVoyage!.metadata!.readWithV2Rules, isTrue);
   });
 
   test('elegir homónimo existente lo usa sin duplicar el perfil', () async {

@@ -98,7 +98,8 @@ class BaplieParserService {
   }
 
   /// UNH/S009: tipo, versión, liberación, agencia y asociación SMDG.
-  /// Mismo conjunto admitido por el escritor de salida de T-82.
+  /// Mismo conjunto admitido por el escritor de salida de T-82, más la 1.5
+  /// (T-103), que se lee con las reglas de 2.x y la pantalla lo avisa.
   void _validateVersion(List<String> segments) {
     final headers = segments.where((s) => s.startsWith('UNH+')).toList();
     final header = headers.firstOrNull;
@@ -113,8 +114,9 @@ class BaplieParserService {
         segments.indexOf(header!) < limit &&
         components != null &&
         components.length == 5 &&
-        components.take(4).join(':') == 'BAPLIE:D:95B:UN' &&
-        {'SMDG20', 'SMDG21', 'SMDG22'}.contains(components[4])) {
+        ((components.take(4).join(':') == 'BAPLIE:D:95B:UN' &&
+                {'SMDG20', 'SMDG21', 'SMDG22'}.contains(components[4])) ||
+            identifier == smdg15MessageIdentifier)) {
       return;
     }
     final version = identifier == null || identifier.isEmpty

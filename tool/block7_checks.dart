@@ -29,11 +29,10 @@ Future<Map<String, dynamic>> checkBlock7(Map<String, String> sources,
   const dg = DangerousGoodsValidator();
   const weight = StackWeightValidator();
   for (final entry in sources.entries) {
-    if (entry.key == 'A06') {
-      metrics[entry.key] = {'rejected': requireA06Rejection(entry.value)};
-      continue;
-    }
-    final parsed = BaplieParserService().parse(entry.value);
+    // T-103: A06 vuelve a contar, leída como 1.5 con aviso.
+    final parsed = entry.key == 'A06'
+        ? readA06WithNotice(entry.value)
+        : BaplieParserService().parse(entry.value);
     final profile = VesselProfile.proposeFrom(parsed);
     final voyage = parsed
         .withGeometry(profile.geometry)
@@ -65,7 +64,7 @@ Future<Map<String, dynamic>> checkBlock7(Map<String, String> sources,
         state.name: results.where((r) => r.status == state).length
     };
   }
-  require(declarations == 33 && units == 29,
+  require(declarations == 34 && units == 30,
       'Corpus incompleto: $declarations DGS/$units unidades');
   final a03 = voyages['A03']!;
   require(metrics['A03']['dgs'] == 23 && metrics['A03']['dangerousUnits'] == 20,

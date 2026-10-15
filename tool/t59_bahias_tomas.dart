@@ -19,11 +19,10 @@ void main(List<String> args) {
   for (var i = 1; i <= 6; i++) {
     final name = 'A0$i';
     final source = File('${args.single}/CORPUS_$name.edi').readAsStringSync();
-    if (name == 'A06') {
-      out[name] = {'rejected': requireA06Rejection(source)};
-      continue;
-    }
-    final voyage = BaplieParserService().parse(source);
+    // T-103: A06 vuelve a leerse, como 1.5 con aviso.
+    final voyage = name == 'A06'
+        ? readA06WithNotice(source)
+        : BaplieParserService().parse(source);
     out[name] = _analyze(voyage.vessel.name, voyage.containers.toList());
   }
   stdout.writeln(const JsonEncoder.withIndent('  ').convert(out));

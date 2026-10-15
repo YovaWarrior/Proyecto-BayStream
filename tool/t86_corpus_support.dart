@@ -1,18 +1,15 @@
-import 'package:baystream/core/errors/exceptions.dart';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
+import 'package:baystream/features/vessel/domain/entities/entities.dart';
 
-/// Los recorridos históricos conservan A06 como prueba de rechazo de entrada.
-String requireA06Rejection(String source) {
-  try {
-    BaplieParserService().parse(source);
-  } on BaplieParsingException catch (error) {
-    if (error.code == 'unsupported_baplie_version' &&
-        error.segment == 'UNH' &&
-        error.message.contains('BAPLIE:1:911:UN:SMDG15') &&
-        error.message.contains('familia 2.x')) {
-      return error.message;
-    }
-    rethrow;
+/// T-103 · A06 (SMDG15) vuelve a leerse, con las cifras de antes de T-86
+/// (1b1be4b^: 717 contenedores) y el aviso de la 1.5. Hasta T-103 los
+/// recorridos históricos exigían aquí su rechazo (`requireA06Rejection`).
+VesselVoyage readA06WithNotice(String source) {
+  final voyage = BaplieParserService().parse(source);
+  if (!declaresSmdg15(source) ||
+      voyage.metadata?.readWithV2Rules != true ||
+      voyage.totalContainers != 717) {
+    throw StateError('A06 debe leerse como 1.5, con aviso y 717 contenedores.');
   }
-  throw StateError('A06 debe rechazarse antes de leer su carga.');
+  return voyage;
 }

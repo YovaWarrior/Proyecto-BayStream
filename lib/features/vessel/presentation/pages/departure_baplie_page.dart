@@ -45,12 +45,23 @@ class DepartureBapliePage extends ConsumerStatefulWidget {
 
 class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
   bool _saving = false;
-  DepartureBaplie _output(Operation operation, LoadingOperation data) =>
-      const DepartureBaplieWriter().generate(
-          operation: operation,
-          state: data.state,
-          list: data.list,
-          movements: data.movements);
+  DepartureBaplie _output(Operation operation, LoadingOperation data) {
+    // T-103: la llegada también aporta segmentos de los que siguen a bordo.
+    for (final source in operation.sources) {
+      if (source.kind != OperationSourceKind.exportList &&
+          declaresSmdg15(source.content)) {
+        throw StateError('No se genera el BAPLIE de salida: '
+            '«${source.fileName}» es versión 1.5 (SMDG15) y se leyó con las '
+            'reglas de 2.x. Escribir la salida con esas reglas no sería fiel a '
+            'lo que llegó. Importa el plano en SMDG20, SMDG21 o SMDG22.');
+      }
+    }
+    return const DepartureBaplieWriter().generate(
+        operation: operation,
+        state: data.state,
+        list: data.list,
+        movements: data.movements);
+  }
 
   @override
   Widget build(BuildContext context) {

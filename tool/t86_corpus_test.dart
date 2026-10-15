@@ -47,6 +47,7 @@ void main() {
       expect(v.totalContainers, entry.value.$1);
       expect(v.totalReservedSlots, entry.value.$2);
       expect(v.totalWeight, closeTo(entry.value.$3, 0.000001));
+      expect(v.metadata!.readWithV2Rules, isFalse, reason: 'T-103: sin aviso');
       if (baseline != null) {
         expect(_withoutIds(v.toJson()), baseline[entry.key],
             reason:
@@ -58,10 +59,13 @@ void main() {
           '${baseline == null ? 'conteos/pesos' : 'todos los campos anteriores'} sin diferencias');
     });
   }
-  test('T-86 A06 real: rechazo SMDG15 antes de parsear', () {
+  // T-103: A06 deja de ser el espécimen del rechazo y se lee con aviso.
+  test('T-86 A06 real: SMDG15 se lee como 1.5 con aviso', () {
     expect(corpus, isNotEmpty);
     expect(
-        requireA06Rejection(File('$corpus/CORPUS_A06.edi').readAsStringSync()),
-        contains('SMDG15'));
+        readA06WithNotice(File('$corpus/CORPUS_A06.edi').readAsStringSync())
+            .metadata!
+            .readWithV2Rules,
+        isTrue);
   });
 }

@@ -35,17 +35,13 @@ void main() {
     final voyages = <VesselVoyage>[];
     for (var i = 1; i <= 6; i++) {
       final file = File('$corpusDirectory/CORPUS_A0$i.edi');
-      if (i == 6) {
-        expect(requireA06Rejection(await file.readAsString()), contains('SMDG15'));
-        continue;
-      }
-      final parsed =
-          parser.parse(String.fromCharCodes(await file.readAsBytes()));
+      final source = String.fromCharCodes(await file.readAsBytes());
+      // T-103: A06 es la 1.5 y se lee con aviso, como antes de T-86.
+      final parsed = i == 6 ? readA06WithNotice(source) : parser.parse(source);
       expect(parsed.vessel.profileKey, keys[i - 1]);
       voyages.add(parsed);
     }
-    expect(voyages[4].vessel.matchIdentity(const Vessel(
-        id: 'sintetico', name: 'BUQUE ECO', imoNumber: '9000039')),
+    expect(voyages[4].vessel.matchIdentity(voyages[5].vessel),
         VesselIdentityMatch.requiresConfirmation);
     final parsed = voyages.first;
     final original = parsed.withGeometry(
