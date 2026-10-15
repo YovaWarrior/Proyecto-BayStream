@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **41 tareas · ≈ 157.1 h estimadas** (al 14-oct, 10.35) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **41 tareas · ≈ 155.3 h estimadas** (al 14-oct, 10.36) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -130,6 +130,8 @@ Carlos autorizó el 5-oct las que hacen falta para las funciones nuevas:
 - un lector de Excel, para importar el listado (RF-038), si hace falta. Es `excel_community 1.0.10`, con versión fija (T-73).
 - `crypto` como dependencia directa, para la huella de las fuentes publicadas (10.3; ya era transitiva).
 - `archive` como dependencia directa (T-73; Carlos, 7-oct; ya era transitiva en 4.0.9 y no se mueve). Sirve para corregir las rutas absolutas de `workbook.xml.rels` que `excel_community` no resuelve.
+- `msix` como dependencia de desarrollo, para el instalador de Windows (T-93; Carlos, 14-oct, 10.36). Con versión fija y sin mover ningún paquete existente.
+- **La copia del SDK JS de Firebase sigue a `firebase_core_web`** (T-92; Carlos, 14-oct, 10.36). Vive en `web/vendor/firebase/<versión>/`. Si `pubspec.lock` cambia `firebase_core_web`, la misma tarea actualiza la copia, con su procedencia y su licencia. La prueba de T-92 hace fallar `flutter test` si se olvida.
 
 Ninguna otra sin preguntar. Cada dependencia nueva se declara en el informe y en el bloque
 de commit, con su versión y por qué esa.
@@ -1323,6 +1325,166 @@ recorrido fija qué se sirve. El informe lo declara para T-98.
 - [ ] Piso de **648** más las nuevas, `analyze` en cero y corpus **116/116**. Mismo
       SHA de las reglas, de `lib/`, de `pubspec.*` y de los dos congelados de H5.
 
+#### T-93 · El instalador de Windows: BayStream como paquete MSIX firmado, para la oficina y el piloto · 2.5 h · Timonel (ficha completa, 14-oct)
+
+**Para qué.** USO. La oficina sincroniza en la app de Windows (10.8), y el piloto
+(T-101) la necesita instalada en una PC de COMAR. Hoy se copia a mano la carpeta
+`Release`. T-93 la entrega como un paquete MSIX:
+- se instala con doble clic;
+- aparece en el menú Inicio;
+- se actualiza instalando la versión siguiente;
+- se desinstala desde Configuración.
+
+**Carlos eligió MSIX con el paquete `msix` (10.36).**
+
+**Lo que hay hoy (Yov lo revisó en el repo, 14-oct).**
+
+- El proyecto de Windows se llama `baystream` (`windows/CMakeLists.txt`). Se
+  compila con `flutter build windows --release
+  --dart-define-from-file=…\firebase-prod.json`. Sin esas definiciones, la app
+  abre en «Falta la configuración de Firebase» (`lib/main.dart`).
+- El almacén local vive en `%LOCALAPPDATA%\BayStream\vessel_store`
+  (`local_store_directory_io.dart`).
+  - En una app empaquetada, Windows redirige las escrituras en `AppData` a la
+    carpeta privada del paquete (`%LOCALAPPDATA%\Packages\<familia>\LocalCache\…`),
+    y puede dejar leer lo que ya existía en la ubicación real. Es lo que vio 10.9
+    con la app lanzada desde Codex.
+  - En la laptop de Carlos, el almacén real trae datos de prueba (BUQUE GOLF y los
+    namespaces de las aceptaciones). El lote de Timonel, que viene después de
+    esta tarea, lo usa con `tloteacc`.
+- El identificador de la app es `gt.cmartinez.baystream` (Android, Play y
+  Firebase).
+
+**Antes de empezar: el certificado, que crea Carlos una sola vez.**
+
+1. En PowerShell normal (sin administrador), Carlos crea un certificado
+   autofirmado en su almacén de usuario. La clave **no se puede exportar**: no hay
+   `.pfx` ni contraseña. Solo se exporta la parte pública (`.cer`) a
+   `baystream-privado`:
+
+   ```powershell
+   $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=BayStream" -FriendlyName "BayStream MSIX" -KeyUsage DigitalSignature -KeyExportPolicy NonExportable -CertStoreLocation "Cert:\CurrentUser\My" -NotAfter (Get-Date).AddYears(3) -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+   New-Item -ItemType Directory -Force -Path C:\Proyectos\baystream-privado\msix | Out-Null
+   Export-Certificate -Cert $cert -FilePath C:\Proyectos\baystream-privado\msix\BayStream.cer | Out-Null
+   $cert.Thumbprint
+   ```
+
+2. En PowerShell **como administrador**, para que su laptop acepte el paquete:
+
+   ```powershell
+   Import-Certificate -FilePath C:\Proyectos\baystream-privado\msix\BayStream.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+   ```
+
+3. Carlos le pasa a Timonel la **huella** (`Thumbprint`), que no es secreta.
+   - Timonel firma con `signtool /sha1 <huella>`, que toma la clave del almacén de
+     Carlos sin exportarla.
+   - El `.cer` es público y viaja con el `.msix` a cada PC.
+
+**Qué construye.**
+
+1. **`msix` como dependencia de desarrollo**, con versión fija.
+   - Tiene que ser compatible con Dart 3.9 y Flutter 3.38.9, y no mover ningún
+     paquete que ya esté en el lock.
+   - `pubspec.yaml` y `pubspec.lock` cambian, y se declara con las versiones.
+2. **`msix_config` en `pubspec.yaml`, sin secretos:**
+   - `display_name: BayStream` y `publisher_display_name: Carlos Martínez`;
+   - `identity_name: gt.cmartinez.baystream`;
+   - `publisher: CN=BayStream`, exactamente el sujeto del certificado;
+   - `msix_version: 1.0.0.0`;
+   - `capabilities: internetClient` y nada más. Sin micrófono: en Windows no hay
+     voz (T-94);
+   - el ícono actual de Windows (`windows/runner/resources/app_icon.ico`). El ícono
+     propio es de T-88;
+   - **`build_windows: false`:** el paquete se arma siempre sobre la compilación
+     Release hecha antes con las definiciones de Firebase, nunca con una compilación
+     propia del paquete sin ellas;
+   - **`install_certificate: false`:** la herramienta no toca los almacenes de
+     certificados; eso lo hace Carlos;
+   - la firma, con `signtool_options` (`/fd SHA256 /sha1 <huella>`). La huella llega
+     por la línea de comandos, no por `pubspec.yaml`.
+   - Los nombres de las opciones se confirman en la documentación y el código de la
+     versión fijada del paquete, no de memoria.
+3. **`tool/t93_msix.ps1`**, que hace las dos cosas en orden y no imprime nada
+   privado:
+   1. `flutter build windows --release`, con `--dart-define-from-file`;
+   2. `dart run msix:create`, con la huella y la versión como parámetros.
+   - Se detiene si la compilación falla.
+   - Deja el `.msix` en `build/t93/` y escribe su SHA-256.
+4. **Una prueba en `test/t93_*`** que fija lo que protege `msix_config`:
+   - `build_windows: false` e `install_certificate: false`;
+   - el `publisher` igual a `CN=BayStream`;
+   - ninguna contraseña ni ruta de certificado en `pubspec.yaml`.
+5. **Las instrucciones para una PC de oficina**, en el informe, para T-100 y el
+   piloto:
+   - importar el `.cer` en «Personas de confianza» del equipo local, como
+     administrador y una sola vez;
+   - doble clic al `.msix` y abrir desde Inicio;
+   - cómo actualizar y cómo desinstalar;
+   - **sincronizar hasta «Al día» antes de desinstalar**, porque desinstalar borra
+     el almacén del paquete, con los movimientos que no hayan subido.
+
+**Carril.**
+- La tarea toca `pubspec.yaml`, `pubspec.lock`, `tool/t93_*`, `test/t93_*` y
+  `docs/T93-RESULTADOS.md`.
+- **No toca `lib/`, `lib/main.dart` ni `windows/`.**
+- `flutter build windows` escribe en `build/windows`. Timonel hace T-93 antes del
+  lote; el lote empieza cuando Carlos commitee T-93. Si Codex corre Flutter
+  mientras tanto, Carlos da el semáforo: un comando de Flutter a la vez, y nadie
+  pisa los binarios del otro.
+- **La aceptación cruzada de T-93 la hace Codex**, después.
+
+**El almacén, que es lo delicado.**
+- Antes de instalar, Timonel toma el SHA-256 de cada archivo del almacén real
+  `%LOCALAPPDATA%\BayStream`, sin abrirlos. Después de todas las pruebas, la huella
+  tiene que ser la misma. La app instalada no puede alterar el almacén real ni los
+  namespaces del lote.
+- El informe dice dónde escribe la app instalada, y si ve o no lo que ya había en
+  el almacén real.
+- No se registra ningún movimiento. La sesión y la sincronización son solo de
+  lectura, sobre «PRUEBA T-84».
+
+**Detente y avisa si:**
+- el paquete exige tocar `lib/`, `windows/` o `main.dart`;
+- `msix` mueve algún paquete existente del lock, o no hay una versión compatible;
+- la app instalada no sincroniza o no encuentra su almacén;
+- el almacén real cambia;
+- firmar exige un `.pfx`, una contraseña o abrir algo de `baystream-privado`.
+
+**Fuera de alcance:**
+- Microsoft Store y un certificado comercial;
+- la actualización automática (`.appinstaller`) y un acceso directo en el
+  escritorio;
+- el ícono propio (T-88);
+- Windows 10 en una PC de COMAR: queda para el piloto;
+- distribuir el `.msix`, que lo hace Carlos.
+
+**Terminada cuando:**
+
+- [ ] **Instalación.** El `.msix` firmado se instala en la laptop de Carlos, con
+      doble clic o con `Add-AppxPackage`.
+  - «BayStream» aparece en Inicio con su ícono.
+  - La app abre con las opciones de Firebase, no en «Falta la configuración de
+    Firebase».
+- [ ] **El plano.** La app instalada abre A07 con sus cifras: 398 contenedores, 21
+      bahías, `6940.6 t` y 0/114/284 en GTSTC. Lo guarda en Recientes y lo conserva
+      al cerrarla por PID y volver a abrirla.
+- [ ] **La sincronización.** Con la sesión que inicia Carlos, «PRUEBA T-84» llega a
+      «Al día» con sus conteos: 4 contenedores, 3 bahías, 20.0 t y 0/3/1 en GTSTC.
+      Sin registrar movimientos.
+- [ ] **La actualización.** Un segundo paquete, con una versión mayor (por ejemplo
+      `1.0.1.0`), se instala encima y conserva el viaje, Recientes y la sesión.
+- [ ] **La desinstalación.** Se desinstala desde Configuración o con
+      `Remove-AppxPackage`, y el informe dice qué queda y qué se borra. Al terminar,
+      Carlos decide si deja instalada la versión final.
+- [ ] **El almacén real** `%LOCALAPPDATA%\BayStream` tiene la misma huella antes y
+      después de todo.
+- [ ] **En el informe,** las instrucciones para una PC de oficina y el bloque con el
+      que Carlos regenera el paquete.
+- [ ] **Piso de 655** más las nuevas, `analyze` en cero y corpus **116/116**.
+  - Mismo SHA de las reglas, de `lib/` y de los congelados.
+  - `pubspec.*` solo cambia por `msix` y sus transitivas nuevas, declaradas con
+    sus versiones.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34) |
@@ -1330,7 +1492,7 @@ recorrido fija qué se sirve. El informe lo declara para T-98.
 | **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes · **ficha completa arriba** |
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo, las fuentes y el SDK de Firebase desde el propio sitio · **ficha completa arriba** |
-| **T-93** | USO | 2.5 | Instalador de Windows |
+| **T-93** | USO | 2.5 | Instalador de Windows: paquete MSIX firmado con el paquete `msix` (Carlos, 10.36) · **ficha completa arriba** |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 
@@ -2474,3 +2636,69 @@ El piso de pruebas es 648.
 - **Una pregunta de diseño para la ficha de T-85:** cómo llega la matriz al código sin publicarla en el repo. Puede ser un archivo privado que se lee al compilar, como las opciones de Firebase, aunque entonces viaja dentro de la app publicada; o puede bastar con los códigos de segregación como dato funcional. Yov la propone en la ficha y decide Carlos.
 
 **El sprint pasa a 41 tareas y ≈ 157.1 h.** El tablero suma T-103 en Por hacer, con 207.5 h estimadas.
+
+### 10.36 · T-92 entregada, en revisión: la Web arranca sin red tras una visita · Carlos acepta las dos decisiones de su ficha · Carlos elige MSIX para T-93 (14-oct)
+
+**T-92, de Codex, pasa a En revisión** (commit `26bbfca`). Su aceptación cruzada la hace Timonel aparte, después del lote.
+
+- **Lo construido.**
+  - Una plantilla propia, `web/flutter_bootstrap.js`, toma CanvasKit y las fuentes de rutas propias, relativas a `<base>`.
+  - Firebase JS **12.17.0**, la versión que exige `firebase_core_web 3.10.0`, se sirve desde `web/vendor/firebase/12.17.0/`. El `import` absoluto de `firebase-app.js` pasó a relativo.
+  - Los tres globales quedan puestos antes de `initializeEngine`.
+  - El service worker de Flutter va tal cual.
+  - Las fuentes servidas son las que pidió el recorrido completo: Roboto v32, Noto Sans Symbols v43 y Noto Sans Symbols 2 v24.
+  - «BayStream» y `lang="es"` en `index.html` y en el manifiesto.
+- **Un defecto propio, hallado y corregido en la aceptación.**
+  - El primer intento en el Honor no recargó sin servidor. El worker de Flutter guarda `index.html`, pero su `onlineFirst` busca la raíz `/`, y la primera navegación todavía no tenía controlador.
+  - La corrección: la plantilla hace una sola petición a `./` cuando el worker ya controla la página, y el mismo worker la guarda. No se tocó el worker ni se precarga el sitio.
+- **El inventario, en Chrome visible y con el mismo recorrido** (A07, los dos temas y el PDF):
+  - HEAD pidió **ocho recursos de código o fuentes** fuera del sitio: CanvasKit, tres fuentes y los tres módulos de Firebase. T-92 no pidió **ninguno**.
+  - Con la sesión de muelle abierta, solo quedan los servicios de datos: `identitytoolkit.googleapis.com` y `firestore.googleapis.com`.
+- **Arranque sin red tras una visita.** El servidor se detuvo y una CSP del servidor de prueba bloqueó a los terceros, sin tocar la red de la máquina.
+  - Pasó en tres casos: Chrome de la laptop en un origen nuevo, Chrome en incógnito (manual de Carlos) y Chrome del Honor en modo avión y con el Wi-Fi apagado.
+  - En los tres, A07 se reabre desde Recientes con 398 contenedores, 21 bahías, `6940.6 t` en pantalla (6 940 578 kg en el corpus) y 0/114/284 en GTSTC, sin recuadros.
+- **La sincronización con el SDK servido**, sobre «PRUEBA T-84» y con la sesión de muelle que inició Carlos:
+  - los mismos conteos que con HEAD: 4 contenedores, 3 bahías, 20.0 t y 0/3/1 en GTSTC;
+  - «Al día», luego «Conectando…» al bloquear a Firebase, y otra vez «Al día» al quitar el bloqueo;
+  - sin movimientos y sin publicar nada.
+- **La actualización:** la compilación 93 reemplazó a la 92 con una visita con red, y sin servidor abrió la 93.
+- **Validaciones.** **655 pruebas** (el piso nuevo; 7 nuevas), `analyze` en cero, corpus **116/116** y los verificadores del sitio compilado en verde.
+  - **126 archivos protegidos** guardan el mismo SHA-256: los 122 de `lib/`, `pubspec.*`, la propuesta de reglas y `firebase.json`.
+  - Sin dependencias nuevas: el verificador usa `crypto`, que ya era directa.
+- **La revisión del commit.**
+  - Las 21 rutas son las del informe, y todas están en el carril de la ficha: `web/`, `test/t92_web_test.dart`, `tool/t92_server.dart`, `tool/t92_verify.dart` y el informe.
+  - No toca `lib/`, `main.dart`, `pubspec.*`, las reglas, `firebase.json` ni los congelados.
+  - El diff no trae claves, correos ni UID, y en los módulos servidos no queda ninguna URL `gstatic.com/firebasejs`.
+  - El servidor de prueba escucha solo en `127.0.0.1`.
+  - No se rastreó nada del corpus. La copia de A07 en el teléfono se borró, y se comprobó.
+- **Horas.** ≈ 1.2 h activas frente a 3.0, descontando una pausa por el límite de sesión. El encabezado baja de ≈ 157.1 a **≈ 155.3 h** (regla de 10.17).
+- **Observaciones, que no son defectos:**
+  - En la primera visita, el favicon y el manifiesto se piden antes de que el worker controle la página, y no quedan guardados. Sin red dan un error de consola, y la app abre igual. No se promete instalarla como PWA sin red.
+  - Si un navegador no activa el worker, la plantilla espera hasta 4 s antes de seguir, y sin red esa página no arranca: queda en blanco, como antes de T-92. Va a T-98 como límite declarado, junto con «la primera visita necesita red».
+  - La consola del Honor no se pudo inspeccionar con estas herramientas, y el informe no la da por revisada.
+  - La pérdida de conexión de Firebase se simuló bloqueando a los terceros con la CSP de prueba, no cortando la red. El arranque lo cubre el Honor en modo avión.
+
+**Carlos acepta las dos decisiones de diseño de la ficha (14-oct, 14:48):**
+- **El SDK de Firebase entra al repo público**, con su licencia Apache 2.0 y su origen.
+  - **Su condición:** cada vez que se actualice `firebase_core_web`, se actualiza también la copia.
+  - La prueba «T-92 SDK servido coincide con los paquetes resueltos» ya lo hace cumplir: si `pubspec.lock` trae otra versión del paquete y falta su carpeta en `web/vendor/firebase/`, `flutter test` falla.
+  - Queda como regla en 2.7.
+- **Un carácter fuera de las fuentes servidas, como un emoji, sale como un recuadro**, también con red. Los acentos y la «ñ» están en Roboto, y en una app de operación los emojis son raros. Va a T-98 como límite declarado.
+
+**La publicación de la Web** sigue en manos de Carlos, después del 17-oct y del lote de Timonel, con el bloque y la comprobación de cinco minutos del informe de T-92. El bloque compila limpio en `build/web`, así que desaparecen los `t54-format.*` viejos.
+
+**Carlos elige MSIX, con el paquete `msix`, para el instalador de Windows de T-93 (14-oct).**
+- Yov recomendaba Inno Setup y advirtió del almacén aislado. Carlos eligió MSIX sabiéndolo.
+- **Queda autorizada la dependencia de desarrollo `msix`**, con versión fija y sin mover ningún paquete existente (2.7).
+- **Lo que trae MSIX, y que la ficha de T-93 resuelve:**
+  - el paquete se firma;
+  - cada PC confía una vez en el certificado;
+  - el almacén local de la app instalada vive en la carpeta privada del paquete: se conserva al actualizar y se borra al desinstalar.
+- **El certificado lo crea Carlos**, autofirmado y en su almacén de usuario de Windows, con la clave no exportable. Al repo no entra ningún secreto.
+
+**El lote de Timonel parte del piso del último informe** (`docs/LOTE-TIMONEL.md`): 655 con T-92, o el de T-93 cuando esté commiteada. La aceptación de T-92 va aparte, después del lote.
+
+**Timonel vuelve antes de lo previsto (14-oct, 18:00), y Carlos le da T-93.**
+- **T-93 pasa a Timonel** con ficha completa (sección 5, Ola 5), en cuanto Carlos cree el certificado. Su aceptación cruzada la hace Codex, después.
+- **Después de T-93, Timonel hace el lote de las doce** (`docs/LOTE-TIMONEL.md`), y por separado la aceptación de T-92.
+- **Codex queda libre del carril esta noche.** El 16-oct toma la parte de código de T-88, con su ficha, y acepta T-93.
