@@ -1,0 +1,311 @@
+# T-88 · Lo que pide Play: la política dentro de la app y en la Web, sin respaldo de Android
+
+Timonel · 15-oct-2026 · rama `sprint-3`, sobre `3f29fc1` (decisión 10.45) · primera entrega (sin ícono)
+
+**Resultado:** la política vive en una sola fuente de Dart puro. De ahí salen la pantalla, que se abre
+desde Parámetros y desde el inicio de sesión sin viaje y sin sesión, y `web/privacidad.html`. Android
+ya no respalda nada ni pasa datos a otro teléfono, y el nombre bajo el ícono es «BayStream». El
+inventario del APK no encontró Installations, analítica ni anuncios, pero sí tres bibliotecas que
+llegaron con `firebase-auth` (sección 5). Las cuatro sondas de T-93 siguen en 0 / 1 / 1 / 1.
+
+**Me detuve en tres frases** que eran falsas en Windows o en la Web, como pide la ficha. Yov las
+corrigió en 10.46 y Carlos me pasó el texto; las tres que corrigió son las mismas que reporté. **El
+ícono (D5) no entra:** va en la segunda entrega (10.45).
+
+## 1. La fuente y las dos entradas
+
+| Pieza | Dónde |
+|---|---|
+| **Fuente única del texto** | `lib/core/constants/privacy_policy.dart`: título, fecha, 13 secciones (título, párrafos y puntos) y `kPrivacyContactEmail`. Dart puro, sin Flutter. Va en `core/constants` porque es un texto constante que comparten la app, la herramienta y la prueba, y no es dominio del buque |
+| **Marcas dentro del texto** | solo `**negrita**` y `` `ruta` ``, las mismas de la ficha. `privacyRuns()` las separa en tramos |
+| **Función del HTML** | `lib/core/utils/privacy_policy_html.dart`, `privacyPolicyHtml()` |
+| **Herramienta** | `tool/t88_privacidad.dart`: `dart run tool/t88_privacidad.dart` escribe `web/privacidad.html`, y con `--comprobar` solo compara (código 1 si no coincide) |
+| **Pantalla** | `lib/features/vessel/presentation/pages/privacy_policy_page.dart`, «Política de privacidad», con el texto seleccionable |
+| **Entrada 1** | portada → icono **Parámetros** (barra superior) → **«Política de privacidad»**, debajo del tema (`parameters_page.dart`, `ValueKey('privacy-policy')`). No pide viaje |
+| **Entrada 2** | portada → icono **Nube y cuenta** → formulario de inicio de sesión → **«Política de privacidad»**, junto a «Olvidé mi contraseña» (`cloud_page.dart`, `ValueKey('sign-in-privacy-policy')`). No pide sesión |
+
+- **`lib/main.dart` no se tocó:** las dos pantallas ya se abrían desde la portada sin viaje.
+- **Palabra por palabra.** Un script comparó la fuente con el bloque de la ficha en `SPRINT-3.md` (10.46): 25 líneas y una sola diferencia, la autorizada, en la ruta de Windows (ver abajo).
+- **Correo (D2):** `giovannimartinezcrl2002@gmail.com`, como constante. Una prueba exige que sea la única dirección de correo del texto.
+- **Las dos rutas de Windows (10.46), verificadas sin abrir su contenido.** Las listé con un `.bat` lanzado por `explorer.exe` (cadena `powershell ← cmd ← explorer ← svchost`), es decir, fuera del paquete:
+  - `%LOCALAPPDATA%\BayStream` existe. **Queda como estaba.**
+  - La caché de Firestore está en `%LOCALAPPDATA%\firestore\[DEFAULT]\baystream-app`. Al lado está `demo-t79`, del emulador. No hay ninguna carpeta llamada «BayStream» dentro de `firestore`.
+  - **Ajuste:** `` `AppData\Local\firestore` `` pasa a `` `AppData\Local\firestore\[DEFAULT]` ``, y la frase dice «la de BayStream dentro de» esa carpeta. La de BayStream es `baystream-app`.
+  - Sugerencia para Yov, sin tocarla: si se quiere sin ambigüedad, la frase podría nombrar `baystream-app` directamente.
+- **Una mejora de forma, no de texto.** A letra 2.0, el título de la barra se cortaba («Política de privaci…»). Ahora se reduce con `FittedBox`, como el título de la portada desde T-97.
+
+## 2. Los tres clientes y `/privacidad.html`
+
+Banco `tool/t88_main.dart`: es la app real (`BayStreamApp` con la portada real), con su sesión de
+Firebase, sobre el namespace **`t88acc`**. Lo compilé solo en una copia de `%TEMP%`
+(`baystream-t88-clientes`, sin `docs`, `build`, `.dart_tool`, `android/key.properties` ni los enlaces
+de `ephemeral`), con `--dart-define-from-file=…\firebase-prod.json` y sin abrir ese archivo. No abrí
+ningún viaje ni registré movimientos.
+
+| Cliente | Desde Parámetros | Desde el inicio de sesión | Claro / oscuro | Letra 2.0 |
+|---|---|---|---|---|
+| **Honor `.t88`**, NAA-LX3, 720×1600 a 320 dpi = **360×800 dp** | Sí | Sí, sin sesión (instalación nueva) | Sí: oscuro por el sistema y claro y oscuro por el ajuste de la app | Sí |
+| **Windows**, `explorer.exe` → PID 12188, después 22376 | Sí | Sí, después de cerrar sesión (ver abajo) | Oscuro (el del sistema) | No aplica |
+| **Web en Chrome** (Claude in Chrome), `http://localhost:8188` | Sí | Sí, sin sesión | Oscuro (el del sistema) | No aplica |
+
+- **Honor.**
+  - Comparé los volcados de `uiautomator` de toda la pantalla, desplazándola, con la fuente: **38 de 38 piezas**, a letra 1.0 y a letra 2.0.
+  - Los volcados se tomaron en memoria y con los correos ocultos. Por eso el contacto aparece como `<correo>` en el volcado; en las capturas sale el de D2. No apareció ningún diálogo del sistema.
+  - La letra estaba en 1.0. **Con permiso de Carlos**, la puse en 2.0 por adb y **la devolví a 1.0** (`font_scale` = 1.0).
+  - En el Honor real, el selector de tema de Parámetros no se desborda a 360 dp, ni a 1.0 ni a 2.0 (ver la observación 3 de la sección 8).
+  - Se instaló solo `gt.cmartinez.baystream.t88` y quedó cerrado con `force-stop`.
+- **Windows.** Ver la sección 3: almacén real, sesión y cierre de sesión.
+- **Web.** Compilé `build/web` en la copia y lo serví con `tool/t92_server.dart … 8188 --block-external`. Carlos dejó Chrome a la vista: con la ventana oculta, las capturas expiran (AGENTS.md).
+- **`/privacidad.html` directo en Chrome:**
+  - estado 200, `lang="es"`, 0 `<script>`, 0 `<link>`, 13 `<h2>` y 10 `<li>`;
+  - el texto de `get_page_text` es el de la app;
+  - el único recurso extra que pidió la página es `/favicon.ico`, del mismo origen, que el navegador pide por su cuenta;
+  - **después de abrir la app, con el service worker de T-92 ya en control** (`sw: true`), `/privacidad.html` sigue entregando la política y no la app.
+  - El servidor (PID 27772) y la pestaña se cerraron al terminar.
+- **El HTML en claro y en oscuro.** Lo revisé en el navegador integrado, emulando 375 px y el esquema de color:
+  - claro: fondo `rgb(255,255,255)`;
+  - oscuro: fondo `rgb(18,19,24)`;
+  - sin desplazamiento horizontal (`scrollWidth` 375).
+- **Firebase Hosting:** `firebase.json` reescribe `**` a `/index.html`, pero Hosting entrega primero los archivos que existen. No publiqué nada, así que eso se comprueba cuando Carlos publique.
+
+## 3. Windows: el almacén real y cerrar sesión
+
+- **Huella del almacén real**, tomada fuera del paquete con un `.bat` lanzado por `explorer.exe` (`powershell ← cmd ← explorer ← svchost`):
+  - **340 archivos antes y 354 después**;
+  - los 340 previos conservan su SHA-256;
+  - **lo único nuevo son los 14 archivos `t88acc_*`**, con `t88acc_movements.hive` en **0 bytes**.
+- **La app abrió con sesión.** En el Administrador de credenciales ya estaba `baystream-app.firebase.auth/[DEFAULT][0]` y `[1]` (solo leí los nombres de destino con `cmdkey /list`, filtrados). Así, «Nube y cuenta» mostró la cuenta de oficina de Carlos y la lista de operaciones abiertas, solo leída.
+- **Cerrar sesión sí quita la sesión guardada en Windows.** Con permiso de Carlos pulsé «Cerrar sesión»:
+  - las dos entradas `baystream-app.firebase.auth/[DEFAULT][0]` y `[1]` **desaparecieron** del Administrador de credenciales;
+  - al cerrar la app por PID y volver a abrirla, arrancó sin sesión.
+  - Quedan entradas de otros proyectos: `T70c-prod` de la espiga T-70c, y `demo-t79`, `demo-baystream-t70` y `demo-baystream-t70b` del emulador. No son de esta app ni se tocaron.
+  - **Carlos tiene que volver a iniciar sesión en Windows** cuando la necesite.
+- **Lo que no quita cerrar sesión** (observación, la frase de la política no lo niega): `t88acc_session.hive` quedó en 123 bytes. El código explica por qué: `FirebaseSessionRepository.signOut()` no borra la copia local del operador (`HiveLastOperatorStore`: uid, nombre y rol). No abrí el archivo.
+- **La caché de Firestore** (`firestore\[DEFAULT]\baystream-app`) pudo cambiar al listar las operaciones con la sesión abierta. Está fuera de `%LOCALAPPDATA%\BayStream` y no tomé su huella.
+
+## 4. D3: sin respaldo y sin transferencia, y D9
+
+**Fuente oficial:**
+- [Android: Auto Backup](https://developer.android.com/identity/data/autobackup), actualizada el 26-feb-2026;
+- [Android 12: cambios de copia y restablecimiento](https://developer.android.com/about/versions/12/backup-restore), actualizada el 1-oct-2026.
+- Las dos dicen que, con `targetSdk` 31 o mayor, en algunos fabricantes `allowBackup="false"` apaga la copia en Google Drive pero **no la transferencia entre dispositivos**. Esa transferencia se controla con `<device-transfer>` dentro de `android:dataExtractionRules`. El formato antiguo sigue rigiendo en Android 11 o menor, y ahí `allowBackup="false"` apaga todo.
+
+**Lo construido.** Es un atributo en el manifiesto y un XML nuevo, sin nada más: D3 no exigió más que
+eso.
+- `android/app/src/main/AndroidManifest.xml`: `android:allowBackup="false"` y `android:dataExtractionRules="@xml/data_extraction_rules"`.
+- `android/app/src/main/res/xml/data_extraction_rules.xml`: excluye los nueve dominios de la documentación (`root`, `file`, `database`, `sharedpref`, `external` y los cuatro `device_*`, con `path="."`) en `<cloud-backup>` y en `<device-transfer>`, sin ningún `<include>`. Cita las dos fuentes.
+
+**El manifiesto fusionado del APK release** (`merged_manifests/release/processReleaseManifest/AndroidManifest.xml`, y `aapt2 dump xmltree` del APK):
+```
+android:allowBackup="false"
+android:dataExtractionRules="@xml/data_extraction_rules"     (0x7f0f0000 en el APK)
+android:label="BayStream"
+```
+No hay `fullBackupContent`.
+
+**En el Honor:**
+- `dumpsys package gt.cmartinez.baystream.t88` da `flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]`, **sin `ALLOW_BACKUP`**. La variante anterior `.t104` da `flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]`.
+- **`bmgr` no sirve como prueba en este teléfono.** `bmgr enabled` dice «Backup Manager currently disabled», y `bmgr backupnow` responde «Backup is not allowed» **también para `.t104`**, que sí admite respaldo. Basta el manifiesto, como permite la ficha.
+
+**D9.**
+- El Honor muestra **«BayStream»** bajo el ícono de `.t88`, y ese ícono abre `gt.cmartinez.baystream.t88/.MainActivity`. Las otras variantes instaladas antes siguen con «baystream».
+- `aapt2 dump badging` da `application-label:'BayStream'`.
+- **Se reporta y no se cambia:** en Windows, la barra de título de la ventana dice «baystream» (`windows/runner/main.cpp:30`), y también `FileDescription` y `ProductName` en `windows/runner/Runner.rc`. En la Web (`index.html`, `manifest.json`) y en el MSIX (`display_name`) ya dice «BayStream».
+
+## 5. El inventario para las declaraciones de Play
+
+APK release compilado hoy en la copia, con `lib/main.dart` (el producto), `gt.cmartinez.baystream`,
+`versionCode 1`, `versionName 1.0.0`, `targetSdk 36`, SHA-256
+`5350B69DABE441FB45813950BCF4B3186A12D147CBEF42C81FF1AD28591E8BF8`. Lo firmó la clave de depuración,
+porque la copia no lleva `key.properties`; la firma no cambia el manifiesto ni las dependencias.
+Herramientas: `aapt2` (build-tools 36.1.0), el manifiesto fusionado de Gradle con su informe de
+procedencia y `gradlew :app:dependencies --configuration releaseRuntimeClasspath` (532 líneas,
+`BUILD SUCCESSFUL`).
+
+### 5.1 Permisos del manifiesto fusionado
+
+| Permiso | Origen (informe de fusión) | ¿Se esperaba? |
+|---|---|---|
+| `android.permission.RECORD_AUDIO` | manifiesto propio (T-94) | sí |
+| `android.permission.INTERNET` | bibliotecas, al fusionar | sí |
+| `android.permission.ACCESS_NETWORK_STATE` | bibliotecas, al fusionar | sí |
+| `com.google.android.providers.gsf.permission.READ_GSERVICES` | **`com.google.android.recaptcha:recaptcha:18.6.1`** | **no estaba en la lista** |
+| `gt.cmartinez.baystream.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | `androidx.core:core:1.15.0`, permiso propio | ya estaba en T-64 |
+
+- **Consultas (`<queries>`):** `android.speech.RecognitionService` (se esperaba), `PROCESS_TEXT` y `GET_CONTENT`. No hay `QUERY_ALL_PACKAGES` ni `AD_ID`.
+- **Componentes de Firebase en el manifiesto:**
+  - `ComponentDiscoveryService`, con los registradores de Core, Firestore y **Auth**;
+  - `FirebaseInitProvider`;
+  - de `firebase-auth`: `GenericIdpActivity`, `RecaptchaActivity`, `CredentialProviderMetadataHolder`, `HiddenActivity`, `SignInHubActivity` y `RevocationBoundService`.
+
+### 5.2 Firebase y Play services en el árbol release
+
+| Artefacto | Versión | Llega por |
+|---|---|---|
+| `firebase-bom` | 34.17.0 | `firebase_core` |
+| `firebase-common` / `firebase-components` / `firebase-annotations` | 22.2.0 / 19.0.0 / 17.0.0 | `firebase_core` |
+| `firebase-firestore` | 26.5.0 (gRPC 1.62.2 sobre OkHttp) | `cloud_firestore` |
+| **`firebase-auth`** | **24.2.0** | `firebase_auth` (T-79) |
+| `firebase-auth-interop` / `firebase-appcheck-interop` | 20.0.0 / 17.0.0 | solo interfaces |
+| `play-services-base` / `basement` / `tasks` | 18.9.0 / 18.9.0 / 18.4.0 | Firebase |
+| **`com.google.android.recaptcha:recaptcha`** | **18.6.1** | `firebase-auth` |
+| **`com.google.android.play:integrity`** (+ `core-common` 2.0.3) | **1.3.0** | `firebase-auth` y `recaptcha` |
+| **`play-services-auth`**, `auth-base`, `auth-api-phone`, `fido` | 20.7.0, 18.0.4, 18.0.2, 20.1.0 | `firebase-auth` |
+| **`androidx.credentials`** (+ `credentials-play-services-auth`), **`googleid`** | 1.2.0-rc01, 1.1.0 | `firebase-auth` |
+
+**Lo que se busca en el árbol, contado término por término:**
+
+| Término | Apariciones |
+|---|---:|
+| `firebase-installations` | **0** |
+| `firebase-analytics`, `play-services-measurement`, `play-services-analytics` | **0** |
+| `firebase-crashlytics` | **0** |
+| `firebase-messaging`, `firebase-config`, `firebase-perf` | **0** |
+| `datatransport`, `transport-runtime`, `transport-api` | **0** |
+| `play-services-ads`, `user-messaging-platform` | **0** |
+| `firebase-appcheck` | 2, ambas `firebase-appcheck-interop`: interfaces sin código que transmita |
+| `okhttp3`, `retrofit`, `volley`, `cronet`, `androidx.work` | **0** |
+
+**Cadenas en el código del APK** (`classes.dex` y `lib/arm64-v8a/*.so`):
+
+| Cadena | dex | nativo |
+|---|---:|---:|
+| `firestore.googleapis.com` | 1 | 0 |
+| `identitytoolkit` | 2 | 0 |
+| `securetoken` | 1 | 0 |
+| `recaptcha.net` | 3 | 0 |
+| `firebaseinstallations`, `app-measurement`, `crashlytics`, `firebaselogging`, `google-analytics`, `googleads`, `doubleclick`, `admob`, `fcm.googleapis.com`, `recaptchaenterprise`, `playintegrity` | 0 | 0 |
+
+**Conclusión:**
+- **No hay Installations, analítica, anuncios, informes de fallos ni mensajería.** La política no tiene que cambiar por eso, y no me detuve.
+- **Pero T-65 cerró V1 en un árbol sin `firebase-auth`, y eso cambió con T-79.** Ahora hay tres familias que pueden transmitir por su cuenta cuando se usan:
+  - **reCAPTCHA** (`recaptcha 18.6.1`), que además pide `READ_GSERVICES`;
+  - **Play Integrity** (`integrity 1.3.0`);
+  - **las de inicio de sesión de Google** (`play-services-auth`, `credentials`, `googleid`). La app no las usa: solo inicia sesión con correo y contraseña.
+- La página oficial [Firebase: divulgación de datos de Google Play](https://firebase.google.com/docs/android/play-data-disclosure) (actualizada el 13-oct-2026) dice:
+  - **Authentication recopila automáticamente la dirección IP**, «para dar seguridad adicional y prevenir abuso durante el registro y la autenticación»;
+  - también recopila cadenas de *user agent* (versión del SDK y plataforma), el Firebase Android App ID y el Firebase user agent;
+  - el token de **Play Integrity** solo si la app usa autenticación por teléfono. BayStream no la usa;
+  - el token de **reCAPTCHA Enterprise** solo si el proyecto protege Authentication con reCAPTCHA Enterprise. **Eso se decide en la consola de Firebase, y no lo pude verificar desde el código.** Lo confirma Carlos.
+  - **Cloud Firestore** recopila solo el Firebase user agent, que «nunca se vincula a un identificador de usuario o dispositivo».
+
+## 6. Las sondas de T-93
+
+`tool/t93_msix.ps1` suma un `elseif` para `UnknownError`, con el mensaje de la ficha, palabra por
+palabra y en ASCII:
+`La firma no es de confianza en este equipo o no se pudo validar. Si no ha importado BayStream.cer en Personas de confianza del equipo local, importelo primero.`
+El `StatusMessage` sigue saliendo en `$detalle`. El script tiene 6 081 bytes y ninguno por encima de 127.
+
+Las cuatro sondas corrieron con Windows PowerShell 5.1 y su módulo nativo
+(`…\v1.0\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1`), en un proceso
+hijo con `-NoProfile -ExecutionPolicy Bypass -File`. Usé las copias de
+`%TEMP%\baystream-t93-timonel\` del 1.0.2.0, con la huella de Carlos.
+
+| Sonda | Código | Mensaje |
+|---|---:|---|
+| Original | **0** | `Firma: Valid \| CN=BayStream \| 60BEF8F4…278EC` |
+| Un bit cambiado | **1** | `El paquete esta alterado o danado; no se distribuye. Status: HashMismatch.` |
+| SHA que no coincide | **1** | `El SHA-256 del paquete no coincide con su .sha256. Status: Valid.` |
+| Otra huella (`ABCDEF01…`) | **1** | `La huella del firmante no coincide con -Huella. Status: Valid.` |
+
+**El camino de `UnknownError` no se ejecutó:** provocarlo exige una raíz que no esté en ningún almacén,
+y no toqué almacenes de certificados. Lo fija una prueba sobre el texto del script. Ninguna copia se
+instaló. Registro: `%TEMP%\t88-sondas-t93.log`.
+
+## 7. Pruebas, analyze, corpus y SHA
+
+| Validación | Resultado |
+|---|---|
+| `flutter test` | **709/709** (piso 697 + **12** nuevas), dos veces; la segunda, después del último cambio de `lib/` |
+| `flutter test test/t88_privacy_policy_test.dart` | 12/12 |
+| `flutter analyze` | **No issues found**, sin `// ignore:` |
+| Corpus, `tool/*corpus*test.dart` con `BAYSTREAM_CORPUS_DIRECTORY` | **118/118 en 32 archivos**, 26 s. Corrió antes del cambio del título de la barra, que es de interfaz y no lo toca el corpus |
+| `dart run tool/t88_privacidad.dart --comprobar` | coincide |
+
+**Las 12 pruebas nuevas** (`test/t88_privacy_policy_test.dart`):
+- `web/privacidad.html` es byte a byte lo que genera la fuente, salvo los finales de línea;
+- el texto nombra el micrófono, la sincronización, la falta de respaldo y el contacto, y D2 es su único correo;
+- el HTML es autocontenido: sin `<script>`, `<link>`, `<img>`, `@import`, `url(`, URL externas ni manejadores `on…`;
+- las marcas se leen sin asteriscos ni comillas invertidas;
+- la pantalla muestra todas las piezas a 360 dp, en claro y en oscuro, a letra 1.0 y 2.0 (4 pruebas);
+- se llega desde Parámetros sin viaje, y desde el inicio de sesión sin sesión;
+- D3 y D9 en el manifiesto, con los nueve dominios excluidos en las dos secciones;
+- el mensaje de `UnknownError` del script de T-93, en ASCII.
+
+**Sin cambio frente a HEAD** (`git diff --stat --ignore-cr-at-eol` vacío):
+
+| Archivo | SHA-256 |
+|---|---|
+| `lib/main.dart` | `C5189B1D8711837A05C68306D424C9FDBCC977BA3BBB6C823089FFE4CA5339D5` |
+| `lib/latency_test_screen.dart` | `599310DB13A713E82FC0D6A411BE2D7757CBC2B803D772C1CAA16C471725CDFF` |
+| `lib/c3_reconciliation_screen.dart` | `3AF478364A8C5386E1F921E0142DC4F847594BECA00B6743563CB09A8A4112A5` |
+| `firestore.rules` | `0112510984D9A16364F9752E243999C47306E0BCF82766E380DB380E8FE8E60A` |
+| `docs/T80-firestore.rules.propuesta` (las publicadas) | `21894B7F43E59F856045473731B795D21F8373C5AC8A1D9FFF324334AC3C9000` |
+| `firebase.json` | `9BCFD4D9B5A717BD4F044C0E67440C7A81D9858EDB1363CBD2CBA695D30852E9` |
+| `pubspec.yaml` | `CDE9A4B132CB83898A9D1909898B89BD9380990CA8225FDFC776C342947DA716` |
+| `pubspec.lock` | `577D742E04143131BC02A1BBB6C246D298C90396E08F6C9DFE393637A2617F53` |
+
+- Los congelados tampoco difieren de `m2-baseline`.
+- `windows/` no cambia.
+- **`pubspec.yaml` y `pubspec.lock` no cambian:** no hay dependencias nuevas.
+
+**Los archivos de esta entrega:**
+
+| Archivo | Estado | SHA-256 |
+|---|---|---|
+| `lib/core/constants/privacy_policy.dart` | nuevo | `70EB5B97B5BDEF2127159235760BFCA16B5074EA3409FEED65F9AB0BDFD51FF2` |
+| `lib/core/utils/privacy_policy_html.dart` | nuevo | `DCC2343DE7E11644FEB89F83B671EE5852B745C95E92DC9CB38EE88B01D11BF3` |
+| `lib/features/vessel/presentation/pages/privacy_policy_page.dart` | nuevo | `4DB8020605C0F41D743D1EDA8BC944A1A14DF7A34F8F524DB3681CF3771264AB` |
+| `lib/features/vessel/presentation/pages/parameters_page.dart` | +10 | `04E525D02F2A735E7E7A60000E741722C27E59E665D8ADD137B8DA620CFF6D06` |
+| `lib/features/vessel/presentation/pages/cloud_page.dart` | +6 | `AF9F4854F35DBF56BF2D0BDBC11000E3C782838CCFC8F12167F83C7ABB59F476` |
+| `test/t88_privacy_policy_test.dart` | nuevo | `A228666595EF6A35BF866CF16F35CFE26AE2EFC96D47EFBEE6046FB2D7A21481` |
+| `tool/t88_privacidad.dart` | nuevo | `899541D41854AA12634A4FEADC03A91F6FB288B41462B036E41C902D1971C1A1` |
+| `tool/t88_main.dart` | nuevo, banco | `EB015843193EE81CF25AC0717E9F2156CB7C748DF7EC56AB964FA4FA6DB683C0` |
+| `tool/t93_msix.ps1` | +4 | `FBB9B6A4E86DE55A170CBA26F7ADE593923F8430E111CB787AA625CB0DB0040A` |
+| `web/privacidad.html` | nuevo, generado | `8E27A91424F7BE6A5D34E4034E8669CB765B98C7F8A8CBA2B63E056D348CA583` |
+| `android/app/src/main/AndroidManifest.xml` | +6 −2 | `1B1A559050F9FD35CFBE19359FBF805D45F5FDB6A8FEAB5FA2942F9C8B981243` |
+| `android/app/src/main/res/xml/data_extraction_rules.xml` | nuevo | `30E2F9B55CE18D15C66623D5EF325397B57F5FDB27D19A25F7B88B45E36299DD` |
+
+Calculados sobre el árbol de trabajo, con los finales de línea que tiene hoy.
+
+## 8. Observaciones para Yov (no son frases falsas)
+
+1. **Cada movimiento lleva también el UID de la cuenta** (`author.uid`), y la operación lo lleva en `createdBy` y `closedBy` (`firestore_operation_sync.dart`, `FirestoreMovementCodec.encode`). La frase «Cada movimiento lleva tu nombre, tu rol, la hora y un identificador aleatorio de la instalación» no lo menciona. Para el formulario de Seguridad de los datos, eso es un «ID de usuario».
+2. **«Quién lo ve … según su rol».** En las reglas publicadas (`T80-firestore.rules.propuesta`), las dos cuentas, muelle y oficina, **leen lo mismo** (`allow get, list: if isAuthorized()`). El rol limita lo que cada una escribe, no lo que ve.
+3. **El selector de tema de T-90 se desborda 2.5 px a 360 dp en `flutter test`**, con o sin la entrada nueva (`parameters_page.dart:22`). En el Honor real no se desborda, ni a 1.0 ni a 2.0: es la letra de pruebas. No se corrigió de paso. La prueba de la entrada desde Parámetros usa la superficie por defecto, y la razón está escrita en la prueba.
+4. **«Cerrar sesión quita tu sesión del dispositivo» es cierta en Windows** (sección 3). La copia local del operador (uid, nombre y rol) se queda hasta desinstalar o borrar los datos. La frase del almacén ya dice que «los datos de tu cuenta» se guardan en el dispositivo.
+5. **Authentication recopila la dirección IP** según Google (sección 5). La política la menciona para el alojamiento de la Web, pero no para iniciar sesión en ninguno de los tres clientes.
+6. **reCAPTCHA, Play Integrity y las bibliotecas de inicio de sesión de Google** llegan con `firebase-auth 24.2.0`, y reCAPTCHA pide `READ_GSERVICES` (sección 5). Si el proyecto tiene reCAPTCHA Enterprise activo para Authentication, la declaración de Play lo tiene que reflejar.
+
+## 9. Horas
+
+De ≈ 13:22 (el primer comando, poco después de `3f29fc1`, 13:20) a ≈ 14:20 del 15-oct: **≈ 1.0 h de
+pared, frente a 2.5**. Incluye la pausa hasta recibir el texto de 10.46. Compilaciones de la copia:
+- APK de inventario, 93 s;
+- APK `.t88`, 73 s, y una segunda de 68 s, después del ajuste del título;
+- Web, 49 s;
+- Windows, 173 s. El primer intento falló en 5 s por los enlaces de `ephemeral`, como en T-103, y se borraron solo en la copia.
+
+**El ícono (D5)** va en la segunda entrega de T-88, con su paquete (10.45). Esta entrega no lleva horas
+del diseño.
+
+## 10. Evidencia y estado en que quedan las cosas
+
+- **Evidencia** en `%TEMP%\baystream-t88-evidencia\` (35 archivos):
+  - capturas `honor-*.png`;
+  - los volcados comparados (`honor-textos*.txt`);
+  - las huellas antes y después, con su `.bat` y su `.ps1`;
+  - `merged-manifest-release.xml`, `gradle-release-runtime.txt` y el APK del inventario;
+  - los registros de la suite, del corpus y de las sondas;
+  - los dos scripts de cotejo.
+- **La copia de compilación** queda en `%TEMP%\baystream-t88-clientes` para Codex.
+- **El Honor:**
+  - instalado `gt.cmartinez.baystream.t88`, cerrado;
+  - letra en 1.0;
+  - tema de `.t88` en oscuro, por el ajuste de la app.
+- **Windows:**
+  - ningún `baystream.exe` abierto;
+  - **sesión cerrada:** Carlos la vuelve a iniciar cuando la necesite;
+  - 14 archivos `t88acc_*` en el almacén real.
+- **La Web:** el servidor y las pestañas están cerrados.
+- **Git:** solo `log`, `show`, `diff --stat --ignore-cr-at-eol`, `ls-files` y `check-ignore`. No usé la CLI de Firebase, no toqué el proyecto de H5 y no publiqué nada.

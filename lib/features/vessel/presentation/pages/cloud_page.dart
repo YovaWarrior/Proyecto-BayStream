@@ -10,6 +10,7 @@ import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import '../widgets/sync_status_chip.dart';
+import 'privacy_policy_page.dart';
 
 /// T-79 · Cuenta, operación de la escala y operaciones abiertas en la nube.
 ///
@@ -146,6 +147,11 @@ class _CloudPageState extends ConsumerState<CloudPage> {
                           done: 'Si el correo tiene cuenta, llegará un enlace '
                               'para cambiar la contraseña.'),
               child: const Text('Olvidé mi contraseña')),
+          // T-88: la política se lee antes de iniciar sesión.
+          TextButton(
+              key: const ValueKey('sign-in-privacy-policy'),
+              onPressed: () => PrivacyPolicyPage.open(context),
+              child: const Text('Política de privacidad')),
         ]),
       ]),
     );

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/app_theme_preference.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/theme_preference_provider.dart';
+import 'privacy_policy_page.dart';
 
 /// Ajustes del dispositivo, separados de la confirmación del perfil del buque.
 class ParametersPage extends ConsumerWidget {
@@ -47,6 +48,15 @@ class ParametersPage extends ConsumerWidget {
           Text('No se pudo leer el tema guardado. Puedes elegirlo de nuevo.',
               style: TextStyle(color: Theme.of(context).colorScheme.error)),
         ],
+        // T-88: la política, sin viaje y sin sesión.
+        const SizedBox(height: 24),
+        ListTile(
+          key: const ValueKey('privacy-policy'),
+          leading: const Icon(Icons.privacy_tip_outlined),
+          title: const Text('Política de privacidad'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => PrivacyPolicyPage.open(context),
+        ),
         if (onVesselParameters != null) ...[
           const SizedBox(height: 24),
           ListTile(

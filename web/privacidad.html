@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!-- Generado por tool/t88_privacidad.dart desde lib/core/constants/privacy_policy.dart. No se edita a mano. -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Política de privacidad de BayStream</title>
+<style>
+:root { --fondo: #ffffff; --texto: #1b1b1f; --suave: #44474f; --marca: #0d47a1; --codigo: #e8eaf0; }
+@media (prefers-color-scheme: dark) {
+  :root { --fondo: #121318; --texto: #e3e2e6; --suave: #c4c6d0; --marca: #a9c7ff; --codigo: #2a2c33; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--texto); font: 1rem/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 44rem; margin: 0 auto; padding: 24px 16px 48px; overflow-wrap: anywhere; }
+h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 4px; }
+h2 { font-size: 1.1rem; margin: 28px 0 8px; }
+.fecha { color: var(--suave); margin: 0 0 8px; }
+p, li { margin: 0 0 10px; }
+ul { padding-left: 1.25rem; }
+a { color: var(--marca); }
+code { background: var(--codigo); padding: 0 4px; border-radius: 4px; font-family: ui-monospace, Consolas, monospace; }
+</style>
+</head>
+<body>
+<main>
+<h1>Política de privacidad de BayStream</h1>
+<p class="fecha">Última actualización: 15 de octubre de 2026</p>
+<section>
+<h2>Quién la publica.</h2>
+<p>BayStream es una aplicación para ver y operar el plano de estiba de un buque portacontenedores. La desarrolla Carlos Giovanni Martínez Aldana, en Puerto Barrios, Guatemala, como proyecto de graduación de Ingeniería en Sistemas. Esta política explica qué datos usa la aplicación en Android, Windows y la Web, dónde quedan y qué decides tú.</p>
+</section>
+<section>
+<h2>Sin cuenta, todo se queda en tu dispositivo.</h2>
+<p>Puedes usar BayStream sin iniciar sesión. Así, los archivos que abres y lo que haces con ellos se procesan y se guardan solo en tu dispositivo, y la aplicación no los envía a ningún servidor.</p>
+</section>
+<section>
+<h2>Los archivos que abres.</h2>
+<p>La aplicación lee los archivos que tú eliges: planos BAPLIE y listados de exportación en Excel. Contienen información comercial del buque, del viaje y de la carga, como números de contenedor, puertos, pesos, refrigerados y mercancías peligrosas. No están pensados para contener datos personales.</p>
+</section>
+<section>
+<h2>Con cuenta, la operación se sincroniza.</h2>
+<p>Las cuentas las crea el administrador de BayStream para el personal de una operación portuaria: la aplicación no permite crearlas por tu cuenta.</p>
+<ul>
+<li><strong>Tu cuenta.</strong> Tu correo y tu contraseña los gestiona Firebase Authentication, de Google. BayStream no guarda tu contraseña. El administrador registra además tu nombre, tu rol (muelle u oficina) y si la cuenta está activa.</li>
+<li><strong>Lo que se envía a la nube.</strong> Al publicar una operación, o al unirte a ella, se guardan en Cloud Firestore, de Google: los archivos de la operación, el perfil del buque y cada movimiento que registras, como descargas, cargas, re-estibas, tapas, solicitudes y aprobaciones. Cada movimiento lleva tu nombre, tu rol, la hora y un identificador aleatorio de la instalación de la aplicación, que no identifica tu teléfono ni tu computadora.</li>
+<li><strong>Quién lo ve.</strong> Solo las cuentas autorizadas de BayStream, según su rol, y el administrador. Las reglas de la base de datos lo exigen.</li>
+<li><strong>Dónde se guarda.</strong> Los datos de la operación, en la región de Firebase en México (northamerica-south1); los de la cuenta, en Firebase Authentication. Las conexiones van cifradas.</li>
+<li><strong>Sin conexión.</strong> Los movimientos esperan en tu dispositivo y se envían cuando vuelve la red.</li>
+</ul>
+</section>
+<section>
+<h2>El micrófono, solo si lo usas.</h2>
+<p>La búsqueda de contenedores se puede dictar. El micrófono se pide únicamente cuando pulsas su botón, y puedes negarlo: escribir la búsqueda siempre funciona. El dictado lo hace el servicio de reconocimiento de voz de tu sistema, en Android, o de tu navegador, en la Web. Ese servicio puede enviar el audio a los servidores de su proveedor, como Google, según la política de ese proveedor. BayStream no graba ni guarda el audio, y el texto reconocido solo llena el campo de búsqueda: no se guarda ni se envía. En Windows no hay dictado.</p>
+</section>
+<section>
+<h2>Lo que se guarda en tu dispositivo.</h2>
+<p>Los viajes recientes, los perfiles de buque, la operación con su cola de movimientos, los datos de tu cuenta y tu preferencia de tema se guardan en tu dispositivo: en Android, en el almacenamiento privado de la aplicación; en Windows, en la carpeta de datos de tu usuario; en la Web, en el almacenamiento del navegador para el sitio de BayStream. Firebase guarda además tu sesión, para no pedirte la contraseña cada vez, y en Android y en Windows, una copia de la operación para trabajar sin conexión.</p>
+<ul>
+<li>En Android, estos datos no entran en la copia de seguridad de Google ni pasan a otro teléfono en una transferencia.</li>
+<li>Puedes borrar un viaje desde Recientes.</li>
+<li>En Android, lo demás se borra al desinstalar la aplicación o al borrar sus datos desde los ajustes; en la Web, al borrar los datos del sitio en el navegador.</li>
+<li>En Windows, desinstalar puede dejar en tu carpeta de usuario los datos de BayStream y la copia de Firebase. Para quitarlos, cierra sesión antes de desinstalar y borra la carpeta <code>AppData\Local\BayStream</code> y la de BayStream dentro de <code>AppData\Local\firestore\[DEFAULT]</code>.</li>
+<li>Cerrar sesión quita tu sesión del dispositivo.</li>
+</ul>
+</section>
+<section>
+<h2>Exportar.</h2>
+<p>Cuando exportas un reporte (PDF, CSV o JSON) o el BAPLIE de salida, el archivo se guarda: en Android y en Windows, donde tú decides con el selector de archivos del sistema; en la Web, como una descarga del navegador. Lo que hagas con él después queda fuera de BayStream.</p>
+</section>
+<section>
+<h2>La Web.</h2>
+<p>La versión Web se sirve desde el sitio de BayStream en Firebase Hosting, de Google, incluidos el motor de dibujo, las fuentes y el SDK de Firebase: no carga código de otros sitios. Como cualquier servidor web, el alojamiento puede registrar datos técnicos de cada conexión, como la dirección IP.</p>
+</section>
+<section>
+<h2>Lo que BayStream no hace.</h2>
+<p>No muestra anuncios, no usa herramientas de analítica ni de seguimiento, y no vende ni cede tus datos. Las bibliotecas de Firebase envían con cada petición el nombre y la versión de la plataforma, como lo describe Google.</p>
+</section>
+<section>
+<h2>Cuánto tiempo se guardan.</h2>
+<p>Los datos de una operación se conservan en la nube mientras el administrador la mantenga. Los movimientos registrados conservan el nombre con que se firmaron, porque son el registro de la operación. Si dejas de trabajar con BayStream, puedes pedir que se borre tu cuenta.</p>
+</section>
+<section>
+<h2>Menores.</h2>
+<p>BayStream es una herramienta de trabajo para adultos y no está dirigida a menores de 18 años.</p>
+</section>
+<section>
+<h2>Cambios.</h2>
+<p>Si esta política cambia, la nueva versión se publica en la aplicación y en el sitio, con su fecha.</p>
+</section>
+<section>
+<h2>Contacto.</h2>
+<p>Para preguntas sobre esta política, o para pedir que se borre tu cuenta, escribe a <a href="mailto:giovannimartinezcrl2002@gmail.com">giovannimartinezcrl2002@gmail.com</a>.</p>
+</section>
+</main>
+</body>
+</html>

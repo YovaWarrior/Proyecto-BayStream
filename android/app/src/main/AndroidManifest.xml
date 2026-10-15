@@ -1,10 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- T-94: dictado opcional; el permiso se pide al pulsar el micrófono. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- T-88: D9, el nombre bajo el ícono; D3, sin respaldo en la nube ni
+         transferencia entre teléfonos (res/xml/data_extraction_rules.xml). -->
     <application
-        android:label="baystream"
+        android:label="BayStream"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity
             android:name=".MainActivity"
             android:exported="true"

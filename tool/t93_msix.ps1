@@ -56,6 +56,10 @@ function Test-PaqueteMsix {
       $errores += 'El paquete esta alterado o danado; no se distribuye.'
     } elseif ($firma.Status -eq 'NotTrusted') {
       $errores += 'La firma no es de confianza. Primero importe BayStream.cer en Personas de confianza del equipo local.'
+    } elseif ($firma.Status -eq 'UnknownError') {
+      # T-88: una raiz que no esta en ningun almacen da UnknownError, no
+      # NotTrusted (GetSignatureStatusFromWin32Error). No se afirma la causa.
+      $errores += 'La firma no es de confianza en este equipo o no se pudo validar. Si no ha importado BayStream.cer en Personas de confianza del equipo local, importelo primero.'
     } else {
       $errores += 'La firma no es Valid; no se distribuye.'
     }
