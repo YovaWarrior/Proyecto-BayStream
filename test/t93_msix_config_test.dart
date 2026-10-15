@@ -73,6 +73,7 @@ void main() {
     expect(script, contains('--dart-define-from-file='));
     expect(script, contains('--build-windows false'));
     expect(script, contains('--install-certificate false'));
+    expect(script, contains(r"if ($firma.Status -ne 'Valid')"));
     expect(script, contains(r'"/fd SHA256 /sha1 $Huella"'));
     expect(script.indexOf('flutter build windows'),
         lessThan(script.indexOf('dart run msix:create')));
