@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.43) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.44) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1637,9 +1637,135 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 - repite las cuatro sondas con el script commiteado.
 - Si pasan, T-93 queda Terminado.
 
+#### T-88 · Lo que pide Play: la política de privacidad dentro de la app y en la Web, sin respaldo de Android, y el ícono propio · 2.5 h · Timonel (ficha completa, 15-oct)
+
+**Para qué.** USO. Abre la prueba de Play después del merge (18 al 21-oct).
+- `docs/T64-DECLARACIONES-PLAY.md` (Sprint 2) dejó tres huecos:
+  - la política de privacidad tiene que estar **dentro de la app** y en una dirección pública (D4 y D1);
+  - el respaldo automático de Android (D3);
+  - el ícono de Flutter (D5).
+- Desde entonces la app cambió lo que hace con los datos: cuentas (T-70c), sincronización con Firestore (T-79), dictado por voz (T-94) y la Web servida desde su sitio (T-92). El borrador de T-64 dice «no tiene cuentas» y «no envía nada», y **ya no es verdad**.
+
+**Decisiones que ya están.**
+- **D3 (10.35):** el almacén local no se respalda ni pasa a otro teléfono.
+- **D4:** el texto va dentro de la app, sin enlace externo. No hace falta `url_launcher`.
+- **D1:** la versión pública es `web/privacidad.html`, que se publica con la Web en Firebase Hosting cuando Carlos publique (T-92). Su dirección es la que va en Play.
+- **D2, el correo de contacto,** lo escribe Carlos en el prompt de Timonel.
+  - Es público por definición: sale en la política y en la ficha de Play. Por eso es la única dirección de correo autorizada en el repo.
+  - Yov recomienda una dirección del proyecto, no la personal.
+- **D9, el nombre bajo el ícono:** «BayStream», como en Windows (T-93) y en la interfaz. Hoy el manifest dice `baystream`.
+
+**Qué construye.**
+
+1. **Una sola fuente para el texto,** en Dart puro dentro de `lib/`. Timonel elige el lugar según la arquitectura y lo declara.
+   - Lleva la fecha de actualización, las secciones con título y párrafos, y el correo como constante.
+   - **El texto es el de abajo, palabra por palabra.**
+   - **Si una frase es falsa frente al código,** Timonel no la arregla por su cuenta: se detiene en esa frase, la reporta con la evidencia, y Yov corrige el texto. Por ejemplo, si un dato que dice que se guarda no se guarda, o lo que se exporta no coincide.
+2. **Una pantalla «Política de privacidad»** que muestra ese texto completo.
+   - Se llega sin abrir un viaje y sin iniciar sesión: desde Parámetros, junto al tema (T-90), y desde la pantalla de inicio de sesión. Timonel declara las rutas exactas.
+   - Se lee bien a 360 dp, en claro y en oscuro, y a letra 2.0.
+3. **`web/privacidad.html`, generado desde la misma fuente** por `tool/t88_privacidad.dart`. La función que arma el HTML vive en `lib/`, para que la herramienta y la prueba usen la misma.
+   - Un archivo autocontenido, con `lang="es"` y `viewport`, en claro y oscuro con `prefers-color-scheme`.
+   - Sin JavaScript y sin recursos externos: ni fuentes de Google ni CDN.
+   - Lo carga la Web servida (T-92) en `/privacidad.html`, directo, sin pasar por la app.
+4. **D3 en Android.**
+   - `android:allowBackup="false"`.
+   - `android:dataExtractionRules`, con un XML que excluye todos los dominios en `cloud-backup` y en `device-transfer`. Con `targetSdk` 31 o mayor, `allowBackup="false"` solo no detiene la transferencia entre dispositivos.
+   - Timonel confirma el mecanismo en la documentación oficial de Android para el `targetSdk` actual, y cita la fuente en el informe.
+5. **D9:** `android:label="BayStream"`. Si la Web o Windows dicen otra cosa, se reporta y no se cambia.
+6. **El inventario para las declaraciones de Play,** como T-64 en 1.2 y 1.3, pero sobre un APK release de hoy:
+   - los permisos del manifiesto fusionado: se espera `INTERNET`, `ACCESS_NETWORK_STATE` y `RECORD_AUDIO`, más la consulta de `RecognitionService`;
+   - `allowBackup` y `dataExtractionRules` en el manifiesto fusionado;
+   - del árbol de dependencias release, los artefactos de Firebase y de Play services, y si aparece alguno que transmita por su cuenta: Installations, Analytics, Crashlytics, Messaging, App Check, anuncios.
+   - **Si aparece Installations, analítica o anuncios, se detiene y avisa:** la política dice que no los hay.
+   - Con este inventario, Yov escribe después las declaraciones de Play.
+7. **De paso, la observación de T-93 (10.44).** En `tool/t93_msix.ps1`, el estado `UnknownError` también da la indicación de importar `BayStream.cer`, porque es lo que devuelve Windows cuando la raíz no es de confianza.
+   - El mensaje no afirma la causa: «La firma no es de confianza en este equipo o no se pudo validar. Si no ha importado BayStream.cer en Personas de confianza del equipo local, importelo primero.» El `StatusMessage` sigue saliendo.
+   - En ASCII, como el resto del script.
+   - Las cuatro sondas de 10.42 siguen dando 0 / 1 / 1 / 1.
+8. **El ícono propio (D5), si Carlos ya decidió.** Si no, queda para una segunda entrega de T-88, y lo anterior se entrega igual.
+   - Las dos opciones: un logo que dé Carlos, o uno sencillo y original que proponga Yov.
+   - Generarlo con `flutter_launcher_icons` como dependencia de desarrollo requiere que Carlos la autorice. Sin ella, no se agrega ninguna.
+   - Abarca Android (adaptativo y los tamaños antiguos), la Web (`favicon` e íconos del manifiesto) y Windows (`app_icon.ico`, que usa el MSIX), además del PNG de 512×512 para la ficha de Play.
+
+**El texto de la política (fuente única; los títulos van en negrita).**
+
+> **Política de privacidad de BayStream**
+> Última actualización: 15 de octubre de 2026
+>
+> **Quién la publica.** BayStream es una aplicación para ver y operar el plano de estiba de un buque portacontenedores. La desarrolla Carlos Giovanni Martínez Aldana, en Puerto Barrios, Guatemala, como proyecto de graduación de Ingeniería en Sistemas. Esta política explica qué datos usa la aplicación en Android, Windows y la Web, dónde quedan y qué decides tú.
+>
+> **Sin cuenta, todo se queda en tu dispositivo.** Puedes usar BayStream sin iniciar sesión. Así, los archivos que abres y lo que haces con ellos se procesan y se guardan solo en tu dispositivo, y la aplicación no los envía a ningún servidor.
+>
+> **Los archivos que abres.** La aplicación lee los archivos que tú eliges: planos BAPLIE y listados de exportación en Excel. Contienen información comercial del buque, del viaje y de la carga, como números de contenedor, puertos, pesos, refrigerados y mercancías peligrosas. No están pensados para contener datos personales.
+>
+> **Con cuenta, la operación se sincroniza.** Las cuentas las crea el administrador de BayStream para el personal de una operación portuaria: la aplicación no permite crearlas por tu cuenta.
+> - **Tu cuenta.** Tu correo y tu contraseña los gestiona Firebase Authentication, de Google. BayStream no guarda tu contraseña. El administrador registra además tu nombre, tu rol (muelle u oficina) y si la cuenta está activa.
+> - **Lo que se envía a la nube.** Al publicar una operación, o al unirte a ella, se guardan en Cloud Firestore, de Google: los archivos de la operación, el perfil del buque y cada movimiento que registras, como descargas, cargas, re-estibas, tapas, solicitudes y aprobaciones. Cada movimiento lleva tu nombre, tu rol, la hora y un identificador aleatorio de la instalación de la aplicación, que no identifica tu teléfono ni tu computadora.
+> - **Quién lo ve.** Solo las cuentas autorizadas de BayStream, según su rol, y el administrador. Las reglas de la base de datos lo exigen.
+> - **Dónde se guarda.** Los datos de la operación, en la región de Firebase en México (northamerica-south1); los de la cuenta, en Firebase Authentication. Las conexiones van cifradas.
+> - **Sin conexión.** Los movimientos esperan en tu dispositivo y se envían cuando vuelve la red.
+>
+> **El micrófono, solo si lo usas.** La búsqueda de contenedores se puede dictar. El micrófono se pide únicamente cuando pulsas su botón, y puedes negarlo: escribir la búsqueda siempre funciona. El dictado lo hace el servicio de reconocimiento de voz de tu sistema, en Android, o de tu navegador, en la Web. Ese servicio puede enviar el audio a los servidores de su proveedor, como Google, según la política de ese proveedor. BayStream no graba ni guarda el audio, y el texto reconocido solo llena el campo de búsqueda: no se guarda ni se envía. En Windows no hay dictado.
+>
+> **Lo que se guarda en tu dispositivo.** Los viajes recientes, los perfiles de buque, la operación con su cola de movimientos, los datos de tu cuenta y tu preferencia de tema se guardan en el almacenamiento privado de la aplicación; en la Web, en el del navegador para el sitio de BayStream. Firebase guarda además tu sesión, para no pedirte la contraseña cada vez, y una copia de la operación para trabajar sin conexión.
+> - En Android, estos datos no entran en la copia de seguridad de Google ni pasan a otro teléfono en una transferencia.
+> - Puedes borrar un viaje desde Recientes. Lo demás se borra al desinstalar la aplicación, al borrar sus datos desde los ajustes de Android o, en la Web, al borrar los datos del sitio.
+> - Cerrar sesión quita tu sesión del dispositivo.
+>
+> **Exportar.** Cuando exportas un reporte (PDF, CSV o JSON) o el BAPLIE de salida, la aplicación abre el selector de archivos de tu sistema y guarda el archivo donde tú decides. Lo que hagas con él después queda fuera de BayStream.
+>
+> **La Web.** La versión Web se sirve desde el sitio de BayStream en Firebase Hosting, de Google, incluidos el motor de dibujo, las fuentes y el SDK de Firebase: no carga código de otros sitios. Como cualquier servidor web, el alojamiento puede registrar datos técnicos de cada conexión, como la dirección IP.
+>
+> **Lo que BayStream no hace.** No muestra anuncios, no usa herramientas de analítica ni de seguimiento, y no vende ni cede tus datos. Las bibliotecas de Firebase envían con cada petición el nombre y la versión de la plataforma, como lo describe Google.
+>
+> **Cuánto tiempo se guardan.** Los datos de una operación se conservan en la nube mientras el administrador la mantenga. Los movimientos registrados conservan el nombre con que se firmaron, porque son el registro de la operación. Si dejas de trabajar con BayStream, puedes pedir que se borre tu cuenta.
+>
+> **Menores.** BayStream es una herramienta de trabajo para adultos y no está dirigida a menores de 18 años.
+>
+> **Cambios.** Si esta política cambia, la nueva versión se publica en la aplicación y en el sitio, con su fecha.
+>
+> **Contacto.** Para preguntas sobre esta política, o para pedir que se borre tu cuenta, escribe a [correo de D2].
+
+**Carril.**
+- Toca:
+  - `lib/`, solo para la fuente del texto, la función del HTML, la pantalla y sus dos entradas;
+  - `test/t88_*`, `tool/t88_privacidad.dart`, `web/privacidad.html` y `tool/t93_msix.ps1`;
+  - en Android: `AndroidManifest.xml` y un XML nuevo en `res/xml/`;
+  - si hay ícono, los recursos de ícono de Android, la Web y Windows.
+- **No toca** `lib/main.dart`, los congelados, las reglas ni `pubspec.*`. La excepción es `flutter_launcher_icons`, solo si Carlos la autoriza, y se declara con su versión.
+- Codex acepta T-103 al mismo tiempo, desde una copia de HEAD, así que nadie pisa a nadie. Un comando de Flutter a la vez, con el semáforo de Carlos.
+
+**Detente y avisa si:**
+- una frase del texto es falsa frente al código;
+- el inventario encuentra Installations, analítica o anuncios;
+- D3 exige más que el manifest y un XML;
+- llegar a la pantalla sin sesión exige tocar `lib/main.dart`.
+
+**Fuera de alcance:**
+- las declaraciones de Play, que escribe Yov con el inventario;
+- publicar la Web o subir algo a Play, que lo hace Carlos;
+- la ficha de la tienda: descripciones, gráfico y capturas;
+- el iPhone, que entra por la Web.
+
+**Terminada cuando:**
+- [ ] **La pantalla** muestra el texto completo en los tres clientes, con el correo de D2. Se llega desde Parámetros y desde el inicio de sesión, sin viaje y sin sesión. En el Honor `.t88`, a 360 dp, en claro y en oscuro, y a letra 2.0.
+- [ ] **`/privacidad.html`** abre directo en Chrome desde la Web servida (`build/web`), sin recursos externos, y su texto es el de la app.
+- [ ] **Una prueba exige que `web/privacidad.html` sea igual a lo que genera la fuente,** byte a byte salvo los finales de línea. Otra pide que el texto nombre el micrófono, la sincronización, la falta de respaldo y el contacto.
+- [ ] **D3:** el manifiesto fusionado del APK release tiene `allowBackup="false"` y `dataExtractionRules` con las dos exclusiones. Si `bmgr` lo permite en el Honor sin root, el informe muestra que el paquete no es elegible para respaldo; si no, basta el manifiesto.
+- [ ] **El nombre** «BayStream» bajo el ícono en el Honor.
+- [ ] **El inventario** de los puntos de arriba, con sus fuentes, en el informe.
+- [ ] **El script de T-93:** las cuatro sondas siguen en 0 / 1 / 1 / 1, y el mensaje de `UnknownError` es el de arriba.
+- [ ] **Validaciones:**
+  - piso de 697 más las nuevas, y `analyze` en cero;
+  - el corpus completo en verde con los conteos declarados;
+  - las reglas, `lib/main.dart` y los congelados sin cambio;
+  - `pubspec.*` sin cambio, salvo la dependencia del ícono si Carlos la autoriza.
+- [ ] **Si hubo ícono:** se ve en el lanzador del Honor, en la pestaña de Chrome y en Windows, y está el PNG de 512×512 para Play.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
-| **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43); ficha pendiente de Yov |
+| **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43) · **ficha completa arriba** |
 | **T-89** | USO | 1.0 | iPhone acepta .edi: sin filtro por extensión y validación por contenido (`UNB`/`UNH`) · **ficha completa arriba** |
 | **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes · **ficha completa arriba** |
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
@@ -3276,3 +3402,42 @@ El piso de pruebas es 648.
 - 2 en revisión: T-93 y T-103;
 - 0 en curso;
 - 10 por hacer.
+
+### 10.44 · T-93 terminada · La ficha de T-88, completa, para Timonel · El correo de la política, la única dirección autorizada en el repo (15-oct)
+
+**Timonel verificó la corrección de T-93** (commit `140129b`, `docs/T93-CORRECCION-ACEPTACION.md`), en ≈ 0.10 h. Pasa.
+- **El cambio cumple la ficha punto por punto.**
+- **Repitió las cuatro sondas** con el script commiteado, en Windows PowerShell 5.1 con su módulo nativo: 0 / 1 / 1 / 1. Ninguna copia se instaló.
+- **El matiz de 10.43, confirmado en el código de PowerShell** (`GetSignatureStatusFromWin32Error`):
+  - `NotTrusted` solo sale con una desconfianza explícita;
+  - una raíz que no está en ningún almacén queda en `UnknownError`;
+  - en una PC sin el `.cer`, el script falla bien, pero con el mensaje genérico.
+  - Que la 5.1 haga lo mismo es inferencia, porque su código no es público. Timonel lo declara así.
+
+**T-93 pasa a Terminado, aceptada con observación.**
+- La observación es una línea: que `UnknownError` también dé la indicación de importar `BayStream.cer`, sin afirmar la causa. Va dentro de T-88, de paso, y la acepta Codex.
+- **Horas reales:** ≈ 0.9 h de Timonel, 0.16 h de la corrección de Codex y 0.10 h de la verificación. Unas 1.2 h, frente a 2.5.
+- Carlos ya puede borrar el respaldo de `%TEMP%\baystream-t93acc-respaldo\`.
+
+**La ficha completa de T-88** está en la Ola 5. Va a Timonel ahora, y la acepta Codex.
+- **El texto de la política lo escribió Yov,** y va palabra por palabra en una sola fuente de `lib/`. De ahí salen la pantalla y `web/privacidad.html`, y una prueba exige que no se separen. Cubre:
+  - el uso sin cuenta;
+  - las cuentas y la sincronización con Firestore;
+  - el micrófono opcional y el servicio de voz;
+  - la falta de respaldo (D3);
+  - la Web servida desde su sitio;
+  - el contacto.
+  - Si una frase resulta falsa frente al código, Timonel se detiene y Yov la corrige.
+- **D1:** la dirección pública es `/privacidad.html` de la Web, que Carlos publica con T-92.
+- **D2, el correo de contacto:** lo escribe Carlos directamente en el prompt de Timonel.
+  - **Es la única dirección de correo autorizada en el repo,** porque es pública por definición: sale en la política y en la ficha de Play.
+  - Yov recomienda una dirección del proyecto, no la personal.
+- **D9:** «BayStream» bajo el ícono, como en Windows y en la interfaz.
+- **T-88 incluye además el inventario del APK release de hoy:** permisos, respaldo y dependencias de Firebase. Con él, Yov escribe después las declaraciones de Play.
+- **El ícono (D5) espera a Carlos:** su logo o uno original de Yov, y si autoriza `flutter_launcher_icons` como dependencia de desarrollo. Si no llega a tiempo, va en una segunda entrega de T-88.
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero suma 211.0 h:
+- 31 terminadas;
+- T-103 en revisión;
+- T-88 en curso;
+- 9 por hacer.
