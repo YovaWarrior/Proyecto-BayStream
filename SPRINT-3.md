@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 155.0 h estimadas** (al 15-oct, 10.40) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 155.5 h estimadas** (al 15-oct, 10.41) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -954,6 +954,53 @@ sincroniza y lo cuenta en el avance.
 - [ ] Piso de 563 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
+#### T-103 · Leer la 1.5 (SMDG15) con un aviso visible · 1.0 h · Timonel (ficha completa, 15-oct; adelantada en 10.41)
+
+**Para qué.** BAP. Carlos decidió en 10.35 no descartar las versiones anteriores, porque
+alguna línea todavía puede mandar una 1.x. A06 del corpus es una SMDG15 real
+(`BAPLIE:1:911:UN:SMDG15`):
+- hasta T-86 se leía;
+- desde T-86 se rechaza en el `UNH`;
+- T-103 la vuelve a leer, avisando que se interpretó con las reglas de 2.x.
+
+**Lo que hay hoy.**
+- T-86 (`1b1be4b`) rechaza toda versión fuera de SMDG20, 21 y 22.
+- Para eso adaptó 43 rutas: las pruebas y los corpus que leían A06 pasaron a exigir el
+  rechazo tipado (`requireA06Rejection`), y el bloque 7 pasó a 33 DGS y 29 unidades
+  peligrosas sin A06.
+- El detalle está en `docs/T86-RESULTADOS.md`.
+
+**Qué construye.**
+1. **El lector acepta `SMDG15`** además de la familia 2.x. El resto de la 1.x, la 3.x y lo
+   que no tiene `UNH` se siguen rechazando como en T-86, con el mismo mensaje.
+2. **Un aviso visible**, mientras ese viaje esté abierto: «Versión 1.5, leída con las reglas
+   de 2.x; revisa pesos y peligrosas».
+   - Va en el resumen del viaje, no solo en un aviso pasajero.
+   - Si el viaje se reabre desde Recientes, el aviso sigue ahí.
+3. **El BAPLIE de salida de T-82 no se genera desde una fuente 1.5.** La acción lo dice con
+   claridad: escribir una 1.5 con reglas de 2.x no sería fiel a lo que llegó.
+4. **Las pruebas y los corpus que hoy exigen el rechazo de A06 pasan a exigir la lectura con
+   aviso**, con las cifras de antes de T-86.
+   - Esas cifras se toman de la historia (`1b1be4b^`), no de memoria.
+   - El bloque 7 vuelve a contar la declaración DGS que aportaba A06, si así era.
+   - Las pruebas de rechazo pasan a una 1.x sintética distinta de la 1.5.
+
+**Fuera de alcance:**
+- leer la 3.1 (T-87);
+- cambiar las reglas de interpretación;
+- cualquier cambio de nube o reglas de Firestore.
+
+**Terminada cuando:**
+- [ ] **A06 abre con las cifras de antes de T-86 y con el aviso** en los tres clientes, y lo
+      conserva al reabrirla desde Recientes.
+- [ ] **Una 1.x sintética distinta de la 1.5**, `t86_smdg31` y `t86_sin_unh` se siguen
+      rechazando con el mensaje de T-86, y conservan el viaje anterior.
+- [ ] **Las nueve fuentes 2.x salen idénticas**, con la referencia completa de T-86: bahías,
+      contenedores, reservas y metadatos.
+- [ ] **Desde una fuente 1.5, la salida de T-82 se niega** con un mensaje claro.
+- [ ] **Validaciones:** piso de 685 más las nuevas, `analyze` en cero, corpus completo en verde
+      con los conteos declarados, y las reglas sin cambio.
+
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-82** | RF-039 | 10.0 | BAPLIE de salida en la misma versión 2.x en que llegó, con lo cargado, re-estibado y cancelado; VGM y tara exactos del listado | Releído por el propio lector, coincide con `CASO_A08_ESTADO_FINAL.csv` en las 460 posiciones · **ficha completa arriba** |
@@ -962,7 +1009,7 @@ sincroniza y lo cuenta en el avance.
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
 | **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
 | **T-87** | BAP | 10.0 | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza |
-| **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35) | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
+| **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35; adelantada a Timonel en 10.41) · **ficha completa arriba** | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
 
 ### Ola 5 · Uso fuera del aula y voz
 
@@ -1665,7 +1712,7 @@ para RNF-003.
 |---|---|---:|---|
 | **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
-| **T-56** | ERS | 2.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38) |
+| **T-56** | ERS | 3.0 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38) y tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
 | **T-104** | ERS | 2.5 | Deudas del lote de Timonel: aislar `block3` del almacén real, «1 bahías», las extensiones de la pantalla inicial y los cortes a 200 % (10.38); la prueba intermitente, los dos `print` y el `LEEME` del SDK (10.39) · **ficha completa arriba** |
 
@@ -3021,3 +3068,43 @@ El piso de pruebas es 648.
 **El orden desde aquí, sin solaparse, porque los dos tocan el almacén real de Windows:**
 1. **Timonel:** vuelve a comprobar la voz sin red de T-94 y acepta T-104.
 2. **Codex:** después, la aceptación cruzada de T-93, apartando el almacén real como en 10.37. Luego, la parte de código de T-88, con su ficha.
+
+### 10.41 · T-94 y T-104 terminadas · T-103 se adelanta para Timonel · El repositorio pasa a privado (15-oct)
+
+**Timonel aceptó las dos** (commit `83b4645`, `docs/T94-T104-ACEPTACION-RESULTADOS.md`), sobre una copia exacta de `7c939e6`, en ≈ 0.55 h.
+- **T-94 pasa a Terminado.**
+  - Sin red, con modo avión, el Wi-Fi apagado y un `ping` que falla, y con la voz de Carlos: 3 de 3 intentos muestran «Reconocimiento en español no disponible. Puedes escribir la búsqueda.» debajo de Buscar.
+  - «5568» encuentra el OR 3 sin red, y con red el dictado queda como borrador.
+- **T-104 pasa a Terminado, aceptada con observación.**
+  - **El almacén real:** la huella queda idéntica tras dos corridas de los 31 corpus (316 archivos, 116/116 en cada una), tomada fuera del paquete.
+  - **La salvaguarda** pasa 5 de 5, más una sonda propia 3 de 3.
+  - **La suite** da 685/685 tres veces seguidas, con la prueba de los guardados simultáneos en verde.
+  - **El reintento de compactación,** revisado contra `hive_ce` 2.20.0: acotado a 5 intentos y 375 ms, solo para el error 5 en Windows, sin repetir ni perder guardados.
+  - **El Honor a 2.0,** en los dos temas: pasan las pestañas, las tarjetas, «1 bahía» y el inicio.
+- **Tres observaciones fuera del catálogo, que pasan a T-56** (suma 0.5 h y queda en 3.0 h):
+  - «1 contenedores» en Recientes;
+  - el desplegable de tapas, que corta «abierta»;
+  - el chip «VIAJE007A», que se sale de su fondo.
+- **Una incidencia menor:** Timonel volvió a ejecutar `git rev-parse`, que solo lee. Queda anotado y la lista no cambia.
+
+**T-103 se adelanta** (ficha completa en la Ola 4). 10.35 la había dejado para después del 17-oct, por carga.
+- Timonel está libre, y la rama principal sigue congelada para la presentación (2.2), así que trabajar en `sprint-3` no la toca.
+- **Va a Timonel ahora.** Su aceptación cruzada la hace Codex.
+- **Al mismo tiempo, Codex acepta T-93.** Para no cruzarse:
+  - Codex compila y prueba desde una copia exacta de HEAD, porque Timonel va a tocar `lib/` y `test/`;
+  - Timonel no abre la app de Windows mientras Codex tenga apartado el almacén real;
+  - un comando de Flutter a la vez, con el semáforo de Carlos.
+
+**El repositorio de código pasa a privado** (Carlos, 15-oct, 02:07), para que no copien la idea.
+- **Las reglas de 2.4 no cambian:** nada de datos reales ni del corpus en el repo. La historia estuvo pública semanas, y el repo podría volver a abrirse.
+- Ningún entregable del curso enlaza al repo, así que el 17-oct no se rompe nada.
+- **Carlos creó aparte un repo público de portafolio,** `YovaWarrior/BayStream`, sin licencia y sin código. Tiene el README que escribió Yov, con cuatro capturas de A07 y A08, que son datos anonimizados. Su enlace va en LinkedIn.
+- **Queda pendiente:**
+  - la alerta de «Security and quality» (1) del repo privado. Probablemente es la clave web de Firebase del proyecto de H5 en la historia (10.36 del Sprint 2); Carlos la revisa;
+  - agregar al tutor como colaborador de lectura, si va a revisar el código.
+
+**El sprint queda en 42 tareas y ≈ 155.5 h.** El tablero suma 210.5 h:
+- 30 terminadas;
+- T-93 en revisión;
+- T-103 en curso;
+- 10 por hacer.
