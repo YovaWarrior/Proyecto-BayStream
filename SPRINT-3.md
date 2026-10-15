@@ -1569,6 +1569,74 @@ recorrido fija qué se sirve. El informe lo declara para T-98.
   - `pubspec.*` solo cambia por `msix` y sus transitivas nuevas, declaradas con
     sus versiones.
 
+**Corrección de T-93 (15-oct, 10.42) · Codex · sin estimación nueva: es parte de T-93.**
+
+**Qué falla.** En la aceptación, Codex cambió un bit de una copia del paquete. La firma
+quedó `HashMismatch`, con la huella de Carlos, y el control final de `tool/t93_msix.ps1`
+no la rechazó:
+- solo compara la huella (`$firma.SignerCertificate.Thumbprint -ne $Huella`);
+- muestra `$firma.Status`, pero no lo mira.
+
+Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script que imprime
+«Firma: HashMismatch» y termina bien da una confianza que no merece.
+
+**Qué construye.**
+1. **Una sola función de verificación en el script,** que exige tres cosas:
+   - el SHA-256 del `.msix` coincide con el de su `.sha256`;
+   - `Get-AuthenticodeSignature` da `Status` igual a `Valid`;
+   - el firmante tiene la huella que se pasó con `-Huella`.
+   - Si falla alguna, termina con error y dice cuál falló, con el estado y el
+     `StatusMessage` de la firma.
+   - Con `HashMismatch`, el mensaje dice que el paquete está alterado o dañado y que no
+     se distribuye.
+   - Si el estado no es `Valid` porque el `.cer` no es de confianza en ese equipo, el
+     mensaje dice que primero se importe `BayStream.cer` en «Personas de confianza».
+2. **El armado termina llamando a esa función** sobre el paquete que acaba de crear. Ya no
+   usa el control de hoy.
+3. **Un modo `-Verificar <ruta del .msix>`,** que solo corre esa función sobre un paquete
+   que ya existe:
+   - no compila, no empaqueta y no necesita Flutter;
+   - no pide el archivo de opciones de Firebase, ni comprueba que exista;
+   - sirve para probar el control sobre un archivo real, y para que Carlos revise una
+     copia antes de llevarla a COMAR.
+4. **La prueba que ya existe,** «T-93 el script compila con Firebase y firma por huella»,
+   exige además que el script consulte el estado `Valid`. No hay pruebas nuevas, y la suite
+   sigue en 685.
+5. **Los textos del script siguen en ASCII,** sin tildes, como el resto.
+
+**Carril.**
+- Toca solo `tool/t93_msix.ps1`, `test/t93_msix_config_test.dart` y
+  `docs/T93-CORRECCION-RESULTADOS.md`.
+- No toca `lib/`, `pubspec.*` ni las demás pruebas: Timonel está en T-103.
+- Trabaja en una copia exacta de HEAD en `%TEMP%`, y pone sus archivos en el repo solo al
+  final, juntos.
+- No instala nada, no abre la app y no toca el almacén real.
+
+**Terminada cuando.** Las sondas usan los paquetes de la aceptación, que siguen en
+`%TEMP%\baystream-t93acc\`, o uno recién armado. Ninguna copia alterada se instala.
+- [ ] **El original pasa:** `-Verificar` sobre el `.msix` 1.0.2.0 con su `.sha256`
+      termina con código 0, y muestra `Valid`, `CN=BayStream` y la huella.
+- [ ] **La firma alterada no pasa:** una copia con un bit cambiado, con su `.sha256`
+      recalculado para que el SHA no la detenga antes, termina con error y dice
+      `HashMismatch`.
+- [ ] **El SHA no pasa:** el original con un `.sha256` que no coincide termina con error,
+      y lo dice.
+- [ ] **Otra huella no pasa:** el original con una huella que no es la de Carlos (40
+      hexadecimales válidos) termina con error, y lo dice.
+- [ ] **El armado usa la misma función:** `-SinCompilar` sobre la compilación Release de
+      la copia termina con la misma verificación en verde. Es un comando de la cadena de
+      Flutter, así que va con el semáforo de Carlos.
+- [ ] **Validaciones en la copia con los dos archivos:**
+  - suite 685/685, T-93 5/5 y `analyze` en cero;
+  - el corpus no hace falta, porque `lib/` no cambia.
+- [ ] **El informe** explica cómo se usa `-Verificar`, en una línea lista para las
+      instrucciones de oficina de T-100.
+
+**La verificación la hace Timonel** cuando entregue T-103:
+- revisa el cambio;
+- repite las cuatro sondas con el script commiteado.
+- Si pasan, T-93 queda Terminado.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34) |
@@ -1576,7 +1644,7 @@ recorrido fija qué se sirve. El informe lo declara para T-98.
 | **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes · **ficha completa arriba** |
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
 | **T-92** | USO | 3.0 | Web sin conexión: servir el motor de dibujo, las fuentes y el SDK de Firebase desde el propio sitio · **ficha completa arriba** |
-| **T-93** | USO | 2.5 | Instalador de Windows: paquete MSIX firmado con el paquete `msix` (Carlos, 10.36) · **ficha completa arriba** |
+| **T-93** | USO | 2.5 | Instalador de Windows: paquete MSIX firmado con el paquete `msix` (Carlos, 10.36) · **ficha completa arriba**, con su corrección (10.42) |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 
@@ -3104,6 +3172,46 @@ El piso de pruebas es 648.
   - agregar al tutor como colaborador de lectura, si va a revisar el código.
 
 **El sprint queda en 42 tareas y ≈ 155.5 h.** El tablero suma 210.5 h:
+- 30 terminadas;
+- T-93 en revisión;
+- T-103 en curso;
+- 10 por hacer.
+
+### 10.42 · T-93 no pasa la aceptación por el control de firma del script · Codex lo corrige ahora y Timonel lo verifica al entregar T-103 (15-oct)
+
+**Codex aceptó T-93** (commit `0cd6074`, `docs/T93-ACEPTACION-RESULTADOS.md`) sobre una copia exacta de `bd09a4d`: 555 archivos, idénticos a HEAD también al terminar. Veredicto: **no pasa**, por un solo punto.
+- **Pasa todo lo que pide la ficha:**
+  - el doble clic con App Installer, la entrada en Inicio y Firebase;
+  - A07 con 398 / 21 / 6940.6 t / 0-114-284, también al reabrir por PID y después de actualizar;
+  - «PRUEBA T-84» en «Al día», con 4 / 3 / 20.0 t / 0-3-1, con la sesión que inició Carlos y sin movimientos;
+  - la actualización a 1.0.2.0, que conserva los dos viajes, Recientes y la sesión;
+  - la desinstalación, que borra el paquete, su carpeta privada y la entrada de Inicio;
+  - el almacén real, apartado antes de instalar y devuelto con la misma huella (316 archivos), tomada fuera del paquete;
+  - 685/685, T-93 5/5, `analyze` en cero y corpus 116/116.
+  - Los dos paquetes originales tienen firma `Valid`, con `CN=BayStream` y la huella de Carlos.
+- **No pasa el control de firma de `tool/t93_msix.ps1`.**
+  - Muestra el estado de la firma, pero solo se detiene si la huella es otra.
+  - Codex cambió un bit de una copia del paquete: la firma quedó `HashMismatch` con la misma huella, y la condición del script no la rechazó.
+  - La copia nunca se instaló.
+
+**La lectura de Yov.**
+- **La ficha no pedía ese control,** y el informe de Timonel describe el script tal como es: «termina con error si la firma no es de esa huella». Ningún criterio de la ficha falla.
+- **Aun así, Codex tiene razón.** Un script que imprime «Firma: HashMismatch» y termina bien da una confianza que no merece. Windows no instalaría ese paquete, así que el riesgo es bajo, y la corrección cuesta poco.
+- **T-93 sigue En revisión** hasta que se corrija y se verifique, como T-94 en 10.38.
+
+**Quién la corrige: Codex, ahora, porque está libre** (la ficha va al final de la de T-93).
+- Toca solo `tool/t93_msix.ps1` y la prueba que ya existe en `test/t93_msix_config_test.dart`. No hay pruebas nuevas: la suite sigue en 685.
+  - Ninguno de los dos archivos es de T-103, así que no se cruza con Timonel.
+  - Trabaja en una copia de HEAD en `%TEMP%`, y pone sus archivos en el repo solo al final.
+  - No instala nada ni toca el almacén real.
+- **Timonel la verifica** cuando entregue T-103. La corrección no es suya, así que la aceptación sigue siendo cruzada. Después, Codex acepta T-103.
+- **Sin estimación nueva:** es parte de T-93, igual que la corrección de T-94.
+
+**Dos notas.**
+- **El commit `0cd6074` salió sin el prefijo «Sprint 3:».** Ya está en el remoto y no se reescribe. El próximo bloque de Codex lo lleva.
+- **El respaldo del almacén de la aceptación** sigue en `%TEMP%\baystream-t93acc-respaldo\`. Carlos lo borra cuando T-93 quede terminada.
+
+**El sprint sigue en 42 tareas y ≈ 155.5 h.** El tablero mantiene sus 210.5 h:
 - 30 terminadas;
 - T-93 en revisión;
 - T-103 en curso;
