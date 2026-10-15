@@ -22,6 +22,8 @@ class _VoiceSearchFieldState extends ConsumerState<VoiceSearchField>
   late VoiceRecognizer _recognizer;
   Timer? _timeout;
   bool _listening = false;
+  bool _finishing = false;
+  bool _receivedTranscript = false;
   bool _draft = false;
   String? _message;
   int _session = 0;
@@ -45,11 +47,14 @@ class _VoiceSearchFieldState extends ConsumerState<VoiceSearchField>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed && _listening) _cancel();
+    if (state != AppLifecycleState.resumed && (_listening || _finishing)) {
+      _cancel();
+    }
   }
 
   void _cancel() {
     _session++;
+    _finishing = false;
     _timeout?.cancel();
     unawaited(_recognizer.cancel());
     if (mounted) setState(() => _listening = false);
@@ -61,6 +66,8 @@ class _VoiceSearchFieldState extends ConsumerState<VoiceSearchField>
       return;
     }
     final session = ++_session;
+    _finishing = false;
+    _receivedTranscript = false;
     setState(() {
       _listening = true;
       _draft = true;
@@ -76,6 +83,7 @@ class _VoiceSearchFieldState extends ConsumerState<VoiceSearchField>
         if (!mounted || session != _session) return;
         final value = normalizeContainerVoiceQuery(transcript);
         if (value.isEmpty) return;
+        _receivedTranscript = true;
         setState(() {
           _text.value = TextEditingValue(
               text: value,
@@ -86,9 +94,20 @@ class _VoiceSearchFieldState extends ConsumerState<VoiceSearchField>
         if (mounted && session == _session) _fail(failure);
       },
       onDone: () {
-        if (!mounted || session != _session) return;
-        _cancel();
-        // El resultado sigue siendo un borrador aunque la escucha termine.
+        if (!mounted || session != _session || _finishing) return;
+        _finishing = true;
+        _timeout?.cancel();
+        setState(() => _listening = false);
+        // Android puede entregar el error después de done. Conservamos los
+        // callbacks brevemente; cerrar, editar o confirmar cancela también esto.
+        _timeout = Timer(const Duration(milliseconds: 500), () {
+          if (!mounted || session != _session) return;
+          if (_receivedTranscript) {
+            _cancel();
+          } else {
+            _fail(VoiceFailure.noMatch);
+          }
+        });
       },
     );
   }
@@ -132,7 +151,7 @@ class _VoiceSearchFieldState extends ConsumerState<VoiceSearchField>
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _confirm(),
               onChanged: (value) {
-                if (_listening) _cancel();
+                if (_listening || _finishing) _cancel();
                 if (!_draft) widget.onQuery(value);
               },
             )),

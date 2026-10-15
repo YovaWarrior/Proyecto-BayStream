@@ -45,6 +45,94 @@ Future<T75MemoryLog> _picker(WidgetTester tester, T94FakeRecognizer fake,
 }
 
 void main() {
+  for (final order in ['error-done', 'done-error', 'done-sin-error']) {
+    testWidgets('T-94 $order: avisa sin cambiar texto ni buscar',
+        (tester) async {
+      final fake = T94FakeRecognizer();
+      final queries = <String?>[];
+      await tester.pumpWidget(ProviderScope(
+          overrides: [voiceRecognizerProvider.overrideWithValue(fake)],
+          child: MaterialApp(
+              home: Scaffold(body: VoiceSearchField(onQuery: queries.add)))));
+      await tester.enterText(_query, '5678');
+      await tester.tap(_mic);
+      await tester.pump();
+      if (order == 'error-done') {
+        fake.failure!(VoiceFailure.network);
+        await tester.pump(const Duration(milliseconds: 50));
+        fake.done!();
+      } else {
+        fake.done!();
+        await tester.pump(const Duration(milliseconds: 50));
+        if (order == 'done-error') fake.failure!(VoiceFailure.network);
+      }
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+          find.byKey(const ValueKey('loading-voice-message')), findsOneWidget);
+      expect(
+          find.textContaining(order == 'done-sin-error'
+              ? 'No se entendió el dictado'
+              : 'Reconocimiento sin conexión'),
+          findsOneWidget);
+      expect(tester.widget<TextField>(_query).controller!.text, '5678');
+      expect(queries, ['5678', null],
+          reason: 'La voz no confirma la búsqueda.');
+      await tester.tap(_confirm);
+      await tester.pump();
+      expect(queries, ['5678', null, '5678']);
+    });
+  }
+  testWidgets('T-94 done sin texto previo no reutiliza el borrador anterior',
+      (tester) async {
+    final fake = T94FakeRecognizer();
+    await _picker(tester, fake);
+    await tester.tap(_mic);
+    await tester.pump();
+    fake.transcript!('cinco seis siete ocho');
+    fake.done!();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byKey(const ValueKey('loading-voice-message')), findsNothing);
+    await tester.tap(_mic);
+    await tester.pump();
+    fake.done!();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.textContaining('No se entendió el dictado'), findsOneWidget);
+    expect(tester.widget<TextField>(_query).controller!.text, '5678');
+    expect(find.byKey(const ValueKey('loading-or-2')), findsNothing);
+  });
+  for (final action in ['editar', 'confirmar', 'cerrar', 'nuevo dictado']) {
+    testWidgets('T-94 $action invalida errores del cierre anterior',
+        (tester) async {
+      final fake = T94FakeRecognizer();
+      await _picker(tester, fake);
+      await tester.tap(_mic);
+      await tester.pump();
+      fake.transcript!('uno dos tres cuatro');
+      final oldFailure = fake.failure!;
+      final oldDone = fake.done!;
+      fake.done!();
+      await tester.pump();
+      switch (action) {
+        case 'editar':
+          await tester.enterText(_query, '5678');
+        case 'confirmar':
+          await tester.tap(_confirm);
+        case 'cerrar':
+          await tester.tap(find.text('Cerrar'));
+        case 'nuevo dictado':
+          await tester.tap(_mic);
+      }
+      await tester.pump();
+      oldFailure(VoiceFailure.network);
+      oldDone();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byKey(const ValueKey('loading-voice-message')), findsNothing);
+      expect(tester.takeException(), isNull);
+      // Desmonta también cualquier nueva escucha para cancelar su timeout.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    });
+  }
   for (final brightness in Brightness.values) {
     testWidgets(
         'T-94 ${brightness.name}: dictado borrador sin buscar ni operar hasta confirmar',

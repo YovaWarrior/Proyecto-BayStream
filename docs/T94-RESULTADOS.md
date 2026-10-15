@@ -287,3 +287,109 @@ añade RECORD_AUDIO y RecognitionService, sin Bluetooth. T-88 debe describir el
 micrófono opcional y el posible procesamiento remoto por el servicio de voz.
 ≈0.60 h frente a 4.5. No hubo publicación, acceso a H5 ni cambios en main o
 reglas. Informe: docs/T94-RESULTADOS.md.
+
+## Corrección del 15-oct
+
+La aceptación en lote (10.38) invalida la conclusión anterior sobre el aviso
+sin red: el Honor terminó tres escuchas sin mostrarlo. Esta corrección pertenece
+a T-94 y no añade una estimación.
+
+**Mecanismo:** al recibir `done`, el widget apaga el indicador y conserva durante
+500 ms los callbacks de esa escucha. Un error recibido antes o durante ese
+intervalo muestra su aviso. Si termina sin transcript ni error, muestra «No se
+entendió el dictado. Reintenta o escribe la búsqueda.». La comprobación cuenta
+texto de la escucha actual, aunque hubiera un borrador anterior. Editar,
+confirmar, cerrar, pausar o iniciar otra escucha invalida los callbacks previos.
+El texto no cambia al terminar ni al fallar y no se confirma ninguna búsqueda.
+
+**Validación automatizada de la corrección:**
+
+| Control | Resultado | Registro en `%TEMP%/baystream-t94-correccion-20261015/` |
+| --- | --- | --- |
+| Widget de voz | 20/20; ocho pruebas nuevas | `widget.log` |
+| Suite completa | 668/668, piso 660 + 8, sin omitidas | `suite.log` |
+| Analyze | 0 incidencias | `analyze.log` |
+| Corpus completo | 116/116 en 31 archivos | `corpus.log` |
+| T-94 dentro del corpus | Dos variantes; 242 números completos y 242 sufijos | `corpus.log` |
+
+Los tres órdenes exigidos (`error → done`, `done → error`, `done` vacío) tienen
+prueba con reconocedor falso: aparece el aviso, conserva el campo y solo Buscar
+confirma. Otras cinco pruebas comprueban una segunda escucha vacía y los eventos
+tardíos después de editar, confirmar, cerrar o iniciar otro dictado.
+
+**Almacén del corpus:** antes de corregir block3 en T-104, esta corrida redirigió
+`LOCALAPPDATA` solo en su proceso a
+`%TEMP%/baystream-t94-correccion-20261015/corpus-localappdata`.
+Así, la bitácora predeterminada de block3 quedó en TEMP, sin acceder al almacén
+real. No se presenta esa corrida como la aceptación de aislamiento de T-104 ni
+como una comparación de huellas del almacén real.
+
+**Cliente preparado:** APK release `.t94`, compilado en
+`%TEMP%/baystream-t94-clientes`, con 0 diferencias de SHA entre sus archivos de
+`lib/` y los del repositorio. Se inicializa `baystream-app` con
+`--dart-define-from-file`, sin abrir el archivo privado. Banco local de T-94,
+namespace `t94acc`, sin cuenta ni movimientos. Instalación `adb install -r`
+correcta; compilación en 87.4 s, 52.4 MB. No se copió ni abrió
+`android/key.properties`; firma de depuración solo en la copia temporal.
+SHA-256 del APK:
+`8EE75B9BDE277B8C2492DB3389DFD616895A9A50E86B3315DC18E55F77CA2862`.
+
+**Honor:** Carlos confirmó la búsqueda manual por `5568` (OR 3) sin red y los
+dos dictados con red como borrador, sin resultados hasta Buscar. Realizó tres
+activaciones con su voz sin red y comunicó que solo veía lo que había en pantalla.
+Inicialmente interpretó que faltaba el aviso; el XML de esa pantalla contiene
+«Reconocimiento en español no disponible. Puedes escribir la búsqueda.». Se
+aclaró que ese texto debajo de Buscar es el aviso, no un diálogo emergente.
+Codex no atribuye a Carlos una confirmación expresa de haber leído tres avisos.
+
+**Comprobación técnica adicional, 3/3:** Codex pulsó el micrófono tres veces
+consecutivas y comprobó el texto anterior tras cada una. Tres XML sanitizados:
+`honor-offline-intento-1.xml`, `honor-offline-intento-2.xml` y
+`honor-offline-intento-3.xml`. Modo avión activo, Wi-Fi apagado y `ping` con
+«Network is unreachable». Otra activación anterior produjo «Reconocimiento sin
+conexión o servicio no disponible. Puedes escribir la búsqueda.». Esta
+comprobación no grabó ni simuló la voz de Carlos. La aceptación cruzada de
+Timonel deberá confirmar el criterio manual sin confundir el aviso inline con
+una ventana emergente.
+
+La variante usa su directorio
+privado `/data/user/0/gt.cmartinez.baystream.t94/files/vessel_store`, namespace
+`t94acc`; no se inspeccionaron sus cajas privadas. Windows y Chrome no se han
+reabierto para esta corrección. No se atribuyen a esta entrega sus resultados
+históricos del 13-oct ni los del lote.
+
+**Integridad:** ocho SHA iniciales/finales iguales, registrados en
+`sha-antes.json`: propuesta de reglas, reglas, `firebase.json`, `main.dart`, los
+dos congelados y `pubspec.*`. Referencia de reglas T-80:
+`21894B7F43E59F856045473731B795D21F8373C5AC8A1D9FFF324334AC3C9000`;
+`firestore.rules`:
+`0112510984D9A16364F9752E243999C47306E0BCF82766E380DB380E8FE8E60A`.
+Es comprobación local; no se accedió a la consola ni al proyecto H5. No hay
+dependencias nuevas; **no cambian `pubspec.yaml` ni `pubspec.lock`**.
+Los cuatro documentos ajenos preexistentes se conservaron.
+
+**Archivos de esta corrección y bloque exclusivo para Carlos:**
+
+```powershell
+git add -- lib/features/vessel/presentation/widgets/voice_search_field.dart
+git add -- test/t94_voice_widget_test.dart
+git add -- docs/T94-RESULTADOS.md
+git commit -m "Sprint 3: T-94 conserva el aviso al terminar el dictado"
+git push
+```
+
+La voz conserva el error que llega alrededor de done y avisa si no reconoce texto.
+El borrador se conserva y ninguna búsqueda se ejecuta automáticamente.
+668/668, analyze 0 y corpus 116/116; Honor con tres avisos comprobados por XML.
+
+**Mensaje para Yov:** corrección de T-94 implementada sobre `5163654`, con espera
+de 500 ms tras done, aviso para escucha vacía y ocho pruebas nuevas. 668/668,
+analyze 0 y corpus 116/116 (242 completos y 242 sufijos), aislando LOCALAPPDATA
+en TEMP por 10.38. Carlos confirmó los dos borradores con red y la búsqueda de
+OR 3 sin red. Tres activaciones técnicas sin red mostraron aviso (XML 3/3).
+Carlos hizo también tres con su voz, pero interpretaba que faltaba el aviso;
+el XML final contiene el aviso de español no disponible. Se aclaró el texto
+inline; no se inventa una confirmación manual expresa de los tres mensajes.
+Queda En revisión para que Timonel compruebe ese criterio.
+Reglas y protegidos con los mismos SHA, sin dependencias nuevas. Commit propuesto:
+`Sprint 3: T-94 conserva el aviso al terminar el dictado`. Solo tres rutas propias.
