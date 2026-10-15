@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 155.7 h estimadas** (al 15-oct, 10.38) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.2 h estimadas** (al 15-oct, 10.39) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1576,7 +1576,7 @@ cambio de reglas o Firebase.
 - [ ] Piso de 635 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
-#### T-104 · Las deudas del lote: el corpus que escribe en el almacén real y los textos a 200 % · 2.0 h · Codex (ficha completa, 15-oct)
+#### T-104 · Las deudas del lote: el corpus que escribe en el almacén real y los textos a 200 % · 2.5 h · Codex (ficha completa, 15-oct; añadido en 10.39)
 
 **Para qué.** Nace en 10.38, del lote de Timonel. Son cuatro cosas chicas del mismo
 carril, juntas para no multiplicar entregas:
@@ -1639,13 +1639,35 @@ para RNF-003.
 - [ ] **Validaciones:** el piso de la corrección de T-94 más las nuevas, `analyze` en cero, las
       reglas sin cambio y sin dependencias nuevas.
 
+**Añadido a T-104 (15-oct, 10.39), de la aceptación de T-92. Suma 0.5 h, y la tarea queda en 2.5 h.**
+
+6. **Una prueba intermitente.** `test/local_vessel_repository_test.dart`, «guardar viajes
+   simultáneamente también respeta cinco», falla 1 de cada 3 corridas en la suite completa
+   y pasa 10 de 10 sola.
+   - Usa un directorio temporal, así que no es el almacén real.
+   - Lo probable es un empate en el orden de los recientes cuando ocho guardados caen en
+     el mismo instante.
+   - Se busca la causa y se corrige sin debilitar lo que la prueba exige. Si el defecto
+     está en el repositorio, se corrige ahí.
+   - **Pasa cuando** la suite completa da 5 de 5 corridas seguidas en verde.
+7. **Los dos `print` con `// ignore: avoid_print`** de `bay_plan_view.dart` (líneas 343 y 348,
+   desde `bb28784`, de mayo) se quitan. Son registros de depuración de la leyenda.
+   - `analyze` queda en cero sin un solo `// ignore:` en `lib/`, como dice la línea base
+     de `CLAUDE.md`.
+   - **Pasa cuando** una búsqueda de `// ignore` en `lib/` no devuelve nada.
+8. **Una frase del `LEEME` del SDK de Firebase** (`web/vendor/firebase/12.17.0/LEEME.md`).
+   - Dice que la URL también se reemplazó «en comentarios». En `firebase-app.js` esas dos
+     apariciones son literales de código (`name$q` y `Logger`).
+   - La frase se corrige. Los módulos y su procedencia no cambian, y las pruebas de T-92
+     siguen en verde.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
 | **T-56** | ERS | 2.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38) |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
-| **T-104** | ERS | 2.0 | Deudas del lote de Timonel: aislar `block3` del almacén real, «1 bahías», las extensiones de la pantalla inicial y los cortes a 200 % (10.38) · **ficha completa arriba** |
+| **T-104** | ERS | 2.5 | Deudas del lote de Timonel: aislar `block3` del almacén real, «1 bahías», las extensiones de la pantalla inicial y los cortes a 200 % (10.38); la prueba intermitente, los dos `print` y el `LEEME` del SDK (10.39) · **ficha completa arriba** |
 
 ### Cierre · Calidad, entregables y piloto (21–24 oct)
 
@@ -2909,3 +2931,38 @@ El piso de pruebas es 648.
 1. **Codex:** la corrección de T-94 y después T-104, con dos commits. El 16-oct, la aceptación cruzada de T-93 y la parte de código de T-88.
 2. **Timonel:** la aceptación de T-92. Después vuelve a comprobar la corrección de T-94 y acepta T-104.
 3. Un comando de Flutter a la vez, y el Honor y la app de Windows por turnos: Carlos da el semáforo.
+
+### 10.39 · T-92 terminada: Timonel la acepta con una observación · Tres cosas más para T-104 · El modo avión del Honor no siempre apaga el Wi-Fi (15-oct)
+
+**T-92 pasa a Terminado.** Timonel la aceptó con una observación (commit `f313be0`, `docs/T92-ACEPTACION-RESULTADOS.md`).
+- Trabajó sobre una copia exacta de HEAD (`5163654`), porque Codex tenía cambios a medias en `lib/` y `test/`. Es la práctica correcta.
+- **El verificador,** sobre una compilación limpia: 48 archivos y 35 680 304 bytes.
+- **El inventario,** con A07 en los dos temas y el PDF: 18 URL y **ninguna externa**. Lo confirma también el registro de red de Chrome.
+- **Sin red, tras una visita:**
+  - en la laptop, con la CSP de prueba y el servidor detenido;
+  - en el Honor, en modo avión, con el Wi-Fi apagado y sin red comprobada;
+  - en los dos, 398 contenedores, 21 bahías, `6940.6 t` y 0/114/284, sin recuadros.
+- **«PRUEBA T-84»:** «Al día» → «Conectando…» → «Al día», con 4/3/`20.0 t`/0-3-1 y sin movimientos. Carlos inició la sesión y autorizó el «Unirse».
+- **Las pruebas:** 660/660, con las 7 de T-92, y `analyze` en cero.
+- **El SDK:** la versión 12.17.0 es la que pide `firebase_core_web`. Los módulos son los originales de `gstatic` con una sola sustitución, comprobado con SHA y byte a byte.
+- **La observación:** el `LEEME` del SDK dice que la URL se reemplazó «en comentarios», y en `firebase-app.js` son dos literales de código (`name$q` y `Logger`). El efecto es nulo; la frase se corrige en T-104.
+
+**Dos hallazgos fuera de T-92, que pasan a T-104** (suma 0.5 h y queda en 2.5 h):
+- **Una prueba intermitente:** «guardar viajes simultáneamente también respeta cinco» falla 1 de 3 en la suite completa y pasa 10 de 10 sola.
+  - Usa un directorio temporal, así que no es el almacén real.
+  - Una prueba intermitente amenaza el piso: se corrige, nunca se marca `skip`.
+- **Dos `// ignore: avoid_print`** en `bay_plan_view.dart`, desde `bb28784` (mayo). Contradicen la línea base de `CLAUDE.md` («sin ningún `// ignore:`»). El lote también los había visto.
+  - Se quitan los dos `print`, que son registros de depuración de la leyenda.
+- **Codex ya estaba con T-104** cuando nació esto. Carlos le pasa el añadido, que está al final de la ficha de T-104.
+
+**Una regla nueva de prueba, en `AGENTS.md`:**
+- En el Honor, el modo avión puede dejar el Wi-Fi encendido (`wifi_on=2`).
+- Una prueba sin red comprueba que de verdad no hay red: el Wi-Fi apagado y un `ping` que falla. Y lo anota.
+
+**Un choque de proceso, sin daño:** Codex usó el Honor durante la prueba de Timonel, y se lo cedieron. El Honor es de un solo usuario a la vez (`AGENTS.md`, «Trabajo en paralelo», regla 5): el turno lo da Carlos con el semáforo.
+
+**El sprint queda en 42 tareas y ≈ 156.2 h,** por la media hora que suma T-104. El tablero suma 210.0 h: 28 terminadas, T-93 en revisión, T-94 en curso y 12 por hacer.
+
+**Lo que sigue:**
+- **Codex:** termina la corrección de T-94 y T-104, con el añadido. El 16-oct, acepta T-93 y hace la parte de código de T-88.
+- **Timonel:** vuelve a comprobar el criterio de T-94 y acepta T-104.

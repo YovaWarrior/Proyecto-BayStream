@@ -127,6 +127,9 @@ herramientas de Flutter y el Honor, así que se reparten así:
   hazlo fuera del paquete: un `.bat` lanzado con `explorer.exe`, que anota su
   proceso padre. La app instalada como MSIX usa esa carpeta si ya existe; en la
   laptop de Carlos, apártala antes de instalarla (10.37).
+- En el Honor, el modo avión puede dejar el Wi-Fi encendido (`wifi_on=2`). Una prueba
+  sin red comprueba que de verdad no hay red, con el Wi-Fi apagado y un `ping` que
+  falla, y lo anota en el informe (10.39).
 - En Windows, una aceptación que registra movimientos usa un namespace propio del
   almacén real (`tNNacc`, como `t75acc`), no la operación por defecto: la bitácora
   es solo de anexar y lo que se registra ahí no se borra desde la app (10.11).
