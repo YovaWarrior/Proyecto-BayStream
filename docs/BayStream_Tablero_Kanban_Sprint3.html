@@ -150,8 +150,8 @@
     <p class="eyebrow">Proyecto de Graduación II · 7 – 24 oct 2026 · rama sprint‑3</p>
     <h1>Sprint 3 — Operación en muelle y sincronización</h1>
     <p class="sub">Estado del tablero al 15 de octubre de 2026, noveno día del sprint. De las 210.0 horas estimadas hay
-      94.0 terminadas, 2.5 en revisión y 4.5 en curso. Cada tarjeta muestra la estimación de SPRINT‑3.md;
-      en las terminadas y en revisión, la nota da el commit, la cifra del caso real y las horas reales. El lote de Timonel pasó once a Terminado y T‑92 se aceptó aparte; T‑94 no pasó y vuelve a En curso. En revisión queda T‑93, que acepta Codex.</p>
+      94.0 terminadas, 9.5 en revisión y 0.0 en curso. Cada tarjeta muestra la estimación de SPRINT‑3.md;
+      en las terminadas y en revisión, la nota da el commit, la cifra del caso real y las horas reales. El lote de Timonel pasó once a Terminado y T‑92 se aceptó aparte. En revisión: T‑94 corregida y T‑104 (las acepta Timonel) y T‑93 (la acepta Codex).</p>
   </header>
 
   <dl class="cifras">
@@ -159,18 +159,18 @@
     <div class="cifra"><dt>Tareas</dt><dd>42</dd></div>
     <div class="cifra"><dt>Estimado</dt><dd>210.0<small>h</small></dd></div>
     <div class="cifra"><dt>Terminadas</dt><dd>28<small>de 42</small></dd></div>
-    <div class="cifra"><dt>Pruebas</dt><dd>660<small>piso</small></dd></div>
+    <div class="cifra"><dt>Pruebas</dt><dd>685<small>piso</small></dd></div>
     <div class="cifra"><dt>Incremento 2</dt><dd>17<small>oct</small></dd></div>
   </dl>
 
   <div>
-    <div class="avance" role="img" aria-label="Horas estimadas: 94.0 terminadas, 2.5 en revisión, 4.5 en curso y 109.0 por hacer"><i style="width:44.8%; background:var(--ok)"></i><i style="width:1.2%; background:var(--warn)"></i><i style="width:2.1%; background:var(--deck)"></i></div>
-    <div class="avance-txt"><span><i class="pt" style="background:var(--ok)"></i>Terminado <b>94.0 h</b></span><span><i class="pt" style="background:var(--warn)"></i>En revisión <b>2.5 h</b></span><span><i class="pt" style="background:var(--deck)"></i>En curso <b>4.5 h</b></span><span><i class="pt" style="background:var(--sunk); border:1px solid var(--line-2)"></i>Por hacer <b>109.0 h</b></span></div>
+    <div class="avance" role="img" aria-label="Horas estimadas: 94.0 terminadas, 9.5 en revisión, 0.0 en curso y 106.5 por hacer"><i style="width:44.8%; background:var(--ok)"></i><i style="width:4.5%; background:var(--warn)"></i><i style="width:0.0%; background:var(--deck)"></i></div>
+    <div class="avance-txt"><span><i class="pt" style="background:var(--ok)"></i>Terminado <b>94.0 h</b></span><span><i class="pt" style="background:var(--warn)"></i>En revisión <b>9.5 h</b></span><span><i class="pt" style="background:var(--deck)"></i>En curso <b>0.0 h</b></span><span><i class="pt" style="background:var(--sunk); border:1px solid var(--line-2)"></i>Por hacer <b>106.5 h</b></span></div>
   </div>
 
   <div class="tablero">
     <section class="col">
-      <header><h2>Por hacer</h2><span class="cuenta">12 · 109.0 h</span></header>
+      <header><h2>Por hacer</h2><span class="cuenta">11 · 106.5 h</span></header>
       <p class="criterio">Estimada en SPRINT‑3.md. La ficha completa se escribe al tomarla.</p>
       <div class="cuerpo">
         <div class="grupo">
@@ -193,12 +193,11 @@
           </div>
         </div>
         <div class="grupo">
-          <h3><span class="id">ERS</span> RF-028, RF-029, tomas de reefer y textos <span class="met">4 de 5 · 18.5 h</span></h3>
+          <h3><span class="id">ERS</span> RF-028, RF-029, tomas de reefer y textos <span class="met">3 de 5 · 16.0 h</span></h3>
           <div class="tareas">
             <div class="t dom"><span class="cod">T‑95</span><span class="txt">Orden de descarga sugerido (RF-028)</span><span class="h">7.5</span><span class="pie"><span class="capa">Dominio</span></span></div>
             <div class="t dom"><span class="cod">T‑96</span><span class="txt">Comparación llegada contra salida (RF-029)</span><span class="h">6.0</span><span class="pie"><span class="capa">Dominio</span><span class="nota ">con la observación de 10.20: el detalle muestra datos de A07</span></span></div>
             <div class="t dom"><span class="cod">T‑56</span><span class="txt">Tomas de reefer por celda y por rangos</span><span class="h">2.5</span><span class="pie"><span class="capa">Dominio</span><span class="nota ">sin listas dentro de listas en Firestore (10.33)</span></span></div>
-            <div class="t int"><span class="cod">T‑104</span><span class="txt">Deudas del lote: block3 fuera del almacén real, «1 bahías», los textos a 200 % y la prueba intermitente</span><span class="h">2.5</span><span class="pie"><span class="capa">Interfaz</span><span class="nota ">nace en 10.38, crece en 10.39; Codex, después de la corrección de T‑94</span></span></div>
           </div>
         </div>
         <div class="grupo">
@@ -218,25 +217,32 @@
       </div>
     </section>
     <section class="col curso">
-      <header><h2>En curso</h2><span class="cuenta">1 · 4.5 h</span></header>
-      <p class="wip">Límite: 1 en el carril de lib/ · 1 de 1</p>
+      <header><h2>En curso</h2><span class="cuenta">0 · 0.0 h</span></header>
+      <p class="wip">Límite: 1 en el carril de lib/ · 0 de 1</p>
       <div class="cuerpo">
-        <div class="grupo">
-          <h3><span class="id">RF‑041</span> Búsqueda por voz <span class="met">1 de 1 · 4.5 h</span></h3>
-          <div class="tareas">
-            <div class="t int"><span class="cod">T‑94</span><span class="txt">Dictar el contenedor, o sus últimos dígitos, y buscarlo</span><span class="h">4.5</span><span class="pie"><span class="capa">Interfaz</span><span class="nota cur"><span class='hash'>6322d96</span> · no pasa en el lote: sin red la voz se apaga sin aviso; la corrige Codex (10.38)</span></span></div>
-          </div>
-        </div>
+        <div class="vacia">Sin tareas en esta columna.</div>
       </div>
     </section>
     <section class="col rev">
-      <header><h2>En revisión</h2><span class="cuenta">1 · 2.5 h</span></header>
+      <header><h2>En revisión</h2><span class="cuenta">3 · 9.5 h</span></header>
       <p class="criterio">Entregada y en el repositorio; espera la aceptación cruzada del otro programador.</p>
       <div class="cuerpo">
         <div class="grupo">
           <h3><span class="id">USO</span> Uso fuera del aula <span class="met">1 de 7 · 2.5 h</span></h3>
           <div class="tareas">
             <div class="t inf"><span class="cod">T‑93</span><span class="txt">Instalador de Windows: paquete MSIX firmado</span><span class="h">2.5</span><span class="pie"><span class="capa">Infraestructura</span><span class="nota rev"><span class='hash'>25dbee5</span> · Timonel; 1.0.0.0 y 1.0.1.0 firmados con CN=BayStream; A07 y T‑84 desde Inicio; la acepta Codex · real ≈ 0.9 h</span></span></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3><span class="id">RF‑041</span> Búsqueda por voz <span class="met">1 de 1 · 4.5 h</span></h3>
+          <div class="tareas">
+            <div class="t int"><span class="cod">T‑94</span><span class="txt">Dictar el contenedor, o sus últimos dígitos, y buscarlo</span><span class="h">4.5</span><span class="pie"><span class="capa">Interfaz</span><span class="nota rev"><span class='hash'>6322d96</span> <span class='hash'>cae798e</span> · corregida: el aviso sin red aparece 3 de 3; Timonel vuelve a comprobarlo · real ≈ 0.60 h + corrección</span></span></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3><span class="id">ERS</span> RF-028, RF-029, tomas de reefer y textos <span class="met">1 de 5 · 2.5 h</span></h3>
+          <div class="tareas">
+            <div class="t int"><span class="cod">T‑104</span><span class="txt">Deudas del lote: block3 fuera del almacén real, «1 bahías», los textos a 200 % y la prueba intermitente</span><span class="h">2.5</span><span class="pie"><span class="capa">Interfaz</span><span class="nota rev"><span class='hash'>bf3a2cf</span> · corpus sin tocar el almacén real (313 archivos iguales); 685 pruebas, 5 suites en verde · real ≈ 1.25 h</span></span></div>
           </div>
         </div>
       </div>

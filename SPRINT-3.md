@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.2 h estimadas** (al 15-oct, 10.39) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 155.0 h estimadas** (al 15-oct, 10.40) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2966,3 +2966,58 @@ El piso de pruebas es 648.
 **Lo que sigue:**
 - **Codex:** termina la corrección de T-94 y T-104, con el añadido. El 16-oct, acepta T-93 y hace la parte de código de T-88.
 - **Timonel:** vuelve a comprobar el criterio de T-94 y acepta T-104.
+
+### 10.40 · La corrección de T-94 y T-104, entregadas y en revisión · La regla del corpus de 10.38 se levanta · Una falla real de Windows al compactar (15-oct)
+
+**La corrección de T-94, de Codex** (commit `cae798e`, sección «Corrección del 15-oct» de `docs/T94-RESULTADOS.md`). **T-94 vuelve a En revisión.**
+- **El mecanismo:**
+  - al recibir `done`, el campo apaga el indicador y conserva 500 ms los avisos de esa escucha;
+  - un error que llegue antes o durante ese intervalo muestra su aviso;
+  - si la escucha termina sin texto y sin error, dice «No se entendió el dictado. Reintenta o escribe la búsqueda.»;
+  - editar, confirmar, cerrar o empezar otra escucha anula los avisos viejos;
+  - nada se busca solo.
+- **Las pruebas:** 8 nuevas, que cubren los tres órdenes y los avisos tardíos. **668/668**, `analyze` en cero, corpus **116/116** y 242/242.
+- **El Honor sin red** (modo avión, Wi-Fi apagado y un `ping` sin red), 3 de 3: el aviso aparece debajo de Buscar.
+  - Carlos lo tomó al principio por ausencia de aviso, porque esperaba una ventana emergente; el XML muestra el texto.
+  - Con red, los dos dictados quedan como borrador.
+- **Una observación, sin defecto:** sin red, el aviso a veces dice «Reconocimiento en español no disponible…» en vez de «…sin conexión…».
+  - Es lo que informa el reconocedor de Android cuando no tiene el idioma sin conexión, y el texto invita a escribir.
+  - Queda declarado; no se cambia.
+- **Timonel vuelve a comprobar solo este criterio.**
+
+**T-104, de Codex, pasa a En revisión** (commit `bf3a2cf`, `docs/T104-RESULTADOS.md`).
+- **`block3` aislado:**
+  - `tool/block3_corpus_test.dart` usa también una bitácora temporal;
+  - bajo `flutter test`, `localStoreDirectory()` en Windows falla con un mensaje claro antes de tocar `LOCALAPPDATA`;
+  - ninguna otra prueba dependía del almacén real;
+  - dos corridas seguidas de los 31 corpus dejan la huella del almacén real idéntica: 313 archivos, tomada fuera del paquete con `.bat` lanzados por `explorer.exe`.
+- **Los textos:**
+  - «1 bahía» en Recientes y en el editor de tapas;
+  - el inicio explica que se valida por contenido, sin listar extensiones;
+  - las pestañas se desplazan;
+  - las tarjetas de Lista y del contenedor no se cortan a 200 %, con pruebas a la escala medida en el Honor.
+  - **Una precisión de la ficha:** son tres pestañas (Lista, Bay Plan y Estadísticas); Avance es una pantalla aparte.
+- **La prueba intermitente era una falla real de Windows:** el sistema puede negar un instante el renombrado con que Hive compacta un archivo (error 5, acceso denegado).
+  - `compactLocalStore` reintenta solo la compactación, hasta cinco veces y con espera creciente. En otras plataformas no cambia nada.
+  - El orden de los recientes ya era correcto.
+  - **Cinco suites seguidas en verde.** Arreglarlo también protege a la app de oficina, que pudo fallar al guardar un viaje.
+- **Lo demás:**
+  - los dos `print` de `bay_plan_view.dart` se quitaron, y no queda ningún `// ignore` en `lib/`;
+  - el `LEEME` del SDK quedó corregido, sin cambios en los módulos ni en su procedencia.
+- **Validaciones.** **685 pruebas** (el piso nuevo; 17 nuevas), `analyze` en cero y corpus 116/116 en dos corridas.
+  - Las reglas, el SDK, `main.dart`, `pubspec.*` y los congelados no cambian.
+  - Sin dependencias ni movimientos.
+  - Los clientes revisados son el Honor `.t104` a 360 dp con la letra en 2.0, Windows y Chrome.
+- **La revisión del commit.**
+  - Las 19 rutas son las del informe.
+  - Los cambios en `data/` son la salvaguarda y el reintento de compactación, ambos dentro del carril que autoriza la ficha («si el defecto está en el repositorio, se corrige ahí»).
+  - No hay claves, correos ni UID.
+- **Horas.** ≈ 1.25 h frente a 2.5. El encabezado baja de ≈ 156.2 a **≈ 155.0 h**.
+
+**La regla de 10.38 se levanta:** con `block3` aislado y la salvaguarda, correr el corpus ya no toca el almacén real. Lo que sigue en pie son las huellas fuera del paquete del agente (`AGENTS.md`).
+
+**El Honor** puede volver a la letra 1.0 cuando Timonel termine de aceptar T-104.
+
+**El orden desde aquí, sin solaparse, porque los dos tocan el almacén real de Windows:**
+1. **Timonel:** vuelve a comprobar la voz sin red de T-94 y acepta T-104.
+2. **Codex:** después, la aceptación cruzada de T-93, apartando el almacén real como en 10.37. Luego, la parte de código de T-88, con su ficha.
