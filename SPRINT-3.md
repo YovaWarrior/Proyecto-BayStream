@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.44) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.45) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1009,7 +1009,7 @@ alguna línea todavía puede mandar una 1.x. A06 del corpus es una SMDG15 real
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
 | **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
 | **T-87** | BAP | 10.0 | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza |
-| **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35; adelantada a Timonel en 10.41; entregada en 10.43, la acepta Codex) · **ficha completa arriba** | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
+| **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35; adelantada a Timonel en 10.41; terminada en 10.45) · **ficha completa arriba** | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
 
 ### Ola 5 · Uso fuera del aula y voz
 
@@ -3439,5 +3439,42 @@ El piso de pruebas es 648.
 **El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero suma 211.0 h:
 - 31 terminadas;
 - T-103 en revisión;
+- T-88 en curso;
+- 9 por hacer.
+
+### 10.45 · T-103 terminada · El ícono lo diseña una sesión aparte de Claude en la nube, y entrega todos los tamaños sin dependencia nueva (15-oct)
+
+**Codex aceptó T-103** (commit `7952c0f`, `docs/T103-ACEPTACION-RESULTADOS.md`) sobre `842dcb8`, en ≈ 0.60 h.
+- Trabajó desde una copia de 562 archivos de ese commit, con sus propias referencias.
+- **Pasan:**
+  - las referencias históricas;
+  - las validaciones;
+  - los tres clientes: Chrome, Windows con `t103cx` y el Honor.
+- **El detalle de cada cliente:**
+  - A06 conserva su aviso al reabrir desde Recientes, después de reiniciar cada cliente. En el Honor, también sin red.
+  - En Windows, el almacén real conserva sus 328 archivos y suma solo los 12 de `t103cx`, con los movimientos en cero bytes.
+  - La salida se niega desde una 1.5, como plan o como llegada, y los tres rechazos conservan A06.
+- **El borde de 10.43** (`messageVersion == '1'`) queda documentado, sin corregir.
+
+**T-103 pasa a Terminado.** Horas reales: ≈ 0.75 h de Timonel y 0.60 h de la aceptación, frente a 1.0.
+
+**El ícono (D5).** Carlos quiere uno bonito, original y que dé la mejor impresión. Lo diseña **una sesión aparte de Claude en la nube**, pagada con los créditos de sesiones en la nube de Carlos, que vencen el 5-nov.
+- **Trabaja sin acceso al repo:** su prompt trae todo el contexto, y Yov lo escribe.
+- **Primero entrega tres conceptos,** en una página con cada uno a todos los tamaños, sobre claro y oscuro, en las máscaras de Android y en monocromo. Carlos elige uno.
+- **Después entrega el paquete completo:**
+  - el SVG maestro;
+  - el ícono adaptativo de Android, con su capa monocroma, y los PNG antiguos;
+  - los íconos de la Web, incluidos los `maskable`;
+  - el `.ico` de Windows;
+  - el PNG de 512×512 para Play y, si da tiempo, el gráfico de 1024×500;
+  - un `LEEME.md` con los tamaños y los SHA-256.
+  - Va en un zip con las rutas del repo, y el script que lo genera queda en el paquete.
+- **Como el paquete trae todos los tamaños, no hace falta `flutter_launcher_icons`:** no hay dependencia nueva.
+- **Carlos guarda el zip en `C:\Proyectos\baystream-icono\`,** fuera del repo y fuera de `baystream-privado`.
+- **Timonel lo integra en una segunda entrega de T-88** y lo comprueba en el Honor, en Chrome, en Windows y en el MSIX. La acepta Codex.
+- **Las horas del diseño se anotan en el informe de T-88.** La estimación no cambia.
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero suma 211.0 h:
+- 32 terminadas;
 - T-88 en curso;
 - 9 por hacer.
