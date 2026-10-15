@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.47) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.48) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -3538,3 +3538,40 @@ El piso de pruebas es 648.
 **El correo de contacto (D2)** quedó en la fuente, como decidió Carlos. Es la dirección autorizada en 10.44.
 
 **El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero no cambia: T-88 sigue en curso hasta su segunda entrega.
+
+### 10.48 · La corrección de T-88, aplicada · El paquete del ícono, listo · Una sola aceptación de T-88, con el ícono (15-oct)
+
+**Timonel aplicó la corrección de 10.47** (commit `9cc6e9e`), en ≈ 0.5 h. T-88 suma ≈ 1.5 h, sin el ícono.
+- **Las cinco frases, palabra por palabra:** el cotejo con la ficha da cero diferencias, y ninguna es falsa frente al código.
+- **«BayStream»** en la ventana de Windows, en `FileDescription` y en `ProductName`. `InternalName` y `baystream.exe` no cambian.
+- **710/710, el piso nuevo:** una prueba nueva para Windows y una reescrita. `analyze` en cero.
+- **Los clientes:** el Honor `.t88` a 360 dp y letra 2.0, en los dos temas; Chrome con `/privacidad.html`; Windows sin cambios en el almacén real (354 archivos).
+- **El matiz que declaró:** la copia del operador guarda también el uid. La política ya dice que «los datos de tu cuenta» se guardan en el dispositivo y se borran con lo demás, así que el texto no cambia.
+
+**Una limitación conocida, para T-99 y el manual (T-100).**
+- El service worker de la Web (T-92) entregó primero la política vieja desde su caché, y la nueva después de actualizarse.
+- Quien ya visitó el sitio puede ver la versión anterior la primera vez después de una publicación. Es el comportamiento normal del service worker de Flutter.
+- A Play no le afecta: lee la dirección sin service worker. Y en la app, la política va compilada.
+
+**reCAPTCHA y App Check (Carlos, consola, sin cambiar nada):**
+- **App Check no tiene ninguna app registrada,** ni la de Android ni la Web, así que no está en uso.
+- **La protección de Authentication con reCAPTCHA** es otro ajuste, en la configuración de Authentication. Carlos lo revisa ahí. Se espera que esté apagada, porque hay que activarla a propósito.
+
+**El ícono.** El diseñador entregó el paquete v1 (concepto «Bahía»), que pasó sus 52 comprobaciones.
+- **El concepto:** el contenedor naranja levantado de su celda, la bodega como casco y versiones dibujadas a píxel para 32, 24, 20 y 16 px.
+- **El tamaño:** en la segunda ronda, el dibujo creció cerca de un 11 % en las versiones a sangre. El adaptativo de Android queda dentro de sus 66 dp.
+- **Lo que trae:** 25 archivos y un `LEEME.md` con los SHA-256.
+  - las fuentes SVG y `generar.py`;
+  - Android: el adaptativo, el monocromo y los PNG antiguos;
+  - la Web: el favicon y los íconos del manifiesto, también los `maskable`;
+  - Windows: un `.ico` con nueve tamaños;
+  - Play: el ícono de 512 y el gráfico de 1024×500.
+
+**El orden: una sola aceptación de T-88, ya con el ícono.**
+1. **Timonel integra el paquete,** como segunda entrega de T-88:
+   - `design/` queda en el repo, con `play/` dentro de `design/icono/`;
+   - `web/manifest.json` cambia sus colores a `#0D47A1`, para que coincidan con el ícono;
+   - no instala el MSIX: revisa sus imágenes abriéndolo como zip.
+2. **Después, Codex acepta T-88 completa,** ícono incluido.
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero no cambia: T-88 sigue en curso.
