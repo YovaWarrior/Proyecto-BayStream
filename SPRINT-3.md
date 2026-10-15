@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **41 tareas · ≈ 153.7 h estimadas** (al 14-oct, 10.37) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 155.7 h estimadas** (al 15-oct, 10.38) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1155,6 +1155,43 @@ cambio de reglas.
 - [ ] Piso del momento (el vigente tras T-90), `analyze` en cero, corpus completo en
       verde y reglas sin cambio (mismo SHA).
 
+**Corrección de T-94 (15-oct, 10.38) · Codex · sin estimación nueva: es parte de T-94.**
+
+**Qué falla.** En el lote, con el Honor en modo avión, el micrófono se activó y se apagó
+sin decir nada, 3 de 3 intentos. La búsqueda manual siguió bien, y lo demás de T-94 pasó.
+Yov lo vio en el código:
+- `speech_to_text_recognizer.dart` llama a `onDone` al recibir el estado `done`;
+- `voice_search_field.dart` responde a `onDone` con `_cancel()`, que sube la sesión y deja
+  sin destino a `_failure`;
+- si el plugin manda `done` antes que `onError`, el error se pierde y no aparece ningún aviso.
+
+El 13-oct Carlos sí vio el aviso: el orden de los dos eventos no es fijo.
+
+**Qué construye.**
+1. **Un error que llega justo antes o justo después de `done` siempre se muestra.** El
+   cierre de la sesión espera ese error un momento breve, o deja que el error mande. El
+   mecanismo lo elige Codex, y lo declara.
+2. **Una escucha que termina sin texto y sin error también avisa**, con el mismo tono que
+   los otros mensajes de voz: que no se reconoció nada y que se puede escribir la búsqueda.
+   Nunca hay silencio.
+3. **Lo demás de T-94 no cambia:**
+   - el texto dictado sigue entrando como borrador;
+   - no se busca solo;
+   - se cancela al salir de la pantalla;
+   - sin dependencias nuevas.
+
+**Terminada cuando:**
+- [ ] **Hay pruebas de widget con el reconocedor falso para los tres órdenes:** error y
+      después `done`, `done` y después error, y `done` sin texto ni error. En los tres
+      aparece un aviso, y nada se busca solo.
+- [ ] **Honor sin red** (`.t94` o una variante nueva, en modo avión; Carlos habla): 3 de 3
+      intentos muestran el aviso, y la búsqueda manual encuentra el OR 3.
+- [ ] **Honor con red:** el OR 1 completo y un sufijo siguen entrando como borrador.
+- [ ] **Validaciones:** piso de 660 más las nuevas, `analyze` en cero, corpus 116/116 con
+      242/242 de T-94, y las reglas sin cambio.
+- [ ] **Antes de correr el corpus completo**, Codex aplica la regla nueva de 10.38: el
+      corpus `block3` escribe en el almacén real de Windows.
+
 #### T-92 · La Web arranca sin conexión: motor, fuentes y SDK de Firebase servidos desde el propio sitio · 3.0 h · Codex (ficha completa, 14-oct)
 
 **Para qué.** USO. Cierra la limitación de 10.36 de `SPRINT-2.md`: sin red, la Web
@@ -1539,12 +1576,76 @@ cambio de reglas o Firebase.
 - [ ] Piso de 635 pruebas, `analyze` en cero, corpus completo en verde y reglas sin
       cambio (mismo SHA).
 
+#### T-104 · Las deudas del lote: el corpus que escribe en el almacén real y los textos a 200 % · 2.0 h · Codex (ficha completa, 15-oct)
+
+**Para qué.** Nace en 10.38, del lote de Timonel. Son cuatro cosas chicas del mismo
+carril, juntas para no multiplicar entregas:
+- una prueba que ensucia el almacén real de Windows en cada corrida;
+- dos plurales mal hechos;
+- un texto que contradice a T-89;
+- tres pantallas que se cortan con la letra al 200 %.
+
+Las dos primeras importan para medir los RNF (T-98 y T-99) y para el piloto; las otras,
+para RNF-003.
+
+**Qué construye.**
+
+1. **`tool/block3_corpus_test.dart` deja de escribir en el almacén real.**
+   - Hoy sobrescribe `localVesselRepositoryProvider`, pero no
+     `movementLogRepositoryProvider`.
+   - Como `confirmGeometry` guarda la operación, cada corrida suma ≈ 173 KB a
+     `%LOCALAPPDATA%\BayStream\vessel_store\baystream_operations.hive`, en el namespace por
+     defecto.
+   - Se sobrescribe con un almacén en un directorio temporal, como el resto.
+2. **Una salvaguarda en `localStoreDirectory()`:** bajo `flutter test`
+   (`FLUTTER_TEST=true`), en Windows, no devuelve el almacén real. Falla con un mensaje
+   claro, para que ninguna prueba, presente o futura, lo toque.
+   - Si alguna prueba existente dependía de eso sin saberlo, se corrige en esta tarea y el
+     informe dice cuál.
+   - La app y los bancos `tool/tNN_main.dart` no corren bajo `flutter test` y no cambian.
+3. **«1 bahías» en singular,** con el formateador común de T-97, en dos sitios: en
+   Recientes («6 contenedores · 1 bahía») y en el editor de tapas («Copiado a 1 bahía»).
+4. **La pantalla inicial deja de listar extensiones** (observación de T-89):
+   - hoy dice «Seleccione un archivo .edi o .txt…» y «Formatos soportados: .edi, .txt,
+     .baplie»;
+   - desde T-89 cualquier archivo entra y se valida por su contenido, y el texto lo dice
+     así.
+5. **A 200 %, en el Honor, nada se corta:**
+   - las pestañas (Bay Plan, Lista, Estadísticas, Avance);
+   - la tarjeta de Lista, sin partir palabras («Contenedores», «6940.6 t»);
+   - las etiquetas de la tarjeta de cada contenedor («Posición», «Destino»).
+   - El mecanismo lo elige el diseño: desplazar, envolver o dos líneas.
+   - Las pruebas de widget usan la escala no lineal real del Honor, la lección de T-97.
+
+**Fuera de alcance:**
+- la prueba de las 21 bahías: va en T-56, que es la siguiente que toca el perfil (10.33);
+- textos o pantallas nuevas;
+- cualquier cambio de reglas, nube o almacenamiento, salvo la salvaguarda del punto 2.
+
+**Terminada cuando:**
+
+- [ ] **El almacén real queda igual con el corpus completo:** dos corridas seguidas de los 31
+      corpus, con la misma huella antes y después. La huella se toma fuera del paquete del
+      agente (`AGENTS.md`). Y 116/116.
+- [ ] **La salvaguarda tiene su prueba:** bajo `flutter test`, pedir el almacén real en
+      Windows falla con el mensaje.
+- [ ] **El Honor a 360 dp con la letra en 2.0**, que pone Carlos, en los dos temas y con A07
+      y «PRUEBA T-84» abiertos:
+  - las pestañas, la tarjeta de Lista y la del contenedor, sin cortes;
+  - Recientes y el editor de tapas, sin «1 bahías»;
+  - la pantalla inicial, sin la lista de extensiones.
+- [ ] Windows y Chrome muestran las mismas pantallas sin regresiones en la barra de T-91, los
+      temas de T-90 ni los textos de T-97.
+- [ ] **Validaciones:** el piso de la corrección de T-94 más las nuevas, `analyze` en cero, las
+      reglas sin cambio y sin dependencias nuevas.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
-| **T-56** | ERS | 2.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2) |
+| **T-56** | ERS | 2.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38) |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
+| **T-104** | ERS | 2.0 | Deudas del lote de Timonel: aislar `block3` del almacén real, «1 bahías», las extensiones de la pantalla inicial y los cortes a 200 % (10.38) · **ficha completa arriba** |
 
 ### Cierre · Calidad, entregables y piloto (21–24 oct)
 
@@ -2755,3 +2856,56 @@ El piso de pruebas es 648.
 1. **Timonel hace el lote de las doce** en un chat nuevo (`docs/LOTE-TIMONEL.md`, piso 660). Mientras corre, nadie más usa la app de Windows ni aparta el almacén real.
 2. Después, Timonel acepta T-92 por separado.
 3. **Codex acepta T-93 después del lote,** con el almacén real apartado, y toma la parte de código de T-88 (16-oct).
+
+### 10.38 · El lote de Timonel: once tareas a Terminado y T-94 no pasa · Un corpus escribía en el almacén real · Nace T-104 (15-oct)
+
+**Timonel cerró la aceptación en lote** (commit `c1e31ea`, `docs/LOTE-TIMONEL-RESULTADOS.md`).
+- Trabajó en dos sesiones, el 14-oct de 18:43 a 19:58 y del 14-oct a las 23:38 al 15-oct a las 00:15, sin contar la pausa por el límite de uso: ≈ 1.9 h de pared.
+- **Las comprobaciones globales,** al empezar y al terminar:
+  - **660/660**, `analyze` en cero, corpus **116/116** y reglas **69/69** con el mismo SHA;
+  - las dependencias, las que se esperaban;
+  - los congelados, iguales a `m2-baseline`.
+
+**Pasan a Terminado once tareas:**
+- **Aceptadas sin observación: T-80, T-81, T-82, T-84, T-86, T-90, T-91 y T-102.**
+  - **T-82** con un cotejo independiente en Python, sin el lector de BayStream: 460/460 en siete campos.
+  - **T-84:** el codec funciona en Windows, el Honor y Chrome, con las tapas en 3/0/2.
+  - **T-102:** 398 celdas y 33 páginas, en color.
+- **Aceptadas con observación:**
+  - **T-83:** ninguna prueba afirma las 21 bahías (el endurecimiento de 10.33 pasa a T-56), y el editor dice «Copiado a 1 bahías» (T-104).
+  - **T-89:** la pantalla inicial todavía lista extensiones (T-104).
+  - **T-97:** los ocho puntos pasan con la letra al 2.0, pero fuera del catálogo se cortan las pestañas y las tarjetas, y aparece «1 bahías» en Recientes (T-104).
+- **La observación de 10.33, en el Honor:** arrancado ya sin red, muestra «Conectando…» durante 40 s sin pasar a «Sin conexión», y «Al día» unos 3 s después de devolver el Wi-Fi.
+  - Es el comportamiento que describió 10.33: veraz y sin temporizador que adivine.
+  - Queda declarado como comportamiento conocido para T-98.
+
+**T-94 no pasa por un criterio: sin red, la voz se apaga sin avisar** (3 de 3 intentos en modo avión). Todo lo demás pasa: el borrador, la búsqueda manual, 242/242 y el manifiesto.
+- Yov lo confirmó en el código: `onDone` cierra la sesión con `_cancel()` y deja sin destino a `_failure`. Si el plugin manda `done` antes que el error, el aviso se pierde.
+- **T-94 vuelve a En curso,** para una corrección de Codex que está al final de su ficha. Timonel vuelve a comprobar solo ese criterio.
+
+**En producción:** con la autorización de Carlos en ese momento, la oficina registró dos movimientos en «PRUEBA T-81», el `cancel_item` y el `annul` del OR 5. Su efecto neto es cero, y la operación queda con 6 registros. No se publicó nada.
+
+**Un hallazgo que cambia una práctica: `tool/block3_corpus_test.dart` escribe en el almacén real de Windows** en cada corrida.
+- Suma ≈ 173 KB a `baystream_operations.hive` del namespace por defecto.
+- Timonel lo aisló corriendo los 31 corpus uno a uno: solo cambia con `block3`.
+- **La consecuencia:** una huella «antes» del almacén real tomada después de correr el corpus no sirve.
+  - Las conclusiones de T-93 siguen en pie, porque la prueba decisiva fue la del almacén apartado.
+  - Pero el salto de 283 a 288 archivos pudo incluir una corrida del corpus.
+- **Regla, hasta que T-104 lo corrija:** quien tome una huella del almacén real no corre el corpus completo entre el «antes» y el «después». Si lo corre, la toma de nuevo.
+
+**Nace T-104** (2.0 h, Codex, ficha completa en la Ola 6). Junta las deudas del lote:
+- aislar `block3`, con una salvaguarda: bajo `flutter test`, Windows nunca devuelve el almacén real;
+- «1 bahías» en dos sitios;
+- la pantalla inicial que lista extensiones;
+- los cortes a 200 % en las pestañas y las tarjetas.
+
+**El sprint pasa a 42 tareas y ≈ 155.7 h.** El tablero suma T-104 en Por hacer: 42 tarjetas y 209.5 h.
+
+**Una incidencia menor, de Timonel:** ejecutó `git rev-parse --abbrev-ref HEAD`, que no está entre las lecturas permitidas. Solo lee y no toca el índice. La lista no cambia.
+
+**El Honor quedó con la letra en 2.0.** Conviene dejarla así hasta que Codex termine T-104, que la necesita, y después devolverla a 1.0.
+
+**El orden desde aquí:**
+1. **Codex:** la corrección de T-94 y después T-104, con dos commits. El 16-oct, la aceptación cruzada de T-93 y la parte de código de T-88.
+2. **Timonel:** la aceptación de T-92. Después vuelve a comprobar la corrección de T-94 y acepta T-104.
+3. Un comando de Flutter a la vez, y el Honor y la app de Windows por turnos: Carlos da el semáforo.
