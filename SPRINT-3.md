@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.48) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.49) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -3575,3 +3575,22 @@ El piso de pruebas es 648.
 2. **Después, Codex acepta T-88 completa,** ícono incluido.
 
 **El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero no cambia: T-88 sigue en curso.
+
+### 10.49 · reCAPTCHA no está activo · Las declaraciones de Play, escritas (15-oct)
+
+**Carlos revisó la consola de Firebase, sin cambiar nada:**
+- **App Check:** ninguna app registrada.
+- **Authentication → Configuración → Fraud Defense** (antes reCAPTCHA Enterprise): pide «configurar reCAPTCHA para crear claves de sitio» primero. No hay claves ni protección activa.
+- **Conclusión:** la biblioteca de reCAPTCHA viene con `firebase-auth`, pero no se usa. No hay token de reCAPTCHA que declarar.
+
+**Yov escribió `docs/T88-DECLARACIONES-PLAY.md`,** que reemplaza las respuestas de T-64 con la app de hoy:
+- **Seguridad de los datos:** recopila, no comparte, y todo es opcional, porque sin cuenta nada sale del dispositivo.
+  - Se declaran el correo, el nombre, el ID de usuario, los archivos, los movimientos (contenido del usuario) y el ID de la instalación con la IP de Authentication.
+  - La voz no se declara: la procesa el servicio del sistema o del navegador. Es un criterio de Yov, explicado en el documento.
+- **Cifrado en tránsito:** sí. **Pedir que se borren los datos:** sí, por el contacto. **Crear cuentas dentro de la app:** no.
+- **Cambia «Acceso a la app»:** la sincronización necesita una cuenta.
+- **Dos decisiones de Carlos para la prueba cerrada, no para la interna:**
+  - cómo entra el revisor de Play. Con las reglas de hoy, cualquier cuenta lee todas las operaciones;
+  - un archivo de muestra sintético para el revisor.
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.**
