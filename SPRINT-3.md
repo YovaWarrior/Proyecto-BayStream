@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 155.5 h estimadas** (al 15-oct, 10.41) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.43) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1009,7 +1009,7 @@ alguna línea todavía puede mandar una 1.x. A06 del corpus es una SMDG15 real
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
 | **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
 | **T-87** | BAP | 10.0 | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza |
-| **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35; adelantada a Timonel en 10.41) · **ficha completa arriba** | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
+| **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35; adelantada a Timonel en 10.41; entregada en 10.43, la acepta Codex) · **ficha completa arriba** | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
 
 ### Ola 5 · Uso fuera del aula y voz
 
@@ -1639,7 +1639,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
-| **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34) |
+| **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43); ficha pendiente de Yov |
 | **T-89** | USO | 1.0 | iPhone acepta .edi: sin filtro por extensión y validación por contenido (`UNB`/`UNH`) · **ficha completa arriba** |
 | **T-90** | USO | 2.0 | Modo claro y oscuro con interruptor, en los tres clientes · **ficha completa arriba** |
 | **T-91** | USO | 1.5 | Barra superior plegable: ocultar los iconos junto al título mientras se ve el plano · **ficha completa arriba** |
@@ -1780,7 +1780,7 @@ para RNF-003.
 |---|---|---:|---|
 | **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
-| **T-56** | ERS | 3.0 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38) y tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo |
+| **T-56** | ERS | 3.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38); tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo; y dos de T-103 (10.43): «Contenido compatible: BAPLIE 2.x.» en la pantalla vacía, y el resumen 0/0/0 de A06 en GTPBR, que no trae `LOC+9` |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
 | **T-104** | ERS | 2.5 | Deudas del lote de Timonel: aislar `block3` del almacén real, «1 bahías», las extensiones de la pantalla inicial y los cortes a 200 % (10.38); la prueba intermitente, los dos `print` y el `LEEME` del SDK (10.39) · **ficha completa arriba** |
 
@@ -3215,4 +3215,64 @@ El piso de pruebas es 648.
 - 30 terminadas;
 - T-93 en revisión;
 - T-103 en curso;
+- 10 por hacer.
+
+### 10.43 · T-103 entregada, en revisión: A06 vuelve a abrir con su aviso · La corrección de T-93, entregada · Dos observaciones más para T-56 · T-88 pasa a Timonel (15-oct)
+
+**Timonel entregó T-103** (commit `3696930`, `docs/T103-RESULTADOS.md`), en ≈ 0.75 h de 1.0. Queda **En revisión**: la acepta Codex.
+- **El lector acepta exactamente `BAPLIE:1:911:UN:SMDG15`,** con las mismas condiciones de cabecera que T-86.
+  - Cualquier otra 1.x, la 3.x, las variantes de la 1.5 con otra versión o liberación y lo que no trae UNH se rechazan con el mensaje de T-86, sin cambiarlo.
+- **A06 vuelve a abrir con sus cifras de `1b1be4b^`:** 717 contenedores, 27 bahías, 10 766 933 kg y 1 DGS.
+  - Timonel no las tomó solo de los informes de entonces: ejecutó el lector de `1b1be4b^` y el viaje completo sale igual, salvo los UUID.
+- **El aviso** «Versión 1.5, leída con las reglas de 2.x; revisa pesos y peligrosas» va fijo arriba del resumen del viaje y se conserva desde Recientes.
+  - Sale de la versión del UNH que ya se guardaba (`messageVersion`): no hay campo nuevo ni cambio de esquema.
+- **La salida de T-82 se niega** desde una fuente 1.5, sea el plan de carga o la llegada, con un mensaje que dice por qué. El escritor no cambia: mismo SHA.
+- **Las pruebas que exigían el rechazo de A06 exigen ahora la lectura con aviso.** Las de rechazo usan una 1.x sintética, `SMDG10`, y el bloque 7 vuelve a 34 DGS en 30 unidades.
+- **Las nueve 2.x salen idénticas** a la referencia tomada antes de tocar el lector.
+- **Validaciones:**
+  - **697/697, el piso nuevo** (12 nuevas), dos veces;
+  - `analyze` en cero;
+  - corpus 118/118 en 32 archivos;
+  - reglas, `lib/main.dart`, `pubspec.*`, el escritor y los congelados sin cambio.
+- **Los clientes:**
+  - la Web, en el navegador integrado de la app (Chromium);
+  - Windows, con `t103acc` sobre el almacén real: 316 archivos antes y 328 después, y los 12 nuevos son solo `t103acc_*`;
+  - el Honor `.t103` a 360 dp.
+
+**La revisión de Yov.**
+- **El código es corto y está donde debe:** cuatro rutas de `lib/`, sin tocar el escritor.
+- **Un borde que la aceptación debe mirar, no corregir:**
+  - el aviso se decide con `messageVersion == '1'`;
+  - un viaje guardado antes de T-86 desde otra 1.x mostraría el aviso de la 1.5;
+  - es un aviso de más, no de menos, y en los almacenes solo hay datos de prueba.
+- **La Web se probó en el navegador integrado, no en Chrome.** Vale como cliente Web, y la aceptación de Codex la hace en Chrome, para cubrir los dos.
+- **Una incidencia que Timonel declaró:** le pidió a Carlos bajar la letra del Honor sin que hiciera falta. Volvió a 2.0. Carlos la deja en 1.0, su valor normal, antes de la aceptación.
+
+**Dos observaciones más, que pasan a T-56** (suma 0.5 h y queda en 3.5 h):
+- **La pantalla vacía dice «Contenido compatible: BAPLIE 2.x.»** Ahora la 1.5 también se lee, con aviso.
+- **A06 da «0 se descargan · 0 se cargan · 0 de paso» en GTPBR,** con 717 a bordo.
+  - No trae `LOC+9`, así que la escala no clasifica sus contenedores.
+  - Ya pasaba antes de T-86.
+  - Yov lo revisa al escribir la ficha de T-56: si el resumen tiene que decir algo en vez de 0/0/0, va ahí.
+- **El chip del viaje que se sale de su fondo a letra 2.0** ya estaba en T-56 (10.41).
+
+**La corrección de T-93 llegó mientras se escribía esta decisión** (commit `f52570b`, `docs/T93-CORRECCION-RESULTADOS.md`). Codex la hizo en ≈ 0.16 h, sobre una copia exacta de `0b7f539`.
+- **Una sola función, `Test-PaqueteMsix`,** exige el SHA igual al del `.sha256`, la firma `Valid` y la huella. El armado y el modo `-Verificar` la comparten.
+- **Las cuatro sondas dan 0 / 1 / 1 / 1,** en Windows PowerShell 5.1, sin Flutter en el `PATH`: el original pasa, y fallan la firma alterada, el SHA que no coincide y la otra huella. `-SinCompilar` termina en 0 con la verificación en verde.
+- **Validaciones:** 685/685, T-93 5/5, `analyze` en cero y el script en ASCII. El prefijo «Sprint 3:» ya va en el commit.
+- **La revisión de Yov:** el cambio es correcto. Le queda un matiz.
+  - El mensaje de «importa primero `BayStream.cer`» solo sale con el estado `NotTrusted`.
+  - En un equipo sin el `.cer`, Windows probablemente da `UnknownError`, que cae en el mensaje genérico, aunque el `StatusMessage` que se imprime sí lo explica.
+  - Timonel lo comprueba en la documentación o el código de PowerShell, sin tocar almacenes de certificados. Con eso, Yov decide si es una observación o una línea más.
+
+**El orden desde aquí:**
+1. **Al mismo tiempo:**
+   - Timonel verifica la corrección de T-93 con el script commiteado. No necesita Flutter, la app ni el almacén.
+   - Codex acepta T-103 desde una copia exacta de HEAD, con su propio namespace, `t103cx`.
+2. **T-88 pasa a Timonel,** porque es el primero que queda libre. La acepta Codex. Yov escribe ahora su ficha, y la parte del ícono espera la respuesta de Carlos.
+
+**El sprint queda en 42 tareas y ≈ 156.0 h.** El tablero suma 211.0 h:
+- 30 terminadas;
+- 2 en revisión: T-93 y T-103;
+- 0 en curso;
 - 10 por hacer.
