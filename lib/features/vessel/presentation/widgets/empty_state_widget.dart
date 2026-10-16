@@ -109,7 +109,7 @@ class EmptyStateWidget extends StatelessWidget {
             
             // La versión se valida por la cabecera, no por el nombre del archivo.
             Text(
-              'Contenido compatible: BAPLIE 2.x.',
+              'Contenido compatible: BAPLIE 2.x, y la 1.5 con aviso.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

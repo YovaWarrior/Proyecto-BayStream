@@ -126,6 +126,10 @@ void main() {
       vesselName: 'ALFA', geometry: _proposal, reeferSlots: {'0061290', '0060102'},
       origin: VesselProfileOrigin.proposedFromFile, updatedAt: DateTime.utc(2026));
     await openPage(tester, (_) {}, profile: profile);
+    // T-56: la sección de tomas suma la carga por rangos; con la pantalla más
+    // alta, la lista sigue construyendo los chips de niveles y el resumen.
+    tester.view.physicalSize = const Size(1000, 3600);
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('profile-sockets')));
     await tester.pumpAndSettle();
     tester.widget<InputChip>(find.byKey(const ValueKey('socket-0061290'))).onDeleted!();

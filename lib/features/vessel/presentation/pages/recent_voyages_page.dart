@@ -107,7 +107,7 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
                                   title: Text(
                                       '${voyage.vessel.name} · ${voyage.voyageNumber}'),
                                   subtitle: Text(
-                                      '${voyage.totalContainers} contenedores · ${operationCount(voyage.bays.length, 'bahía', 'bahías')}'),
+                                      '${operationCount(voyage.totalContainers, 'contenedor', 'contenedores')} · ${operationCount(voyage.bays.length, 'bahía', 'bahías')}'),
                                   leading: const Icon(
                                       Icons.directions_boat_outlined),
                                   onTap: _working ? null : () => _open(voyage),

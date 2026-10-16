@@ -181,6 +181,10 @@ class _HatchCoversPageState extends State<HatchCoversPage> {
               key: ValueKey('hatch-kind-$_bay'),
               initialValue: _kind?.name ?? 'unknown',
               isExpanded: true,
+              // T-56: sin altura fija, a letra grande la opción elegida y las
+              // del menú envuelven en vez de cortar «abierta».
+              isDense: false,
+              itemHeight: null,
               decoration: const InputDecoration(
                   labelText: 'Declaración', border: OutlineInputBorder()),
               items: const [

@@ -208,6 +208,9 @@ void main() {
     await tester.pump();
     expect(find.textContaining('se solapa'), findsOneWidget);
     await tester.enterText(find.byKey(const ValueKey('hatch-rows-1')), '06');
+    // T-56: el desplegable ya no tiene altura fija y el botón queda más abajo.
+    await tester.ensureVisible(find.byKey(const ValueKey('hatch-apply')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('hatch-apply')));
     await tester.pump();
     expect(find.textContaining('no pertenece'), findsOneWidget);

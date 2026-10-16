@@ -239,14 +239,19 @@ void main() {
                   label: const Text('Cargar BAPLIE'))),
           brightness));
       expect(find.textContaining('Se valida por su contenido'), findsOneWidget);
-      expect(find.text('Contenido compatible: BAPLIE 2.x.'), findsOneWidget);
+      // T-56: desde T-103 la 1.5 también se lee, con aviso.
+      expect(find.text('Contenido compatible: BAPLIE 2.x, y la 1.5 con aviso.'),
+          findsOneWidget);
       expect(find.textContaining('.edi'), findsNothing);
       expect(find.textContaining('.txt'), findsNothing);
       await tester.drag(
           find.byType(SingleChildScrollView), const Offset(0, -2000));
       await tester.pumpAndSettle();
       expect(
-          tester.getRect(find.text('Contenido compatible: BAPLIE 2.x.')).bottom,
+          tester
+              .getRect(find
+                  .text('Contenido compatible: BAPLIE 2.x, y la 1.5 con aviso.'))
+              .bottom,
           lessThanOrEqualTo(
               tester.getRect(find.byType(FloatingActionButton)).top),
           reason: 'El botón flotante no tapa el texto inferior.');

@@ -295,6 +295,16 @@ class VesselVoyage extends Equatable {
         c.portOfDischarge != port).length,
   );
 
+  /// T-56: lo que [cargoCountsFor] y [reservedCountsFor] no cuentan en ninguna
+  /// parte porque el archivo no trae su puerto de carga (`LOC+9`), como A06.
+  /// Los que se descargan en la escala ya están contados ahí y no se repiten.
+  ({int containers, int reserved}) withoutLoadingPortAt(String? port) => (
+    containers: port == null ? 0 : containers.where((c) =>
+        c.portOfLoading == null && c.portOfDischarge != port).length,
+    reserved: port == null ? 0 : reservedSlots.where((s) =>
+        s.portOfLoading == null && s.portOfDischarge != port).length,
+  );
+
   /// Operaciones previstas de las reservas, aparte de los contenedores.
   ({int loaded, int discharged, int transit}) reservedCountsFor(String? port) => (
     loaded: port == null ? 0 : reservedSlots.where((s) => s.portOfLoading == port).length,

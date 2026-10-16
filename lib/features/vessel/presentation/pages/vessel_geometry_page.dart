@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/reefer_socket_ranges.dart';
+import '../formatters/operation_text.dart';
 import '../formatters/stack_weight_formatter.dart';
 import '../widgets/voyage_call_summary.dart';
 import 'hatch_covers_page.dart';
@@ -96,6 +98,14 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   late Set<String> _sockets;
   bool _declareSockets = false;
   String? _socketError;
+  // T-56: carga por rangos y por lista pegada. Cargar no declara.
+  final _rangeBays = TextEditingController();
+  final _rangeRows = TextEditingController();
+  final _rangeTiers = TextEditingController();
+  final _pastedSockets = TextEditingController();
+  String? _rangeError;
+  String? _pasteError;
+  String? _batchSummary;
   late Map<int, HatchCoverDeclaration> _hatches;
   Set<int> _holdBays(VesselGeometry geometry) => {
     ...?widget.profile?.observedHoldBayNumbers,
@@ -174,6 +184,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   @override
   void dispose() {
     _socketInput.dispose();
+    for (final controller in [_rangeBays, _rangeRows, _rangeTiers, _pastedSockets]) {
+      controller.dispose();
+    }
     for (final controller in _controllers) {
       controller.dispose();
     }
@@ -433,11 +446,55 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
       VesselProfileOrigin.proposedFromFile => 'Propuestas del archivo: cota inferior, puede haber más tomas.',
       VesselProfileOrigin.declaredByUser => 'Tomas declaradas por el usuario.',
     };
+    final textTheme = Theme.of(context).textTheme;
+    final error = TextStyle(color: Theme.of(context).colorScheme.error);
     return ExpansionTile(
       key: const ValueKey('profile-sockets'),
       title: Text('Tomas de reefer (${_sockets.length})'),
       subtitle: Text(source),
+      expandedCrossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // T-56: los códigos se generan tal como se escriben; la pantalla no
+        // calcula pares, porque esa correspondencia es del buque (T-55).
+        Text('Cargar por rangos', style: textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text('Las bahías se usan tal como se escriben, sin calcular pares: '
+            'si sabes el extremo, escribe las impares; si no, las pares.',
+            style: textTheme.bodySmall),
+        const SizedBox(height: 8),
+        _rangeField(_rangeBays, 'socket-range-bays', 'Bahías',
+            'Números y rangos con paso: 002-038/4, 041, 044'),
+        _rangeField(_rangeRows, 'socket-range-rows', 'Filas',
+            'Vacío: todas las de la geometría. O 01-10, o una lista'),
+        _rangeField(_rangeTiers, 'socket-range-tiers', 'Niveles',
+            'De dos en dos por omisión: 82-88 o 02-08'),
+        if (_rangeError != null)
+          Padding(padding: const EdgeInsets.only(bottom: 8),
+            child: Text(_rangeError!, key: const ValueKey('socket-range-error'), style: error)),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          OutlinedButton.icon(key: const ValueKey('socket-range-add'),
+            icon: const Icon(Icons.playlist_add), label: const Text('Agregar por rango'),
+            onPressed: () => _previewRange(removing: false)),
+          OutlinedButton.icon(key: const ValueKey('socket-range-remove'),
+            icon: const Icon(Icons.playlist_remove), label: const Text('Quitar por rango'),
+            onPressed: () => _previewRange(removing: true)),
+        ]),
+        const SizedBox(height: 16),
+        TextField(key: const ValueKey('socket-paste'), controller: _pastedSockets,
+          minLines: 2, maxLines: 6, keyboardType: TextInputType.multiline,
+          decoration: InputDecoration(labelText: 'Pegar una lista de códigos',
+            helperText: 'BBBRRTT separados por comas, espacios o saltos de línea',
+            helperMaxLines: 2, errorText: _pasteError, errorMaxLines: 3,
+            border: const OutlineInputBorder())),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(key: const ValueKey('socket-paste-add'),
+          icon: const Icon(Icons.content_paste), label: const Text('Agregar la lista'),
+          onPressed: _previewPasted),
+        if (_batchSummary != null) ...[
+          const SizedBox(height: 8),
+          Text(_batchSummary!, key: const ValueKey('socket-batch-summary')),
+        ],
+        const SizedBox(height: 16),
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (final slot in _sockets.toList()..sort())
             InputChip(key: ValueKey('socket-$slot'), label: Text(slot),
@@ -469,6 +526,102 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             subtitle: const Text('Marca solo después de revisar las tomas. Confirmar la geometría no las declara.')),
       ],
     );
+  }
+
+  Widget _rangeField(TextEditingController controller, String key,
+          String label, String helper) =>
+      Padding(padding: const EdgeInsets.only(bottom: 12), child: TextField(
+        key: ValueKey(key), controller: controller,
+        decoration: InputDecoration(labelText: label, helperText: helper,
+          helperMaxLines: 2, border: const OutlineInputBorder()),
+      ));
+
+  /// T-56: las tomas se descartan contra la geometría del formulario, la misma
+  /// que se va a guardar.
+  void _previewRange({required bool removing}) {
+    final geometry = _buildGeometry();
+    if (geometry == null) {
+      setState(() => _rangeError =
+          'Revisa la frontera y las anclas antes de cargar tomas.');
+      return;
+    }
+    final range = ReeferSocketRanges.codesFor(bays: _rangeBays.text,
+        rows: _rangeRows.text, tiers: _rangeTiers.text, geometry: geometry);
+    setState(() => _rangeError = range.error);
+    if (range.error != null) return;
+    _showBatch(removing
+        ? ReeferSocketRanges.previewRemove(range.codes, _sockets)
+        : ReeferSocketRanges.previewAdd(range.codes, _sockets, geometry));
+  }
+
+  void _previewPasted() {
+    final geometry = _buildGeometry();
+    final pasted = ReeferSocketRanges.parsePasted(_pastedSockets.text);
+    setState(() => _pasteError = geometry == null
+        ? 'Revisa la frontera y las anclas antes de cargar tomas.'
+        : pasted.codes.isEmpty && pasted.invalid.isEmpty
+            ? 'Pega al menos un código.'
+            : null);
+    if (_pasteError != null) return;
+    _showBatch(ReeferSocketRanges.previewAdd(pasted.codes, _sockets, geometry!,
+        invalid: pasted.invalid));
+  }
+
+  String _verb(List<String> codes, String singular, String plural) =>
+      codes.length == 1 ? singular : plural;
+
+  String _examples(List<String> codes) => codes.isEmpty
+      ? ''
+      : ': ${codes.take(3).join(', ')}${codes.length > 3 ? '…' : ''}';
+
+  /// Vista previa antes de aplicar. Aplicar no toca la casilla de declaración.
+  Future<void> _showBatch(SocketBatchPreview preview) async {
+    final lines = preview.removing
+        ? [
+            ('socket-preview-changed', '${_verb(preview.changed, 'Se quita', 'Se quitan')} ${operationCount(preview.changed.length, 'toma', 'tomas')}${_examples(preview.changed)}'),
+            ('socket-preview-unchanged', '${_verb(preview.unchanged, 'No estaba', 'No estaban')} ${preview.unchanged.length}${_examples(preview.unchanged)}'),
+          ]
+        : [
+            ('socket-preview-changed', '${_verb(preview.changed, 'Se agrega', 'Se agregan')} ${operationCount(preview.changed.length, 'toma', 'tomas')}${_examples(preview.changed)}'),
+            ('socket-preview-unchanged', '${_verb(preview.unchanged, 'Ya estaba', 'Ya estaban')} ${preview.unchanged.length}${_examples(preview.unchanged)}'),
+            ('socket-preview-outside', '${_verb(preview.outside, 'Se descarta', 'Se descartan')} ${preview.outside.length} con la fila o el nivel fuera de la geometría${_examples(preview.outside)}'),
+            if (preview.invalid.isNotEmpty)
+              ('socket-preview-invalid', '${_verb(preview.invalid, 'No se carga', 'No se cargan')} ${preview.invalid.length} que no ${_verb(preview.invalid, 'es un código', 'son códigos')} de siete dígitos${_examples(preview.invalid)}'),
+          ];
+    final apply = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(preview.removing ? 'Quitar tomas' : 'Agregar tomas'),
+        content: SingleChildScrollView(child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (key, text) in lines) Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(text.endsWith('…') ? text : '$text.', key: ValueKey(key))),
+            const Text('Cargar no declara: la casilla de declaración no cambia.'),
+          ],
+        )),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar')),
+          FilledButton(key: const ValueKey('socket-batch-apply'),
+            onPressed: preview.changed.isEmpty ? null : () => Navigator.pop(context, true),
+            child: Text(preview.removing ? 'Quitar' : 'Agregar')),
+        ],
+      ),
+    );
+    if (!mounted || apply != true) return;
+    setState(() {
+      _sockets = preview.applyTo(_sockets);
+      final verb = preview.removing
+          ? _verb(preview.changed, 'Se quitó', 'Se quitaron')
+          : _verb(preview.changed, 'Se agregó', 'Se agregaron');
+      _batchSummary = '$verb '
+          '${operationCount(preview.changed.length, 'toma', 'tomas')}; '
+          '${_sockets.length == 1 ? 'queda' : 'quedan'} ${_sockets.length}.';
+      if (!preview.removing) _pastedSockets.clear();
+    });
   }
 
   Widget _buildExplanation(BuildContext context) {
@@ -819,7 +972,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
                       ? 'El archivo no dice dónde se cargó cada contenedor, '
                           'así que la carga de paso no se puede separar.'
                       : '${counts.discharged} se descargan · '
-                          '${counts.loaded} se cargan · ${counts.transit} de paso',
+                          '${counts.loaded} se cargan · ${counts.transit} de paso'
+                          '${widget.voyage == null ? '' : withoutLoadingPortSuffix(widget.voyage!, _portOfCall)}',
               key: const ValueKey('port-split'),
               style: textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
