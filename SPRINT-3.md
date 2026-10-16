@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 15-oct, 10.56) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 15-oct, 10.59) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1876,7 +1876,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-93** | USO | 2.5 | Instalador de Windows: paquete MSIX firmado con el paquete `msix` (Carlos, 10.36) · **ficha completa arriba**, con su corrección (10.42) |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
-| **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54) · **ficha completa arriba** |
+| **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); en curso (10.57) · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -1961,6 +1961,199 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
   - piso de 710 más las nuevas, y `analyze` en cero;
   - el corpus completo en verde, con los conteos declarados;
   - las reglas, el JSON del perfil, `lib/main.dart` y los congelados sin cambio.
+
+#### T-96 · Comparar la llegada con la salida: qué bajó, qué subió y qué cambió en lo que sigue a bordo · 6.0 h · Timonel (ficha completa, 15-oct)
+
+**Para qué.** ERS, RF-029 (COULD), diferido del Sprint 2. El planner recibe el BAPLIE de llegada y el plan de salida del planner de la línea, y hoy los compara a ojo. El caso ya trae la diferencia real (10.20, ratificada en 10.33): entre A07 y el plan, los 284 de paso difieren en POL (127), POD (189), línea (58) y peso (113). El detalle del plano de llegada muestra solo lo de la llegada (0020310: 24 260 kg en A07 y 24 200 en el plan).
+
+**Lo que hay hoy (Yov lo revisó en el repo, 15-oct):**
+- **El lector:** `VesselRepository.parseBaplieFile(content)` devuelve un `VesselVoyage`, con la 1.5 leída con aviso (T-103).
+- **Abrir un archivo** pasa por `loadVesselFromFile` y `parseBaplieContent`, que confirman identidad y perfil y **publican** el viaje. Comparar no puede usar ese flujo.
+- **`ContainerUnit`** trae `containerId`, `stowagePosition`, `isoSizeType`, `status` (lleno o vacío), `grossWeight`, `vgmWeight`, `portOfLoading`, `portOfDischarge`, `operatorCode`, las peligrosas (`dangerousGoods`, `unNumber`, `imdgClass`) y `temperature`.
+- **Las reservas** (un `EQD` sin número, T-69) van en `reservedSlots`.
+- **La identidad del buque** ya existe: `VesselIdentity`, por IMO, indicativo o nombre.
+- **T-82** genera el BAPLIE de salida de una operación (`departure_baplie_page.dart`), y su corpus ya lo relee con el mismo lector.
+- **Las cifras del caso:** A07 tiene 398 contenedores, 114 que se descargan en GTSTC y 284 de paso. A08 tiene 405: 121 que se cargan en GTSTC y 284 de paso, más 55 reservas.
+
+**Qué construye.**
+
+1. **Un servicio puro de comparación,** `domain/services/voyage_comparison.dart`. Recibe dos `VesselVoyage`, el primero y el segundo, y clasifica por número de contenedor:
+   - **descargados:** solo en el primero;
+   - **cargados:** solo en el segundo;
+   - **permanentes:** en los dos.
+     - De cada uno dice qué campos cambiaron: posición, ISO, lleno o vacío, POL, POD, línea, peso, peligrosas (números ONU y clases) y temperatura.
+     - **El peso** es el efectivo de T-66 (`effectiveWeight`: el VGM si lo hay, si no el WT), el mismo que usa la app. En el detalle se muestran también el WT y el VGM cuando difieren.
+     - Un campo que falta en uno de los dos archivos cuenta como cambio, y se muestra como «sin dato».
+   - **Las reservas** no se comparan por número, porque no lo tienen. Se cuentan aparte, en cada archivo.
+   - **Un número repetido dentro de un archivo** no se clasifica. Se reporta con su cuenta.
+   - **Distinto buque:** si `VesselIdentity` no coincide, se compara igual, con un aviso visible arriba: «No parece el mismo buque: …».
+   - **Es simétrico:** comparar B con A intercambia descargados y cargados, con los mismos cambios en los permanentes.
+2. **Dos entradas:**
+   - **Desde el viaje abierto,** en la barra: «Comparar con otro BAPLIE…».
+     - Elige el archivo con el mismo selector, y lo lee con el lector **sin pasar por el flujo de carga**.
+     - No confirma identidad ni perfil, no entra a Recientes, no se guarda ni sube.
+     - El primero es el viaje abierto; el segundo, el archivo elegido.
+   - **Desde el BAPLIE de salida de T-82:** «Comparar con la llegada».
+     - Relee en memoria el texto generado y lo compara con la llegada de la operación. Así se ve lo que cambió en la escala.
+3. **La vista comparativa,** una pantalla nueva:
+   - **arriba, las cuentas:** por ejemplo, «114 descargados · 121 cargados · 284 permanentes, 256 con cambios», y las reservas aparte;
+   - **un resumen por campo:** «POL 127 · POD 189 · Línea 58 · Peso 113…»;
+   - **tres secciones,** cada una con su color **y con su rótulo o ícono**: el color nunca va solo (RNF-003);
+   - **en los permanentes,** un filtro «Solo con cambios» y, por cada campo cambiado, «antes → después», por ejemplo «Peso 24 260 → 24 200 kg»;
+   - **listas perezosas,** porque son cientos de filas;
+   - **legible** a 360 dp y letra 2.0, en claro y oscuro.
+4. **La observación de 10.20 queda resuelta aquí.** El detalle del plano de llegada sigue mostrando la llegada, que es lo correcto, y la diferencia con el plan se ve en la comparación.
+
+**Las cifras que tiene que dar el caso** (un corpus nuevo, `tool/t96_corpus_test.dart`):
+- **A07 → A08:**
+  - 114 descargados;
+  - 121 cargados, más 55 reservas en el segundo;
+  - 284 permanentes, con POL 127, POD 189, línea 58 y peso 113, y 0 en posición, ISO y lleno o vacío. Son las cifras de 10.20, medidas contra el CSV, y A08 coincide con el CSV en 284/284 y siete campos. Si el 113 no sale con el peso efectivo, el informe dice con cuál sale.
+- **A08 → A07:** lo mismo, intercambiado.
+- **A07 → A08v_VGM:** la misma clasificación. El informe da las diferencias de VGM.
+- **La operación de A07 con sus 177 eventos,** como en T-82: la salida generada contra la llegada da 114 descargados, 176 cargados (121 llenos y 55 vacíos asignados) y 284 permanentes, con las diferencias de 10.20.
+- **Un archivo consigo mismo:** 0 descargados, 0 cargados y todos permanentes, sin cambios.
+- **A05 → A06** (mismo buque, otro viaje; A06 es la 1.5): solo cuentas, sin cifra esperada. El informe las da, y el aviso de la 1.5 se ve.
+
+**Carril.**
+- **Nuevo:** el servicio, la pantalla, `test/t96_*` y `tool/t96_*`.
+- **Toca:** `vessel_overview_page.dart` (la entrada) y `departure_baplie_page.dart` (la segunda entrada).
+- **Codex está en T-105,** en `bay_plan_view.dart` y `change_requests*`. Antes de colocar, compara cada archivo que tocas con tu base: si alguno cambió en HEAD, te detienes y avisas.
+- **No toca:** el lector, el escritor de T-82, el modelo, el codec, las reglas, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+
+**Detente y avisa si:**
+- A07 → A08 no da 114, 121 y 284, o las diferencias no dan 127, 189, 58 y 113, y no puedes explicar por qué;
+- comparar exige cambiar el lector o el modelo;
+- la segunda entrada obliga a tocar el escritor de T-82.
+
+**Fuera de alcance:**
+- comparar más de dos archivos;
+- exportar o guardar la comparación;
+- el código viejo de `voyages` en `deleteVoyage` (10.18), que queda para el cierre.
+
+**Terminada cuando:**
+- [ ] **Las pruebas del servicio** cubren la clasificación, cada campo de cambio, el «sin dato», las reservas aparte, los repetidos, el distinto buque y la simetría.
+- [ ] **El corpus** da las cifras de arriba, incluida la operación de 177 eventos.
+- [ ] **En los tres clientes,** con un namespace propio (`t96acc`) y en modo sin cuenta:
+  - con A07 abierto, comparar con A08 da las cuentas y el resumen por campo;
+  - se ve un ejemplo: 0020310, peso 24 260 → 24 200 kg;
+  - «Comparar con la llegada», desde la salida de T-82, da la misma clasificación;
+  - el archivo comparado no aparece en Recientes ni en el almacén. En Windows, la huella antes y después, tomada fuera del paquete, suma solo `t96acc_*`.
+- [ ] **En el Honor,** la pantalla a 360 dp y letra 2.0, en claro y oscuro.
+- [ ] **Validaciones:**
+  - el piso de HEAD más las nuevas, y `analyze` en cero;
+  - el corpus completo en verde;
+  - las reglas, `lib/main.dart`, `pubspec.*` y los congelados sin cambio.
+
+#### T-95 · El orden de descarga sugerido, con las sobreestibas por columna y por tapa · 7.5 h · Codex (ficha completa, 15-oct)
+
+**Para qué.** ERS, RF-028 (COULD), diferido del Sprint 2. Dice: filtrar lo que se descarga en el puerto elegido, agrupar por bahía, ordenar cubierta antes que bodega y por nivel, y dar la secuencia con una estimación de movimientos. Lo que el planner necesita además, y la fila de T-95 lo pide, son **las sobreestibas**: lo que sigue a bordo y estorba. Hay dos clases:
+- **por columna:** lo que va encima de un contenedor que baja, en la misma pila;
+- **por tapa:** lo que va en cubierta sobre la tapa que hay que quitar para llegar a la bodega.
+
+**Las tres definiciones de dominio, de Carlos (10.59):**
+1. **Sobre una tapa van los de cubierta de las mismas filas que la tapa declara.** Las filas de afuera, sin bodega abajo, no estorban: se cuentan aparte, sin suponer.
+2. **Las bahías se sugieren de la de más movimientos a la de menos.** Con empate, de proa a popa (el número de bahía, de menor a mayor).
+3. **La estimación muestra las dos re-estibas:** a bordo, de celda a celda (1 movimiento), y por muelle, que sale y vuelve (2 movimientos, como registra hoy T-75). Cada tapa de grúa cuenta 2: quitar y reponer.
+
+**Un supuesto de Yov, que Carlos puede corregir:** la tapa automática se abre sin grúa. Cuenta 0 movimientos, pero igual exige despejar la cubierta que va encima. La bodega abierta no tiene tapa.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 15-oct):**
+- **El puerto:** el viaje ya usa la escala confirmada, `portOfCall` (T-68), para sus cuentas (`cargoCountsFor`). El puerto de descarga de cada contenedor es `portOfDischarge`.
+- **La geometría:** `isDeckTier(tier)` separa cubierta de bodega, y `orderedRows` da las filas en orden.
+- **Las tapas:** `VesselProfile.hatchCovers` es un `Map<int, HatchCoverDeclaration>` por bahía del BAPLIE (T-83).
+  - Cada declaración es `openHold`, `automatic` (una tapa) o `crane` (de una a tres), con las filas que cubre cada tapa.
+  - T-84 las identifica como `T:<bahía>-<número>` y las opera; `closedCoverAt` busca por bahía exacta.
+  - **Ningún buque del corpus declara tapas reales.** Todas las de prueba son PROVISIONALES (T-83).
+- **Los proveedores de descarga y carga** ya leen las tapas del perfil vigente (`discharge_provider.dart`, `loading_operation_provider.dart`).
+- **El caso:** A07 tiene 114 descargas en GTSTC, 66 en cubierta y 48 en bodega (T-75).
+
+**Qué construye.**
+
+1. **La celda física, sin calcular pares** (la lección de T-55 y T-56).
+   - **La huella de una bahía:** la de una impar b es {b}, y la de una par E es {E−1, E+1}.
+   - **Dos posiciones están en la misma pila** si tienen la misma fila, la misma zona (cubierta o bodega) y huellas que se tocan.
+   - Así, un 40 en la 02 va sobre los 20 de la 01 y la 03; un 20 en la 03 no va sobre uno en la 01; y en ALFA, la 044 va sobre la 043 y la 045, y la 041 queda sola. No hace falta ninguna fórmula.
+2. **Un servicio puro,** `domain/services/discharge_sequence.dart`. Recibe el viaje, el puerto, la geometría y las tapas del perfil:
+   - **Las descargas** son los contenedores con `portOfDischarge` igual al puerto. Los que no tienen posición o no tienen puerto de descarga se cuentan aparte. Las reservas no son contenedores y no entran.
+   - **La sobreestiba por columna:** todo lo que no baja y está más arriba en la misma pila que una descarga.
+   - **La sobreestiba por tapa:**
+     - **Qué tapa hay que quitar.** Para cada descarga en bodega, la tapa que declara su fila, en una bahía cuya huella toca la suya.
+     - **Qué la estorba.** Todo lo que no baja, está en cubierta, en una fila de esa tapa, y en una bahía cuya huella toca la de la tapa.
+     - **Una misma tapa física, declarada varias veces.** Si se copió a la 01, la 02 y la 03, con las mismas filas y huellas que se tocan, se une en una sola, para no contarla tres veces. El reporte dice cuántas se unieron.
+     - **Una descarga en bodega sin tapa declarada** da un aviso, sin movimientos de tapa.
+   - **Una re-estiba se cuenta una sola vez,** aunque estorbe a varias descargas o sea de las dos clases.
+   - **La secuencia, por celda física** (la par con sus impares):
+     1. la cubierta, de nivel en nivel, de arriba abajo, y dentro del nivel por `orderedRows`. Cada re-estiba sale en su lugar, antes de lo que tiene debajo;
+     2. lo que estorba sobre cada tapa, y después la tapa;
+     3. la bodega, de arriba abajo;
+     4. las tapas de vuelta;
+     5. las re-estibas de vuelta.
+   - **La estimación,** por celda y en total: descargas, más re-estibas (×1 a bordo y ×2 por muelle), más tapas de grúa ×2. Da los dos totales.
+   - **El orden de las celdas:** de más a menos movimientos, con el total por muelle; con empate, de proa a popa.
+3. **La pantalla «Orden de descarga»,** desde el viaje abierto:
+   - **El puerto** es la escala confirmada, y se puede elegir otro de los puertos de descarga del archivo.
+   - **Arriba, el resumen.** Por ejemplo, con cifras inventadas: «114 descargas · 9 re-estibas (6 por columna, 3 por tapa) · 4 tapas de grúa · 131 movimientos a bordo, 140 por muelle».
+   - **Las celdas, en el orden sugerido.** Cada una con sus movimientos y sus pasos, y cada paso con su número, su posición y su rótulo: «Descarga», «Re-estiba: sale», «Tapa T1: quitar», «Tapa T1: reponer» o «Re-estiba: vuelve». El rótulo nunca va solo con color.
+   - **Los avisos:** bodega sin tapa declarada, filas de cubierta fuera de las tapas y contenedores sin posición.
+   - Listas perezosas, legible a 360 dp y letra 2.0, en claro y oscuro.
+   - **La entrada:** si la barra del viaje no cabe a 360 dp con la de T-96, las dos van a un menú «Más».
+
+**Las cifras que tiene que dar el caso** (un corpus nuevo, `tool/t95_corpus_test.dart`):
+- **A07 en GTSTC:** 114 descargas, 66 en cubierta y 48 en bodega.
+  - Las re-estibas por columna las da el corpus, y las confirma **un cotejo independiente sobre el texto crudo**: `LOC+147` y `LOC+11` de cada grupo, sin el lector de BayStream, como el de T-56.
+- **Cada fuente del corpus y cada puerto de descarga que traiga**, con estos invariantes:
+  - cada contenedor de ese puerto aparece una sola vez como descarga;
+  - cada re-estiba no baja, y está sobre una descarga de su pila o sobre una tapa que se quita;
+  - ninguna descarga queda debajo de algo que no baja y no figura como re-estiba;
+  - los totales suman.
+- **Las tapas de A07,** con declaraciones PROVISIONALES en las 21 bahías con bodega:
+  - las mismas tapas declaradas solo en las pares, o copiadas a las impares, dan el mismo resultado;
+  - el informe da las cifras.
+
+**Carril.**
+- **Nuevo:** el servicio, la pantalla, `test/t95_*` y `tool/t95_*`.
+- **Toca:** la entrada en `vessel_overview_page.dart`. T-96 la toca antes, así que la base es el HEAD con T-96.
+- **No toca:**
+  - el plano (`bay_plan_view.dart`): ver el orden en las celdas queda fuera;
+  - el lector, el modelo, el perfil y su JSON, el codec y las reglas;
+  - `lib/main.dart`, los congelados ni `pubspec.*`.
+- Sin dependencias nuevas.
+
+**Detente y avisa si:**
+- el cotejo crudo no da las mismas re-estibas por columna que el servicio;
+- A07 no da 114 descargas, 66 en cubierta y 48 en bodega;
+- unir las tapas copiadas cambia el resultado frente a declararlas solo en las pares.
+
+**Fuera de alcance:**
+- el orden en las celdas del plano;
+- las grúas y el reparto entre ellas;
+- seguir el avance en vivo, que ya hace T-75: la secuencia es del archivo;
+- la estabilidad y la escora;
+- guardar o exportar la secuencia.
+
+**Terminada cuando:**
+- [ ] **Las pruebas del servicio,** con datos sintéticos, cubren:
+  - un 40 que no baja sobre un 20 que baja (02 sobre 01): re-estiba por columna;
+  - un 20 en la 03 sobre un 20 en la 01: no es la misma pila;
+  - un 20 que no baja sobre un 40 que baja: re-estiba;
+  - ALFA, sin fórmula: la 044 sobre la 043 y la 045, y la 041 sola;
+  - una descarga en bodega con cubierta de paso sobre su tapa: re-estibas por tapa. La misma cubierta en una fila de afuera no cuenta, y se reporta;
+  - la tapa automática: despeja la cubierta y cuenta 0. La bodega abierta: sin tapa. La tapa sin declarar: aviso;
+  - las copias en la 01, la 02 y la 03 unidas en una tapa;
+  - una re-estiba que estorba dos veces cuenta una;
+  - el orden de las celdas por movimientos, con el empate de proa a popa;
+  - los dos totales.
+- [ ] **El corpus** da las cifras y los invariantes de arriba, con el cotejo crudo.
+- [ ] **En los tres clientes,** con un namespace propio (`t95acc`) y en modo sin cuenta:
+  - A07 en GTSTC muestra el resumen, las celdas en orden y sus pasos;
+  - cambiar de puerto recalcula;
+  - con las tapas PROVISIONALES, se ven las re-estibas por tapa.
+- [ ] **En el Honor,** la pantalla a 360 dp y letra 2.0, en claro y oscuro.
+- [ ] **Validaciones:**
+  - el piso de HEAD más las nuevas, y `analyze` en cero;
+  - el corpus completo en verde;
+  - las reglas, el perfil y su JSON, `lib/main.dart`, `pubspec.*` y los congelados sin cambio.
 
 #### T-97 · El título sin truncar y los textos acumulados del sprint · 1.0 h · Codex (ficha completa, 13-oct)
 
@@ -2090,9 +2283,9 @@ para RNF-003.
 
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
-| **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
-| **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
-| **T-56** | ERS | 3.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38); tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo; y dos de T-103 (10.43): «Contenido compatible: BAPLIE 2.x.» en la pantalla vacía, y el resumen 0/0/0 de A06 en GTPBR, que no trae `LOC+9`. La hace Timonel y la acepta Codex (10.52) · **ficha completa arriba** |
+| **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa, con las tres definiciones de Carlos (10.59). La hace Codex y la acepta Timonel · **ficha completa arriba** |
+| **T-96** | RF-029 | 6.0 | Comparación llegada contra salida: descargados, cargados y permanentes, con lo que cambió en cada campo. La hace Timonel y la acepta Codex (10.58) · **ficha completa arriba** |
+| **T-56** | ERS | 3.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38); tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo; y dos de T-103 (10.43): «Contenido compatible: BAPLIE 2.x.» en la pantalla vacía, y el resumen 0/0/0 de A06 en GTPBR, que no trae `LOC+9`. La hace Timonel y la acepta Codex (10.52); entregada en 10.57, con una corrección antes de la aceptación · **ficha completa arriba** |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
 | **T-104** | ERS | 2.5 | Deudas del lote de Timonel: aislar `block3` del almacén real, «1 bahías», las extensiones de la pantalla inicial y los cortes a 200 % (10.38); la prueba intermitente, los dos `print` y el `LEEME` del SDK (10.39) · **ficha completa arriba** |
 
@@ -3963,3 +4156,113 @@ El piso de pruebas es 648.
 - entrega en español, con un «Mensaje para Yov».
 
 **El sprint sigue en 43 tareas y ≈ 159.5 h.** Las horas de Gru se anotan en la tarea que apoya.
+
+### 10.57 · T-56 entregada, en revisión: las tomas por celda y por rangos · Una corrección chica antes de la aceptación · T-105, en curso con Codex (15-oct)
+
+**Timonel entregó T-56** (commit `5b1d8a1`, base `35f0058`, `docs/T56-RESULTADOS.md`). Yov revisó el diff y cumple la ficha.
+- **El validador busca por celda física, sin cambiar el modelo.**
+  - Un 40 en la par E acepta la toma de E, E−1 o E+1.
+  - Un 20 en la impar b acepta la de b. Con solo una par vecina da un aviso de extremo que nombra el código encontrado, nunca un error.
+  - No calcula pares.
+- **La carga por rangos** está en un servicio puro, `reefer_socket_ranges.dart`:
+  - con vista previa, quitar por rango y pegar una lista;
+  - con un tope de 20 000 códigos por operación y errores legibles;
+  - **cargar no declara:** solo la casilla declara.
+- **Las cifras:**
+  - 745/745 (35 nuevas), `analyze` en cero y corpus 129/129 en 33 archivos;
+  - el escenario de T-55 pasa de 91 errores a 82 avisos de extremo y 9 conformes, sintético y sobre A01;
+  - en las 10 fuentes, 0 → 0. En los cruces del mismo buque, A08 → A07 sigue en 4 → 4, y no aparece ninguna alerta nueva;
+  - las 21 bahías de A07 ∪ A08, con su lista y un cotejo sobre el texto crudo;
+  - en los tres clientes:
+    - 204 se agregan, 6 ya estaban y 70 se descartan;
+    - se guardan 216 y quedan 147 al quitar;
+    - solo la casilla declara;
+  - Windows tardó 41 s y la Web 22 s. El Honor no tiene un tiempo limpio.
+- **Los cinco textos** se vieron en el Honor a 2.0, en claro y oscuro. A06 en GTPBR dice «717 sin puerto de carga en el archivo».
+- **No cambian** el modelo y el JSON del perfil, el codec, las reglas, `lib/main.dart`, `pubspec.*` ni los congelados. Los SHA están en el informe.
+- **Windows** sumó al almacén real solo archivos `t56acc_*` (362 → 374).
+
+**La pregunta de Timonel, confirmada por Yov:** un contenedor sin `LOC+9` que se descarga en la escala ya va en «se descargan», y no se repite en «sin puerto de carga». Así, las cuatro cifras suman el total.
+
+**Una corrección antes de la aceptación,** para que Codex acepte una sola vez. La hace Timonel ahora, sin dispositivos:
+1. **El diálogo de quitar** cerraba con «Cargar no declara…». Ahora dirá «Quitar no cambia la casilla de declaración.».
+2. **La sección de tomas** ya no se pliega cuando la lista la desecha al desplazarse.
+3. **Las cuatro líneas del resumen con reservas** concuerdan en singular y plural. La prueba nueva fijaba «1 reservas» y «1 contenedores».
+
+**Observaciones que quedan anotadas:**
+- Windows se probó con la compilación anterior a la corrección de dos detalles de la vista previa. Codex lo ve con la final.
+- Al usar el Honor se recreó la actividad de `.t105` de Codex. Su almacén no se tocó.
+- Un `%TEMP%` limpiado a mitad de la tarea obligó a rehacer la copia de compilación.
+- «Usar estas declaraciones», pegado al borde de su botón a 2.0, queda para la pasada de textos del cierre.
+
+**La acepta Codex cuando entregue T-105,** sobre la corrección:
+- cronometra en el Honor, de un tirón, la carga de al menos cien tomas por rango, en menos de un minuto;
+- repite Windows con la compilación final.
+
+**T-105 está en curso:** Codex la está haciendo (el Honor ya tiene su `.t105`). La acepta Timonel.
+
+**Horas:** ≈ 1.3 h de Timonel frente a 3.5, sin contar la corrección.
+
+**El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero:
+- 33 terminadas;
+- T-56 en revisión;
+- T-105 en curso;
+- 8 por hacer.
+
+### 10.58 · La ficha de T-96, completa, para Timonel · T-95 espera tres definiciones de dominio de Carlos (15-oct)
+
+**T-96 va a Timonel ahora,** mientras Codex termina T-105 (ficha completa en la Ola 6, después de T-56). La acepta Codex, después de T-56.
+- **La idea central:** comparar es un servicio puro sobre dos `VesselVoyage` ya leídos, por número de contenedor.
+- **El segundo archivo** se lee con el mismo lector y **no pasa por el flujo de carga:** no se publica, no entra a Recientes, no se guarda ni sube.
+- **Dos entradas:** «Comparar con otro BAPLIE…», desde el viaje abierto, y «Comparar con la llegada», desde el BAPLIE de salida de T-82.
+- **El peso** que se compara es el efectivo de T-66, el mismo que usa la app.
+- **Las cifras del caso:**
+  - A07 → A08 da 114 descargados, 121 cargados más 55 reservas y 284 permanentes, con las diferencias de 10.20: POL 127, POD 189, línea 58 y peso 113;
+  - al revés, se intercambian;
+  - la salida de la operación de 177 eventos contra A07 da 114, 176 y 284.
+- **Resuelve la observación de 10.20:** el detalle de la llegada sigue mostrando la llegada, y la diferencia con el plan se ve en la comparación.
+- **El carril:** archivos nuevos más dos entradas, en `vessel_overview_page.dart` y `departure_baplie_page.dart`. Si T-105 cambió alguno de los dos antes de colocar, Timonel se detiene y avisa.
+
+**T-96 se adelanta a T-95** porque su especificación está completa y el caso trae las cifras. T-95, el orden de descarga con sobreestibas por columna y por tapa, necesita tres definiciones de dominio que solo puede dar Carlos como planner:
+- qué contenedores de cubierta van sobre cada tapa;
+- en qué orden se sugieren las bahías;
+- cuántos movimientos cuenta una re-estiba.
+
+Yov se las pregunta y escribe la ficha con sus respuestas.
+
+**El tablero muestra dos tareas en curso,** una por programador y en archivos distintos, como ya permitió 10.54.
+
+**Las horas no cambian:** 6.0 h. **El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero:
+- 33 terminadas;
+- T-56 en revisión;
+- T-105 y T-96 en curso;
+- 7 por hacer.
+
+### 10.59 · Carlos define el dominio de T-95 · Su ficha, completa, para Codex (15-oct)
+
+**Las tres definiciones de Carlos,** como planner, para las sobreestibas y la estimación:
+1. **Sobre una tapa van los de cubierta de las mismas filas que la tapa declara** (lo que recomendó Yov). Las filas de afuera, sin bodega abajo, no estorban: se cuentan aparte.
+2. **Las bahías van de la de más movimientos a la de menos.** Yov había recomendado de proa a popa; Carlos eligió otra cosa. Con empate, se ordenan de proa a popa.
+3. **La estimación muestra las dos re-estibas:** a bordo (1 movimiento) y por muelle (2). Cada tapa de grúa cuenta 2, quitar y reponer.
+
+**Un supuesto de Yov, anotado para que Carlos lo corrija si no aplica:** la tapa automática se abre sin grúa. Cuenta 0 movimientos, pero igual exige despejar la cubierta que va encima.
+
+**La ficha de T-95, completa** (Ola 6, después de T-96):
+- **La celda física, sin calcular pares.** La huella de una impar es ella misma, y la de una par son sus dos impares vecinas. Dos posiciones están en la misma pila si tienen la misma fila, la misma zona y huellas que se tocan. Así, ALFA (la 041 sola, y la 044 sobre la 043 y la 045) no necesita fórmula.
+- **Un servicio puro,** `discharge_sequence.dart`, con las sobreestibas por columna y por tapa.
+  - Una re-estiba se cuenta una sola vez.
+  - Las tapas copiadas entre bahías de la misma celda, con las mismas filas, se unen en una.
+- **Una pantalla nueva,** «Orden de descarga»: el resumen, las celdas en el orden sugerido con sus pasos rotulados, y los avisos.
+- **El caso:** A07 en GTSTC da 114 descargas, 66 en cubierta y 48 en bodega. Las re-estibas por columna las confirma un cotejo sobre el texto crudo, y cada fuente y cada puerto cumplen los invariantes.
+- **Las tapas siguen siendo PROVISIONALES:** ningún buque del corpus las declara (T-83).
+- **Queda fuera:** el orden en las celdas del plano, las grúas, el avance en vivo, la estabilidad y exportar.
+
+**Quién y cuándo:**
+- **Codex** la hace después de aceptar T-56, sobre el HEAD con T-96.
+- **La acepta Timonel.**
+- **Codex acepta T-96.**
+- **El orden:**
+  - **Codex:** T-105, después la aceptación de T-56, y después T-95.
+  - **Timonel:** la corrección de T-56, T-96 y la aceptación de T-105, que se adelanta a T-96 en cuanto llegue.
+
+**Las horas no cambian:** 7.5 h. **El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero no cambia: T-95 sigue por hacer, con su ficha.
