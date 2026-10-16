@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 15-oct, 10.59) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 15-oct, 10.60) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1001,12 +1001,121 @@ alguna línea todavía puede mandar una 1.x. A06 del corpus es una SMDG15 real
 - [ ] **Validaciones:** piso de 685 más las nuevas, `analyze` en cero, corpus completo en verde
       con los conteos declarados, y las reglas sin cambio.
 
+#### T-85 · La segregación con el Código IMDG 42-24: el cuadro de 7.2.4 por clase y las distancias de 7.4.3.2 a bordo · 10.0 h · Timonel (ficha completa, 15-oct)
+
+**Para qué.** ERS, RF-027. Hoy la segregación usa un subconjunto de 49 CFR Parte 176 (T-41): 18 números ONU y 7 clases, y declara que no es el IMDG. La transcripción del IMDG 42-24 ya existe y está verificada (10.60): dos lecturas a ciegas, de Yov y de Gru, coinciden en 348 de 349 celdas, y Carlos resolvió la única diferencia mirando el PDF. T-85 pasa el validador a la norma que gobierna la operación real.
+
+**Las decisiones de Carlos (10.60):**
+- **Solo los códigos van al código.** La matriz de 7.2.4 (1 a 4, X y \*) y las exigencias de 7.4.3.2 entran como datos en Dart, sin copiar texto del IMDG. Los mensajes van en palabras de BayStream y citan el apartado («IMDG 42-24, 7.2.4»). Las pruebas corren sin archivos privados.
+- **La transcripción vive en `C:\Proyectos\baystream-privado\imdg\`,** nunca en el repo: `yov_7-2-4.csv`, `yov_7-4-3-2.csv`, `yov_notas.txt` y `cotejo_imdg_yov_gru.txt`. Un comprobador fuera de la suite la compara con los datos del código.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 15-oct):**
+- **`segregation_rules.dart`** es 49 CFR:
+  - 18 números ONU con su perfil (`unProfiles`), 7 clases y 4 códigos (`substance`, `away`, `separated` y `compatibility`), con una cita por par;
+  - y el aviso `SegregationRules.disclaimer`.
+- **`dangerous_goods_validator.dart`** recorre las DGS de cada contenedor (`ContainerUnit.dangerousGoods`, con clase, número ONU y etiquetas) y evalúa cada par.
+  - **Mide por huecos, no en metros:** en sentido longitudinal, huecos de 20 pies por número de bahía (`longitudinalGap`); en sentido transversal, filas (`lateralGap`), con la fila 00 solo si se declara o se observa.
+  - **Lo que no sabe,** como los mamparos o la resistencia de las cubiertas, lo deja en «no evaluado».
+- **`ContainerUnit.containerType`** sale del tercer carácter del ISO: G, R, U (techo abierto), P (plataforma), T (tanque) y B.
+- **Lo muestran** `segregation_page.dart` y `stowage_alerts_page.dart`.
+- **Dependen de esto:**
+  - `test/dangerous_goods_validator_test.dart`;
+  - en `tool/`: `block7b_corpus.dart`, `block7_checks.dart`, `t42_aceptacion.dart`, `t55_fila_central.dart`, `t55_tabla_segregacion.dart` y `t55_trazas.dart`.
+
+**Qué construye.**
+
+1. **Los datos del IMDG, como códigos,** en un archivo de dominio propio:
+   - **7.2.4:** las 17 filas de la tabla (1.1/1.2/1.5, 1.3/1.6, 1.4, 2.1, 2.2, 2.3, 3, 4.1, 4.2, 4.3, 5.1, 5.2, 6.1, 6.2, 7, 8 y 9) y una matriz simétrica de 1 a 4, X y \*.
+   - **7.4.3.2:** para cada exigencia, de 1 a 4:
+     - la regla vertical por par de unidades: cerrada/cerrada, cerrada/abierta o abierta/abierta;
+     - la horizontal por sentido (longitudinal o transversal), par de unidades y zona (en cubierta o bajo cubierta).
+     - **Los valores posibles:** sin restricción; n espacios; n espacios o un mamparo; n mamparos; 24 m; un mamparo y 24 m; o prohibido.
+   - **Sin texto del IMDG.** Solo códigos y la cita del apartado.
+2. **La clase de cada sustancia:**
+   - **Las divisiones de la clase 1,** con o sin grupo de compatibilidad, caen en su fila: 1.1, 1.2 y 1.5 juntas; 1.3 y 1.6 juntas; 1.4 sola.
+   - **Las etiquetas de peligro secundario** que declare el archivo se aplican como dice 7.2.3.3: manda la exigencia más rigurosa entre la del peligro principal y la del secundario. Un secundario de clase 1 se toma como 1.3.
+   - **Con dos o más secundarios** (7.2.3.4), la exigencia está en la columna 16b de la Lista, que BayStream no tiene: «no evaluado».
+3. **El resultado de un par:**
+   - **Un número (1 a 4):** se evalúa la posición con 7.4.3.2, como dice el punto 4.
+   - **Una X:** «no evaluado: consultar la Lista de mercancías peligrosas». Así sale toda la clase 9.
+   - **El asterisco** (clase 1 contra clase 1): «no evaluado: ver 7.2.7.1».
+   - **Si un par de etiquetas da X y otro da un número,** se evalúa el número y se agrega el aviso de consultar la Lista.
+   - **Dos sustancias en el mismo contenedor** que exigen segregación entre sí: «no conforme», como hoy (7.2.3.2).
+4. **La posición, con 7.4.3.2,** sobre el modelo de huecos de hoy, sin medir metros:
+   - **Cerrada o abierta,** por el tipo ISO. Son cerradas G, R, T y B, y abiertas U y P. Sin tipo, o con otro, da «no evaluado».
+   - **En la misma vertical** quiere decir misma pila: misma fila y huellas que se tocan, como en T-95.
+     - «Separados por una cubierta» es uno en cubierta y el otro en bodega.
+     - Una bahía declarada como bodega abierta (T-83) no tiene tapa, así que no separa.
+   - **Horizontal:**
+     - **Los espacios.** Un espacio para contenedor es un hueco completo, y dos o tres espacios son dos o tres huecos. 7.4.3.1.1 lo define como 6 m por 2,4 m; aquí se cuenta en huecos, y se rotula como derivación, igual que hoy.
+     - **Los 24 m** son cuatro huecos longitudinales de 20 pies, rotulados como aproximación.
+     - **Los mamparos** no los conoce BayStream: dan «no evaluado», salvo que se cumpla la alternativa «o un espacio».
+     - **Basta uno de los dos sentidos.** En la exigencia 4, el transversal está prohibido: solo vale el longitudinal.
+   - **La zona:** cuando las dos unidades están en la misma zona, se usa la columna de esa zona.
+     - Si una va en cubierta y la otra en bodega, la tabla no da una columna directa.
+     - Para 1 y 2, la cubierta entre ellas cumple.
+     - Para 3 y 4: «no evaluado», porque hacen falta los límites de la bodega.
+5. **El aviso de la fuente cambia,** con esta idea:
+   - «Fuente: Código IMDG, Enmienda 42-24 (7.2.4 y 7.4.3.2). Apoyo a la decisión, no verificación de cumplimiento.»
+   - «No se evalúan la columna 16b de la Lista de mercancías peligrosas, que tiene prioridad (7.2.3.1), ni los mamparos, ni la resistencia de las cubiertas.»
+   - **49 CFR deja de usarse,** y sus datos (`unProfiles` y sus pares) salen del código. `docs/T41-SEGREGACION-FUENTE.md` queda como historia.
+6. **La pantalla de segregación** muestra la matriz por clase con una leyenda en palabras de BayStream, y cada resultado con su apartado.
+
+**El comprobador privado,** `tool/t85_tabla_privada.dart`:
+- recibe las rutas de `yov_7-2-4.csv` y `yov_7-4-3-2.csv` como argumentos;
+- compara los datos del código con la transcripción verificada, celda por celda: 289 y 60;
+- traduce los textos de 7.4.3.2 a sus códigos con una tabla cerrada, y un texto desconocido falla;
+- sale con 0 si coinciden.
+- **No entra a `flutter test`.** Ningún CSV entra al repo, y sus salidas van a `%TEMP%`.
+- **Lo corren** el que implementa y el que acepta.
+
+**Carril.**
+- **Toca:** `segregation_rules.dart`, `dangerous_goods_validator.dart`, el archivo nuevo de datos, los textos de `segregation_page.dart` y `stowage_alerts_page.dart`, `test/t85_*`, `tool/t85_*`, y las pruebas y herramientas de segregación de arriba que fijan resultados de 49 CFR.
+- **No toca:** el lector, el modelo (`DangerousGoods` y `ContainerUnit`), el codec, las reglas, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+
+**Detente y avisa si:**
+- el comprobador privado no da 289/289 y 60/60;
+- un resultado del corpus cambia y no se explica por las tablas del IMDG;
+- hace falta cambiar el modelo de DGS.
+
+**Fuera de alcance:**
+- la Lista de mercancías peligrosas, su columna 16b y los códigos SG;
+- la estiba mixta de la clase 1 (7.2.7.1.4);
+- 7.4.3.3, los buques sin tapas;
+- declarar mamparos o bodegas;
+- las prescripciones de estiba de 7.4.2, como la ventilación o el punto de inflamación en cubierta;
+- las cantidades limitadas y exceptuadas.
+
+**Terminada cuando:**
+- [ ] **El comprobador privado** da 289/289 y 60/60 contra la transcripción verificada.
+- [ ] **Una prueba exige la simetría** de la matriz.
+- [ ] **Los casos sintéticos** cubren al menos:
+  - 3 contra 5.1 (2): pegados en cubierta, no conforme; con un hueco, conforme;
+  - 2.1 contra 4.1 (1): cerrados y pegados en cubierta, conforme;
+  - una exigencia 1 entre dos abiertas pegadas: falta un espacio;
+  - 1 en vertical: una abierta sobre una cerrada, permitido;
+  - 1.4 contra 6.2 (4):
+    - con cuatro huecos longitudinales, conforme;
+    - con tres, no conforme;
+    - separadas solo en sentido transversal, no conforme;
+  - bajo cubierta, una exigencia de mamparo: no evaluado;
+  - una en cubierta y otra en bodega, para 2 y para 3;
+  - la clase 9, el asterisco, un secundario declarado y dos secundarios;
+  - dos sustancias en un mismo contenedor.
+- [ ] **El corpus:** cada resultado que cambia frente a 49 CFR se lista en el informe con su razón, y ninguno queda sin explicar.
+- [ ] **Ningún texto del IMDG en el repo:** una búsqueda de «Prohibido en la misma línea vertical» y «compartimiento intermedio» en `lib/`, `test/` y `tool/` no devuelve nada.
+- [ ] **En los tres clientes,** con un namespace propio (`t85acc`), la pantalla de segregación de un archivo del corpus con peligrosas muestra la fuente nueva y sus resultados. En el Honor, a 360 dp y letra 2.0.
+- [ ] **Validaciones:**
+  - el piso de HEAD más las nuevas, y `analyze` en cero;
+  - el corpus completo en verde;
+  - las reglas, `lib/main.dart`, `pubspec.*` y los congelados sin cambio.
+
 | Tarea | Elemento | h | Qué | Terminada cuando |
 |---|---|---:|---|---|
 | **T-82** | RF-039 | 10.0 | BAPLIE de salida en la misma versión 2.x en que llegó, con lo cargado, re-estibado y cancelado; VGM y tara exactos del listado | Releído por el propio lector, coincide con `CASO_A08_ESTADO_FINAL.csv` en las 460 posiciones · **ficha completa arriba** |
 | **T-83** | RF-040 | 4.0 | Tapas en el perfil del buque, por bahía: sin tapa, una automática, o 1–3 de grúa con las filas que cubre cada una | Se declaran una vez por buque y se copian a otras bahías · **ficha completa arriba** |
 | **T-84** | RF-040 | 4.0 | Tapas en la operación: quitar y reponer como movimientos; aviso al marcar bodega bajo tapa cerrada | Los movimientos de tapa cuentan en el avance · **ficha completa arriba** |
-| **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, que Yov transcribe y verifica | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
+| **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, transcritas a ciegas por Yov y Gru y verificadas (10.60). La hace Timonel y la acepta Codex · **ficha completa arriba** | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
 | **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
 | **T-87** | BAP | 10.0 | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza |
 | **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35; adelantada a Timonel en 10.41; terminada en 10.45) · **ficha completa arriba** | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
@@ -4266,3 +4375,42 @@ Yov se las pregunta y escribe la ficha con sus respuestas.
   - **Timonel:** la corrección de T-56, T-96 y la aceptación de T-105, que se adelanta a T-96 en cuanto llegue.
 
 **Las horas no cambian:** 7.5 h. **El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero no cambia: T-95 sigue por hacer, con su ficha.
+
+### 10.60 · La transcripción del IMDG, verificada por dos lecturas a ciegas · Carlos decide cómo llega al código · La ficha de T-85, completa (15-oct)
+
+**La transcripción existe y está verificada.** Yov y Gru leyeron por separado, sin ver la otra lectura, las dos tablas del PDF de la Enmienda 42-24 (`baystream-privado`):
+- **7.2.4,** el cuadro de segregación por clase (página 2 del PDF, 536 impresa): **289 de 289 celdas iguales.** La lectura de Yov es además simétrica en sus 136 parejas.
+- **7.4.3.2,** los portacontenedores con bodegas cerradas (página 16, 557 impresa, girada): **59 de 60 iguales en el contenido,** más una diferencia de forma, un punto contra una barra.
+- **La única diferencia de contenido:** la .3, vertical, abierta/abierta.
+  - Yov leyó «prohibido en la misma vertical salvo que los separe una cubierta»; Gru, «prohibido».
+  - Yov midió las líneas de la tabla sobre la imagen: en esa columna no hay ninguna entre la .1, la .2 y la .3, así que es una sola celda combinada, y el «prohibido» es solo de la .4.
+  - **Carlos lo confirmó mirando el PDF:** vale la lectura de Yov.
+- **Los archivos** (`yov_7-2-4.csv`, `yov_7-4-3-2.csv`, `yov_notas.txt` y `cotejo_imdg_yov_gru.txt`) están en `C:\Proyectos\baystream-privado\imdg\`, junto a los de Gru. **Nunca en el repo** (10.35).
+- **Es la verificación doble que pide el plan,** con evidencia de cada paso. Gru cumplió su primera tarea: 348 de 349 celdas.
+
+**Carlos decide cómo llega la tabla al código** (la pregunta de 10.35): **solo los códigos.**
+- La matriz de 1 a 4, X y \*, y las exigencias de 7.4.3.2, van como datos en Dart, sin copiar texto del IMDG.
+- Los mensajes van en palabras de BayStream, citando el apartado.
+- La app igual lleva la tabla dentro, y las pruebas corren sin archivos privados.
+- Un comprobador fuera de la suite compara los datos con la transcripción verificada.
+- Era la opción que recomendó Yov.
+
+**La ficha de T-85, completa** (Ola 4, después de T-103):
+- **El cambio de fuente:** el validador deja 49 CFR y pasa al IMDG 42-24. La clase sale del archivo, con las etiquetas secundarias según 7.2.3.3.
+- **Los resultados:**
+  - la X da «no evaluado: consultar la Lista», y así sale toda la clase 9;
+  - el asterisco remite a 7.2.7.1.
+- **La posición** se evalúa con 7.4.3.2 sobre el modelo de huecos que ya existe.
+
+**Supuestos de Yov que Carlos puede corregir antes de que empiece T-85:**
+- un tanque (T) es una unidad cerrada, como G, R y B; U y P son abiertas;
+- la tapa de escotilla cuenta como la cubierta que separa en vertical, y una bodega abierta (T-83) no separa;
+- 24 m son cuatro huecos longitudinales de 20 pies, rotulados como aproximación;
+- entre una unidad en cubierta y otra en bodega, para las exigencias 1 y 2 basta la cubierta; para la 3 y la 4, «no evaluado».
+
+**Quién y cuándo:**
+- **Timonel** la hace después de T-96 y de aceptar T-105.
+- **Antes de la aceptación, Gru revisa** los datos del código contra el PDF, como tercera lectura.
+- **La acepta Codex.**
+
+**Las horas no cambian:** 10.0 h. **El sprint sigue en 43 tareas y ≈ 159.5 h.**
