@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.67) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.68) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -4671,3 +4671,43 @@ Las demás son textos y cosméticas, entre ellas:
 **La ficha de T-85 queda ajustada** en el punto 4 de «Qué construye». Ya no quedan supuestos abiertos: Timonel la toma después de T-95.
 
 **El sprint sigue en 44 tareas y ≈ 161.5 h.**
+
+### 10.68 · T-56 y T-96 terminadas: Codex acepta las dos · La medición de Windows la hace Carlos a mano (16-oct)
+
+**T-56 pasa a Terminado** (`be85e4c`, `docs/T56-ACEPTACION-RESULTADOS.md`):
+- **Lo que confirmó Codex en las validaciones:**
+  - 799/799, `analyze` en cero y corpus 135/135;
+  - los ocho SHA iguales;
+  - su cotejo independiente del validador sobre el EDI crudo: 91 errores pasan a 82 avisos y 9 conformes, sin alertas nuevas;
+  - las 21 bahías.
+- **En los tres clientes:**
+  - 204 / 6 / 70, con 216 al reabrir;
+  - la lista pegada da 1 / 2 / 1, con los tres inválidos;
+  - quitar deja 147;
+  - solo la casilla declara;
+  - la sección no se pliega.
+- **Los cinco textos,** en el Honor a 2.0, en claro y oscuro. El Honor queda en 1.0.
+- **El almacén real de Windows:** solo `t56cx_*`.
+- **El cronómetro:**
+  - el Honor, 27.9 s;
+  - **Windows, 56 s, medidos a mano por Carlos** (decisión de Yov). El intento del agente dio 96 s, pero medía la latencia de la herramienta, porque escribía carácter por carácter. El criterio de «menos de un minuto» es para una persona. Después de la medición de Carlos, Codex verificó las 216 tomas al reabrir.
+- **La Web,** en el navegador integrado con autorización de Carlos (10.55). Chrome no se da por probado.
+- **Queda como precedente:** cuando un criterio mide la operación de una persona y la herramienta del agente lo distorsiona, la medición la hace Carlos a mano, declarada en el informe.
+
+**T-96 pasa a Terminado** (`6d5f3f7`, `docs/T96-ACEPTACION-RESULTADOS.md`), con la corrección del aviso de buque (`adc9ea4`):
+- **Las validaciones:** 842/842, `analyze` en cero y corpus 135/135.
+- **El cotejo independiente de Codex,** preparado sin el lector, coincide por número y por cada campo con 114 / 121 + 55 / 284 y 127 / 189 / 58 / 113.
+- **El aviso de buque:** A07 → A08 no tiene aviso, A05 → A06 pide confirmar, y dos IMO distintos dicen «No parece el mismo buque».
+- **En los tres clientes:**
+  - las cuentas, el ejemplo de 0020310 y el filtro «Solo con cambios»;
+  - «Comparar con la llegada» desde T-82;
+  - el archivo comparado no se guarda: solo se agregan archivos `t96cx_*`.
+- **La Web,** en el integrado autorizado, con dos desplazamientos manuales de Carlos, declarados.
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h.** El tablero:
+- 36 terminadas;
+- 0 en revisión;
+- T-95 en curso;
+- 7 por hacer.
+
+**La diapositiva 15** pasa a «36 de 44». Las tomas de reefer y la comparación entre la llegada y la salida suben a «Ya funciona».
