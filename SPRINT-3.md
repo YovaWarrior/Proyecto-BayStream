@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.53) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 15-oct, 10.55) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1765,6 +1765,107 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
   - `pubspec.*` sin cambio, salvo la dependencia del ícono si Carlos la autoriza.
 - [ ] **Si hubo ícono:** se ve en el lanzador del Honor, en la pestaña de Chrome y en Windows, y está el PNG de 512×512 para Play.
 
+#### T-105 · Mover un contenedor arrastrándolo en el plano · 3.5 h · Codex (ficha completa, 15-oct)
+
+**Para qué.** RF-038, con la interacción de RF-037. Carlos lo pide para mostrarlo el 17-oct (10.54). Hoy, mover o intercambiar un objeto del plan de carga es un formulario (`change_requests_page.dart`): se escribe el contenedor, la orden o la reserva, y la celda de destino. En el plano, lo natural es tomarlo y soltarlo donde va.
+
+**La idea central: arrastrar es otra forma de escribir el mismo cambio.**
+- No hay un tipo de movimiento nuevo, ni otra regla, ni otra sincronización.
+- Al soltar, se arma la misma `PositionChange`, y pasa por el mismo `ChangeRequests`:
+  - **la oficina** registra `changePosition`: el cambio es directo, y se deshace como hoy;
+  - **el muelle** registra `requestChange`, y la oficina la aprueba o la rechaza, como en T-80.
+- **Por eso hereda todo lo que ya está probado:** el motivo obligatorio, la sincronización, el deshacer, los permisos por rol y las reglas de Firestore.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 15-oct):**
+- **`ChangeRequests.review()`** rechaza:
+  - un objeto que no está en el plan, o cuyo origen cambió;
+  - una celda fuera de la geometría;
+  - un 40 en bahía impar o un 20 en par;
+  - una celda prevista para otro objeto, salvo que ese objeto entre en el intercambio.
+- **`move()`** exige además:
+  - que el objeto esté **pendiente de carga** (`PlanRole.load` y `ItemState.planned`);
+  - que la celda no esté ocupada a bordo;
+  - que, en un intercambio de reservas, sean del mismo grupo.
+- **`request()`** es lo mismo para el muelle. Un lote lleva de uno a cuatro cambios.
+- **El plano** (`bay_plan_view.dart`, `_BayGridWidget`) muestra una bahía a la vez. Tiene los modos Contenido, Carga, Orden y Descarga, y en el modo Carga recibe el `LoadingOperation` y abre los detalles al tocar una celda.
+
+**Qué construye.**
+1. **Una vista previa pura en el dominio:** `ChangeRequests.preview(data, actor, changes)`.
+   - Devuelve si el cambio es válido, si es un intercambio, o el mensaje de error.
+   - Usa las mismas comprobaciones de `move()` y `request()`, sin copiarlas en la vista: las tres llaman a la misma función.
+2. **Qué se arrastra:**
+   - **solo en el modo Carga,** con una operación abierta y una sesión con rol;
+   - **solo objetos pendientes de carga,** contenedores o reservas.
+   - Lo que ya se cargó, lo que descarga o va de paso, y todo lo que hay en los demás modos, no se arrastra.
+   - Sin rol, una pulsación larga sobre un objeto pendiente dice «Inicia sesión para mover».
+3. **El gesto:**
+   - **`LongPressDraggable`,** para que el toque siga abriendo los detalles y el desplazamiento y el zoom del plano sigan funcionando. En Android vibra al empezar.
+   - **Lo que se arrastra** es una copia de la celda (contenedor u orden), un poco por encima del dedo para que no la tape.
+   - **Solo dentro de la bahía que se ve.** Para otra bahía queda el formulario.
+4. **Mientras se arrastra,** cada celda bajo el dedo muestra el resultado de `preview()`:
+   - **verde,** si el movimiento es válido;
+   - **ámbar,** si es un intercambio, porque la celda está prevista para otro objeto pendiente;
+   - **rojo,** si no se puede.
+   - El color no es la única señal: lleva también un borde o un ícono.
+5. **Al soltar no se registra nada todavía.** Se abre una hoja de confirmación:
+   - «Mover TSTU 123456-7 de 14 01 02 a 14 01 08», o «Intercambiar A ↔ B»;
+   - el motivo, obligatorio, con sugerencias rápidas (peso, segregación, acceso de grúa) y texto libre;
+   - **«Confirmar»:** la oficina mueve. El muelle «Envía la solicitud», y el objeto no se mueve hasta que la oficina la apruebe.
+   - Soltar en rojo no abre la hoja: un aviso dice por qué.
+   - Cancelar no registra nada.
+6. **La solicitud pendiente se ve en el plano** (Carlos, 10.54). El muelle arrastra igual que la oficina, en el teléfono y en la Web, pero su cambio espera la confirmación.
+   - Mientras está pendiente, la celda de destino lleva un borde punteado y un reloj, en el plano del muelle y en el de la oficina. El objeto sigue en su celda.
+   - La oficina la aprueba o la rechaza en su lista de solicitudes, como en T-80. Al aprobarla, el objeto pasa a la celda nueva en las dos pantallas, sin recargar. Al rechazarla, la marca desaparece.
+7. **El formulario de hoy se queda** para mover a otra bahía y para el teclado.
+
+**Carril, en paralelo con T-56.**
+- **Toca:**
+  - `bay_plan_view.dart`;
+  - `change_requests.dart` (solo para agregar `preview` y que `move` y `request` la usen);
+  - un widget nuevo para la hoja de confirmación;
+  - `test/t105_*`.
+- **Puede reutilizar** de `change_requests_page.dart` lo que ya resuelve el guardado.
+- **Timonel está en T-56** con otros archivos de `lib/`:
+  - Codex trabaja en una copia exacta de HEAD en `%TEMP%` y pone sus archivos en el repo solo al final, juntos;
+  - si alguno cambió en el árbol mientras tanto (su SHA ya no es el de HEAD), se detiene y avisa.
+- **No toca** el modelo de movimientos, el codec de Firestore, las reglas, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+
+**Detente y avisa si:**
+- el gesto rompe el toque, el desplazamiento o el zoom del plano;
+- `preview` no se puede compartir sin cambiar el comportamiento de `move` o `request`;
+- hace falta otro tipo de movimiento.
+
+**Fuera de alcance:**
+- arrastrar entre bahías;
+- arrastrar lo que ya está a bordo: re-estibar es descargar y volver a cargar (T-75);
+- el desplazamiento automático en los bordes;
+- deshacer desde la misma hoja (el deshacer de la oficina queda donde está).
+
+**Terminada cuando:**
+- [ ] **Pruebas de widget** con el repositorio falso:
+  - un pendiente soltado en una celda libre y válida de su bahía, confirmado, deja un `changePosition` con la `PositionChange` correcta (oficina);
+  - soltado sobre otro pendiente, arma el intercambio de dos cambios;
+  - un 40 sobre una bahía impar, o fuera de la geometría, se rechaza con el mensaje de `review`;
+  - con el rol de muelle, el mismo gesto deja un `requestChange`;
+  - cancelar no deja nada;
+  - lo cargado, lo que descarga y lo que va de paso no se pueden arrastrar;
+  - el toque sigue abriendo los detalles.
+- [ ] **Una prueba del dominio** exige que `preview`, `move` y `request` den el mismo resultado sobre los mismos casos.
+- [ ] **En los tres clientes,** sobre una operación de prueba (namespace `t105acc`):
+  - el Honor, con el dedo, a 360 dp;
+  - Windows, con el mouse;
+  - Chrome.
+  - En cada uno se hace un movimiento y un intercambio como oficina, y una solicitud como muelle.
+  - La solicitud se ve pendiente, con el borde punteado y el reloj, en las dos pantallas.
+  - Una solicitud aprobada mueve el objeto, y una rechazada quita la marca.
+  - El muelle arrastra en el Honor y en la Web.
+  - La otra pantalla los ve sincronizados sin recargar.
+  - El desplazamiento y el zoom siguen funcionando.
+- [ ] **Validaciones:**
+  - el piso vigente más las nuevas, y `analyze` en cero;
+  - el corpus completo en verde;
+  - las reglas, `lib/main.dart` y los congelados sin cambio.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43) · **ficha completa arriba** |
@@ -1775,6 +1876,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-93** | USO | 2.5 | Instalador de Windows: paquete MSIX firmado con el paquete `msix` (Carlos, 10.36) · **ficha completa arriba**, con su corrección (10.42) |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
+| **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54) · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -3771,3 +3873,65 @@ El piso de pruebas es 648.
 - si Codex acepta T-88 antes de presentar, la línea al pie de la diapositiva 15 pasa a «33 de 42».
 
 **El sprint sigue en 42 tareas y ≈ 156.0 h.**
+
+### 10.54 · Nace T-105: mover un contenedor arrastrándolo en el plano, para el 17-oct (15-oct)
+
+**Carlos lo pide para mostrarlo el sábado 17:** tomar un contenedor en el plano y soltarlo donde va.
+
+**La decisión de diseño: arrastrar es otra forma de escribir el mismo cambio** (ficha completa en la Ola 5).
+- Al soltar se arma la misma `PositionChange` de T-80 y T-81, y pasa por `ChangeRequests`:
+  - la oficina mueve directo (`changePosition`);
+  - el muelle pide (`requestChange`), y la oficina aprueba. **El muelle también arrastra, en el teléfono y en la Web** (Carlos): su cambio queda pendiente, marcado en el plano con borde punteado y reloj, hasta que la oficina lo apruebe o lo rechace.
+- No hay un tipo de movimiento nuevo. Hereda el motivo obligatorio, la sincronización, el deshacer, los roles y las reglas de Firestore.
+- **Una sola fuente de verdad para la vista previa:** `ChangeRequests.preview()`, que usan también `move()` y `request()`. La vista no copia reglas.
+- **Lo que entra:**
+  - solo en el modo Carga, solo objetos pendientes y solo dentro de la bahía que se ve;
+  - `LongPressDraggable`, para no romper el toque, el desplazamiento ni el zoom;
+  - colores con borde o ícono mientras se arrastra;
+  - y una hoja de confirmación con motivo antes de registrar.
+- **Lo que queda fuera:** arrastrar entre bahías, arrastrar lo que ya está a bordo (re-estibar es descargar y cargar) y el desplazamiento automático.
+
+**Quién y cuándo:**
+- **Codex** la hace cuando termine la aceptación de T-88, en una copia de HEAD, en paralelo con T-56. Los dos tocan archivos distintos de `lib/`.
+- **La acepta Timonel** cuando entregue T-56.
+- **Para el 17,** se muestra con una compilación de `sprint-3` sobre una operación de prueba. La rama principal sigue congelada para la presentación (10.40).
+
+**El sprint pasa a 43 tareas y ≈ 159.5 h.** El tablero suma 214.5 h:
+- 32 terminadas;
+- T-88 en revisión;
+- T-56 en curso;
+- T-105 y 8 más por hacer.
+
+### 10.55 · T-88 terminada, aceptada con una sustitución autorizada · La diapositiva 15, al día (15-oct)
+
+**Codex aceptó T-88 completa** (commits `bbb2692` y `b874ceb`, `docs/T88-ACEPTACION-RESULTADOS.md`), sobre la copia de producto de `d6c0228`.
+- **Pasan completos el Honor y Windows.** El almacén real conserva sus 354 archivos y suma solo los de `t88cx`.
+- **También pasan:**
+  - 710/710, `analyze` en cero y corpus 118/118;
+  - los 36 SHA del ícono;
+  - el MSIX nítido;
+  - las sondas de T-93 en 0/1/1/1;
+  - el cotejo exacto de la política, con el correo único y `--comprobar` en 0.
+- **Chrome:** pasaron las dos entradas y `/privacidad.html` directo.
+- **La sustitución autorizada por Carlos.** Las tres comprobaciones que faltaban en Chrome (la pestaña, el panel Manifest y la red) se hicieron en el navegador integrado:
+  - el favicon descargado, con el SHA correcto;
+  - el manifiesto servido, con BayStream y `#0D47A1`;
+  - las cuatro imágenes, a su tamaño;
+  - la política, sin recursos de otro origen.
+  - El informe declara que no se vio la pestaña ni el panel de Chrome, ni se generó un HAR.
+- **Queda como precedente:** cuando Carlos no autoriza mirar su Chrome, el navegador integrado sustituye la comprobación, solo con su autorización expresa y declarado en el informe.
+- **Sin cambios de producto.**
+
+**T-88 pasa a Terminado, aceptada con observación** (la sustitución). Horas reales: ≈ 2.2 h de Timonel y ≈ 0.43 h de comprobaciones instrumentadas de Codex, frente a 2.5. No cuentan la sesión del diseñador.
+
+**La diapositiva 15 del Incremento 2, al día:**
+- «Política de privacidad e ícono propio» pasa a «Ya funciona»;
+- «Arrastrar un contenedor en el plano, con confirmación» entra a «Por cerrar»;
+- el pie dice «33 de 43 tareas terminadas»;
+- las notas mencionan el arrastre.
+- **Revisada renderizada,** sin desbordes. SHA-256 `7d0d02cc…`.
+
+**El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero:
+- 33 terminadas;
+- T-56 en curso;
+- 9 por hacer, con T-105.
