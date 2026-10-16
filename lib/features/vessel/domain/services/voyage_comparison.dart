@@ -1,4 +1,5 @@
 import '../entities/container_unit.dart';
+import '../entities/vessel.dart';
 import '../entities/vessel_voyage.dart';
 
 /// T-96 · RF-029: qué bajó, qué subió y qué cambió en lo que sigue a bordo.
@@ -57,7 +58,7 @@ class VoyageComparison {
   final int reservedFirst;
   final int reservedSecond;
 
-  /// `null` si la identidad del buque coincide.
+  /// `null` si la identidad del buque coincide sin preguntar.
   final String? vesselNotice;
 
   VoyageComparison._({
@@ -100,8 +101,6 @@ class VoyageComparison {
                 !other.duplicates.containsKey(id))
               from.unique[id]!,
         ];
-    final sameVessel =
-        first.vessel.profileIdentity == second.vessel.profileIdentity;
     return VoyageComparison._(
       discharged: only(a, b),
       loaded: only(b, a),
@@ -110,13 +109,34 @@ class VoyageComparison {
       duplicatesSecond: b.duplicates,
       reservedFirst: first.reservedSlots.length,
       reservedSecond: second.reservedSlots.length,
-      vesselNotice: sameVessel
-          ? null
-          : 'No parece el mismo buque: ${first.vessel.name} '
-              '(${first.vessel.profileKey}) y ${second.vessel.name} '
-              '(${second.vessel.profileKey}).',
+      vesselNotice: _vesselNotice(first.vessel, second.vessel),
     );
   }
+
+  /// 10.61: decide `Vessel.matchIdentity`. Con el mismo nombre, dos claves del
+  /// mismo tipo y distinto valor (dos IMO, dos indicativos) son dos buques.
+  static String? _vesselNotice(Vessel first, Vessel second) {
+    final a = first.profileIdentity, b = second.profileIdentity;
+    final match = first.matchIdentity(second);
+    if (match == VesselIdentityMatch.automatic) return null;
+    if (match == VesselIdentityMatch.requiresConfirmation &&
+        (a.source != b.source || a.source == VesselIdentitySource.name)) {
+      final how = a.source == b.source
+          ? 'los dos archivos identifican a ${first.name} solo por su nombre'
+          : '${first.name} se identifica por ${_identity(a)} y '
+              '${second.name}, por ${_identity(b)}';
+      return 'No se puede confirmar que sea el mismo buque: $how. '
+          'Confirma que es el mismo buque antes de usar la comparación.';
+    }
+    return 'No parece el mismo buque: ${first.name} '
+        '(${first.profileKey}) y ${second.name} (${second.profileKey}).';
+  }
+
+  static String _identity(VesselIdentity key) => switch (key.source) {
+        VesselIdentitySource.imo => 'IMO ${key.value}',
+        VesselIdentitySource.callSign => 'indicativo ${key.value}',
+        VesselIdentitySource.name => 'su nombre',
+      };
 
   static _Index _index(Iterable<ContainerUnit> containers) {
     final counts = <String, int>{};

@@ -187,6 +187,35 @@ void main() {
     expect(find.textContaining('A06: Versión 1.5'), findsOneWidget);
   });
 
+  testWidgets('T-96 indicativo contra IMO, el mismo nombre: el aviso pide confirmar',
+      (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    // 10.61: como A05 → A06, un archivo por indicativo y otro por IMO.
+    final byCallSign = BaplieParserService()
+        .parse(_plan.replaceFirst('9000096:146:11', 'ZZC5603:103:ZZZ'));
+    expect(byCallSign.vessel.profileKey, 'callSign:ZZC5603');
+    await tester.pumpWidget(MaterialApp(
+        home: VoyageComparisonPage(
+            first: byCallSign,
+            second: _first,
+            firstLabel: 'A05',
+            secondLabel: 'A06')));
+    await tester.pumpAndSettle();
+    final notice = find.byKey(const ValueKey('comparison-vessel-notice'));
+    expect(notice, findsOneWidget);
+    expect(
+        find.descendant(
+            of: notice,
+            matching: find.textContaining(
+                'No se puede confirmar que sea el mismo buque: BUQUE T96 se '
+                'identifica por indicativo ZZC5603 y BUQUE T96, por IMO 9000096.')),
+        findsOneWidget);
+    expect(find.textContaining('No parece el mismo buque'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final brightness in Brightness.values) {
     testWidgets('T-96 legible a 360 dp con la letra del Honor, ${brightness.name}',
         (tester) async {

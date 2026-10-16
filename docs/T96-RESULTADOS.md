@@ -181,3 +181,60 @@ Unas **0.75 h de pared** frente a 6.0 h estimadas, de 22:27 a 23:12, contando la
 - `lib/features/vessel/presentation/pages/departure_baplie_page.dart`: la segunda entrada, 36 líneas.
 
 No toqué `bay_plan_view.dart` ni `change_requests*`. Git: solo `log`, `show`, `diff --stat --ignore-cr-at-eol` y `ls-files`.
+
+## 9. Corrección de 10.61: el aviso de buque
+
+**Cómo trabajé:**
+- **Base `eb3504b`.** Trabajé en una copia en `%TEMP%\baystream-t96c-eb3504b` y coloqué los cuatro archivos al final, después de comprobar que en el árbol seguían iguales a HEAD.
+- **Mientras validaba entró `3086db2`,** la 10.63 de Capitán. Toca `change_requests.dart`, dos pruebas suyas y su informe; ninguno de mis archivos.
+- **Repetí todo sobre `3086db2` con la corrección encima,** en `%TEMP%\baystream-t105v-3086db2`. Esa copia es igual al árbol en los 323 archivos de `lib/`, `test/`, `tool/` y `pubspec.*`.
+- **Sin dispositivos.** Usé Flutter solo con el turno que dio Carlos, y avisé al terminar.
+
+**La regla, decidida por Carlos ante una contradicción.**
+- `Vessel.matchIdentity` devuelve «pedir confirmación» para cualquier par con el mismo nombre que no coincida solo. Eso incluye dos IMO distintos, que son dos buques. La 10.61, en cambio, pide confirmar solo «con claves de distinto tipo».
+- Carlos eligió que el aviso dependa del tipo de clave, y que sea solo texto, sin botón ni estado.
+
+| `matchIdentity` | Claves | Aviso |
+|---|---|---|
+| automática | el mismo IMO o el mismo indicativo, aunque cambie el nombre | ninguno |
+| pide confirmar | de distinto tipo (indicativo e IMO, nombre e IMO…) | «No se puede confirmar que sea el mismo buque: BUQUE ECO se identifica por indicativo ZZC5603 y BUQUE ECO, por IMO 9000039. Confirma que es el mismo buque antes de usar la comparación.» |
+| pide confirmar | las dos solo por nombre | «No se puede confirmar que sea el mismo buque: los dos archivos identifican a X solo por su nombre. Confirma…». Antes no había aviso |
+| pide confirmar | del mismo tipo y distinto valor (dos IMO, dos indicativos) | «No parece el mismo buque: …», como antes |
+| ninguna | nombres distintos y claves distintas | «No parece el mismo buque: …», como antes |
+
+**Lo que cambió:**
+- **`voyage_comparison.dart`:** `_vesselNotice()` reemplaza la comparación directa de `profileIdentity`, y `_identity()` da «IMO …», «indicativo …» o «su nombre».
+- **El texto vive en el dominio.** `voyage_comparison_page.dart` solo muestra `vesselNotice` y no cambia.
+
+**Las pruebas:**
+- **`test/t96_voyage_comparison_test.dart`:**
+  - el ayudante `_voyage` gana un parámetro `name`, con el mismo valor por defecto;
+  - seis casos de la tabla, cada uno en los dos sentidos;
+  - una prueba con los dos textos completos.
+  - La prueba de «distinto buque» (BUQUE T96 con IMO 9000096 y 9000097) sigue igual.
+- **`test/t96_comparison_page_test.dart`:** una prueba nueva a 360 dp, con indicativo contra IMO y el mismo nombre. El aviso pide confirmar y «No parece» no aparece.
+- **`tool/t96_corpus_test.dart`:**
+  - A05 → A06 y A06 → A05 piden confirmar, nombrando «indicativo ZZC5603» e «IMO 9000039»;
+  - A07 → A08 sigue sin aviso, porque los dos llevan el indicativo ZZG0007.
+
+**Validaciones:**
+
+| | Sobre `eb3504b` | Sobre `3086db2` + la corrección (igual al árbol) |
+|---|---:|---:|
+| Las dos pruebas de T-96 | 26/26 | — |
+| Suite completa | **807/807** (799 + 8 nuevas) | **842/842** |
+| `flutter analyze` | 0 | 0 |
+| Corpus, 34 archivos | **135/135** | **135/135** |
+
+**Los once SHA de la sección 5 siguen iguales en el árbol.** `vessel.dart`, `voyage_comparison_page.dart` y `change_requests.dart` no cambian frente a HEAD. **`pubspec.yaml` y `pubspec.lock` no cambian.**
+
+**Archivos:**
+- `lib/features/vessel/domain/services/voyage_comparison.dart`
+- `test/t96_voyage_comparison_test.dart`
+- `test/t96_comparison_page_test.dart`
+- `tool/t96_corpus_test.dart`
+- `docs/T96-RESULTADOS.md`
+
+**Evidencias** (fuera del commit): `build/t96c/` (registros y `correccion.diff`) y `build/t105tm/v3086/`.
+
+**Horas:** ≈ 0.3 h de pared, de 01:36 a 01:55, contando las esperas del semáforo. Git: solo `log`, `show`, `diff --stat --ignore-cr-at-eol` y `ls-files`.

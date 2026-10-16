@@ -127,6 +127,18 @@ void main() {
     stdout.writeln('T-96 A05 → A06: ${summary(c)}; aviso de buque: '
         '${c.vesselNotice ?? 'ninguno'}; duplicados '
         '${c.duplicatesFirst.length}/${c.duplicatesSecond.length}');
+    // 10.61: BUQUE ECO por indicativo y por IMO pide confirmar, no asusta.
+    expect(a05.vessel.matchIdentity(a06.vessel),
+        VesselIdentityMatch.requiresConfirmation);
+    for (final notice in [
+      c.vesselNotice,
+      VoyageComparison.compare(a06, a05).vesselNotice
+    ]) {
+      expect(notice,
+          startsWith('No se puede confirmar que sea el mismo buque: BUQUE ECO'));
+      expect(notice, contains('indicativo ZZC5603'));
+      expect(notice, contains('IMO 9000039'));
+    }
   });
 
   test('T-96 la salida de la operación de 177 eventos contra A07: 114, 176, 284',

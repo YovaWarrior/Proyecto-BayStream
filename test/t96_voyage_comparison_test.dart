@@ -38,11 +38,11 @@ ContainerUnit _unit(
 VesselVoyage _voyage(List<ContainerUnit> units,
         {String? imo = '9000096',
         String? callSign,
+        String name = 'BUQUE T96',
         List<ReservedSlot> reserved = const []}) =>
     VesselVoyage(
       id: 'v',
-      vessel: Vessel(
-          id: 'b', name: 'BUQUE T96', imoNumber: imo, callSign: callSign),
+      vessel: Vessel(id: 'b', name: name, imoNumber: imo, callSign: callSign),
       voyageNumber: 'T96',
       containers: units,
       bays: const {},
@@ -197,6 +197,78 @@ void main() {
     expect(c.vesselNotice, startsWith('No parece el mismo buque: '));
     expect(c.vesselNotice, contains('imo:9000096'));
     expect(c.vesselNotice, contains('imo:9000097'));
+  });
+
+  // 10.61: el aviso sigue a Vessel.matchIdentity y al tipo de las dos claves.
+  const confirm = 'No se puede confirmar que sea el mismo buque: ';
+  const different = 'No parece el mismo buque: ';
+  final identityCases = <(String, VesselVoyage, VesselVoyage, String?)>[
+    (
+      'mismo nombre, indicativo e IMO: pide confirmar',
+      _voyage([], imo: null, callSign: 'ZZC5603'),
+      _voyage([], imo: '9000039'),
+      confirm
+    ),
+    (
+      'mismo nombre, los dos solo por nombre: pide confirmar',
+      _voyage([], imo: null),
+      _voyage([], imo: null),
+      confirm
+    ),
+    (
+      'mismo nombre y dos indicativos distintos: otro buque',
+      _voyage([], imo: null, callSign: 'ZZC5603'),
+      _voyage([], imo: null, callSign: 'ZZC5604'),
+      different
+    ),
+    (
+      'nombres distintos, indicativo e IMO: otro buque',
+      _voyage([], imo: null, callSign: 'ZZC5603'),
+      _voyage([], imo: '9000039', name: 'BUQUE OTRO'),
+      different
+    ),
+    (
+      'el mismo IMO con otro nombre: sin aviso',
+      _voyage([], imo: '9000039'),
+      _voyage([], imo: '9000039', name: 'BUQUE RENOMBRADO'),
+      null
+    ),
+    (
+      'el mismo indicativo: sin aviso',
+      _voyage([], imo: null, callSign: 'ZZC5603'),
+      _voyage([], imo: null, callSign: 'zzc5603'),
+      null
+    ),
+  ];
+  for (final (name, first, second, expected) in identityCases) {
+    test('T-96 aviso de buque, $name', () {
+      for (final (a, b) in [(first, second), (second, first)]) {
+        final notice = VoyageComparison.compare(a, b).vesselNotice;
+        if (expected == null) {
+          expect(notice, isNull);
+        } else {
+          expect(notice, startsWith(expected));
+        }
+      }
+    });
+  }
+
+  test('T-96 aviso de confirmar: nombra las dos claves y pide confirmar', () {
+    final c = VoyageComparison.compare(
+        _voyage([_unit('AAAU0000001')], imo: null, callSign: 'ZZC5603'),
+        _voyage([_unit('AAAU0000001')], imo: '9000039'));
+    expect(c.permanent, hasLength(1));
+    expect(
+        c.vesselNotice,
+        'No se puede confirmar que sea el mismo buque: BUQUE T96 se '
+        'identifica por indicativo ZZC5603 y BUQUE T96, por IMO 9000039. '
+        'Confirma que es el mismo buque antes de usar la comparación.');
+    expect(
+        VoyageComparison.compare(_voyage([], imo: null), _voyage([], imo: null))
+            .vesselNotice,
+        'No se puede confirmar que sea el mismo buque: los dos archivos '
+        'identifican a BUQUE T96 solo por su nombre. Confirma que es el mismo '
+        'buque antes de usar la comparación.');
   });
 
   test('T-96 es simétrica: B contra A intercambia descargados y cargados', () {
