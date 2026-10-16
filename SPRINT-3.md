@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.68) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.69) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1979,6 +1979,74 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
   - el corpus completo en verde;
   - las reglas, `lib/main.dart` y los congelados sin cambio.
 
+#### T-106 · Pulido del arrastre y del zoom: avisos en palabras, el zoom a 300 % y lo que el plano no dibuja · 2.0 h · Timonel (ficha completa, 16-oct; pasa de Codex a Timonel en 10.69)
+
+**Para qué.** RF-038. Son las observaciones de la aceptación de T-105 (sección 12 de `docs/T105-ACEPTACION-RESULTADOS.md`; 10.64 y 10.66), más una de T-95. Ninguna rompe una regla. Todas son lo que el planner ve mal o no ve.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 16-oct):**
+- **`ChangeRequests.review()`** (`change_requests.dart`) arma sus avisos con la clave interna del objeto: «C:TSTU0000017 no cabe en la bahía 5.».
+  - `_collision` (10.63) siempre agrega una segunda frase, «marca primero su descarga» o «inclúyelo en el intercambio», aunque no aplique.
+- **El zoom de T-105** está en `bay_plan_view.dart` y `plan_drag_confirmation.dart`.
+  - A 300 %, con una ventana ancha de Windows, el plano abre en blanco: la rejilla queda centrada en un lienzo tan ancho como la vista.
+  - El margen de 16 dp también se escala.
+  - La copia que se arrastra no lleva la escala.
+- **El modo Carga** no dibuja la descarga pendiente, que viene de T-76: la celda se ve vacía.
+- **La vista de una bahía par** no dibuja los 20 de sus impares vecinas, así que el choque de 10.63 no se ve, aunque el rojo sí lo dice.
+- **En T-95,** «re-estibas» se parte en el guion a 360 dp con letra grande.
+
+**Qué construye.**
+1. **Los avisos, en palabras.**
+   - El objeto se nombra como lo ve el planner: «OR 7 · TSTU0000017», o «la reserva 005 02 82», nunca `C:` ni `R:`. Vale para todos los avisos de `review()`.
+   - **La segunda frase, solo si aplica:**
+     - si choca con un objeto de otro tamaño: «Un 20 y un 40 no se intercambian.»;
+     - si choca con carga de paso a bordo: «Es carga de paso: no se descarga aquí.»;
+     - si choca con una descarga pendiente: «marca primero su descarga.»;
+     - si choca con otro objeto pendiente del mismo tamaño: «inclúyelo en el intercambio.».
+   - Las reglas no cambian, solo el texto.
+2. **El zoom a 300 %:**
+   - al ampliar, la rejilla queda a la vista, sin lienzo en blanco, en cualquier ancho de ventana;
+   - el margen de 16 dp no se escala;
+   - la copia que se arrastra se dibuja a la escala del zoom.
+3. **El modo Carga dibuja la descarga pendiente:** la celda se ve ocupada, con la marca de T-75. Soltar ahí sigue dando el rojo.
+4. **La vista de una bahía par dibuja los 20 de sus impares vecinas** como sombra.
+   - Es la misma huella física de T-95 y de 10.63, sin calcular pares.
+   - Es solo dibujo: no se arrastra ni se toca.
+5. **«re-estiba» no se parte en el guion:** se escribe con un guion que no parte línea (U+2011) en la pantalla de T-95. Las pruebas que fijan el texto se ajustan.
+
+**Carril.**
+- **Toca:**
+  - los textos de los avisos en `change_requests.dart`, sin cambiar ninguna regla;
+  - `bay_plan_view.dart`, `plan_drag_confirmation.dart` y la pantalla de T-95;
+  - `test/t106_*`, y las pruebas que fijan los textos que cambian.
+- **No toca:** el modelo, el codec, las reglas, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+- **La demo del 17:** no se coloca nada en el árbol hasta que Carlos confirme que compiló los clientes de la demo.
+
+**Detente y avisa si:**
+- un aviso nuevo exige cambiar una regla de `review()`;
+- dibujar la sombra de los 20 cambia lo que se arrastra o se toca.
+
+**Fuera de alcance:**
+- tocar la sombra de un 40 para ver detalles;
+- el error que salió una vez en la consola de la Web;
+- arrastrar entre bahías.
+
+**Terminada cuando:**
+- [ ] **Pruebas de widget y de dominio:**
+  - cada aviso en palabras, con su segunda frase según el caso;
+  - el zoom a 300 % con un ancho de 1600 px muestra la rejilla;
+  - la copia escalada;
+  - la descarga pendiente dibujada en Carga;
+  - los 20 vecinos dibujados en la par, sin arrastre ni toque;
+  - «re-estibas» sin partirse a 360 dp y 2.0.
+- [ ] **En los tres clientes,** sobre una operación de prueba propia:
+  - Windows con la ventana ancha a 300 %;
+  - el Honor con pellizco;
+  - en los dos, los avisos y lo que ahora se dibuja.
+- [ ] **Validaciones:**
+  - el piso de HEAD más las nuevas, y `analyze` en cero;
+  - el corpus completo en verde;
+  - las reglas, `lib/main.dart`, `pubspec.*` y los congelados sin cambio.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43) · **ficha completa arriba** |
@@ -1990,7 +2058,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 | **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62); terminada con la corrección de la sombra del 40 (10.63) · **ficha completa arriba** |
-| **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Codex y la acepta Timonel |
+| **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Timonel y la acepta Codex (10.69) · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -2398,7 +2466,7 @@ para RNF-003.
 
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
-| **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa, con las tres definiciones de Carlos (10.59). La hace Timonel y la acepta Codex (10.61) · **ficha completa arriba** |
+| **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa, con las tres definiciones de Carlos (10.59). La hace Timonel y la acepta Codex (10.61); entregada en 10.69 · **ficha completa arriba** |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida: descargados, cargados y permanentes, con lo que cambió en cada campo. La hace Timonel y la acepta Codex (10.58) · **ficha completa arriba** |
 | **T-56** | ERS | 3.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38); tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo; y dos de T-103 (10.43): «Contenido compatible: BAPLIE 2.x.» en la pantalla vacía, y el resumen 0/0/0 de A06 en GTPBR, que no trae `LOC+9`. La hace Timonel y la acepta Codex (10.52); entregada en 10.57, con una corrección antes de la aceptación · **ficha completa arriba** |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
@@ -4711,3 +4779,40 @@ Las demás son textos y cosméticas, entre ellas:
 - 7 por hacer.
 
 **La diapositiva 15** pasa a «36 de 44». Las tomas de reefer y la comparación entre la llegada y la salida suben a «Ya funciona».
+
+### 10.69 · T-95 entregada, en revisión: el orden de descarga sugerido · Codex la acepta y después hace T-85 · T-106 pasa a Timonel, con ficha completa (16-oct)
+
+**Timonel entregó T-95** (commit `6b209f1`, `docs/T95-RESULTADOS.md`), sobre `ff14dc0`.
+- **El servicio:** `discharge_sequence.dart`, puro.
+  - La celda física va por huellas, sin calcular pares.
+  - Hay re-estibas por columna y por tapa; las tapas copiadas se unen, y cada re-estiba se cuenta una sola vez.
+  - Las celdas van de más a menos movimientos por muelle; con empate, de proa a popa.
+  - La vuelta va en el orden bodega, tapas y cubierta (10.65).
+- **La pantalla «Orden de descarga»** está junto a «Comparar con otro BAPLIE…».
+- **Las cifras:**
+  - **A07 en GTSTC:** 114 descargas (66 en cubierta y 48 en bodega) y 0 re-estibas por columna, confirmadas por un cotejo sobre el texto crudo que coincide en todas las fuentes 2.x. A06 no trae `LOC+11`.
+  - **Otros puertos sí las tienen:** JMKCT 6, COSPC 5, A01 XXVSL 66 y A04 JMKIN 21.
+  - **Con tapas PROVISIONALES** en las 21 bahías: 13 re-estibas por tapa, 4 tapas de grúa, 135 movimientos a bordo y 148 por muelle. Dan igual declaradas solo en las pares o copiadas.
+- **Las validaciones:** 866/866, `analyze` en cero y corpus 147/147.
+- **Los clientes:**
+  - Windows;
+  - la Web, en el navegador integrado;
+  - el Honor, a 1.45, en claro y oscuro.
+    - Es el máximo de Ajustes de ese teléfono. **Carlos decidió probar así** y no cambiar la letra del sistema por ADB, y el 2.0 queda cubierto por la prueba de widget.
+    - Queda en 1.0.
+  - El almacén real tiene solo `t95acc_*`. Chrome sin probar.
+- **Un error propio de Timonel, encontrado y corregido.** Dos evidencias `.dart` de su aceptación de T-105, guardadas en `build/`, rompían `analyze` en el repo. Quedaron como `.dart.txt`, sin perder la evidencia.
+- **Horas:** las del informe.
+
+**El orden queda así** (Carlos prefirió esperar a que Timonel terminara):
+1. **Codex acepta T-95.**
+2. **Después Codex hace T-85.** Antes de que Timonel la acepte, Gru revisa sus datos contra el PDF.
+3. **T-106 pasa de Codex a Timonel** (antes, 10.66). La ficha está completa en la Ola 5, después de T-105, y la acepta Codex.
+   - **Suma** la observación 1 de T-95: «re-estiba» con un guion que no parte línea.
+   - **No se coloca nada** hasta que Carlos confirme que compiló los clientes de la demo.
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h.** El tablero:
+- 36 terminadas;
+- T-95 en revisión;
+- T-106 en curso;
+- 6 por hacer.
