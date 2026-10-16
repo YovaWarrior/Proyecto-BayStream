@@ -5,6 +5,7 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../data/services/export_service.dart';
 import '../../data/services/pdf_report_service.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/discharge_sequence.dart';
 import '../../domain/services/operation_sources.dart';
 import '../providers/vessel_providers.dart';
 import '../providers/plan_toolbar_provider.dart';
@@ -25,6 +26,7 @@ import 'recent_voyages_page.dart';
 import 'stowage_alerts_page.dart';
 import 'parameters_page.dart';
 import 'voyage_comparison_page.dart';
+import 'discharge_sequence_page.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -729,6 +731,25 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 label: const Text('Comparar con otro BAPLIE…'),
                 onPressed: () => compareWithAnotherBaplie(context, ref, voyage),
               ),
+              // T-95: el orden sugerido, con las tapas del perfil vigente.
+              if (voyage.geometry != null &&
+                  DischargeSequence.dischargePorts(voyage).isNotEmpty)
+                TextButton.icon(
+                  key: const ValueKey('open-discharge-sequence'),
+                  icon: const Icon(Icons.low_priority),
+                  label: const Text('Orden de descarga'),
+                  onPressed: () {
+                    final profile =
+                        ref.read(voyageNotifierProvider.notifier).currentProfile;
+                    final covers = profile?.key ==
+                            (voyage.vesselProfileKey ?? voyage.vessel.profileKey)
+                        ? profile!.hatchCovers
+                        : const <int, HatchCoverDeclaration>{};
+                    Navigator.of(context).push(MaterialPageRoute<void>(
+                        builder: (_) => DischargeSequencePage(
+                            voyage: voyage, hatchCovers: covers)));
+                  },
+                ),
               // T-73: el listado de la agencia se cruza con lo que se carga aquí.
               if (voyage.portOfCall != null &&
                   voyage.cargoCountsFor(voyage.portOfCall).loaded +
