@@ -35,7 +35,7 @@ void main() {
     expect(config['display_name'], 'BayStream');
     expect(config['msix_version'], '1.0.0.0');
     expect(config['capabilities'], 'internetClient');
-    expect(config['logo_path'], 'windows/runner/resources/app_icon.ico');
+    expect(config['logo_path'], 'web/icons/Icon-512.png');
   });
 
   test('T-93 pubspec.yaml no guarda contraseña, certificado ni huella', () {

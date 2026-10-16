@@ -489,3 +489,48 @@ Timonel · 15-oct-2026 · sobre `956d802` (10.49; 10.48 en `ed84383`) · segunda
 ### Horas
 
 ≈ 0.5 h de trabajo: de 15:02 a 15:07 y de 16:41 a 17:05. En medio hubo una pausa larga por el límite de uso. **T-88 suma ≈ 2.0 h frente a 2.5.** El diseño del ícono lo hizo la sesión en la nube (10.45) y sus horas no están aquí.
+
+## Mosaicos del MSIX (10.50)
+
+Timonel · 15-oct-2026 · sobre `4723538` (decisión 10.50).
+
+### El cambio
+
+- **`pubspec.yaml`:** `msix_config.logo_path` pasa de `windows/runner/resources/app_icon.ico` a `web/icons/Icon-512.png`. También cambió el comentario de esa misma línea, que decía «Icono actual de Windows; el propio es de T-88» y dejaba de ser cierto. No cambia nada más del archivo.
+- **`pubspec.lock` no cambia:** SHA `577D742E…` antes y después.
+- **`test/t93_msix_config_test.dart`:** la prueba «T-93 msix_config identifica la app con el sujeto del certificado» espera la ruta nueva. No hay pruebas nuevas.
+- **El `.ico` no cambia.** Es el que lleva `baystream.exe`.
+
+### Validaciones
+
+- Suite **710/710**, T-93 5/5 y `analyze` en cero.
+
+### El MSIX
+
+Lo rearmé con `tool/t93_msix.ps1 -Version 1.0.4.0 -SinCompilar`, con el semáforo de Carlos. El Release del repo no había cambiado desde la compilación de las 16:48. El script terminó con código 0 en 9 s.
+
+- **Paquete:** `build/t93/BayStream_1.0.4.0.msix`, SHA-256 `FE430BD8A9E3D489DB855CF6AD590C6BAF306A24F6E186F7583ED3DFA93DE9D8`.
+- **Firma `Valid`**, de `CN=BayStream`, con la huella `60BEF8F4D26ECF7AD25CC478E715CF9B26A278EC`. **No se instaló.**
+
+### Las imágenes
+
+Abrí el paquete como zip: tiene 82 imágenes en `Images/`. Las miré a tamaño real, sin escalar, y **son nítidas**: se ven el casco, las celdas, la tapa y el contenedor naranja, sin los bloques de 16 px ampliados de la versión 1.0.3.0.
+
+| Imagen | Píxeles |
+|---|---|
+| `Square150x150Logo.scale-400.png` | 600 × 600 |
+| `LargeTile.scale-100.png` | 310 × 310 |
+| `Square44x44Logo.targetsize-48.png` | 48 × 48 |
+
+Además, `Square44x44Logo.altform-unplated_targetsize-256.png` mide 256 × 256 y `StoreLogo.scale-100.png`, 50 × 50.
+
+**Un matiz:** los tamaños chicos del paquete, de 16 a 48 px, salen reducidos del PNG de 512, no del dibujo a píxel de 16 a 32 px que trae el `.ico`. A 48 px se lee bien. En la barra de tareas y en el Explorador, el `.exe` sigue usando su `.ico`.
+
+### Archivos
+
+| Archivo | SHA-256 |
+|---|---|
+| `pubspec.yaml` | `1B40E5308D3D1594EAFBF48EE578ABB73A39DC2E3FE0A4551F0D1AC6956F38EA` |
+| `test/t93_msix_config_test.dart` | `53D696BDD5905CDD2948AC6632323785B3E3C173DE5D177932BC2BCEB02BE551` |
+
+**Horas:** ≈ 0.2 h. **T-88 suma ≈ 2.2 h frente a 2.5.**

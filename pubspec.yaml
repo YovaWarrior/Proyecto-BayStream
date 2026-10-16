@@ -74,8 +74,8 @@ msix_config:
   msix_version: 1.0.0.0
   # Solo red saliente. Sin microfono: en Windows no hay voz (T-94).
   capabilities: internetClient
-  # Icono actual de Windows; el propio es de T-88.
-  logo_path: windows/runner/resources/app_icon.ico
+  # T-88 (10.50): el PNG de 512; msix lee del .ico solo el cuadro de 16 px.
+  logo_path: web/icons/Icon-512.png
   # El paquete se arma sobre la compilacion Release hecha antes con las
   # definiciones de Firebase, nunca con una compilacion propia sin ellas.
   build_windows: false
