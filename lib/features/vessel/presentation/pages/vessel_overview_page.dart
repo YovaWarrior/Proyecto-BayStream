@@ -24,6 +24,7 @@ import 'vessel_profiles_page.dart';
 import 'recent_voyages_page.dart';
 import 'stowage_alerts_page.dart';
 import 'parameters_page.dart';
+import 'voyage_comparison_page.dart';
 
 /// Página principal de la aplicación BayStream
 /// Permite cargar archivos BAPLIE y visualizar la información del viaje
@@ -720,6 +721,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 icon: const Icon(Icons.fact_check_outlined),
                 label: const Text('Alertas de estiba'),
                 onPressed: () => _openAlerts(voyage),
+              ),
+              // T-96: el segundo archivo se lee sin el flujo de carga.
+              TextButton.icon(
+                key: const ValueKey('compare-baplie'),
+                icon: const Icon(Icons.compare_arrows),
+                label: const Text('Comparar con otro BAPLIE…'),
+                onPressed: () => compareWithAnotherBaplie(context, ref, voyage),
               ),
               // T-73: el listado de la agencia se cruza con lo que se carga aquí.
               if (voyage.portOfCall != null &&

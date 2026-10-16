@@ -11,6 +11,8 @@ import '../../domain/services/loading_operation.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/sync_providers.dart';
+import '../providers/vessel_providers.dart';
+import 'voyage_comparison_page.dart';
 
 final departureExportRepositoryProvider = Provider<DepartureExportRepository>(
     (ref) => const DepartureExportRepositoryImpl());
@@ -136,7 +138,41 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
           onPressed: _saving ? null : _save,
           icon: const Icon(Icons.save_alt),
           label: Text(_saving ? 'Guardando…' : 'Guardar BAPLIE de salida')),
+      const SizedBox(height: 12),
+      // T-96: la salida generada, releída en memoria, contra la llegada.
+      if (operation.sources
+          .any((s) => s.kind == OperationSourceKind.arrivalBaplie))
+        OutlinedButton.icon(
+            key: const ValueKey('departure-compare-arrival'),
+            onPressed: () => _compareWithArrival(operation, output),
+            icon: const Icon(Icons.compare_arrows),
+            label: const Text('Comparar con la llegada'))
+      else
+        const Text('La operación no tiene un plano de llegada para comparar.',
+            key: ValueKey('departure-compare-unavailable')),
     ]);
+  }
+
+  Future<void> _compareWithArrival(
+      Operation operation, DepartureBaplie output) async {
+    final arrivalSource = operation.sources
+        .firstWhere((s) => s.kind == OperationSourceKind.arrivalBaplie);
+    final repository = ref.read(vesselRepositoryProvider);
+    final arrival = await repository.parseBaplieFile(arrivalSource.content);
+    final departure = await repository.parseBaplieFile(output.text);
+    if (!mounted) return;
+    final failure = arrival.fold((f) => f, (_) => null) ??
+        departure.fold((f) => f, (_) => null);
+    if (failure != null) {
+      _notice(vesselFailureMessage(failure));
+      return;
+    }
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => VoyageComparisonPage(
+            first: arrival.getOrElse(() => throw StateError('llegada')),
+            second: departure.getOrElse(() => throw StateError('salida')),
+            firstLabel: 'Llegada: ${arrivalSource.fileName}',
+            secondLabel: 'Salida generada, sin guardar')));
   }
 
   void _notice(String message) => ScaffoldMessenger.of(context)
