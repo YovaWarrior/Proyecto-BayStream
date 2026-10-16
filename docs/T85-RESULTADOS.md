@@ -1,6 +1,6 @@
 # T-85 · Segregación con el Código IMDG 42-24
 
-**Estado: IMPLEMENTADA, EN REVISIÓN.** Los archivos están colocados, sin commit. Antes de aceptar, **Gru debe revisar los datos contra el PDF y después Timonel hace la aceptación cruzada**, como manda 10.69. La Web visual queda pendiente por falta de acceso al integrado de Claude autorizado. Queda además una observación de repintado de la matriz en Windows, descrita sin darla por resuelta en la sección 6.
+**Estado: IMPLEMENTADA, EN REVISIÓN.** Implementación versionada por Carlos en ac72849. Antes de aceptar, **Gru debe revisar los datos contra el PDF y después Timonel hace la aceptación cruzada**, como manda 10.69. La revisión visual Web quedó completada en el **navegador integrado de Codex**, autorizado por Carlos en 10.70; se documenta en 6.1, sin afirmar una prueba en Chrome. Sigue pendiente la observación de repintado de la matriz en Windows descrita en la sección 6.
 
 ## 1. Base, aislamiento y alcance
 
@@ -104,9 +104,25 @@ La leyenda siguiente es la razón concreta de **cada fila** del anexo. No se agr
 
 **Honor, 360 dp:** 720×1600, densidad 320. Letra **1.45**, autorizada por ADB en el modo siesta, en claro y oscuro. Fuente, resumen 4/154/95 y tarjetas con referencias legibles, sin cortes. Matriz expandida y desplazada con el dedo hasta la columna 9, con X en todas sus filas visibles; captura limpia en `honor-t85-light-matrix-class9.png`. Evidencias de fuente/resultados `honor-t85-light-*` y `honor-t85-dark-*`. XML sanitizado en memoria; no apareció ni se guardó un formulario de acceso. Se restaura a **1.0** y se detienen `.t85acc` y `.t95cx`; los pidof quedan vacíos.
 
-**Web:** compilada, **revisión visual pendiente**. El conector de esta sesión no ofrece el integrado de Claude autorizado; solo el de Codex, Chrome, Edge y MCP Apps. No se cambió de navegador autorizado, no se pidió acción manual ni se afirma una prueba en Chrome. No se inició servidor Web.
+**Web:** revisión visual completada por autorización 10.70, en el integrado de Codex. La limitación inicial de acceso al integrado de Claude queda superada por esta autorización; detalles en 6.1.
 
 **Almacén real Windows:** `C:\Users\Giova\AppData\Local\BayStream`. Huellas tomadas fuera del paquete por BAT lanzados con Explorer, con cadena de padres en el JSON. **462 → 474; los 462 anteriores idénticos, 0 modificados, 0 borrados, 0 errores; solo 12 nuevos `t85acc_*`** (seis parejas hive/lock en vessel_store). Se incluyen los 12 t95cx previos entre los preservados. Evidencias `store-t85-before.json`, `store-t85-after.json`, `t85-store-comparison.json`, PIDs en `t85-windows-process-*.json` y cierre en `cleanup.json`. Ningún almacén ajeno se borró.
+
+### 6.1. Revisión visual Web · decisión 10.70
+
+16-oct-2026, 15:23–15:24, Guatemala. Se sirvió **la compilación existente de la copia t85acc**, base 93dc695 con la implementación entregada en ac72849, en `http://127.0.0.1:8185/`, mediante Python limitado a loopback. Se utilizó el **navegador integrado de Codex**, visible, contenido 1092×871, tema claro y modo sin cuenta. Es la sustitución autorizada por Carlos en 10.70, con la regla de 10.55; **no es una aceptación en Chrome**.
+
+El banco abrió **A03, 369 contenedores**, y la pantalla del producto mostró:
+
+- Título «Segregación · IMDG» y fuente **Código IMDG, Enmienda 42-24 (7.2.4 y 7.4.3.2)**, con el alcance, la prioridad de la Lista/16b (7.2.3.1) y la explicación de distancias derivadas de huecos.
+- **4 posibles incumplimientos / 154 no evaluados / 95 conformes en las reglas evaluadas**, coincidentes con el corpus y los otros clientes.
+- Leyenda de códigos y entrada «Ver matriz de 17 clases»; tarjetas legibles con posición, clase, razón y apartados. Las primeras muestran X como «No evaluado: consultar la Lista de mercancías peligrosas», con referencias 7.2.4 y 7.2.3.1.
+
+Evidencia en `%TEMP%\baystream-codex-20261016\web-1070\`: `t85-a03-source-results.png` y `t85-a03-source-results-ax.txt`. SHA-256 de `t85acc/build/web/main.dart.js`: `d2562678efd24825e184974c35928816d4a1c584d5e8d82539041fc96969f184`.
+
+**Sin cambios de código ni comandos Flutter en esta continuación**, sin dispositivos ni app Windows. La guardia de 338 archivos de lib/test/tool, pubspec.* y configuración pública no registra diferencias (`source-before.json`, `source-after.json`, `web-close-and-guard.json`). Las cifras de suite, corpus y comprobador de las secciones anteriores corresponden a las validaciones originales, no se volvieron a ejecutar para esta revisión visual. Pestaña cerrada y servidor detenido; puertos 8185 y 8195 sin escucha al cerrar ambas revisiones.
+
+La Web solicitada queda comprobada. **No se reevaluó el desplazamiento de la matriz en Windows**: esa observación sigue abierta para Timonel. También siguen pendientes Gru contra el PDF y la aceptación cruzada posterior; esta revisión Web no los sustituye.
 
 ## 7. Archivos exactos y guardia SHA
 
@@ -156,7 +172,7 @@ La leyenda siguiente es la razón concreta de **cada fila** del anexo. No se agr
 
 ## 8. Comandos para Carlos y mensaje de entrega
 
-No ejecutados por Codex. Ninguna ruta requiere git add -f según .gitignore. Un commit de este requerimiento, independiente del informe T-95:
+Bloque de la entrega original, no ejecutado por Codex y **ya versionado por Carlos en ac72849**; se conserva como registro, no se debe repetir. Ninguna ruta requiere git add -f según .gitignore:
 
 ```powershell
 git add -- lib/features/vessel/domain/services/dangerous_goods_validator.dart
@@ -183,12 +199,20 @@ git commit -m "Aplicar segregacion IMDG 42-24 por clase y posicion"
 git push
 ```
 
+Para versionar **solo esta continuación Web**, Carlos puede ejecutar este bloque independiente del cierre T-95; Codex no lo ejecutó:
+
+```powershell
+git add -- docs/T85-RESULTADOS.md
+git commit -m "Sprint 3: documentar revision Web de T-85"
+git push
+```
+
 Tres líneas:
 - La segregación deja perfiles de 49 CFR y usa clases, secundarios y posición del IMDG 42-24.
 - Comprobador 289/289 y 60/60; suite 894/894, analyze 0, corpus 157/157; 650 filas trazadas sin cambio inexplicado.
-- Windows y Honor revisados; Web y observación de repintado pendientes; Gru revisa datos y Timonel acepta; Honor en 1.0 y apps cerradas.
+- Windows, Honor y Web revisados; sigue la observación de repintado de Windows. Gru revisa datos y Timonel acepta; servidores Web detenidos.
 
-**Mensaje para Yov:** Capitán implementó T-85 en copia nueva de HEAD 93dc695 y colocó 19 rutas más docs/T85-RESULTADOS.md, sin commit. Datos SHA-256 6fc226831e9a23b202a20ecc302d28515c01bf6e84719a35846d5b6992e1b899; reglas 99085f2ed738b7ec3fd3d5519af89e6e29540fb4cf124583dd1065cba9e613e4. Comprobador privado final 289/289 y 60/60, sin discrepancias, solo códigos/huellas en el repo. Suite 894/894 (866+28), analyze 0 sin ignore y corpus final 157/157. Los 650 resultados anteriores están listados con razón: 640 finales, 313 cambios de estado o emisión, 337 del mismo estado, 0 inexplicados; diez diagnósticos de ONU de A07 se retiran pero sus pares siguen, y A05/A06 conservan NE por 22K2. A03 muestra 4/154/95 en Windows y Honor a 360 dp/1.45 claro/oscuro. Huella real 462→474, todos los anteriores iguales y solo doce t85acc nuevos. Web compilada pero visual pendiente por falta del integrado de Claude autorizado. Queda observación NO resuelta de rastros al desplazar horizontalmente la matriz por rueda en Windows; se limpia con desplazamiento vertical, no se reprodujo con el dedo en Honor. Paso mínimo adicional: segregation_provider pasa tapas del perfil publicado para respetar bodega abierta; prueba propia lo exige. Modelo/lector/codec/firestore.rules/main/congelados/pubspec intactos; T-106 intacta. Gru debe revisar datos contra PDF antes de que Timonel acepte. Honor vuelve a 1.0, apps cerradas por PID/force-stop y ningún servidor iniciado. T-95 queda en revisión solo por Web visual, en su informe separado; allí se declara y repite en secuencia un solapamiento inicial de Flutter.
+**Mensaje para Yov:** Completada la Web de T-85 (ac72849, copia base 93dc695) con la autorización 10.70: navegador integrado de Codex, declarado como sustituto, sin afirmar Chrome. A03 abre con 369 contenedores y la pantalla muestra fuente IMDG 42-24, apartados 7.2.4/7.4.3.2, resumen 4/154/95 y tarjetas X no evaluadas con remisión a la Lista/16b. Captura y estado accesible en TEMP/web-1070; main.dart.js SHA-256 d2562678efd24825e184974c35928816d4a1c584d5e8d82539041fc96969f184. Datos IMDG SHA-256 6fc226831e9a23b202a20ecc302d28515c01bf6e84719a35846d5b6992e1b899; siguen vigentes las validaciones originales: comprobador 289/289 y 60/60, suite 894/894, analyze 0, corpus 157/157 y 650 resultados anteriores explicados, 0 sin razón. Esta continuación solo actualiza informes: 338 archivos de código/configuración sin cambios, pubspec.* intactos, ningún comando Flutter ni dispositivos. Pestañas cerradas y servidores detenidos. Sigue EN REVISIÓN: Gru coteja datos con el PDF y después Timonel acepta, incluida la observación de rastros en la matriz de Windows, que no se declara resuelta. T-95 queda aceptada en su informe separado tras completar también su Web.
 
 ## 9. Anexo: lista completa de los 650 resultados anteriores
 
