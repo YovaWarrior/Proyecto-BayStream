@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.51) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.52) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1778,6 +1778,88 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 
 ### Ola 6 · Resto del ERS
 
+#### T-56 · Las tomas de reefer: cargarlas por rangos y validarlas por celda, más siete arreglos pendientes · 3.5 h · Timonel (ficha completa, 15-oct)
+
+**Para qué.** ERS, RF-027 (T-55, T-59). Viene del Sprint 2 (10.24 de `SPRINT-2.md`). Hoy las tomas se declaran una a una, con un campo de siete dígitos y «Agregar toma». Un inventario real de cientos de tomas no se carga así. Y el validador busca el código exacto, así que con un inventario **declarado** el mismo hueco físico con el otro tamaño da errores falsos: 91 en el escenario de T-55.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 15-oct):**
+- **El modelo:** `VesselProfile.reeferSlots` es un `Set<String>` de códigos `BBBRRTT`, con `reeferSlotsOrigin`, que puede ser plantilla, propuesto o declarado.
+  - Viaja a Firestore como una lista de cadenas, sin listas dentro de listas (2.3).
+- **El validador,** `reefer_socket_validator.dart`, busca `hasReeferSocket(p.toIsoCode())`, el código exacto.
+  - Sin toma, da error si el inventario está declarado y aviso si no.
+- **La pantalla,** la sección de tomas de `vessel_geometry_page.dart`, tiene un chip por toma, el campo «Posición BBBRRTT», «Agregar toma» y la casilla «Declaro este conjunto de tomas para el buque».
+- **La geometría no lista bahías.** `covers()` mira solo la fila y el nivel. Las bahías con bodega se deducen de los planes (`observedHoldBayNumbers`, T-83).
+
+**Qué construye.**
+
+1. **Validar por celda física, sin cambiar el modelo.** El código de siete dígitos ya dice todo lo que T-59 propuso guardar: una impar es un extremo, una par es la celda sin extremo, y una impar sola es la celda entera.
+   - **Un reefer de 40, en la par E:** hay toma si existe el código de E, de E−1 o de E+1, con la misma fila y el mismo nivel. Un 40 se orienta hacia su toma (T-59).
+   - **Un reefer de 20, en la impar b:**
+     - hay toma si existe el código de b;
+     - si solo existe el de una par vecina (b−1 o b+1), da **aviso** «La celda tiene toma, pero no consta en qué extremo: confírmalo», nunca error;
+     - si solo existe el del otro extremo, sigue la regla de hoy: error con inventario declarado, aviso sin él.
+   - **No se calcula «la par de una impar»:** se miran las dos vecinas. T-55 mostró que esa correspondencia es del buque. En ALFA, la 044 cubre a la 043 y a la 045, y la 041 va sola.
+   - **La severidad no cambia** (T-39): error solo con inventario declarado.
+   - Los textos dicen qué código se encontró, para que el usuario lo vea.
+2. **Cargar por rangos.** Un formulario en la sección de tomas, con tres campos:
+   - **bahías:** una lista de números y rangos con paso, por ejemplo `002-038/4, 041, 044`;
+   - **filas:** `01-10`, todas las de la geometría o una lista;
+   - **niveles:** por ejemplo `82-88` o `02-08`, de dos en dos por omisión.
+   - **Genera los códigos de las bahías tal como se escriben,** sin calcular pares. Quien sabe el extremo escribe las impares, y quien no, las pares.
+   - **Una vista previa,** antes de aplicar, dice cuántos códigos se agregan, cuántos ya estaban y cuántos se descartan porque su fila o su nivel caen fuera de la geometría. Muestra ejemplos de cada grupo.
+   - **«Quitar por rango»** usa el mismo formulario, para corregir.
+3. **Pegar una lista:** códigos separados por comas, espacios o saltos de línea. Los que no son de siete dígitos se reportan, y los que caen fuera de la geometría, se descartan con su cuenta.
+4. **Cargar no declara.** La declaración sigue exigiendo la casilla que ya existe. Un inventario propuesto que se edita no pasa a declarado por sí solo.
+5. **La prueba de las 21 bahías** (10.33, 10.38): un corpus nuevo que propone el perfil desde A07 ∪ A08 y afirma las 21 bahías con bodega, con su lista exacta. Es el conteo que T-83 verificó en pantalla en los tres clientes.
+6. **Cinco textos y diseños pendientes:**
+   - «1 contenedores» en Recientes pasa a «1 contenedor» (10.41);
+   - el desplegable de tapas ya no corta «abierta» a 360 dp y letra 2.0 (10.41);
+   - el chip del viaje no se sale de su fondo a letra 2.0 (10.41, 10.43);
+   - la pantalla vacía dice «Contenido compatible: BAPLIE 2.x, y la 1.5 con aviso.» (10.43);
+   - **el resumen de la escala cuenta los contenedores sin puerto de carga** (10.43). Hoy A06 da «0 se descargan · 0 se cargan · 0 de paso» en GTPBR con 717 a bordo, porque no trae `LOC+9` y `cargoCountsFor` no los cuenta en ninguna parte.
+     - Cuando hay alguno, el resumen agrega «· N sin puerto de carga en el archivo»;
+     - con reservas, una línea más.
+     - Las demás cuentas no cambian.
+
+**Carril.**
+- Toca `lib/` (el validador, la sección de tomas, el resumen de la escala y los cinco textos), `test/t56_*` y `tool/t56_*`. Puede tocar las pruebas que fijan los textos que cambian.
+- **No toca:**
+  - el modelo del perfil ni su JSON;
+  - el codec de Firestore ni las reglas;
+  - `lib/main.dart`, los congelados ni `pubspec.*`.
+- Sin dependencias nuevas.
+
+**Detente y avisa si:**
+- validar por celda exige cambiar el modelo o el JSON del perfil;
+- el corpus da una alerta nueva que no se explica por la regla de celda;
+- las 21 bahías no salen de A07 ∪ A08.
+
+**Fuera de alcance:**
+- guardar el extremo aparte;
+- la tabla de pares en el perfil (T-59; queda para cuando haya un plano de tomas real);
+- importar el plano de tomas desde un archivo.
+
+**Terminada cuando:**
+- [ ] **Las pruebas del validador** cubren:
+  - el 40 en 022/07/04 con toma en 021, 022 o 023: conforme; sin ninguna: error con inventario declarado, aviso sin él;
+  - el 20 en 021: conforme con 021; aviso «confirmar extremo» con solo 022; error con solo 023 si está declarado;
+  - el 20 en la 041 sola: conforme con 041;
+  - y el escenario de T-55 reproducido con datos sintéticos: los 82 errores pasan a avisos de extremo y los 9 a conformes.
+- [ ] **El corpus:**
+  - la regla de tomas, corrida antes y después sobre las fuentes con perfil propuesto, no da ninguna alerta nueva, y las que desaparecen se explican todas por la regla de celda;
+  - las 21 bahías de A07 ∪ A08, con su lista.
+- [ ] **En los tres clientes,** con un namespace propio (`t56acc`):
+  - se cargan al menos cien tomas por rango en menos de un minuto;
+  - la vista previa coincide con el conteo guardado;
+  - pegar una lista con códigos inválidos los reporta;
+  - quitar por rango funciona;
+  - y la casilla de declaración sigue siendo la única que declara.
+- [ ] **Los cinco textos** se ven en el Honor a 360 dp y letra 2.0, en claro y oscuro. A06 en GTPBR dice «717 sin puerto de carga en el archivo».
+- [ ] **Validaciones:**
+  - piso de 710 más las nuevas, y `analyze` en cero;
+  - el corpus completo en verde, con los conteos declarados;
+  - las reglas, el JSON del perfil, `lib/main.dart` y los congelados sin cambio.
+
 #### T-97 · El título sin truncar y los textos acumulados del sprint · 1.0 h · Codex (ficha completa, 13-oct)
 
 **Para qué.** ERS y RNF-003. Son los textos que el sprint fue anotando decisión tras
@@ -1908,7 +1990,7 @@ para RNF-003.
 |---|---|---:|---|
 | **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida |
-| **T-56** | ERS | 3.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38); tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo; y dos de T-103 (10.43): «Contenido compatible: BAPLIE 2.x.» en la pantalla vacía, y el resumen 0/0/0 de A06 en GTPBR, que no trae `LOC+9` |
+| **T-56** | ERS | 3.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38); tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo; y dos de T-103 (10.43): «Contenido compatible: BAPLIE 2.x.» en la pantalla vacía, y el resumen 0/0/0 de A06 en GTPBR, que no trae `LOC+9`. La hace Timonel y la acepta Codex (10.52) · **ficha completa arriba** |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
 | **T-104** | ERS | 2.5 | Deudas del lote de Timonel: aislar `block3` del almacén real, «1 bahías», las extensiones de la pantalla inicial y los cortes a 200 % (10.38); la prueba intermitente, los dos `print` y el `LEEME` del SDK (10.39) · **ficha completa arriba** |
 
@@ -3638,3 +3720,25 @@ El piso de pruebas es 648.
 **T-88 pasa a En revisión.** La acepta Codex con el prompt de 10.48 y los dos cambios de 10.50.
 
 **El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero: 32 terminadas, T-88 en revisión y 9 por hacer.
+
+### 10.52 · La ficha de T-56, completa: validar las tomas por celda sin cambiar el modelo, y cargarlas por rangos (15-oct)
+
+**T-56 va a Timonel ahora** (ficha completa al inicio de la Ola 6). La acepta Codex, que está aceptando T-88.
+
+**La idea central de la ficha:** la propuesta de T-59 (celda más extremo, con la tabla de pares) se puede validar **sin cambiar el modelo**.
+- El código de siete dígitos ya lleva el extremo: una impar es un extremo, una par es la celda sin extremo, y una impar sola es la celda entera.
+- **Un 40 en la par E** acepta la toma de E, E−1 o E+1.
+- **Un 20 en la impar b** acepta la de b, y con solo una par vecina da aviso de «confirmar el extremo», no error.
+- **No se calcula la par de una impar,** porque esa correspondencia es del buque (T-55).
+- **Así,** el escenario de T-55 pasa de 91 errores falsos a 82 avisos de extremo y 9 conformes.
+- **El perfil, su JSON, Firestore y las reglas no cambian.**
+- **Queda fuera** guardar el extremo aparte y la tabla de pares, hasta que haya un plano de tomas real.
+
+**Además:**
+- **la carga por rangos,** con vista previa, pegar una lista y quitar por rango. Cargar no declara;
+- **la prueba de las 21 bahías;**
+- **los cinco textos pendientes,** incluido «N sin puerto de carga en el archivo» en el resumen de la escala, que deja de mostrar 0/0/0 para A06.
+
+**Las horas no cambian:** 3.5 h.
+
+**El tablero:** 32 terminadas, T-88 en revisión, T-56 en curso y 8 por hacer.
