@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 16-oct, 10.62) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 16-oct, 10.63) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1985,7 +1985,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-93** | USO | 2.5 | Instalador de Windows: paquete MSIX firmado con el paquete `msix` (Carlos, 10.36) · **ficha completa arriba**, con su corrección (10.42) |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
-| **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62) · **ficha completa arriba** |
+| **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62); terminada con la corrección de la sombra del 40 (10.63) · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -4504,4 +4504,63 @@ Yov se las pregunta y escribe la ficha con sus respuestas.
 - 33 terminadas;
 - T-56, T-96 y T-105 en revisión;
 - T-95 en curso;
+- 6 por hacer.
+
+### 10.63 · La sombra del 40: un hallazgo de Timonel, corregido por Codex · T-105 terminada para el 17 · La corrección de T-96, entregada (16-oct)
+
+**El hallazgo, al aceptar T-105:**
+- `review()` no veía que un 40 en una bahía par ocupa la misma fila y el mismo nivel en sus dos impares vecinas. Un 20 soltado bajo la sombra de un 40 salía en verde, y un 40 encima de dos 20 también.
+- **Viene desde T-80 y T-81:** el formulario y la solicitud ya lo tenían. El arrastre solo lo dejó a la vista.
+- **Lo reprodujo una prueba de dominio de Timonel:** 4 conflictos fallaban y 2 controles pasaban.
+
+**La corrección de Codex** (`3086db2`):
+- **La celda física por huellas,** la misma regla de T-95, sin calcular pares. La huella de una impar es ella misma, y la de una par son sus dos impares vecinas. Dos posiciones chocan si comparten fila, nivel y huella.
+- **`review()` revisa** lo que hay a bordo, lo previsto en el plan y los destinos del mismo lote.
+- **Cubre todos los caminos:** el arrastre, el formulario, la solicitud y también la aprobación.
+- **Las pruebas:** 834/834, con las 6 pruebas de Timonel intactas y 29 de Codex; `analyze` en cero y corpus 135/135.
+
+**Timonel aceptó T-105 con la corrección** (`docs/T105-ACEPTACION-RESULTADOS.md`):
+- **Las validaciones:** 799/799 sobre `7a06c5d`, con los SHA de Codex iguales. Junto con la corrección de T-96 da 842/842, `analyze` en cero y corpus 135/135.
+- **El dominio:**
+  - `preview`, `move` y `request` coinciden en 18 casos suyos;
+  - los tres controles nuevos de `request()` fallan con el código anterior, así que el hallazgo de 10.62 es real;
+  - el ajuste de T-80 solo cambia el estado de partida.
+- **Los tres clientes,** sobre «PRUEBA T-105 TM» (con dos 40, uno incoherente a propósito y PROVISIONAL):
+  - la matriz completa, con 7 registros y 0 conflictos;
+  - la solicitud desde la Web la hizo Carlos con el mouse;
+  - la 10.63 en Windows: rojo y sin hoja, en los dos sentidos.
+- **Lo que no se tocó:** «PRUEBA T-105», la de la demo, quedó igual. El almacén real conservó sus 400 archivos idénticos, más 14 `t105tm_*`.
+- **El Honor** quedó en 1.0.
+- **Chrome queda sin probar,** por Codex y por Timonel.
+- **Incidencias declaradas, sin daño:**
+  - dos instancias extra de Windows, cerradas por PID en menos de un minuto;
+  - dos `git diff --no-index` de solo lectura, fuera de la lista permitida.
+
+**T-105 pasa a Terminado, aceptada con observación:** Chrome sin probar, y el zoom agregado con autorización (10.62). Horas reales:
+- ≈ 1.56 h de Codex, más la corrección;
+- ≈ 1.2 h de la aceptación de Timonel.
+
+**Nueve observaciones de Timonel, que no son defectos de T-105.** Yov las decide el 16-oct. Para la demo pesan dos:
+- a 300 %, con la ventana de Windows ancha, el plano abre en blanco: en la demo, mejor no pasar de 200 %;
+- en el modo Carga, la descarga pendiente no se dibuja (viene de T-76).
+
+Las demás son textos y cosméticas, entre ellas:
+- el aviso rojo muestra la clave interna `C:`;
+- la segunda frase del aviso no siempre aplica;
+- la vista de una bahía par no dibuja los 20 de las impares vecinas.
+
+**La corrección de T-96, entregada** (`adc9ea4`):
+- **El aviso de buque sigue a `Vessel.matchIdentity` y al tipo de clave,** como decidió Carlos.
+- **A05 → A06 pide confirmar.** Dos IMO distintos siguen siendo dos buques.
+- **Las pruebas:** 842/842, `analyze` en cero y corpus 135/135.
+- **T-96 sigue En revisión,** y la acepta Codex.
+
+**Las operaciones de prueba en Firestore,** para que Carlos las borre después desde la consola:
+- «PRUEBA T-105 TM»;
+- «PRUEBA T-105», después de la demo.
+
+**El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero:
+- 34 terminadas;
+- T-56 y T-96 en revisión;
+- T-95 por empezar con Timonel;
 - 6 por hacer.
