@@ -1,6 +1,6 @@
 # T-95 · Aceptación cruzada de Capitán Codex
 
-**Veredicto: EN REVISIÓN únicamente por la comprobación visual Web pendiente.** No encontré defectos de dominio ni diferencias con el cotejo independiente. Windows y Honor pasan las comprobaciones solicitadas. La Web compila, pero el conector disponible solo ofrece el integrado de Codex, no el integrado de Claude autorizado; no se sustituyó por Chrome ni se pidió intervención a Carlos durante el modo siesta.
+**Veredicto: ACEPTADA.** Dominio, cotejo independiente, Windows, Honor y Web pasan las comprobaciones solicitadas. La revisión visual Web que faltaba se completó el 16-oct en el **navegador integrado de Codex**, autorizado expresamente por Carlos en 10.70 como sustituto de Chrome. No se afirma una prueba en Chrome. Se conserva la observación cosmética re-/estibas ya asignada a T-106.
 
 ## Base y aislamiento
 
@@ -40,9 +40,25 @@ Mis casos sintéticos comprueban ALFA (044 sobre 043/045, 041 aislada y bloqueo 
 
 **Honor, 360 dp:** 720×1600 y 320 dpi. Encontrado en 1.0; puesto por ADB en **1.45**, autorización expresa del modo siesta, y devuelto a **1.0** al terminar. Revisé GTSTC y JMKCT, luego las tapas, los pasos y las re-estibas por tapa en claro y oscuro. Capturas `honor-t95-light-*` y `honor-t95-dark-*`; XML sanitizado en memoria, sin cuentas ni UID y con descarte de formularios de acceso. No apareció ninguno. Resumen y pasos legibles, sin cortes de glifos. Se reproduce la partición cosmética re-/estibas en el resumen de celda, ya asignada a T-106; no se corrige en esta aceptación.
 
-**Web:** compilación correcta, aceptación visual pendiente. La autorización es para el integrado de Claude. El inventario del conector solo ofreció Chrome, Edge, integrado de Codex y MCP Apps; no se usaron como sustitución. No se inició servidor Web para una sesión que no podía operarse. No se afirma que Chrome esté probado.
+**Web:** revisión visual completada con la autorización 10.70; véase la sección siguiente. La limitación de acceso al integrado de Claude que dejó pendiente el informe inicial queda superada por la autorización del integrado de Codex.
 
 **Almacén real Windows:** `C:\Users\Giova\AppData\Local\BayStream`, huellas tomadas fuera del paquete con BAT lanzado por Explorer, con cadena de padres registrada (`powershell → cmd → explorer`). **450 → 462 archivos; los 450 previos idénticos; 0 modificados, 0 borrados, 0 errores.** Los doce nuevos son exclusivamente `vessel_store/t95cx_*` (device, movements, operations, profiles, settings, voyages; hive/lock). `store-t95-before.json`, `store-t95-after.json` y `t95-store-comparison.json`. No se borró nada.
+
+## Cierre visual Web · decisión 10.70
+
+16-oct-2026, 15:21–15:24, Guatemala. Se sirvió **la compilación existente de la copia t95cx**, base 93dc695/T-95 6b209f1, en `http://127.0.0.1:8195/`, con Python y acceso limitado a loopback. Navegador integrado de **Codex**, visible, ventana de contenido 1092×871, tema claro y modo sin cuenta. No se recompiló ni se ejecutó ningún comando Flutter durante esta revisión; no se usaron dispositivos ni la app de Windows.
+
+| Comprobación visual | Resultado observado |
+|---|---|
+| A07 en GTSTC, sin tapas | 114 descargas, 66 en cubierta y 48 en bodega; 0 re-estibas, 0 tapas, 114 a bordo / 114 por muelle; advertencia de bodega sin tapa declarada |
+| Pasos numerados | Celda 021/022/023 primero, 52/52 movimientos; pasos 1, 2, 3… con posición y contenedor legibles |
+| Elegir JMKCT | Recalcula a 125 descargas, 6 re-estibas por columna, 0 por tapa, 131/137; 55 en cubierta, 70 en bodega y 5 celdas; primera 009/010/011 con 38/38 |
+| Declarar tapas PROVISIONALES en el banco | Rótulo PROVISIONALES visible; al volver al producto, GTSTC da 13 re-estibas por tapa, 0 por columna, 4 tapas de grúa y 135/148 |
+| Pasos con tapas | Primera celda: 66/76, 52 descargas, 10 re-estibas y 2 tapas. Estado accesible: paso 21 «Tapa T1: quitar», 22 «Re-estiba: sale … por tapa»; al desplazar se leen las re-estibas por tapa y el paso 32 «Tapa T2: quitar» |
+
+Evidencia en `%TEMP%\baystream-codex-20261016\web-1070\`: `t95-gtstc.png`, `t95-jmkct.png`, `t95-tapas-bank.png`, `t95-tapas-summary.png`, `t95-tapas-steps.png` y sus estados `*-ax.txt`. El banco visual declara seis bahías; el cotejo completo de pares/copias descrito arriba sigue siendo la prueba de equivalencia de dominio.
+
+SHA-256 de `t95cx/build/web/main.dart.js`: `9cb58cb770c8886bc2041aae5498c4521019e9f154060ba794bd9cf37dbd5883`. La pestaña se cerró y el servidor se detuvo; el puerto 8195 quedó sin escucha. La guardia de esta continuación comprueba **338 archivos de lib/test/tool, pubspec.* y configuración pública sin cambios** (`source-before.json`, `source-after.json`, `web-close-and-guard.json`). Las validaciones de la tabla inicial son las ya ejecutadas durante la aceptación; esta continuación solo completa la Web y actualiza informes.
 
 ## Guardia SHA-256
 
@@ -73,19 +89,19 @@ Lo declaré y **repetí las dos validaciones en secuencia**, con los clientes ce
 
 ## Entrega
 
-Único archivo agregado al árbol: `docs/T95-ACEPTACION-RESULTADOS.md`. Los casos independientes, Python, exportaciones y evidencias permanecen en TEMP. Windows cerrada por PID; Android de aceptación detenida; Honor en 1.0; ningún servidor Web activo de esta tarea. Sin Firebase ni publicaciones.
+Único archivo de T-95 actualizado en esta continuación: `docs/T95-ACEPTACION-RESULTADOS.md` (informe inicial versionado por Carlos en 722a55c). Los casos independientes, Python, exportaciones y evidencias permanecen en TEMP. Windows y Android ya habían quedado cerradas y Honor en 1.0; esta continuación no usó dispositivos. Pestaña cerrada y servidor Web detenido. Sin consola/CLI de Firebase ni publicaciones. Código y pubspec.* sin cambios.
 
 Comandos para **Carlos**, cuando decida versionar el informe (no los ejecutó Codex):
 
 ```powershell
 git add -- docs/T95-ACEPTACION-RESULTADOS.md
-git commit -m "Registrar aceptacion cruzada de T-95 con Web pendiente"
+git commit -m "Sprint 3: cerrar aceptacion de T-95 con revision Web"
 git push
 ```
 
 Tres líneas:
 - Dominio, cotejo crudo y tapas de T-95 pasan sin cambios al producto.
-- Suite 866/866, analyze 0, corpus 147/147; Windows y Honor pasan.
-- Web visual pendiente; almacén real solo añade doce t95cx y Honor vuelve a 1.0.
+- Suite 866/866, analyze 0, corpus 147/147; Windows, Honor y Web pasan.
+- Web revisada en el integrado de Codex, autorizado en 10.70; T-95 aceptada, sin cambios de código.
 
-**Mensaje para Yov:** Capitán revisó T-95 (6b209f1) en copia de HEAD 93dc695. Sigue En revisión solo por Web visual pendiente: no estuvo disponible el integrado de Claude autorizado y Carlos dormía. Suite 866/866, analyze 0 sin ignore y corpus 147/147; cuatro casos propios pasan. Cotejo Python independiente sobre EDI crudo coincide en diez fuentes y 39 puertos: A07 GTSTC 114/66/48 y 0 por columna; testigos 6/5/66/21. Tapas PROVISIONALES en pares o copiadas idénticas: 13 por tapa, 4 tapas, 135/148. Windows y Honor 360 dp/1.45 en claro y oscuro muestran resumen, pasos, recalculo JMKCT y tapas. Huella real externa 450→462, todos los previos idénticos y solo doce t95cx_*; catorce SHA protegidos intactos (firestore.rules 01125109…, main c5189b1d…, perfil 70f26644…). Honor termina en 1.0, apps cerradas. pubspec.* sin cambios. Única entrega docs/T95-ACEPTACION-RESULTADOS.md. T-85 se realiza independiente sobre copia nueva de 93dc695, sin esperar commit. Declaro un solapamiento inicial de unos ocho segundos entre suite y analyze: repetidos luego en secuencia, analyze 0 y suite 866/866, con los clientes cerrados.
+**Mensaje para Yov:** T-95 (6b209f1, copia base 93dc695) queda ACEPTADA. Con la autorización 10.70 completé la Web en el navegador integrado de Codex, sin afirmar Chrome: GTSTC 114 descargas/66 cubierta/48 bodega y pasos numerados; JMKCT recalcula a 125 descargas, 6 por columna y 131/137; tapas PROVISIONALES muestran 13 por tapa, 4 tapas y 135/148, con pasos de tapa y re-estiba legibles. Capturas y estados en TEMP/web-1070; main.dart.js SHA-256 9cb58cb770c8886bc2041aae5498c4521019e9f154060ba794bd9cf37dbd5883. Se conservan las validaciones previas 866/866, analyze 0, corpus 147/147, cotejo independiente de diez fuentes/39 puertos y equivalencia de tapas pares/copias; Windows y Honor ya pasaban. Se conserva también la incidencia inicial de Flutter y su repetición serial documentada. Esta continuación no ejecutó Flutter ni usó dispositivos: 338 archivos de código/configuración sin cambios, solo informes; pubspec.* intactos. Servidor detenido, pestaña cerrada. Queda únicamente la observación cosmética de re-/estibas ya asignada a T-106, sin bloquear esta aceptación.
