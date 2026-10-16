@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.50) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.51) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -3625,3 +3625,16 @@ El piso de pruebas es 648.
 **Después de la corrección, Codex acepta T-88 completa,** con el prompt de 10.48, más una línea: las imágenes del MSIX son nítidas y salen del PNG de 512.
 
 **El sprint sigue en 42 tareas y ≈ 156.0 h.** T-88 sigue en curso.
+
+### 10.51 · T-88 completa, en revisión: los mosaicos del MSIX, nítidos (15-oct)
+
+**Timonel aplicó la corrección de 10.50** (commit `1e872af`), en ≈ 0.2 h. T-88 suma ≈ 2.2 h frente a 2.5, sin contar la sesión del diseñador.
+- **`msix_config.logo_path`** apunta a `web/icons/Icon-512.png`, y su comentario se actualizó. `pubspec.lock` no cambia, y la prueba de T-93 espera la ruta nueva.
+- **El MSIX 1.0.4.0,** rearmado con `-SinCompilar`, tiene firma `Valid` con la huella de Carlos, y no se instaló.
+- **Las 82 imágenes son nítidas:** por ejemplo `Square150x150Logo.scale-400` de 600×600, `LargeTile.scale-100` de 310×310 y `Square44x44Logo.targetsize-48` de 48×48.
+- **Validaciones:** 710/710 y `analyze` en cero.
+- **El matiz:** los tamaños chicos del paquete se reducen desde el 512 y no usan los dibujos a píxel del `.ico`. A 48 px se lee bien, y el `.exe` conserva su `.ico`. Queda así.
+
+**T-88 pasa a En revisión.** La acepta Codex con el prompt de 10.48 y los dos cambios de 10.50.
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.** El tablero: 32 terminadas, T-88 en revisión y 9 por hacer.
