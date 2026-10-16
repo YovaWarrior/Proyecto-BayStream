@@ -382,3 +382,110 @@ Volví a compilar las tres variantes en la copia de `%TEMP%`, con los cinco arch
 Calculados sobre el árbol de trabajo. En `main.cpp` y `Runner.rc`, el editor dejó finales LF donde había CRLF. En el índice son LF y `diff --ignore-cr-at-eol` muestra solo las tres líneas.
 
 **Horas:** ≈ 0.5 h. T-88 suma ≈ 1.5 h frente a 2.5, sin el ícono.
+
+## Ícono (10.48)
+
+Timonel · 15-oct-2026 · sobre `956d802` (10.49; 10.48 en `ed84383`) · segunda entrega de T-88.
+
+### El paquete
+
+- **Dónde estaba.** No estaba en `C:\Proyectos\baystream-icono\`, que no existe. Lo encontré en `C:\Users\Giova\Downloads\BayStream_icono_v1.zip`: 260 712 bytes, SHA-256 `2677C8C2455E26233FE845A28F5C2178CA546536E3679FE424BB2F99B7F42343`.
+  - Solo aparecía al buscar fuera del paquete de la consola, con un `.bat` lanzado por `explorer.exe`.
+  - No lo modifiqué: lo descomprimí en `%TEMP%\baystream-t88-icono\`.
+- **La integridad.** Trae 37 archivos. **Los 36 que tienen SHA-256 en su `LEEME.md` coinciden todos**, y el `LEEME.md` no lleva SHA propio, como él mismo dice.
+- **Lo copié con sus rutas:**
+  - `android/`, `web/` y `windows/`, tal cual;
+  - `design/icono/` completo;
+  - `play/` dentro de `design/icono/play/`.
+  - Después de copiar, los 36 SHA se repiten en el repo.
+- **Un aviso sobre el paquete.** El `LEEME.md` y `generar.py` siguen escribiendo `play/` en la raíz. Si se regenera, `generar.py` deja `play/` fuera de `design/icono/`. No los modifiqué.
+- **`web/manifest.json`:** `background_color` y `theme_color` pasan de `#0175C2` a `#0D47A1`. No cambia nada más.
+- **Íconos de Flutter sin usar: ninguno.** Los once que había los reemplaza el paquete:
+  - los cinco `mipmap-*/ic_launcher.png`;
+  - `web/favicon.png` y los cuatro de `web/icons/`;
+  - `windows/runner/resources/app_icon.ico`.
+- **Lo que no cambia:** el resto de `android/` y `windows/`, incluidos `AndroidManifest.xml`, `main.cpp`, `Runner.rc` y `CMakeLists.txt`; `lib/`, `test/`, `tool/` y `pubspec.*`; y las reglas.
+
+### Los archivos y sus SHA
+
+| Archivo | Estado | SHA-256 |
+|---|---|---|
+| `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml` | nuevo | `CEE3FF6C73E61072D4F99F71D5311DF6DE2540630951B0F9FBD4FC4BB010F62F` |
+| `android/app/src/main/res/mipmap-hdpi/ic_launcher.png` | cambia | `7A997685A154D988F81C91F5D32AEAEE34ADFDD91908CE5E9768860315809489` |
+| `android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png` | nuevo | `209D2940B42B8E0DB5975F3BF4A6A86FC4F3D7A9D047789A1784E46D263E5C5F` |
+| `android/app/src/main/res/mipmap-hdpi/ic_launcher_monochrome.png` | nuevo | `60C71C696B0E202A5F9EA54756FAA37B040AFF743BA70D4D528CC8D4708B222D` |
+| `android/app/src/main/res/mipmap-mdpi/ic_launcher.png` | cambia | `A1403C046BCF62A7A142361C84CEE3AFDFAEEEDB6FD36EC0C3E45EC9C3971146` |
+| `android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png` | nuevo | `CDFE666FAF024CE164DE78A12FF240F958F0FB7144B804FBABB6F2D38120EEAF` |
+| `android/app/src/main/res/mipmap-mdpi/ic_launcher_monochrome.png` | nuevo | `4FB0FC05798B8964EA496F7633F0D0E463813DF6FD4FF37EB7768103A3808D2E` |
+| `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png` | cambia | `52E5F235E77A6CBF20F993889EAFA82699CED9BF1FC8CCC70052F98F7B01C1F8` |
+| `android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png` | nuevo | `5876918D4EC5CDEF3D738F947841340D9DEC65EC328F5AD095F2812F28013F3D` |
+| `android/app/src/main/res/mipmap-xhdpi/ic_launcher_monochrome.png` | nuevo | `B21C4950BB554B8938DDD865D9DB96BFD6A8047A58F760B82C0E2D2CE59B95E1` |
+| `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png` | cambia | `6C51E6FD465BEE117AECBC4097CFA67A3F42E69C38DC5AF352289167D77ADB67` |
+| `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png` | nuevo | `0EFAF9A9D795863EE71E40FD629894E61D4E4037F78633367627EB69CD8B6DEB` |
+| `android/app/src/main/res/mipmap-xxhdpi/ic_launcher_monochrome.png` | nuevo | `28838371BC07E4BA7C6C85176919A856F648E653C1823325156FA275166FD8F4` |
+| `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` | cambia | `21D7C9F1FAABFC13A0E17FA9E85220257620AA0E57E55533C28F78B1C5E75805` |
+| `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png` | nuevo | `79B4F0F6D7F925733448A47213BB3181D9810D5704A65DAFF26EC55BFF973EFB` |
+| `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_monochrome.png` | nuevo | `276F8B3406CD8B81A9E9AF1D03A0BC77B18435EF25B43D4FA44B2B0134EDCDAF` |
+| `android/app/src/main/res/values/ic_launcher_background.xml` | nuevo | `87C0FA5B1F64046F2577B8E1A03BF3AD8BD1BA7CFF3EB64A4A4BF50A46C17D27` |
+| `design/icono/LEEME.md` | nuevo | `DF8A6F82745237BC7624B6843B4C61001A797E301AD4305F4A42DE7C8488DC3A` |
+| `design/icono/baystream.svg` | nuevo | `4F12646124389F3C1EA36E94EF3DC1B4464370444A164B5E6C66C456032A39BE` |
+| `design/icono/baystream_16.svg` | nuevo | `4BE5CF0511B35D26ECE415AA0465A0428316780141044F54004EB9DA64F4E012` |
+| `design/icono/baystream_20.svg` | nuevo | `38C92A410021FB6836E40CE9780E633ACB1C1D5759D770F3A8B1FCE122DF480A` |
+| `design/icono/baystream_24.svg` | nuevo | `06D68FF4E607A3BEFA3331943AFDDD883B9425D4419E82846AC1DA54BF0C5B19` |
+| `design/icono/baystream_32.svg` | nuevo | `8C3C68A773592C59F815E8CF76D115984428B9E5DB1D485EDE1493A994A5CC70` |
+| `design/icono/baystream_forma.svg` | nuevo | `04F4F1F089DCF25420FF205DA0F35E3565741C2BCEA6AC891B2CFD295A8FBAAF` |
+| `design/icono/baystream_frente.svg` | nuevo | `B975968C040E944FBDE77C8325AFF0359030D41AD705A35AFED208551EA45478` |
+| `design/icono/baystream_monocromo.svg` | nuevo | `58DF99FB9A3C51FCDC0B16B1939A138501CB40041D28648E61EAF7CFF8887AF6` |
+| `design/icono/generar.py` | nuevo | `3EEBB673E65C7A64E738AB5FCEFDEAB8144334211FAFE4A8E75899BD831F81A9` |
+| `design/icono/grafico_play.svg` | nuevo | `CEFAE8D0BD2BAA75CD1E4C7D5FBF6EF3018E3DB1DA098C7B3FE78174DD12D289` |
+| `design/icono/play/grafico-1024x500.png` | nuevo | `EF24F425D256E472CB4D3000569885D61F7510DA417CA46E4D7D38DBDBAF0884` |
+| `design/icono/play/icono-512.png` | nuevo | `1E860539D0828A7C158168FF8AE96E6BC7ADE0CD9B2000FA9309BB1202281865` |
+| `design/icono/vista-previa.png` | nuevo | `F38744B47FC05C4CF7FFBF30A633A776B1B423DB1555BDFF364051DA955B7BF4` |
+| `web/favicon.png` | cambia | `9D8DA6448207EB75902183DE44BB1A30816CD8345085250E52736FB29194BBDE` |
+| `web/icons/Icon-192.png` | cambia | `21D7C9F1FAABFC13A0E17FA9E85220257620AA0E57E55533C28F78B1C5E75805` |
+| `web/icons/Icon-512.png` | cambia | `37E29E43385B43A91446BCA6320A417C4583C4A525D44856C677E21DE8C22CF6` |
+| `web/icons/Icon-maskable-192.png` | cambia | `B5BACAC546B7E80AF4D72D1DE4B167634E9247AA1C95B9C639B6802953ADB781` |
+| `web/icons/Icon-maskable-512.png` | cambia | `1E860539D0828A7C158168FF8AE96E6BC7ADE0CD9B2000FA9309BB1202281865` |
+| `web/manifest.json` | cambia | `9F1AE9CFABD15FE252060F7249916BEA2D493106900CCA55E3AB64315AFC2913` |
+| `windows/runner/resources/app_icon.ico` | cambia | `1721C4752FA09CA07B9D3F5438AC99CCC6014AA9E72FD8EAF4703E050CA722BD` |
+
+### Lo que se vio en cada cliente
+
+**Honor `.t88`** (APK `A56775D7…CAA7AC`, compilado en la copia de `%TEMP%`):
+- **En el lanzador está el ícono nuevo, con «BayStream» debajo.** El fondo azul, la cuadrícula y el contenedor naranja se ven con la máscara redondeada de MagicOS. Las variantes viejas siguen con el logo de Flutter.
+- `aapt2` confirma el adaptativo dentro del APK: `adaptive-icon` con `background` (`#FF0D47A1`), `foreground` y **`monochrome`**.
+- **El monocromo no se vio en el teléfono.** El Honor usa el lanzador de MagicOS 9 (`com.hihonor.android.launcher`, Android 15), que no ofrece los íconos temáticos de Material. No cambié ningún ajuste del tema.
+
+**Chrome** (`build/web` de la copia, servido por `tool/t92_server.dart`):
+- Los cinco archivos servidos tienen el mismo SHA que los del repo.
+- Desde la página, pasando por el service worker (después de actualizarlo), comprobé:
+  - el `<link rel="icon">` apunta a `favicon.png`, y su SHA es el nuevo (`9D8DA644…`);
+  - el manifiesto trae `theme_color` y `background_color` en `#0D47A1`;
+  - sus cuatro íconos (192 y 512, `any` y `maskable`) se decodifican sin error, a su tamaño real y con el SHA nuevo.
+- **No vi la pestaña ni el panel Manifest de DevTools.** Carlos no autorizó mirar la ventana de Chrome, y la extensión no abre DevTools. Queda para la aceptación de Codex.
+
+**Windows:**
+- **`tool/t93_msix.ps1 -Version 1.0.3.0`**, con el semáforo de Carlos, terminó con código 0 en 64 s.
+  - Compiló `baystream.exe` Release en el repo (35 s).
+  - Armó y firmó `build/t93/BayStream_1.0.3.0.msix`, SHA-256 `46B30B6E2E32F9128DD82FBA1BF0A1509A64BB0AFA9F3A5007E93D2502419923`. La firma es `Valid`, de `CN=BayStream`, con la huella de Carlos.
+  - **El MSIX no se instaló.**
+- **Abrí el MSIX como zip:** 82 imágenes en `Images/`. Son las nuevas: el color dominante es `#0C47A1`/`#6E9DE6` y aparece el contenedor naranja.
+  - **Pero salen pixeladas.** `msix 3.18.0` lee `logo_path` (`app_icon.ico`) con `decodeImage` de `image 4.9.2`. Para un `.ico` con varios cuadros, ese decodificador devuelve como primera imagen el cuadro 0, que es el de 16 px (`ico_decoder.dart`, líneas 38 a 61). `msix` amplía ese cuadro para todos los mosaicos, incluido el de 150×150 al 400 %.
+  - **No lo corregí,** porque cambiarlo está fuera de mi carril. Hay dos salidas, y las decide Carlos o Yov:
+    - apuntar `logo_path` a un PNG grande, como `web/icons/Icon-512.png` o `design/icono/play/icono-512.png`, lo que cambia `pubspec.yaml`;
+    - o que el `.ico` traiga primero el cuadro de 256 px, lo que cambia el paquete del diseñador.
+- **`baystream.exe` en el Explorador y en la barra de tareas.** Usé el banco con `t88acc` de la copia: lo abrí con `explorer.exe` (PID 36412) y lo cerré por PID. Las dos muestran el ícono azul nuevo, en su dibujo de tamaño pequeño.
+  - Carlos no autorizó controlar el Explorador. La carpeta `Release` se abrió con `explorer.exe`, se vio en la captura y se cerró por COM.
+- **Una trampa de compilación.** La primera recompilación incremental del banco **no volvió a enlazar el `.exe`**: siguió con el ícono de Flutter, porque CMake no vio el cambio del `.ico`. Tocar `Runner.rc` en la copia lo resolvió. El `.exe` del repo sí salió con el ícono nuevo. **Para Carlos:** si un `.exe` sigue con el ícono viejo, basta un `flutter clean` o tocar `Runner.rc`.
+- **El almacén real** tiene 354 archivos antes y después, todos con el mismo SHA. La huella se tomó fuera del paquete.
+
+### Validaciones
+
+- **Suite 710/710** y `analyze` en cero. No hay pruebas nuevas: el ícono son recursos, y el nombre y el manifiesto ya los fijan las pruebas de T-88 y de T-92.
+- `lib/`, `test/`, `tool/`, `pubspec.yaml`, `pubspec.lock`, `firestore.rules`, las reglas publicadas, `firebase.json`, `AndroidManifest.xml`, `main.cpp`, `Runner.rc` y `CMakeLists.txt` no cambian.
+- **El corpus no se repitió:** `lib/` no cambia.
+- No corrí `generar.py`. Es código del paquete, y no hacía falta: los SHA ya coinciden.
+
+### Horas
+
+≈ 0.5 h de trabajo: de 15:02 a 15:07 y de 16:41 a 17:05. En medio hubo una pausa larga por el límite de uso. **T-88 suma ≈ 2.0 h frente a 2.5.** El diseño del ícono lo hizo la sesión en la nube (10.45) y sus horas no están aquí.
