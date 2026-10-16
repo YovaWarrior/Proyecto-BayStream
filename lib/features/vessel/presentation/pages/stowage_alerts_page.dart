@@ -24,7 +24,7 @@ class StowageAlertsPage extends ConsumerWidget {
         StowageRule.stackWeight => 'Peso por pila',
         StowageRule.reeferSocket => 'Toma de refrigerado',
         StowageRule.twentyOverForty => '20 pies sobre 40 pies',
-        StowageRule.dangerousGoodsSegregation => 'Segregación · 49 CFR',
+        StowageRule.dangerousGoodsSegregation => 'Segregación · IMDG 42-24',
       };
 
   @override

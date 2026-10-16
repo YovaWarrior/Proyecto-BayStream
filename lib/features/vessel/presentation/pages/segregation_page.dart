@@ -21,7 +21,7 @@ class SegregationPage extends ConsumerWidget {
     final results = ref.watch(segregationResultsProvider);
     final colors = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Segregación · 49 CFR')),
+      appBar: AppBar(title: const Text('Segregación · IMDG')),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: results.length + 1,
@@ -37,6 +37,40 @@ class SegregationPage extends ConsumerWidget {
                       : '${results.where((r) => r.status == ValidationStatus.nonConforming).length} posibles incumplimientos · '
                           '${results.where((r) => r.status == ValidationStatus.notEvaluated).length} no evaluados · '
                           '${results.where((r) => r.status == ValidationStatus.conforming).length} conformes en las reglas evaluadas'),
+                  const SizedBox(height: 12),
+                  const Text('Matriz por clase · IMDG 7.2.4. '
+                      '1 a 4: exigencia de separación creciente, evaluada con 7.4.3.2; '
+                      'X: consultar la Lista; *: revisar 7.2.7.1. '
+                      'La clase 1 usa las divisiones agrupadas indicadas.'),
+                  ExpansionTile(
+                    title: const Text('Ver matriz de 17 clases'),
+                    children: [
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        child: RepaintBoundary(
+                            child: DataTable(
+                          dataRowColor: WidgetStatePropertyAll(colors.surface),
+                          headingRowColor:
+                              WidgetStatePropertyAll(colors.surfaceContainer),
+                          columns: [
+                            const DataColumn(label: Text('Clase')),
+                            for (final c in SegregationRules.classes)
+                              DataColumn(label: Text(c)),
+                          ],
+                          rows: [
+                            for (final a in SegregationRules.classes)
+                              DataRow(cells: [
+                                DataCell(Text(a)),
+                                for (final b in SegregationRules.classes)
+                                  DataCell(Text(SegregationRules.symbol(
+                                      SegregationRules.code(a, b)!))),
+                              ]),
+                          ],
+                        )),
+                      )
+                    ],
+                  ),
                   const SizedBox(height: 16),
                 ]);
           }

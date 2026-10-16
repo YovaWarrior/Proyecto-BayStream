@@ -86,7 +86,7 @@ void main() {
         findsOneWidget);
     expect(find.text('Aviso · No evaluado'), findsOneWidget);
     expect(find.text(unknown.description), findsOneWidget);
-    expect(find.textContaining('No es el Código IMDG'), findsOneWidget);
+    expect(find.textContaining('Fuente: Código IMDG, Enmienda 42-24'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets('T-42 vacío no certifica conformidad', (tester) async {
@@ -171,3 +171,4 @@ class _Voyage extends VoyageNotifier {
   @override
   AsyncValue<VesselVoyage?> build() => AsyncValue.data(voyage);
 }
+

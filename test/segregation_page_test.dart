@@ -13,7 +13,8 @@ void main() {
     ], child: const MaterialApp(home: SegregationPage())));
     expect(find.textContaining('Esto no declara el viaje conforme'),
         findsOneWidget);
-    expect(find.textContaining('No es el Código IMDG'), findsOneWidget);
+    expect(find.textContaining('Fuente: Código IMDG, Enmienda 42-24'),
+        findsOneWidget);
     expect(find.text('Conforme en las reglas evaluadas'), findsNothing);
   });
 
@@ -32,14 +33,14 @@ void main() {
           description: 'UN3084 / UN1993. Motivo explícito del resultado.',
           positions: [IsoCoordinateParser.parse('0140784')],
           containerIds: ['TEST0000001'],
-          references: ['49 CFR §176.83(a)(6)']);
+          references: ['IMDG 42-24, 7.2.3.3']);
       await tester.pumpWidget(ProviderScope(overrides: [
         segregationResultsProvider.overrideWithValue([result]),
       ], child: const MaterialApp(home: SegregationPage())));
       expect(find.text(SegregationPage.statusLabel(status)), findsOneWidget);
       expect(find.text(result.description), findsOneWidget);
       expect(find.text('0140784'), findsOneWidget);
-      expect(find.text('49 CFR §176.83(a)(6)'), findsOneWidget);
+      expect(find.text('IMDG 42-24, 7.2.3.3'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

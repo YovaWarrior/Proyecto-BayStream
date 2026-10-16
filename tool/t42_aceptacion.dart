@@ -40,8 +40,9 @@ void main(List<String> args) {
     'A03 perfil historico (fila 00 en null)': _panel(
         a03,
         VesselProfile.proposeFrom(a03).copyWith(
-            geometry: VesselProfile.proposeFrom(a03).geometry.copyWith(
-                centerRowOnDeck: null, centerRowInHold: null))),
+            geometry: VesselProfile.proposeFrom(a03)
+                .geometry
+                .copyWith(centerRowOnDeck: null, centerRowInHold: null))),
     'A03 propuesta nueva (fila 00 segun el viaje)':
         _panel(a03, VesselProfile.proposeFrom(a03)),
   };
@@ -83,20 +84,29 @@ Map<String, dynamic> _panel(VesselVoyage parsed, VesselProfile profile) {
   int count(ValidationStatus s) => results.where((r) => r.status == s).length;
   String reason(StowageValidationResult r) {
     final d = r.description;
-    if (d.contains('Registro sin lista completa')) return 'registro historico sin lista DGS';
-    if (d.contains('Posición ausente')) return 'posicion ausente o fuera de geometria';
-    if (d.contains('Tipo de unidad cerrada')) return 'tipo de unidad no confirmado como cerrado';
-    if (d.contains('Grupos de segregación no evaluados')) return 'grupos de segregacion (49 CFR 176.83(m))';
-    if (d.contains('Distancia insuficiente')) return 'mamparos o cubierta desconocidos';
-    if (d.contains('Misma vertical entre cubierta y bodega')) return 'cubierta entre bodega y cubierta';
-    if (d.contains('fuera de la matriz') || d.contains('fuera de los 17')) return 'clase u ONU fuera de la tabla';
+    if (d.contains('Registro sin lista completa')) {
+      return 'registro historico sin lista DGS';
+    }
+    if (d.contains('Posición ausente')) {
+      return 'posicion ausente o fuera de geometria';
+    }
+    if (d.contains('Tipo de unidad')) return 'tipo de unidad no confirmado';
+    if (d.contains('X: consultar')) return 'X: requiere Lista IMDG 7.2.3.1';
+    if (d.contains('7.2.7.1')) return 'asterisco: compatibilidad de clase 1';
+    if (d.contains('mamparos')) return 'mamparos desconocidos, IMDG 7.4.3.2';
+    if (d.contains('fuera de la matriz')) return 'clase fuera de la matriz';
     if (d.contains('Longitud o relación')) return 'tamano/bahia no confirmado';
-    if (d.contains('Misma clase primaria')) return 'misma clase con secundario (a)(8)';
+    if (d.contains('secundarios')) return 'dos secundarios: columna 16b';
+    if (d.contains('límites de la bodega')) {
+      return 'limites de bodega desconocidos';
+    }
+    if (d.contains('Bodega abierta')) return 'sin tapa separadora';
     return 'OTRO: ${d.length > 80 ? d.substring(0, 80) : d}';
   }
 
   final reasons = <String, int>{};
-  for (final r in results.where((r) => r.status == ValidationStatus.notEvaluated)) {
+  for (final r
+      in results.where((r) => r.status == ValidationStatus.notEvaluated)) {
     final k = reason(r);
     reasons[k] = (reasons[k] ?? 0) + 1;
   }

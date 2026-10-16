@@ -41,7 +41,7 @@ ContainerUnit _unit(String id, String iso, String position, String un,
       dangerousGoods: [DangerousGoods(unNumber: un, hazardClass: hazardClass)],
     );
 
-/// Par de código 2 (UN1170 clase 3 / UN0012 clase 1.4S, §176.83(b)), los dos
+/// Par de código 2 (UN1170 clase 3 / UN0012 clase 1.4S, IMDG 42-24, 7.2.4), los dos
 /// de 40 pies en la misma bahía y nivel, solo cambia la fila.
 Map<String, dynamic> _controlledCase() {
   // Geometría cualquiera: no existe parámetro para declarar «sin fila 00».
@@ -70,14 +70,20 @@ Map<String, dynamic> _controlledCase() {
 
   return {
     'orderedRows': rows,
-    'coversFila00SinDeclararla': geometry.covers(IsoCoordinateParser.parse('0020082')),
+    'coversFila00SinDeclararla':
+        geometry.covers(IsoCoordinateParser.parse('0020082')),
     'casos': [
-      pair('cubierta 02/01: vecinas si el buque no tiene 00', '0020282', '0020182'),
-      pair('cubierta 01/03: control, contiguas del mismo lado', '0020182', '0020382'),
-      pair('cubierta 02/04: control, contiguas del mismo lado', '0020282', '0020482'),
+      pair('cubierta 02/01: vecinas si el buque no tiene 00', '0020282',
+          '0020182'),
+      pair('cubierta 01/03: control, contiguas del mismo lado', '0020182',
+          '0020382'),
+      pair('cubierta 02/04: control, contiguas del mismo lado', '0020282',
+          '0020482'),
       pair('cubierta 00/01: control, con la 00 ocupada', '0020082', '0020182'),
-      pair('cubierta 02/03: una fila de por medio sin la 00', '0020282', '0020382'),
-      pair('bodega 02/01: vecinas si el buque no tiene 00', '0020204', '0020104'),
+      pair('cubierta 02/03: una fila de por medio sin la 00', '0020282',
+          '0020382'),
+      pair('bodega 02/01: vecinas si el buque no tiene 00', '0020204',
+          '0020104'),
       pair('bodega 01/03: control', '0020104', '0020304'),
     ],
   };
@@ -127,7 +133,7 @@ Map<String, dynamic> _corpus(String dir) {
     final crossing = dg
         .where((r) =>
             r.positions.length == 2 &&
-            r.description.contains('Código 2: separación satisfecha') &&
+            r.description.contains('Exigencia 2 satisfecha') &&
             {r.positions[0].row, r.positions[1].row}.containsAll({1, 2}))
         .map((r) => {
               'estado': r.status.name,
@@ -137,8 +143,8 @@ Map<String, dynamic> _corpus(String dir) {
         .toList();
     final code2 = dg
         .where((r) =>
-            r.description.contains('Código 2') ||
-            r.description.contains('código 2'))
+            r.description.contains('Exigencia 2') ||
+            r.description.contains('exigencia 2'))
         .length;
 
     result[name] = {

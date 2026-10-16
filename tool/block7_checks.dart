@@ -96,8 +96,9 @@ Future<Map<String, dynamic>> checkBlock7(Map<String, String> sources,
   ];
   require(
       compared.every((r) =>
-          r.description.contains('5.1') && r.description.contains('Código 2')),
-      'UN3084 no aplica la regla del secundario');
+          r.status == ValidationStatus.notEvaluated &&
+          r.description.contains('X: consultar')),
+      'IMDG: no inferir 5.1 de UN3084 si no viene declarado');
   final aerosol = at('0260186'), below = at('0260184');
   require(
       aerosol.dangerousGoods!.single.unNumber == '1950' &&
@@ -106,9 +107,9 @@ Future<Map<String, dynamic>> checkBlock7(Map<String, String> sources,
   final exception = dg.evaluatePair(aerosol, aerosol.dangerousGoods!.single,
       below, below.dangerousGoods!.single, a03.geometry!);
   require(
-      exception.status == ValidationStatus.notEvaluated &&
-          exception.description.contains('126'),
-      'Falsa alarma UN1950');
+      exception.status == ValidationStatus.nonConforming &&
+          exception.description.contains('Exigencia 2'),
+      'IMDG: UN1950 conserva 2.1; no aplicar excepcion ONU de la fuente anterior');
   metrics['mandatoryA03'] = {
     'UN3084': [
       for (final r in compared)

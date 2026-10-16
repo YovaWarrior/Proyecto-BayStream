@@ -11,6 +11,11 @@ final segregationResultsProvider =
   final state = ref.watch(voyageNotifierProvider);
   final voyage = state.hasValue ? state.value : null;
   if (voyage == null) return const [];
-  return const DangerousGoodsValidator()
-      .validate(voyage.containers, voyage.geometry!);
+  return const DangerousGoodsValidator().validate(
+      voyage.containers, voyage.geometry!,
+      hatchCovers: ref
+              .read(voyageNotifierProvider.notifier)
+              .publishedProfile
+              ?.hatchCovers ??
+          const {});
 });
