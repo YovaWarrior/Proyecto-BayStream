@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.69) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.71) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2466,7 +2466,7 @@ para RNF-003.
 
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
-| **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa, con las tres definiciones de Carlos (10.59). La hace Timonel y la acepta Codex (10.61); entregada en 10.69 · **ficha completa arriba** |
+| **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa, con las tres definiciones de Carlos (10.59). La hace Timonel y la acepta Codex (10.61); entregada en 10.69; terminada con la Web en 10.71 · **ficha completa arriba** |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida: descargados, cargados y permanentes, con lo que cambió en cada campo. La hace Timonel y la acepta Codex (10.58) · **ficha completa arriba** |
 | **T-56** | ERS | 3.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38); tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo; y dos de T-103 (10.43): «Contenido compatible: BAPLIE 2.x.» en la pantalla vacía, y el resumen 0/0/0 de A06 en GTPBR, que no trae `LOC+9`. La hace Timonel y la acepta Codex (10.52); entregada en 10.57, con una corrección antes de la aceptación · **ficha completa arriba** |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
@@ -4816,3 +4816,88 @@ Las demás son textos y cosméticas, entre ellas:
 - T-95 en revisión;
 - T-106 en curso;
 - 6 por hacer.
+
+### 10.70 · Codex acepta T-95, salvo la Web · T-85 entregada: el IMDG en el código · El navegador integrado de Codex también sustituye a Chrome (16-oct)
+
+**Codex trabajó de corrido durante la siesta de Carlos,** con las autorizaciones dadas de antemano por Yov.
+
+**T-95, aceptada salvo la Web** (`722a55c`, `docs/T95-ACEPTACION-RESULTADOS.md`):
+- **Las validaciones:** 866/866, `analyze` en cero y corpus 147/147, con los 14 SHA protegidos intactos.
+- **El cotejo crudo de Codex,** independiente, coincide en 10 fuentes y 39 puertos.
+- **Con las tapas:** 13 re-estibas, 4 tapas y 135/148 movimientos.
+- **Los clientes:**
+  - Windows y el Honor pasan;
+  - el almacén real queda en 450 → 462 archivos, y los nuevos son solo `t95cx_*`;
+  - el Honor queda en 1.0.
+- **Lo que falta:** la revisión visual de la Web. El conector de Codex ofrece su propio navegador integrado, Chrome y Edge, pero no el de la app de Claude que autorizó 10.55, y Codex no cambió de navegador sin permiso.
+- **Un solapamiento de Flutter** al empezar quedó declarado, y Codex repitió las validaciones en secuencia.
+
+**T-85, entregada** (`ac72849`, `docs/T85-RESULTADOS.md`):
+- **Los datos:**
+  - `imdg_42_24_data.dart` (SHA-256 `6fc22683…`) guarda solo códigos: enumeraciones para 7.4.3.2 y la matriz de 7.2.4;
+  - en `lib/`, `test/` y `tool/` no hay ningún texto del IMDG.
+- **El comprobador privado da 289/289 y 60/60** contra la transcripción verificada (10.60).
+- **Las validaciones:** 894/894, `analyze` en cero y corpus 157/157.
+- **El corpus:**
+  - los 650 resultados anteriores quedan listados con su razón: 640 finales, 313 con cambio de estado o de emisión, 337 iguales y 0 sin explicar;
+  - diez diagnósticos de número ONU de A07 se retiran, pero sus pares siguen;
+  - A05 y A06 conservan el «no evaluado» por el tipo 22K2.
+- **Un paso mínimo, fuera de la lista de la ficha:** `segregation_provider.dart` pasa las tapas del perfil publicado, para respetar la bodega abierta (10.67). Una prueba lo exige.
+- **Los clientes:** A03 da 4/154/95 en Windows y en el Honor (360 dp, a 1.45, en claro y oscuro), y el almacén real suma solo 12 `t85acc`.
+- **Pendiente:**
+  - la Web visual;
+  - una observación de Windows sin resolver: al desplazar la matriz de lado con la rueda quedan rastros de algunos glifos, que se limpian con un desplazamiento vertical. En el Honor no pasa, y no se sabe si es la captura o la app. Timonel lo verifica con el mouse al aceptar.
+
+**El navegador integrado de Codex también sustituye a Chrome** para las revisiones visuales de la Web, con la misma regla de 10.55: con la autorización de Carlos y declarado en el informe. Con él, Codex cierra la Web de T-95 y de T-85.
+
+**Dos commits sin el prefijo «Sprint 3:»** (`722a55c` y `ac72849`). No se reescriben: queda anotado.
+
+**Lo que sigue con T-85:** Gru revisa los datos del código contra el PDF; después Timonel la acepta y verifica los rastros con el mouse.
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h.** El tablero:
+- 36 terminadas;
+- T-95 y T-85 en revisión;
+- T-106 en curso;
+- 5 por hacer.
+
+### 10.71 · T-95 terminada, con la Web en el navegador integrado de Codex · T-85 pasa la Web y sigue en revisión · La demo, de `ab67fcb` (16-oct)
+
+**T-95, terminada** (`2f0c152`, `docs/T95-ACEPTACION-RESULTADOS.md`). Codex revisó la Web en su navegador integrado, con la autorización de 10.70, declarado y sin afirmar Chrome:
+- **A07 en GTSTC, sin tapas:** 114 descargas (66 en cubierta y 48 en bodega), 0 re-estibas y 114/114 movimientos. La primera celda, 021/022/023, da 52/52.
+- **JMKCT:** 125 descargas, 6 re-estibas por columna y 131/137.
+- **Con tapas PROVISIONALES, en GTSTC:** 13 re-estibas por tapa, 4 tapas de grúa y 135/148. La primera celda da 66/76, con 52 descargas, 10 re-estibas y 2 tapas.
+- **Yov rehízo las cuentas** con la regla de 10.59 (re-estiba ×1 a bordo y ×2 por muelle; tapa de grúa ×2), y todas cuadran:
+  - 125 + 6 = 131 y 125 + 12 = 137;
+  - 114 + 13 + 8 = 135 y 114 + 26 + 8 = 148;
+  - 52 + 10 + 4 = 66 y 52 + 20 + 4 = 76.
+- **Lo revisado:** la compilación de su copia t95cx (base `93dc695` con `6b209f1`), con `main.dart.js` SHA-256 `9cb58cb7…`. No corrió Flutter ni usó dispositivos, y 338 archivos de código y configuración quedaron sin cambios.
+- **Queda la observación cosmética** de «re-/estibas» partida en el resumen de celda, que ya está en T-106.
+- **Horas reales:** ≈ 2.3 h de pared, según el informe de Timonel.
+
+**T-85 pasa la Web** (`ab67fcb`, sección 6.1 de `docs/T85-RESULTADOS.md`):
+- A03 abre con 369 contenedores. La pantalla muestra la fuente «Código IMDG, Enmienda 42-24 (7.2.4 y 7.4.3.2)» y el resumen 4/154/95, igual que el corpus, Windows y el Honor.
+- `main.dart.js` SHA-256 `d2562678…`. Los datos siguen en `6fc22683…`, sin cambios de código.
+- **Sigue en revisión:** Gru coteja los datos con el PDF; después Timonel la acepta y revisa con el mouse los rastros de la matriz en Windows.
+
+**Los dos commits de Codex de hoy llevan el prefijo «Sprint 3:».**
+
+**La demo del 17: Yov recomienda compilarla de `ab67fcb`,** lo que hoy está en GitHub, con T-95 terminada y T-85 en revisión:
+- T-85 pasó los tres clientes, y sus tablas pasan el comprobador contra la transcripción verificada (10.60);
+- la diapositiva 15 la presenta «por cerrar», no terminada;
+- si Gru encuentra una diferencia, se corrige después de la demo, y no hay nada publicado.
+- **Si Carlos prefiere dejar fuera T-85,** el commit es `722a55c`, que ya trae todo el código de T-95.
+- **En la demo, con Windows:** no pasar de 200 % de zoom (10.63) ni desplazar de lado la matriz del IMDG con la rueda del mouse.
+- **T-106 sigue sin colocarse** hasta que Carlos confirme que compiló los clientes de la demo.
+
+**La diapositiva 15:**
+- **«Ya funciona»** suma el orden de descarga junto con la llegada contra salida, y junta en una línea reefer, tapas, BAPLIE de salida, voz, instalador y privacidad;
+- **«Por cerrar»:** la segregación IMDG, el pulido del arrastre y del zoom, y las declaraciones de Google Play;
+- **«Falta para el 24-oct»:** la auditoría y la presentación final, la medición de los RNF, y el manual y la prueba piloto;
+- **el pie:** «37 de 44 tareas terminadas, 894 pruebas automáticas y 157 de corpus»;
+- **las notas del orador,** al mismo estado.
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h.** El tablero (v36), con el piso de pruebas en 894:
+- 37 terminadas;
+- T-85 en revisión;
+- T-106 en curso;
+- 5 por hacer.
