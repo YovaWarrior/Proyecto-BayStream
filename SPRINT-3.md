@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 16-oct, 10.65) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.67) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1042,10 +1042,14 @@ alguna línea todavía puede mandar una 1.x. A06 del corpus es una SMDG15 real
    - **Si un par de etiquetas da X y otro da un número,** se evalúa el número y se agrega el aviso de consultar la Lista.
    - **Dos sustancias en el mismo contenedor** que exigen segregación entre sí: «no conforme», como hoy (7.2.3.2).
 4. **La posición, con 7.4.3.2,** sobre el modelo de huecos de hoy, sin medir metros:
-   - **Cerrada o abierta,** por el tipo ISO. Son cerradas G, R, T y B, y abiertas U y P. Sin tipo, o con otro, da «no evaluado».
+   - **Cerrada o abierta,** por el tercer carácter de `isoSizeType`, leído en el servicio de T-85, sin cambiar el modelo:
+     - son cerradas G, R, T, B, V y H;
+     - son abiertas U y P;
+     - sin tipo, o con otro, da «no evaluado» (10.67).
    - **En la misma vertical** quiere decir misma pila: misma fila y huellas que se tocan, como en T-95.
      - «Separados por una cubierta» es uno en cubierta y el otro en bodega.
      - Una bahía declarada como bodega abierta (T-83) no tiene tapa, así que no separa.
+     - **El mensaje dice el supuesto:** «se considera la tapa como cubierta resistente al fuego y a los líquidos (IMDG 7.4.2.2)» (10.67).
    - **Horizontal:**
      - **Los espacios.** Un espacio para contenedor es un hueco completo, y dos o tres espacios son dos o tres huecos. 7.4.3.1.1 lo define como 6 m por 2,4 m; aquí se cuenta en huecos, y se rotula como derivación, igual que hoy.
      - **Los 24 m** son cuatro huecos longitudinales de 20 pies, rotulados como aproximación.
@@ -1986,6 +1990,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 | **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62); terminada con la corrección de la sombra del 40 (10.63) · **ficha completa arriba** |
+| **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Codex y la acepta Timonel |
 
 ### Ola 6 · Resto del ERS
 
@@ -4614,3 +4619,55 @@ Las demás son textos y cosméticas, entre ellas:
 - **La ficha de T-95 queda corregida** en los pasos 4 a 6 de la secuencia.
 
 **El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero: T-95 pasa a En curso.
+
+### 10.66 · Nace T-106: el pulido del arrastre y del zoom, después de la demo (16-oct)
+
+**Carlos confirma T-106**, la tarea que propuso Yov en 10.64, con siete observaciones de la aceptación de T-105.
+- **Elemento:** RF-038.
+- **Estimación:** 2.0 h.
+- **Quién y cuándo:** después de la demo del 17. La hace Codex, que escribió T-105, y la acepta Timonel.
+- **Lo que entra:**
+  1. el aviso rojo, sin la clave interna `C:`, con el contenedor o la orden en palabras (observación 1);
+  2. el aviso, sin una segunda frase que no aplica: un 20 no se intercambia con un 40, y un tránsito no se descarga (8);
+  3. el zoom a 300 %, que no abra en blanco con la ventana ancha y no escale el margen (2 y 3);
+  4. la descarga pendiente, dibujada en el modo Carga (4, que viene de T-76);
+  5. los 20 de las impares vecinas, dibujados en la vista de una bahía par, para que el choque de 10.63 se vea (5);
+  6. la copia que se arrastra, a la escala del zoom (6).
+- **Queda fuera:**
+  - el error que salió una vez en la consola de la Web (7);
+  - el toque sobre la sombra de un 40 (9).
+- **La ficha completa** se escribe al tomarla.
+
+**El sprint pasa a 44 tareas y ≈ 161.5 h.** El tablero suma 216.5 h:
+- 34 terminadas;
+- T-56 y T-96 en revisión;
+- T-95 en curso;
+- 7 por hacer, con T-106.
+
+### 10.67 · Carlos confirma los cuatro supuestos de T-85, con dos ajustes de Yov (16-oct)
+
+**La regla con que se revisaron:** cuando BayStream no puede saber algo, el resultado es «no evaluado». Nunca da «conforme» por un supuesto a su favor.
+
+**Los cuatro supuestos, confirmados por Carlos con los ajustes que recomendó Yov:**
+
+1. **Cerrada o abierta, por el tercer carácter del ISO.**
+   - **Son cerradas** G, R, T (tanque), B, y además V (ventilado) y H (aislado), porque encierran la carga con una estructura rígida y permanente.
+   - **Son abiertas** U (techo abierto) y P (plataforma).
+   - **Cualquier otro tipo, o uno que falte,** da «no evaluado».
+   - T-85 lee el carácter de `isoSizeType` en su propio servicio, sin cambiar `ContainerUnit.containerType`, que es del modelo.
+   - **Una nota:** la definición de unidad cerrada está en una parte del IMDG que no está en el PDF transcrito. El supuesto se apoya en la práctica de Carlos.
+2. **La tapa de escotilla cuenta como la cubierta que separa en vertical, y el mensaje lo dice.**
+   - El texto lleva la idea «se considera la tapa como cubierta resistente al fuego y a los líquidos (IMDG 7.4.2.2)».
+   - **La razón:** una tapa parcialmente estanca sin canales de drenaje eficaces no cuenta, y BayStream no sabe qué tapas tiene el buque. Suponer lo contrario daría falsas alarmas en casi todos los buques normales.
+   - **La bodega abierta** (T-83) nunca separa.
+   - **Queda fuera:** declarar en el perfil las tapas parcialmente estancas.
+3. **Los 24 m son cuatro huecos longitudinales de 20 pies.**
+   - Es la propia definición de 7.4.3.1.1: un espacio para contenedor mide al menos 6 m a lo largo.
+   - Es conservador, porque no cuenta los mamparos ni los huecos entre bahías.
+4. **Una unidad en cubierta y otra en bodega:**
+   - **para 1 y 2,** la cubierta entre ellas cumple, con el supuesto 2;
+   - **para 3 y 4,** «no evaluado», porque hacen falta los límites de la bodega.
+
+**La ficha de T-85 queda ajustada** en el punto 4 de «Qué construye». Ya no quedan supuestos abiertos: Timonel la toma después de T-95.
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h.**
