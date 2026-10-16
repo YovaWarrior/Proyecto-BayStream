@@ -167,3 +167,108 @@ Zoom incorporado y comprobado en los tres clientes; 799 pruebas, análisis cero 
 ## Mensaje para Yov
 
 T-105 implementada sobre 5fba2f2 y comprobada también contra f6bac1f con T-56/T-96: 799 pruebas y análisis cero. Carlos autorizó unificar los tres controles que faltaban en request(), ajustar las dos fixtures de T-80 y añadir el zoom que HEAD no implementaba. Matriz de roles completa en Windows, Honor e integrado autorizado: aprobaciones/rechazos sincronizados sin recargar; confusión recuperada con anulaciones, bitácora conservada y estado final de 22 registros/0 conflictos. Zoom comprobado también en los tres clientes finales, con cancelaciones sin registros. Los 374 archivos originales del almacén real quedan idénticos; se añaden 14 de t105acc y 12 de la tarea paralela t96acc. Ocho rutas transferidas juntas con guardia de SHA y protegidos intactos. Chrome no se da por probado. La aceptación cruzada de T-105 corresponde a Timonel.
+
+
+## Corrección de 10.63
+
+**16-oct-2026 · Capitán Codex. Corrección de dominio entregada; el gesto en pantalla lo verifica Timonel antes de cerrar su aceptación.**
+
+### Base y alcance
+
+- Base actual: `eb3504b193c0928c138c4758b8c73d4549a88938`, rama `sprint-3`; el piso de pruebas era **799**.
+- Trabajo y validaciones en `C:\Users\Giova\AppData\Local\Temp\baystream-t105c-1063-20261016\base`, copia de HEAD. No se compiló ni probó en el árbol compartido.
+- La solicitud directa de Carlos de 10.63 autoriza corregir la sombra de los 40 en `change_requests.dart` y agregar pruebas `test/t105_*`. El informe original se conserva completo; esta sección documenta la corrección posterior.
+- Sin dispositivos, compilaciones de clientes, acceso a Firebase, publicaciones ni apertura del archivo privado de defines. Los comandos de Flutter fueron secuenciales, después de que Carlos cedió el turno; al concluir se le avisó que Flutter quedaba libre.
+
+### Defecto y corrección
+
+El código anterior comparaba solamente el código exacto de la celda. Así aceptaba un 20 bajo la sombra de un 40 pendiente o ya cargado y el caso inverso, tanto en el gesto como en el formulario y la solicitud.
+
+**La revisión física queda exclusivamente en `ChangeRequests.review()`:**
+
+- Huella de la impar b: `{b}`; huella de la par E: `{E−1, E+1}`. No se calcula la par de una impar.
+- Hay choque cuando coinciden fila y nivel y las huellas se intersectan.
+- Se revisan las posiciones reales a bordo y las previstas de los otros objetos del plan que no se descargan. Las reservas ya asignadas identifican el contenedor que las ocupa; las previstas identifican la reserva.
+- Los orígenes de los objetos del mismo lote se excluyen, para conservar los intercambios atómicos. Sus destinos finales sí deben quedar separados físicamente.
+- La comprobación anterior de ocupación exacta se retiró de `preview()` para que no exista una regla duplicada. `preview()`, `move()` y `request()` usan la revisión común.
+- `decide()` **ya llamaba a `review()` al aprobar** y conserva esa llamada. Ahora también niega una aprobación si entretanto otro objeto quedó previsto o cargado en una huella que choca, con el mismo mensaje. Se conserva la regularización de cargas propias anteriores a la aprobación.
+
+El aviso identifica destino, objeto y posición bloqueante. En el caso entregado por Timonel, el 20 de TSTU0000011 a 0030182 se rechaza con:
+
+> 0030182 choca con TSTU0000016 en 0040182: un 40 ocupa las dos mitades de la celda. La celda está prevista para otro objeto; inclúyelo en el intercambio.
+
+Cuando el bloqueante está a bordo, el cierre dice «La celda está ocupada a bordo; marca primero su descarga.». El código completo del destino se conserva en el texto, también para su identificación inequívoca en las pruebas y los clientes.
+
+No se copió la regla a la vista. `plan_drag_confirmation.dart` y `bay_plan_view.dart` permanecen idénticos; la presentación ya utiliza el error devuelto por el dominio.
+
+### Prueba de Timonel y regresión propia
+
+**Origen autorizado:** `build/t105tm/t105tm_sombra40_test.dart`, entregado por Carlos. SHA-256:
+
+`a144a0a8fe537e0f7cb6a7478433288216418c4f7c2d82bdec53404c3b7d96b5`
+
+Se copió **byte a byte**, sin editar ni formatear, a `test/t105_timonel_shadow40_test.dart` en la copia y luego en la entrega. El original bajo `build/` sigue intacto e ignorado; no se propone forzarlo en Git.
+
+- **Con el código base:** sus cuatro conflictos fallan porque salen válidos; sus dos controles pasan. Salida final `+2 -4`, código 1, esperado para reproducir el defecto.
+- **Con la corrección:** pasan sus **6/6**: sombra en 003 y 005, 40 sobre los 20 de ambas mitades, 40 ya cargado y los dos controles libres.
+- La sonda propia sobre el caso inicial de Carlos, 40 previsto en 004/02/82 y 20 destinado a 003/02/82, también falla en la base (`review()` devuelve null).
+- `test/t105_physical_collision_test.dart` agrega **29 casos**, con igualdad de mensaje entre preview de oficina/muelle, move y request. Cubre ambos sentidos de 20/40 a bordo y previstos; ALFA 044 sobre 043/045 y 041 sola; diferencias de fila, nivel y huella; impares distintas; pares con huellas que se tocan; código exacto; reservas previstas y asignadas; descarga que libera; intercambios de 20 y de 40; destinos superpuestos del propio lote; aprobación después de otro cambio de plan y después de una carga; rechazo permitido y regularización de la carga propia.
+- No se borró, omitió ni modificó ninguna prueba existente.
+
+### Validaciones de la corrección
+
+| Comprobación | Resultado observado | Registro externo |
+|---|---|---|
+| Sonda propia en la base | 1 fallo esperado, porque la colisión sale válida | `baseline-red.log` |
+| Prueba de Timonel en la base | 2 controles pasan y 4 conflictos fallan, salida 1 esperada | `timonel-baseline-red.log` |
+| Pruebas nuevas sobre la corrección | **35/35**, salida 0: 29 propias + 6 de Timonel | `regression-green.log` |
+| `flutter analyze` | **0 incidencias**, salida 0; 35.0 s | `analyze.log` |
+| Suite completa | **834/834 = 799 + 35**, salida 0; `00:54 +834: All tests passed!` | `suite.log` |
+| Corpus completo `tool/*corpus*test.dart` | **135/135 en 34 archivos**, salida 0; `00:36 +135: All tests passed!` | `corpus.log` |
+| Supresiones de análisis | Ningún `// ignore:` ni `// ignore_for_file:` en `lib/` y `test/` de la copia | búsqueda con `rg`, salida 1 sin coincidencias |
+
+Los registros están en `C:\Users\Giova\AppData\Local\Temp\baystream-t105c-1063-20261016`. La evidencia incluye el diff acotado, los SHA iniciales, el origen de la prueba de Timonel y el manifiesto de entrega. El corpus se leyó de su carpeta externa autorizada. No se utilizó `flutter test --platform chrome`.
+
+### Guardia de SHA y archivos de esta corrección
+
+Antes de colocar se exige que las **15 rutas de la guardia inicial** sigan iguales en el árbol compartido y que las dos rutas nuevas continúen ausentes. La copia de los cuatro archivos se verifica por SHA después de transferirla; los restantes archivos de la guardia deben conservar sus SHA iniciales. La evidencia de cierre se conserva en `delivery-sha.json`.
+
+**Cambian exactamente cuatro archivos:**
+
+1. `lib/features/vessel/domain/services/change_requests.dart`.
+2. `test/t105_physical_collision_test.dart` — nuevo.
+3. `test/t105_timonel_shadow40_test.dart` — nuevo, prueba autónoma de Timonel sin cambios.
+4. `docs/T105-RESULTADOS.md` — solo se agrega esta sección.
+
+**`pubspec.yaml` y `pubspec.lock` no cambian.** Tampoco se modifican modelos, codec, reglas, `main.dart`, congelados ni presentación. Sin dependencias nuevas.
+
+| Fuente o prueba entregada | SHA-256 |
+|---|---|
+| `lib/features/vessel/domain/services/change_requests.dart` | `bb7efcd1589c52c0feb94bc34e0eb98c303f15dcace44104689b3d97e0776340` |
+| `test/t105_physical_collision_test.dart` | `732d0f35903da3a1ea7dc04bd08ccf23e05513fd56c351720ca7b8aab2d675c4` |
+| `test/t105_timonel_shadow40_test.dart` | `a144a0a8fe537e0f7cb6a7478433288216418c4f7c2d82bdec53404c3b7d96b5` |
+
+### Observación de Timonel que queda fuera de esta corrección
+
+La vista de la bahía 004 no dibuja los 20 de las impares vecinas. No se corrige ahora. Desde esta corrección el dominio informa la colisión al consultar la vista previa, pero **el rojo y la ausencia de hoja en el gesto real siguen pendientes de la verificación de Timonel**. Estas pruebas automáticas no sustituyen esa comprobación de pantalla ni cierran su aceptación.
+
+### Git para Carlos — solo esta corrección
+
+```powershell
+git add -- lib/features/vessel/domain/services/change_requests.dart
+git add -- test/t105_physical_collision_test.dart
+git add -- test/t105_timonel_shadow40_test.dart
+git add -- docs/T105-RESULTADOS.md
+git commit -m "Sprint 3: rechazar colisiones de 20 y 40 por huella fisica"
+git push
+```
+
+### Tres líneas de la corrección
+
+La celda física se revisa por huellas en el dominio, con el mismo rechazo en preview, move, request y al aprobar.
+Los intercambios siguen válidos; el mensaje identifica quién bloquea y dónde, sin duplicar la regla en la vista.
+35 pruebas nuevas pasan, incluidas las seis de Timonel; suite 834/834, analyze cero y corpus 135/135; queda el gesto de Timonel.
+
+### Mensaje para Yov — corrección de 10.63
+
+Corregida T-105 sobre eb3504b: review() detecta choques por huellas de bahía, con misma fila y nivel, contra ocupación real y posiciones previstas de otros objetos que no se descargan. Preview, move y request comparten la regla y el mensaje; decide() vuelve a revisarla al aprobar y niega la aprobación si apareció un choque. Se conservan los intercambios y la regularización de la carga propia. La prueba autónoma de Timonel se incorporó intacta (SHA a144a0a8fe537e0f7cb6a7478433288216418c4f7c2d82bdec53404c3b7d96b5): en la base reproduce cuatro conflictos y dos controles; corregida pasa 6/6. Más 29 casos propios: suite 834/834, analyze cero y corpus 135/135 en 34 archivos. Cuatro rutas entregadas con guardia de SHA; pubspec.*, modelos, codec, reglas, main y congelados sin cambios. Sin dispositivos ni Firebase. Flutter libre. Timonel aún verifica el gesto rojo sin hoja antes de cerrar su aceptación; la ausencia de dibujo de los 20 vecinos en la vista par queda anotada y sin corregir. T-56 vuelve a esperar la cesión de sus clientes.

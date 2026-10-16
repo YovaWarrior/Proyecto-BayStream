@@ -27,18 +27,10 @@ class ChangeRequests {
     if (error != null) return ChangePreview.invalid(error);
     final batch =
         PositionChange.readAll(changes.map((c) => c.toJson()).toList())!;
-    final targets = batch.map((c) => c.target).toSet();
     for (final change in batch) {
       if (!pending(data, change.target)) {
         return const ChangePreview.invalid(
             'Solo se mueve un objeto pendiente del plan de carga.');
-      }
-      final occupant = data.state.items.values
-          .where((i) => i.position == change.to && !targets.contains(i.key))
-          .firstOrNull;
-      if (occupant != null) {
-        return ChangePreview.invalid(
-            '${change.to} está ocupada; marca primero su descarga.');
       }
       final source = data.plan.loading[change.target]!.reservedSlot;
       final destination = data.plan.loadingItemAt(change.to)?.reservedSlot;
@@ -115,8 +107,9 @@ class ChangeRequests {
   }
 
   String? review(LoadingOperation data, List<PositionChange> changes) {
-    final batch =
-        PositionChange.readAll(changes.map((c) => c.toJson()).toList());
+    final batch = PositionChange.readAll(
+      changes.map((c) => c.toJson()).toList(),
+    );
     if (batch == null) return 'Indica de uno a cuatro cambios válidos.';
     final targets = batch.map((c) => c.target).toSet();
     for (final c in batch) {
@@ -132,17 +125,81 @@ class ChangeRequests {
         return 'La celda ${c.to} no existe en la geometría del buque.';
       }
       final size = nominalLength(
-          item.container?.isoSizeType ?? item.reservedSlot?.isoSizeType);
+        item.container?.isoSizeType ?? item.reservedSlot?.isoSizeType,
+      );
       if (size != null && size != (coordinate.bay.isEven ? 40 : 20)) {
         return '${c.target} no cabe en la bahía ${coordinate.bay}.';
       }
-      if (data.plan.loading.values
-          .any((i) => !targets.contains(i.key) && i.plannedPosition == c.to)) {
-        return '${c.to} está prevista para otro objeto; inclúyelo en el intercambio.';
+      // T-105, 10.63: la par ocupa sus dos impares vecinas. Las posiciones
+      // actuales y previstas se revisan aquí, también al aprobar solicitudes.
+      // Los orígenes del propio lote no bloquean un intercambio atómico.
+      for (final occupant in data.state.items.values) {
+        final at = occupant.position;
+        if (at == null ||
+            targets.contains(occupant.key) ||
+            occupant.kind == PlanItemKind.reservedSlot &&
+                occupant.assignedContainer == null) {
+          continue;
+        }
+        final other = IsoCoordinateParser.parse(at);
+        if (_overlaps(coordinate, other)) {
+          return _collision(
+            coordinate,
+            other,
+            occupant.assignedContainer ?? occupant.key.substring(2),
+            aboard: true,
+          );
+        }
+      }
+      for (final otherItem in data.plan.loading.values) {
+        if (targets.contains(otherItem.key) ||
+            otherItem.role == PlanRole.discharge ||
+            data.state[otherItem.key]?.role == PlanRole.discharge) {
+          continue;
+        }
+        final other = IsoCoordinateParser.parse(otherItem.plannedPosition);
+        if (_overlaps(coordinate, other)) {
+          return _collision(coordinate, other, _name(otherItem));
+        }
+      }
+      // Excluir los orígenes no permite superponer los destinos del lote.
+      for (final otherChange in batch.where((o) => o.target != c.target)) {
+        final otherItem = data.plan.loading[otherChange.target];
+        if (otherItem == null) continue;
+        final other = IsoCoordinateParser.parse(otherChange.to);
+        if (_overlaps(coordinate, other)) {
+          return _collision(coordinate, other, _name(otherItem));
+        }
       }
     }
     return null;
   }
+
+  /// Huellas físicas, sin deducir la par de una impar (ALFA: 041 sola,
+  /// 044 sobre 043 y 045). Fila y nivel deben coincidir exactamente.
+  Set<int> _footprint(int bay) => bay.isOdd ? {bay} : {bay - 1, bay + 1};
+
+  bool _overlaps(IsoCoordinate a, IsoCoordinate b) =>
+      a.row == b.row &&
+      a.tier == b.tier &&
+      _footprint(a.bay).intersection(_footprint(b.bay)).isNotEmpty;
+
+  String _shown(IsoCoordinate p) =>
+      '${p.bayPadded} ${p.rowPadded} ${p.tierPadded}';
+
+  String _name(PlanItem item) =>
+      item.container?.containerId ??
+      'la reserva ${_shown(IsoCoordinateParser.parse(item.plannedPosition))}';
+
+  String _collision(
+    IsoCoordinate destination,
+    IsoCoordinate other,
+    String name, {
+    bool aboard = false,
+  }) =>
+      '${destination.toIsoCode()} choca con $name en ${other.toIsoCode()}: '
+      '${destination.bay != other.bay ? 'un 40 ocupa las dos mitades de la celda. ' : ''}'
+      '${aboard ? 'La celda está ocupada a bordo; marca primero su descarga.' : 'La celda está prevista para otro objeto; inclúyelo en el intercambio.'}';
 
   MovementDraft request(Operation operation, Operator? actor,
       LoadingOperation data, List<PositionChange> changes, String reason) {
