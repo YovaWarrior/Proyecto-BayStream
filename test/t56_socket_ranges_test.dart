@@ -134,8 +134,9 @@ void main() {
         origin: VesselProfileOrigin.proposedFromFile,
         updatedAt: DateTime.utc(2026));
 
-    Future<List<VesselCallParameters?>> open(WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1000, 2600);
+    Future<List<VesselCallParameters?>> open(WidgetTester tester,
+        {double height = 2600}) async {
+      tester.view.physicalSize = Size(1000, height);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final captured = <VesselCallParameters?>[];
@@ -158,7 +159,14 @@ void main() {
                           child: const Text('abrir')))))));
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('profile-sockets')));
+      final sockets = find.byKey(const ValueKey('profile-sockets'));
+      if (sockets.evaluate().isEmpty) {
+        await tester.scrollUntilVisible(sockets, 400,
+            scrollable: find.byType(Scrollable).first);
+      }
+      await tester.ensureVisible(sockets);
+      await tester.pumpAndSettle();
+      await tester.tap(sockets);
       await tester.pumpAndSettle();
       return captured;
     }
@@ -207,6 +215,8 @@ void main() {
           startsWith('Se descartan 60 con la fila o el nivel fuera de la '
               'geometría: 0020192'));
       expect(find.byKey(const ValueKey('socket-preview-invalid')), findsNothing);
+      expect(text(tester, 'socket-preview-declaration'),
+          'Cargar no declara: la casilla de declaración no cambia.');
       await press(tester, 'socket-batch-apply');
       expect(text(tester, 'socket-batch-summary'),
           'Se agregaron 119 tomas; quedan 122.');
@@ -239,6 +249,36 @@ void main() {
           {...profile.reeferSlots, '0100182'});
     });
 
+    testWidgets(
+        '10.57 la sección no se pliega cuando la lista desecha el tile',
+        (tester) async {
+      final captured = await open(tester, height: 600);
+      final sockets = find.byKey(const ValueKey('profile-sockets'));
+      await type(tester, 'socket-range-bays', '002-038/4, 041, 044');
+      await type(tester, 'socket-range-rows', '01-05');
+      await type(tester, 'socket-range-tiers', '88-90');
+      await press(tester, 'socket-range-add');
+      await press(tester, 'socket-batch-apply');
+      expect(find.text('Tomas de reefer (122)'), findsOneWidget);
+      // Arriba del todo, el tile queda fuera de la vista y de la caché.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.drag(
+          find.byType(Scrollable).first, const Offset(0, 100000));
+      await tester.pumpAndSettle();
+      expect(sockets, findsNothing, reason: 'la lista desechó el tile');
+      await tester.scrollUntilVisible(sockets, 400,
+          scrollable: find.byType(Scrollable).first);
+      await tester.pumpAndSettle();
+      expect(find.text('Tomas de reefer (122)'), findsOneWidget);
+      expect(find.byKey(const ValueKey('socket-range-bays')), findsOneWidget,
+          reason: 'la sección sigue abierta');
+      await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('socket-0020190')), 400,
+          scrollable: find.byType(Scrollable).first);
+      expect(find.byKey(const ValueKey('socket-0020190')), findsOneWidget);
+      expect((await save(tester, captured)).reeferSlots, hasLength(122));
+    });
+
     testWidgets('quitar por rango', (tester) async {
       final captured = await open(tester);
       await type(tester, 'socket-range-bays', '002, 006');
@@ -249,6 +289,9 @@ void main() {
           'Se quitan 3 tomas: 0020188, 0060102, 0061290.');
       expect(text(tester, 'socket-preview-unchanged'),
           startsWith('No estaban 9'));
+      // 10.57: al quitar no dice «Cargar».
+      expect(text(tester, 'socket-preview-declaration'),
+          'Quitar no cambia la casilla de declaración.');
       await press(tester, 'socket-batch-apply');
       expect(text(tester, 'socket-batch-summary'),
           'Se quitaron 3 tomas; quedan 0.');

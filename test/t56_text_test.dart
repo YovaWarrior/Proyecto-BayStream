@@ -144,26 +144,40 @@ void main() {
       expect(find.textContaining('sin puerto de carga'), findsNothing);
     });
 
-    testWidgets('con reservas, una línea más', (tester) async {
-      final slot = ReservedSlot(
-          stowagePosition: IsoCoordinateParser.parse('0030184'),
+    testWidgets('con reservas, una línea más, en singular y plural',
+        (tester) async {
+      ReservedSlot slot(String position, {String? pol}) => ReservedSlot(
+          stowagePosition: IsoCoordinateParser.parse(position),
           isoSizeType: '22G1',
           status: ContainerStatus.empty,
+          portOfLoading: pol,
           portOfDischarge: 'PAMIT',
           nominalWeight: 2100);
       await tester.pumpWidget(_app(
           Scaffold(
               body: SingleChildScrollView(
                   child: VoyageSummaryCard(
-                      voyage: _voyage(reserved: [slot])))),
+                      voyage: _voyage(reserved: [
+            slot('0030184'),
+            slot('0030102', pol: 'GTPBR'),
+          ])))),
           Brightness.light));
       expect(
           tester
               .widget<Text>(
                   find.byKey(const ValueKey('call-without-loading-port')))
               .data,
-          'Sin puerto de carga en el archivo: 2 contenedores y 1 reservas');
-      expect(find.text('De paso 1 contenedores y 0 reservas'), findsOneWidget);
+          'Sin puerto de carga en el archivo: 2 contenedores y 1 reserva');
+      // 10.57: las cuatro líneas concuerdan con su cifra.
+      expect(find.text('Se cargan 0 contenedores y 1 reserva (1 movimiento)'),
+          findsOneWidget);
+      expect(
+          find.text('Se descargan 1 contenedor y 0 reservas (1 movimiento)'),
+          findsOneWidget);
+      expect(find.text('De paso 1 contenedor y 0 reservas'), findsOneWidget);
+      expect(find.textContaining('1 reservas'), findsNothing);
+      expect(find.textContaining('1 contenedores'), findsNothing);
+      expect(find.textContaining('1 movimientos'), findsNothing);
     });
 
     testWidgets('la pantalla de parámetros dice lo mismo', (tester) async {

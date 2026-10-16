@@ -106,6 +106,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   String? _rangeError;
   String? _pasteError;
   String? _batchSummary;
+  // 10.57: la lista perezosa desecha el tile al desplazarse lejos; la página
+  // recuerda si estaba abierto para que no se pliegue solo.
+  bool _socketsExpanded = false;
   late Map<int, HatchCoverDeclaration> _hatches;
   Set<int> _holdBays(VesselGeometry geometry) => {
     ...?widget.profile?.observedHoldBayNumbers,
@@ -450,6 +453,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     final error = TextStyle(color: Theme.of(context).colorScheme.error);
     return ExpansionTile(
       key: const ValueKey('profile-sockets'),
+      initiallyExpanded: _socketsExpanded,
+      onExpansionChanged: (open) => _socketsExpanded = open,
       title: Text('Tomas de reefer (${_sockets.length})'),
       subtitle: Text(source),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
@@ -599,7 +604,10 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             for (final (key, text) in lines) Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(text.endsWith('…') ? text : '$text.', key: ValueKey(key))),
-            const Text('Cargar no declara: la casilla de declaración no cambia.'),
+            Text(preview.removing
+                ? 'Quitar no cambia la casilla de declaración.'
+                : 'Cargar no declara: la casilla de declaración no cambia.',
+                key: const ValueKey('socket-preview-declaration')),
           ],
         )),
         actions: [

@@ -224,3 +224,44 @@ No cuentan la pausa por el límite de uso, de 19:17 a 21:43.
 - los ayudantes de volcado.
 
 Git: solo `log`, `show`, `diff --stat --ignore-cr-at-eol` y `ls-files`.
+
+## 10. Corrección de 10.57
+
+Base `5b1d8a1`. Trabajé en una copia en `%TEMP%\baystream-t56-corr` y coloqué los cuatro archivos al final, después de comprobar que en el repo seguían iguales a HEAD. No usé dispositivos. El semáforo de Carlos estuvo en verde para analyze, la suite y el corpus.
+
+**Lo que cambió:**
+1. **El diálogo de quitar** cierra con «Quitar no cambia la casilla de declaración.». Al agregar sigue «Cargar no declara: la casilla de declaración no cambia.». La línea tiene llave nueva, `socket-preview-declaration`, y las pruebas fijan las dos frases.
+2. **La sección «Tomas de reefer» ya no se pliega sola.** La página guarda si está abierta (`_socketsExpanded`, con `initiallyExpanded` y `onExpansionChanged`). Cuando la lista perezosa desecha el tile y lo vuelve a construir, vuelve abierto y con sus tomas. Conserva `ValueKey('profile-sockets')`.
+3. **Las cuatro líneas del resumen con reservas concuerdan** con `operationCount`: contenedor/contenedores, reserva/reservas y movimiento/movimientos. Por ejemplo: «Se descargan 1 contenedor y 0 reservas (1 movimiento)» y «Sin puerto de carga en el archivo: 2 contenedores y 1 reserva». Las cifras de T-69 y del corpus, en plural, no cambian.
+
+**Las pruebas:**
+- **Una nueva,** en `test/t56_socket_ranges_test.dart`, «10.57 la sección no se pliega cuando la lista desecha el tile»:
+  - a 1000 × 600 abre la sección y carga 119 tomas por rango, hasta 122;
+  - sube hasta que la lista desecha el tile (comprobado: el tile ya no existe);
+  - vuelve, y la sección sigue abierta, con «Tomas de reefer (122)», el formulario y el chip `0020190`;
+  - guarda 122.
+  - **Sonda:** sin las dos líneas del estado, la prueba falla («Found 0 widgets with key socket-range-bays»). Con ellas, pasa.
+- **Ampliada,** «quitar por rango»: fija la frase de quitar. La de cien tomas fija la de agregar.
+- **Ampliada,** «con reservas, una línea más, en singular y plural», en `test/t56_text_test.dart`:
+  - una segunda reserva con carga en GTPBR;
+  - fija las cuatro líneas;
+  - comprueba que no aparezca «1 reservas», «1 contenedores» ni «1 movimientos».
+
+**Las cifras:**
+- **746/746** (745 + 1 nueva) y `analyze` en cero, sin ningún `// ignore` en `lib/`;
+- corpus **129/129 en 33 archivos**;
+- los ocho SHA de la sección 6, **iguales**;
+- `git diff --stat --ignore-cr-at-eol` muestra solo los cuatro archivos.
+
+Los registros están en `%TEMP%`: `t56c-analyze.log`, `t56c-suite.log`, `t56c-corpus.log` y `t56c-sonda.log`.
+
+**Los archivos:**
+- `lib/features/vessel/presentation/pages/vessel_geometry_page.dart`
+- `lib/features/vessel/presentation/widgets/voyage_call_summary.dart`
+- `test/t56_socket_ranges_test.dart`
+- `test/t56_text_test.dart`
+- `docs/T56-RESULTADOS.md`
+
+No toqué `bay_plan_view.dart` ni `change_requests*`. `pubspec.*` no cambia.
+
+**Horas:** ≈ 0.3 h, de 22:02 a 22:20.
