@@ -2,7 +2,7 @@
 
 Capitán Codex · 16-oct-2026 · Guatemala.
 
-**Estado: puntos 1–3 conformes; aceptación completa pendiente de los clientes y del almacén real (puntos 4–6).** No se declara T-56 aceptada todavía. No se encontró discrepancia en las comprobaciones ejecutadas.
+**Veredicto actual: T-56 pendiente; no se declara aceptada.** Los casos funcionales de los tres clientes, los cinco textos y el almacén real resultaron conformes. Honor: 27,902 s. Windows: el intento continuo consumió 96,337 s hasta regresar a Perfiles guardados y no registró todavía «Perfil guardado» en esa captura; no acredita el límite de menos de un minuto. Se detuvo la aceptación por instrucción de Carlos. El cierre de esta etapa está en las secciones 11–17; las secciones 1–10 conservan la entrega parcial anterior.
 
 ## 1. Base y coordinación
 
@@ -108,7 +108,7 @@ La sonda de producción propone la geometría desde las posiciones de ambos viaj
 
 El cotejo independiente reproduce la lista leyendo el texto EDI: posiciones `LOC+147` por debajo de 80 y, para los tipos de 40/45 pies en bahía par, sus dos impares vecinas. No utiliza el lector ni la función de bahías de BayStream. La comparación automática confirma ambas uniones.
 
-## 6. Clientes y almacén real: pendientes de cesión
+## 6. Pendientes al entregar la primera etapa (histórico)
 
 Estos resultados **no se sustituyen por las pruebas automatizadas ni por lo observado por Timonel**. Todavía no se ejecutaron en esta aceptación:
 
@@ -148,6 +148,117 @@ Suite 799/799, analyze en cero, corpus 135/135 y ocho SHA conservados sobre el H
 Cotejo propio sobre A01 y diez fuentes conforme; A08 → A07 permanece en cuatro y las dos uniones dan las 21 bahías.
 No cambia el producto; la aceptación completa espera los tres clientes, las mediciones y la huella del almacén real.
 
-## 10. Mensaje para Yov
+## 10. Mensaje para Yov de la primera etapa (histórico)
 
 T-56: puntos 1–3 de la aceptación cruzada conformes sobre 7a06c5d51377226a7c8e7babbaed5653ddab3756, en copia de TEMP. Suite 799/799, analyze cero sin supresiones, corpus completo 135/135 en 34 archivos y ocho SHA de la sección 6 iguales antes y después. Una sonda propia fuera del repo, sin pruebas ni auxiliares de Timonel, ejecutó el validador de producción y coincidió con un cálculo independiente sobre EDI crudo: A01 91 errores → 82 avisos de extremo + 9 conformes; ninguna alerta nueva en las diez fuentes; A08 → A07 sigue en 4; A07 ∪ A08 y su variante VGM dan las 21 bahías exactas. Flutter quedó libre y Carlos fue avisado. Honor y Windows siguen con Timonel; faltan los puntos 4–6, por lo que T-56 todavía no se declara aceptada. Informe parcial: docs/T56-ACEPTACION-RESULTADOS.md. No se modificó producción ni pubspec.*.
+
+
+## 11. Reanudación de los clientes sobre HEAD
+
+Carlos cedió los dispositivos para terminar primero T-56 y después aceptar T-96. La copia de clientes se preparó sobre `ff14dc0d5e8b3f4e7461b760fa28208380029ce7`, HEAD al comenzar esta etapa, en `C:\Users\Giova\AppData\Local\Temp\baystream-t56cx-ff14dc0\base`. Namespace `t56cx`, applicationId `gt.cmartinez.baystream.t56cx`.
+
+Al cerrar, HEAD era `0b2dfce8bf06f06c0a2d98fe49f3879067dc4443`. El diff entre ambos HEAD solo contiene `SPRINT-3.md`, la presentación y el tablero; no hay diferencias de producto. Se leyeron las decisiones posteriores hasta 10.67. El producto de la copia sigue correspondiendo al HEAD actual. Los ocho archivos protegidos de la sección 3 conservaron sus SHA en el repositorio, cotejados de nuevo al terminar (`protected-sha-final.json`).
+
+Se usó el banco existente `tool/t56_main.dart`. Solo en TEMP se sustituyó su namespace por `t56cx`, se agregó una anulación explícita de `LocalOnlyOperationSync`, se incorporaron A07 y A06 como assets y se cambió el applicationId. El banco conserva `LocalSessionRepository`: modo sin cuenta. Ninguna operación de nube ni publicación. El archivo privado pasado por `--dart-define-from-file` no se abrió.
+
+Las compilaciones finales terminaron con código 0: Android release 83,9 s, Windows release 36,3 s y Web release 56,3 s. Después `flutter run -d chrome --release --no-pub` compiló la Web en 36,0 s y sirvió el puerto 8157. Un solo comando de Flutter a la vez. Estos son tiempos de compilación, no de interacción.
+
+**Ningún archivo de producción del repositorio fue modificado. `pubspec.yaml` y `pubspec.lock` del repositorio no cambian; no se agregaron dependencias.** Los cambios de assets y arranque pertenecen exclusivamente a la copia temporal.
+
+## 12. Casos funcionales de los tres clientes
+
+Se ejecutaron personalmente en esta aceptación, sin sustituirlos por los resultados de Timonel. En cada cliente se empezó con BUQUE GOLF propuesto desde A07 y sus 12 tomas. Bahías `002-026/4`, filas vacías y niveles `82-86,94`.
+
+| Comprobación observada | Honor | Windows final | Web autorizada |
+|---|---|---|---|
+| Vista previa del rango | 204 nuevas / 6 existentes / 70 descartadas | Igual | Igual |
+| Guardar y reabrir | 216, «Propuestas del archivo» | Igual | Igual |
+| Lista `0020184 0060188, 12345 ABCDEFG 0000182 0021282 0100382` | 1 nueva / 2 existentes / 1 fuera; «No se cargan 3…» | Igual | Igual |
+| Aplicar la lista | 217 | 217 | 217 |
+| Quitar `002-026/4`, filas vacías, nivel 86 | Se quitan 70, no estaban 0; quedan 147 | Igual | Igual |
+| Cierre del diálogo de quitar | «Quitar no cambia la casilla de declaración.» | Igual | Igual |
+| Reabrir después de cargar y quitar, sin marcar la casilla | 147 propuestas | Igual | Igual |
+| Marcar expresamente la casilla, guardar y reabrir | 147, «Tomas declaradas por el usuario» | Igual | Igual |
+| Alejarse de la sección y volver sin tocar su expansión | Sigue abierta con formulario y tomas | Igual | Igual |
+
+La declaración se comprobó separadamente: cargar, quitar y guardar conservaron el origen propuesto; solo marcar la casilla lo cambió. Se conservan capturas y volcados de las dos reaperturas (propuesto/declarado).
+
+**Navegador utilizado:** la Web pasó en el navegador integrado de Codex, visible, en `http://127.0.0.1:8157/`, con autorización directa posterior de Carlos: «Haz las pruebas con el navegador integrado…». Chrome se abrió con Flutter, pero **no se declara probado**: Computer Use detuvo su inspección por no poder determinar la URL con suficiente confianza para aplicar su política. No se usó `flutter test --platform chrome`. La pestaña integrada, Chrome de esta prueba y el proceso Flutter que la servía se cerraron al terminar esa etapa.
+
+Evidencia principal: `honor-timed-preview.*`, `honor-reopened-216.*`, `honor-pasted-preview.*`, `honor-remove-preview.*`, `honor-section-still-open.*`, `honor-147-reopened-proposed.*`, `honor-147-declared-reopened.*`; sus equivalentes `windows-*` y `web-*`.
+
+## 13. Cinco textos del Honor
+
+Honor a 720 × 1600 píxeles y densidad 320: **360 × 800 dp**. Letra del sistema **2.0**, en claro y oscuro. Se inspeccionaron las capturas, además del texto accesible sanitizado.
+
+| Texto | Resultado en ambos temas |
+|---|---|
+| Recientes: «1 contenedor · 1 bahía» y «717 contenedores · 27 bahías» | Concordancia correcta; texto completo al desplazarse |
+| «Sin tapa · bodega abierta» | Completo dentro del campo en dos líneas y completo en el menú |
+| «Viaje: VIAJE007A» y «Viaje: VIAJE004A» | Dos líneas dentro de su fondo, sin salirse |
+| «Contenido compatible: BAPLIE 2.x, y la 1.5 con aviso.» | Completo al desplazarse hasta el final de la pantalla vacía |
+| A06, escala GTPBR | «0 se descargan · 0 se cargan · 0 de paso · 717 sin puerto de carga en el archivo», completo; conserva el aviso de la versión 1.5 |
+
+Capturas: `honor-recientes-claro-2.png`, `honor-recientes-singular-claro-2.png`, `honor-recientes-oscuro-2-final.png`, `honor-recientes-singular-oscuro-2.png`, `honor-tapas-{claro,oscuro}-2.png`, `honor-tapas-menu-{claro,oscuro}-2.png`, `honor-producto-A0{6,7}-{claro,oscuro}-2.png`, `honor-A06-resumen-{claro,oscuro}-2.png`, `honor-vacia-texto-claro-2-completo.png` y `honor-vacia-texto-oscuro-2.png`.
+
+El botón «Usar estas declaraciones» conserva la observación de T-104 ya documentada por Timonel; no es uno de los cinco textos de esta aceptación y no se modificó.
+
+Los volcados se obtuvieron con `adb exec-out uiautomator dump /dev/tty`, sanitizados en memoria antes de imprimirlos o guardarlos. Se descartan formularios con contraseña y diálogos de cuenta; se ocultan correos y UID. **La letra terminó en 1.0**, comprobado otra vez después de detener Windows (`honor-font-final.txt`).
+
+## 14. Almacén real de Windows
+
+La app se lanzó con `explorer.exe` desde la copia final, fuera del paquete del agente. Primera ejecución: PID **27516**; segunda, para preparar la medición: PID **13540**. Ambas se cerraron por su PID exacto, después de verificar la ruta del ejecutable.
+
+Almacén real: `C:\Users\Giova\AppData\Local\BayStream`. Huellas obtenidas con `.bat` lanzados por `explorer.exe`, que ejecutan el script de huella fuera del paquete:
+
+- Antes: **414 archivos**; padre `cmd.exe` PID 28468, abuelo `explorer.exe` PID 27768.
+- Después de los casos funcionales: **426 archivos**; padre `cmd.exe` PID 3388, abuelo `explorer.exe` PID 612.
+- Después de repetir la preparación y detener la medición final: **426 archivos**; padre `cmd.exe` PID 17236, abuelo `explorer.exe` PID 6224.
+- Los **414 originales conservan exactamente su SHA**. No hay archivos eliminados. Los 12 añadidos son exclusivamente `t56cx_{device,movements,operations,profiles,settings,voyages}.{hive,lock}`.
+
+Para repetir la medición desde las 12 tomas iniciales, se apartaron únicamente los 12 archivos de este namespace de prueba a `windows-before-timing-retry/` en TEMP, con la app cerrada. El script se ejecutó fuera del paquete y verificó la ruta absoluta del almacén y el prefijo de cada archivo antes de moverlo. El banco volvió a proponer A07. No se tocaron archivos de otros namespaces. El segundo recorrido final dejó de nuevo 216 propuestas en el namespace de prueba; la secuencia funcional hasta 147 declaradas queda conservada en el respaldo y en su evidencia anterior.
+
+Registros: `store-before.json`, `store-after-functional.json`, `store-after.json`, `store-comparison.json`, `store-comparison-final.json`, `fingerprint.ps1`, los `.bat` y `windows-reset-own-namespace.json`.
+
+## 15. Cronómetros e incidencias de instrumentación
+
+**Honor: conforme, 27,9021708 s**, de abrir el perfil hasta observar «Perfil guardado», en una transacción continua con vista previa 204 / 6 / 70. Inicio `2026-10-16T17:12:53.282590+00:00`, fin `2026-10-16T17:13:21.185459+00:00`. Registro `honor-timing.json`.
+
+**Windows: no acredita el límite solicitado.** El último intento continuo, con la compilación final y partiendo de las 12 tomas, consumió **96,337 s hasta regresar a Perfiles guardados**. Esa captura aún no registró «Perfil guardado» (`observed_saved: false`), por lo que no es lícito presentarlo como un cronómetro completo hasta ese texto. Ya había superado el minuto antes de poder acreditar el final exigido. Registro crudo `windows-timing.json`, vista previa `windows-timed-preview.png` y captura/árbol al volver `windows-timed-saved.*`. Los nombres de estos últimos archivos identifican la acción de guardar; no convierten en verdadera la observación del texto, cuyo indicador permanece `false`.
+
+Este resultado incluye la latencia entre llamadas del agente y la escritura de ocho caracteres por separado. **No permite atribuir 96,337 s a procesamiento de BayStream ni afirmar que una persona tarda eso.** Tampoco permite declarar conforme el requisito de menos de un minuto. No se descontaron pausas ni se sumaron fragmentos de distintos intentos. Carlos pidió que lo hiciera el agente; no se sustituyó por una medición manual suya.
+
+Incidencias conservadas, sin cambios al producto:
+
+1. Un primer intento de Windows quedó interrumpido por una pausa de la herramienta antes de completar los campos. Se descartó, sin guardar.
+2. Otro intento se interrumpió al comprobar que `type_text` no insertaba texto en Flutter Windows. El teclado de teclas individuales sí funcionaba. Carlos escribió correctamente los niveles en ese borrador; no se utilizó esa intervención como medición continua.
+3. El texto auxiliar se preparó en una pestaña nueva de Bloc de notas y se pegó mediante el menú contextual del campo. No se editaron documentos previos del usuario. La pestaña auxiliar contiene solo datos sintéticos de prueba.
+4. Al preparar inicialmente el banco temporal se retiró erróneamente `Firebase.initializeApp`, lo que produjo `[core/no-app]` al construir el repositorio usado por el parser. No se leyó A07 ni se guardó perfil en ese intento. Se restituyó el arranque original del banco temporal, con sesión y sincronización locales explícitas, y se recompilaron los tres clientes finales. Registro `bank-incident.txt`. No se cambió producción ni se ejecutaron operaciones de nube.
+5. Algunos volcados del Honor no obtuvieron XML durante una transición. Se observaron de nuevo las pantallas antes de continuar; no se guardaron volcados sin sanitizar.
+6. La revisión automática rechazó inicialmente un comando compuesto de servidor y Chrome; no se ejecutó. Se utilizó después el flujo específico `flutter run -d chrome`. Al inspeccionar Chrome, Computer Use detuvo el control por la comprobación de URL; Carlos autorizó el integrado. Tras cerrar Chrome, Carlos pidió retomar Windows y el control de BayStream volvió a funcionar.
+
+**SEMÁFORO:** se anunció el inicio y el cierre de las mediciones. Durante la medición final de Windows no se usó el Honor ni se ejecutó Flutter. Al terminar se cerraron los procesos de esta prueba; el turno de Flutter quedó libre.
+
+## 16. Veredicto y alcance de la detención
+
+**T-56 queda pendiente y no se declara aceptada.** Están conformes los puntos 1–3 de la primera etapa, los casos funcionales de los tres clientes de esta etapa, los cinco textos y la huella real. Falta acreditar el recorrido de Windows en menos de un minuto. El último intento continuo no lo acredita.
+
+Se aplica la instrucción directa de Carlos: «Si algo no cuadra, te detienes y avisas. No lo arreglas de paso». Se detuvo la aceptación y se notificó el resultado. **No se arregló ni se modificó el producto. No se inició la aceptación de T-96**, que debía ir después del cierre de T-56. Su preparación independiente anterior permanece en `%TEMP%\baystream-t96cx-preparacion-20261016`, sin atribuirle una nueva ejecución sobre HEAD.
+
+Único archivo modificado en el repositorio por esta entrega: `docs/T56-ACEPTACION-RESULTADOS.md`. No se creó `docs/T96-ACEPTACION-RESULTADOS.md` porque esa aceptación no comenzó.
+
+## 17. Mensaje para Yov y Git para Carlos
+
+**Mensaje para Yov:** T-56 sigue En revisión. La aceptación cruzada verificó en los tres clientes 204 / 6 / 70, 216 propuestas al reabrir, lista 1 / 2 / 1 con tres inválidos, retirada de 70 hasta 147, declaración solo por casilla y persistencia de la expansión. Los cinco textos pasan en Honor a 360 dp y letra 2.0, claro/oscuro; quedó en 1.0. Honor cronometrado: 27,902 s. La huella real de Windows es 414 → 426: los 414 previos idénticos y solo 12 t56cx_* nuevos. La Web se probó en el integrado con autorización explícita de Carlos; Chrome no se declara probado. El intento continuo de Windows consumió 96,337 s hasta volver a perfiles, sin registrar aún el texto final en esa captura; no acredita <60 s. Incluye latencia del agente y no se atribuye a procesamiento del producto. Se detuvo por la regla de Carlos, sin arreglos; no comenzó T-96. Copia ff14dc0, idéntica en producto al HEAD 0b2dfce. Informe: docs/T56-ACEPTACION-RESULTADOS.md.
+
+Tres líneas:
+
+- Los casos funcionales de los tres clientes, cinco textos y almacén real están comprobados y conformes.
+- Honor da 27,902 s; Windows no acredita el límite de un minuto y T-56 no se declara aceptada.
+- Se detuvo sin modificar producción; T-96 queda sin iniciar y Flutter libre.
+
+```powershell
+git add -- docs/T56-ACEPTACION-RESULTADOS.md
+git commit -m "Sprint 3: documentar clientes de T-56 y medicion pendiente de Windows"
+git push
+```
