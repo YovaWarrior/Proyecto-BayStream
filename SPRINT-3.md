@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.52) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.53) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -3742,3 +3742,32 @@ El piso de pruebas es 648.
 **Las horas no cambian:** 3.5 h.
 
 **El tablero:** 32 terminadas, T-88 en revisión, T-56 en curso y 8 por hacer.
+
+### 10.53 · El Incremento 2 suma el avance del Sprint 3: un párrafo en Conclusiones y una diapositiva final (15-oct)
+
+**Yov hizo lo que decidió 10.35,** un día antes de lo previsto. No se tocan resultados, tablas ni cifras medidas del Incremento 2.
+
+**El documento,** `docs/BayStream_Incremento2_Seguridad_Calidad.docx` (SHA-256 `63017b15…`):
+- **un párrafo nuevo en V. Conclusiones,** después del de la prueba de campo y antes de «Por último»;
+- **lo que dice:**
+  - el Sprint 3 ya corrigió los cuatro defectos de campo y llevó a la aplicación el procedimiento de muelle;
+  - se informa como avance, no como resultado, porque no se midió con el protocolo del reporte;
+  - lo que funciona al 15-oct, con aceptación cruzada: muelle, sincronización con cuentas, roles y cola sin conexión, tapas, BAPLIE de salida, voz, instalador de Windows y la Web sin conexión;
+  - lo que queda para la entrega final: IMDG, orden de descarga, medición de los RNF y la prueba piloto;
+- **el formato:** el párrafo copia el formato de sus vecinos (nivel 1: 0.75 cm, 44 pt). El verificador da 0 fallas y 0 avisos, con las Tablas 77–90 intactas, y siguen siendo 42 páginas;
+- **la revisión visual:** Yov comparó las páginas 36 a 38. Referencias sigue empezando en página nueva.
+
+**La presentación,** `docs/BayStream_Incremento2_Presentacion.pptx` (SHA-256 `165be843…`):
+- **la diapositiva 15, «Avance del Sprint 3, en curso»,** con el diseño de la Retrospectiva:
+  - tres tarjetas: «Ya funciona», «Por cerrar» y «Falta para el 24-oct»;
+  - una línea al pie: «Al 15 de octubre: 32 de 42 tareas terminadas, 710 pruebas automáticas y 118 de corpus»;
+  - y sus notas para el orador.
+- **La revisión visual:** renderizada, sin cortes.
+
+**Los originales del 6-oct** quedan en git (`468a003`), y los dos archivos se reemplazan en `docs/`.
+
+**Para Carlos, antes del 17:**
+- si generó el índice en Word, lo actualiza; las páginas de los títulos no cambian;
+- si Codex acepta T-88 antes de presentar, la línea al pie de la diapositiva 15 pasa a «33 de 42».
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.**
