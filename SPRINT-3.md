@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 15-oct, 10.60) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 16-oct, 10.62) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1985,7 +1985,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-93** | USO | 2.5 | Instalador de Windows: paquete MSIX firmado con el paquete `msix` (Carlos, 10.36) · **ficha completa arriba**, con su corrección (10.42) |
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
-| **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); en curso (10.57) · **ficha completa arriba** |
+| **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62) · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -2154,7 +2154,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
   - el corpus completo en verde;
   - las reglas, `lib/main.dart`, `pubspec.*` y los congelados sin cambio.
 
-#### T-95 · El orden de descarga sugerido, con las sobreestibas por columna y por tapa · 7.5 h · Codex (ficha completa, 15-oct)
+#### T-95 · El orden de descarga sugerido, con las sobreestibas por columna y por tapa · 7.5 h · Timonel (ficha completa, 15-oct; pasa de Codex a Timonel en 10.61)
 
 **Para qué.** ERS, RF-028 (COULD), diferido del Sprint 2. Dice: filtrar lo que se descarga en el puerto elegido, agrupar por bahía, ordenar cubierta antes que bodega y por nivel, y dar la secuencia con una estimación de movimientos. Lo que el planner necesita además, y la fila de T-95 lo pide, son **las sobreestibas**: lo que sigue a bordo y estorba. Hay dos clases:
 - **por columna:** lo que va encima de un contenedor que baja, en la misma pila;
@@ -2206,7 +2206,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
    - **Las celdas, en el orden sugerido.** Cada una con sus movimientos y sus pasos, y cada paso con su número, su posición y su rótulo: «Descarga», «Re-estiba: sale», «Tapa T1: quitar», «Tapa T1: reponer» o «Re-estiba: vuelve». El rótulo nunca va solo con color.
    - **Los avisos:** bodega sin tapa declarada, filas de cubierta fuera de las tapas y contenedores sin posición.
    - Listas perezosas, legible a 360 dp y letra 2.0, en claro y oscuro.
-   - **La entrada:** si la barra del viaje no cabe a 360 dp con la de T-96, las dos van a un menú «Más».
+   - **La entrada:** en la fila de acciones del viaje, junto a «Comparar con otro BAPLIE…» de T-96 (10.61).
 
 **Las cifras que tiene que dar el caso** (un corpus nuevo, `tool/t95_corpus_test.dart`):
 - **A07 en GTSTC:** 114 descargas, 66 en cubierta y 48 en bodega.
@@ -2392,7 +2392,7 @@ para RNF-003.
 
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
-| **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa, con las tres definiciones de Carlos (10.59). La hace Codex y la acepta Timonel · **ficha completa arriba** |
+| **T-95** | RF-028 | 7.5 | Orden de descarga sugerido, con sobreestibas por columna y por tapa, con las tres definiciones de Carlos (10.59). La hace Timonel y la acepta Codex (10.61) · **ficha completa arriba** |
 | **T-96** | RF-029 | 6.0 | Comparación llegada contra salida: descargados, cargados y permanentes, con lo que cambió en cada campo. La hace Timonel y la acepta Codex (10.58) · **ficha completa arriba** |
 | **T-56** | ERS | 3.5 | Tomas de reefer por celda y por rangos (diferida del Sprint 2). Incluye la prueba de corpus que afirma las 21 bahías de A07 ∪ A08 (10.33, 10.38); tres textos de la aceptación de T-104 (10.41): «1 contenedores» en Recientes, «abierta» cortado en el desplegable de tapas y el chip del viaje que se sale de su fondo; y dos de T-103 (10.43): «Contenido compatible: BAPLIE 2.x.» en la pantalla vacía, y el resumen 0/0/0 de A06 en GTPBR, que no trae `LOC+9`. La hace Timonel y la acepta Codex (10.52); entregada en 10.57, con una corrección antes de la aceptación · **ficha completa arriba** |
 | **T-97** | ERS | 1.0 | Título sin truncar a 360 px (RNF-003). Incluye los textos de 10.11 a 10.16: la fila del detalle que no se adapta con letra grande, «1 cargados» en singular, «(0 cub. / 0 bod.)», que debe decir que son pendientes, el punto doble al final de un rechazo y «Conectando…» en lugar de «Sin conexión» al abrir un plano en la Web · **ficha completa arriba** |
@@ -4414,3 +4414,94 @@ Yov se las pregunta y escribe la ficha con sus respuestas.
 - **La acepta Codex.**
 
 **Las horas no cambian:** 10.0 h. **El sprint sigue en 43 tareas y ≈ 159.5 h.**
+
+### 10.61 · T-96 entregada, en revisión: comparar la llegada con la salida · Un aviso de buque que asusta de más · T-95 pasa a Timonel (15-oct)
+
+**Timonel entregó T-96** (commit `0011882`, `docs/T96-RESULTADOS.md`), sobre `32a1a94`. Yov revisó las dos entradas y el informe, y cumple la ficha.
+- **El servicio:** `voyage_comparison.dart`, puro. Clasifica por número de contenedor y compara nueve campos con el peso efectivo y el «sin dato». Además:
+  - cuenta las reservas aparte;
+  - reporta los repetidos;
+  - es simétrico.
+- **Las cifras del caso:**
+  - **A07 → A08:** 114 descargados, 121 cargados más 55 reservas y 284 permanentes, con POL 127, POD 189, línea 58 y peso 113, como 10.20; 262 tienen algún cambio;
+  - **al revés,** las cifras se intercambian campo por campo;
+  - **A08v_VGM** da lo mismo, porque su VGM es igual al WT de A08;
+  - **la salida de los 177 eventos** da 114, 176 y 284. Los 176 son 121 + 55 por origen y 120 llenos + 56 vacíos por estado, como los eventos.
+- **Las validaciones:**
+  - 764/764, `analyze` en cero y corpus 135/135;
+  - el lector, el escritor de T-82 (`05EE9198…`), el codec, el modelo, las reglas, `main.dart`, `pubspec.*` y los congelados siguen con el mismo SHA.
+- **Los clientes:**
+  - **Windows:** solo `t96acc_*` en el almacén real (388 → 400). Una segunda instancia que se abrió por error se cerró por PID, y está declarada;
+  - **el Honor:** a 2.0, en claro y oscuro;
+  - **la Web,** en el navegador integrado, con autorización de Carlos (10.55).
+- **Horas:** ≈ 0.75 h frente a 6.0.
+
+**La entrada se queda donde la puso Timonel:** en la fila de acciones del viaje, junto a «Alertas de estiba». La barra superior de T-91 tiene su lista fijada en una prueba, y la fila está a la vista. La entrada de T-95 va en la misma fila.
+
+**Un aviso que asusta de más, a corregir antes de la aceptación.** A05 → A06 dice «No parece el mismo buque», y los dos son BUQUE ECO. Uno se identifica por IMO y el otro por indicativo, y T-96 compara la clave entera.
+- Ya existe `Vessel.matchIdentity`, que distingue tres casos.
+- **La corrección:**
+  - con identidad automática, no hay aviso;
+  - con el mismo nombre y claves de distinto tipo, el aviso dice que no se puede confirmar que sea el mismo buque, y pide confirmarlo;
+  - si no hay coincidencia, se queda «No parece el mismo buque».
+- La hace Timonel ahora, sin dispositivos.
+
+**T-95 pasa de Codex a Timonel.**
+- **Por qué:** Codex sigue en T-105 y después tiene dos aceptaciones, la de T-56 y la de T-96. Timonel está libre y entrega rápido.
+- **La ficha no cambia,** salvo la entrada, que va en la fila de acciones.
+- **La acepta Codex.**
+
+**El orden queda así:**
+- **Timonel:** la corrección de T-96, después T-95 y después T-85. La aceptación de T-105 pasa adelante en cuanto llegue.
+- **Codex:** T-105, la aceptación de T-56, la de T-96, la de T-95 y la de T-85.
+
+**El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero:
+- 33 terminadas;
+- T-56 y T-96 en revisión;
+- T-105 y T-95 en curso;
+- 6 por hacer.
+
+### 10.62 · T-105 entregada, en revisión: arrastrar con confirmación, y un zoom que no existía · `request()` gana los tres controles que le faltaban · Timonel la acepta ya (16-oct)
+
+**Codex entregó T-105** (commit `3473e10`, `docs/T105-RESULTADOS.md`). Partió de `5fba2f2`, y antes de colocar la comprobó contra `f6bac1f`, con T-56 y T-96 dentro. Yov revisó el informe y el cambio de dominio.
+- **`ChangeRequests.preview()` es la única revisión.** `move()` y `request()` la usan, y el gesto la consulta mientras se arrastra.
+- **Un hallazgo real de T-80.** `request()` no tenía tres controles que sí tenía `move()`:
+  - que el objeto esté pendiente de carga;
+  - que la celda no esté ocupada a bordo;
+  - que un intercambio de reservas sea del mismo grupo.
+  - **Lo que significaba:** el muelle podía pedir un cambio que la oficina no habría podido hacer.
+  - **Carlos autorizó unificarlos,** y también ajustar las dos variantes de `test/t80_requests_widget_test.dart`, que ahora parten de la descarga del ocupante. No se borró ni se omitió ninguna prueba.
+- **El zoom, que el plano no tenía.** La ficha suponía que existía, y solo había un comentario.
+  - **Carlos autorizó agregarlo:** pellizco y controles de 75 a 300 %. Un dedo sigue desplazando y la pulsación larga sigue arrastrando, y cambiar de bahía reinicia el zoom.
+  - Es alcance agregado con autorización, y queda anotado.
+- **El gesto:**
+  - `LongPressDraggable` solo en Carga, solo pendientes y dentro de la bahía que se ve;
+  - colores con ícono;
+  - una hoja con motivo obligatorio;
+  - la solicitud del muelle, con borde punteado y reloj hasta que la oficina decide.
+- **Las validaciones:**
+  - 799/799, `analyze` en cero y corpus 135/135;
+  - el modelo de movimientos, el codec, las reglas, `main.dart`, `pubspec.*` y los congelados siguen con el mismo SHA.
+- **Los clientes,** sobre la operación de prueba «PRUEBA T-105» en `baystream-app`, con el namespace `t105acc` y datos sintéticos:
+  - Windows y el Honor completos: movimiento, intercambio y solicitud, con aprobación y rechazo sin recargar;
+  - **la Web,** en el navegador integrado con la autorización de Carlos (10.55). Su conector no arrancó, así que las acciones allí son manuales de Carlos, contrastadas desde los otros clientes. **Chrome no se da por probado.**
+- **Una confusión, recuperada sin borrar nada.** Carlos mezcló una secuencia y quedaron una carga y una cancelación accidentales.
+  - Se anularon como dice T-81, con «Marcado por error» y una anulación con motivo.
+  - **La bitácora se conservó:** 22 registros, 0 solicitudes pendientes y 0 conflictos.
+- **El almacén real de Windows:** los 374 archivos previos quedan idénticos. Se agregan solo 14 de `t105acc` y los 12 de `t96acc`, que son de T-96.
+- **Incidencias declaradas, sin daño:**
+  - una lectura de accesibilidad devolvió el formulario de acceso con un identificador de cuenta. Se descartó y no se guardó;
+  - un build de Windows se lanzó a la vez que el corpus, y se detuvo por PID;
+  - la ventana equivocada salió en dos capturas, que se descartaron.
+- **El Honor:** Codex lo encontró con la letra en 2.0 y lo dejó así. La regla es 1.0, salvo que haga falta; Timonel lo deja en 1.0 al aceptar.
+- **Horas:** ≈ 1.56 h por huellas, frente a 3.5.
+
+**La operación «PRUEBA T-105»** se queda en Firestore como operación de prueba, y sirve para mostrar el arrastre el 17. Borrarla después es de Carlos, desde la consola.
+
+**Timonel la acepta ahora,** antes de seguir con la corrección de T-96 y con T-95, porque es la del 17. Si pasa, la diapositiva 15 del Incremento 2 sube el arrastre a «Ya funciona» y actualiza la cuenta.
+
+**El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero:
+- 33 terminadas;
+- T-56, T-96 y T-105 en revisión;
+- T-95 en curso;
+- 6 por hacer.
