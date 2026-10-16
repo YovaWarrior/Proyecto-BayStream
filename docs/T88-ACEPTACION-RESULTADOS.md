@@ -1,6 +1,77 @@
-# T-88 · Aceptación cruzada con ícono — resultados parciales actualizados
+# T-88 · Aceptación cruzada con ícono — aceptada con sustitución autorizada
 
-## Estado actual tras retomar el 15-oct
+## Veredicto final · 15-oct-2026
+
+**T-88 pasa la aceptación con la sustitución de navegador autorizada por Carlos.** Honor y Windows pasan las pruebas completas. Chrome ya había pasado ambas entradas y el HTML directo; Carlos autorizó completar sus tres comprobaciones restantes en el **navegador integrado**. Las comprobaciones alternativas de favicon, manifiesto, imágenes y recursos observados pasan.
+
+La sustitución se declara expresamente: **no se inspeccionaron visualmente la pestaña ni el panel Manifest de Chrome**. Se verificaron el favicon efectivamente descargado por el navegador integrado, el manifiesto real servido y sus cuatro imágenes renderizadas. La comprobación de red se hizo con el inventario de recursos observados del navegador; no se generó un HAR ni se usó el panel Network de Chrome. Los pendientes históricos que aparecen más abajo quedan resueltos por esta sustitución autorizada, no por una supuesta ejecución de esas vistas de Chrome.
+
+### Cierre en el navegador integrado
+
+Se mantuvo visible el navegador integrado y se sirvió el mismo `build/web` de la copia de aceptación, en `http://localhost:8189/`, mediante `tool/t92_server.dart`. No se recompiló ni se alteró el producto, no se inyectaron sondas y no se bloquearon terceros con CSP.
+
+| Comprobación alternativa | Resultado propio |
+|---|---|
+| `/privacidad.html` directo | Pasa: política legible y completa, sin pasar por la app |
+| Recursos observados en la primera carga | Solo `http://localhost:8189/favicon.ico`, solicitado automáticamente por el navegador. **Cero recursos de otro origen** |
+| Regreso a la política después de abrir la app | Inventario de **cero recursos adicionales**; sigue mostrando la política |
+| Favicon de la app | El DOM declara `rel="icon" href="favicon.png"`; el inventario registra su descarga. Se exportó el recurso observado, se inspeccionó visualmente y su SHA coincide con el paquete aprobado |
+| Manifiesto servido | El DOM apunta a `manifest.json`. Su JSON leído en el navegador es igual al JSON de `build/web/manifest.json`; nombre BayStream y ambos colores `#0D47A1` |
+| Imágenes del manifiesto | **4/4** se muestran con el ícono propio y `complete=true`; tamaño natural igual al declarado: 192×192 y 512×512, en formatos `any` y `maskable` |
+| Integridad de los recursos de la compilación servida | **5/5 SHA** coinciden con `design/icono/LEEME.md`: favicon y los cuatro PNG. Además, el favicon exportado desde el navegador coincide byte a byte |
+
+El inventario se obtuvo mediante la capacidad `pageAssets` del navegador, que enumera recursos observados, incluidos los de tipo `fetch`. En esta prueba de la política sin scripts, el único recurso adicional inicial fue el favicon del mismo origen. Se informa ese alcance de observación; no se presenta una auditoría de todo el tráfico del sistema ni de otros sitios.
+
+SHA-256 del favicon descargado por el navegador: `9D8DA6448207EB75902183DE44BB1A30816CD8345085250E52736FB29194BBDE`.
+
+Evidencia adicional dentro de la misma carpeta externa de la aceptación:
+
+- `iab-privacy-assets.json` y `iab-privacy-after-app-assets.json`: inventarios de recursos de la política.
+- `iab-app-assets.json`: recursos observados de la app, incluido `favicon.png`.
+- `iab-manifest.json`, `iab-manifest.jpg`: manifiesto real leído y su captura.
+- `iab-icon-checks.json`: cuatro decodificaciones con sus URL, dimensiones y estado.
+- `iab-served-favicon.png`, `iab-hashes.json`: favicon exportado y cotejo de los cinco SHA.
+- `iab-Icon-192.png.jpg`, `iab-Icon-512.png.jpg`, `iab-Icon-maskable-192.png.jpg`, `iab-Icon-maskable-512.png.jpg`: capturas de las imágenes servidas.
+- `iab-icono-verificado.jpg`: recorte de la imagen observada en el navegador, sin alterar sus recursos.
+- `iab-summary.json`: resumen de esta última comprobación.
+
+### Resultado conjunto y horas
+
+- Política: cotejo exacto de 25 líneas, correo único y `--comprobar` en 0.
+- Honor: ambas entradas a 360 dp, claro/oscuro y letra 1.0/2.0, **38/38 piezas** en cada combinación; D3, nombre e ícono correctos. Letra restaurada a 1.0 y variante cerrada.
+- Windows: ambas entradas, **38/38 piezas**, nombre e ícono correctos. Almacén real tomado fuera del paquete: **354 archivos previos idénticos y solo ocho añadidos de `t88cx`**. App cerrada por PID.
+- Web: entradas ya verificadas en Chrome y cierre alternativo en el integrado, autorizado por Carlos, con los resultados anteriores.
+- Inventario release sin Installations, analítica, anuncios, Crashlytics ni mensajería; presentes reCAPTCHA, Play Integrity y READ_GSERVICES.
+- Ícono: 36/36 SHA del paquete, MSIX 1.0.4.0 con mosaicos nítidos y firma válida, sin instalarlo; sondas T-93 **0/1/1/1**.
+- Validaciones de la misma copia de producto: **710/710**, analyze **cero**, corpus **118/118**. No hubo cambios que justificaran repetirlas.
+- Reglas, `lib/main.dart`, archivos congelados y `pubspec.lock` sin cambios de T-88; en `pubspec.yaml`, T-88 solo había cambiado `logo_path` y su comentario, conforme a 10.50. **Esta aceptación no modifica ningún archivo de producto ni `pubspec.*`.**
+
+Esta última ventana instrumentada fue **18:44:03–18:48:09**, Guatemala (UTC−06:00): **0.069 h**. Sumada a los intervalos anteriores de 0.135 h y aproximadamente 0.23 h: **≈0.43 h de comprobaciones instrumentadas**. No incluye las pausas entre turnos ni atribuye una duración exacta a la lectura y redacción no cronometradas. Los SHA y horarios detallados de las etapas previas se conservan en el registro de abajo.
+
+### Entrega final para Carlos
+
+Único archivo modificado en el repositorio en este cierre: `docs/T88-ACEPTACION-RESULTADOS.md`. `pubspec.yaml` y `pubspec.lock` no cambian. El servidor de aceptación se cierra al finalizar; no se publica nada ni se instala el MSIX.
+
+```powershell
+git add -- docs/T88-ACEPTACION-RESULTADOS.md
+git commit -m "Sprint 3: T-88 cierra aceptacion con navegador integrado"
+git push
+```
+
+Tres líneas:
+- T-88 pasa con la sustitución del navegador autorizada por Carlos.
+- Política, Honor, Windows, ícono, MSIX, inventario y validaciones cumplen las comprobaciones documentadas.
+- El integrado confirma favicon, manifiesto, cuatro imágenes y cero recursos externos observados de la política; el producto queda intacto.
+
+**Mensaje para Yov:** Capitán Codex cierra la aceptación de T-88 sobre la copia de producto de `d6c0228`. Carlos autorizó sustituir las tres verificaciones restantes de Chrome por el navegador integrado: pasan el favicon realmente descargado (SHA correcto), el manifiesto servido (BayStream y #0D47A1), sus cuatro imágenes decodificadas al tamaño correcto y el inventario de recursos de `/privacidad.html` sin otros orígenes (solo favicon.ico propio en la primera carga y cero recursos adicionales al regresar). No se afirma haber visto la pestaña o el panel Manifest de Chrome ni haber generado un HAR. Se conservan Honor completo, Windows completo, los 354 archivos previos intactos y solo ocho nuevos t88cx, 710/710, analyze cero, corpus 118/118, 36 SHA, MSIX nítido y sondas 0/1/1/1. Sin cambios de código o pubspec.*. Informe final: docs/T88-ACEPTACION-RESULTADOS.md.
+
+---
+
+## Registros históricos anteriores al cierre autorizado
+
+Los veredictos parciales y sus comandos de entrega de las sesiones anteriores se conservan como evidencia histórica. El veredicto y el bloque Git vigentes son los de arriba.
+
+## Estado de la segunda sesión, antes de autorizar la sustitución
 
 **Honor y Windows pasan. Chrome pasa las dos entradas y el HTML directo; quedan tres comprobaciones pendientes. T-88 aún no se da por aceptada completa.** No se corrigió código ni se modificó `pubspec.yaml` o `pubspec.lock`.
 
