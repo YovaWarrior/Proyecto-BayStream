@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.49) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **42 tareas · ≈ 156.0 h estimadas** (al 15-oct, 10.50) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -3594,3 +3594,34 @@ El piso de pruebas es 648.
   - un archivo de muestra sintético para el revisor.
 
 **El sprint sigue en 42 tareas y ≈ 156.0 h.**
+
+### 10.50 · El ícono, integrado · Los mosaicos del MSIX salen pixelados y se corrigen con un PNG de 512 · Después, la aceptación de T-88 (15-oct)
+
+**Timonel integró el ícono** (commit `1f2b909`), en ≈ 0.5 h. T-88 suma ≈ 2.0 h frente a 2.5, sin contar la sesión del diseñador.
+- **El zip estaba en Descargas,** no en `C:\Proyectos\baystream-icono\`. Lo usó sin modificarlo, y los 36 SHA del `LEEME.md` coinciden.
+- **`play/` quedó en `design/icono/play/`,** y `web/manifest.json` usa `#0D47A1`. No queda ningún ícono de Flutter sin usar.
+- **El Honor** muestra el ícono nuevo con «BayStream» debajo. El APK lleva el adaptativo con su capa monocroma, pero el lanzador de MagicOS no ofrece íconos temáticos, así que el monocromo no se pudo ver.
+- **Chrome:** el favicon y los cuatro íconos del manifiesto son los nuevos, comprobado desde la página. La pestaña y el panel Manifest los revisa Codex, porque Carlos no autorizó mirar su ventana de Chrome.
+- **Windows:** el `.exe` muestra el ícono nuevo en el Explorador y en la barra de tareas. `t93_msix.ps1` firmó el MSIX 1.0.3.0 con firma `Valid`, y no se instaló.
+- **Validaciones:** 710/710 y `analyze` en cero. `pubspec.*`, las reglas, `lib/` y el almacén real sin cambio.
+
+**El hallazgo: los mosaicos del MSIX salen pixelados.**
+- `msix 3.18.0` lee el `.ico` de `logo_path` con el paquete `image`, que devuelve primero el tamaño de 16 px, y lo amplía para las 82 imágenes del paquete.
+- **Decisión de Yov:** `logo_path` pasa a `web/icons/Icon-512.png`, el PNG de 512 con la forma propia del ícono.
+  - No hace falta otra vuelta del diseñador.
+  - No depende del orden de los tamaños dentro del `.ico`.
+  - El `.ico` sigue siendo el del `.exe`.
+- **Lo hace Timonel,** como corrección de T-88:
+  - el cambio en `pubspec.yaml`, que solo toca `msix_config`, sin dependencias;
+  - la prueba de T-93 que fija `logo_path`;
+  - el MSIX de nuevo, con imágenes nítidas comprobadas.
+
+**Dos notas.**
+- **Para T-100, el manual:** una compilación incremental de Windows no tomó el `.ico` nuevo hasta tocar `Runner.rc`. Antes de armar un paquete con cambios de recursos, `flutter clean`.
+- **`design/icono/generar.py` todavía escribe `play/` en la raíz del paquete.**
+  - No se modifica, para que siga coincidiendo con su SHA del `LEEME.md`.
+  - Quien lo vuelva a correr mueve `play/` a `design/icono/play/`.
+
+**Después de la corrección, Codex acepta T-88 completa,** con el prompt de 10.48, más una línea: las imágenes del MSIX son nítidas y salen del PNG de 512.
+
+**El sprint sigue en 42 tareas y ≈ 156.0 h.** T-88 sigue en curso.
