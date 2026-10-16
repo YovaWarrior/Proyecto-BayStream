@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 15-oct, 10.55) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 15-oct, 10.56) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -3935,3 +3935,31 @@ El piso de pruebas es 648.
 - 33 terminadas;
 - T-56 en curso;
 - 9 por hacer, con T-105.
+
+### 10.56 · Un cuarto agente: Gru (Gemini 4 Argon, en una Gem), solo de lectura (15-oct)
+
+**Carlos suma un agente:** Gemini 4 Argon, que llegó a la app de Gemini para los planes AI Pro y AI Ultra el 13-oct. Trabaja en una Gem, en la Web. Carlos lo llama **Gru**.
+
+**Lo que puede y lo que no**, verificado en la ayuda de Google:
+- **Importa el repo solo para leerlo.** Es un repositorio por chat, de hasta 5 000 archivos y 100 MB; el nuestro tiene 601 archivos y 22.6 MB.
+- **Es una foto del momento:** no se sincroniza, no escribe en el repo y no ve la historia.
+- **No corre Flutter, ni las pruebas, ni los clientes.**
+- **Conclusión:** no programa ni hace aceptaciones. Es un lector y revisor independiente, con mucha capacidad de lectura y de texto largo.
+
+**Sus tareas, por valor:**
+1. **La segunda lectura del IMDG (T-85).** Transcribe por su cuenta las tablas 7.2.4 y 7.4.3.2 del PDF de la Enmienda 42-24, sin ver la de Yov. Después se cotejan celda por celda, y Carlos resuelve las diferencias mirando el PDF.
+   - Es la verificación doble que pide el plan (simetría y segunda lectura), y desbloquea T-85, la tarea de dominio más grande que queda.
+   - La transcripción se guarda en `baystream-privado`, nunca en el repo.
+2. **Una auditoría de seguridad independiente** para la entrega del 24-oct: las reglas de Firestore, el acceso a los datos y OWASP Mobile, desde el código. Cada hallazgo lleva su evidencia; los agentes y Carlos lo comprueban.
+3. **El borrador del manual de usuario** (T-100, TC-02), leyendo el código y las fichas. Yov lo revisa y le da el formato UMG.
+4. **Cuando Yov lo pida,** una revisión adicional del diff de una entrega antes de su aceptación cruzada. No reemplaza a la aceptación.
+
+**Sus reglas** (van en las instrucciones de la Gem):
+- solo lectura: no pide a Carlos comandos de git que escriban ni nada de Firebase;
+- nunca recibe el corpus, `firebase-prod.json`, `key.properties` ni otro archivo de `baystream-privado`, salvo el PDF del IMDG para su tarea;
+- dice siempre qué commit o rama importó;
+- cada afirmación lleva su archivo y su línea, o se declara como hipótesis;
+- no reescribe el plan: propone, y Yov decide;
+- entrega en español, con un «Mensaje para Yov».
+
+**El sprint sigue en 43 tareas y ≈ 159.5 h.** Las horas de Gru se anotan en la tarea que apoya.
