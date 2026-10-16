@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 16-oct, 10.63) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **43 tareas · ≈ 159.5 h estimadas** (al 16-oct, 10.65) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2196,8 +2196,9 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
      1. la cubierta, de nivel en nivel, de arriba abajo, y dentro del nivel por `orderedRows`. Cada re-estiba sale en su lugar, antes de lo que tiene debajo;
      2. lo que estorba sobre cada tapa, y después la tapa;
      3. la bodega, de arriba abajo;
-     4. las tapas de vuelta;
-     5. las re-estibas de vuelta.
+     4. las re-estibas de bodega de vuelta, de abajo arriba;
+     5. las tapas de vuelta;
+     6. las re-estibas de cubierta de vuelta, de abajo arriba (10.65, a pregunta de Timonel: es el único orden físico posible).
    - **La estimación,** por celda y en total: descargas, más re-estibas (×1 a bordo y ×2 por muelle), más tapas de grúa ×2. Da los dos totales.
    - **El orden de las celdas:** de más a menos movimientos, con el total por muelle; con empate, de proa a popa.
 3. **La pantalla «Orden de descarga»,** desde el viaje abierto:
@@ -4564,3 +4565,52 @@ Las demás son textos y cosméticas, entre ellas:
 - T-56 y T-96 en revisión;
 - T-95 por empezar con Timonel;
 - 6 por hacer.
+
+### 10.64 · La diapositiva 15, al día para el 17 · Las nueve observaciones de Timonel, clasificadas (16-oct)
+
+**La diapositiva 15 del Incremento 2, al 16-oct** (`docs/BayStream_Incremento2_Presentacion.pptx`, SHA-256 `b0646dc8…`):
+- **«Ya funciona»** suma «Arrastrar un contenedor en el plano» (T-105). Para que entre sin desbordar:
+  - tapas y la lectura de 1.5 a 2.2 quedan juntas;
+  - la voz, la Web sin conexión, el instalador y la privacidad van en un solo punto.
+- **«Por cerrar»:**
+  - las tomas de reefer (T-56);
+  - comparar la llegada con la salida (T-96);
+  - las declaraciones de Play.
+- **«Falta para el 24-oct»:**
+  - la segregación IMDG, «con sus tablas ya verificadas» (10.60);
+  - el orden de descarga, con sobreestibas;
+  - la medición de los RNF;
+  - el manual y el piloto.
+- **El pie:** «Al 16 de octubre: 34 de 43 tareas terminadas, 842 pruebas automáticas y 135 de corpus.»
+- **Las notas para el orador** dicen que el arrastre ya funciona y que conviene mostrarlo, y que las tablas del IMDG se verificaron con dos lecturas independientes.
+- **El campo del número de diapositiva** tenía 12 en caché, porque se copió de la 12, y ahora dice 15.
+- **La revisión:** el validador pasa y la diapositiva renderizada no tiene cortes. Si Codex acepta T-56 o T-96 antes de la presentación, Yov sube la cuenta del pie.
+
+**Las nueve observaciones de la aceptación de T-105** (sección 12 de `docs/T105-ACEPTACION-RESULTADOS.md`). Yov las clasifica:
+- **Para una tarea chica, después de la demo:** T-106, «Pulido del arrastre y del zoom», de unas 2 h, que **propone Yov y confirma Carlos**. Junta:
+  - el aviso rojo sin la clave interna `C:` (1);
+  - el aviso sin una segunda frase que no aplica (8);
+  - el zoom a 300 %, que no abra en blanco ni desperdicie el margen (2 y 3);
+  - la descarga pendiente dibujada en el modo Carga (4);
+  - los 20 de las impares vecinas dibujados en la vista de una bahía par (5);
+  - la copia que se arrastra, a la escala del zoom (6).
+- **Solo anotadas:**
+  - el error que salió una vez en la consola de la Web (7), sin efecto visible;
+  - que tocar la sombra de un 40 no abra detalles (9).
+- **Para la demo del 17:** en Windows, no pasar de 200 % de zoom.
+
+**El sprint sigue en 43 tareas y ≈ 159.5 h** mientras Carlos no confirme T-106. El tablero no cambia.
+
+### 10.65 · T-95 empieza con Timonel sobre `ff14dc0` · El orden de vuelta de las re-estibas, corregido en la ficha (16-oct)
+
+**Timonel empieza T-95** sobre `ff14dc0`, con la confirmación de Carlos.
+
+**Un error de la ficha, encontrado por Timonel antes de programar.**
+- **Lo que decía la ficha:** las tapas volvían antes que todas las re-estibas. Así, una re-estiba de bodega tendría que volver con la tapa ya cerrada.
+- **El orden físico, que confirmó Carlos:**
+  1. las re-estibas de bodega vuelven, de abajo arriba;
+  2. se reponen las tapas;
+  3. las re-estibas de cubierta vuelven, de abajo arriba.
+- **La ficha de T-95 queda corregida** en los pasos 4 a 6 de la secuencia.
+
+**El sprint sigue en 43 tareas y ≈ 159.5 h.** El tablero: T-95 pasa a En curso.
