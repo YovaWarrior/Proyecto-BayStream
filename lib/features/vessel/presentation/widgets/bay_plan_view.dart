@@ -18,11 +18,12 @@ import '../providers/sync_providers.dart';
 import 'hatch_cover_diagram.dart';
 import 'hatch_operation_controls.dart';
 import 'detail_text_row.dart';
+import 'plan_drag_confirmation.dart';
 import '../formatters/operation_text.dart';
 
 /// Widget que muestra el Bay Plan como un grid visual de contenedores
 /// Permite navegar entre bahías y ver la disposición de contenedores
-/// Soporta zoom/pan con InteractiveViewer y resaltado de contenedores
+/// Permite ampliar con pellizco o botones, desplazar y resaltar contenedores.
 class BayPlanView extends ConsumerStatefulWidget {
   final VesselVoyage voyage;
 
@@ -128,6 +129,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   hatchCovers: hatches?[_selectedBayNumber],
                   bay: displayedVoyage.bays[_selectedBayNumber] ?? displayedVoyage.bays[sortedBayNumbers.first]!,
                   loading: loading,
+                  dragVoyage: loading == null ? null : widget.voyage,
                   onContainerTap: loading != null
                       ? (container) => onLoadingContainerTap(context, ref, widget.voyage, container,
                           selectedBay: _selectedBayNumber, openDetails: () => _showContainerDetails(container))
@@ -532,6 +534,7 @@ class _BayGridWidget extends StatelessWidget {
   final bool orderMode;
   final LoadingPlanProgress? progress;
   final LoadingOperation? loading;
+  final VesselVoyage? dragVoyage;
 
   /// T-75: solo en el modo Descarga; marca cada contenedor del plano de llegada.
   final DischargeProgress? discharge;
@@ -557,6 +560,7 @@ class _BayGridWidget extends StatelessWidget {
     this.orderMode = false,
     this.progress,
     this.loading,
+    this.dragVoyage,
     this.discharge,
     this.portOfCall,
     this.highlightedContainerId,
@@ -622,7 +626,9 @@ class _BayGridWidget extends StatelessWidget {
 
     // Scroll vertical y horizontal para conservar la alineación en pantallas angostas
     return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
+      builder: (context, constraints) => PlanZoomViewport(
+        key: ValueKey('plan-zoom-${bay.bayNumber}'),
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
         if (hatchCovers != null && constraints.maxWidth < 600) ...[
@@ -766,7 +772,7 @@ class _BayGridWidget extends StatelessWidget {
           ),
         ),
         ]),
-      ),
+      )),
     );
   }
 
@@ -1007,6 +1013,13 @@ class _BayGridWidget extends StatelessWidget {
         ),
         // Celdas de contenedores
         ...rows.map((row) {
+          final position = '${bay.bayNumber.toString().padLeft(3, '0')}'
+              '${row.toString().padLeft(2, '0')}${tier.toString().padLeft(2, '0')}';
+          Widget target(Widget cell, {String? itemKey}) =>
+              dragVoyage == null || loading == null ? cell : PlanDragCell(
+                key: ValueKey('plan-cell-$position'),
+                voyage: dragVoyage!, data: loading!, position: position,
+                itemKey: itemKey, enableDrag: !orderMode, child: cell);
           final key = '$row-$tier';
           final container = positionMap[key];
           final isHighlighted = container != null &&
@@ -1029,22 +1042,22 @@ class _BayGridWidget extends StatelessWidget {
                 onTap: container == null
                     ? () => onReservedSlotTap(loadSlot!)
                     : () => onContainerTap(container));
-            return loadHighlighted ? _RevealPosition(key: ValueKey(loadKey), child: cell) : cell;
+            return target(loadHighlighted ? _RevealPosition(key: ValueKey(loadKey), child: cell) : cell, itemKey: loadKey);
           }
           if (container == null && reservation != null) {
-            return _ReservedCell(
+            return target(_ReservedCell(
               key: ValueKey('reserved-${reservation.key}'),
               slot: reservation,
               orderLabel: orderMode && reservation.portOfLoading == portOfCall
                   ? progress?.label(reservation.key) ?? '—'
                   : null,
               onTap: () => onReservedSlotTap(reservation),
-            );
+            ));
           }
           if (container == null &&
               !bay.slotsOccupiedByNeighbors.contains(slotKey) &&
               reservedNeighbor != null) {
-            return _ReservedCell(
+            return target(_ReservedCell(
               key: ValueKey(
                   'reserved-shadow-${bay.bayNumber}-$slotKey-${reservedNeighbor.key}'),
               slot: reservedNeighbor,
@@ -1054,7 +1067,7 @@ class _BayGridWidget extends StatelessWidget {
                       : null,
               isNeighbor: true,
               onTap: () => onReservedSlotTap(reservedNeighbor),
-            );
+            ));
           }
           final cell = _ContainerCell(
             key: ValueKey('cell-$row-$tier'),
@@ -1074,10 +1087,10 @@ class _BayGridWidget extends StatelessWidget {
             isOccupiedByNeighbor: container == null &&
                 bay.slotsOccupiedByNeighbors.contains(slotKey),
           );
-          return isHighlighted
+          return target(isHighlighted
               ? _RevealPosition(
                   key: ValueKey(container.containerId), child: cell)
-              : cell;
+              : cell);
         }),
         SizedBox(
           width: _tierWeightWidth,

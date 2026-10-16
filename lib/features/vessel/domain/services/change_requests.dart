@@ -12,25 +12,32 @@ class ChangeRequests {
       data.plan.loading[key]?.role == PlanRole.load &&
       data.state[key]?.state == ItemState.planned;
 
-  /// T-81: solo objetos pendientes de carga; se revisa de nuevo al guardar.
-  MovementDraft move(Operation operation, Operator? actor,
-      LoadingOperation data, List<PositionChange> changes, String reason) {
-    _access(operation, actor, OperatorRole.office);
-    final draft = MovementDraft.changePosition(operation.id, changes, reason);
-    final error = draft.validate() ?? review(data, changes);
-    if (error != null) throw StateError(error);
-    final batch = PositionChange.readAll(draft.payload['changes'])!;
+  /// T-105: una sola revisión pura para el gesto y ambos caminos de guardado.
+  ChangePreview preview(
+      LoadingOperation data, Operator? actor, List<PositionChange> changes) {
+    if (actor == null || !actor.authorized) {
+      return const ChangePreview.invalid('Inicia sesión para mover');
+    }
+    if (PositionChange.readAll(changes.map((c) => c.toJson()).toList()) ==
+        null) {
+      return const ChangePreview.invalid(
+          'Indica de uno a cuatro cambios válidos, sin repetir objetos ni destinos.');
+    }
+    final error = review(data, changes);
+    if (error != null) return ChangePreview.invalid(error);
+    final batch =
+        PositionChange.readAll(changes.map((c) => c.toJson()).toList())!;
     final targets = batch.map((c) => c.target).toSet();
     for (final change in batch) {
       if (!pending(data, change.target)) {
-        throw StateError(
+        return const ChangePreview.invalid(
             'Solo se mueve un objeto pendiente del plan de carga.');
       }
       final occupant = data.state.items.values
           .where((i) => i.position == change.to && !targets.contains(i.key))
           .firstOrNull;
       if (occupant != null) {
-        throw StateError(
+        return ChangePreview.invalid(
             '${change.to} está ocupada; marca primero su descarga.');
       }
       final source = data.plan.loading[change.target]!.reservedSlot;
@@ -40,10 +47,21 @@ class ChangeRequests {
           (source.isoSizeType != destination.isoSizeType ||
               source.portOfDischarge != destination.portOfDischarge ||
               source.operatorCode != destination.operatorCode)) {
-        throw StateError(
+        return const ChangePreview.invalid(
             'Las reservas del intercambio deben ser del mismo grupo.');
       }
     }
+    return ChangePreview.valid(batch.any((c) =>
+        batch.any((other) => other.target != c.target && other.from == c.to)));
+  }
+
+  /// T-81: solo objetos pendientes de carga; se revisa de nuevo al guardar.
+  MovementDraft move(Operation operation, Operator? actor,
+      LoadingOperation data, List<PositionChange> changes, String reason) {
+    _access(operation, actor, OperatorRole.office);
+    final draft = MovementDraft.changePosition(operation.id, changes, reason);
+    final error = draft.validate() ?? preview(data, actor, changes).error;
+    if (error != null) throw StateError(error);
     return draft;
   }
 
@@ -130,7 +148,7 @@ class ChangeRequests {
       LoadingOperation data, List<PositionChange> changes, String reason) {
     _access(operation, actor, OperatorRole.dock);
     final draft = MovementDraft.requestChange(operation.id, changes, reason);
-    final error = draft.validate() ?? review(data, changes);
+    final error = draft.validate() ?? preview(data, actor, changes).error;
     if (error != null) throw StateError(error);
     return draft;
   }
@@ -156,4 +174,13 @@ class ChangeRequests {
     if (error != null) throw StateError(error);
     return draft;
   }
+}
+
+/// Resultado de la revisión; no registra ni modifica el plan.
+class ChangePreview {
+  final String? error;
+  final bool isSwap;
+  const ChangePreview.invalid(this.error) : isSwap = false;
+  const ChangePreview.valid(this.isSwap) : error = null;
+  bool get valid => error == null;
 }

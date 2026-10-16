@@ -76,7 +76,12 @@ void main() {
             (ref) => Stream.value(const SyncStatus(SyncState.upToDate))),
         loadingOperationProvider(t76Loading).overrideWith((ref) async* {
           await for (final records in log.watch('op')) {
-            yield t76Operation(records.map((r) => r.movement).toList());
+            // T-105: pedir comparte la restricción de ocupación de mover.
+            // El ocupante de llegada ya descargó antes de pedir el intercambio.
+            yield t76Operation([
+              t76Movement(MovementDraft.discharge('op', 'INCOMING1', '0030282'), -1),
+              ...records.map((r) => r.movement),
+            ]);
           }
         }),
       ]);
@@ -141,7 +146,10 @@ void main() {
       expect(log.of('op').last.movement.payload['request'],
           log.of('op').first.movement.id);
       // Otro pedido se rechaza y conserva la primera aprobación.
-      final data = t76Operation(log.of('op').map((r) => r.movement).toList());
+      final data = t76Operation([
+        t76Movement(MovementDraft.discharge('op', 'INCOMING1', '0030282'), -1),
+        ...log.of('op').map((r) => r.movement),
+      ]);
       final draft = const ChangeRequests().request(
           operation,
           dock,
