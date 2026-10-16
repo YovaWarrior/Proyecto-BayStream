@@ -2,7 +2,7 @@
 
 Capitán Codex · 16-oct-2026 · Guatemala.
 
-**Veredicto actual: T-56 pendiente; no se declara aceptada.** Los casos funcionales de los tres clientes, los cinco textos y el almacén real resultaron conformes. Honor: 27,902 s. Windows: el intento continuo consumió 96,337 s hasta regresar a Perfiles guardados y no registró todavía «Perfil guardado» en esa captura; no acredita el límite de menos de un minuto. Se detuvo la aceptación por instrucción de Carlos. El cierre de esta etapa está en las secciones 11–17; las secciones 1–10 conservan la entrega parcial anterior.
+**Veredicto actual: T-56 aceptada.** Carlos midió manualmente **56 segundos** desde abrir el perfil hasta «Perfil guardado», conforme a la decisión 10.68 transmitida directamente por él. Capitán verificó después **216 tomas, «Propuestas del archivo»**, y la huella real final solo difiere en archivos `t56cx_*`. Honor: 27,902 s. Los casos funcionales de los tres clientes, los cinco textos y el almacén real resultaron conformes. El cierre definitivo y el Mensaje para Yov están en la sección 18. Las etapas anteriores se conservan como historial; el intento de 96,337 s mide instrumentación del agente y no se usa para el criterio humano.
 
 ## 1. Base y coordinación
 
@@ -239,7 +239,7 @@ Incidencias conservadas, sin cambios al producto:
 
 **SEMÁFORO:** se anunció el inicio y el cierre de las mediciones. Durante la medición final de Windows no se usó el Honor ni se ejecutó Flutter. Al terminar se cerraron los procesos de esta prueba; el turno de Flutter quedó libre.
 
-## 16. Veredicto y alcance de la detención
+## 16. Veredicto anterior a la medición manual (histórico)
 
 **T-56 queda pendiente y no se declara aceptada.** Están conformes los puntos 1–3 de la primera etapa, los casos funcionales de los tres clientes de esta etapa, los cinco textos y la huella real. Falta acreditar el recorrido de Windows en menos de un minuto. El último intento continuo no lo acredita.
 
@@ -247,7 +247,7 @@ Se aplica la instrucción directa de Carlos: «Si algo no cuadra, te detienes y 
 
 Único archivo modificado en el repositorio por esta entrega: `docs/T56-ACEPTACION-RESULTADOS.md`. No se creó `docs/T96-ACEPTACION-RESULTADOS.md` porque esa aceptación no comenzó.
 
-## 17. Mensaje para Yov y Git para Carlos
+## 17. Mensaje de la etapa detenida y Git anterior (histórico)
 
 **Mensaje para Yov:** T-56 sigue En revisión. La aceptación cruzada verificó en los tres clientes 204 / 6 / 70, 216 propuestas al reabrir, lista 1 / 2 / 1 con tres inválidos, retirada de 70 hasta 147, declaración solo por casilla y persistencia de la expansión. Los cinco textos pasan en Honor a 360 dp y letra 2.0, claro/oscuro; quedó en 1.0. Honor cronometrado: 27,902 s. La huella real de Windows es 414 → 426: los 414 previos idénticos y solo 12 t56cx_* nuevos. La Web se probó en el integrado con autorización explícita de Carlos; Chrome no se declara probado. El intento continuo de Windows consumió 96,337 s hasta volver a perfiles, sin registrar aún el texto final en esa captura; no acredita <60 s. Incluye latencia del agente y no se atribuye a procesamiento del producto. Se detuvo por la regla de Carlos, sin arreglos; no comenzó T-96. Copia ff14dc0, idéntica en producto al HEAD 0b2dfce. Informe: docs/T56-ACEPTACION-RESULTADOS.md.
 
@@ -260,5 +260,42 @@ Tres líneas:
 ```powershell
 git add -- docs/T56-ACEPTACION-RESULTADOS.md
 git commit -m "Sprint 3: documentar clientes de T-56 y medicion pendiente de Windows"
+git push
+```
+
+
+## 18. Cierre: medición manual de Carlos, decisión 10.68
+
+Carlos dispuso que el límite de un minuto se mida por una persona con su teléfono. El intento de 96,337 s del agente se conserva como incidencia de instrumentación y **no constituye una medición de respuesta de BayStream ni un rechazo del producto**.
+
+Se volvió a preparar la misma compilación final de Windows, con el script de reinicio anterior y un nuevo nombre de respaldo, siempre fuera del paquete. Solo se apartaron los 12 archivos `t56cx_*`. La app se abrió mediante `explorer.exe`, PID **5864**, y se verificaron en pantalla las **12 tomas propuestas de A07** antes de dejar «Perfiles guardados» a la vista. Evidencia `windows-reset-before-manual.json`, `windows-manual-before-12.*` y `windows-manual-profiles-ready.png`.
+
+Se esperó la ventana con Timonel. Carlos confirmó que ya no utilizaba nada. El primer recorrido suyo se detuvo para localizar la sección de tomas y se descartó como ensayo, sin atribuirle un tiempo ni un resultado. Para el segundo recorrido, se confirmó otra vez la pantalla de perfiles y se indicó iniciar el cronómetro del teléfono justo antes de abrir BUQUE GOLF. Durante la medición no se ejecutaron comandos ni se utilizó la máquina desde el agente.
+
+**Resultado informado directamente por Carlos: «listo, en 56 segundos».** Se registra como **medición manual de Carlos, 56 s**, desde abrir el perfil hasta ver «Perfil guardado», con el recorrido de bahías `002-026/4`, filas vacías, niveles `82-86,94`, vista previa 204 / 6 / 70, Agregar y Guardar. **56 < 60: criterio conforme.** El agente no presenta este tiempo como medición propia. Registro `windows-manual-timing.json`.
+
+Después, Capitán reabrió el perfil y observó **«Tomas de reefer (216)» y «Propuestas del archivo: cota inferior, puede haber más tomas.»**, sin cambios pendientes. Captura y árbol `windows-manual-reopened.png` y `.txt`. La app se cerró por el PID 5864 tras comprobar la ruta del ejecutable.
+
+**Huella final, de nuevo fuera del paquete:**
+
+- Antes de la preparación manual: **426 archivos**, `cmd.exe` 22768 ← `explorer.exe` 13864.
+- Después de la medición y el cierre: **426 archivos**, `cmd.exe` 10044 ← `explorer.exe` 9800.
+- Solo cambian `t56cx_device.hive`, `t56cx_operations.hive`, `t56cx_profiles.hive` y `t56cx_voyages.hive`.
+- Los **414 archivos originales de la primera huella conservan su SHA**; respecto de aquella, solo existen los 12 añadidos `t56cx_*`.
+- Registros: `store-before-manual.json`, `store-after-manual.json`, `store-comparison-manual.json`. La letra del Honor continúa en 1.0.
+
+**Veredicto definitivo: T-56 aceptada.** La base de clientes ff14dc0 conserva el mismo producto en HEAD `f59afafc801e2b2c4699f2c0c47111545f6bf77a`: sus diferencias son documentos de sprint, presentación, tablero y este informe. No se modificó código de producción. `pubspec.yaml` y `pubspec.lock` no cambian. Con este cierre se continúa, en el orden solicitado, con T-96.
+
+**Mensaje para Yov:** T-56 aceptada. Carlos cronometró manualmente Windows en 56 s según la decisión 10.68; Capitán verificó al reabrir 216 tomas y «Propuestas del archivo». Honor dio 27,902 s. Los tres clientes dan 204 / 6 / 70, lista 1 / 2 / 1 y tres inválidos, retirada hasta 147, declaración solo por casilla y expansión conservada. Los cinco textos pasan a 360 dp y letra 2.0 en claro/oscuro; Honor terminó en 1.0. La huella real conserva los 414 archivos originales y solo añade t56cx_*; la repetición manual solo modifica cuatro archivos de ese namespace. Web en el integrado con autorización de Carlos; Chrome no se declara probado. El intento de 96 s se conserva como instrumentación y no se usa para el criterio humano. Windows cerrado por PID. Informe: docs/T56-ACEPTACION-RESULTADOS.md. Se continúa con T-96; producción y pubspec.* intactos.
+
+Tres líneas:
+
+- Se verificaron los tres clientes, los cinco textos y el almacén real.
+- Windows manual de Carlos: 56 s; Honor: 27,902 s; T-56 aceptada.
+- Solo cambia este informe; se continúa con T-96 sin modificar producción.
+
+```powershell
+git add -- docs/T56-ACEPTACION-RESULTADOS.md
+git commit -m "Sprint 3: cerrar aceptacion de T-56 con medicion manual de Windows"
 git push
 ```
