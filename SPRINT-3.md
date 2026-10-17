@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **45 tareas · ≈ 164.5 h estimadas** (al 16-oct, 10.77) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **45 tareas · ≈ 164.5 h estimadas** (al 16-oct, 10.78) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2127,7 +2127,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 | **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62); terminada con la corrección de la sombra del 40 (10.63) · **ficha completa arriba** |
-| **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Timonel y la acepta Codex (10.69); entregada sin colocar en 10.72; colocada en `ce13547` (10.74) · **ficha completa arriba** |
+| **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Timonel y la acepta Codex (10.69); entregada sin colocar en 10.72; colocada en `ce13547` (10.74); terminada en 10.78 · **ficha completa arriba** |
 | **T-107** | RF-038 | 3.0 | El encabezado del plano, compacto en pantallas angostas (el modo y un desplegable «Acciones» en una línea, el resumen en otra; Windows y la Web sin cambios), y los tres textos que dejó T-106: la etiqueta de accesibilidad y los avisos del deriver sin `C:`, y «re-estiba» sin partirse. Lo encontró Carlos en el Honor (10.76); la hace Timonel y la acepta Codex, antes del commit de cierre · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
@@ -5315,5 +5315,31 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 **El sprint sigue en 45 tareas y ≈ 164.5 h.** T-107 pasa a «En curso». El tablero (v42):
 - 37 terminadas;
 - T-85 y T-106 en revisión;
+- T-107 en curso;
+- 5 por hacer.
+
+### 10.78 · T-106 terminada: Codex completa el Honor esta noche · Timonel avanza con T-107 parte A (16-oct)
+
+**T-106 está aceptada** (`80b8954`, `docs/T106-ACEPTACION-RESULTADOS.md`), sobre `ce13547`.
+- **El Honor:** el pellizco de Carlos a 300 %, «BAJA» y las sombras en «Número de orden», la pantalla de T-95 y los cuatro avisos en palabras, a 1.45.
+- **A 1.0:** Carga, el arrastre rojo sobre «BAJA», la copia a escala a 300 % y la sombra, que no responde a gestos.
+- **D1 no es defecto** (10.75), y la prueba propia invertida pasa 1/1.
+- **Lo demás:**
+  - reglas intactas, 914/914, corpus 157/157 y `analyze` en cero;
+  - el almacén real de Windows solo suma 14 `t106cx_*`;
+  - `demo17` conserva su huella, y el Honor queda libre y en 1.0.
+- **Una observación, la O2, que ya es de T-107:** a 1.45, el encabezado de Carga ocupa toda la pantalla. Por eso Carga y el arrastre se comprobaron a 1.0. La ficha de T-107 ya exige que la rejilla tenga un tercio del alto a 1.45.
+- **Horas reales:** ≈ 2.5 h de pared (Timonel).
+
+**T-107 parte A va bien.** En la copia de Timonel pasan 922/922 pruebas, `analyze` en cero y el corpus 157/157, y Windows ya pasó. Ahora sigue el Honor, con una app aparte (`.t107`).
+
+**La diapositiva 15:**
+- el pie dice «38 de 45»;
+- en «Por cerrar», el pulido del arrastre se cambia por el encabezado del plano en el teléfono;
+- las notas del orador, al mismo estado.
+
+**El sprint sigue en 45 tareas y ≈ 164.5 h.** El tablero (v43):
+- 38 terminadas;
+- T-85 en revisión;
 - T-107 en curso;
 - 5 por hacer.
