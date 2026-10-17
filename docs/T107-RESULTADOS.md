@@ -1,6 +1,6 @@
-# T-107 · Parte A: el encabezado del plano, compacto en el teléfono — resultados (Timonel)
+# T-107 · El encabezado del plano, compacto en el teléfono, y los últimos textos internos — resultados (Timonel)
 
-**Estado: PARTE A COLOCADA EN EL ÁRBOL, SIN COMMIT, PARA LA REVISIÓN RÁPIDA DE CODEX.** La parte B (la etiqueta de accesibilidad, los avisos del deriver y U+2011 en lo demás) va después de la demo (10.77).
+**Estado (17-oct): PARTE A VERSIONADA EN `2414588` (10.79). PARTE B EN EL ÁRBOL, SIN COMMIT, PARA LA ACEPTACIÓN DE CODEX.** La parte B está en la sección 10. Falta el criterio del Honor, que hoy no se usó.
 
 ## 1. Qué pide la parte A
 
@@ -160,3 +160,178 @@
 **Los archivos de `lib/` y `test/` modificados conservan el CRLF de sus blobs.**
 
 **`pubspec.yaml` y `pubspec.lock` no cambian.**
+
+## 10. Parte B: los textos (17-oct)
+
+**Lo que pide la ficha** («Qué construye», punto 4):
+- la etiqueta de accesibilidad nombra el objeto como lo ve el planner, igual que los avisos de T-106;
+- «re‑estiba» lleva U+2011 en todos los lugares visibles que quedan;
+- los avisos del deriver no muestran `C:` y usan el formato de T-106.
+
+Hoy **no se usó el Honor**.
+
+### 10.1 Base
+
+- **HEAD en `9ae744a`.** Desde `2414588`, los commits solo traen documentos: la revisión de Codex y las decisiones 10.79 y 10.80.
+- **La copia de validación:** `%TEMP%\baystream-t107b-9ae744a`.
+  - Tiene los 471 archivos de `git ls-tree -r HEAD` fuera de `docs/`, sacados con `git show`.
+  - Con `diff --strip-trailing-cr`, su `lib/` es igual al del árbol, salvo mis cuatro archivos.
+- **Por qué no se validó en el árbol:** hay archivos de T-98 sin versionar, de hoy entre las 17:11 y las 17:15:
+  - en `test/`: `t98_estandares_test.dart`, `t98_instrumentos_test.dart` y `t98_auxiliares_test.py`;
+  - en `tool/`: varios `t98_*`.
+  - Son de Codex: no los toqué. La suite y `analyze` del árbol los habrían incluido a medio hacer.
+
+### 10.2 Lo que cambia
+
+**`loading_controls.dart`, la etiqueta de las celdas de carga.**
+- **`loadingCellSemantics()`, nuevo y público,** para probarlo sin pantalla.
+  - **Un lleno:** «OR 1 · FULL0001234, sube».
+    - El OR sale del listado o del movimiento, igual que en T-106.
+    - Sin OR, va solo el número: «FULL0005678, sube».
+  - **Una reserva:** «Reserva 005 02 82 · 22G1 · PAMIT · TEST, sube», con su grupo.
+    - Con un vacío asignado: «Reserva 005 02 82 · OR 12 · EMPTY0000012, cargada».
+  - **La marca, en palabras:** sube, cargado/cargada, cancelado/cancelada o revisar.
+  - La celda dibuja lo mismo que antes: «OR 1» y «SUBE».
+- **`excludeSemantics: true` y `onTap` en el `Semantics` de la celda.**
+  - **Antes,** el lector juntaba la etiqueta con los textos visibles: «C:…, OR 1, SUBE» + «OR 1» + «SUBE». En HEAD pasaba igual; lo vi en el árbol de semántica de la prueba.
+  - **Ahora** se lee solo la etiqueta.
+  - La acción de tocar se conserva para el lector, y la prueba lo afirma (`hasTapAction`).
+  - **No cambia lo que hace el botón:** el toque sigue llamando al mismo `onTap`.
+
+**`operation_state_deriver.dart`, solo los textos de los avisos.**
+- **Dos ayudantes privados,** con el formato de T-106: `_shown` (que también usa `_PlanChanges`) y `_name`/`_occupant` en `_Run`.
+  - **«OR 7 · TSTU0000017»,** el número solo si no tiene orden, o «la reserva 005 02 82».
+  - **Una reserva que ocupa la celda con su vacío asignado** se nombra por el contenedor: «0030882 ya la ocupa OR 12 · EMPTY0000012.»
+- **Los 19 avisos que mostraban una clave pasan a ese formato,** entre ellos los de las líneas 116, 285, 305 y 442 que citaba la sección 7 de T-106.
+- **«re‑estiba» con U+2011** en el aviso de la descarga de uno de paso.
+- **Un límite declarado:** el plan no trae el listado, así que el deriver muestra el OR solo si lo registró el movimiento. Para traerlo habría que cambiar el modelo, y eso está fuera del carril.
+- **No cambia:** el tipo de conflicto, la clave guardada, el orden, ni ninguna regla.
+- **Queda igual:** el aviso de tapa inválida, que muestra `m.target` (`T:3-1`). No es `C:`, y su objetivo es justamente lo que no se reconoce.
+
+**`discharge_controls.dart` y `operation_progress_page.dart`: «re‑estiba» con U+2011** en los 15 textos visibles.
+- En la tabla, el resumen y su explicación.
+- La columna «Re‑est.», la marca «RE‑EST.» y «re‑estiba» de la celda.
+- El aviso «Re‑estiba», «Registrar re‑estiba», «Deshacer la re‑estiba» y «Re‑estiba registrada».
+- En el avance, la explicación, las filas y el tipo de movimiento.
+- Los comentarios `///` no se tocaron.
+
+**No cambia:** `loading_plan_controls.dart`, `bay_plan_view.dart`, las reglas, el modelo, el codec, `lib/main.dart`, los congelados, `pubspec.yaml`, `pubspec.lock` ni `firestore.rules`. Sin dependencias nuevas.
+
+**Fuera del carril, sin tocar:** `privacy_policy.dart:70` todavía dice «re-estibas» con el guion normal. Es texto visible de la política de privacidad.
+
+### 10.3 Las pruebas
+
+**Nuevas: `test/t107_texts_test.dart` (26).**
+- **Los avisos del deriver (19 casos),** con un plan de llegada que trae un contenedor de paso y el plan de carga de T-76:
+  - cada caso afirma el texto exacto;
+  - y que ningún aviso tiene `C:`, `R:` ni «re-estiba».
+- **La etiqueta (3):**
+  - un lleno con OR en sus cuatro estados;
+  - un lleno sin listado;
+  - una reserva libre y con su vacío.
+- **A 360×780 dp, con letra 1.0 y 1.45 (4):**
+  - **en Carga,** la celda tiene exactamente la etiqueta «OR 1 · FULL0001234, sube», es botón y tiene la acción de tocar;
+  - ninguna etiqueta del árbol tiene `C:` ni `R:`;
+  - desde «Acciones», el avance dice «Las re‑estibas se muestran aparte.» y cada «re‑estiba» dibujada queda en una línea;
+  - **en Descarga,** el resumen y la tabla terminan en «0 re‑estibas», la columna dice «Re‑est.», y lo dibujado no se parte.
+
+**Nuevas: `test/t107_tabs_test.dart` (4).** La observación de la pestaña; está en 10.5.
+
+**El control,** mis pruebas sobre el `lib/` de HEAD (`build/t107b/control-head*.txt`, en la copia):
+- `t107_texts_test.dart` no compila sin `loadingCellSemantics`.
+- **Sin el grupo de la etiqueta,** caso por caso: **fallan 21 de 23**.
+  - Pasan 2, «la celda la ocupa lo que llegó» y «se carga lo que no sube aquí», porque HEAD ya quitaba el prefijo en esos dos avisos con `substring(2)`. Quedan como guardas.
+- Las 4 de la pestaña pasan sobre HEAD (10.5).
+
+**La prueba existente que se ajustó: `t75_discharge_test.dart`.**
+- Cuatro aserciones fijaban el guion normal: «1 re-estiba» (dos veces), «RE-EST.» y «Re-est.». Pasan a U+2011.
+- No cambia ninguna clave ni ningún paso.
+- **Ninguna prueba necesitó otra clave,** así que no se cumplió la condición para detenerse.
+
+### 10.4 Validaciones (en la copia de `9ae744a` con mis archivos)
+
+| Validación | Resultado |
+|---|---|
+| T-107 (las 30 nuevas, las 8 de la parte A) y `t75` | **46/46** |
+| Suite completa | **952/952** (piso 922 + 30), sin skip |
+| `flutter analyze` | **0**, sin `// ignore` |
+| Corpus completo (`tool/`, 36 archivos, la carpeta por `--dart-define`, salidas en `%TEMP%`) | **157/157** |
+| `pubspec.yaml` y `pubspec.lock` | sin cambio |
+
+- Mis 7 archivos del árbol son byte a byte los de la copia (`cmp`).
+- **Fin de línea:** los tres archivos cuyo blob es LF siguen en LF; `loading_controls.dart` y `t75` siguen en CRLF.
+- **La suite no se corrió en el árbol,** por los archivos de T-98 (10.1).
+
+### 10.5 La pestaña «Estadísticas» (la observación del 17-oct)
+
+**No se reproduce,** ni en las pruebas ni en Windows.
+- **`t107_tabs_test.dart`** monta `VesselOverviewPage` completa (`pumpT91Plan`) a 360×780 dp con la llegada sintética de T-75. Prueba, con toque y con ratón:
+  - «Lista → Estadísticas»;
+  - «Bay Plan → Lista → Estadísticas».
+  - Las cuatro terminan en el índice 2, con «Total Contenedores» a la vista. **Pasan sobre HEAD y con mis cambios.**
+- **Un diagnóstico aparte** (`%TEMP%\baystream-t107b-evidencia\t107_tabs_diag_test.dart`, no se entrega) probó 12 casos:
+  - letra 1.0, 1.45 y 2.0, la barra plegada y desplegada, y toque y ratón;
+  - el clic va en el borde visible de «Estadísticas»: a letra 2.0 la pestaña llega a 403 dp y se sale de los 360.
+  - **Los 12 dejan el índice en 2.** El controlador avisa solo el índice 2, nunca el 1.
+- **En Windows,** a 1280 dp con A07, «Lista → Estadísticas» abrió Estadísticas.
+- **El código:** en `vessel_overview_page.dart`, lo único que manda a «Bay Plan» es:
+  - `_openBayPlan` (`animateTo(1)`), que solo se llama al tocar una bahía del «Perfil longitudinal» de Estadísticas (`vessel_profile_view.dart:171`);
+  - y el buscador (`container_search_delegate.dart:322`).
+- **Una hipótesis, sin confirmar:** que el toque cayera en una bahía del perfil, con la pestaña ya abierta. No toqué nada: los dos archivos están fuera del carril.
+- **Para seguir,** haría falta reproducirlo en la Web publicada a 360 dp, anotando dónde cae el toque.
+
+**De paso, fuera del carril:** en el diagnóstico, con letra **lineal** de 1.45 y 2.0, Estadísticas desborda a 360 dp en `voyage_stats_view.dart:139`, `:395` y `:770`.
+- No se probó con la escala no lineal del Honor; T-97 mostró que dan resultados distintos.
+- Queda anotado; no se corrigió.
+
+### 10.6 Windows
+
+**Compilación:** el banco `tool/t107_main.dart`, en la copia de compilación de la parte A (`%TEMP%\baystream-t107-build`) con mis cuatro archivos.
+- `--dart-define-from-file`, sin abrirlo.
+- `baystream.exe` `fa535e8b…`: el mismo de la parte A, porque el código Dart va en `data/app.so`, que ahora es `52a51d40…`.
+
+**La revisión,** a 1280 × 900 dp medidos (cliente de 1920 × 1350 px a 144 ppp):
+- **Abierta con `explorer.exe`** como `baystream_t107.exe` (PID 30716), con el namespace `t107tm`, el rol de oficina guardado y A07 como llegada en GTSTC.
+- **El encabezado es el de antes:**
+  - **Contenido:** «Pendientes por bahía», «Avance de la operación» y el chip «Solo este dispositivo» en línea.
+  - **Carga:** lo mismo, el resumen completo con «· 0 re‑estibas.», «OR / últimos dígitos» y «Asignar vacío».
+  - **Descarga:** «Pendientes de descarga», el avance y el chip; el resumen termina en «· 0 re‑estibas».
+  - No aparece «Acciones».
+- **La tabla de pendientes de descarga:** 6 bahías, 114 pendientes, la columna «Re‑est.» y su explicación.
+- **Cerrada por PID.**
+- **No se tocaron** las apps de `C:\Proyectos\baystream-demo17\` ni la operación «PRUEBA T-105». No había otra BayStream abierta.
+- **El almacén real, fuera del paquete** (`.bat` con `explorer.exe`, padre `cmd.exe`): **544 archivos antes y 544 después**.
+  - Ninguno agregado ni borrado, y ninguno inaccesible.
+  - **Cambiaron 5, todos `vessel_store\t107tm_*`:** settings, session, voyages, operations y profiles.
+  - Los `demo17_*` y el resto quedan iguales.
+
+### 10.7 Pendiente
+
+- **El Honor (criterio de la ficha):** con A07 y una operación de prueba, el plano se ve y se arrastra, y las acciones se alcanzan.
+  - Hoy no se usó.
+  - La parte A ya lo probó el 16-oct, con el arrastre en «PRUEBA T-106» (sección 6).
+  - La parte B no cambia el encabezado ni el arrastre. Aun así, el criterio queda abierto hasta que se repita con este código.
+
+### 10.8 Incidencias declaradas
+
+- **Mis cuatro pruebas de widget fallaron en la primera corrida:**
+  - **en Carga,** la etiqueta llegaba unida a los textos visibles de la celda; eso llevó a `excludeSemantics` (10.2);
+  - **en Descarga,** mi `_unbroken` contaba el resumen recogido, donde «re‑estibas» queda cortada por el «…» y no se dibuja. Ahora no cuenta lo que no se dibuja.
+- **Mi primer `analyze` dio 21 incidencias:** salían de mis dos archivos de control y diagnóstico, guardados en `build/t107b/` de la copia. Los saqué de la copia y dio 0.
+- **El control del escritorio** no encontró la app por «BayStream». La concedió por `baystream_t107.exe`, y solo esa.
+
+### 10.9 Archivos de la parte B
+
+**Modificados:**
+- `lib/features/vessel/domain/services/operation_state_deriver.dart` (`086058eb…`)
+- `lib/features/vessel/presentation/pages/operation_progress_page.dart` (`21ae4cea…`)
+- `lib/features/vessel/presentation/widgets/discharge_controls.dart` (`e2bc2987…`)
+- `lib/features/vessel/presentation/widgets/loading_controls.dart` (`b1a1737b…`)
+- `test/t75_discharge_test.dart` (`6d2ef608…`)
+- `docs/T107-RESULTADOS.md` (este informe)
+
+**Nuevos:**
+- `test/t107_texts_test.dart` (`2c2ea63b…`)
+- `test/t107_tabs_test.dart` (`d780ac78…`)
+
+**`pubspec.yaml` y `pubspec.lock` no cambian.** Las evidencias quedan en `%TEMP%`, fuera del repo.

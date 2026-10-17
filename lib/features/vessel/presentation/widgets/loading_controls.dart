@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
 import '../../domain/services/loading_operation.dart';
@@ -897,6 +898,40 @@ Future<void> showLoadingDetails(
                   ]);
             }));
 
+/// T-107 · La etiqueta de accesibilidad nombra el objeto como lo ve el
+/// planner, igual que los avisos de T-106, nunca con su clave interna:
+/// «OR 3 · TSTU0000003, sube», el número solo si no tiene orden, o
+/// «Reserva 005 02 82 · 22G1 · GTSTC · MSK, sube».
+String loadingCellSemantics(LoadingOperation operation, String itemKey) {
+  final status = operation.state[itemKey];
+  String container(String id, int? order) {
+    final listed = operation.list?.byContainer(id)?.order ?? order;
+    return listed == null ? id : 'OR $listed · $id';
+  }
+
+  final reserve = itemKey.startsWith('R:');
+  final String name;
+  if (reserve) {
+    final p = IsoCoordinateParser.tryParse(itemKey.substring(2));
+    final assigned = status?.assignedContainer;
+    final group = operation.progress.label(itemKey);
+    name = 'Reserva ${p == null ? itemKey.substring(2) : '${p.bayPadded} ${p.rowPadded} ${p.tierPadded}'}'
+        '${assigned != null ? ' · ${container(assigned, status?.order)}' : group == '—' ? '' : ' · ${group.replaceAll('\n', ' · ')}'}';
+  } else {
+    name = container(
+        itemKey.startsWith('C:') ? itemKey.substring(2) : itemKey,
+        status?.order);
+  }
+  final mark = status?.inConflict == true
+      ? 'revisar'
+      : status?.state == ItemState.cancelled
+          ? (reserve ? 'cancelada' : 'cancelado')
+          : status?.state == ItemState.moved
+              ? (reserve ? 'cargada' : 'cargado')
+              : 'sube';
+  return '$name, $mark';
+}
+
 /// OR y estado con icono: la marca sigue siendo legible sin depender del color.
 class LoadingCell extends StatelessWidget {
   final String itemKey;
@@ -927,9 +962,13 @@ class LoadingCell extends StatelessWidget {
                 : 'SUBE';
     final foreground =
         loaded ? scheme.onSurfaceVariant : scheme.onPrimaryContainer;
+    // T-107: se lee solo la etiqueta, sin repetir el OR y la marca de la
+    // celda; el toque sigue disponible para el lector de pantalla.
     return Semantics(
         button: true,
-        label: '$itemKey, $label, $mark',
+        label: loadingCellSemantics(operation, itemKey),
+        excludeSemantics: true,
+        onTap: onTap,
         child: InkWell(
             onTap: onTap,
             child: Container(

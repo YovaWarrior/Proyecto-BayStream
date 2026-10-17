@@ -258,15 +258,15 @@ void main() {
       final restow = log.of('op-t75').last.movement;
       expect((restow.type, restow.payload['restow'], restow.reason),
           (MovementType.discharge, true, 'Despejar la bodega'));
-      expect(summary(), contains('1 re-estiba'));
-      expect(find.text('RE-EST.'), findsOneWidget);
+      expect(summary(), contains('1 re‑estiba'));
+      expect(find.text('RE‑EST.'), findsOneWidget);
       expect(
           tester
               .widget<Text>(
                   find.byKey(const ValueKey('operation-discharge-totals')))
               .data,
           contains(
-              '4 por descargar (2 pendientes en cubierta / 2 pendientes en bodega) · 0 descargados · 1 re-estiba'));
+              '4 por descargar (2 pendientes en cubierta / 2 pendientes en bodega) · 0 descargados · 1 re‑estiba'));
 
       // La tabla de la operación.
       // T-107 · A 360 dp la acción está en «Acciones».
@@ -275,7 +275,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('discharge-table-button')));
       await tester.pumpAndSettle();
       expect(find.textContaining('2 bahías · 4 pendientes'), findsOneWidget);
-      expect(find.text('Re-est.'), findsOneWidget);
+      expect(find.text('Re‑est.'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     });

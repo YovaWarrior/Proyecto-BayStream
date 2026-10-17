@@ -64,7 +64,7 @@ class OperationProgressPage extends ConsumerWidget {
                       const Text(
                           'Sin listado de agencia: llenos y vacíos según el plan.'),
                     const Text(
-                        'Hechos y pendientes según el estado de la operación. Las re-estibas se muestran aparte.'),
+                        'Hechos y pendientes según el estado de la operación. Las re‑estibas se muestran aparte.'),
                     const SizedBox(height: 12),
                     if (constraints.maxWidth >= 1000)
                       SingleChildScrollView(
@@ -218,7 +218,7 @@ class OperationProgressPage extends ConsumerWidget {
       '${operationCount(row.discharged, 'descargado', 'descargados')} · '
       '${operationCount(row.dischargePending, 'pendiente', 'pendientes')}\n'
       '${pendingZones(row.dischargeDeck.pending, row.dischargeHold.pending)} · '
-      '${operationCount(row.restows, 're-estiba', 're-estibas')}';
+      '${operationCount(row.restows, 're‑estiba', 're‑estibas')}';
 
   String _covers(BayOperationProgress row) =>
       '${operationCount(row.coversDeclared, 'declarada', 'declaradas')} · '
@@ -229,7 +229,7 @@ class OperationProgressPage extends ConsumerWidget {
     if (movement == null) return 'Sin movimientos';
     final label = switch (movement.type) {
       MovementType.discharge =>
-        movement.payload['restow'] == true ? 'Re-estiba' : 'Descarga',
+        movement.payload['restow'] == true ? 'Re‑estiba' : 'Descarga',
       MovementType.loadFull => 'Carga',
       MovementType.assignEmpty => 'Asignación de vacío',
       MovementType.annul => 'Anulación',

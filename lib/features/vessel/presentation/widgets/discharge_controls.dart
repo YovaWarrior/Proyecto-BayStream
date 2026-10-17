@@ -35,12 +35,12 @@ class DischargeSummary extends ConsumerWidget {
               : 'Bahía ${bay.label} · pendientes de descarga: '
                   'cubierta ${bay.deckPending} · bodega ${bay.holdPending} · '
                   '${bay.discharged == 1 ? 'descargado' : 'descargados'} ${bay.discharged}'
-                  '${bay.restows == 0 ? '' : ' · ${operationCount(bay.restows, 're-estiba', 're-estibas')}'}',
+                  '${bay.restows == 0 ? '' : ' · ${operationCount(bay.restows, 're‑estiba', 're‑estibas')}'}',
           key: const ValueKey('bay-discharge-pending')),
       Text(
           'Escala ${voyage.portOfCall}: ${data.pending} por descargar '
           '${pendingZones(data.deckPending, data.holdPending)} · '
-          '${operationCount(data.discharged, 'descargado', 'descargados')} · ${operationCount(data.restows, 're-estiba', 're-estibas')}',
+          '${operationCount(data.discharged, 'descargado', 'descargados')} · ${operationCount(data.restows, 're‑estiba', 're‑estibas')}',
           key: const ValueKey('operation-discharge-totals')),
       if (!data.canRegister)
         const Text('Esta escala todavía no tiene operación guardada: vuelve a '
@@ -79,11 +79,11 @@ void showDischargeTable(BuildContext context, VesselVoyage voyage) =>
                       Text(
                           '${operationCount(bays.length, 'bahía', 'bahías')} · ${operationCount(data.pending, 'pendiente', 'pendientes')} · '
                           '${data.deckPending} en cubierta / ${data.holdPending} en bodega · '
-                          '${operationCount(data.discharged, 'descargado', 'descargados')} · ${operationCount(data.restows, 're-estiba', 're-estibas')}',
+                          '${operationCount(data.discharged, 'descargado', 'descargados')} · ${operationCount(data.restows, 're‑estiba', 're‑estibas')}',
                           key: const ValueKey(
                               'operation-discharge-table-totals')),
                       const Text('Cub. y Bod. = pendientes en cubierta y '
-                          'bodega; Desc. = descargados; Re-est. = re-estibas, '
+                          'bodega; Desc. = descargados; Re‑est. = re‑estibas, '
                           'que no cuentan entre los pendientes.'),
                       SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
@@ -97,7 +97,7 @@ void showDischargeTable(BuildContext context, VesselVoyage voyage) =>
                                 'Bod.',
                                 'Total',
                                 'Desc.',
-                                'Re-est.'
+                                'Re‑est.'
                               ])
                                 DataColumn(label: Text(label))
                             ],
@@ -195,7 +195,7 @@ Future<void> onDischargeTap(BuildContext context, WidgetRef ref,
     key: const ValueKey('discharge-undo-snackbar'),
     duration: const Duration(seconds: 6),
     persist: false,
-    content: Text('${restow ? 'Re-estiba registrada' : 'Descargado'} · '
+    content: Text('${restow ? 'Re‑estiba registrada' : 'Descargado'} · '
         '${container.containerId} · ${_cell(position)}'),
     action: SnackBarAction(
         label: 'Deshacer',
@@ -220,15 +220,15 @@ Future<String?> confirmRestow(
     showDialog<String>(
       context: context,
       builder: (context) => _ReasonDialog(
-        title: 'Re-estiba',
+        title: 'Re‑estiba',
         message: '${container.containerId} no se descarga en $port: va a '
             '${container.portOfDischarge ?? 'un puerto no declarado'}. '
             'Si sale del buque para volver a estibarlo, se registra como '
-            're-estiba y no cuenta entre los que bajan aquí.',
+            're‑estiba y no cuenta entre los que bajan aquí.',
         fieldKey: const ValueKey('restow-reason'),
         fieldLabel: 'Motivo (opcional)',
         confirmKey: const ValueKey('confirm-restow'),
-        confirmLabel: 'Registrar re-estiba',
+        confirmLabel: 'Registrar re‑estiba',
         requiresText: false,
       ),
     );
@@ -381,7 +381,7 @@ class DischargeDetailSection extends ConsumerWidget {
               key: const ValueKey('discharge-undo-detail'),
               icon: const Icon(Icons.undo),
               label: Text(mark == DischargeMark.restowed
-                  ? 'Deshacer la re-estiba'
+                  ? 'Deshacer la re‑estiba'
                   : 'Deshacer la descarga'),
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(context);
@@ -411,7 +411,7 @@ String dischargeMarkText(DischargeMark mark) => switch (mark) {
       DischargeMark.pending => 'por descargar',
       DischargeMark.discharged => 'descargado',
       DischargeMark.transit => 'de paso, sigue a bordo',
-      DischargeMark.restowed => 're-estiba',
+      DischargeMark.restowed => 're‑estiba',
       DischargeMark.cancelled => 'cancelado',
       DischargeMark.conflict => 'en conflicto',
     };
@@ -422,7 +422,7 @@ String dischargeMarkLabel(DischargeMark mark) => switch (mark) {
       DischargeMark.pending => 'BAJA',
       DischargeMark.discharged => 'DESC.',
       DischargeMark.transit => 'PASO',
-      DischargeMark.restowed => 'RE-EST.',
+      DischargeMark.restowed => 'RE‑EST.',
       DischargeMark.cancelled => 'CANC.',
       DischargeMark.conflict => 'REVISAR',
     };

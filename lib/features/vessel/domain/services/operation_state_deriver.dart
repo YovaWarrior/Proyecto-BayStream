@@ -1,6 +1,7 @@
 import '../entities/movement.dart';
 import '../entities/operation.dart';
 import '../entities/hatch_covers.dart';
+import '../../../../core/utils/iso_coordinate_parser.dart';
 
 /// T-72 · Deriva el estado de la escala a partir del plan y la bitácora
 /// (T-79a 2.7). Es una función pura: los mismos movimientos dan el mismo
@@ -58,6 +59,24 @@ class OperationStateDeriver {
   }
 }
 
+/// T-107 · El objeto como lo ve el planner, con el formato de T-106 y sin
+/// la clave interna: «OR 7 · TSTU0000017», el número solo si no tiene orden,
+/// o «la reserva 005 02 82». El plan no trae el listado, así que el orden es
+/// el que registró el movimiento.
+String _shown(String key, {int? order}) {
+  if (key.startsWith('R:')) {
+    final p = IsoCoordinateParser.tryParse(key.substring(2));
+    return p == null
+        ? 'la reserva ${key.substring(2)}'
+        : 'la reserva ${p.bayPadded} ${p.rowPadded} ${p.tierPadded}';
+  }
+  final id = key.startsWith('C:') ? key.substring(2) : key;
+  return order == null ? id : 'OR $order · $id';
+}
+
+String _capital(String text) =>
+    text.isEmpty ? text : '${text[0].toUpperCase()}${text.substring(1)}';
+
 class _PlanChanges {
   OperationPlan plan;
   final List<Movement> movements;
@@ -113,9 +132,9 @@ class _PlanChanges {
           key = c.target;
           final item = plan.loading[c.target];
           if (item == null) {
-            error = '${c.target} no está en el plan de carga.';
+            error = '${_capital(_shown(c.target))} no está en el plan de carga.';
           } else if (item.plannedPosition != c.from) {
-            error = '${c.target}: origen obsoleto; plan efectivo ${item.plannedPosition}, cambio desde ${c.from}.';
+            error = '${_capital(_shown(c.target))}: origen obsoleto; plan efectivo ${item.plannedPosition}, cambio desde ${c.from}.';
           } else if (plan.loading.values.any((i) =>
               !targets.contains(i.key) && i.plannedPosition == c.to)) {
             error = '${c.to} está prevista para otro objeto del plan.';
@@ -153,6 +172,20 @@ class _Run {
   final conflicts = <OperationConflict>[];
   final duplicates = <String>[];
   final notDerived = <String>[];
+
+  /// T-107 · El sujeto del aviso, al principio de la frase.
+  String _name(String key) =>
+      _capital(_shown(key, order: items[key]?.order));
+
+  /// T-107 · Lo que ocupa una celda: una reserva con vacío asignado se nombra
+  /// por su contenedor, como en T-106.
+  String _occupant(String key) {
+    final status = items[key];
+    final assigned = status?.assignedContainer;
+    return assigned == null
+        ? _shown(key, order: status?.order)
+        : _shown(assigned, order: status?.order);
+  }
 
   _Run(this.plan, this.voided, {this.changes}) {
     for (final entry in plan.hatchCovers.entries) {
@@ -282,11 +315,11 @@ class _Run {
     final status = items[key];
     if (status == null || !plan.arrival.containsKey(key)) {
       _conflict(ConflictKind.notInPlan, key, m,
-          '$key no está en el plano de llegada de esta escala.');
+          '${_name(key)} no está en el plano de llegada de esta escala.');
       return;
     }
     if (status.state == ItemState.cancelled) {
-      _conflict(ConflictKind.cancelledItem, key, m, '$key está cancelado y se descargó.',
+      _conflict(ConflictKind.cancelledItem, key, m, '${_name(key)} está cancelado y se descargó.',
           other: status.movementId);
       return;
     }
@@ -302,7 +335,7 @@ class _Run {
         state: ItemState.moved, clearPosition: true, restow: restow, movementId: m.id);
     if (status.role != PlanRole.discharge && !restow) {
       _conflict(ConflictKind.outOfPlan, key, m,
-          '$key no descarga en ${plan.portOfCall}; si sale para volver a subir, es una re-estiba.');
+          '${_name(key)} no descarga en ${plan.portOfCall}; si sale para volver a subir, es una re‑estiba.');
     }
   }
 
@@ -315,7 +348,7 @@ class _Run {
       final taken = occupied[position];
       if (taken != null) {
         _conflict(ConflictKind.cellTaken, key, m,
-            '$position ya la ocupa ${taken.substring(2)}.',
+            '$position ya la ocupa ${_occupant(taken)}.',
             other: items[taken]?.movementId);
         return;
       }
@@ -330,18 +363,18 @@ class _Run {
           movementId: m.id);
       occupied[position] = key;
       _conflict(ConflictKind.notInPlan, key, m,
-          '${key.substring(2)} no está en el plan de carga de ${plan.portOfCall}.');
+          '${_name(key)} no está en el plan de carga de ${plan.portOfCall}.');
       return;
     }
     if (status.state == ItemState.cancelled) {
-      _conflict(ConflictKind.cancelledItem, key, m, '$key está cancelado y se cargó.',
+      _conflict(ConflictKind.cancelledItem, key, m, '${_name(key)} está cancelado y se cargó.',
           other: status.movementId);
       return;
     }
     final reload = status.restow && status.state == ItemState.moved && status.position == null;
     if (status.role != PlanRole.load && !reload) {
       _conflict(ConflictKind.notInPlan, key, m,
-          '${key.substring(2)} no se carga en ${plan.portOfCall}.');
+          '${_name(key)} no se carga en ${plan.portOfCall}.');
       return;
     }
     if (status.role == PlanRole.load && status.state == ItemState.moved) {
@@ -349,14 +382,14 @@ class _Run {
         duplicates.add(m.id);
       } else {
         _conflict(ConflictKind.movedTwice, key, m,
-            '${key.substring(2)} ya se cargó en ${status.position}.',
+            '${_name(key)} ya se cargó en ${status.position}.',
             other: status.movementId);
       }
       return;
     }
     final taken = occupied[position];
     if (taken != null && taken != key) {
-      _conflict(ConflictKind.cellTaken, key, m, '$position ya la ocupa ${taken.substring(2)}.',
+      _conflict(ConflictKind.cellTaken, key, m, '$position ya la ocupa ${_occupant(taken)}.',
           other: items[taken]?.movementId);
       return;
     }
@@ -370,7 +403,7 @@ class _Run {
     occupied[position] = key;
     if (!reload && status.plannedPosition != null && status.plannedPosition != position) {
       _conflict(ConflictKind.outOfPlan, key, m,
-          '${key.substring(2)}: planificado en ${status.plannedPosition}, registrado en $position.');
+          '${_name(key)}: planificado en ${status.plannedPosition}, registrado en $position.');
     }
   }
 
@@ -379,11 +412,11 @@ class _Run {
     final container = m.payload['container'] as String;
     final status = items[key];
     if (status == null || status.kind != PlanItemKind.reservedSlot) {
-      _conflict(ConflictKind.notInPlan, key, m, '$key no es una celda reservada del plan.');
+      _conflict(ConflictKind.notInPlan, key, m, '${_name(key)} no es una celda reservada del plan.');
       return;
     }
     if (status.state == ItemState.cancelled) {
-      _conflict(ConflictKind.cancelledItem, key, m, '$key está cancelada y se asignó.',
+      _conflict(ConflictKind.cancelledItem, key, m, '${_name(key)} está cancelada y se asignó.',
           other: status.movementId);
       return;
     }
@@ -392,21 +425,21 @@ class _Run {
         duplicates.add(m.id);
       } else {
         _conflict(ConflictKind.cellTaken, key, m,
-            '$key ya tiene asignado ${status.assignedContainer}.',
+            '${_name(key)} ya tiene asignado ${status.assignedContainer}.',
             other: status.movementId);
       }
       return;
     }
     final elsewhere = emptiesAssigned[container];
     if (elsewhere != null && elsewhere != key) {
-      _conflict(ConflictKind.containerTwice, key, m, '$container ya está en $elsewhere.',
+      _conflict(ConflictKind.containerTwice, key, m, '$container ya está en ${_shown(elsewhere)}.',
           other: items[elsewhere]?.movementId);
       return;
     }
     final position = status.plannedPosition!;
     final taken = occupied[position];
     if (taken != null && taken != key) {
-      _conflict(ConflictKind.cellTaken, key, m, '$position ya la ocupa ${taken.substring(2)}.',
+      _conflict(ConflictKind.cellTaken, key, m, '$position ya la ocupa ${_occupant(taken)}.',
           other: items[taken]?.movementId);
       return;
     }
@@ -439,7 +472,7 @@ class _Run {
     final key = m.target!;
     final status = items[key];
     if (status == null) {
-      _conflict(ConflictKind.notInPlan, key, m, '$key no está en el plan de esta escala.');
+      _conflict(ConflictKind.notInPlan, key, m, '${_name(key)} no está en el plan de esta escala.');
       return;
     }
     if (status.state == ItemState.cancelled) {
@@ -448,7 +481,7 @@ class _Run {
     }
     if (status.state == ItemState.moved) {
       _conflict(ConflictKind.cancelledItem, key, m,
-          '$key ya se movió; para cancelarlo, anula antes ese movimiento.',
+          '${_name(key)} ya se movió; para cancelarlo, anula antes ese movimiento.',
           other: status.movementId);
       return;
     }
