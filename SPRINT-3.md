@@ -5382,3 +5382,22 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 - T-85 en revisión;
 - T-107 en curso, por la parte B;
 - 5 por hacer.
+
+### 10.80 · Revisión del tutor del 17-oct: una sola hipótesis con seis indicadores, título resumido y rediseño visual después del cierre (17-oct)
+
+**La presentación del proyecto** (5 a 7 min, con el video de 60 s y el logo de BayStream) se mostró al tutor el 17-oct. Los archivos viven fuera del repo, en `C:\Proyectos\baystream-presentacion\`; el vigente es el borrador 10.
+
+**Lo que pidió el tutor y lo que se decidió:**
+1. **Una sola hipótesis.** Las seis metas que eran H1 a H6 pasan a ser **indicadores** de una hipótesis de investigación única, numerados del 1 al 6:
+   - **Hi:** «El uso de BayStream reduce el tiempo de interpretación de los planos de estiba, previene los errores de posición de contenedores y mejora el acceso a la información en la oficina y el muelle, frente a la lectura manual de archivos BAPLIE y los listados impresos».
+   - **Indicadores y metas:** 1) precisión del lector ≥ 98 %; 2) tiempo para localizar un contenedor −60 %; 3) errores de posición de 1 % a 0.2 %; 4) esfuerzo −50 % frente a tres apps nativas; 5) latencia oficina–muelle ≤ 3 s; 6) SUS ≥ 68.
+   - La presentación ya lo tiene. **Falta** alinear el Documento Completo de Investigación: el capítulo de hipótesis y la operacionalización de variables. Carlos lo edita; Yov puede redactar los párrafos.
+2. **Variables e indicadores** sin las H: van numerados del 1 al 6.
+3. **Título resumido.** Carlos eligió: «Ecosistema multiplataforma para la planificación de estiba de portacontenedores en tiempo real». Sale «optimización», porque BayStream no planifica la estiba de forma automática; eso está entre los límites. La presentación ya lo usa, y el documento y los entregables siguientes lo adoptan.
+4. **La pregunta de Android.** BayStream no guarda en SQLite: usa Hive, en la carpeta privada de la app (`files/vessel_store`). La caché sin conexión del SDK de Firestore es aparte y la maneja el SDK.
+5. **La interfaz.** El tutor la vio pobre: debe ser más intuitiva y de impacto. Carlos decide hacerlo **todo después del commit de cierre**:
+   - primero, el sistema de diseño sacado del ícono (`#0D47A1`, `#FF7A1A`, `#6E9DE6`) y las maquetas de las cinco pantallas clave: inicio, plano por bahía, muelle de carga y descarga, estadísticas y avance en la oficina;
+   - después, la implementación como tema y componentes, sin tocar la lógica y con el piso de pruebas intacto.
+   - La tarea se abre al cerrar lo funcional. El tablero no cambia hoy.
+
+**El sprint sigue en 45 tareas y ≈ 164.5 h.**
