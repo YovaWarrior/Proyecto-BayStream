@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.74) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.75) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -5070,7 +5070,7 @@ Las demás son textos y cosméticas, entre ellas:
 - la reserva se nombra por su celda del BAPLIE, como en T-80;
 - la descarga pendiente también se ve en «Número de orden»;
 - la leyenda «Ocupado por 20 pies» es nueva, y la de C-5b no cambia;
-- «inclúyelo» solo aparece en el formulario de la oficina, donde sí hay intercambio. Con eso se cierra la cola del aviso que quedó de 10.63.
+- «inclúyelo» solo aparece en el formulario de la oficina, donde sí hay intercambio. Con eso se cierra la cola del aviso que quedó de 10.63. **(Mal escrito: lo corrige la 10.75.)**
 
 **Quedan fuera del carril tres textos:**
 - las etiquetas de accesibilidad que todavía llevan `C:`;
@@ -5162,3 +5162,27 @@ Yov propone juntarlos en una **T-107** de ≈ 1 h, después de la demo. Carlos c
 - 37 terminadas;
 - T-85 y T-106 en revisión;
 - 5 por hacer.
+
+### 10.75 · D1 de la aceptación de T-106 no es un defecto: Yov escribió mal la 10.72 · Codex sigue con el Honor después de la demo (16-oct)
+
+**La aceptación parcial de Codex** (`611ac25`, `docs/T106-ACEPTACION-RESULTADOS.md`):
+- reglas intactas, 914/914, corpus 157/157 y `analyze` en cero;
+- Windows y la Web pasan: en la Web integrada, a 300 %, con la copia a escala y el rojo;
+- el almacén real suma solo 14 `t106cx_*`;
+- **el veredicto es EN REVISIÓN por D1,** y falta el Honor.
+
+**Qué es D1.** En «Pedir cambio» del muelle, con «Intercambiar dos contenedores» apagado, se envía un objeto a una celda prevista para otro pendiente del mismo tamaño. El rechazo dice «La celda está prevista para otro objeto; inclúyelo en el intercambio.». Codex lo marcó como defecto porque la 10.72 decía que «inclúyelo» solo aparece en el formulario de la oficina.
+
+**Yov lo revisó en el código, y D1 no es un defecto. El error fue de Yov, al escribir la 10.72:**
+- **El formulario del muelle sí tiene el intercambio.** Es más: abre con «Intercambiar dos contenedores» encendido (`swap = !widget.direct`, `change_requests_page.dart`). Así que el consejo es correcto y el muelle puede seguirlo.
+- **Lo que Timonel describió era una observación, no un cambio.** El formulario del muelle no muestra la vista previa de `review()`, solo el error al enviar. Esa guarda (`widget.direct &&`) viene de T-81 (`c31055d`), y T-106 no toca ese archivo.
+- **La 10.72 queda corregida:** «inclúyelo» sale en los dos formularios cuando aplica, porque los dos tienen intercambio. Lo que T-106 cerró de la 10.63 es que la frase ya no sale cuando no aplica, por ejemplo entre un 20 y un 40.
+
+**Una observación, no un defecto de T-106:** el muelle ve el aviso solo después de enviar, y la oficina lo ve antes. Es una candidata para T-107, si Carlos la crea.
+
+**Codex sigue:**
+- el Honor, después de la demo;
+- su prueba propia del muelle se invierte: «inclúyelo» debe aparecer cuando el intercambio está apagado y aplica;
+- **el veredicto puede quedar en ACEPTADA si el Honor pasa.**
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h.** El tablero no cambia de columnas.
