@@ -11,6 +11,19 @@ import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
 import 'loading_controls.dart' show loadingPosition;
 
+/// T-106: la escala del zoom, para lo que no debe ampliarse (el margen) o se
+/// dibuja fuera del viewport (la copia que se arrastra, en el Overlay).
+class PlanZoomScope extends InheritedWidget {
+  final double scale;
+  const PlanZoomScope({super.key, required this.scale, required super.child});
+
+  static double of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<PlanZoomScope>()?.scale ?? 1;
+
+  @override
+  bool updateShouldNotify(PlanZoomScope oldWidget) => oldWidget.scale != scale;
+}
+
 /// Amplía la rejilla y su área desplazable; conserva los gestos de cada celda.
 class PlanZoomViewport extends StatefulWidget {
   final Widget child;
@@ -85,7 +98,8 @@ class _PlanZoomViewportState extends State<PlanZoomViewport> {
                                           physics: pointers.length >= 2
                                               ? const NeverScrollableScrollPhysics()
                                               : null),
-                                  child: widget.child))))));
+                                  child: PlanZoomScope(
+                                      scale: scale, child: widget.child)))))));
         })),
         Positioned(
             top: 0,
@@ -194,6 +208,8 @@ class PlanDragCell extends ConsumerWidget {
     final open = operation?.published == true &&
         operation?.closed == false &&
         operation?.id == data.operationId;
+    // T-106: la copia vive en el Overlay, fuera del zoom; se dibuja a su escala.
+    final zoom = PlanZoomScope.of(context);
     Widget cell = child;
     if (enableDrag && pending && actor?.authorized != true) {
       cell = GestureDetector(
@@ -207,11 +223,15 @@ class PlanDragCell extends ConsumerWidget {
         maxSimultaneousDrags: 1,
         dragAnchorStrategy: pointerDragAnchorStrategy,
         feedback: Transform.translate(
-            offset: const Offset(-27, -60),
-            child: Material(
-                type: MaterialType.transparency,
-                child:
-                    IgnorePointer(child: Opacity(opacity: .85, child: child)))),
+            offset: Offset(-27 * zoom, -60 * zoom),
+            child: Transform.scale(
+                key: const ValueKey('plan-drag-feedback'),
+                scale: zoom,
+                alignment: Alignment.topLeft,
+                child: Material(
+                    type: MaterialType.transparency,
+                    child: IgnorePointer(
+                        child: Opacity(opacity: .85, child: child))))),
         childWhenDragging: Opacity(opacity: .35, child: child),
         child: cell,
       );

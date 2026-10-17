@@ -114,9 +114,9 @@ class ChangeRequests {
     final targets = batch.map((c) => c.target).toSet();
     for (final c in batch) {
       final item = data.plan.loading[c.target];
-      if (item == null) return '${c.target} no está en el plan.';
+      if (item == null) return '${_capital(_label(data, c.target))} no está en el plan.';
       if (item.plannedPosition != c.from) {
-        return 'El origen de ${c.target} cambió; revisa la solicitud.';
+        return 'El origen de ${_label(data, c.target)} cambió; revisa la solicitud.';
       }
       final coordinate = IsoCoordinateParser.parse(c.to);
       if (coordinate.bay == 0 ||
@@ -128,7 +128,7 @@ class ChangeRequests {
         item.container?.isoSizeType ?? item.reservedSlot?.isoSizeType,
       );
       if (size != null && size != (coordinate.bay.isEven ? 40 : 20)) {
-        return '${c.target} no cabe en la bahía ${coordinate.bay}.';
+        return '${_capital(_label(data, c.target))} no cabe en la bahía ${coordinate.bay}.';
       }
       // T-105, 10.63: la par ocupa sus dos impares vecinas. Las posiciones
       // actuales y previstas se revisan aquí, también al aprobar solicitudes.
@@ -143,11 +143,20 @@ class ChangeRequests {
         }
         final other = IsoCoordinateParser.parse(at);
         if (_overlaps(coordinate, other)) {
+          // T-106: la segunda frase solo si aplica; las reglas no cambian.
+          final then = switch (occupant.role) {
+            PlanRole.transit => 'Es carga de paso: no se descarga aquí.',
+            PlanRole.discharge =>
+              'La celda está ocupada a bordo; marca primero su descarga.',
+            PlanRole.load => _sizes(coordinate, other),
+          };
           return _collision(
             coordinate,
             other,
-            occupant.assignedContainer ?? occupant.key.substring(2),
-            aboard: true,
+            occupant.assignedContainer == null
+                ? _label(data, occupant.key)
+                : _container(data, occupant.assignedContainer!, occupant.order),
+            then,
           );
         }
       }
@@ -159,7 +168,15 @@ class ChangeRequests {
         }
         final other = IsoCoordinateParser.parse(otherItem.plannedPosition);
         if (_overlaps(coordinate, other)) {
-          return _collision(coordinate, other, _name(otherItem));
+          return _collision(
+            coordinate,
+            other,
+            _label(data, otherItem.key),
+            _sizes(coordinate, other) ??
+                (pending(data, otherItem.key)
+                    ? 'La celda está prevista para otro objeto; inclúyelo en el intercambio.'
+                    : null),
+          );
         }
       }
       // Excluir los orígenes no permite superponer los destinos del lote.
@@ -168,7 +185,8 @@ class ChangeRequests {
         if (otherItem == null) continue;
         final other = IsoCoordinateParser.parse(otherChange.to);
         if (_overlaps(coordinate, other)) {
-          return _collision(coordinate, other, _name(otherItem));
+          return _collision(coordinate, other, _label(data, otherItem.key),
+              _sizes(coordinate, other));
         }
       }
     }
@@ -187,19 +205,34 @@ class ChangeRequests {
   String _shown(IsoCoordinate p) =>
       '${p.bayPadded} ${p.rowPadded} ${p.tierPadded}';
 
-  String _name(PlanItem item) =>
-      item.container?.containerId ??
-      'la reserva ${_shown(IsoCoordinateParser.parse(item.plannedPosition))}';
+  /// T-106: el objeto como lo ve el planner, nunca con su clave interna:
+  /// «OR 7 · TSTU0000017», el número solo si no tiene orden, o «la reserva
+  /// 005 02 82».
+  String _label(LoadingOperation data, String key) => key.startsWith('R:')
+      ? 'la reserva ${_shown(IsoCoordinateParser.parse(key.substring(2)))}'
+      : _container(data, key.startsWith('C:') ? key.substring(2) : key,
+          data.state[key]?.order);
 
-  String _collision(
-    IsoCoordinate destination,
-    IsoCoordinate other,
-    String name, {
-    bool aboard = false,
-  }) =>
-      '${destination.toIsoCode()} choca con $name en ${other.toIsoCode()}: '
-      '${destination.bay != other.bay ? 'un 40 ocupa las dos mitades de la celda. ' : ''}'
-      '${aboard ? 'La celda está ocupada a bordo; marca primero su descarga.' : 'La celda está prevista para otro objeto; inclúyelo en el intercambio.'}';
+  String _container(LoadingOperation data, String id, int? order) {
+    final listed = data.list?.byContainer(id)?.order ?? order;
+    return listed == null ? id : 'OR $listed · $id';
+  }
+
+  static String _capital(String text) =>
+      text.isEmpty ? text : '${text[0].toUpperCase()}${text.substring(1)}';
+
+  /// Un 40 vive en una bahía par y un 20 en una impar: chocar entre bahías de
+  /// distinta paridad es chocar con otro tamaño, y eso no se intercambia.
+  String? _sizes(IsoCoordinate destination, IsoCoordinate other) =>
+      destination.bay.isEven != other.bay.isEven
+          ? 'Un 20 y un 40 no se intercambian.'
+          : null;
+
+  String _collision(IsoCoordinate destination, IsoCoordinate other,
+          String name, String? then) =>
+      '${destination.toIsoCode()} choca con $name en ${other.toIsoCode()}'
+      '${destination.bay != other.bay ? ': un 40 ocupa las dos mitades de la celda.' : '.'}'
+      '${then == null ? '' : ' $then'}';
 
   MovementDraft request(Operation operation, Operator? actor,
       LoadingOperation data, List<PositionChange> changes, String reason) {

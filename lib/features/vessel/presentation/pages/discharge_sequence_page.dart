@@ -114,7 +114,7 @@ class _DischargeSequencePageState extends State<DischargeSequencePage> {
 
   static String _summary(DischargeSequence s) =>
       '${operationCount(s.discharges, 'descarga', 'descargas')} · '
-      '${operationCount(s.restows, 're-estiba', 're-estibas')} '
+      '${operationCount(s.restows, 're‑estiba', 're‑estibas')} '
       '(${s.columnRestows} por columna, ${s.coverRestows} por tapa) · '
       '${operationCount(s.craneCovers, 'tapa de grúa', 'tapas de grúa')} · '
       '${operationCount(s.movesOnBoard, 'movimiento', 'movimientos')} a bordo, '
@@ -199,14 +199,15 @@ class _DischargeSequencePageState extends State<DischargeSequencePage> {
             '${operationCount(cell.movesOnBoard, 'movimiento', 'movimientos')} a bordo, '
             '${cell.movesByQuay} por muelle · '
             '${operationCount(cell.discharges, 'descarga', 'descargas')} · '
-            '${operationCount(cell.restows, 're-estiba', 're-estibas')} · '
+            '${operationCount(cell.restows, 're‑estiba', 're‑estibas')} · '
             '${operationCount(cell.craneCovers, 'tapa de grúa', 'tapas de grúa')}',
             style: text.bodySmall?.copyWith(color: scheme.onSecondaryContainer)),
       ]),
     );
   }
 
-  /// El rótulo nunca va solo con color: lleva su texto y su ícono.
+  /// El rótulo nunca va solo con color: lleva su texto y su ícono. «Re‑estiba»
+  /// lleva un guion que no parte línea (U+2011, T-106).
   static (String, IconData) _label(DischargeStep step) {
     final cover = step.cover;
     final name = cover == null
@@ -216,7 +217,7 @@ class _DischargeSequencePageState extends State<DischargeSequencePage> {
             : 'Tapa automática';
     return switch (step.kind) {
       DischargeStepKind.discharge => ('Descarga', Icons.south),
-      DischargeStepKind.restowOut => ('Re-estiba: sale', Icons.north),
+      DischargeStepKind.restowOut => ('Re‑estiba: sale', Icons.north),
       DischargeStepKind.coverOff => (
           cover!.crane ? '$name: quitar' : '$name: abrir',
           Icons.expand_less
@@ -225,7 +226,7 @@ class _DischargeSequencePageState extends State<DischargeSequencePage> {
           cover!.crane ? '$name: reponer' : '$name: cerrar',
           Icons.expand_more
         ),
-      DischargeStepKind.restowBack => ('Re-estiba: vuelve', Icons.undo),
+      DischargeStepKind.restowBack => ('Re‑estiba: vuelve', Icons.undo),
     };
   }
 

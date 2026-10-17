@@ -151,7 +151,7 @@ void main() {
     await tester.pumpWidget(_page(Brightness.light));
     await tester.pumpAndSettle();
     expect(_text(tester, 'discharge-summary'),
-        '3 descargas · 2 re-estibas (1 por columna, 1 por tapa) · '
+        '3 descargas · 2 re‑estibas (1 por columna, 1 por tapa) · '
         '1 tapa de grúa · 7 movimientos a bordo, 9 por muelle');
     expect(_text(tester, 'discharge-zones'),
         '1 en cubierta · 2 en bodega · 2 celdas, de más a menos movimientos por muelle');
@@ -160,17 +160,17 @@ void main() {
     final second = tester.getTopLeft(find.byKey(const ValueKey('discharge-cell-005')));
     expect(first.dy, lessThan(second.dy));
     expect(_stepText(tester, '001', 1),
-        '1. | Re-estiba: sale | 001-02-84 · TSTU0000952 · por columna');
+        '1. | Re‑estiba: sale | 001-02-84 · TSTU0000952 · por columna');
     expect(_stepText(tester, '001', 2), '2. | Descarga | 001-02-82 · TSTU0000951');
     expect(_stepText(tester, '001', 3),
-        '3. | Re-estiba: sale | 001-04-82 · TSTU0000953 · por tapa');
+        '3. | Re‑estiba: sale | 001-04-82 · TSTU0000953 · por tapa');
     expect(_stepText(tester, '001', 4), '4. | Tapa T1: quitar | Bahía 001 · filas 04');
     expect(_stepText(tester, '001', 5), '5. | Descarga | 001-04-02 · TSTU0000954');
     expect(_stepText(tester, '001', 6), '6. | Tapa T1: reponer | Bahía 001 · filas 04');
     expect(_stepText(tester, '001', 7),
-        '7. | Re-estiba: vuelve | 001-04-82 · TSTU0000953 · por tapa');
+        '7. | Re‑estiba: vuelve | 001-04-82 · TSTU0000953 · por tapa');
     expect(_stepText(tester, '001', 8),
-        '8. | Re-estiba: vuelve | 001-02-84 · TSTU0000952 · por columna');
+        '8. | Re‑estiba: vuelve | 001-02-84 · TSTU0000952 · por columna');
     final warning =
         find.byKey(const ValueKey('discharge-warning-hold-without-cover'));
     expect(warning, findsOneWidget, reason: 'la 005 no tiene tapa declarada');
@@ -190,7 +190,7 @@ void main() {
     await tester.tap(find.text('JMKIN').last);
     await tester.pumpAndSettle();
     expect(_text(tester, 'discharge-summary'),
-        '1 descarga · 0 re-estibas (0 por columna, 0 por tapa) · '
+        '1 descarga · 0 re‑estibas (0 por columna, 0 por tapa) · '
         '0 tapas de grúa · 1 movimiento a bordo, 1 por muelle');
     expect(find.byKey(const ValueKey('discharge-cell-009')), findsOneWidget);
     expect(find.byKey(const ValueKey('discharge-cell-001')), findsNothing);

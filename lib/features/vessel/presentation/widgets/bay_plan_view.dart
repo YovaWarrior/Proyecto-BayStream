@@ -80,6 +80,24 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     final discharge = dischargeMode
         ? ref.watch(dischargeProgressProvider(widget.voyage)).value
         : null;
+    // T-106: en Carga se ve lo que todavía baja aquí, con la marca de T-75.
+    final arriving = <int, Map<String, ContainerUnit>>{};
+    for (final item in loading?.plan.arrival.values ?? const <PlanItem>[]) {
+      final status = loading!.state[item.key];
+      final at = status?.position;
+      if (item.role != PlanRole.discharge ||
+          item.container == null ||
+          status?.state != ItemState.planned ||
+          at == null) {
+        continue;
+      }
+      final p = IsoCoordinateParser.parse(at);
+      arriving.putIfAbsent(p.bay, () => {})['${p.row}-${p.tier}'] =
+          item.container!.copyWith(stowagePosition: p);
+    }
+    final twenties = _selectedBayNumber == null
+        ? const <String, int>{}
+        : _neighborTwenties(displayedVoyage, _selectedBayNumber!, arriving);
 
     // Escuchar cambios en la bahía seleccionada desde búsqueda o perfil.
     ref.listen<int?>(selectedBayProvider, (previous, next) {
@@ -159,14 +177,45 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   discharge: discharge,
                   progress: loading?.progress ?? progress,
                   portOfCall: widget.voyage.portOfCall,
+                  arriving: arriving[_selectedBayNumber] ?? const {},
+                  neighborTwenties: twenties,
+                  onDetailsTap: _showContainerDetails,
                 )
               : const Center(child: Text('Selecciona una bahía')),
         ),
 
         // Leyenda
-        _buildLegend(displayedVoyage),
+        _buildLegend(displayedVoyage, twenties: twenties.isNotEmpty),
       ],
     );
+  }
+
+  /// T-106: en una bahía par, cuántos 20 de sus impares vecinas ocupan cada
+  /// «fila-nivel». Es la huella física de T-95 y 10.63, sin calcular pares:
+  /// una par toca sus dos impares. Cuenta contenedores, reservas y lo que
+  /// todavía baja; es solo dibujo.
+  static Map<String, int> _neighborTwenties(VesselVoyage voyage, int bay,
+      Map<int, Map<String, ContainerUnit>> arriving) {
+    if (bay.isOdd) return const {};
+    final counts = <String, int>{};
+    void add(IsoCoordinate? p) {
+      if (p == null || (p.bay != bay - 1 && p.bay != bay + 1)) return;
+      final key = '${p.row}-${p.tier}';
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+
+    for (final c in voyage.containers) {
+      add(c.stowagePosition);
+    }
+    for (final s in voyage.reservedSlots) {
+      add(s.stowagePosition);
+    }
+    for (final b in [bay - 1, bay + 1]) {
+      for (final c in arriving[b]?.values ?? const <ContainerUnit>[]) {
+        add(c.stowagePosition);
+      }
+    }
+    return counts;
   }
 
   Widget _buildBaySelector(List<int> bayNumbers, VesselVoyage displayedVoyage) {
@@ -267,7 +316,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     );
   }
 
-  Widget _buildLegend(VesselVoyage displayedVoyage) {
+  Widget _buildLegend(VesselVoyage displayedVoyage, {bool twenties = false}) {
     final activeFilter = ref.watch(selectedTypeFilterProvider);
     final scheme = Theme.of(context).colorScheme;
     return Container(
@@ -300,6 +349,12 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             const SizedBox(width: 16),
             _buildLegendItem(
                 scheme.surfaceContainerHigh, 'Ocupado por 40 pies', null, activeFilter),
+            // T-106: la sombra de los 20 vecinos solo aparece en una par.
+            if (twenties) ...[
+              const SizedBox(width: 16),
+              _buildLegendItem(scheme.surfaceContainerHigh,
+                  'Ocupado por 20 pies', null, activeFilter),
+            ],
             if (displayedVoyage.totalReservedSlots > 0) ...[
               const SizedBox(width: 16),
               _buildReservedLegendItem(),
@@ -549,6 +604,15 @@ class _BayGridWidget extends StatelessWidget {
   /// Predicado del dominio: no se reimplementa la regla aqui.
   final bool Function(ContainerUnit) isInTransit;
 
+  /// T-106: en Carga, lo que todavía baja en esta bahía, por «fila-nivel».
+  final Map<String, ContainerUnit> arriving;
+
+  /// T-106: en una par, cuántos 20 de sus impares vecinas ocupan cada celda.
+  final Map<String, int> neighborTwenties;
+
+  /// Solo abre los detalles: lo que baja no se opera desde el modo Carga.
+  final void Function(ContainerUnit)? onDetailsTap;
+
   const _BayGridWidget({
     required this.bay,
     this.hatchCovers,
@@ -565,6 +629,9 @@ class _BayGridWidget extends StatelessWidget {
     this.portOfCall,
     this.highlightedContainerId,
     this.activeTypeFilter,
+    this.arriving = const {},
+    this.neighborTwenties = const {},
+    this.onDetailsTap,
   });
 
   @override
@@ -626,13 +693,21 @@ class _BayGridWidget extends StatelessWidget {
 
     // Scroll vertical y horizontal para conservar la alineación en pantallas angostas
     return LayoutBuilder(
-      builder: (context, constraints) => PlanZoomViewport(
+      builder: (context, outer) => PlanZoomViewport(
         key: ValueKey('plan-zoom-${bay.bayNumber}'),
-        child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // T-106: dentro del zoom el ancho es el de la vista lógica. A 300 % la
+        // rejilla queda a la vista, sin un lienzo en blanco tan ancho como la
+        // pantalla, y el margen de 16 dp se compensa para no ampliarse.
+        child: LayoutBuilder(builder: (context, constraints) {
+        final margin = 16 / PlanZoomScope.of(context);
+        final inner = constraints.maxWidth > 2 * margin
+            ? constraints.maxWidth - 2 * margin
+            : 0.0;
+        return SingleChildScrollView(
+        padding: EdgeInsets.all(margin),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-        if (hatchCovers != null && constraints.maxWidth < 600) ...[
-          SizedBox(width: constraints.maxWidth > 32 ? constraints.maxWidth - 32 : 0,
+        if (hatchCovers != null && outer.maxWidth < 600) ...[
+          SizedBox(width: inner,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Tapas · bahía ${bay.bayNumber.toString().padLeft(2, '0')}'),
               HatchCoverDiagram(key: const ValueKey('hatch-compact-plan'),
@@ -643,9 +718,7 @@ class _BayGridWidget extends StatelessWidget {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: constraints.maxWidth > 32 ? constraints.maxWidth - 32 : 0,
-            ),
+            constraints: BoxConstraints(minWidth: inner),
             child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -772,7 +845,8 @@ class _BayGridWidget extends StatelessWidget {
           ),
         ),
         ]),
-      )),
+      );
+      })),
     );
   }
 
@@ -1069,6 +1143,18 @@ class _BayGridWidget extends StatelessWidget {
               onTap: () => onReservedSlotTap(reservedNeighbor),
             ));
           }
+          // T-106: la descarga pendiente se ve ocupada, con la marca de T-75.
+          // No se arrastra; soltar ahí sigue dando el rojo del dominio.
+          final arrival = container == null ? arriving[key] : null;
+          if (arrival != null) {
+            return target(_ContainerCell(
+              key: ValueKey('pending-discharge-${arrival.containerId}'),
+              container: arrival,
+              dischargeMark: DischargeMark.pending,
+              onTap: onDetailsTap == null ? null : () => onDetailsTap!(arrival),
+              activeTypeFilter: activeTypeFilter,
+            ));
+          }
           final cell = _ContainerCell(
             key: ValueKey('cell-$row-$tier'),
             container: container,
@@ -1086,6 +1172,7 @@ class _BayGridWidget extends StatelessWidget {
             isInTransit: container != null && isInTransit(container),
             isOccupiedByNeighbor: container == null &&
                 bay.slotsOccupiedByNeighbors.contains(slotKey),
+            neighborTwenties: container == null ? neighborTwenties[key] ?? 0 : 0,
           );
           return target(isHighlighted
               ? _RevealPosition(
@@ -1262,6 +1349,10 @@ class _ContainerCell extends StatelessWidget {
   /// de 40 pies estibado en una bahía par vecina.
   final bool isOccupiedByNeighbor;
 
+  /// T-106: en una bahía par, cuántos 20 de las impares vecinas ocupan el
+  /// hueco. Es solo dibujo: no se arrastra ni se toca.
+  final int neighborTwenties;
+
   const _ContainerCell({
     super.key,
     this.container,
@@ -1270,12 +1361,37 @@ class _ContainerCell extends StatelessWidget {
     this.activeTypeFilter,
     this.isInTransit = false,
     this.isOccupiedByNeighbor = false,
+    this.neighborTwenties = 0,
     this.orderLabel,
     this.dischargeMark,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (container == null && !isOccupiedByNeighbor && neighborTwenties > 0) {
+      return Container(
+        key: const ValueKey('neighbor-twenty'),
+        width: 50,
+        height: 40,
+        margin: const EdgeInsets.all(2),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
+        child: Text(
+          neighborTwenties == 1 ? "20'" : "2×20'",
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
     if (container == null) {
       // C-5b: el hueco puede estar vacío en esta bahía pero tomado por un
       // contenedor de 40 pies estibado en una par vecina. No es carga de este
