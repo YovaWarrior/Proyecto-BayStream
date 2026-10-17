@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **45 tareas · ≈ 164.5 h estimadas** (al 16-oct, 10.79) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **47 tareas · ≈ 168.0 h estimadas** (al 17-oct, 10.81) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2116,6 +2116,72 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
   - el piso (914) más las nuevas, y `analyze` en cero;
   - el corpus completo en verde.
 
+#### T-108 · El lector avisa lo que no cumple el estándar: unidades de peso, posiciones mal formadas, dígito de control y archivo incompleto · 2.5 h · Codex (ficha completa, 17-oct; la acepta Timonel)
+
+**Para qué.** La batería de conformidad de T-98 (RNF-008) encontró que el lector acepta en silencio cuatro tipos de casos que no cumplen el estándar (10.81). Uno da un dato equivocado: un peso en libras o en toneladas se toma como kilos. Los otros pueden pasar sin que nadie lo note. T-98 mide RNF-008 sobre el commit de cierre, así que la tarea va antes.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 17-oct):**
+- `_parseMEA` (`baplie_parser_service.dart`) toma el número del peso y no mira la unidad (`KGM`, `LBR` o `TNE`).
+- La posición de `LOC+147` pasa por `IsoCoordinateParser.tryParse`. Si no es un BBBRRTT válido, la coordenada queda nula y el lector no avisa.
+- El lector no valida el dígito de control ISO 6346.
+- `parse()` revisa la versión en `UNH` (`_validateVersion`), pero no que existan `UNB`, `BGM`, `UNT` y `UNZ`.
+- El único aviso de lectura que llega a la pantalla es el de la 1.5 (T-103): `smdg15Notice`, en `voyage_summary_card.dart`.
+
+**Qué construye.**
+1. **Pesos:** `KGM` queda igual. `LBR` se convierte a kg (× 0.45359237) y `TNE` a kg (× 1000), redondeados al kilo. Sin unidad, se toma como kg, como hoy, y hay aviso. Una unidad distinta: el contenedor queda sin ese peso, y hay aviso.
+2. **Posición mal formada:** el contenedor no se coloca en ninguna celda, y el aviso dice cuántos y cuáles, con la posición tal como vino.
+3. **Dígito de control ISO 6346:** se calcula para cada número con el formato de 4 letras y 7 dígitos. Si no coincide, el contenedor se lee igual y el aviso dice cuántos y cuáles. Los números con otro formato no se evalúan.
+4. **Archivo incompleto:** si faltan `UNB`, `BGM`, `UNT` o `UNZ`, el archivo abre igual, y el aviso dice cuáles faltan y que puede venir incompleto.
+5. **Dónde se ven:** en la tarjeta de resumen del viaje, con el estilo del aviso de la 1.5: una línea por tipo, con la cuenta, y el detalle a un toque. Sin avisos, la tarjeta queda como hoy.
+6. **La batería de T-98** (`tool/t98_estandares_test.dart`, tras la corrección de 10.81) marca los 13 casos negativos como detectados.
+
+**Carril.**
+- **Toca:** `baplie_parser_service.dart`; un servicio puro nuevo en `domain/services/` para el dígito de control; la entidad del viaje, solo si hace falta para llevar los avisos; `voyage_summary_card.dart`, y `test/t108_*`.
+- **No toca:** las reglas, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas. Firestore no cambia.
+
+**Detente y avisa si:**
+- algún archivo del corpus cambia de peso, de número de contenedores o de posiciones: solo pueden aparecer avisos;
+- el dígito de control da aviso en más del 1 % de los contenedores del corpus, que está anonimizado y podría no respetar el dígito;
+- llevar los avisos, también al reabrir desde Recientes, exige cambiar el codec local o Firestore.
+
+**Fuera de alcance:** UN/LOCODE (T-98 lo mide aparte), rechazar archivos completos, y los avisos en el PDF o en la comparación de viajes.
+
+**Terminada cuando:**
+- [ ] **Pruebas en `test/t108_*`:**
+  - `LBR` y `TNE` convertidos a kg; una unidad desconocida y un peso sin unidad, con su aviso;
+  - posiciones mal formadas (corta, larga, con letra y con signo) fuera de la rejilla y en el aviso;
+  - tres números con el dígito alterado en el aviso, y tres válidos sin aviso;
+  - un archivo sin `UNT` ni `UNZ` y otro sin `UNB` ni `BGM`, con su aviso;
+  - un archivo limpio, sin avisos.
+- [ ] **`tool/t98_estandares_test.dart`:** los 13 casos negativos salen «detectado».
+- [ ] **El corpus:** 157/157, con todos sus resultados idénticos; el informe lista los archivos que ahora tienen algún aviso, y cuál.
+- [ ] **Windows y la Web:** A07 sin avisos nuevos, o con los declarados, y un archivo sintético con los cuatro tipos muestra sus cuatro líneas. El Honor, cuando Carlos lo permita.
+- [ ] **Validaciones:** el piso vigente más las nuevas, y `analyze` en cero.
+
+#### T-109 · Estadísticas sin desbordes a 360 dp con letra grande, y el último guion de «re-estibas» · 1.0 h · Codex (ficha completa, 17-oct; la acepta Timonel)
+
+**Para qué.** Timonel lo anotó en T-107 parte B (sección 10 de `docs/T107-RESULTADOS.md`): a 360 dp, con la letra lineal en 1.45 y en 2.0, la vista de estadísticas (`voyage_stats_view.dart`) se desborda. T-98 y T-99 miden a 360 dp y con letra grande, así que la tarea va antes del commit de cierre. Además, «re-estibas» sigue con guion normal en `privacy_policy.dart:70`.
+
+**Qué construye.**
+1. **Estadísticas a 360×780 dp, con letra 1.0, 1.45 y 2.0, sin desbordes:** las tarjetas pasan a una columna si no caben; los textos largos se parten en líneas o se recortan con «…», con el texto completo a un toque y en la etiqueta de accesibilidad. Los números no se recortan.
+2. **A 600 dp o más, y en Windows,** la vista queda como hoy.
+3. **La política:** «re-estibas» con U+2011, y `web/privacidad.html` igual a la fuente única, como lo dejó T-88, con su prueba.
+
+**Carril.**
+- **Toca:** `voyage_stats_view.dart`, `privacy_policy.dart`, `web/privacidad.html` y `test/t109_*`.
+- **No toca:** las reglas, el modelo, el codec, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+
+**Detente y avisa si:**
+- quitar un desborde exige quitar un dato de la vista;
+- la política cambia más allá del guion.
+
+**Terminada cuando:**
+- [ ] **Pruebas de widget a 360×780 dp** con A07 y letra 1.0, 1.45 y 2.0: sin errores de desborde, y con todos los datos de hoy presentes.
+- [ ] **A 1280 dp,** la vista igual que hoy.
+- [ ] **La política** con U+2011, y `web/privacidad.html` igual a la fuente.
+- [ ] **Windows sin cambios;** el Honor (360 dp y letra 2.0), cuando Carlos lo permita.
+- [ ] **Validaciones:** el piso vigente más las nuevas, y `analyze` en cero.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43) · **ficha completa arriba** |
@@ -2129,6 +2195,8 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62); terminada con la corrección de la sombra del 40 (10.63) · **ficha completa arriba** |
 | **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Timonel y la acepta Codex (10.69); entregada sin colocar en 10.72; colocada en `ce13547` (10.74); terminada en 10.78 · **ficha completa arriba** |
 | **T-107** | RF-038 | 3.0 | El encabezado del plano, compacto en pantallas angostas (el modo y un desplegable «Acciones» en una línea, el resumen en otra; Windows y la Web sin cambios), y los tres textos que dejó T-106: la etiqueta de accesibilidad y los avisos del deriver sin `C:`, y «re-estiba» sin partirse. Lo encontró Carlos en el Honor (10.76); la hace Timonel y la acepta Codex, antes del commit de cierre · **ficha completa arriba** |
+| **T-108** | BAP | 2.5 | El lector avisa lo que no cumple el estándar (10.81): pesos en LBR y TNE a kg, posiciones mal formadas, dígito de control ISO 6346 y archivo incompleto, con aviso en la tarjeta del viaje. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
+| **T-109** | TC | 1.0 | Estadísticas sin desbordes a 360 dp con letra 1.45 y 2.0, y el último guion de «re-estibas» en la política (10.81). La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -5401,3 +5469,44 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
    - La tarea se abre al cerrar lo funcional. El tablero no cambia hoy.
 
 **El sprint sigue en 45 tareas y ≈ 164.5 h.**
+
+### 10.81 · T-98 Fase A, por corregir: la batería de conformidad va a `tool/` · T-107 parte B, en revisión · Timonel acepta T-85 sin el Honor · Nacen T-108 y T-109 (17-oct)
+
+**Sin el Honor por ahora (Carlos, 17-oct).** Se avanza con lo que no lo necesita. Las comprobaciones en el teléfono de T-107, T-85 y T-98 se hacen cuando Carlos lo permita.
+
+**T-98 Fase A, entregada** (Codex). Carlos la versionó en `194f140`, sin el prefijo «Sprint 3:»; no se reescribe.
+- **Son 17 archivos:** los scripts de `tool/t98_*`, la batería y las autopruebas de `test/t98_*`, y `docs/T98-RESULTADOS.md`. Lo ensayado sobre HEAD no es una medición.
+- **La suite quedó en rojo: 948/962.** Fallan 13 casos de la batería de conformidad de RNF-008, porque el lector acepta en silencio BBBRRTT mal formados, dígitos ISO 6346 alterados, pesos en LBR y TNE, y archivos sin UNB, BGM, UNT o UNZ. Falla también la prueba de T-92.
+- **Decisiones de Yov:**
+  1. **La suite por defecto queda en verde.** La batería de conformidad es un instrumento de medición: pasa a `tool/t98_estandares_test.dart`, como el corpus, y registra por caso qué hace el lector (acepta en silencio, avisa o rechaza). Para un caso negativo, «detectado» es rechazar o avisar de forma visible. En `test/` quedan las 12 autopruebas.
+  2. **El fallo de T-92 no es del producto.** Al sacar una copia con git en Windows, los `.js` servidos pasan a CRLF y la huella no cuadra. Se agrega `web/vendor/**/*.js -text` a `.gitattributes`, autorizado fuera del carril de T-98. Hace falta antes de la Fase B, que compila desde una copia limpia.
+  3. **El TLS negativo** se hace con el módulo `ssl` de Python, sin instalar OpenSSL.
+  4. **Los mensajes de commit** empiezan con «Sprint 3:».
+- La corrección va a Codex ahora. **T-98 pasa a «En curso».**
+
+**T-107 parte B, en revisión** (Timonel, `b862b15`):
+- La etiqueta de las celdas de carga y los 19 avisos del deriver nombran el objeto como en T-106, sin `C:` ni `R:`. «re‑estiba» lleva U+2011 en los 15 textos visibles que quedaban.
+- Yov revisó el commit: solo toca el carril, y en el deriver solo cambian los textos.
+- 952/952 (922 + 30) en una copia limpia, `analyze` en cero y corpus 157/157. Windows a 1280 dp, sin cambios. **Falta el Honor.** La acepta Codex.
+- **«Estadísticas» que lleva a «Bay Plan»:** no se reproduce en 16 casos a 360 dp ni en Windows. La hipótesis de Timonel es un toque sobre el perfil longitudinal (`vessel_profile_view.dart:171`). Se revisa en el Honor.
+- **Anotado:** los desbordes de Estadísticas a 360 dp con letra 1.45 y 2.0, y «re-estibas» con guion normal en `privacy_policy.dart:70`. Pasan a T-109.
+
+**T-85: la acepta Timonel ahora, sin el Honor.** La revisión de Gru deja de ser requisito: los datos se verificaron dos veces a ciegas (10.60), y el comprobador privado da 289/289 y 60/60. Si Gru logra importar el repo, su revisión suma.
+
+**Nacen dos tareas antes del commit de cierre (Carlos, 17-oct).** Fichas completas en la Ola 5:
+- **T-108 · El lector avisa lo que no cumple el estándar** (≈ 2.5 h, Codex; la acepta Timonel): pesos en LBR y TNE a kg, posiciones mal formadas, dígito de control ISO 6346 y archivo incompleto, con aviso en la tarjeta del viaje.
+- **T-109 · Estadísticas sin desbordes a 360 dp con letra grande** (≈ 1.0 h, Codex; la acepta Timonel), más el último guion de «re-estibas».
+
+**El orden:**
+- **Codex:** la corrección de T-98, después T-108 y T-109. El carril de `lib/` pasa a Codex.
+- **Timonel:** la aceptación de T-85; después acepta T-108 y T-109.
+- **Codex acepta T-107** con el Honor, cuando se pueda.
+- **El commit de cierre** llega cuando T-85, T-107, T-108 y T-109 estén terminadas. Meta: 19 o 20-oct.
+
+**El piso de pruebas sigue en 922** hasta las aceptaciones. Con T-107 B y las autopruebas de T-98 serían 964.
+
+**El sprint pasa a 47 tareas y ≈ 168.0 h.** El tablero (v45) suma 223.0 h:
+- 38 terminadas;
+- T-85 y T-107 en revisión;
+- T-98 en curso;
+- 6 por hacer: T-108, T-109, T-87, T-99, T-100 y T-101.
