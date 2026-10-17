@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **45 tareas · ≈ 164.5 h estimadas** (al 16-oct, 10.78) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **45 tareas · ≈ 164.5 h estimadas** (al 16-oct, 10.79) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -5342,4 +5342,43 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 - 38 terminadas;
 - T-85 en revisión;
 - T-107 en curso;
+- 5 por hacer.
+
+### 10.79 · La demo va con T-106 y T-107 parte A: los clientes nuevos pasan la prueba de humo a las 22:09 (16-oct)
+
+**T-107 parte A, versionada** (`2414588`):
+- **Lo que entrega:** por debajo de 600 dp, el encabezado va en dos líneas: el modo, «Acciones» (con el globo de las solicitudes) y la nube, y debajo el resumen en una línea con «OR / últimos dígitos». A 600 dp o más sigue el `Wrap` de antes.
+- **Las validaciones:** 922/922 (914 + 8), `analyze` en cero y corpus 157/157.
+- **El control:** sobre HEAD fallan 7 de las 8 pruebas nuevas.
+- **Los clientes:** Windows sin cambios; en el Honor, a 1.0 y a 1.45, la rejilla empieza a unos 300 dp de 800.
+- **Cinco pruebas existentes** (t74 a t78) agregan solo el toque previo en «Acciones» a 360 dp. Yov lo acepta: es el «un toque más» de la ficha.
+- **La revisión rápida de Codex: PASA.** Presentación y acciones equivalentes a las del padre, sus pruebas propias 21/21 y la suite 922/922. La aceptación completa, con los clientes, va después de la demo, junto con la parte B.
+- **El piso de pruebas sube a 922.**
+
+**Los clientes de la demo, recompilados desde `2414588`** (Timonel), con el mismo `.bat` y el namespace `demo17`:
+- `baystream.exe` `f7605d03…` y el APK `75491db1…`, que es el mismo instalado en el teléfono.
+- El APK se instaló encima del anterior, así que la sesión de muelle se conservó. Windows abrió sin sesión, y Carlos la volvió a iniciar.
+- **La prueba de humo pasa los siete puntos a las 22:09:**
+  1. la oficina movió OR 3;
+  2. el muelle pidió mover OR 2, con el globo en «Acciones», y la oficina lo aprobó;
+  3. «PRUEBA T-105» abre sin cambios;
+  4. el orden de descarga abre;
+  5. el IMDG abre;
+  6. Windows a 200 % muestra la bahía centrada y entera;
+  7. en el Honor, «PRUEBA T-105» en Carga muestra el encabezado en dos líneas y los tres contenedores a la vista.
+- **El respaldo,** con los clientes de las 19:00, está en `C:\Proyectos\baystream-demo17-bd02328\`.
+- **Un hallazgo de Windows:** el banco de T-107 se cayó una vez al arrancar (`0xe06d7363`) mientras otra BayStream estaba abierta. **En la demo va una sola BayStream a la vez.** La causa no se investigó y queda anotada para T-98.
+
+**La guía de la demo queda al día:**
+- Windows puede llegar a 200 %;
+- los avisos rojos ya salen en palabras;
+- en el Honor, los botones están en «Acciones»;
+- si falla Windows, se usa el respaldo, que sigue limitado a 150 %.
+
+**La diapositiva 15** dice 922 pruebas.
+
+**El sprint sigue en 45 tareas y ≈ 164.5 h.** El tablero (v44), con el piso de pruebas en 922:
+- 38 terminadas;
+- T-85 en revisión;
+- T-107 en curso, por la parte B;
 - 5 por hacer.
