@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.71) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.74) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2058,7 +2058,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-94** | RF-041 | 4.5 | Dictar el número de contenedor, o sus últimos dígitos, y buscarlo · **ficha completa arriba** |
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 | **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62); terminada con la corrección de la sombra del 40 (10.63) · **ficha completa arriba** |
-| **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Timonel y la acepta Codex (10.69) · **ficha completa arriba** |
+| **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Timonel y la acepta Codex (10.69); entregada sin colocar en 10.72; colocada en `ce13547` (10.74) · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -2474,9 +2474,158 @@ para RNF-003.
 
 ### Cierre · Calidad, entregables y piloto (21–24 oct)
 
+#### T-98 · RNF primera parte: seguridad, tolerancia a fallos, estándares y usabilidad, medidos sobre los binarios de cierre · 26.0 h · Codex (ficha completa, 16-oct; la acepta Timonel)
+
+**Para qué.** Es lo primero de la lista de 4.2: lo que se entrega el 24-oct. Mide RNF-004, 006, 008 y 002 con los criterios de `docs/T63-CRITERIOS-RNF.md` y las decisiones de `docs/T63-DECISIONES-RNF.md`, que Carlos confirmó el 5 y el 6-oct.
+- Los criterios ya están decididos y **no se ajustan después de ver los datos**.
+- Si uno no se puede aplicar tal como está, se declara cuál y por qué.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 16-oct):**
+- **T-44** (`docs/T44-FINAL-RESULTADOS.md`) dejó:
+  - 004 y 006, «no medibles»;
+  - 008, «no cumple» por IMDG;
+  - 002, «no cumple» por pasos: 5 y 6 sin perfil.
+- **Lo que cambió desde entonces:**
+  - la sincronización y las cuentas (T-79, T-80 y T-81), así que TLS y credenciales aplican (4.3);
+  - la versión por la cabecera y el rechazo con mensaje (T-86 y T-103);
+  - la validación por contenido (T-89);
+  - la Web sin conexión (T-92);
+  - el IMDG 42-24 (T-85, en revisión).
+- **Las sondas que ya existen:** `tool/t44_honor_red.ps1`, para el TCP del Honor. No hay sonda de Windows.
+- **`integration_test/` no existe.** Agregarlo cambia `pubspec.yaml`, así que no se usa sin autorización de Carlos.
+
+**Dos fases.**
+- **Fase A: los instrumentos, desde ya y sin binarios de cierre.**
+  - Se arman los scripts, el catálogo y la batería, y se ensayan sobre HEAD.
+  - Lo que salga del ensayo no es un resultado y no se informa como tal.
+  - **No usa el Honor antes de que termine la demo del 17.**
+- **Fase B: la medición, sobre los binarios de cierre.**
+  - Carlos anuncia el commit de cierre cuando T-85 y T-106 estén terminadas, y también T-107 si Carlos la crea. La meta es el 19-oct.
+  - Se compila en una copia limpia de ese commit, con el namespace `t98`, y se mide.
+
+**Qué construye y qué mide.**
+
+1. **RNF-004 · Seguridad de los datos.**
+   - **Las operaciones básicas (4.1):**
+     - cargar un BAPLIE y confirmar el perfil;
+     - ver el Bay Plan y navegar las bahías;
+     - Lista y filtros, y la búsqueda;
+     - Estadísticas y Alertas de estiba;
+     - exportar;
+     - reabrir un viaje reciente;
+     - Parámetros del buque.
+   - **Dos condiciones:**
+     - **(A) sin sesión:** rige el 100 %;
+     - **(B) con sesión y fuera de una operación compartida:** solo informativa.
+     - La sincronización de una operación transmite por diseño y se mide solo con TLS.
+   - **Los instrumentos:**
+     - **Web:** HAR, y `chrome://net-export`. Hay que comprobar si el NetLog incluye al service worker, y decirlo.
+     - **Android:** `dumpsys netstats detail` por UID, antes y después de cada operación. La sonda TCP de T-44 queda como segunda fuente.
+     - **Windows:** una sonda nueva, `tool/t98_sonda_red_windows.ps1`, que muestrea `Get-NetTCPConnection` y `Get-NetUDPEndpoint` filtrados por el PID.
+   - **Qué es transmitir (4.2):** toda petición que lleve contenido del archivo o derivado de él, o que escriba en un servicio remoto. Las descargas del sitio, del motor y de las fuentes no cuentan.
+   - **TLS:**
+     - la versión negociada, en el panel Security de Chrome;
+     - `openssl s_client -tls1_1` contra los hosts que usa la app (Firestore, Identity Toolkit y Secure Token), que tiene que fallar;
+     - es solo el saludo TLS: sin credenciales ni datos.
+   - **Credenciales:**
+     - el inventario de qué guarda la app y dónde, en cada plataforma, con la fuente de cada afirmación;
+     - sin abrir ningún contenido;
+     - con su dictamen contra «mecanismos nativos seguros».
+
+2. **RNF-006 · Tolerancia a fallos.**
+   - **El catálogo** lo genera `tool/t98_catalogo_invalidos.dart` a partir del corpus. La salida va a %TEMP%, nunca al repo. Lleva un caso de cada uno:
+     - bytes aleatorios;
+     - texto sin estructura EDIFACT;
+     - A01 cortado a mitad de un segmento;
+     - A01 sin `UNT`/`UNZ`;
+     - A01 sin `TDT`;
+     - un `COPRAR` sintético;
+     - un BAPLIE de una versión no admitida;
+     - un archivo vacío.
+   - **El inventario de todos los mensajes de error que `lib/` puede mostrar:**
+     - cada mensaje lleva la marca de si dice la causa y la acción y, si es de parseo, el segmento;
+     - el script va en `tool/` y la tabla en el informe.
+   - **La recuperación, < 3 s:**
+     - desde que se confirma el archivo hasta que el error se ve con la app operativa: el viaje anterior a la vista y el botón de carga que responde;
+     - en video, cuadro a cuadro, con la tasa real de cuadros de cada video;
+     - una medición por archivo y por cliente.
+   - **La disponibilidad (6.1 a):** las operaciones básicas sin red, con el modo avión en el Honor, y con la red desconectada en Windows y en la Web después de cargarla.
+
+3. **RNF-008 · Estándares.**
+   - **La batería, en `test/t98_estandares_test.dart`,** con casos sintéticos positivos y negativos:
+     - BBBRRTT;
+     - ISO 6346, con dígitos de control calculados, válidos y alterados;
+     - el peso en `KGM` y en otra unidad, y el VGM;
+     - la estructura de BAPLIE 2.2.1 según la guía de SMDG.
+   - **Contra el corpus, en `tool/t98_estandares_corpus.dart`:**
+     - que cada segmento y cada grupo de la guía aparezca en algún archivo;
+     - que toda posición se descomponga en BBBRRTT;
+     - que los puertos estén en la lista UN/LOCODE;
+     - aparte, el porcentaje de IDs con dígito válido, con la advertencia de que el corpus está anonimizado.
+   - **La lista UN/LOCODE** es la oficial de UNECE, con su edición anotada. Vive fuera del repo, en `C:\Proyectos\baystream-privado\unlocode\`. Si la red del agente no llega, la descarga Carlos.
+   - **El IMDG:**
+     - se citan el comprobador de T-85 (289/289 y 60/60) y sus pruebas;
+     - las disposiciones especiales por número ONU siguen «no evaluadas», así que 008 queda en «no cumple» (8.1).
+   - **Si la app acepta sin aviso un caso negativo,** es un caso fallido: se informa y no se corrige.
+
+4. **RNF-002 · Usabilidad.**
+   - **Pasos y tiempo:**
+     - las condiciones (i) sin perfil, que es la que rige, y (ii) con perfil;
+     - en los tres clientes, con cinco repeticiones grabadas por condición;
+     - el inicio es el toque en el ícono y el fin, el primer cuadro con la rejilla del Bay Plan (2.2 a);
+     - un paso es cada toque o clic en un control propio, o cada decisión en un diálogo. El selector de archivos cuenta como uno.
+   - **El idioma:**
+     - el inventario de las cadenas visibles de `lib/`, con un script en `tool/`, y el recorrido de las rutas de error;
+     - métrica: cadenas en español / cadenas visibles.
+   - **Material 3 (2.4 a):**
+     - una lista, pantalla por pantalla, de los controles interactivos: si cada uno es un componente de la biblioteca Material y si su color sale de `colorScheme`;
+     - se cuentan las excepciones;
+     - la rejilla se excluye, y se dice por qué.
+   - **Para el piloto (T-101):**
+     - la lista fija de tareas: cargar A01, ver una bahía, encontrar un contenedor por ID, identificar un refrigerado y leer una alerta;
+     - la hoja de tiempos;
+     - el cuestionario SUS en español, con su fuente.
+     - Los aplica Carlos con cinco participantes de COMAR. T-98 deja lista la sección del informe para sus resultados.
+
+**El informe: `docs/T98-RESULTADOS.md`.**
+- Una tabla por RNF, con la submétrica, el umbral, la medición y el dictamen.
+- El dictamen del RNF completo: cumple, no cumple o no medible.
+- Donde una decisión de T-63 no se pudo aplicar, se dice cuál y por qué.
+- La evidencia (videos, HAR, NetLog, netstats y capturas) va en %TEMP%, sanitizada, y el informe cita la ruta.
+
+**Carril.**
+- **No toca** `lib/`, el codec, las reglas, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+- **Toca:** `test/t98_*`, `tool/t98_*` y `docs/T98-RESULTADOS.md`.
+- **Puede ir en paralelo** con T-107 y con la aceptación de T-85, porque no toca `lib/`, pero respeta el semáforo de Flutter.
+- **Los clientes:**
+  - namespace `t98`, sin tocar las apps reales ni las `demo17`;
+  - Windows, abierta con `explorer.exe` y cerrada por PID;
+  - el Honor, en 1.0 al terminar y con volcados sanitizados.
+- **Firebase:** las mediciones con sesión usan una operación de prueba, «PRUEBA T-98», que crea Carlos. Nada por CLI ni por consola.
+- **Si no hay con qué grabar la pantalla de Windows,** avisa antes de instalar nada.
+
+**Detente y avisa si:**
+- una medición exige cambiar `lib/`;
+- una operación básica transmite en la condición A. Es un resultado, pero Yov tiene que verlo antes de seguir;
+- no se consigue la lista UN/LOCODE;
+- un criterio de T-63 no se puede aplicar tal como está.
+
+**Fuera de alcance:**
+- 6.1 (b), la disponibilidad a lo largo de semanas;
+- RNF-001, 003, 005 y 007, que son de T-99;
+- corregir cualquier defecto que aparezca: se anota para Yov.
+
+**Terminada cuando:**
+- [ ] **Fase A:**
+  - los scripts y la batería existen y pasan sobre HEAD, con `analyze` en cero;
+  - el piso de pruebas sube con la batería.
+- [ ] **Fase B:** las cuatro tablas, con evidencia en los tres clientes y sobre los binarios de cierre.
+- [ ] **El informe,** con dictámenes y limitaciones, y la sección del piloto lista para el SUS.
+- [ ] **La aceptación de Timonel:** repite por su cuenta una fila de cada RNF y lo anota.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
-| **T-98** | TC | 26.0 | RNF primera parte sobre los binarios de cierre: 004 (con TLS y sesión), 006, 008 y 002 (SUS en el piloto), según `docs/T63-DECISIONES-RNF.md` |
+| **T-98** | TC | 26.0 | RNF primera parte sobre los binarios de cierre: 004 (con TLS y sesión), 006, 008 y 002 (SUS en el piloto), según `docs/T63-DECISIONES-RNF.md`. La hace Codex y la acepta Timonel (10.73), en dos fases · **ficha completa arriba** |
 | **T-99** | TC | 31.0 | RNF segunda parte: 001 y 007 (sintéticos de 5 000 y 10 000), 005 y 003 |
 | **T-100** | TC | 6.0 | Manual de usuario con el anexo de geometría a mano (TC-02) y presentación final (TC-05) |
 | **T-101** | PIL | 4.0 | Prueba piloto: BayStream en paralelo al papel en una escala real, con permiso de COMAR |
@@ -4900,4 +5049,116 @@ Las demás son textos y cosméticas, entre ellas:
 - 37 terminadas;
 - T-85 en revisión;
 - T-106 en curso;
+- 5 por hacer.
+
+### 10.72 · T-106 entregada sin colocar · Los clientes de la demo, aparte, con el namespace `demo17` · Tres textos internos quedan fuera (16-oct)
+
+**T-106 está entregada en la copia de Timonel, sin colocar** (regla de 10.69):
+- **Validaciones sobre `ab67fcb`:** 914/914 (894 + 20), `analyze` en cero y corpus 157/157. Sobre `93dc695` da 886/886 y 147/147.
+- **El control:**
+  - sobre HEAD fallan 16 de las 20 pruebas nuevas;
+  - con el guion normal, «re-estibas» se parte en 22 anchos, de 378 a 420 dp; con U+2011 no se parte en ninguno.
+- **Los clientes,** sobre «PRUEBA T-106» con el namespace `t106acc`:
+  - Windows, como oficina, con el mouse y a 300 % con la ventana ancha;
+  - el Honor, como muelle, con el pellizco de Carlos a 300 %;
+  - se ven la rejilla, la copia a escala, «BAJA» en Carga, las sombras «20'» y «2×20'» sin tocarse, y los cuatro avisos en palabras;
+  - 0 registros; el almacén real de Windows suma 14 archivos, todos `t106acc_*`;
+  - el Honor queda en 1.0.
+- **La Web no se probó,** por decisión de Carlos. Queda para la aceptación de Codex, en su navegador integrado (10.70).
+
+**Yov acepta las cuatro decisiones de Timonel:**
+- la reserva se nombra por su celda del BAPLIE, como en T-80;
+- la descarga pendiente también se ve en «Número de orden»;
+- la leyenda «Ocupado por 20 pies» es nueva, y la de C-5b no cambia;
+- «inclúyelo» solo aparece en el formulario de la oficina, donde sí hay intercambio. Con eso se cierra la cola del aviso que quedó de 10.63.
+
+**Quedan fuera del carril tres textos:**
+- las etiquetas de accesibilidad que todavía llevan `C:`;
+- los avisos del deriver con `C:`;
+- «re-/estibas» partida en el resumen del modo Carga.
+
+Yov propone juntarlos en una **T-107** de ≈ 1 h, después de la demo. Carlos confirma.
+
+**La demo del 17 se compila ahora, sin T-106:**
+- T-106 toca el arrastre y el plano, que es justo lo que se presenta, y todavía le falta la aceptación de Codex. Va después, como se acordó en 10.66.
+- **Los clientes de la demo son compilaciones aparte, con el namespace `demo17`,** como las de aceptación. No tocan la app real de Windows ni la del Honor, ni el MSIX instalado, así que no hace falta subir versión ni revisar firmas.
+- **La base es `bd02328`,** el mismo código que `ab67fcb`.
+- **La compilación de Windows se guarda fuera del repo,** en `C:\Proyectos\baystream-demo17\`, para que ninguna compilación posterior la pise.
+- **«PRUEBA T-105» no se modifica antes de la demo.** La prueba de humo arrastra en «PRUEBA T-106».
+- **Lo hace Timonel.** Capitán está libre, así que no hay choque de Flutter.
+- **Después:** Carlos confirma, Timonel coloca T-106 sin commit, Carlos la versiona y Codex la acepta, con la Web.
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h** mientras Carlos no confirme T-107. El tablero (v37):
+- 37 terminadas;
+- T-85 y T-106 en revisión;
+- 5 por hacer.
+
+### 10.73 · La ficha de T-98, en dos fases · El commit de cierre · Quién hace qué hasta el 24 (16-oct)
+
+**La ficha de T-98 está completa** (sección 5, «Cierre»). Mide 004, 006, 008 y 002 con los criterios de T-63, que ya están decididos, en dos fases:
+- **Fase A, los instrumentos:** empieza ya. No toca `lib/` y no usa el Honor hasta después de la demo.
+- **Fase B, la medición:** sobre los binarios de cierre.
+
+**El commit de cierre:**
+- Lo anuncia Carlos cuando T-85 y T-106 estén terminadas, y también T-107 si la crea. La meta es el lunes 19-oct.
+- Después de ese commit solo entran en `lib/` las correcciones de defectos que salgan de la medición, con la decisión de Yov y de Carlos.
+- Cada corrección obliga a repetir las filas de la medición que toque, y el informe lo dice.
+
+**Quién hace qué hasta el 24.** Es una propuesta de Yov; Carlos confirma.
+- **Codex:**
+  - la Fase A de T-98, desde ya, en un chat nuevo;
+  - la aceptación de T-106 cuando esté versionada;
+  - después, la Fase B de T-98.
+- **Timonel:**
+  - coloca T-106;
+  - acepta T-85 después de Gru;
+  - hace T-107, si Carlos la crea;
+  - después, T-99.
+- **Gru:** revisa los datos de T-85 contra el PDF.
+- **Yov:** las fichas de T-99, T-100 y T-101, y después la revisión de los informes.
+- **Carlos:**
+  - el commit de cierre;
+  - la operación «PRUEBA T-98»;
+  - la lista UN/LOCODE, si la red del agente no llega;
+  - la fecha del piloto con cinco participantes de COMAR, que es donde se miden el SUS y la curva de aprendizaje de 002.
+
+**La prioridad para recortar no cambia** (4.2): T-98 va primero y T-99 casi al final. Si falta tiempo, lo que no se mida se declara.
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h.** T-98 pasa a «En curso» cuando Codex empiece.
+
+### 10.74 · Los clientes de la demo pasan la prueba de humo · T-106 versionada (`ce13547`) · En la demo, Windows hasta 150 % (16-oct)
+
+**Los clientes de la demo pasan los seis puntos.** Los hizo Timonel en `C:\Proyectos\baystream-demo17\`, desde `bd02328` y con el namespace `demo17`.
+- **Los binarios:**
+  - `baystream.exe` `e2930351…` y el APK `a6564096…`, que es el mismo instalado en el teléfono;
+  - Android va en release, sin `debuggable`, y firmado con la clave de depuración porque la copia no tiene `key.properties`. Como es una app aparte, no importa.
+- **Solo cambian dos líneas de `android/`, en la copia:** el `applicationId` `.demo17` y el nombre «BayStream demo», que pidió Carlos porque el Honor tiene 42 apps llamadas «BayStream».
+- **La prueba de humo,** con las sesiones de Carlos:
+  1. la oficina movió OR 1 con motivo, y el Honor lo vio sin recargar;
+  2. el muelle pidió mover OR 2, la oficina lo aprobó, y quedó igual en las dos pantallas;
+  3. «PRUEBA T-105» abre con 3 contenedores, 1 bahía y 15.0 t, sin cambios;
+  4. el orden de descarga abre (PAMIT, 5 descargas, 5/5);
+  5. «Segregación · IMDG» abre con la fuente 42-24;
+  6. el zoom de Windows (ver abajo).
+- **Un hallazgo para la demo:** en Windows con la ventana maximizada, a 200 % la rejilla queda corrida a la derecha y hay que desplazarla; a 150 % se ve entera.
+  - Lo corrige T-106, que no está en la demo.
+  - **En la demo, Windows llega hasta 150 %.** Reemplaza el límite de 200 % de 10.63 y 10.71.
+- **Las sesiones quedan iniciadas:** la oficina en Windows y el muelle en el Honor.
+- **El almacén real** suma 14 archivos, todos `demo17_*`.
+
+**T-106, colocada y versionada** (`ce13547`, por Carlos):
+- HEAD seguía en `bd02328`, y las cinco bases no habían cambiado.
+- Lo colocado es byte a byte lo probado.
+- `analyze` en cero y 914/914 sobre el árbol, con 5 archivos modificados y 5 nuevos.
+- **El piso de pruebas sube a 914.**
+
+**La aceptación de Codex** es sobre `ce13547`:
+- Windows y la Web, ya.
+- **El Honor espera a que termine la demo,** porque es el teléfono de la presentación.
+- «PRUEBA T-106» lleva ahora los dos movimientos de la prueba de humo.
+- **El orden de Codex:** si ya empezó la Fase A de T-98, la aceptación va después; si no, va primero, porque desbloquea el commit de cierre.
+
+**El sprint sigue en 44 tareas y ≈ 161.5 h.** El tablero (v39), con el piso de pruebas en 914:
+- 37 terminadas;
+- T-85 y T-106 en revisión;
 - 5 por hacer.
