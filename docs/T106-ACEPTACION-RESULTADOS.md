@@ -1,18 +1,18 @@
 # T-106 · Aceptación cruzada de Capitán Codex
 
-**Veredicto: EN REVISIÓN únicamente por el Honor pendiente después de la demo. Informe parcial del 16-oct-2026, actualizado según la decisión 10.75. D1: no es defecto.**
+**Veredicto: ACEPTADA. Aceptación de `ce13547` cerrada el 16-oct-2026 según 10.75 y 10.77. D1: no es defecto. Honor liberado para Timonel, con letra en 1.0.**
 
-La decisión 10.75 corrige el criterio de la 10.72: el consejo «inclúyelo en el intercambio» es correcto también en el formulario del muelle cuando aplica, porque ese formulario sí ofrece intercambio. Se retiró la clasificación de D1 como defecto y se invirtió la prueba propia externa, que pasa **1/1**. La falta de vista previa en el muelle se conserva como observación anterior a T-106. Windows y Web quedan comprobados con los métodos declarados abajo; el almacén real conserva sus 502 archivos originales y agrega solo 14 `t106cx_*`. No se modificó código del producto. El Honor queda reservado hasta que Carlos avise explícitamente que terminó la demo; si pasa, el veredicto será **ACEPTADA**.
+La decisión 10.75 corrige el criterio de la 10.72: el consejo «inclúyelo en el intercambio» es correcto también en el formulario del muelle cuando aplica, porque ese formulario sí ofrece intercambio. Se retiró la clasificación de D1 como defecto y se invirtió la prueba propia externa, que pasa **1/1**. La falta de vista previa en el muelle se conserva como observación anterior a T-106. Windows y Web quedan comprobados con los métodos declarados abajo; el almacén real conserva sus 502 archivos originales y agrega solo 14 `t106cx_*`. En el Honor pasan el pellizco de Carlos a 300 %, los dibujos, T-95 y cuatro avisos a 1.45; Carga, el arrastre rojo sobre BAJA, la copia a escala a 300 % y la sombra sin gestos se comprobaron al volver a 1.0. Se declara por separado el encabezado que tapa Carga a 1.45, ya asignado a T-107 en 10.76. No se modificó código del producto. El Honor conserva los 3 registros iniciales y queda libre, con letra en 1.0; `demo17` conserva su huella.
 
 ## 1. Base, aislamiento y reglas
 
 - Base exacta: **`ce135475e5905147f7e51f888b4915ae47de6158`**. El árbol principal estaba en `8f8d856`, que documenta decisiones posteriores; no se utilizó como base de código.
 - Copia nueva, sin `.git`: `C:\Users\Giova\AppData\Local\Temp\baystream-t106cx-ce13547-20261016`, exportada con `git ls-files` y `git show`: **646 archivos**. Ninguna lectura ni copia de `android/key.properties` o de la configuración local de Claude.
 - Carlos confirmó libres Flutter y Windows. Los comandos de Flutter se ejecutaron en secuencia. No se usó Git de escritura, `git status`, Firebase CLI ni consolas externas.
-- Se leyeron la sección 2, la ficha y las decisiones 10.63, 10.66, 10.69, 10.72, 10.74 y 10.75 de `SPRINT-3.md`, el informe de Timonel y las observaciones de la sección 12 de T-105. La corrección 10.75 prevalece sobre la redacción original de 10.72.
+- Se leyeron la sección 2, la ficha y las decisiones 10.63, 10.66, 10.69, 10.72, 10.74, 10.75 y 10.77 de `SPRINT-3.md`, el informe de Timonel y las observaciones de la sección 12 de T-105. La corrección 10.75 prevalece sobre la redacción original de 10.72; 10.77 autoriza el Honor antes de la demo.
 - Mis casos se fijaron **antes de abrir `test/t106_*`**: `evidence/casos-previos.md`, SHA-256 `e690b6bd072dedbbc7c31afe414b05a0d223b48989e81706bd4291c397132c70`.
 - El banco de clientes es una variante externa `tool/t106cx_main.dart`: namespace **`t106cx`**, misma operación sintética **«PRUEBA T-106»**, y acceso añadido a la pantalla de T-95. El banco original queda intacto. No se recrea ni publica la operación; ya tiene los dos movimientos de la prueba de humo.
-- No se toca «PRUEBA T-105», el Honor ni los clientes `demo17`.
+- No se toca «PRUEBA T-105» ni los clientes `demo17`. El Honor se usa por turno de 10.77, con paquete propio.
 
 ## 2. Las reglas de `review()` no cambiaron
 
@@ -92,6 +92,7 @@ Evidencia histórica: `evidence/cx-extra-final.log`, donde la expectativa anteri
 | `flutter analyze`, banco y pruebas propias incluidos | **0 incidencias** (`analyze-last.log`) |
 | Compilación Windows release | Correcta, **137.3 s** |
 | Compilación Web release | Correcta, **51.2 s** |
+| Compilación Android release para el Honor | Correcta, **106.8 s**, paquete independiente `gt.cmartinez.baystream.t106cx` |
 
 El corpus se leyó desde su carpeta externa mediante `BAYSTREAM_CORPUS_DIRECTORY`; no se copió al repositorio. Sus salidas y todos los registros permanecen en `%TEMP%`. No se ejecutó `flutter test --platform chrome`.
 
@@ -103,7 +104,7 @@ Las huellas SHA-256 de `lib/main.dart`, los dos congelados, `firestore.rules`, `
 
 El cotejo final contra el árbol confirma también iguales a `ce13547` los cinco archivos de implementación revisados y los seis protegidos anteriores, normalizando únicamente CRLF/LF (`source-final.json`). No se colocó código en `lib/`.
 
-Advertencias de compilación declaradas: MSBuild MSB8029 por compilar en `%TEMP%`, y Web avisa de CupertinoIcons ausente durante la reducción de fuentes. Ninguna impidió compilar; no se atribuyen a un cambio de T-106.
+Advertencias de compilación declaradas: MSBuild MSB8029 por compilar en `%TEMP%`, Web avisa de CupertinoIcons ausente durante la reducción de fuentes y Android informa de APIs obsoletas/operaciones sin comprobación de tipos en dependencias. Ninguna impidió compilar; no se atribuyen a un cambio de T-106. Para el cierre del Honor se compiló Android y se comprobó el cliente; no se repitieron la suite, el corpus ni el análisis ya ejecutados sobre esta misma base.
 
 ## 6. Clientes
 
@@ -155,11 +156,44 @@ Compilación release servida en `http://127.0.0.1:8116`, PID de servidor **28548
 
 **Método del arrastre Web:** eventos ordinarios de ratón mediante la capacidad CDP del navegador integrado, con movimiento inicial para establecer el puntero, botón presionado durante 800 ms y desplazamiento gradual. Se observaron el rojo y la copia con el botón sostenido, y se liberó después para comprobar el aviso. No se invocaron funciones internas de Flutter ni APIs de Firebase; no se modificó código ni se simuló el estado de la operación. La capacidad se llama CDP por el protocolo: **eso no convierte esta prueba en una prueba de Chrome**.
 
-La Web y su servidor se dejan abiertos para revisión y para retomar tras la demo. No hay botones de ratón retenidos. El único intento de guardar fue la solicitud imposible de D1, rechazada localmente antes de anexarse; los demás avisos se produjeron con arrastres rojos.
+La Web y su servidor se dejaron abiertos para revisión, como pidió Carlos. No hay botones de ratón retenidos. El único intento de guardar fue la solicitud imposible de D1, rechazada localmente antes de anexarse; los demás avisos se produjeron con arrastres rojos.
 
-### Honor, después de la demo
+### Honor, turno autorizado esta noche (10.77)
 
-El Honor no se conecta ni opera antes del aviso de Carlos de que terminó la demo. Después corresponde: letra 1.45, pellizco de Carlos a 300 %, avisos en palabras y dibujo nuevo; volver la letra a 1.0 al terminar.
+Aplicación externa **BayStream T106 CX**, paquete `gt.cmartinez.baystream.t106cx` y namespace `t106cx`, compilada de la misma copia de `ce13547`. Solo se cambian en esa copia el `applicationId` y la etiqueta Android; no se copia ni abre `key.properties`. APK release sin `debuggable`, firmado con la clave de depuración: **58 253 799 bytes**, SHA-256 `441825443c0a10e5ffe107c0ca0ecb660dd01c05e91c588396d41791bd429a0b`. Compilación correcta en **106.8 s**, sin otro comando Flutter activo; Flutter se liberó al terminar.
+
+Honor de **720 × 1600 px**, densidad 320 (**360 dp**). Carlos ajustó la letra a **1.45**, verificada por lectura de `font_scale`; inició la sesión de muelle. Codex terminó de abrir exclusivamente «PRUEBA T-106» mediante los controles normales de la app. Referencia: **3 registros, 0 conflictos y 0 solicitudes pendientes**, «Al día». No hubo capturas durante el acceso.
+
+| Comprobación a 1.45 | Resultado y evidencia externa |
+|---|---|
+| Pellizco real de Carlos | Confirmó 300 % y lo verifica la pantalla; `honor-300-145.png` |
+| Descarga pendiente | «BAJA» en `0030082`, en «Número de orden»; `honor-orden-deck-145.png` |
+| Bahía 004 | Sombras «20'» y «2×20'»; `honor-par-celdas-145.png` |
+| 20 contra 40, formulario de muelle | «OR 2 · TSTU0000002» y «Un 20 y un 40 no se intercambian.»; `honor-aviso-tamanos-completo-145.png` |
+| Carga de paso | «TSTU0000012» y «Es carga de paso: no se descarga aquí.»; `honor-aviso-paso-145.png` |
+| Descarga pendiente | «TSTU0000013» y «marca primero su descarga»; `honor-aviso-descarga-145.png` |
+| Otro pendiente igual | OR 1 hacia `0030282`: «OR 2 · TSTU0000002» e «inclúyelo en el intercambio», correcto según 10.75; `honor-aviso-intercambio-145.png` |
+| T-95 | «re‑estibas» no se parte, en resumen y celda; `honor-t95-145.png` |
+
+Los cuatro avisos son rechazos locales de destinos imposibles, con intercambio apagado y motivo sintético no vacío. Los textos no llevan `C:` ni `R:`. No se aprueba ni ejecuta ningún movimiento.
+
+**Observación O2, ya asignada a T-107 (10.76):** a 1.45, el encabezado de Carga consume la pantalla y no deja área útil para la rejilla (`honor-carga-145.png`; `loading_plan_controls.dart:51`, encabezado en `Wrap`, y `:106`, resumen de Carga). No se corrige en esta aceptación. Los dibujos y el pellizco se comprobaron en «Número de orden». Ese modo desactiva el arrastre por diseño (`bay_plan_view.dart:1096`); los intentos de automatización solo desplazaron la rejilla, no levantaron copia y no se cuentan como prueba de arrastre. **Carga y su arrastre se verificaron después a 1.0; no se afirma haberlos verificado a 1.45.** La observación pertenece al alcance ya abierto de T-107; no cambia el resultado de las funciones de T-106 comprobadas aquí.
+
+Carlos volvió la letra a **1.0** desde Ajustes; se verificó por lectura, sin escribir ajustes mediante ADB. Tras reabrir la operación se completó:
+
+| Comprobación en Carga, letra 1.0 | Resultado y evidencia externa |
+|---|---|
+| BAJA visible | `0030082` dibujada como descarga pendiente; `honor-carga-deck-100.png` |
+| Soltar OR 3 sobre BAJA | Borde rojo y ⊘ mientras se sostiene; al soltar, «0030082 choca con TSTU0000011 en 0030082. La celda está ocupada a bordo; marca primero su descarga.». Sin hoja de confirmación; `honor-baja-confirmado-100-{sostenido,soltado}.png` |
+| Sombras en bahía 004 | «20'» y «2×20'»; tocar y mantener/desplazar sobre «2×20'» no abre ficha ni levanta copia. Solo desplaza el lienzo; `honor-sombras-carga-100.png`, `honor-sombra-sin-gesto-100-{sostenido,soltado}.png` |
+| Copia a 300 % | Se amplió con los controles después del pellizco ya comprobado a 1.45. OR 4 hacia `0040682`: copia del tamaño de la celda, rojo y ⊘ sobre «2×20'»; al soltar, identifica `TSTU0000013` en `0050682` y pide marcar su descarga, sin hoja; `honor-copia300-confirmada-100-{sostenido,soltado}.png` |
+| Estado final | **3 registros, 0 conflictos y 0 solicitudes pendientes**, «Al día»; `honor-final-100.png` y `.json` |
+
+**Método del arrastre aceptado:** entradas táctiles ordinarias `DOWN`, espera de un segundo, movimientos graduales y `UP`, por ADB. La captura sostenida se tomó en memoria y se sanitizó antes de guardar; la captura posterior y el volcado verifican el rechazo. No se invocan APIs internas de Flutter ni Firebase. Todos los contactos se liberan al terminar cada gesto.
+
+Los volcados se obtienen únicamente con `adb exec-out uiautomator dump /dev/tty`, se sanitizan en memoria y después se guardan fuera del repositorio. Las imágenes también se sanitizan antes de guardarlas. No se capturó ningún diálogo del sistema con datos de cuenta.
+
+**Cierre del Honor: 16-oct-2026, 21:24:27 (Guatemala).** Letra **1.0** verificada, sin cambios en los contadores. Se cerró exclusivamente `gt.cmartinez.baystream.t106cx` con `am force-stop` y se comprobó que no quedara su PID. El APK de `demo17` tiene la misma huella antes y después: `a6564096f1795014f93f62636c4d1c098ac51c906b054b053d3396930981e899`. No se abrió, reinstaló ni operó esa app; no se tocó «PRUEBA T-105». Evidencias: `honor-final-state.json`, `honor-demo17-before.txt`, `honor-demo17-after.txt`. **Honor liberado para Timonel y avisado a Carlos.** La revisión rápida de T-107 no se inició; espera su mensaje específico.
 
 ## 7. Almacén real de Windows
 
@@ -187,6 +221,9 @@ Evidencias: `store-before.bat`, `store-after.bat`, `store-before.json`, `store-a
 - En Web, el primer intento CDP no estableció previamente la posición del puntero y no levantó la celda. Se liberó el botón; al añadir el movimiento inicial y el desplazamiento gradual, se obtuvieron copia, rojo y aviso. Se cuentan solo los gestos observados que funcionaron.
 - `setValue` sobre las etiquetas de accesibilidad Web cambió sus valores DOM, pero no los campos visibles de Flutter. Se detectó porque el botón seguía deshabilitado y el resumen no cambiaba; se enfocó cada campo y se escribió con `typeText`. Antes de enviar D1 se verificaron en pantalla los tres valores reales. Al cerrar el formulario no quedó un cambio en la operación.
 - Al reanudar Windows, una captura devolvió la ventana frontal de Codex y no BayStream; no se guardó como evidencia ni se actuó sobre Codex. Se seleccionó y activó de nuevo BayStream. En el cierre, las dos activaciones adicionales fueron rechazadas con «user input was detected in this window» y la lectura indicó ventana minimizada; se detuvo el control UI. El cierre por PID y las huellas sí se completaron.
+- En el Honor, al crecer la ayuda del formulario cambió la posición de los campos: una entrada quedó en el campo equivocado y se corrigió antes de enviar. Después, el ayudante externo confundió `text` con `content-desc` al buscar el interruptor y se detuvo sin enviar. Se ajustó únicamente el ayudante; los casos posteriores verifican objeto, destino e intercambio apagado antes de pulsar «Enviar solicitud».
+- Los intentos iniciales de arrastre en «Número de orden», sobre OR 1 ya reubicado y con el comando `draganddrop` no levantaron copia y no se cuentan como resultados positivos. Se usaron después OR 3 y OR 4, con `DOWN` sostenido un segundo. Un primer destino quedó debajo del control de zoom: se desplazó la fila y se repitió fuera de ese control. Solo se aceptan las capturas finales con copia, rojo y rechazo visible; no se modificó el producto para obtenerlas. El ayudante también se detuvo antes de un gesto sobre sombra al exigir una altura mayor que la de su texto; se ajustó esa comprobación externa y se completó el gesto.
+- Una consulta `git show --stat` mostró metadatos del autor. Fue un error de salida; no se copiaron a este informe ni a los archivos de evidencia. Las consultas posteriores deben omitir el encabezado del commit.
 
 ## 9. Archivos de entrega y Git para Carlos
 
@@ -194,7 +231,7 @@ Evidencias: `store-before.bat`, `store-after.bat`, `store-before.json`, `store-a
 
 ```powershell
 git add -- docs/T106-ACEPTACION-RESULTADOS.md
-git commit -m "Sprint 3: actualizar aceptacion de T-106 segun 10.75"
+git commit -m "Sprint 3: cerrar aceptacion cruzada de T-106"
 git push
 ```
 
@@ -202,8 +239,8 @@ git push
 
 Las reglas de `review()` conservan sus 15 controles y 288 decisiones propias; la suite da 914/914, el corpus 157/157 y el análisis cero.
 D1 no es defecto según 10.75: el consejo aplica en ambos formularios; la prueba propia invertida pasa 1/1 y la falta de vista previa se conserva como observación de T-81.
-Windows y Web tienen comprobados zoom, dibujo y avisos; Carlos confirmó el gesto Windows, el almacén solo suma 14 `t106cx_*` y falta el Honor después de la demo.
+Windows, Web integrada y Honor completan la aceptación; en el Honor se distinguen dibujo/avisos a 1.45 y Carga/arrastre a 1.0 por el encabezado ya asignado a T-107. Quedan 3 registros, letra 1.0 y Honor libre; el almacén Windows solo sumó 14 `t106cx_*`.
 
 ## 11. Mensaje para Yov
 
-Capitán actualizó `docs/T106-ACEPTACION-RESULTADOS.md` según 10.75: **D1 no es defecto**. Se invirtió la prueba propia del muelle fuera del repositorio y pasó **1/1, sin skip**: intercambio activado por defecto; al apagarlo y enviar hacia otro pendiente igual, aparece el consejo correcto y no se registra nada. La falta de vista previa se conserva como **O1, ajena a T-106**, confirmada en T-81 (`c31055d`); T-106 no toca esa pantalla. Se mantienen las evidencias anteriores: reglas intactas (15 controles y 288 decisiones), suite 914/914, corpus 157/157 y análisis cero; Windows y Web integrada comprobados, con el gesto Windows confirmado por Carlos y Chrome no probado. Almacén 502 → 516, originales idénticos y solo 14 `t106cx_*`. **EN REVISIÓN únicamente porque falta el Honor después de la demo**, con pellizco de Carlos, letra 1.45 y regreso a 1.0; si pasa, el veredicto será **ACEPTADA**. No se tocó el producto, «PRUEBA T-105» ni `demo17`; `pubspec.*` sin cambios. El informe está colocado sin commit y se espera el aviso de Carlos para usar el Honor.
+**T-106 ACEPTADA**, sobre `ce13547`. Honor completado esta noche según 10.77, con paquete y namespace `t106cx`: pellizco real de Carlos a 300 %, BAJA y sombras en «Número de orden», T-95 y cuatro avisos en palabras a 1.45. El encabezado tapa Carga a 1.45, como ya documenta 10.76 para T-107; se declara esa limitación y se verifica Carga a 1.0: rojo sobre BAJA, copia a escala a 300 % y sombra sin gestos. **D1 no es defecto (10.75)**; O1 sigue ajena a T-106. Se conservan reglas intactas, suite 914/914, corpus 157/157 y análisis cero; Windows/Web integrada comprobados y almacén Windows con originales idénticos y solo 14 `t106cx_*` nuevos. Honor termina con **3 registros, 0 conflictos, 0 solicitudes pendientes y letra 1.0**; app de aceptación cerrada y dispositivo libre para Timonel. APK `demo17` idéntico antes/después; «PRUEBA T-105» intacta. Informe colocado sin commit, sin cambios de producto ni `pubspec.*`. No se inició la revisión rápida de T-107.
