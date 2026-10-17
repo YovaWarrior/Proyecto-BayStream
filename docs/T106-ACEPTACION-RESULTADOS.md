@@ -1,15 +1,15 @@
 # T-106 · Aceptación cruzada de Capitán Codex
 
-**Veredicto: EN REVISIÓN. Informe parcial del 16-oct-2026; falta el Honor después de la demo.**
+**Veredicto: EN REVISIÓN únicamente por el Honor pendiente después de la demo. Informe parcial del 16-oct-2026, actualizado según la decisión 10.75. D1: no es defecto.**
 
-La aceptación propia reproduce un incumplimiento, tanto en widget como en la Web real: «inclúyelo en el intercambio» también aparece al rechazar una solicitud del muelle. Windows y Web quedan comprobados con las salvedades de método declaradas abajo; el almacén real conserva sus 502 archivos originales y agrega solo 14 `t106cx_*`. No se corrigió código. El Honor queda reservado para después de la demo, hasta el aviso explícito de Carlos.
+La decisión 10.75 corrige el criterio de la 10.72: el consejo «inclúyelo en el intercambio» es correcto también en el formulario del muelle cuando aplica, porque ese formulario sí ofrece intercambio. Se retiró la clasificación de D1 como defecto y se invirtió la prueba propia externa, que pasa **1/1**. La falta de vista previa en el muelle se conserva como observación anterior a T-106. Windows y Web quedan comprobados con los métodos declarados abajo; el almacén real conserva sus 502 archivos originales y agrega solo 14 `t106cx_*`. No se modificó código del producto. El Honor queda reservado hasta que Carlos avise explícitamente que terminó la demo; si pasa, el veredicto será **ACEPTADA**.
 
 ## 1. Base, aislamiento y reglas
 
 - Base exacta: **`ce135475e5905147f7e51f888b4915ae47de6158`**. El árbol principal estaba en `8f8d856`, que documenta decisiones posteriores; no se utilizó como base de código.
 - Copia nueva, sin `.git`: `C:\Users\Giova\AppData\Local\Temp\baystream-t106cx-ce13547-20261016`, exportada con `git ls-files` y `git show`: **646 archivos**. Ninguna lectura ni copia de `android/key.properties` o de la configuración local de Claude.
 - Carlos confirmó libres Flutter y Windows. Los comandos de Flutter se ejecutaron en secuencia. No se usó Git de escritura, `git status`, Firebase CLI ni consolas externas.
-- Se leyeron la sección 2, la ficha y las decisiones 10.63, 10.66, 10.69, 10.72 y 10.74 de `SPRINT-3.md`, el informe de Timonel y las observaciones de la sección 12 de T-105.
+- Se leyeron la sección 2, la ficha y las decisiones 10.63, 10.66, 10.69, 10.72, 10.74 y 10.75 de `SPRINT-3.md`, el informe de Timonel y las observaciones de la sección 12 de T-105. La corrección 10.75 prevalece sobre la redacción original de 10.72.
 - Mis casos se fijaron **antes de abrir `test/t106_*`**: `evidence/casos-previos.md`, SHA-256 `e690b6bd072dedbbc7c31afe414b05a0d223b48989e81706bd4291c397132c70`.
 - El banco de clientes es una variante externa `tool/t106cx_main.dart`: namespace **`t106cx`**, misma operación sintética **«PRUEBA T-106»**, y acceso añadido a la pantalla de T-95. El banco original queda intacto. No se recrea ni publica la operación; ya tiene los dos movimientos de la prueba de humo.
 - No se toca «PRUEBA T-105», el Honor ni los clientes `demo17`.
@@ -45,13 +45,15 @@ Evidencias externas: `change_requests.diff.txt`, `review-controls.json`, `audit.
 
 **4 pruebas propias de widget del zoom, en verde** (`t106cx_zoom_test.dart`): 200 % y 300 %, con anchos 1389 y 1920. Comprueban acceso inicial a las celdas, margen físico de 16 px y copia del arrastre con las mismas dimensiones que la celda. Con 1389 a 300 % se permite que las columnas del extremo requieran desplazamiento; no se confunde ese caso con un lienzo vacío.
 
-**1 prueba propia de widget reproduce el defecto de la sección 4** (`t106cx_dock_test.dart`). Conserva una expectativa de aceptación que falla: el muelle no debe ver «inclúyelo». No se omitió ni se cambió para que pase.
+**1 prueba propia de widget corregida según 10.75, en verde** (`t106cx_dock_test.dart`): el formulario del muelle abre con intercambio activado; al apagarlo y enviar un objeto a la celda de otro pendiente del mismo tamaño, muestra el consejo exacto «inclúyelo en el intercambio» y no registra movimientos. También verifica que el aviso no aparece antes de enviar, como comportamiento preexistente de T-81.
+
+La expectativa inicial exigía ausencia del consejo, siguiendo la redacción errónea de 10.72. Carlos pidió invertirla al corregirse esa decisión en 10.75. Se conserva la prueba anterior como `t106cx_dock_test.dart.antes-10-75.txt` y el fallo original en `cx-extra-final.log`; el archivo fechado de casos previos y su SHA no se alteraron. La nueva corrida es **1/1, sin skip**, en `dock-10-75.log`. No se cambió el producto ni las pruebas del repositorio para obtener este resultado.
 
 Las 20 pruebas de Timonel se leyeron después de fijar mis casos. La suite completa las ejecuta: descarga dibujada, desaparición al registrar descarga, sombra de uno/dos 20 sin gestos, rojo físico, margen, copia y guion U+2011. La prueba de T-95 recorre 360–420 dp con la escala no lineal del Honor a 2.0 y verifica que la palabra ocupa una sola línea.
 
-## 4. Defecto encontrado, sin corregir
+## 4. D1: no es defecto (10.75)
 
-**D1 · El consejo de intercambio llega al formulario del muelle.**
+**Clasificación retirada por la decisión 10.75:** el consejo de intercambio llega correctamente al formulario del muelle cuando aplica. La clasificación inicial se basó en la instrucción errónea de 10.72, corregida por Yov y Carlos.
 
 Reproducción con datos sintéticos y rol de muelle:
 
@@ -62,7 +64,7 @@ Reproducción con datos sintéticos y rol de muelle:
 
 > 0030682 choca con OR 2 · FULL0005678 en 0030682. La celda está prevista para otro objeto; inclúyelo en el intercambio.
 
-Incumple el punto 2 de la aceptación y la decisión 10.72: «inclúyelo» solo debe aparecer en el formulario de oficina. La vista previa del formulario sí tiene la guarda `widget.direct`; el error de guardado vuelve a mostrar el mensaje común sin esa guarda.
+**Resultado correcto según 10.75:** «Pedir cambio» sí tiene la opción de intercambio y abre con ella activada (`swap = !widget.direct`). Si el usuario la apaga, el rechazo puede aconsejar que vuelva a incluir el otro pendiente del mismo tamaño en el intercambio. El consejo es válido en los dos formularios. Esta evidencia ya no se considera un incumplimiento de T-106.
 
 Rutas y líneas:
 
@@ -71,9 +73,11 @@ Rutas y líneas:
 - `lib/features/vessel/presentation/pages/change_requests_page.dart:288`: guarda el mensaje de la excepción.
 - `lib/features/vessel/presentation/pages/change_requests_page.dart:385`: lo dibuja también en el formulario del muelle.
 
-Evidencia: `evidence/cx-extra-final.log`, **4 pasan y 1 falla exactamente por el texto encontrado**; `evidence/t106cx_dock_test.dart:33`. La bitácora sintética queda vacía. No es un cambio de reglas ni se propone cambiarlas.
+Evidencia histórica: `evidence/cx-extra-final.log`, donde la expectativa anterior falla por el texto encontrado. Evidencia vigente: `evidence/dock-10-75.log`, **1/1**, con la expectativa invertida y el texto completo verificado. La bitácora sintética queda vacía en ambos casos. No hace falta cambiar ninguna regla ni corregir la aplicación.
 
 **Reproducido también en la Web de aceptación, con la sesión de muelle iniciada por Carlos:** OR 1, actualmente en `0030182`, hacia `0030282`, ocupada por OR 2; intercambio desactivado y motivo «T106cx comprobar aviso». Al pulsar «Enviar solicitud», aparece «0030282 choca con OR 2 · TSTU0000002 en 0030282. La celda está prevista para otro objeto; inclúyelo en el intercambio.». Se volvió atrás: no aparece una solicitud nueva y la operación conserva **3 registros, 0 conflictos y 0 solicitudes pendientes**. Captura: `web-D1-muelle.png`.
+
+**Observación O1, ajena a T-106:** la oficina ve la revisión antes de enviar y el muelle solo ve el error al enviar. La guarda `widget.direct &&` ya existe en T-81 (`c31055d`), igual que `swap = !widget.direct`; ambas se cotejaron con `git show` y con el archivo actual. T-106 no modifica `change_requests_page.dart`. Se conserva como observación de uso para que Carlos/Yov decidan su alcance futuro, sin bloquear T-106 ni corregirla en esta aceptación.
 
 ## 5. Validaciones ejecutadas en la copia
 
@@ -84,12 +88,14 @@ Evidencia: `evidence/cx-extra-final.log`, **4 pasan y 1 falla exactamente por el
 | Corpus completo: 36 archivos `tool/*_test.dart` | **157/157**, sin skip |
 | Dominio propio | **14/14**, con 288 comparaciones |
 | Zoom propio | **4/4** |
-| Formulario del muelle propio | **0/1**, defecto D1 reproducido |
+| Formulario del muelle propio, criterio 10.75 | **1/1**, consejo correcto, sin registros ni skip |
 | `flutter analyze`, banco y pruebas propias incluidos | **0 incidencias** (`analyze-last.log`) |
 | Compilación Windows release | Correcta, **137.3 s** |
 | Compilación Web release | Correcta, **51.2 s** |
 
 El corpus se leyó desde su carpeta externa mediante `BAYSTREAM_CORPUS_DIRECTORY`; no se copió al repositorio. Sus salidas y todos los registros permanecen en `%TEMP%`. No se ejecutó `flutter test --platform chrome`.
+
+Para la actualización 10.75 solo se repitió `flutter test --no-pub evidence/t106cx_dock_test.dart --reporter expanded`, en la misma copia externa de `ce13547`. Antes de ejecutarlo no había otro proceso de Flutter/Dart activo; se ejecutó un solo comando de Flutter. Terminó con código 0 y «+1: All tests passed!». La suite 914, el corpus 157 y el análisis cero de la tabla son las corridas anteriores, conservadas sin atribuirles una repetición en esta actualización documental.
 
 Sin `// ignore` ni `skip:` en los `.dart` de `lib/`, `test/` y `tool/` de la copia. El script histórico `prepare_block5_probe.ps1` contiene una directiva dentro del texto que genera; no se ejecutó ni modificó.
 
@@ -144,7 +150,7 @@ Compilación release servida en `http://127.0.0.1:8116`, PID de servidor **28548
 | Zoom 200 y 300 % | Rejilla a la vista, con desplazamiento vertical normal para llegar al 82; en este viewport estrecho a 300 % las columnas derechas exceden la vista; `web-200.png`, `web-300-inicial.png` |
 | Arrastre a 300 % | Copia de OR 4 del mismo tamaño visible que las celdas y rojo sobre la sombra; al soltar, aviso de tamaños, sin hoja ni registro; `web-300-arrastre.png` |
 | T-95 | La pantalla muestra «re‑estibas» completa y con U+2011; `web-t95.png` |
-| Formulario de muelle | **Falla D1:** «inclúyelo» después del rechazo, sin solicitud nueva; `web-D1-muelle.png` |
+| Formulario de muelle | **Correcto según 10.75:** «inclúyelo» después del rechazo, sin solicitud nueva; O1: no tiene vista previa, comportamiento anterior a T-106; `web-D1-muelle.png` |
 | Final | **3 registros, 0 conflictos y 0 solicitudes pendientes**, «Al día»; `web-final.png`, `web-final.txt` |
 
 **Método del arrastre Web:** eventos ordinarios de ratón mediante la capacidad CDP del navegador integrado, con movimiento inicial para establecer el puntero, botón presionado durante 800 ms y desplazamiento gradual. Se observaron el rojo y la copia con el botón sostenido, y se liberó después para comprobar el aviso. No se invocaron funciones internas de Flutter ni APIs de Firebase; no se modificó código ni se simuló el estado de la operación. La capacidad se llama CDP por el protocolo: **eso no convierte esta prueba en una prueba de Chrome**.
@@ -173,7 +179,7 @@ Evidencias: `store-before.bat`, `store-after.bat`, `store-before.json`, `store-a
 - El primer lanzamiento del BAT con una ruta de barras diagonales no produjo huella. Se repitió con ruta Windows entre comillas y se verificó su cadena de procesos.
 - Al imprimir el final del corpus, mi envoltorio Python falló por la codificación cp1252 de la consola. El comando de corpus ya había terminado correctamente en **157/157**; su registro UTF-8 se conserva. Los siguientes envoltorios usan UTF-8.
 - Mi prueba auxiliar de dominio produjo cinco avisos de estilo al analizarla desde `evidence/` (dos `print` y tres bucles sin llaves). Se corrigió únicamente esa evidencia externa; el análisis final vuelve a cero, sin `ignore`.
-- La primera prueba auxiliar del muelle buscó el destino cuando todavía estaba activado el intercambio; se corrigieron la preparación y los `pumpAndSettle`. La reproducción definitiva falla por el consejo visible, no por un error del banco.
+- La primera prueba auxiliar del muelle buscó el destino cuando todavía estaba activado el intercambio; se corrigieron la preparación y los `pumpAndSettle`. La corrida original falló por una expectativa basada en la redacción errónea de 10.72. Según la corrección 10.75, se invirtió la expectativa y la nueva corrida pasa 1/1; el fallo anterior se conserva como evidencia histórica.
 - La prueba auxiliar de zoom exigía inicialmente ver todas las columnas a 300 % en 1389 px. Se corrigió esa exigencia ajena a la ficha; acceso inicial, margen y copia pasan en los cuatro escenarios.
 - Dos clics de accesibilidad a «Unirse» fueron rechazados por identificadores caducados; finalmente Codex lo resolvió por imagen, tras comprobar que la vista autenticada solo muestra el nombre de la cuenta. La petición inicial de ayuda para unirse en Windows quedó reemplazada por la del gesto. No se pulsó «Preparar sintética».
 - `type_text` no escribió en el campo Flutter y Ctrl+A no seleccionó el texto. Se verificó el foco y se usaron teclas numéricas y retroceso; no se enviaron formularios ni movimientos. Las capturas de los avisos se guardaron después de verificar el destino completo correcto.
@@ -184,20 +190,20 @@ Evidencias: `store-before.bat`, `store-after.bat`, `store-before.json`, `store-a
 
 ## 9. Archivos de entrega y Git para Carlos
 
-**Único archivo nuevo del árbol:** `docs/T106-ACEPTACION-RESULTADOS.md`. Todo el código auxiliar, las compilaciones y evidencias están fuera del repositorio. No se modificaron archivos de producto ni se corrigió D1.
+**Único archivo modificado del árbol en esta actualización:** `docs/T106-ACEPTACION-RESULTADOS.md`. Todo el código auxiliar, las compilaciones y evidencias están fuera del repositorio. No se modificaron archivos de producto; D1 no requiere una corrección de la aplicación. `pubspec.yaml` y `pubspec.lock` no cambian.
 
 ```powershell
 git add -- docs/T106-ACEPTACION-RESULTADOS.md
-git commit -m "Sprint 3: documentar aceptacion parcial de T-106"
+git commit -m "Sprint 3: actualizar aceptacion de T-106 segun 10.75"
 git push
 ```
 
 ## 10. Tres líneas
 
 Las reglas de `review()` conservan sus 15 controles y 288 decisiones propias; la suite da 914/914, el corpus 157/157 y el análisis cero.
-El muelle aún puede ver «inclúyelo en el intercambio» al rechazar una solicitud de un solo objeto; se reproduce y no se corrige.
+D1 no es defecto según 10.75: el consejo aplica en ambos formularios; la prueba propia invertida pasa 1/1 y la falta de vista previa se conserva como observación de T-81.
 Windows y Web tienen comprobados zoom, dibujo y avisos; Carlos confirmó el gesto Windows, el almacén solo suma 14 `t106cx_*` y falta el Honor después de la demo.
 
 ## 11. Mensaje para Yov
 
-Capitán entrega la aceptación parcial de T-106 sobre una copia nueva de `ce13547`, con namespace `t106cx` y «PRUEBA T-106». Veredicto **EN REVISIÓN por D1**, sin arreglar código: en «Pedir cambio» del muelle, desactivar intercambio y enviar un objeto contra otro pendiente del mismo tamaño muestra «inclúyelo» en el error de guardado. Está reproducido en prueba propia y en la Web real; no agrega solicitud ni movimiento. Las reglas no cambiaron (15 controles idénticos y 288 decisiones equivalentes), suite 914/914, corpus 157/157 y análisis cero. Pasan 14 pruebas propias de dominio y cuatro de zoom. Windows maximizado a 200/300 %, BAJA, sombras, toque sin ficha, T-95 y avisos en formulario; Carlos confirma manualmente copia a escala, rojo y aviso a 300 %, sin hoja ni registro. Web probada en el navegador integrado de Codex visible, con sesión de muelle iniciada por Carlos y arrastres sostenidos mediante eventos CDP: BAJA, sombras sin gesto, rojos, avisos y copia a escala a 300 %. Chrome no se probó. La operación conserva 3 registros, 0 conflictos y 0 solicitudes pendientes. Windows se cerró por PID; huellas fuera del paquete: 502 → 516, los 502 originales idénticos y solo 14 `t106cx_*` nuevos. **La comprobación de cliente que falta es el Honor después de la demo**, con pellizco de Carlos, letra 1.45 y regreso a 1.0; queda además D1 para que Timonel lo corrija y se vuelva a aceptar. «PRUEBA T-105» y `demo17` intactos. Único archivo entregado, sin commit: `docs/T106-ACEPTACION-RESULTADOS.md`.
+Capitán actualizó `docs/T106-ACEPTACION-RESULTADOS.md` según 10.75: **D1 no es defecto**. Se invirtió la prueba propia del muelle fuera del repositorio y pasó **1/1, sin skip**: intercambio activado por defecto; al apagarlo y enviar hacia otro pendiente igual, aparece el consejo correcto y no se registra nada. La falta de vista previa se conserva como **O1, ajena a T-106**, confirmada en T-81 (`c31055d`); T-106 no toca esa pantalla. Se mantienen las evidencias anteriores: reglas intactas (15 controles y 288 decisiones), suite 914/914, corpus 157/157 y análisis cero; Windows y Web integrada comprobados, con el gesto Windows confirmado por Carlos y Chrome no probado. Almacén 502 → 516, originales idénticos y solo 14 `t106cx_*`. **EN REVISIÓN únicamente porque falta el Honor después de la demo**, con pellizco de Carlos, letra 1.45 y regreso a 1.0; si pasa, el veredicto será **ACEPTADA**. No se tocó el producto, «PRUEBA T-105» ni `demo17`; `pubspec.*` sin cambios. El informe está colocado sin commit y se espera el aviso de Carlos para usar el Honor.
