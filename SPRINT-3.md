@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **44 tareas · ≈ 161.5 h estimadas** (al 16-oct, 10.75) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **45 tareas · ≈ 164.5 h estimadas** (al 16-oct, 10.77) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2047,6 +2047,75 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
   - el corpus completo en verde;
   - las reglas, `lib/main.dart`, `pubspec.*` y los congelados sin cambio.
 
+#### T-107 · El encabezado del plano, compacto en el teléfono, y los últimos textos internos · 3.0 h · Timonel (ficha completa, 16-oct; la acepta Codex)
+
+**Para qué.** Carlos lo encontró en el Honor la víspera de la demo (10.76). A 360 dp, con A07 en el modo Carga, los controles de arriba del plano ocupan casi toda la pantalla, y la rejilla queda en una franja donde no se ve el plano. Además se cierran los tres textos que T-106 dejó fuera (sección 7 de `docs/T106-RESULTADOS.md`). T-98 y T-99 miden RNF-002 y RNF-003 a 360 dp, así que la tarea entra antes del commit de cierre.
+
+**Dos partes (10.77).** La parte A, antes de la demo: el encabezado y «re-estibas» en el resumen de Carga. La parte B, después: la etiqueta de accesibilidad, los avisos del deriver y U+2011 en lo demás.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 16-oct):**
+- **`bay_plan_view.dart` arma una columna fija:** `LoadingPlanControls`, el selector de bahías, la rejilla en un `Expanded` y la leyenda. Los controles no se desplazan, y la rejilla se queda con lo que sobra.
+- **`LoadingPlanControls`** (`loading_plan_controls.dart`) pone en un `Wrap`:
+  - el desplegable de modo;
+  - «Pendientes por bahía» o «Pendientes de descarga»;
+  - «Avance de la operación»;
+  - el chip de la nube;
+  - «Solicitudes de cambio» o «Bandeja de cambios».
+  - A 360 dp, cada botón cae en su propia línea.
+- **Debajo va el resumen del modo:** en Carga, `LoadingControls` (el resumen, «OR / últimos dígitos» y «Asignar vacío»); en Descarga, `DischargeSummary`.
+- **Los textos:**
+  - la etiqueta de accesibilidad de las celdas de carga lleva `C:` (`loading_controls.dart`, `label: '$itemKey, …'`);
+  - «re-estibas» se parte en el guion en el resumen de Carga (`loading_controls.dart`), y usa el guion normal también en `discharge_controls.dart`, `operation_progress_page.dart` y el aviso del deriver;
+  - los avisos de conflicto de `operation_state_deriver.dart` muestran la clave con `C:`.
+
+**Qué construye.**
+1. **En pantallas angostas, de menos de 600 dp de ancho, el encabezado cabe en dos líneas:**
+   - **la primera:** el desplegable de modo, un segundo desplegable, **«Acciones»**, a su lado, y el chip de la nube como ícono;
+   - **«Acciones»** lleva lo que hoy son botones: los pendientes por bahía o de descarga, el avance de la operación, las solicitudes o la bandeja con su cuenta, y «Asignar vacío» en Carga. La cuenta de solicitudes pendientes también se ve en el propio «Acciones»;
+   - **la segunda:** el resumen del modo en una línea; con un toque se ve el detalle completo;
+   - **«OR / últimos dígitos»** sigue a la vista en Carga, porque es lo que más usa el muelle.
+2. **En pantallas de 600 dp o más no cambia nada:** Windows y la Web se quedan como están.
+3. **Ninguna acción se pierde:**
+   - todo lo que hoy se toca queda, como mucho, a un toque más;
+   - el control que lo abre conserva sus claves de prueba (`ValueKey`).
+4. **Los textos:**
+   - la etiqueta de accesibilidad nombra el objeto como lo ve el planner, igual que los avisos de T-106: «OR 3 · TSTU0000003, sube»;
+   - «re-estiba» lleva U+2011 en todos los lugares visibles que quedan;
+   - los avisos del deriver no muestran `C:` y usan el formato de T-106.
+
+**Carril.**
+- **Toca:**
+  - `loading_plan_controls.dart`, `loading_controls.dart`, `discharge_controls.dart` y `operation_progress_page.dart`;
+  - los textos de `operation_state_deriver.dart`;
+  - `test/t107_*`, y las pruebas que fijan los textos que cambian.
+- **`bay_plan_view.dart`,** solo si hace falta para pasar el ancho, y se declara.
+- **No toca:** las reglas, el modelo, el codec, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+- **La demo del 17:**
+  - el Honor no se usa hasta que Carlos diga que terminó la demo;
+  - después de la demo, el Honor va por turnos: primero Codex termina su parte de la aceptación de T-106;
+  - el código y las pruebas pueden avanzar antes, en una copia.
+
+**Detente y avisa si:**
+- compactar exige cambiar qué hace un botón o una regla;
+- una prueba existente necesita otra clave para encontrar un control.
+
+**Fuera de alcance:**
+- que el muelle vea la vista previa del aviso antes de enviar: queda anotado (10.75);
+- los rastros de la matriz del IMDG en Windows, que son de T-85.
+
+**Terminada cuando:**
+- [ ] **Pruebas de widget a 360×780 dp,** con A07 en Carga y en Descarga, y con letra 1.0 y 1.45:
+  - el encabezado ocupa como mucho dos líneas, más el selector de bahías;
+  - la rejilla tiene al menos la mitad del alto con 1.0, y un tercio con 1.45;
+  - cada entrada de «Acciones» abre lo mismo que el botón de antes;
+  - a 1280 dp, el encabezado es el de hoy;
+  - las etiquetas y los avisos no muestran `C:`, y «re-estibas» no se parte a 360 dp.
+- [ ] **En el Honor, después de la demo,** con A07 y con una operación de prueba: el plano se ve y se arrastra, y las acciones se alcanzan.
+- [ ] **En Windows:** el encabezado sin cambios.
+- [ ] **Validaciones:**
+  - el piso (914) más las nuevas, y `analyze` en cero;
+  - el corpus completo en verde.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43) · **ficha completa arriba** |
@@ -2059,6 +2128,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-102** | USO | 1.0 | Peso en las celdas del PDF, como en el plano impreso (nace en 10.2). Incluye que la cabecera de peso por pila marque una pila con pesos faltantes («28.7+?», de 10.2; pasa aquí en 10.13) · **ficha completa arriba** |
 | **T-105** | RF-038 | 3.5 | Mover un contenedor arrastrándolo en el plano: el mismo cambio de T-80 y T-81, con vista previa por celda y una hoja de confirmación con motivo. Lo hace Codex y lo acepta Timonel (10.54); entregada con zoom autorizado por Carlos (10.62); terminada con la corrección de la sombra del 40 (10.63) · **ficha completa arriba** |
 | **T-106** | RF-038 | 2.0 | Pulido del arrastre y del zoom (10.66): el aviso rojo sin claves internas ni frases que no aplican, el zoom a 300 % sin lienzo en blanco ni margen escalado, la descarga pendiente en el modo Carga, los 20 de las impares vecinas en la vista de una par y la copia que se arrastra a escala. Después de la demo; la hace Timonel y la acepta Codex (10.69); entregada sin colocar en 10.72; colocada en `ce13547` (10.74) · **ficha completa arriba** |
+| **T-107** | RF-038 | 3.0 | El encabezado del plano, compacto en pantallas angostas (el modo y un desplegable «Acciones» en una línea, el resumen en otra; Windows y la Web sin cambios), y los tres textos que dejó T-106: la etiqueta de accesibilidad y los avisos del deriver sin `C:`, y «re-estiba» sin partirse. Lo encontró Carlos en el Honor (10.76); la hace Timonel y la acepta Codex, antes del commit de cierre · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -5186,3 +5256,64 @@ Yov propone juntarlos en una **T-107** de ≈ 1 h, después de la demo. Carlos c
 - **el veredicto puede quedar en ACEPTADA si el Honor pasa.**
 
 **El sprint sigue en 44 tareas y ≈ 161.5 h.** El tablero no cambia de columnas.
+
+### 10.76 · Nace T-107: el encabezado del plano, compacto en el teléfono, con los textos que dejó T-106 · No entra en la demo (16-oct)
+
+**Carlos lo encontró en el Honor** (16-oct, 20:45), con A07 en el modo Carga en «BayStream demo»:
+- los controles de arriba del plano ocupan casi toda la pantalla;
+- la rejilla queda en una franja abajo, y no deja ver el plano;
+- pidió ordenarlos, con otro desplegable al lado si no caben, sin cambiar cómo funciona nada.
+
+**Por qué pasa:** la vista del plano es una columna fija. Los controles van en un `Wrap`, y a 360 dp cada botón cae en su propia línea. La rejilla se queda con lo que sobra.
+
+**Nace T-107**, de ≈ 3.0 h (ficha completa en la Ola 5, después de T-106):
+- **Junta dos cosas:**
+  - el encabezado compacto en pantallas angostas: el modo y un desplegable «Acciones» en una línea, el resumen en otra, y Windows y la Web sin cambios;
+  - los tres textos que T-106 dejó fuera, que eran la T-107 que Yov propuso en 10.72.
+  - Con este pedido, Carlos la confirma.
+- **La hace Timonel,** que conoce esos archivos por T-106, y la acepta Codex.
+- **Entra antes del commit de cierre,** porque T-98 y T-99 miden RNF-002 y RNF-003 a 360 dp. La meta del 19-oct se mantiene; si no alcanza, el cierre pasa al 20.
+
+**No entra en la demo de mañana.** Los clientes de la demo ya están compilados y probados, y cambiar el encabezado la víspera es más riesgo que ayuda. Para la demo, en el Honor:
+- «PRUEBA T-105» tiene una sola bahía con tres contenedores, así que cabe en la franja; así arrastró Timonel en la prueba de humo, sobre «PRUEBA T-106»;
+- si hace falta, se pellizca la rejilla para alejarla.
+
+**El orden en el Honor después de la demo:** primero Codex termina su parte de la aceptación de T-106, y después Timonel prueba T-107. El código y las pruebas de T-107 pueden avanzar antes, en una copia.
+
+**El sprint pasa a 45 tareas y ≈ 164.5 h.**
+- La diapositiva 15 dice «37 de 45».
+- El tablero (v41):
+  - 37 terminadas;
+  - T-85 y T-106 en revisión;
+  - 6 por hacer.
+
+### 10.77 · Carlos decide que T-107 entre en la demo: la parte A esta noche, con un corte a medianoche y la versión de hoy como respaldo (16-oct)
+
+**Carlos decide que el encabezado se arregla antes de la demo presencial.** Reemplaza el «No entra en la demo» de la 10.76.
+
+**Para que quepa esta noche, T-107 se parte en dos:**
+- **Parte A, antes de la demo:** el encabezado compacto en pantallas angostas, y «re-estibas» sin partirse en el resumen de Carga. Es lo que se ve en la demo.
+- **Parte B, después de la demo:** la etiqueta de accesibilidad y los avisos del deriver sin `C:`, y U+2011 en los demás lugares.
+- **Las dos son T-107,** con la misma ficha.
+
+**La base es HEAD, que ya trae T-106.** Así la demo también gana:
+- el zoom de Windows sin correrse a 200 %;
+- los avisos en palabras, sin `C:`.
+
+Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche.
+
+**El orden de esta noche.** El Honor se usa por turnos y Flutter, un comando a la vez.
+1. **Codex:** la parte del Honor de la aceptación de T-106. Va primero, mientras Timonel programa en su copia sin el Honor.
+2. **Timonel:** T-107 parte A sobre HEAD, con pruebas de widget, Windows y el Honor. La coloca sin commit, y Carlos la versiona.
+3. **Codex:** una revisión rápida de la parte A: el diff, sus propias pruebas a 360 dp, la suite y `analyze`. La aceptación completa, con los clientes, va después de la demo.
+4. **Timonel:** recompila los clientes `demo17` desde el nuevo HEAD.
+   - Antes guarda los de hoy en `C:\Proyectos\baystream-demo17-bd02328\`, con su APK, como respaldo.
+   - Repite la prueba de humo con Carlos, y le suma el encabezado en el Honor y Windows a 200 %.
+
+**El corte es a medianoche** (Carlos puede moverlo). Si a esa hora la prueba de humo nueva no pasó, se presenta con los clientes de hoy, que ya pasaron la suya (10.74), y la guía de la demo sigue como está.
+
+**El sprint sigue en 45 tareas y ≈ 164.5 h.** T-107 pasa a «En curso». El tablero (v42):
+- 37 terminadas;
+- T-85 y T-106 en revisión;
+- T-107 en curso;
+- 5 por hacer.
