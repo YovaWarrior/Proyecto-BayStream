@@ -269,6 +269,9 @@ void main() {
               '4 por descargar (2 pendientes en cubierta / 2 pendientes en bodega) · 0 descargados · 1 re-estiba'));
 
       // La tabla de la operación.
+      // T-107 · A 360 dp la acción está en «Acciones».
+      await tester.tap(find.byKey(const ValueKey('bay-plan-actions')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('discharge-table-button')));
       await tester.pumpAndSettle();
       expect(find.textContaining('2 bahías · 4 pendientes'), findsOneWidget);

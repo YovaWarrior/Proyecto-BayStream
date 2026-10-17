@@ -47,6 +47,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Descarga: 0 pendientes'), findsOneWidget);
       Future<void> search(String query, {bool empty = false}) async {
+        // T-107 · A 360 dp «Asignar vacío» está en «Acciones».
+        if (empty) {
+          await tester.tap(find.byKey(const ValueKey('bay-plan-actions')));
+          await tester.pumpAndSettle();
+        }
         await tester
             .tap(find.byKey(ValueKey(empty ? 'empty-search' : 'load-search')));
         await tester.pumpAndSettle();

@@ -39,6 +39,11 @@ void main() {
                 theme: ThemeData(brightness: brightness, useMaterial3: true),
                 home: Scaffold(body: BayPlanView(voyage: t76Loading)))));
         await tester.pumpAndSettle();
+        // T-107 · Por debajo de 600 dp la acción está en «Acciones».
+        if (size.width < 600) {
+          await tester.tap(find.byKey(const ValueKey('bay-plan-actions')));
+          await tester.pumpAndSettle();
+        }
         await tester
             .tap(find.byKey(const ValueKey('operation-progress-button')));
         await tester.pumpAndSettle();

@@ -45,7 +45,11 @@ Future<void> onLoadingContainerTap(BuildContext context, WidgetRef ref,
 class LoadingControls extends ConsumerWidget {
   final VesselVoyage voyage;
   final int? selectedBay;
-  const LoadingControls({super.key, required this.voyage, this.selectedBay});
+  /// T-107 · En pantallas angostas el resumen va en una línea, junto a
+  /// «OR / últimos dígitos»; «Asignar vacío» pasa a «Acciones».
+  final bool compact;
+  const LoadingControls(
+      {super.key, required this.voyage, this.selectedBay, this.compact = false});
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
       ref.watch(loadingOperationProvider(voyage)).when(
@@ -55,31 +59,43 @@ class LoadingControls extends ConsumerWidget {
               final bay = selectedBay == null
                   ? null
                   : data.progress.forBay(selectedBay!);
+              final summary = [
+                Text(
+                    'Carga: ${operationCount(data.progress.total, 'pendiente', 'pendientes')} '
+                    '(${operationCount(data.progress.full, 'lleno', 'llenos')} / ${operationCount(data.progress.empty, 'vacío', 'vacíos')}).',
+                    key: const ValueKey('loading-operation-totals')),
+                if (bay != null)
+                  Text(
+                      'Bahía ${bay.label}: cubierta ${bay.deck} · bodega ${bay.hold}.'),
+                // T-107 · Con U+2011, «re‑estibas» no se parte en el guion.
+                Text('Descarga: ${operationCount(data.discharge.pending, 'pendiente', 'pendientes')} '
+                    '${pendingZones(data.discharge.deckPending, data.discharge.holdPending)} · '
+                    '${operationCount(data.discharge.restows, 're‑estiba', 're‑estibas')}.'),
+                if (data.list == null)
+                  const Text(
+                      'Importa el listado de agencia para operar por OR.'),
+              ];
+              final search = TextButton.icon(
+                  key: const ValueKey('load-search'),
+                  onPressed: data.list == null
+                      ? null
+                      : () => chooseLoadingRow(context, ref, voyage,
+                          selectedBay: selectedBay),
+                  icon: const Icon(Icons.search),
+                  label: const Text('OR / últimos dígitos'));
+              if (compact) {
+                return PlanSummaryLine(
+                    trailing: search,
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: summary));
+              }
               return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                        'Carga: ${operationCount(data.progress.total, 'pendiente', 'pendientes')} '
-                        '(${operationCount(data.progress.full, 'lleno', 'llenos')} / ${operationCount(data.progress.empty, 'vacío', 'vacíos')}).',
-                        key: const ValueKey('loading-operation-totals')),
-                    if (bay != null)
-                      Text(
-                          'Bahía ${bay.label}: cubierta ${bay.deck} · bodega ${bay.hold}.'),
-                    Text('Descarga: ${operationCount(data.discharge.pending, 'pendiente', 'pendientes')} '
-                        '${pendingZones(data.discharge.deckPending, data.discharge.holdPending)} · '
-                        '${operationCount(data.discharge.restows, 're-estiba', 're-estibas')}.'),
-                    if (data.list == null)
-                      const Text(
-                          'Importa el listado de agencia para operar por OR.'),
+                    ...summary,
                     Wrap(spacing: 8, children: [
-                      TextButton.icon(
-                          key: const ValueKey('load-search'),
-                          onPressed: data.list == null
-                              ? null
-                              : () => chooseLoadingRow(context, ref, voyage,
-                                  selectedBay: selectedBay),
-                          icon: const Icon(Icons.search),
-                          label: const Text('OR / últimos dígitos')),
+                      search,
                       TextButton.icon(
                           key: const ValueKey('empty-search'),
                           onPressed: data.list == null
@@ -92,6 +108,94 @@ class LoadingControls extends ConsumerWidget {
                   ]);
             },
           );
+}
+
+/// T-107 · El resumen del modo en una sola línea, para pantallas angostas, con
+/// [trailing] al lado («OR / últimos dígitos» en Carga). Un toque lo abre
+/// completo, a todo el ancho y con un alto máximo para que la rejilla no se
+/// quede sin espacio; otro lo recoge. Recogido, el resumen sigue en el árbol,
+/// recortado a su primera línea, así que sus textos y sus claves de prueba no
+/// cambian.
+class PlanSummaryLine extends StatefulWidget {
+  final Widget child;
+  final Widget? trailing;
+  const PlanSummaryLine({super.key, required this.child, this.trailing});
+  @override
+  State<PlanSummaryLine> createState() => _PlanSummaryLineState();
+}
+
+class _PlanSummaryLineState extends State<PlanSummaryLine> {
+  bool open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // El alto de una línea con la letra y la escala que usará el resumen.
+    final painter = TextPainter(
+        text: TextSpan(text: 'Ág', style: DefaultTextStyle.of(context).style),
+        textDirection: TextDirection.ltr,
+        textScaler: MediaQuery.textScalerOf(context),
+        maxLines: 1)
+      ..layout();
+    final line = painter.height;
+    painter.dispose();
+    void toggle() => setState(() => open = !open);
+    final icon = Icon(open ? Icons.expand_less : Icons.expand_more,
+        size: line,
+        semanticLabel: open ? 'Recoger el resumen' : 'Ver el resumen completo');
+    if (!open) {
+      return Row(key: const ValueKey('plan-summary-line'), children: [
+        Expanded(
+            child: InkWell(
+                key: const ValueKey('plan-summary-toggle'),
+                onTap: toggle,
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(
+                      child: ClipRect(
+                          child: SizedBox(
+                              height: line,
+                              child: OverflowBox(
+                                  alignment: AlignmentDirectional.topStart,
+                                  maxHeight: double.infinity,
+                                  child: DefaultTextStyle.merge(
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      overflow: TextOverflow.ellipsis,
+                                      child: widget.child))))),
+                  icon,
+                ]))),
+        if (widget.trailing != null) widget.trailing!,
+      ]);
+    }
+    final detail = ConstrainedBox(
+        constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * .3),
+        child: SingleChildScrollView(child: widget.child));
+    return Column(
+        key: const ValueKey('plan-summary-line'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.trailing != null)
+            Row(children: [
+              Expanded(
+                  child: InkWell(
+                      key: const ValueKey('plan-summary-toggle'),
+                      onTap: toggle,
+                      child: Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: icon))),
+              widget.trailing!,
+            ]),
+          InkWell(
+              key: widget.trailing == null
+                  ? const ValueKey('plan-summary-toggle')
+                  : null,
+              onTap: toggle,
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Expanded(child: detail),
+                if (widget.trailing == null) icon,
+              ])),
+        ]);
+  }
 }
 
 Future<void> chooseLoadingRow(

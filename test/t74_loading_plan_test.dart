@@ -232,6 +232,9 @@ void main() {
         expect(find.textContaining('todavía no tiene listado'), findsOneWidget);
       }
       expect(tester.takeException(), isNull);
+      // T-107 · A 360 dp la acción está en «Acciones».
+      await tester.tap(find.byKey(const ValueKey('bay-plan-actions')));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Pendientes por bahía'));
       await tester.pumpAndSettle();
       expect(find.textContaining('7 pendientes'), findsOneWidget);
