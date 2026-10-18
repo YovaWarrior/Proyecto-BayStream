@@ -131,6 +131,7 @@ Carlos autorizó el 5-oct las que hacen falta para las funciones nuevas:
 - `crypto` como dependencia directa, para la huella de las fuentes publicadas (10.3; ya era transitiva).
 - `archive` como dependencia directa (T-73; Carlos, 7-oct; ya era transitiva en 4.0.9 y no se mueve). Sirve para corregir las rutas absolutas de `workbook.xml.rels` que `excel_community` no resuelve.
 - `msix` como dependencia de desarrollo, para el instalador de Windows (T-93; Carlos, 14-oct, 10.36). Con versión fija y sin mover ningún paquete existente.
+- `integration_test`, del propio SDK de Flutter, como dependencia de desarrollo, para el arnés de rendimiento de T-99 (Carlos, 18-oct, 10.83). No entra en la app compilada y no mueve ningún paquete existente.
 - **La copia del SDK JS de Firebase sigue a `firebase_core_web`** (T-92; Carlos, 14-oct, 10.36). Vive en `web/vendor/firebase/<versión>/`. Si `pubspec.lock` cambia `firebase_core_web`, la misma tarea actualiza la copia, con su procedencia y su licencia. La prueba de T-92 hace fallar `flutter test` si se olvida.
 
 Ninguna otra sin preguntar. Cada dependencia nueva se declara en el informe y en el bloque
@@ -2761,10 +2762,83 @@ para RNF-003.
 - [ ] **El informe,** con dictámenes y limitaciones, y la sección del piloto lista para el SUS.
 - [ ] **La aceptación de Timonel:** repite por su cuenta una fila de cada RNF y lo anota.
 
+#### T-99 · RNF segunda parte: rendimiento, escalabilidad, mantenibilidad y portabilidad, medidos sobre los binarios de cierre · 31.0 h · Timonel (ficha completa, 18-oct; la acepta Codex)
+
+**Para qué.** Es lo segundo de la lista de 4.2 y entra el 24-oct. Mide RNF-001, 007, 005 y 003 con los criterios de `docs/T63-CRITERIOS-RNF.md` y las decisiones de `docs/T63-DECISIONES-RNF.md` (1.1 a 1.4, 3.1 a 3.3, 5.1 a 5.3 y 7.1 a 7.4), con lo que ajusta la 10.83.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 18-oct):**
+- **No existe `integration_test/`.** Carlos autorizó `integration_test` del SDK como dependencia de desarrollo (10.83, 2.7).
+- **No hay archivos de 5 000 ni de 10 000 contenedores.** El corpus llega a 977 (A01); A06 tiene 717.
+- **Las cifras de T-44** (RAM de Windows 416.7–422.0 MB maximizada, Honor RSS 233.7 MB; plano en el Honor con cotas de 703–813 ms) se tomaron con otro instrumento y **no se comparan** con las nuevas.
+- **No hay script** de código compartido, de documentación ni de capas. `flutter analyze` está en cero.
+- **Windows 10 no se prueba (10.83);** se mide en Windows 11.
+
+**Dos fases, como T-98.**
+- **Fase A: los instrumentos, desde ya, sin `lib/` y sin el Honor.** Se arman y se ensayan sobre HEAD, en Windows, en la Web y en el emulador. Lo que salga del ensayo no es un resultado.
+- **Fase B: la medición, sobre los binarios de cierre,** en una copia limpia del commit de cierre con el namespace `t99`, con el Honor incluido.
+
+**Qué construye y qué mide.**
+1. **RNF-001 · Rendimiento.**
+   - **El arnés:** `integration_test/t99_rendimiento_test.dart`, en modo *profile*, con `traceAction` y `TimelineSummary` para los cinco escenarios de T-63: el parseo (la llamada al lector, desde la prueba, sin tocar `lib/`), la navegación entre bahías, la búsqueda por carácter, el scroll de Lista y Estadísticas.
+   - **La RAM:** `tool/t99_ram_windows.ps1` (`WorkingSet64`, ventana maximizada a 1920×1080 con la escala que recomienda Windows, registrada) y `tool/t99_ram_honor.ps1` (RSS de `dumpsys meminfo`), con el escenario fijo de T-63: cargar, Bay Plan, todas las bahías, Estadísticas, buscar un ID y volver a Lista. Se informan el valor estable y el pico.
+   - **Los umbrales:** 5 s, 100 ms, 200 ms, p90 ≤ 16.67 ms, 1 s y 200 MB del SI. Cinco repeticiones; mediana y máximo; la primera en frío se descarta y se declara.
+2. **Los archivos sintéticos:** `tool/t99_sintetico.dart` genera 5 000 y 10 000 contenedores a partir de la estructura de A01, con una geometría que los admita.
+   - Las salidas van solo a %TEMP% y nunca entran al repo.
+   - Se declaran como carga de prueba, no como viajes.
+   - El lector los abre sin error y con la cuenta exacta.
+3. **RNF-007 · Escalabilidad.**
+   - **Capacidad:** el arnés de RNF-001 con A06 (717), 5 000 y 10 000. Se informa la curva tiempo/tamaño y memoria/tamaño. «Sin degradación» y «aceptable» usan los umbrales de RNF-001 (7.1 a).
+   - **Módulos, retrospectivo:** con `git log` y `git show --stat`, para las funciones agregadas después de fijar la arquitectura (por ejemplo, T-85, T-95, T-96 y T-73), los archivos modificados fuera de su carpeta nueva.
+   - **Módulos, prospectivo:** un módulo mínimo en una **copia temporal fuera del repo**, no en una rama, y lo mismo contado.
+4. **RNF-005 · Mantenibilidad.**
+   - **Documentación:** `public_member_api_docs` sobre una copia temporal fuera del repo, sin tocar el `analysis_options.yaml` versionado. Métrica de 5.1 (a): clases y métodos públicos, con las dos pantallas de H5 dentro. Se excluye el código generado, declarándolo.
+   - **Capas:** `tool/t99_capas.dart` cuenta las violaciones de las reglas de `AGENTS.md`: el dominio no importa Flutter, datos ni presentación, y la presentación no importa datos. Umbral: 0.
+   - **Análisis estático:** `flutter analyze` sobre el commit medido.
+   - **Providers (5.3 b):** el procedimiento con el seguimiento de reconstrucciones de DevTools queda escrito en la Fase A y se ejecuta en la Fase B.
+5. **RNF-003 · Portabilidad.**
+   - **Código compartido (3.1 b):** `tool/t99_codigo_compartido.dart` cuenta líneas de Dart de `lib/` más el nativo escrito a mano (`windows/runner`, `android/app/src`, `web/`), sin comentarios ni líneas en blanco y sin lo generado. Es «no compartida» toda línea en una rama por plataforma y todo archivo que compila en una sola. Umbral: ≥ 95 %.
+   - **Anchos:** 360, 600, 840, 1200 y 2560×1440, más 1920×1080, en Windows y la Web, con capturas. Con 3.3 (a): ningún texto ni control cortado o tapado; solo la rejilla de bahías puede desplazarse en horizontal.
+   - **Android 8.0:** un emulador con imagen API 26, que Carlos autorizó instalar (10.83), con el APK release, A01 y el recorrido de RNF-002.
+   - **Entrada:** el mismo recorrido con mouse y teclado en Windows; con toque, en el Honor en la Fase B.
+   - **Windows 10:** no probado, declarado (10.83).
+
+**El informe:** `docs/T99-RESULTADOS.md`, con una tabla por RNF (submétrica, umbral, medición, evidencia y dictamen), las limitaciones y una sección «Fase A» con los instrumentos y cómo se corren.
+
+**Carril.**
+- **No toca** `lib/`, el codec, las reglas, `lib/main.dart` ni los congelados.
+- **`pubspec.yaml` y `pubspec.lock`:** solo para agregar `integration_test` (10.83), sin mover ningún paquete. Se declara en el informe.
+- **Toca:** `integration_test/t99_*`, `test/t99_*` (las autopruebas de los scripts), `tool/t99_*` y `docs/T99-RESULTADOS.md`.
+- **Va en paralelo** con T-108 y T-109 de Codex, que sí tocan `lib/`. Respeta el semáforo de Flutter.
+- **Clientes:** el namespace `t99`; nunca las apps reales ni las de `demo17`; Windows abierta con `explorer.exe` y cerrada por PID; «PRUEBA T-105» no se toca. Sin Firebase: estas mediciones no usan sesión.
+- **El Honor,** solo en la Fase B y cuando Carlos lo permita, en 1.0 al terminar y con volcados sanitizados.
+- **Las aceptaciones de T-108 y T-109** van antes que la Fase A, porque están en el camino del cierre.
+
+**Detente y avisa si:**
+- una medición exige cambiar `lib/`;
+- `integration_test` exige mover otro paquete;
+- el lector no abre un sintético o da otra cuenta;
+- el emulador no se instala con el gestor del SDK de Android que ya está;
+- un criterio de T-63 no se puede aplicar tal como está.
+
+**Fuera de alcance:**
+- corregir lo que salga (por ejemplo, la RAM): se anota para Yov;
+- Windows 10 y un archivo real de un ULCS;
+- RNF-002, 004, 006 y 008, que son de T-98.
+
+**Terminada cuando:**
+- [ ] **Fase A:**
+  - los instrumentos existen y se ensayaron sobre HEAD, con `analyze` en cero;
+  - el arnés corre en Windows en modo *profile* con A01, y los sintéticos de 5 000 y 10 000 se abren con su cuenta exacta;
+  - el emulador API 26 abre el APK con A01;
+  - la suite por defecto sigue en verde y el piso sube con las autopruebas.
+- [ ] **Fase B:** las cuatro tablas, con evidencia en los tres clientes y el emulador, sobre los binarios de cierre.
+- [ ] **El informe,** con dictámenes y limitaciones.
+- [ ] **La aceptación de Codex:** repite por su cuenta una fila de cada RNF y lo anota.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-98** | TC | 26.0 | RNF primera parte sobre los binarios de cierre: 004 (con TLS y sesión), 006, 008 y 002 (SUS en el piloto), según `docs/T63-DECISIONES-RNF.md`. La hace Codex y la acepta Timonel (10.73), en dos fases · **ficha completa arriba** |
-| **T-99** | TC | 31.0 | RNF segunda parte: 001 y 007 (sintéticos de 5 000 y 10 000), 005 y 003 |
+| **T-99** | TC | 31.0 | RNF segunda parte sobre los binarios de cierre: 001 y 007 (sintéticos de 5 000 y 10 000, arnés con `integration_test`), 005 y 003 (emulador API 26; Windows 10 no probado). La hace Timonel y la acepta Codex (10.83), en dos fases · **ficha completa arriba** |
 | **T-100** | TC | 6.0 | Manual de usuario con el anexo de geometría a mano (TC-02) y presentación final (TC-05) |
 | **T-101** | PIL | 4.0 | Prueba piloto: BayStream en paralelo al papel en una escala real, con permiso de COMAR |
 
@@ -5532,3 +5606,30 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 - **Si un cliente de BayStream negocia menos de 1.2,** eso sí es un incumplimiento: Codex se detiene y avisa.
 
 **Sigue igual:** Codex hace T-108 y T-109; Timonel acepta T-85 y después las dos nuevas. El sprint, en 47 tareas y ≈ 168.0 h; el tablero, en v45.
+
+### 10.83 · T-85 aceptada sin el Honor · La ficha de T-99, completa · Carlos autoriza `integration_test` y el emulador; Windows 10 no se prueba (18-oct)
+
+**T-85, aceptada con observaciones** (Timonel; versionada por Carlos en `8c9d765`, `docs/T85-ACEPTACION-RESULTADOS.md`):
+- El comprobador privado da 289/289 y 60/60, y falla al alterar una celda o una regla. La simetría está en una prueba y en la lectura aparte de Timonel.
+- Su cotejo independiente coincide en los 640 resultados del corpus, y el anexo de Codex cuadra en sus 650 filas, con 0 sin explicar. Cinco resultados revisados a mano coinciden.
+- Windows y Chrome, con `t85acc` y A03, muestran la fuente nueva y 4/154/95. Los rastros de 10.70 no se reproducen.
+- Su suite de HEAD dio 979/992 por los 13 casos de la batería de T-98, antes de la corrección (`46202d7`). Sin la batería son 964.
+- **Sigue «En revisión» hasta la ronda del Honor:** la ficha pide 360 dp y letra 2.0, y Codex la vio a 1.45. Se cierra junto con T-107.
+- **Observaciones:**
+  - Mayús + rueda no desplaza la matriz en Windows: va al rediseño posterior al cierre (10.80).
+  - Dos de los cuatro «no conforme» de A03 son pares de UN1950 (aerosoles) que 49 CFR aprobaba por excepción. Con la clase declarada, la ficha da «no conforme», y la columna 16b del IMDG queda fuera, como dice la pantalla. Va al manual (T-100), para que el planner lo sepa.
+  - El informe de Codex quedó atrás en el papel de Gru y en sus SHA en CRLF. No cambia el código.
+
+**Lo que decidió Carlos para T-99:**
+- **`integration_test`** del SDK, como dependencia de desarrollo, para el arnés de rendimiento. Queda en 2.7.
+- **El emulador de Android con imagen API 26,** para probar Android 8.0.
+- **Windows 10 no se prueba.** El jefe de Carlos dice que en la oficina ya no hay Windows 10, y que los proyectos deben pensar en el presente y el futuro. Además, Microsoft terminó el soporte de Windows 10 el 14 de octubre de 2025. Se mide en Windows 11, y Windows 10 se declara como no probado; no se da por cumplido.
+
+**La ficha de T-99, completa,** en la Ola 6, en dos fases como T-98: los instrumentos desde ya, sin `lib/` y sin el Honor, y la medición sobre los binarios de cierre.
+
+**El orden:**
+- **Timonel:** las aceptaciones de T-108 y T-109 en cuanto Codex las entregue, porque están en el camino del cierre; mientras tanto, T-99 Fase A.
+- **Codex:** confirma la suite de HEAD (964) y hace T-108 y T-109. Después acepta T-99.
+- **La ronda del Honor,** cuando Carlos lo permita: T-107, T-85 y los ensayos de T-98 y T-99.
+
+**El sprint sigue en 47 tareas y ≈ 168.0 h.** El tablero (v46): 38 terminadas; T-85 y T-107 en revisión; T-98 y T-99 en curso; 5 por hacer: T-108, T-109, T-87, T-100 y T-101.
