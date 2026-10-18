@@ -67,7 +67,7 @@ const List<PrivacyPolicySection> kPrivacyPolicySections = [
     ('**Lo que se envía a la nube.** Al publicar una operación, o al unirte a '
         'ella, se guardan en Cloud Firestore, de Google: los archivos de la '
         'operación, el perfil del buque y cada movimiento que registras, como '
-        'descargas, cargas, re-estibas, tapas, solicitudes y aprobaciones. Cada '
+        'descargas, cargas, re‑estibas, tapas, solicitudes y aprobaciones. Cada '
         'movimiento lleva el identificador de tu cuenta, tu nombre, tu rol, la '
         'hora y un identificador aleatorio de la instalación de la aplicación, '
         'que no identifica tu teléfono ni tu computadora. La operación guarda '

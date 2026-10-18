@@ -95,10 +95,24 @@ class VoyageStatsView extends ConsumerWidget {
               icon: Icons.directions_boat,
             ),
             const SizedBox(height: 12),
-            VesselProfileView(
-              voyage: voyage,
-              onBaySelected: onBaySelected,
-            ),
+            if (_compactStats(context))
+              LayoutBuilder(builder: (context, constraints) =>
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: max(constraints.maxWidth,
+                          320 * MediaQuery.textScalerOf(context).scale(12) / 12),
+                      child: VesselProfileView(
+                        voyage: voyage,
+                        onBaySelected: onBaySelected,
+                      ),
+                    ),
+                  ))
+            else
+              VesselProfileView(
+                voyage: voyage,
+                onBaySelected: onBaySelected,
+              ),
             const SizedBox(height: 24),
           ],
 
@@ -127,6 +141,9 @@ class VoyageStatsView extends ConsumerWidget {
 // COMPONENTES INTERNOS
 // ============================================
 
+// T-109: los cambios de composición se limitan al teléfono.
+bool _compactStats(BuildContext context) => MediaQuery.sizeOf(context).width < 600;
+
 /// Título de sección
 class _SectionTitle extends StatelessWidget {
   final String title;
@@ -140,11 +157,13 @@ class _SectionTitle extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -162,16 +181,25 @@ class _SummaryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 600 ? 3 :
-            MediaQuery.textScalerOf(context).scale(12) > 18 ? 1 : 2;
+        final crossAxisCount = constraints.maxWidth > 600
+            ? 3
+            : MediaQuery.textScalerOf(context).scale(12) >
+                  (_compactStats(context) ? 14 : 18)
+            ? 1
+            : 2;
         return GridView.count(
           crossAxisCount: crossAxisCount,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: ((constraints.maxWidth - (crossAxisCount - 1) * 12) / crossAxisCount) /
-              (76 + MediaQuery.textScalerOf(context).scale(32)),
+          childAspectRatio:
+              ((constraints.maxWidth - (crossAxisCount - 1) * 12) /
+                  crossAxisCount) /
+              (_compactStats(context) &&
+                        MediaQuery.textScalerOf(context).scale(12) > 14
+                    ? 100 + MediaQuery.textScalerOf(context).scale(40)
+                    : 76 + MediaQuery.textScalerOf(context).scale(32)),
           children: [
             _MetricCard(
               label: 'Total Contenedores',
@@ -311,6 +339,52 @@ class _StatusPieChart extends StatelessWidget {
     final emptyPct = (emptyCount / total * 100).toStringAsFixed(1);
     final unknownCount = total - fullCount - emptyCount;
 
+    final chart = SizedBox(
+      width: 120,
+      height: 120,
+      child: CustomPaint(
+        painter: _PieChartPainter(
+          segments: [
+            _PieSegment(fullCount / total, Colors.green.shade600),
+            _PieSegment(emptyCount / total, Colors.orange.shade600),
+            if (unknownCount > 0)
+              _PieSegment(unknownCount / total, Colors.grey.shade400),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            '$total',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+    final legend = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _LegendItem(
+          color: Colors.green.shade600,
+          label: 'Llenos',
+          value: '$fullCount ($fullPct%)',
+        ),
+        const SizedBox(height: 8),
+        _LegendItem(
+          color: Colors.orange.shade600,
+          label: 'Vacíos',
+          value: '$emptyCount ($emptyPct%)',
+        ),
+        if (unknownCount > 0) ...[
+          const SizedBox(height: 8),
+          _LegendItem(
+            color: Colors.grey.shade400,
+            label: 'Sin estado',
+            value: '$unknownCount',
+          ),
+        ],
+      ],
+    );
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -319,60 +393,21 @@ class _StatusPieChart extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Pie chart custom painted
-            SizedBox(
-              width: 120,
-              height: 120,
-              child: CustomPaint(
-                painter: _PieChartPainter(
-                  segments: [
-                    _PieSegment(fullCount / total, Colors.green.shade600),
-                    _PieSegment(emptyCount / total, Colors.orange.shade600),
-                    if (unknownCount > 0) _PieSegment(unknownCount / total, Colors.grey.shade400),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    '$total',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 24),
-            // Leyenda
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: _compactStats(context)
+            ? Column(
                 children: [
-                  _LegendItem(
-                    color: Colors.green.shade600,
-                    label: 'Llenos',
-                    value: '$fullCount ($fullPct%)',
-                  ),
-                  const SizedBox(height: 8),
-                  _LegendItem(
-                    color: Colors.orange.shade600,
-                    label: 'Vacíos',
-                    value: '$emptyCount ($emptyPct%)',
-                  ),
-                  if (unknownCount > 0) ...[
-                    const SizedBox(height: 8),
-                    _LegendItem(
-                      color: Colors.grey.shade400,
-                      label: 'Sin estado',
-                      value: '$unknownCount',
-                    ),
-                  ],
+                  Center(child: chart),
+                  const SizedBox(height: 16),
+                  legend,
+                ],
+              )
+            : Row(
+                children: [
+                  chart,
+                  const SizedBox(width: 24),
+                  Expanded(child: legend),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -392,6 +427,46 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_compactStats(context) &&
+        MediaQuery.textScalerOf(context).scale(14) > 18) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         Container(
@@ -404,16 +479,13 @@ class _LegendItem extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
         ),
         Text(
           value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -516,6 +588,40 @@ class _SpecialCargoCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_compactStats(context) &&
+        MediaQuery.textScalerOf(context).scale(12) > 14) {
+      final cards = [
+        if (specialCargo.reeferCount > 0)
+          _SpecialCard(
+            icon: Icons.ac_unit,
+            label: 'Reefer',
+            count: specialCargo.reeferCount,
+            color: Colors.cyan,
+          ),
+        if (specialCargo.dangerousCount > 0)
+          _SpecialCard(
+            icon: Icons.warning_amber,
+            label: 'IMO / DG',
+            count: specialCargo.dangerousCount,
+            color: Colors.red,
+          ),
+        if (specialCargo.oogCount > 0)
+          _SpecialCard(
+            icon: Icons.open_in_full,
+            label: 'OOG',
+            count: specialCargo.oogCount,
+            color: Colors.deepOrange,
+          ),
+      ];
+      return Column(
+        children: [
+          for (var i = 0; i < cards.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            SizedBox(width: double.infinity, child: cards[i]),
+          ],
+        ],
+      );
+    }
     return Row(
       children: [
         if (specialCargo.reeferCount > 0)
@@ -527,7 +633,8 @@ class _SpecialCargoCards extends StatelessWidget {
               color: Colors.cyan,
             ),
           ),
-        if (specialCargo.reeferCount > 0 && specialCargo.dangerousCount > 0) const SizedBox(width: 12),
+        if (specialCargo.reeferCount > 0 && specialCargo.dangerousCount > 0)
+          const SizedBox(width: 12),
         if (specialCargo.dangerousCount > 0)
           Expanded(
             child: _SpecialCard(
@@ -537,7 +644,8 @@ class _SpecialCargoCards extends StatelessWidget {
               color: Colors.red,
             ),
           ),
-        if ((specialCargo.reeferCount > 0 || specialCargo.dangerousCount > 0) && specialCargo.oogCount > 0)
+        if ((specialCargo.reeferCount > 0 || specialCargo.dangerousCount > 0) &&
+            specialCargo.oogCount > 0)
           const SizedBox(width: 12),
         if (specialCargo.oogCount > 0)
           Expanded(
@@ -679,17 +787,61 @@ class _BarRow extends StatelessWidget {
     final pct = (value / total * 100).toStringAsFixed(1);
     final fraction = maxValue > 0 ? value / maxValue : 0.0;
 
+    if (_compactStats(context)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _StatsLabel(
+                  label: label,
+                  maxLines: 2,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '$value ($pct%)',
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: fraction,
+              minHeight: 20,
+              backgroundColor: color.withValues(alpha: 0.08),
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         SizedBox(
           width: 80,
-          child: Text(
-            label,
+          child: _StatsLabel(
+            label: label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'monospace',
-                ),
-            overflow: TextOverflow.ellipsis,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'monospace',
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -709,13 +861,59 @@ class _BarRow extends StatelessWidget {
           width: 70,
           child: Text(
             '$value ($pct%)',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.right,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Texto completo accesible y a un toque, aunque la etiqueta se abrevie.
+class _StatsLabel extends StatelessWidget {
+  final String label;
+  final TextStyle? style;
+  final int? maxLines;
+  const _StatsLabel({required this.label, this.style, this.maxLines});
+
+  @override
+  Widget build(BuildContext context) {
+    void showDetail() => showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Detalle'),
+        scrollable: true,
+        content: SelectableText(label),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+    return Semantics(
+      key: ValueKey('stats-label-$label'),
+      container: true,
+      label: label,
+      button: true,
+      excludeSemantics: true,
+      onTap: showDetail,
+      child: InkWell(
+        onTap: showDetail,
+        child: Tooltip(
+          message: label,
+          child: Text(
+            label,
+            style: style,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -739,13 +937,17 @@ class _BayOccupancyChart extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: SizedBox(
-          height: 180,
+          height: _compactStats(context)
+              ? 200 + max(0.0, MediaQuery.textScalerOf(context).scale(9) - 9) * 4
+              : 180,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               // Eje Y labels
               SizedBox(
-                width: 30,
+                width: _compactStats(context)
+                    ? 40 * max(1.0, MediaQuery.textScalerOf(context).scale(9) / 9)
+                    : 30,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -832,13 +1034,17 @@ class _BayWeightChart extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: SizedBox(
-          height: 180,
+          height: _compactStats(context)
+              ? 200 + max(0.0, MediaQuery.textScalerOf(context).scale(9) - 9) * 4
+              : 180,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               // Eje Y labels
               SizedBox(
-                width: 36,
+                width: _compactStats(context)
+                    ? 50 * max(1.0, MediaQuery.textScalerOf(context).scale(9) / 9)
+                    : 36,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
