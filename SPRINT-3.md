@@ -5633,3 +5633,25 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 - **La ronda del Honor,** cuando Carlos lo permita: T-107, T-85 y los ensayos de T-98 y T-99.
 
 **El sprint sigue en 47 tareas y ≈ 168.0 h.** El tablero (v46): 38 terminadas; T-85 y T-107 en revisión; T-98 y T-99 en curso; 5 por hacer: T-108, T-109, T-87, T-100 y T-101.
+
+### 10.84 · T-108 y T-109, entregadas y en revisión: las acepta Timonel en un chat aparte (18-oct)
+
+**T-108 · El lector avisa lo que no cumple el estándar** (Codex; versionada por Carlos en `bc7d82a`):
+- **Sobre HEAD `25b3efd`:** la suite previa dio 964/964, como pedía la 10.82, y el piso se confirma en 964. La final da 988/988, con `analyze` en cero.
+- **El corpus:** 157/157 y los 10 cotejos completos, sin un solo dato cambiado y sin avisos nuevos. El dígito de control inválido da 0 % en el corpus.
+- **La batería de T-98:** los 13 negativos, antes silenciosos, salen detectados con aviso.
+- **Los avisos** viven en la entidad del viaje y en su JSON, y sobreviven al reabrir desde Recientes. No se editaron el codec, su versión, Firestore ni las reglas. Archivo nuevo: `domain/services/iso6346_check_digit.dart`.
+- Windows y Chrome comprobados con `t108`, incluida la persistencia. Falta el Honor.
+
+**T-109 · Estadísticas sin desbordes a 360 dp con letra grande** (Codex; versionada en `32d9288`):
+- A07 a 360×780 con letra 1.0, 1.45 y 2.0: sin desbordes y sin perder textos ni cifras. Seis pruebas nuevas.
+- A 1280 dp, los cinco cuadros coinciden con HEAD.
+- La política y `web/privacidad.html` solo cambian el guion a U+2011, y siguen iguales a la fuente.
+- **Sobre HEAD + T-108: 994/994**, `analyze` en cero y corpus 167/167 (157 + 10 cotejos). Windows y Chrome con `t109`. Falta el Honor.
+- **Un hallazgo previo, declarado y sin corregir:** a 1280 dp, los gráficos de contenedores y de peso por bahía se desbordan en vertical 0.23 dp con Roboto (8 dp con la fuente de las pruebas). La ficha pedía no cambiar la vista ancha. **Yov decide:** no se corrige antes del cierre, porque con la fuente real no corta nada visible. T-99 lo declara en RNF-003, y se resuelve en el rediseño (10.80).
+
+**Las dos las acepta Timonel en un chat aparte.** El chat de T-99 se detiene en un punto seguro mientras tanto: dos Timonel a la vez se pisarían la carpeta y el semáforo.
+
+**El piso de pruebas sube a 964,** confirmado sobre HEAD. Con las aceptaciones de T-108 y T-109 serán 994.
+
+**El sprint sigue en 47 tareas y ≈ 168.0 h.** El tablero (v47): 38 terminadas; en revisión T-85, T-107, T-108 y T-109; en curso T-98 y T-99; 3 por hacer: T-87, T-100 y T-101.
