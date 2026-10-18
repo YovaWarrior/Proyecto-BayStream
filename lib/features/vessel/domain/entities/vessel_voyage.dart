@@ -67,6 +67,9 @@ class VesselVoyage extends Equatable {
   /// Metadatos adicionales del mensaje BAPLIE
   final BaplieMetadata? metadata;
 
+  /// Incidencias de la fuente, conservadas también al reabrir desde Recientes.
+  final List<BaplieReadNotice> readNotices;
+
   /// Geometría del buque declarada por el usuario.
   ///
   /// Fuente única: se guarda una sola vez aquí y `Bay` la recibe inyectada.
@@ -100,6 +103,7 @@ class VesselVoyage extends Equatable {
     this.reservedSlots = const [],
     this.bays = const {},
     this.metadata,
+    this.readNotices = const [],
     this.geometry,
     this.portOfCall,
     this.vesselProfileKey,
@@ -346,6 +350,7 @@ class VesselVoyage extends Equatable {
         reservedSlots,
         bays,
         metadata,
+        readNotices,
         geometry,
         portOfCall,
         vesselProfileKey,
@@ -364,6 +369,7 @@ class VesselVoyage extends Equatable {
     List<ReservedSlot>? reservedSlots,
     Map<int, Bay>? bays,
     BaplieMetadata? metadata,
+    List<BaplieReadNotice>? readNotices,
     VesselGeometry? geometry,
     String? portOfCall,
     bool clearPortOfCall = false,
@@ -382,6 +388,7 @@ class VesselVoyage extends Equatable {
       reservedSlots: reservedSlots ?? this.reservedSlots,
       bays: bays ?? this.bays,
       metadata: metadata ?? this.metadata,
+      readNotices: readNotices ?? this.readNotices,
       geometry: geometry ?? this.geometry,
       portOfCall: clearPortOfCall ? null : portOfCall ?? this.portOfCall,
       vesselProfileKey: vesselProfileKey ?? this.vesselProfileKey,
@@ -405,6 +412,8 @@ class VesselVoyage extends Equatable {
         if (includeBays)
           'bays': bays.map((k, v) => MapEntry(k.toString(), v.toJson())),
         if (metadata != null) 'metadata': metadata!.toJson(),
+        if (readNotices.isNotEmpty)
+          'readNotices': readNotices.map((notice) => notice.toJson(containers)).toList(),
         // Una sola vez para todo el buque: las bahias no la serializan.
         if (geometry != null) 'geometry': geometry!.toJson(),
         if (portOfCall != null) 'portOfCall': portOfCall,
@@ -453,6 +462,9 @@ class VesselVoyage extends Equatable {
             ?.map((s) => ReservedSlot.fromJson(s as Map<String, dynamic>)).toList()
             ?? const [],
         bays: bays,
+        readNotices: (json['readNotices'] as List<dynamic>?)
+            ?.map((value) => BaplieReadNotice.fromJson(
+                Map<String, dynamic>.from(value as Map), containers)).toList() ?? const [],
         metadata: json['metadata'] != null
             ? BaplieMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
             : null,
@@ -574,4 +586,55 @@ class BaplieMetadata extends Equatable {
             ? DateTime.parse(json['preparationDateTime'] as String)
             : null,
       );
+}
+
+
+/// Una entrada por tipo; los detalles identifican los contenedores afectados.
+enum BaplieReadNoticeKind { weight, position, checkDigit, incomplete }
+
+class BaplieReadNotice extends Equatable {
+  final BaplieReadNoticeKind kind;
+  final List<String> details;
+
+  BaplieReadNotice(this.kind, Iterable<String> details)
+      : details = List.unmodifiable(details);
+
+  @override
+  List<Object?> get props => [kind, details];
+
+  /// El número ya está en containers: se guarda su índice, no otra copia.
+  Map<String, dynamic> toJson(List<ContainerUnit> containers) => {
+        'kind': kind.name,
+        'details': [
+          for (final detail in details)
+            if (kind == BaplieReadNoticeKind.incomplete)
+              detail
+            else
+              _reference(detail, containers),
+        ],
+      };
+
+  static Map<String, dynamic> _reference(
+      String detail, List<ContainerUnit> containers) {
+    final separator = detail.indexOf(': ');
+    final number = separator < 0 ? detail : detail.substring(0, separator);
+    final index = containers.indexWhere((unit) => unit.containerId == number);
+    if (index < 0) throw StateError('Aviso sin contenedor de origen.');
+    return {
+      'containerIndex': index,
+      'text': separator < 0 ? '' : detail.substring(separator + 2),
+    };
+  }
+
+  factory BaplieReadNotice.fromJson(
+      Map<String, dynamic> json, List<ContainerUnit> containers) {
+    final kind = BaplieReadNoticeKind.values.byName(json['kind'] as String);
+    return BaplieReadNotice(kind, (json['details'] as List<dynamic>).map((value) {
+      if (kind == BaplieReadNoticeKind.incomplete) return value as String;
+      final reference = Map<String, dynamic>.from(value as Map);
+      final number = containers[reference['containerIndex'] as int].containerId;
+      final text = reference['text'] as String;
+      return text.isEmpty ? number : '$number: $text';
+    }));
+  }
 }

@@ -4,6 +4,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/entities/dangerous_goods.dart';
+import '../../domain/services/iso6346_check_digit.dart';
 
 /// Servicio para parsear la familia BAPLIE 2.x (EDIFACT).
 /// 
@@ -45,7 +46,14 @@ class BaplieParserService {
     final metadata = _parseMetadata(segments);
     
     // Extraer contenedores (grupos LOC+147 -> EQD -> MEA)
-    final cargo = _parseCargo(segments);
+    final notices = <BaplieReadNoticeKind, List<String>>{};
+    final missing = ['UNB', 'BGM', 'UNT', 'UNZ']
+        .where((tag) => !segments.any((s) => _getSegmentType(s) == tag))
+        .toList();
+    if (missing.isNotEmpty) {
+      notices[BaplieReadNoticeKind.incomplete] = missing;
+    }
+    final cargo = _parseCargo(segments, notices);
     final containers = cargo.containers;
     
     // Organizar contenedores por bahías
@@ -66,6 +74,11 @@ class BaplieParserService {
       reservedSlots: cargo.reservedSlots,
       bays: bays,
       metadata: metadata,
+      readNotices: [
+        for (final kind in BaplieReadNoticeKind.values)
+          if (notices[kind]?.isNotEmpty ?? false)
+            BaplieReadNotice(kind, notices[kind]!),
+      ],
     );
   }
 
@@ -450,11 +463,16 @@ class BaplieParserService {
   /// 
   /// Por esto, acumulamos los pesos temporalmente hasta encontrar el EQD
   ({List<ContainerUnit> containers, List<ReservedSlot> reservedSlots})
-      _parseCargo(List<String> segments) {
+      _parseCargo(List<String> segments,
+          Map<BaplieReadNoticeKind, List<String>> notices) {
     final containers = <ContainerUnit>[];
     final reservedSlots = <ReservedSlot>[];
     
     IsoCoordinate? currentPosition;
+    String? rawPosition;
+    final weightNotices = <String>[];
+    void notice(BaplieReadNoticeKind kind, String detail) =>
+        notices.putIfAbsent(kind, () => []).add(detail);
     String? currentPortOfLoading;
     String? currentPortOfDischarge;
     
@@ -474,8 +492,19 @@ class BaplieParserService {
       final builder = containerBuilder;
       if (builder != null) {
         if (builder.containerId != null) {
+          final number = builder.containerId!;
           containers.add(builder.build(_uuid.v4(), currentPosition,
               currentPortOfLoading, currentPortOfDischarge));
+          if (rawPosition != null && currentPosition == null) {
+            notice(BaplieReadNoticeKind.position, '$number: $rawPosition');
+          }
+          if (Iso6346CheckDigit.isValid(number) == false) {
+            notice(BaplieReadNoticeKind.checkDigit, number);
+          }
+          if (weightNotices.isNotEmpty) {
+            notice(BaplieReadNoticeKind.weight,
+                '$number: ${weightNotices.join('; ')}');
+          }
         } else if (currentPosition != null) {
           reservedSlots.add(builder.buildReserved(currentPosition,
               currentPortOfLoading, currentPortOfDischarge));
@@ -498,6 +527,8 @@ class BaplieParserService {
                 finishGroup();
                 // Reiniciar datos para nuevo grupo de contenedor
                 currentPosition = locResult.coordinate;
+                rawPosition = _getElements(segment)[2].split(':').first;
+                weightNotices.clear();
                 currentPortOfLoading = null;
                 currentPortOfDischarge = null;
                 // Reiniciar pesos pendientes
@@ -519,34 +550,32 @@ class BaplieParserService {
           break;
 
         case 'MEA':
-          // Parsear peso a un builder temporal
-          final tempBuilder = _ContainerBuilder();
-          _parseMEA(segment, tempBuilder);
-          
-          // Guardar en pendientes o aplicar al contenedor si ya existe
+          final reading = _parseMEA(segment);
+          if (reading == null) break;
+          if (reading.notice != null) weightNotices.add(reading.notice!);
           final builder = containerBuilder;
-          if (builder != null) {
-            // Ya tenemos EQD, aplicar directamente
-            if (tempBuilder.grossWeight != null) {
-              builder.grossWeight = tempBuilder.grossWeight;
-            }
-            if (tempBuilder.vgmWeight != null) {
-              builder.vgmWeight = tempBuilder.vgmWeight;
-            }
-            if (tempBuilder.tareWeight != null) {
-              builder.tareWeight = tempBuilder.tareWeight;
-            }
-          } else {
-            // EQD aún no llegó, guardar como pendiente
-            if (tempBuilder.grossWeight != null) {
-              pendingGrossWeight = tempBuilder.grossWeight;
-            }
-            if (tempBuilder.vgmWeight != null) {
-              pendingVgmWeight = tempBuilder.vgmWeight;
-            }
-            if (tempBuilder.tareWeight != null) {
-              pendingTareWeight = tempBuilder.tareWeight;
-            }
+          switch (reading.qualifier) {
+            case BaplieConstants.meaGrossWeight:
+              if (builder != null) {
+                builder.grossWeight = reading.weight;
+              } else {
+                pendingGrossWeight = reading.weight;
+              }
+              break;
+            case BaplieConstants.meaVgm:
+              if (builder != null) {
+                builder.vgmWeight = reading.weight;
+              } else {
+                pendingVgmWeight = reading.weight;
+              }
+              break;
+            case BaplieConstants.meaTare:
+              if (builder != null) {
+                builder.tareWeight = reading.weight;
+              } else {
+                pendingTareWeight = reading.weight;
+              }
+              break;
           }
           break;
 
@@ -750,62 +779,59 @@ class BaplieParserService {
   /// - MEA+AAE+WT+KGM:25000' (qualifier en pos 2, peso en pos 3 comp 1)
   /// - WT: Peso Bruto (Gross Weight)
   /// - VGM: Peso Verificado SOLAS (Verified Gross Mass)
-  void _parseMEA(String segment, _ContainerBuilder builder) {
+  ({String qualifier, double? weight, String? notice})? _parseMEA(
+      String segment) {
     final elements = _getElements(segment);
-    if (elements.length < 2) return;
-
-    // Buscar el qualifier (WT, VGM, T) en posición 1 o 2
-    String? qualifier;
-    int weightElementIndex = 3;
-    
-    // Formato 1: MEA+WT++KGM:21850 (qualifier en posición 1)
+    const qualifiers = {
+      BaplieConstants.meaGrossWeight,
+      BaplieConstants.meaVgm,
+      BaplieConstants.meaTare,
+    };
     final pos1 = _safeGetElement(elements, 1);
-    if (pos1 == BaplieConstants.meaGrossWeight || 
-        pos1 == BaplieConstants.meaVgm || 
-        pos1 == BaplieConstants.meaTare) {
-      qualifier = pos1;
-      weightElementIndex = 3;
-    } else {
-      // Formato 2: MEA+AAE+WT+KGM:25000 (qualifier en posición 2)
-      qualifier = _safeGetElement(elements, 2);
-      weightElementIndex = 3;
-    }
-
-    if (qualifier == null) return;
+    final qualifier = qualifiers.contains(pos1)
+        ? pos1
+        : _safeGetElement(elements, 2);
+    if (!qualifiers.contains(qualifier)) return null;
 
     double? weight;
-
-    // Buscar peso en el elemento correspondiente y sus componentes
-    for (int elemIdx = weightElementIndex; elemIdx < elements.length && weight == null; elemIdx++) {
-      final element = _safeGetElement(elements, elemIdx);
-      if (element == null || element.isEmpty) continue;
-      
-      // Intentar parsear el elemento directamente
+    String? unit;
+    // Conserva los formatos numéricos admitidos, identificando la unidad del
+    // mismo elemento que aporta el valor. KGM conserva su precisión original.
+    for (var i = 3; i < elements.length && weight == null; i++) {
+      final element = _safeGetElement(elements, i);
+      if (element == null) continue;
+      unit = null;
       weight = double.tryParse(element);
-      
-      // Si no, buscar en componentes
-      if (weight == null) {
-        final components = _getComponents(element);
-        for (final comp in components) {
-          weight = double.tryParse(comp);
-          if (weight != null) break;
-        }
+      if (weight != null) break;
+      final components = _getComponents(element);
+      unit = _safeGetComponent(components, 0);
+      if (unit != null && double.tryParse(unit) != null) unit = null;
+      for (final component in components) {
+        weight = double.tryParse(component);
+        if (weight != null) break;
       }
     }
-
-    if (weight == null) return;
-
-    switch (qualifier) {
-      case BaplieConstants.meaGrossWeight: // WT
-        builder.grossWeight = weight;
+    if (weight == null || !weight.isFinite) return null;
+    String? warning;
+    switch (unit) {
+      case 'KGM':
         break;
-      case BaplieConstants.meaVgm: // VGM
-        builder.vgmWeight = weight;
+      case 'LBR':
+        weight = (weight * 0.45359237).roundToDouble();
+        warning = '$qualifier en LBR convertido a $weight kg';
         break;
-      case BaplieConstants.meaTare: // T
-        builder.tareWeight = weight;
+      case 'TNE':
+        weight = (weight * 1000).roundToDouble();
+        warning = '$qualifier en TNE convertido a $weight kg';
         break;
+      case null:
+        warning = '$qualifier sin unidad; se tomó como kg';
+        break;
+      default:
+        warning = '$qualifier con unidad desconocida $unit; sin ese peso';
+        weight = null;
     }
+    return (qualifier: qualifier!, weight: weight, notice: warning);
   }
 
   /// Parsea segmento NAD (Name and Address)

@@ -64,6 +64,10 @@ class VoyageSummaryCard extends StatelessWidget {
               ),
               const SizedBox(height: 16),
             ],
+            for (final notice in voyage.readNotices) ...[
+              _ReadNotice(notice: notice),
+              const SizedBox(height: 16),
+            ],
             // Encabezado con icono y nombre del buque
             Row(
               children: [
@@ -279,5 +283,88 @@ class VoyageSummaryCard extends StatelessWidget {
       return '${(weightKg / 1000).toStringAsFixed(1)} t';
     }
     return '${weightKg.toStringAsFixed(0)} kg';
+  }
+}
+
+
+/// T-108: una línea de resumen por tipo y su fuente completa a un toque.
+class _ReadNotice extends StatelessWidget {
+  final BaplieReadNotice notice;
+  const _ReadNotice({required this.notice});
+
+  String get title => switch (notice.kind) {
+        BaplieReadNoticeKind.weight => 'Pesos revisados',
+        BaplieReadNoticeKind.position => 'Posiciones mal formadas',
+        BaplieReadNoticeKind.checkDigit => 'Dígito de control inválido',
+        BaplieReadNoticeKind.incomplete => 'Archivo posiblemente incompleto',
+      };
+
+  String get summary {
+    final count = notice.details.length;
+    if (notice.kind == BaplieReadNoticeKind.incomplete) {
+      return '$title: faltan $count segmentos (${notice.details.join(', ')})';
+    }
+    return '$title: $count ${count == 1 ? 'contenedor' : 'contenedores'}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final radius = BorderRadius.circular(12);
+    return Material(
+      key: ValueKey('voyage-${notice.kind.name}-notice'),
+      color: scheme.errorContainer,
+      borderRadius: radius,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: () => showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(summary),
+            scrollable: true,
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (notice.kind == BaplieReadNoticeKind.incomplete)
+                  const Text('El archivo puede venir incompleto. '
+                      'Revisa los segmentos que faltan:'),
+                for (final detail in notice.details)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: SelectableText(detail),
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cerrar'),
+              ),
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.warning_amber,
+                  color: scheme.onErrorContainer, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(summary,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: scheme.onErrorContainer,
+                        )),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right,
+                  semanticLabel: 'Ver detalle',
+                  color: scheme.onErrorContainer, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
