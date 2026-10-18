@@ -5510,3 +5510,25 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 - T-85 y T-107 en revisión;
 - T-98 en curso;
 - 6 por hacer: T-108, T-109, T-87, T-99, T-100 y T-101.
+
+### 10.82 · La corrección de T-98 queda versionada · El TLS de RNF-004 se mide en las conexiones de BayStream, no en la política del servidor (18-oct)
+
+**La corrección de 10.81** (Codex; versionada por Carlos en `46202d7`):
+- `.gitattributes` con `web/vendor/**/*.js -text`. En un clon nuevo, los `.js` salen con LF y T-92 pasa 7/7.
+- La batería de conformidad está en `tool/t98_estandares_test.dart` y deja una tabla con 29 observaciones, sin dictamen por caso. Los 13 negativos siguen aceptados en silencio; los corrige T-108.
+- La suite por defecto da 934/934 y `analyze` en cero, **sobre un clon de `194f140`**, sin T-107 parte B. Sobre HEAD tienen que ser 964 (922 + 30 + 12). Codex lo confirma antes de empezar T-108, y entonces el piso sube a 964.
+- El TLS negativo, con el módulo `ssl` de Python (OpenSSL 3.0.18), sin instalar nada.
+- **La Fase A queda hecha,** salvo los ensayos en el Honor y con la sesión de «PRUEBA T-98». T-98 sigue «En curso» por la Fase B.
+
+**El hallazgo del TLS.** Los tres servidores de Firebase (`firestore`, `identitytoolkit` y `securetoken.googleapis.com`) **aceptan TLS 1.1** cuando un cliente lo pide. El criterio de T-63 pedía que ese intento fallara.
+
+**Yov decide cómo se mide** (T-63 delegó los RNF en Yov):
+- El ERS pide «TLS 1.2+ para sincronización en la nube». Es una propiedad de **las conexiones de BayStream**, y la política de los servidores de Google no la controla el proyecto.
+- **El dictamen** se toma de la versión que negocian los clientes de BayStream en conexiones reales con sesión:
+  - **Web:** el panel Security de Chrome y el NetLog, conexión por conexión;
+  - **Windows:** el saludo TLS capturado con `pktmon`, que viene con Windows, con los permisos de administrador que da Carlos; si no alcanza, se declara;
+  - **Android:** sin root no se ve el saludo. Se declaran la versión de Android del Honor y lo que documenta la plataforma, como limitación.
+- **El intento con TLS 1.1** queda como observación del proveedor: se informa con su fecha, sin dictamen sobre BayStream.
+- **Si un cliente de BayStream negocia menos de 1.2,** eso sí es un incumplimiento: Codex se detiene y avisa.
+
+**Sigue igual:** Codex hace T-108 y T-109; Timonel acepta T-85 y después las dos nuevas. El sprint, en 47 tareas y ≈ 168.0 h; el tablero, en v45.
