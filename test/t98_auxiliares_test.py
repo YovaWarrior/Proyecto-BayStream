@@ -20,9 +20,36 @@ inventory = load('t98_inventario')
 sanitizer = load('t98_sanitizar')
 video = load('t98_video')
 prepare = load('t98_preparar')
+tls = load('t98_tls')
 
 
 class Instruments(unittest.TestCase):
+    def test_tls_11_clienthello_and_version_cap(self):
+        import ssl
+        ctx = tls.context('TLSv1.1')
+        self.assertEqual(ctx.maximum_version, ssl.TLSVersion.TLSv1_1)
+        self.assertEqual(ctx.minimum_version, ssl.TLSVersion.TLSv1_1)
+        self.assertTrue(tls.preflight(ctx, 'firestore.googleapis.com'))
+
+    def test_tls_local_error_is_not_remote_rejection(self):
+        import ssl
+        error = ssl.SSLError(1, 'Error sintetico local')
+        error.reason = 'NO_CIPHERS_AVAILABLE'
+        self.assertEqual(tls.classify(error, 200), 'fallo_cliente_o_protocolo_inconcluso')
+        error.reason = 'TLSV1_ALERT_PROTOCOL_VERSION'
+        self.assertEqual(tls.classify(error, 0), 'fallo_cliente_o_protocolo_inconcluso')
+        self.assertEqual(tls.classify(error, 200), 'alerta_servidor')
+
+    def test_tls_eof_and_timeout_are_inconclusive(self):
+        import ssl
+        self.assertEqual(tls.classify(ssl.SSLEOFError(), 200), 'transporte_inconcluso')
+        self.assertEqual(tls.classify(TimeoutError(), 200), 'transporte_inconcluso')
+
+    def test_tls_certificate_error_is_not_version_rejection(self):
+        import ssl
+        self.assertEqual(tls.classify(ssl.SSLCertVerificationError(), 200),
+                         'validacion_certificado_cliente')
+
     def test_comments_and_strings(self):
         values = [v for _, _, v in inventory.literals(
             '// "comentario"\nText("Español"); /* "oculto" */ r"raw"; """multi\nlinea""";')]

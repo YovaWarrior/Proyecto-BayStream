@@ -2,7 +2,246 @@
 
 Capitán Codex · 17-oct-2026 · Fase A · base `9ae744a` de `sprint-3`.
 
-## Fase A
+**Vigencia:** la sección «Corrección 10.81», del 18-oct, prevalece sobre la
+entrega histórica del 17-oct que se conserva después. La corrección está sin
+commit, verificada y lista para revisión de Yov. La Fase B continúa pendiente.
+
+## Corrección 10.81
+
+Capitán Codex · 18-oct-2026 · base solicitada `194f140`.
+
+### Cambios y criterio de conformidad
+
+- Se trasladó `test/t98_estandares_test.dart` a
+  `tool/t98_estandares_test.dart`. Es un instrumento que se ejecuta a mano,
+  fuera de la suite por defecto, con un único `testWidgets` para alojar el
+  registro. No hay aprobados/reprobados por caso ni se invierte ninguna
+  expectativa para declarar conforme al producto.
+- Conserva los 28 especímenes sintéticos y agrega un control SMDG15 del
+  detector de aviso visible: **29 filas de observaciones**, sin añadir
+  pruebas a `test/`. Para cada una registra caso, norma, tipo, comportamiento,
+  aviso visible, datos sintéticos leídos, huella de fuente, fase y base.
+- **Negativo detectado = «rechaza» o «avisa» de forma visible**. Una
+  advertencia almacenada en el modelo o una validación del oráculo de pruebas
+  no bastan. Para la observación «avisa» se renderiza `VoyageSummaryCard` real
+  y se recoge el texto de avisos dentro del área visible. No sustituye los
+  recorridos en Windows, Web y Honor de la Fase B.
+- `.gitattributes` incorpora exactamente `web/vendor/**/*.js -text`, por la
+  autorización específica de 10.81. No se editaron los JS ni sus huellas.
+- `tool/t98_tls.py` usa `ssl` de Python. El antiguo `.ps1` queda como
+  envoltorio compatible de entrada, sin instalar ni invocar OpenSSL externo.
+  Se añaden cuatro autopruebas Python de TLS: **10 en total**, fuera del
+  cómputo de pruebas Dart.
+
+No se modificaron `lib/`, el codec, reglas, congelados, clientes reales ni
+`pubspec.yaml`/`pubspec.lock`. Los 12 casos de
+`test/t98_instrumentos_test.dart` permanecen sin cambios. No se utilizó el
+Honor ni ninguna sesión Firebase.
+
+### Copia nueva y T-92
+
+El árbol de trabajo ya está en `3d5c83a`, con T-107 B y la decisión 10.81.
+Para respetar la base pedida se creó un **clone nuevo de la revisión exacta
+`194f1401d01217d3cbf1126aa099cb6948eb0df3`** en
+`%TEMP%\t98-correccion-1081-194f140\clone`.
+Se usó `git clone --revision`, autorizado expresamente en esta corrección,
+sin cambiar la rama ni el índice del repositorio de Carlos. No se reescribió
+`194f140` y no se ejecutó `git status`.
+
+La copia aplica `core.autocrlf=true` y
+`core.attributesFile=C:/Proyectos/proyecto-baystream/.gitattributes` durante la
+extracción inicial: esto permite ensayar la regla aún sin commit. Después se
+copió también `.gitattributes` a la raíz del clone. Se superpusieron solamente
+las rutas de esta corrección. Las dependencias instaladas se reutilizaron con
+`package_config.json` y `package_graph.json`; sin `pub get` ni dependencias nuevas.
+
+La inspección binaria de los archivos recién extraídos registró:
+
+| JS servido en `web/vendor/firebase/12.17.0/` | CRLF | LF | SHA-256 coincide con `servedSha256` |
+|---|---:|---:|---|
+| `firebase-app.js` | 0 | 2850 | Sí |
+| `firebase-auth.js` | 0 | 3 | Sí |
+| `firebase-firestore-pipelines.js` | 0 | 3 | Sí |
+
+Evidencia: `%TEMP%\t98-correccion-1081-194f140\js-copia.json` y `clone.txt`.
+El fallo anterior de T-92 era una conversión de finales de línea al extraer
+la copia en Windows, **no un defecto del producto**.
+
+**T-92 pasa 7/7 en esta copia nueva**, con código de salida 0. Se ejecutó
+`flutter test --no-pub test/t92_web_test.dart --reporter expanded`, tras
+comprobar que los procesos Dart previos habían terminado y con luz verde de
+Carlos. Registro: `%TEMP%\t98-correccion-1081-194f140\t92-correccion.txt`.
+
+### Tabla del ensayo del lector
+
+Corrida manual sobre la copia de `194f140`, con luz verde individual de Carlos.
+Se generaron **29 filas**: los 28 especímenes anteriores y un control de
+aviso visible. El único `testWidgets` terminó con código 0 porque el
+instrumento produjo su salida, **no porque los casos sean conformes**.
+
+| Caso | Norma | Tipo | Qué hace el lector hoy | Aviso visible |
+|---|---|---|---|---|
+| BBBRRTT 0010002 | BBBRRTT | positivo | acepta en silencio |  |
+| BBBRRTT 0020182 | BBBRRTT | positivo | acepta en silencio |  |
+| BBBRRTT 9999999 | BBBRRTT | positivo | acepta en silencio |  |
+| BBBRRTT 01234 | BBBRRTT | negativo | acepta en silencio |  |
+| BBBRRTT 01200000 | BBBRRTT | negativo | acepta en silencio |  |
+| BBBRRTT 012A082 | BBBRRTT | negativo | acepta en silencio |  |
+| BBBRRTT -120082 | BBBRRTT | negativo | acepta en silencio |  |
+| Dígito válido CSQU305438 | ISO 6346 | positivo | acepta en silencio |  |
+| Dígito alterado CSQU305438 | ISO 6346 | negativo | acepta en silencio |  |
+| Dígito válido TSTU000098 | ISO 6346 | positivo | acepta en silencio |  |
+| Dígito alterado TSTU000098 | ISO 6346 | negativo | acepta en silencio |  |
+| Dígito válido ABCU123456 | ISO 6346 | positivo | acepta en silencio |  |
+| Dígito alterado ABCU123456 | ISO 6346 | negativo | acepta en silencio |  |
+| WT KGM 24000 | KGM / SOLAS | positivo | acepta en silencio |  |
+| VGM KGM 24000 | KGM / SOLAS VGM | positivo | acepta en silencio |  |
+| WT LBR 24000 | KGM / SOLAS | negativo | acepta en silencio |  |
+| WT TNE 24000 | KGM / SOLAS | negativo | acepta en silencio |  |
+| SMDG22 grupos 1, 2 y 3 | BAPLIE 2.2.1 | positivo | acepta en silencio |  |
+| Grupo 4 clase 3 ONU 1993 | BAPLIE 2.2.1 | positivo | acepta en silencio |  |
+| Sin UNB | BAPLIE 2.2.1 | negativo | acepta en silencio |  |
+| Sin UNH | BAPLIE 2.2.1 | negativo | rechaza |  |
+| Sin BGM | BAPLIE 2.2.1 | negativo | acepta en silencio |  |
+| Sin TDT | BAPLIE 2.2.1 | negativo | rechaza |  |
+| Sin UNT | BAPLIE 2.2.1 | negativo | acepta en silencio |  |
+| Sin UNZ | BAPLIE 2.2.1 | negativo | acepta en silencio |  |
+| Cabecera COPRAR:D:95B:UN:SMDG22 | BAPLIE 2.2.1 | negativo | rechaza |  |
+| Cabecera BAPLIE:D:13B:UN:SMDG31 | BAPLIE 2.2.1 | negativo | rechaza |  |
+| Cabecera TDT+99+ | BAPLIE 2.2.1 | negativo | rechaza |  |
+| Control SMDG15 con aviso | Control del instrumento | control | avisa | Versión 1.5, leída con las reglas de 2.x; revisa pesos y peligrosas |
+
+La tabla se copió de la salida real, sin dictamen RNF: 23 aceptaciones
+silenciosas (incluyen los positivos), cinco rechazos y un aviso visible
+de control. Los 13 negativos conocidos siguen aceptados en silencio en
+esta base; se conservan como observaciones para T-108 y Fase B.
+Ningún dato de este ensayo se presenta como medición del cierre.
+
+Evidencia: `%TEMP%\t98-correccion-1081-194f140\conformidad\conformidad.csv`,
+`conformidad.md` y `conformidad-correccion.txt`.
+
+Para ejecutarlo a mano desde la copia nueva, **con su propio semáforo**:
+
+```powershell
+flutter test --no-pub tool/t98_estandares_test.dart --reporter expanded --dart-define=T98_BASE=194f140 --dart-define=T98_FASE=A --dart-define=T98_SALIDA="$env:TEMP/t98-correccion-1081-194f140/conformidad"
+```
+
+Produce `conformidad.csv` y `conformidad.md` en esa carpeta TEMP y se niega a
+sobrescribir una corrida. En Fase B se declara `T98_FASE=B` y el hash completo
+del commit de cierre en `T98_BASE`; la tabla sirve para dictaminar RNF-008
+entonces, sin dictámenes automáticos en la Fase A.
+
+### TLS con Python, sin instalaciones
+
+Se usan límites mínimo y máximo de TLS 1.1 para el negativo, con
+`DEFAULT:@SECLEVEL=0` **solo en ese contexto de cliente de prueba**. Hay un
+saludo de control TLS 1.2 por host. `ssl.MemoryBIO` comprueba que el cliente
+puede generar el ClientHello; la conexión real registra si envió bytes del
+saludo antes de recibir una alerta. No se envía HTTP ni se usan credenciales.
+
+El instrumento separa negociación, alerta recibida del servidor, error del
+cliente, fallo de validación de certificado y transporte inconcluso.
+EOF/reset/timeout y protocolos/cifrados no disponibles localmente nunca se
+presentan como rechazo del servidor. Una alerta remota tampoco certifica por
+sí sola su política mínima. La versión de las conexiones del SDK sigue
+pendiente de Chrome Security en la Fase B.
+
+Ejercitación realizada, **no medición de cierre ni dictamen RNF**:
+
+| Host | Control TLS 1.2 | Intento TLS 1.1 |
+|---|---|---|
+| `firestore.googleapis.com` | Negocia TLS 1.2 | Negocia TLS 1.1 |
+| `identitytoolkit.googleapis.com` | Negocia TLS 1.2 | Negocia TLS 1.1 |
+| `securetoken.googleapis.com` | Negocia TLS 1.2 | Negocia TLS 1.1 |
+
+No se fuerza ni se inventa el rechazo esperado. Este comportamiento queda
+anotado para corroborarlo en el entorno de Fase B; no se cambia el umbral.
+Salida sanitizada: `%TEMP%\t98-correccion-1081-194f140\tls-python.json`.
+La biblioteca disponible de Python es `OpenSSL 3.0.18`; no se instaló una
+herramienta OpenSSL ni una dependencia de producción.
+
+```powershell
+python tool/t98_tls.py --salida "$env:TEMP/t98-correccion-1081-194f140/tls-otra-corrida.json" --fase A --base 194f140
+# Alternativa mediante el punto de entrada PowerShell:
+./tool/t98_tls.ps1 -Base 194f140 -Fase A -Salida "$env:TEMP/t98-correccion-1081-194f140/tls-wrapper.json"
+```
+
+### Validaciones de la corrección
+
+| Verificación | Estado |
+|---|---|
+| Clone nuevo de base exacta con JS LF y huellas correctas | Comprobado |
+| `flutter test --no-pub test/t92_web_test.dart --reporter expanded` en el clone | **7/7**, código 0; `t92-correccion.txt` |
+| Suite por defecto de la base corregida | **934/934**, código 0; `suite-correccion.txt` |
+| `flutter analyze --no-pub` | **0 incidencias**, sin `// ignore` nuevos; `analyze-correccion.txt` |
+| Instrumento manual y tabla CSV/MD | **29 observaciones**, un registrador completado, código 0; `conformidad-correccion.txt` |
+| Autopruebas Python | **10/10**, `python-autopruebas.txt` en TEMP |
+| Wrapper PowerShell TLS | Sintaxis validada |
+| TLS Python | Seis saludos ejercitados, sin sesión ni datos de la app |
+
+No se atribuyen a esta corrección las 30 pruebas de T-107 B que están en el
+HEAD actual: se valida la base pedida `194f140`. En el árbol con T-107 B el
+total esperado tras el traslado sería 964 = 922 + 30 + 12; no se ha ejecutado
+allí una suite ni se modifica su trabajo concurrente.
+
+**Piso verificado de esta base: 934/934 = 922 + 12.** Los 28 casos trasladados
+dejan de formar parte de la suite por defecto. El control visible adicional
+solo agrega una fila al instrumento manual, no una prueba unitaria. Las diez
+autopruebas Python se informan aparte. No hay saltos de conteo ni pruebas
+omitidas mediante `skip` para obtener el verde.
+
+Carlos autorizó individualmente T-92, la suite, el registrador y el análisis.
+Al reanudar había tres procesos Dart activos; se esperó a que terminaran antes
+de iniciar Flutter y se ejecutó un único comando a la vez. Los registros
+están en `%TEMP%\t98-correccion-1081-194f140\`; no se sobrescribieron binarios
+ni almacenes de las apps reales o de demo17. No se abrió ningún cliente ni
+se consultó «PRUEBA T-105».
+
+### Archivos y Git de la corrección
+
+Rutas exactas: `.gitattributes` (nuevo), `tool/t98_estandares_test.dart`
+(traslado y adaptación), `test/t98_estandares_test.dart` (retirado),
+`tool/t98_tls.py` (nuevo), `tool/t98_tls.ps1` (modificado),
+`test/t98_auxiliares_test.py` (modificado) y este informe (modificado).
+`pubspec.yaml` y `pubspec.lock` **sin cambios**.
+
+Bloque para Carlos, con las verificaciones de la corrección completadas.
+El traslado se registra con ambas rutas; no se usa `git mv` ni se reescribe
+el commit anterior. El prefijo «Sprint 3:» rige el commit nuevo.
+
+```powershell
+git add -- .gitattributes
+git add -- tool/t98_estandares_test.dart
+git add -- test/t98_estandares_test.dart
+git add -- tool/t98_tls.py
+git add -- tool/t98_tls.ps1
+git add -- test/t98_auxiliares_test.py
+git add -- docs/T98-RESULTADOS.md
+git commit -m "Sprint 3: corrige instrumentos de T-98 segun decision 10.81"
+git push
+```
+
+Tres líneas de la corrección:
+
+La conformidad se registra manualmente en tool/ y deja la suite unitaria separada.
+La regla -text preserva los JS servidos y TLS usa exclusivamente Python instalado.
+La copia de 194f140 da 934/934, T-92 7/7 y analyze cero; la tabla real tiene 29 filas.
+
+Mensaje para Yov:
+
+La corrección 10.81 de T-98 está verificada, sin commit y sin cambios en lib/.
+La batería pasó a tool/ y registra silencio, aviso visible o rechazo, sin dictamen por caso.
+Clone nuevo de 194f140: JS con LF y huellas correctas; T-92 7/7, suite 934/934 y analyze cero.
+El instrumento generó CSV/MD con 29 filas: los 28 especímenes y el control visible SMDG15.
+Los 13 negativos siguen aceptados en silencio en esa base; quedan registrados para T-108/Fase B.
+TLS Python ejercitado sin instalaciones; los tres hosts negociaron 1.1 en el ensayo.
+Python 10/10; Honor, sesión y mediciones de cierre siguen pendientes.
+
+## Fase A · Entrega histórica del 17-oct (194f140)
+
+Las instrucciones de ejecución, el bloqueo y el bloque Git de esta sección
+son históricos: para el estado actual y los comandos vigentes, ver
+«Corrección 10.81» arriba. No ejecutar su bloque Git ni reinstalar instrumentos.
 
 **Instrumentos preparados; no se declara cerrada la Fase A mientras la batería
 de conformidad conserve casos fallidos. No se ha realizado la Fase B.**
