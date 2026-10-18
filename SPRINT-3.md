@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **47 tareas · ≈ 168.0 h estimadas** (al 17-oct, 10.81) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 169.0 h estimadas** (al 18-oct, 10.85) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2183,6 +2183,42 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 - [ ] **Windows sin cambios;** el Honor (360 dp y letra 2.0), cuando Carlos lo permita.
 - [ ] **Validaciones:** el piso vigente más las nuevas, y `analyze` en cero.
 
+#### T-110 · Todas las bahías del buque, al leer y al reabrir, y dos textos de T-108 · 1.0 h · Codex (ficha completa, 18-oct; la acepta Timonel)
+
+**Para qué.** Timonel lo encontró al aceptar T-108 y T-109 (10.85): A07 muestra 18 bahías al leerlo y 21 al reabrirlo desde Recientes, y ya pasaba antes de T-108. **Carlos decide (18-oct):** con el perfil del buque confirmado, el selector muestra todas las bahías del buque, también las que vienen vacías en el archivo, porque en la carga se llenan. Además, Timonel dejó dos textos de T-108 para corregir.
+
+**Lo que hay hoy (Yov lo revisó en el repo, 18-oct):**
+- `parse()` (`baplie_parser_service.dart`) arma las bahías con `_organizeBays`, solo con las que traen contenedores, y les suma las de las reservas.
+- Al reabrir desde Recientes la lista sale de otro lado y da 21. Codex ubica de dónde: el perfil, la geometría o lo guardado.
+- **Los textos:**
+  - «faltan 1 segmentos» en `voyage_summary_card.dart:305`;
+  - en Windows, el peso convertido sale como «23457.0 kg» (`baplie_parser_service.dart:821` y `825`), porque un `double` se escribe distinto en la Web y en las apps nativas.
+
+**Qué construye.**
+1. **Una sola regla para los dos caminos:**
+   - con el perfil confirmado, la lista de bahías es la del buque (la del perfil o su geometría) más las que traiga el archivo;
+   - sin perfil, solo las del archivo, como hoy.
+   - Las bahías vacías se ven con su rejilla vacía, cubierta y bodega según la geometría, en orden de número.
+2. **Lo que no cambia:** «bahías ocupadas» y cualquier cuenta de Estadísticas siguen contando solo las que tienen carga. La validación, el orden de descarga y la comparación de viajes dan lo mismo.
+3. **Los textos:** «falta 1 segmento» y «faltan N segmentos». Los pesos convertidos se escriben como kilos enteros, igual en las tres plataformas, con el mismo formato que ya usa la app para los pesos.
+
+**Carril.**
+- **Toca:** el lugar donde se arma la lista de bahías, al leer y al reabrir; `voyage_summary_card.dart`; los dos mensajes de `baplie_parser_service.dart`, y `test/t110_*`.
+- **No toca:** las reglas, el codec, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+
+**Detente y avisa si:**
+- la regla cambia algo del corpus aparte de la lista de bahías: cuentas, pesos, posiciones, validación u orden de descarga;
+- hace falta cambiar el codec o lo guardado para aplicarla;
+- el perfil de algún buque del corpus no permite saber sus bahías.
+
+**Terminada cuando:**
+- [ ] **A07 muestra 21 bahías al leerlo y al reabrirlo,** y Estadísticas sigue contando las ocupadas igual que antes.
+- [ ] **Un buque sin perfil** muestra solo las bahías del archivo.
+- [ ] **Pruebas en `test/t110_*`:** los dos caminos con perfil y sin perfil, una bahía vacía con su rejilla, y los dos textos (también el peso sin «.0»).
+- [ ] **El corpus:** 157/157, idéntico salvo la lista de bahías; el informe dice qué archivos ganan bahías y cuántas.
+- [ ] **Windows y la Web** con `t110`; el Honor, cuando Carlos lo permita.
+- [ ] **Validaciones:** el piso (994) más las nuevas, y `analyze` en cero.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43) · **ficha completa arriba** |
@@ -2198,6 +2234,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-107** | RF-038 | 3.0 | El encabezado del plano, compacto en pantallas angostas (el modo y un desplegable «Acciones» en una línea, el resumen en otra; Windows y la Web sin cambios), y los tres textos que dejó T-106: la etiqueta de accesibilidad y los avisos del deriver sin `C:`, y «re-estiba» sin partirse. Lo encontró Carlos en el Honor (10.76); la hace Timonel y la acepta Codex, antes del commit de cierre · **ficha completa arriba** |
 | **T-108** | BAP | 2.5 | El lector avisa lo que no cumple el estándar (10.81): pesos en LBR y TNE a kg, posiciones mal formadas, dígito de control ISO 6346 y archivo incompleto, con aviso en la tarjeta del viaje. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 | **T-109** | TC | 1.0 | Estadísticas sin desbordes a 360 dp con letra 1.45 y 2.0, y el último guion de «re-estibas» en la política (10.81). La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
+| **T-110** | ERS | 1.0 | Todas las bahías del buque al leer y al reabrir, con el perfil confirmado (Carlos, 10.85), y dos textos de T-108. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -5655,3 +5692,37 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 **El piso de pruebas sube a 964,** confirmado sobre HEAD. Con las aceptaciones de T-108 y T-109 serán 994.
 
 **El sprint sigue en 47 tareas y ≈ 168.0 h.** El tablero (v47): 38 terminadas; en revisión T-85, T-107, T-108 y T-109; en curso T-98 y T-99; 3 por hacer: T-87, T-100 y T-101.
+
+### 10.85 · T-108 y T-109, aceptadas salvo el Honor · El piso sube a 994 · Nace T-110: todas las bahías del buque (18-oct)
+
+**T-108 y T-109, ACEPTADAS con observaciones** (Timonel, en un chat aparte; versionado por Carlos en `104c2db`):
+- **La base:** una copia limpia de `2638072`. Suite 994/994, `analyze` en cero y `tool/` 168/168.
+- **T-108:**
+  - los 13 negativos de T-98 avisan, sin falsos positivos;
+  - el corpus sale idéntico contra la referencia de Timonel de `25b3efd`, y sin avisos (A06 conserva el de la 1.5);
+  - el dígito de control calculado a mano, aparte del producto, y las conversiones LBR y TNE coinciden;
+  - los viajes guardados por el binario anterior abren desde Recientes, sin avisos inventados.
+- **T-109:**
+  - a 1280 dp, idéntica píxel por píxel a la anterior;
+  - a 360 dp, con letra 1.0, 1.45 y 2.0, sin desbordes en Windows ni en Chrome;
+  - en la política solo cambia el guion a U+2011.
+- **Siguen «En revisión» hasta la ronda del Honor,** como T-85 y T-107.
+
+**El piso de pruebas sube a 994.**
+
+**Observaciones:**
+- **Para Codex:** «faltan 1 segmentos» (`voyage_summary_card.dart:305`), y «23457.0 kg» solo en Windows (`baplie_parser_service.dart:821` y `825`). Pasan a T-110.
+- **Aceptado:** `_StatsLabel` también hace táctil la vista ancha (`voyage_stats_view.dart:839`), sin cambiar un píxel. Ayuda a la accesibilidad.
+- **Anterior a T-108:** A07 muestra 18 bahías al leerlo y 21 al reabrirlo.
+- **Los tropiezos de proceso** que declara Timonel (un `flutter --version` sin luz verde y dos compilaciones repetidas con luz verde) no afectan lo medido.
+
+**Carlos decide (18-oct):** con el perfil confirmado, el selector muestra **todas las bahías del buque**, también las vacías en el archivo, porque en la carga se llenan.
+
+**Nace T-110 · Todas las bahías del buque, al leer y al reabrir, y dos textos de T-108** (≈ 1.0 h, Codex; la acepta Timonel, antes del commit de cierre). Ficha completa en la Ola 5.
+
+**Antes del commit de cierre falta:**
+- T-110;
+- la ronda del Honor, que cierra T-85, T-107, T-108, T-109 y T-110;
+- T-99 Fase A sigue con Timonel en paralelo, sin bloquear el cierre.
+
+**El sprint pasa a 48 tareas y ≈ 169.0 h.** El tablero (v48) suma 224.0 h: 38 terminadas; en revisión T-85, T-107, T-108 y T-109; en curso T-98 y T-99; 4 por hacer: T-110, T-87, T-100 y T-101.
