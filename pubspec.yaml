@@ -50,6 +50,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Arnés de rendimiento de T-99 (autorizado en 2.7 de SPRINT-3, 10.83). Del
+  # propio SDK y solo de desarrollo: no entra en la app compilada.
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   # Instalador MSIX de Windows (T-93, autorizado en 2.7 de SPRINT-3). Fija y
   # solo de desarrollo: no entra en la app compilada.
