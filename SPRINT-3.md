@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 169.5 h estimadas** (al 19-oct, 10.89) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 169.5 h estimadas** (al 19-oct, 10.90) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -5932,3 +5932,46 @@ La letra quedó en 1.0, y las otras 44 BayStream del Honor no cambiaron.
 - 4 por hacer: T-111, T-87, T-100 y T-101.
 
 El piso sigue en 1034.
+
+### 10.90 · T-111 entregada · El piso sube a 1047 · T-107, terminada · T-98, ensayada en el Honor · La sonda de red necesita un control positivo (19-oct)
+
+**Commits** (Codex, solo y con los permisos de 10.88; los corrió Carlos a las 15:33): `3cfd0e1` (T-111), `2312fe5` (la aceptación de T-107) y `22f3573` (el ensayo de T-98).
+
+**T-111, entregada:**
+- **El cambio:** la tarjeta mide las etiquetas y los valores con el estilo y la escala de letra activos, y apila los tres indicadores si alguno no cabe. Si caben, conserva el ancho de antes. Además, «1 celda reservada».
+- **Validaciones:** **1047/1047** (1034 + 13), `analyze` en cero y el corpus 178/178 (157 más 21 cotejos de T-108, T-110 y T-110acc contra referencias de HEAD).
+- **Control de regresión:** las 13 pruebas nuevas, corridas sobre la tarjeta de HEAD, dan 9 aprobadas y 4 fallidas. Las pruebas sí detectan el defecto.
+- **Clientes:** Windows y Chrome pasan; el Honor, a 360 dp con letra 1.0 y 1.45, con A07 y una reserva, también.
+- **El piso sube a 1047.** La acepta Timonel, con el Honor.
+
+**T-107, ACEPTADA con observaciones por Codex** (sobre `83d0dc1`, en una copia sin T-111):
+- 1034/1034, `analyze` en cero, corpus 157/157 y seis pruebas propias con A07 real.
+- Windows conserva el encabezado.
+- **El Honor**, a 1.0 y 1.45, en Carga y en Descarga: dos filas más el selector, las acciones locales alcanzables, sin `C:` y con «re-estibas» entera.
+- **El arrastre pide sesión** («Inicia sesión para mover»), y Codex no la tenía: no se registró nada.
+- **Lo que decide Yov:** T-107 pasa a **Terminado**.
+  - El arrastre con sesión en el Honor ya lo mostró Timonel en la parte A, con la sesión de muelle de Carlos sobre «PRUEBA T-106» a 1.45 (`docs/T107-RESULTADOS.md`).
+  - La parte B no toca el arrastre.
+  - Las acciones que dependen de la cuenta están cubiertas por las pruebas de widget.
+- **«Estadísticas → Bay Plan»** no se reprodujo tampoco esta vez: con dos rondas sin reproducirse, se cierra.
+
+**T-98, ensayada en el Honor, sin dictamen:**
+- **Arreglos a la sonda:** `tool/t98_honor_red.ps1` buscaba solo `userId=`, y el Android 15 del Honor escribe `appId=`; además contaba como *bucket* un `set=` del mapa BPF. Las dos cosas quedan corregidas, y las cinco autopruebas pasan, también en PowerShell 5.
+- **El ensayo, en modo avión:** el Wi-Fi apagado y el ping falla («Network is unreachable»); antes y después, ningún historial atribuible al paquete.
+- **El hallazgo de Codex:** que no haya historial no prueba que el tráfico fue cero.
+- **Lo que decide Yov para la Fase B de RNF-006:**
+  - Primero, un **control positivo**: la misma operación con red, que debe dejar historial atribuible al paquete. Solo si la sonda lo detecta, su silencio sin red cuenta como evidencia.
+  - Si con red tampoco ve nada, la sonda queda como referencia, y el dictamen descansa en lo funcional: con la red caída y verificada, la app lee, guarda y reabre sin error.
+- El Honor quedó sin modo avión, con el Wi-Fi encendido y la letra en 1.0.
+
+**Siguiente:** Timonel acepta T-111, con el Honor, en el mismo chat de la ronda del Honor. Después vienen el commit de cierre y las Fases B, que necesitan a Carlos:
+- **T-98:** la sesión de «PRUEBA T-98».
+- **T-99:** la pantalla de Windows a 1920×1080.
+
+**El sprint sigue en 49 tareas y ≈ 169.5 h.** El tablero (v53):
+- 43 terminadas;
+- T-111 en revisión;
+- T-98 y T-99 en curso;
+- 3 por hacer: T-87, T-100 y T-101.
+
+El piso queda en 1047.
