@@ -645,3 +645,174 @@ No toqué lib/, codec, reglas, congelados ni pubspec.*; Flutter siempre con sem�
 UN/LOCODE oficial 2025-1 fuera del repo; FFmpeg disponible, OpenSSL no localizado.
 Honor y sesión PRUEBA T-98 sin ensayar; T-105 y demo17 no se tocaron.
 Hojas del piloto/SUS listas, sin datos; SUS es el indicador 6 de la hipótesis única.
+
+## Ensayo en el Honor, 19-oct
+
+Capitán Codex · 19-oct-2026 · **Ensayo de instrumentos, sin dictamen RNF.**
+Esta sección actualiza exclusivamente el ensayo del Honor: conserva las
+entregas históricas anteriores. «PRUEBA T-98», su sesión, los binarios de
+cierre y las mediciones de Fase B siguen pendientes de Carlos.
+
+### Autorización, app y aislamiento
+
+Carlos autorizó esta sesión en solitario, el Honor, ADB, modo avión, Wi-Fi y
+cambio de letra. Se anunciaron el inicio y fin de la ventana con `SEMÁFORO:`;
+no se compiló ni se ejecutó Flutter durante ella.
+
+Base: `83d0dc1d55358e66d5bc23ccc0b59a284327f8be`, **más la tarjeta de T-111**.
+Se reutilizó el APK propio de T-111 y T-107, no un binario de cierre:
+
+- Paquete nuevo `gt.cmartinez.baystream.t111.t98`, etiqueta «BayStream T111 Codex».
+- Namespace `t111`, en la carpeta privada de esa app; ninguna app previa se abrió.
+- Banco `tool/t111_main.dart`: UI y lector reales, sin inicializar Firebase,
+  con sesión local y adaptador que falla ante cualquier acceso remoto.
+- Compilado release sin `--no-pub`, con la configuración por
+  `--dart-define-from-file` sin abrirla; firma Android Debug verificada con
+  `apksigner`. No se abrió ni copió `android/key.properties`.
+- SHA-256 APK: `bb60ab9b5750704bf6e5bb3727524340a2545f35e5a1ee5498a24ca6f9f30213`.
+
+El namespace y la identidad se declaran expresamente: **no es la condición A
+de medición del cierre con Firebase configurado**. Este ensayo comprueba la
+sonda, la atribución al paquete propio y la carga de un BAPLIE sin red.
+No mide transmisión de datos del producto, TLS, recuperación, tiempos ni SUS.
+
+Evidencia raíz: `%TEMP%\baystream-19oct-codex-83d0dc1\`.
+Las salidas de esta sección están bajo `t98/`; no contienen identificadores
+de cuenta, extremos de red, credenciales ni volcados crudos.
+
+### Fallos encontrados y correcciones en la sonda
+
+**1. La sonda original no obtenía el UID.**
+`dumpsys package` de este Honor Android 15 usa `appId=`, y el instrumento
+buscaba exclusivamente `userId=`. La primera ejecución se detuvo con
+«No se obtuvo el UID reservado», antes de generar evidencia.
+
+Ahora consulta `pm list packages -U` y exige una única coincidencia del
+**nombre completo** del paquete. Obtiene el UID completo, sin confundirlo con
+un appId o con otro paquete de prefijo parecido. El valor queda solo en memoria.
+Una atribución ausente o ambigua detiene la captura; no se transforma en cero.
+
+**2. Se contaba un registro BPF como si fuera tráfico.**
+Al resolver la atribución, la versión intermedia guardó
+`bucketsEncontrados: 1`, cuyo único contenido era `set=1`.
+Esa fila estaba en **BPF map content**, no en un historial de tráfico.
+Se conserva en `t98/corregido/carga_reserva19-antes.json` como evidencia del fallo,
+no como una medición válida.
+
+Ahora `Select-T98Buckets`:
+
+- admite únicamente `UID stats` y `UID tag stats`, conservando su nombre;
+- exige un inicio de bucket `st=` y campos de bytes para contarlo;
+- conserva duración, set, tag y un ordinal de contexto, sin guardar la
+  identidad de la red;
+- corta la atribución al cambiar de UID, contexto de red o sección;
+- nunca suma ambas secciones ni incluye encabezados o mapas BPF.
+
+**3. Metadatos y segunda fuente.**
+La captura registra `-Fase A|B`, `-Base`, paquete y método de atribución en
+lugar del texto provisional «completar fase al ejecutar».
+Comprueba errores reconocibles al solicitar el poll, aunque el código de
+salida sea 0; esto no certifica frescura del historial.
+Añade una consulta **puntual** de `/proc/net/tcp` y `tcp6`, con estado válido/
+inválido y número de filas del paquete, sin guardar sus extremos ni el UID.
+Un fallo de consulta no se presenta como cero sockets.
+
+### Antes y después de cargar el BAPLIE
+
+Se activó avión con `cmd connectivity airplane-mode enable` y se apagó Wi-Fi
+con `svc wifi disable`. Se cargó `T111_1.edi`, sintético completo del banco,
+desde `Descargas/t111codex` mediante el selector real, y se confirmó el perfil.
+Mostró el viaje, `7419.5 t` y «1 celda reservada» sin error. No se registraron
+movimientos. Las copias habían sido indexadas con `MEDIA_SCANNER_SCAN_FILE`.
+
+| Dato observado | Antes | Después |
+|---|---|---|
+| Hora local (Guatemala, UTC−6), 19-oct | 15:24:18 | 15:25:32 |
+| `airplane_mode_on` | 1 | 1 |
+| `wifi_on` | 0 | 0 |
+| Ping a 1.1.1.1 | Falla | Falla |
+| `sinRedVerificada` | true | true |
+| Solicitud de poll aceptada | true | true |
+| Buckets de historial atribuibles | Ninguno | Ninguno |
+| Consulta TCP puntual | Válida, 0 filas del paquete | Válida, 0 filas del paquete |
+
+Archivos válidos:
+
+- `t98/final/carga_reserva19-antes.json`
+- `t98/final/carga_reserva19-despues.json`
+
+El ping observado devuelve **«Network is unreachable»**, código 2.
+**Ausencia de historial no equivale a cero tráfico.** Tampoco dos consultas
+TCP puntuales descartan conexiones entre ellas. No se hizo una transferencia
+de control ni se acreditó frescura/contabilidad de bytes del servicio; eso
+sigue pendiente antes de dictaminar en Fase B. No se calcula un delta ficticio.
+
+### Verificaciones del instrumento
+
+| Verificación | Resultado |
+|---|---|
+| `-Autoprueba`, datos sintéticos | **5 comprobaciones pasan**: atribución, separación de secciones, duración, sanitización y descarte BPF |
+| Las mismas en Windows PowerShell 5 | **Pasan**; no son cinco casos adicionales |
+| Análisis sintáctico PowerShell | Sin errores |
+| Guarda de paquete no aislado | Rechazado antes de consultar el dispositivo |
+| Guarda de salida fuera de TEMP | Rechazada antes de consultar el dispositivo |
+| Dos JSON finales contra el identificador real en memoria | Sin identificador persistido; red desconectada verificada |
+
+Registro resumido: `t98/validacion-final.json`.
+Las autopruebas están en el propio script; no agregan pruebas Dart ni cambian
+el piso de 1047 que dejó T-111. No hubo modificaciones de `lib/` por T-98.
+
+Repetición autorizada del ensayo, desde el repositorio, con su semáforo:
+
+```powershell
+./tool/t98_honor_red.ps1 -Momento antes -Operacion autoprueba -Autoprueba
+# Para una nueva pareja, usar un nombre de operacion nuevo: no sobrescribe.
+./tool/t98_honor_red.ps1 -Momento antes -Operacion nuevo_ensayo -Paquete gt.cmartinez.baystream.t111.t98 -Fase A -Base 83d0dc1 -Salida "$env:TEMP/t98-nuevo-ensayo"
+# Cargar y confirmar un BAPLIE en la app propia, con la red comprobada.
+./tool/t98_honor_red.ps1 -Momento despues -Operacion nuevo_ensayo -Paquete gt.cmartinez.baystream.t111.t98 -Fase A -Base 83d0dc1 -Salida "$env:TEMP/t98-nuevo-ensayo"
+```
+
+### Restauración y entrega
+
+Se desactivó avión, se restauró Wi-Fi activado como estaba y se dejó letra
+**1.0**; la app propia terminó detenida. No se tocó `wm`.
+`honor-final.json`: avión 0, Wi-Fi 1, letra 1.0, app sin PID;
+45 paquetes BayStream previos y ninguno con `lastUpdateTime` cambiado.
+Solo se añadió la app de prueba. Las copias de archivos quedan en
+`Descargas/t111codex`, y la app propia queda instalada y cerrada.
+
+No hubo Firebase, cuentas, publicaciones, acceso al almacén real, demo17 o
+«PRUEBA T-105», ni Git de escritura. No se capturó «Nube y cuenta» ni el
+selector del Honor. Capturas y volcados de la app se sanitizaron en memoria.
+**`pubspec.yaml` y `pubspec.lock` sin cambios.**
+
+Archivos de este requerimiento:
+
+- `tool/t98_honor_red.ps1` — modificado.
+- `docs/T98-RESULTADOS.md` — esta sección añadida, sin reemplazar lo anterior.
+
+```powershell
+git add -- tool/t98_honor_red.ps1
+git add -- docs/T98-RESULTADOS.md
+git commit -m "Sprint 3: ensaya y corrige sonda del Honor T-98"
+git push
+```
+
+Tres líneas:
+
+El Honor ejecutó la sonda antes/después de cargar un BAPLIE sin red, sin sesión.
+Se corrigieron atribución Android 15 y falsos buckets BPF; cinco autopruebas pasan.
+No hay dictamen RNF; Fase B, frescura y transferencia de control siguen pendientes.
+
+Mensaje para Yov:
+
+Ensayo T-98 en Honor completado, sin dictamen ni sesión, sobre el APK aislado
+HEAD 83d0dc1 + tarjeta T-111. El original falló por userId/appId; después se
+detectó que un set del mapa BPF contaba como bucket. La sonda ahora atribuye
+por paquete exacto con pm -U, separa UID stats/tag, descarta BPF y registra
+fase/base y una segunda fuente TCP puntual, todo sanitizado. Cinco autopruebas
+pasan también en PowerShell 5, más sintaxis, guardas y auditoría de los JSON.
+Antes/después: avión 1, Wi-Fi 0, ping fallido; ningún historial atribuible,
+no «cero tráfico». Fase B y transferencia de control pendientes. Honor restaurado
+a avión 0, Wi-Fi 1, letra 1.0 y app detenida. Commit propuesto
+«Sprint 3: ensaya y corrige sonda del Honor T-98».
