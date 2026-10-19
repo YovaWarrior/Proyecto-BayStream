@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 169.0 h estimadas** (al 18-oct, 10.85) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 169.0 h estimadas** (al 18-oct, 10.87) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2183,7 +2183,9 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 - [ ] **Windows sin cambios;** el Honor (360 dp y letra 2.0), cuando Carlos lo permita.
 - [ ] **Validaciones:** el piso vigente más las nuevas, y `analyze` en cero.
 
-#### T-110 · Todas las bahías del buque, al leer y al reabrir, y dos textos de T-108 · 1.0 h · Codex (ficha completa, 18-oct; la acepta Timonel)
+#### T-110 · Las mismas bahías al leer y al reabrir, con la evidencia del archivo, y dos textos de T-108 · 1.0 h · Codex (ficha completa, 18-oct; acotada en 10.87; la acepta Timonel)
+
+> **Acotada en 10.87 (18-oct, noche).** Codex se detuvo por la tercera condición: el perfil no guarda la lista completa de bahías del buque. Carlos acota la tarea a la evidencia del archivo. **La regla y «Terminada cuando» de 10.87 reemplazan el punto 1 y la lista de esta ficha.** Lo demás sigue: los textos, el carril y el «detente y avisa». «Todas las bahías del buque» queda para después del cierre.
 
 **Para qué.** Timonel lo encontró al aceptar T-108 y T-109 (10.85): A07 muestra 18 bahías al leerlo y 21 al reabrirlo desde Recientes, y ya pasaba antes de T-108. **Carlos decide (18-oct):** con el perfil del buque confirmado, el selector muestra todas las bahías del buque, también las que vienen vacías en el archivo, porque en la carga se llenan. Además, Timonel dejó dos textos de T-108 para corregir.
 
@@ -2234,7 +2236,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-107** | RF-038 | 3.0 | El encabezado del plano, compacto en pantallas angostas (el modo y un desplegable «Acciones» en una línea, el resumen en otra; Windows y la Web sin cambios), y los tres textos que dejó T-106: la etiqueta de accesibilidad y los avisos del deriver sin `C:`, y «re-estiba» sin partirse. Lo encontró Carlos en el Honor (10.76); la hace Timonel y la acepta Codex, antes del commit de cierre · **ficha completa arriba** |
 | **T-108** | BAP | 2.5 | El lector avisa lo que no cumple el estándar (10.81): pesos en LBR y TNE a kg, posiciones mal formadas, dígito de control ISO 6346 y archivo incompleto, con aviso en la tarjeta del viaje. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 | **T-109** | TC | 1.0 | Estadísticas sin desbordes a 360 dp con letra 1.45 y 2.0, y el último guion de «re-estibas» en la política (10.81). La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
-| **T-110** | ERS | 1.0 | Todas las bahías del buque al leer y al reabrir, con el perfil confirmado (Carlos, 10.85), y dos textos de T-108. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
+| **T-110** | ERS | 1.0 | Las mismas bahías al leer y al reabrir, con la evidencia del archivo: carga, reservas y sombras de los 40/45 (Carlos, 10.87; antes, «todas las del buque», 10.85), y dos textos de T-108. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -5765,3 +5767,53 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 **Para mañana:** Codex hace T-110; Timonel la acepta; después, la ronda del Honor y el commit de cierre.
 
 **El sprint sigue en 48 tareas y ≈ 169.0 h.** El tablero (v49): 38 terminadas, 4 en revisión, 2 en curso (T-98 y T-99, con sus Fases A hechas) y 4 por hacer. El piso, 1016 con el commit de T-99 Fase A.
+
+### 10.87 · T-110 se detuvo con razón · Carlos la acota a la evidencia del archivo · «Todas las bahías del buque», después del cierre (18-oct, noche)
+
+**Commits nuevos:**
+- `51c5e8e`, T-99 Fase A: los 27 archivos y los dos `pubspec`, con el bloque de Yov. **El piso queda en 1016.**
+- `1a1febf`, el diagnóstico de T-110 de Codex: solo `docs/T110-RESULTADOS.md`, sin código.
+
+**Lo que encontró Codex.** Se detuvo antes de tocar código, por la tercera condición de la ficha: «el perfil de algún buque del corpus no permite saber sus bahías».
+- **El perfil no guarda la lista completa de bahías.**
+  - `VesselProfile` tiene la geometría, las tapas, las observaciones de bodega y las tomas de reefer.
+  - `observedHoldBayNumbers` es una cota inferior: no declara bahías vacías.
+  - `VesselGeometry` guarda filas y niveles, no números de bahía.
+- **Las 21 de A07 al reabrir salen de las sombras físicas,** no del perfil.
+  - `neighborOccupiedSlots()` proyecta cada 40/45 de una par B sobre B−1 y B+1.
+  - `withGeometry()` agrega esas bahías al publicar con el perfil confirmado.
+  - `fromJson()` las agrega al leer lo guardado, aun sin geometría.
+  - Al leer el archivo, `_organizeBays()` solo arma las bahías con contenedores, más las de reservas. Por eso da 18.
+- **Estadísticas** ya cuenta carga propia o sombra física (`vessel_providers.dart:632`), sin las bahías de solo reservas.
+- **Yov lo revisó contra el informe:** el diagnóstico es correcto y la parada es la que pedía la ficha. Inventar una secuencia del 1 al máximo habría afirmado bahías que nada declara.
+
+**Carlos decide (18-oct, 23:55): T-110 se acota a la evidencia del archivo.**
+
+**La regla, que reemplaza el punto 1 de la ficha:**
+- Las bahías del selector son las mismas al leer y al reabrir desde Recientes, con perfil o sin él:
+  - las que tienen contenedores propios;
+  - las que tienen reservas;
+  - las impares B−1 y B+1 de cada 40/45 que está en una par B (la sombra física).
+- Una sola función para los dos caminos, que no depende de la geometría ni del perfil.
+- No se inventan bahías: no se numera del 1 al máximo, y ni `observedHoldBayNumbers` ni `hatchCovers` se usan como lista.
+- **Lo que no cambia:**
+  - Estadísticas sigue con su contrato de hoy: carga propia o sombra física; las bahías de solo reservas no cuentan.
+  - La validación, el orden de descarga, los pesos y la comparación de viajes dan lo mismo.
+
+**Terminada cuando (reemplaza la lista de la ficha):**
+- [ ] **A07 da el mismo número al leerlo y al reabrirlo.** Se espera 21; si no sale 21, el informe dice por qué.
+- [ ] **Pruebas en `test/t110_*`:**
+  - los dos caminos dan la misma lista, con perfil y sin perfil;
+  - una impar que solo tiene sombra aparece en los dos caminos;
+  - una bahía que solo tiene reservas aparece en el selector y no cuenta en Estadísticas;
+  - los dos textos, incluido el peso sin «.0».
+- [ ] **Los dos textos de la ficha,** sin cambios: «falta 1 segmento» / «faltan N segmentos», y los kilos enteros iguales en las tres plataformas.
+- [ ] **El corpus:** 157/157, idéntico salvo la lista de bahías. El informe dice qué archivos ganan bahías al leerlos y cuántas.
+- [ ] **Validaciones:** el piso (1016) más las nuevas, todas en verde y sin *skip*; `analyze` en cero, sin `// ignore:`.
+- [ ] **Windows** (namespace `t110`) **y la Web** hoy; **el Honor**, en la ronda de mañana.
+
+**Sin cambios:** el carril, el «detente y avisa» (si cambia algo aparte de la lista de bahías, o si hay que tocar el codec o lo guardado) y la estimación de 1.0 h. Codex sigue en el mismo chat, con GPT-6.1 Sol y esfuerzo high.
+
+**«Todas las bahías del buque» pasa a después del cierre.** Necesita un inventario de bahías por buque, declarado en el perfil. Hay que definir de dónde sale (Carlos o el plano del buque) y cómo se guarda, y eso toca lo guardado y el codec. Queda anotado para el Sprint 4, junto al rediseño; en este sprint no nace tarea.
+
+**El sprint sigue en 48 tareas y ≈ 169.0 h.** El tablero (v50): T-110 pasa a «En curso» (Codex, 18-oct, noche). Quedan 38 terminadas, 4 en revisión, 3 en curso y 3 por hacer. El piso, 1016.
