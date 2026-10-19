@@ -302,7 +302,8 @@ class _ReadNotice extends StatelessWidget {
   String get summary {
     final count = notice.details.length;
     if (notice.kind == BaplieReadNoticeKind.incomplete) {
-      return '$title: faltan $count segmentos (${notice.details.join(', ')})';
+      final missing = count == 1 ? 'falta 1 segmento' : 'faltan $count segmentos';
+      return '$title: $missing (${notice.details.join(', ')})';
     }
     return '$title: $count ${count == 1 ? 'contenedor' : 'contenedores'}';
   }

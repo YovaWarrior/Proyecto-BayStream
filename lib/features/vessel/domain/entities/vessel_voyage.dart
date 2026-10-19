@@ -44,24 +44,11 @@ class VesselVoyage extends Equatable {
   /// Posiciones previstas sin número de contenedor; no son carga a bordo.
   final List<ReservedSlot> reservedSlots;
   
-  /// Mapa de bahías organizadas por número.
-  ///
-  /// **Cambio de contrato.** Antes contenía solo las bahías con carga propia
-  /// de este viaje, porque el parser crea una bahía por cada contenedor. Desde
-  /// la extensión posterior a C-7 contiene **toda bahía con evidencia física
-  /// de ocupación**: la propia y también la que está tomada por contenedores
-  /// de 40 pies de una bahía par vecina, aunque no traiga ni un contenedor de
-  /// este viaje.
-  ///
-  /// El motivo: sin eso, siete bahías impares de `CORPUS_A01` no aparecían en
-  /// el plano estando físicamente ocupadas. La 013 tiene 92 de sus 156 huecos
-  /// tomados —un 59 %— y el planificador no podía verla.
-  ///
-  /// La extensión la hace [withGeometry], no el parser: depende de la
-  /// geometría declarada tanto como el resto del plano. Recién parseado, el
-  /// mapa incluye la carga propia. T-69 añade además las bahías con reservas
-  /// y sus proyecciones para dibujarlas, sin sumar ocupación. Por tanto,
-  /// `bays.length` cuenta bahías del plan, no bahías físicamente ocupadas.
+  /// Bahías con evidencia del archivo, ordenadas por número: carga propia,
+  /// reservas (incluida su proyección de dibujo) y sombra física de vecinas.
+  /// [withFileBays] aplica la misma regla al leer y reabrir, sin inferir un
+  /// inventario del casco desde el perfil o la geometría.
+  /// `bays.length` incluye reservas; no es la cuenta de bahías ocupadas.
   final Map<int, Bay> bays;
   
   /// Metadatos adicionales del mensaje BAPLIE
@@ -143,45 +130,30 @@ class VesselVoyage extends Equatable {
   List<ContainerUnit> getContainersInBay(int bayNumber) =>
       containers.where((c) => c.stowagePosition?.bay == bayNumber).toList();
 
-  /// Devuelve el viaje con la geometría confirmada y propagada a cada bahía.
-  ///
-  /// Es la única transformación que asigna geometría. Mantiene el invariante
-  /// de que un viaje publicado siempre trae geometría, en el buque y en todas
-  /// sus bahías a la vez.
-  /// También recalcula qué slots de cada bahía impar toma un contenedor de 40
-  /// pies de una bahía par vecina: es dato derivado de los contenedores, así
-  /// que se computa aquí, una sola vez, y se inyecta.
-  VesselVoyage withGeometry(VesselGeometry geometry, {String? portOfCall}) {
+  /// Lista única derivada de carga y reservas; no requiere perfil ni geometría.
+  /// Conserva los atributos de las bahías históricas que tengan evidencia.
+  VesselVoyage withFileBays() {
+    final own = _baysFromContainers(containers, geometry);
     final shadows = neighborOccupiedSlots();
-    final updated = <int, Bay>{};
-
-    for (final entry in bays.entries) {
-      updated[entry.key] = entry.value.copyWith(
-        geometry: geometry,
-        slotsOccupiedByNeighbors: shadows[entry.key] ?? const {},
-      );
-    }
-
-    // Bahías sin carga propia pero físicamente ocupadas por un contenedor de
-    // 40 pies de una vecina. Sin esto quedan invisibles aunque estén tomadas,
-    // que es lo que le pasa a siete bahías impares de CORPUS_A01. Ver [bays].
-    for (final entry in shadows.entries) {
-      if (updated.containsKey(entry.key)) continue;
-      updated[entry.key] = Bay(
-        bayNumber: entry.key,
-        is40FtBay: entry.key.isEven,
-        geometry: geometry,
-        slotsOccupiedByNeighbors: entry.value,
-      );
-    }
-
-    _addReservedBays(updated, geometry);
-    return copyWith(
-      geometry: geometry,
-      portOfCall: portOfCall,
-      bays: updated,
-    );
+    final numbers = {
+      ...own.keys,
+      ...reservedSlots.map((slot) => slot.stowagePosition.bay),
+      // T-69: una reserva larga también se dibuja en sus impares vecinas.
+      ...neighborReservedSlots().keys,
+      ...shadows.keys,
+    }.toList()..sort();
+    return copyWith(bays: {
+      for (final number in numbers)
+        number: (bays[number] ?? own[number] ??
+                Bay(bayNumber: number, is40FtBay: number.isEven))
+            .copyWith(geometry: geometry,
+                slotsOccupiedByNeighbors: shadows[number] ?? const {}),
+    });
   }
+
+  /// Inyecta la geometría confirmada sin cambiar la regla de selección.
+  VesselVoyage withGeometry(VesselGeometry geometry, {String? portOfCall}) =>
+      copyWith(geometry: geometry, portOfCall: portOfCall).withFileBays();
 
   /// Slots que los contenedores de 40 y 45 pies de las bahías pares ocupan en
   /// las impares vecinas, por número de bahía. Clave `"RRTT"`.
@@ -224,17 +196,6 @@ class VesselVoyage extends Equatable {
       }
     }
     return shadows;
-  }
-
-  void _addReservedBays(Map<int, Bay> target, VesselGeometry? geometry) {
-    final numbers = {
-      ...reservedSlots.map((slot) => slot.stowagePosition.bay),
-      ...neighborReservedSlots().keys,
-    };
-    for (final number in numbers) {
-      target.putIfAbsent(number, () => Bay(bayNumber: number,
-          is40FtBay: number.isEven, geometry: geometry));
-    }
   }
 
   /// Evidencia de posiciones del plan para geometría; no es la ocupación.
@@ -439,7 +400,7 @@ class VesselVoyage extends Equatable {
             Bay.fromJson(v as Map<String, dynamic>, geometry: geometry),
           ),
         ) ??
-        _baysFromContainers(containers, geometry);
+        <int, Bay>{};
     final voyage = VesselVoyage(
         geometry: geometry,
         portOfCall: json['portOfCall'] as String?,
@@ -469,25 +430,7 @@ class VesselVoyage extends Equatable {
             ? BaplieMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
             : null,
     );
-    // También se reconstruyen sin geometría: la ocupación queda no calculable,
-    // pero nunca se pierde la evidencia física ni se muestra un cero falso.
-    final shadows = voyage.neighborOccupiedSlots();
-    final restored = {
-      for (final entry in bays.entries)
-        entry.key: entry.value.copyWith(
-          slotsOccupiedByNeighbors: shadows[entry.key] ?? const {},
-        ),
-      for (final entry in shadows.entries)
-        if (!bays.containsKey(entry.key))
-          entry.key: Bay(
-            bayNumber: entry.key,
-            is40FtBay: entry.key.isEven,
-            geometry: geometry,
-            slotsOccupiedByNeighbors: entry.value,
-          ),
-    };
-    voyage._addReservedBays(restored, geometry);
-    return voyage.copyWith(bays: restored);
+    return voyage.withFileBays();
   }
 
   static Map<int, Bay> _baysFromContainers(

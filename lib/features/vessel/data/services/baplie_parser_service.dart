@@ -56,13 +56,6 @@ class BaplieParserService {
     final cargo = _parseCargo(segments, notices);
     final containers = cargo.containers;
     
-    // Organizar contenedores por bahías
-    final bays = _organizeBays(containers);
-    for (final slot in cargo.reservedSlots) {
-      final number = slot.stowagePosition.bay;
-      bays.putIfAbsent(number, () => Bay(bayNumber: number, is40FtBay: number.isEven));
-    }
-
     return VesselVoyage(
       id: _uuid.v4(),
       vessel: vesselInfo.vessel,
@@ -72,14 +65,13 @@ class BaplieParserService {
       portOfNextCall: _findNextPortOfCall(segments),
       containers: containers,
       reservedSlots: cargo.reservedSlots,
-      bays: bays,
       metadata: metadata,
       readNotices: [
         for (final kind in BaplieReadNoticeKind.values)
           if (notices[kind]?.isNotEmpty ?? false)
             BaplieReadNotice(kind, notices[kind]!),
       ],
-    );
+    ).withFileBays();
   }
 
   /// Normaliza el contenido removiendo saltos de línea innecesarios
@@ -818,11 +810,11 @@ class BaplieParserService {
         break;
       case 'LBR':
         weight = (weight * 0.45359237).roundToDouble();
-        warning = '$qualifier en LBR convertido a $weight kg';
+        warning = '$qualifier en LBR convertido a ${weight.toStringAsFixed(0)} kg';
         break;
       case 'TNE':
         weight = (weight * 1000).roundToDouble();
-        warning = '$qualifier en TNE convertido a $weight kg';
+        warning = '$qualifier en TNE convertido a ${weight.toStringAsFixed(0)} kg';
         break;
       case null:
         warning = '$qualifier sin unidad; se tomó como kg';
@@ -911,36 +903,6 @@ class BaplieParserService {
     );
   }
 
-  // ============================================
-  // ORGANIZACIÓN DE BAHÍAS
-  // ============================================
-
-  /// Organiza los contenedores en bahías
-  Map<int, Bay> _organizeBays(List<ContainerUnit> containers) {
-    final baysMap = <int, List<ContainerUnit>>{};
-
-    for (final container in containers) {
-      final position = container.stowagePosition;
-      if (position == null) continue;
-
-      final bayNumber = position.bay;
-      baysMap.putIfAbsent(bayNumber, () => []);
-      baysMap[bayNumber]!.add(container);
-    }
-
-    return baysMap.map((bayNumber, containerList) {
-      Bay bay = Bay(
-        bayNumber: bayNumber,
-        is40FtBay: bayNumber % 2 == 0, // Bahías pares suelen ser de 40'
-      );
-
-      for (final container in containerList) {
-        bay = bay.addContainer(container);
-      }
-
-      return MapEntry(bayNumber, bay);
-    });
-  }
 
   /// Determina la dirección del viaje (Import/Export)
   VoyageDirection _determineDirection(List<String> segments) {
