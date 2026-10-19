@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 169.0 h estimadas** (al 18-oct, 10.87) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 169.0 h estimadas** (al 19-oct, 10.88) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -5817,3 +5817,34 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 **«Todas las bahías del buque» pasa a después del cierre.** Necesita un inventario de bahías por buque, declarado en el perfil. Hay que definir de dónde sale (Carlos o el plano del buque) y cómo se guarda, y eso toca lo guardado y el codec. Queda anotado para el Sprint 4, junto al rediseño; en este sprint no nace tarea.
 
 **El sprint sigue en 48 tareas y ≈ 169.0 h.** El tablero (v50): T-110 pasa a «En curso» (Codex, 18-oct, noche). Quedan 38 terminadas, 4 en revisión, 3 en curso y 3 por hacer. El piso, 1016.
+
+### 10.88 · T-110 entregada · El piso sube a 1034 · Ronda del Honor con Timonel solo y todos los permisos (19-oct)
+
+**T-110, entregada** (Codex, `8d1bbb8`, commiteado por Carlos), sobre `246d577`:
+- **Una sola función,** `VesselVoyage.withFileBays()`, arma las bahías al leer, al reabrir y al aplicar la geometría. Junta la carga propia, las reservas (con su proyección de dibujo de T-69) y las sombras de los 40/45. `withGeometry()` y `fromJson()` la llaman; no consulta el perfil, las tapas ni las observaciones de bodega.
+- **A07:** al leerlo pasa de 18 a 21 (se suman la 27, la 29 y la 31), y al reabrirlo da 21, con perfil o sin él. Los diez archivos del cotejo ganan bahías al leerlos (de +3 a +13), y todas son sombras.
+- **Estadísticas** no cambia: las bahías que solo tienen reservas no cuentan como ocupadas.
+- **Los textos:** «falta 1 segmento» / «faltan N segmentos», y los kilos enteros (10886 kg y 23457 kg) iguales en Windows y en Chrome. El valor convertido no cambia; solo cambia cómo se escribe en el aviso.
+- **Validaciones:** suite **1034/1034** (1016 + 18), analyze en cero, y el corpus 157/157 más diez cotejos, con datos y formato guardado iguales a HEAD. Windows y la Web, con el banco `t110`. Falta el Honor.
+- El informe dice «sin commit» porque se escribió antes de que Carlos corriera el bloque.
+
+**Lo que revisó Yov en el diff:**
+- Cumple la regla de 10.87.
+- Una reserva de 40 también trae al selector sus impares vecinas, por la proyección de dibujo de T-69. Ya pasaba antes, con `_addReservedBays`. **Yov lo acepta:** es la sombra planeada de esa reserva, y Estadísticas no la cuenta. Timonel lo comprueba al aceptar.
+- **El piso sube a 1034.**
+
+**Carlos (19-oct, 12:50): hoy trabaja un solo agente, con todo abierto.** Timonel hace, en un chat nuevo:
+1. la aceptación cruzada de T-110;
+2. la ronda del Honor de sus aceptaciones: T-85, T-108, T-109 y T-110.
+
+**Lo que le queda abierto por hoy:**
+- **El semáforo:** corre Flutter sin pedir luz verde, un comando a la vez.
+- **El Honor**, toda la sesión. Usa una app aparte compilada de `8d1bbb8`, con su propia identidad, como `t106cx`. Al final deja la letra en 1.0 y la densidad restablecida.
+- **Chrome.**
+- **No pregunta.** Si algo lo bloquea, lo anota y sigue con lo demás.
+
+**Lo que sigue cerrado:** Firebase, iniciar sesión, git de escritura, publicar, `lib/`, «PRUEBA T-105», la demo17 y el almacén real.
+
+**Codex, en el siguiente turno:** el Honor de T-107 y el ensayo de T-98 en el Honor. Después viene el commit de cierre, y sobre él las Fases B.
+
+**El sprint sigue en 48 tareas y ≈ 169.0 h.** El tablero (v51): 38 terminadas, 5 en revisión (T-85, T-107, T-108, T-109 y T-110), 2 en curso (T-98 y T-99) y 3 por hacer (T-87, T-100 y T-101). Piso 1034.
