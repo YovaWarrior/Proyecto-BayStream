@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 169.0 h estimadas** (al 19-oct, 10.88) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 169.5 h estimadas** (al 19-oct, 10.89) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2221,6 +2221,36 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 - [ ] **Windows y la Web** con `t110`; el Honor, cuando Carlos lo permita.
 - [ ] **Validaciones:** el piso (994) más las nuevas, y `analyze` en cero.
 
+#### T-111 · La tarjeta del viaje sin palabras partidas a 360 dp, y «1 celda reservada» · 0.5 h · Codex (ficha completa, 19-oct; la acepta Timonel)
+
+**Para qué.** Timonel lo encontró en la ronda del Honor (10.89). A 360 dp, la fila de indicadores de la tarjeta del viaje parte las palabras:
+- con letra 1.0, «Contenedore / s»;
+- con 1.45, además, «Contene / dores», «7419.5 / t» y «Peso / Total».
+
+Es lo primero que ve el planificador al abrir un viaje en el teléfono, y el piloto (T-101) lo vería. **Carlos decide arreglarlo antes del cierre (19-oct).** De paso se corrige «1 celdas reservadas».
+
+**Lo que hay hoy (Timonel, 10.89):**
+- `voyage_summary_card.dart:127–130` solo apila los indicadores cuando `textScaler.scale(12) > 18`, es decir, por encima de 1.5. La regla viene de T-104 (`bf3a2cf`).
+- Por debajo de 1.5 reparte el ancho en tres, `(ancho − 32) / 3`, que en el Honor son unos 85 dp. Ahí una sola palabra de `bodySmall` no cabe.
+- «1 celdas reservadas» está en `voyage_summary_card.dart:161–162`, y viene de T-69.
+
+**Qué construye.**
+1. **Los indicadores se apilan también cuando no caben a lo ancho.** La decisión depende del ancho disponible y de la escala de la letra, no solo de la escala. Ninguna palabra se parte, y ninguna cifra se separa de su unidad («7419.5 t» queda entera).
+2. **A 1280 dp y en Windows,** la tarjeta queda como hoy.
+3. **El texto:** «1 celda reservada» / «N celdas reservadas».
+
+**Carril.**
+- **Toca:** `voyage_summary_card.dart` y `test/t111_*`.
+- **No toca:** el resto de `lib/`, el codec, `lib/main.dart`, los congelados ni `pubspec.*`. Sin dependencias nuevas.
+
+**Detente y avisa si** el arreglo pide cambiar otra pantalla o el tema.
+
+**Terminada cuando:**
+- [ ] **Pruebas de widget a 360×780 dp,** con letra 1.0, 1.45 y 2.0, con A07 y con un viaje con reservas: ningún indicador parte una palabra ni separa la cifra de su unidad. A 1280 dp, igual que hoy.
+- [ ] **El texto:** «1 celda reservada» y «N celdas reservadas».
+- [ ] **Los clientes:** Windows y la Web con `t111`; el Honor, a 360 dp con letra 1.0 y 1.45.
+- [ ] **Validaciones:** el piso (1034) más las nuevas, `analyze` en cero y el corpus en verde.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43) · **ficha completa arriba** |
@@ -2237,6 +2267,7 @@ Windows no instalaría ese paquete, así que el riesgo es bajo. Pero un script q
 | **T-108** | BAP | 2.5 | El lector avisa lo que no cumple el estándar (10.81): pesos en LBR y TNE a kg, posiciones mal formadas, dígito de control ISO 6346 y archivo incompleto, con aviso en la tarjeta del viaje. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 | **T-109** | TC | 1.0 | Estadísticas sin desbordes a 360 dp con letra 1.45 y 2.0, y el último guion de «re-estibas» en la política (10.81). La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 | **T-110** | ERS | 1.0 | Las mismas bahías al leer y al reabrir, con la evidencia del archivo: carga, reservas y sombras de los 40/45 (Carlos, 10.87; antes, «todas las del buque», 10.85), y dos textos de T-108. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
+| **T-111** | USO | 0.5 | La tarjeta del viaje sin palabras partidas a 360 dp (apilar los indicadores por ancho, no solo por escala), y «1 celda reservada». Lo encontró Timonel en el Honor (10.89); la hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -5848,3 +5879,56 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 **Codex, en el siguiente turno:** el Honor de T-107 y el ensayo de T-98 en el Honor. Después viene el commit de cierre, y sobre él las Fases B.
 
 **El sprint sigue en 48 tareas y ≈ 169.0 h.** El tablero (v51): 38 terminadas, 5 en revisión (T-85, T-107, T-108, T-109 y T-110), 2 en curso (T-98 y T-99) y 3 por hacer (T-87, T-100 y T-101). Piso 1034.
+
+### 10.89 · T-110, terminada · La ronda del Honor cierra T-85, T-108 y T-109 · Nace T-111: la tarjeta del viaje a 360 dp (19-oct)
+
+**Commit:** `8ef6da1`, con la aceptación de T-110 y la ronda del Honor. Timonel trabajó de 13:47 a 14:09, solo y con los permisos de 10.88. Sin cambios en `lib/`, `test/` ni `pubspec.*`.
+
+**T-110, ACEPTADA con observaciones:**
+- Cumple 10.87: `withFileBays()` es la única regla, no usa el perfil como lista de bahías, y el codec, `toJson` y lo guardado no cambian.
+- Suite 1034/1034, `analyze` en cero y corpus 167/167, con la referencia propia del padre.
+- **Su cotejo crudo da la misma tabla que Codex:** en A07, la 27 viene de la 26, y la 29 y la 31 de la 30; en A03 se suman 13 bahías. Todas son sombras.
+- LBR y TNE guardan el mismo valor que antes; solo cambia el texto.
+- Windows y la Web, con `t110acc`.
+- **La reserva de 40 (10.88)** trae al selector la 9 y la 11, y Estadísticas no las cuenta.
+
+**Corrección a 10.85:** el «18 al leer» salía del banco de Timonel. El producto ya mostraba 21 al confirmar el perfil, por `withGeometry`. T-110 deja la misma lista también sin perfil.
+
+**La ronda del Honor.** Timonel usó una app aparte, `gt.cmartinez.baystream.honor19`, compilada de `8d1bbb8` con la firma de depuración. El Honor ya da 360 dp, así que `wm` no se tocó.
+
+| Tarea | Letra | Resultado |
+|---|---|---|
+| **T-85** | 2.0 | PASA en «Alertas de estiba» de A03: la fuente completa y 4 / 154 / 95 |
+| **T-108** | 1.0 | PASA: las cuatro líneas de su sintético, también al reabrir; A07 sin avisos |
+| **T-109** | 1.45 y 2.0 | PASA: «Llenos» entero y ninguna cifra achicada |
+| **T-110** | 1.0 | PASA: A07 con 21 al leer y al reabrir, la 27 con su rejilla y las marcas del 40, el singular, el plural y los kilos enteros |
+
+La letra quedó en 1.0, y las otras 44 BayStream del Honor no cambiaron.
+
+**Pasan a Terminado T-85, T-108, T-109 y T-110.** Sigue en revisión T-107: la acepta Codex, con el Honor.
+
+**Lo que decide Yov sobre las observaciones:**
+1. **La tarjeta del viaje parte palabras a 360 dp.** Carlos decide arreglarlo antes del cierre: nace **T-111** (abajo).
+2. **«1 celdas reservadas»** entra en T-111.
+3. **La matriz de segregación no tiene entrada en el producto** desde T-42 (`3318da4`): `SegregationPage` solo se abre con el banco `tool/t85_main.dart`. El usuario ve la segregación en «Alertas de estiba», que es lo que pasó en el Honor.
+   - **El criterio del Honor de T-85 se da por cumplido** con «Alertas de estiba».
+   - Dar entrada a la matriz es una decisión de interfaz y va al rediseño (Sprint 4).
+4. **El lector del producto pide Firebase inicializado** (`vessel_repository_impl.dart:19`). En cambio, el comentario de `operation_sync_factory.dart:13–15` promete un modo de un solo dispositivo que, para leer archivos, no existe. No afecta al producto, porque `lib/main.dart` siempre inicializa Firebase. Queda anotado para el Sprint 4; no se toca antes del cierre.
+5. **`adb push` no indexa los archivos.** En las próximas rondas se usa `MEDIA_SCANNER_SCAN_FILE`. Las copias de A07, A03, ACC1 y ACC2 siguen en `Descargas/honor19` del Honor, y Carlos decide si las borra.
+
+**Nace T-111 (Carlos, 19-oct, 14:55):** la tarjeta del viaje sin palabras partidas a 360 dp, y «1 celda reservada». ≈ 0.5 h; la hace Codex y la acepta Timonel, antes del cierre. Ficha completa en la Ola 5.
+
+**El siguiente turno es de Codex,** solo y con los permisos de 10.88:
+1. T-111;
+2. la aceptación completa de T-107 (partes A y B), con el Honor;
+3. el ensayo en el Honor de los instrumentos de T-98 (`tool/t98_honor_red.ps1`), sin sesión.
+
+«PRUEBA T-98» y su sesión siguen esperando a Carlos. **Después,** Timonel acepta T-111 y viene el commit de cierre.
+
+**El sprint pasa a 49 tareas y ≈ 169.5 h.** El tablero (v52) suma 224.5 h:
+- 42 terminadas;
+- T-107 en revisión;
+- T-98 y T-99 en curso;
+- 4 por hacer: T-111, T-87, T-100 y T-101.
+
+El piso sigue en 1034.
