@@ -131,7 +131,7 @@ Carlos autorizó el 5-oct las que hacen falta para las funciones nuevas:
 - `crypto` como dependencia directa, para la huella de las fuentes publicadas (10.3; ya era transitiva).
 - `archive` como dependencia directa (T-73; Carlos, 7-oct; ya era transitiva en 4.0.9 y no se mueve). Sirve para corregir las rutas absolutas de `workbook.xml.rels` que `excel_community` no resuelve.
 - `msix` como dependencia de desarrollo, para el instalador de Windows (T-93; Carlos, 14-oct, 10.36). Con versión fija y sin mover ningún paquete existente.
-- `integration_test`, del propio SDK de Flutter, como dependencia de desarrollo, para el arnés de rendimiento de T-99 (Carlos, 18-oct, 10.83). No entra en la app compilada y no mueve ningún paquete existente.
+- `integration_test`, del propio SDK de Flutter, como dependencia de desarrollo, para el arnés de rendimiento de T-99 (Carlos, 18-oct, 10.83). No entra en la app compilada y no mueve ningún paquete existente. Agrega 7 paquetes al lock: `integration_test`, `flutter_driver` y `fuchsia_remote_debug_protocol` del SDK, más `platform` 3.1.6, `process` 5.0.6, `sync_http` 0.3.1 y `webdriver` 3.2.0 (10.86). **Desde entonces, toda compilación de Android (APK o AAB) se hace sin `--no-pub`** (10.86).
 - **La copia del SDK JS de Firebase sigue a `firebase_core_web`** (T-92; Carlos, 14-oct, 10.36). Vive en `web/vendor/firebase/<versión>/`. Si `pubspec.lock` cambia `firebase_core_web`, la misma tarea actualiza la copia, con su procedencia y su licencia. La prueba de T-92 hace fallar `flutter test` si se olvida.
 
 Ninguna otra sin preguntar. Cada dependencia nueva se declara en el informe y en el bloque
@@ -5726,3 +5726,42 @@ Timonel ya validó T-106 en el Honor, y Codex hace su parte del Honor esta noche
 - T-99 Fase A sigue con Timonel en paralelo, sin bloquear el cierre.
 
 **El sprint pasa a 48 tareas y ≈ 169.0 h.** El tablero (v48) suma 224.0 h: 38 terminadas; en revisión T-85, T-107, T-108 y T-109; en curso T-98 y T-99; 4 por hacer: T-110, T-87, T-100 y T-101.
+
+### 10.86 · T-99 Fase A, entregada · El scroll se dictamina con `FrameTiming` · Windows a 1920×1080 · La RAM, con el producto · Android sin `--no-pub` (18-oct)
+
+**T-99 Fase A, entregada** (Timonel; en el árbol, sin commit al escribir esto):
+- **26 instrumentos:** 3 en `integration_test/`, 2 autopruebas en `test/` y 21 en `tool/`, más `docs/T99-RESULTADOS.md`. Yov comprobó en el árbol que solo cambian `pubspec.yaml` (+4) y `pubspec.lock` (+47); `lib/` no se tocó.
+- **`integration_test` agrega 7 paquetes** sin mover ninguno (lista en 2.7).
+- **En el árbol:** `analyze` en cero y **suite 1016/1016** (994 + 22). **Con su commit, el piso sube a 1016.**
+- **Ensayos, que no son mediciones,** sobre `d4253ff`:
+  - el arnés en Windows, en modo *profile* y con la ventana maximizada: A01, A06, 5 000 y 10 000, con la cuenta exacta y sin avisos de T-108;
+  - la RAM en Windows y en el emulador;
+  - los anchos en Windows y en la Web, con 24 capturas en cada uno;
+  - la documentación, las capas, el código compartido y los módulos.
+- **El emulador API 26** (Android 8.0.0) quedó instalado y apagado: el APK release `.t99` abrió A01 con el selector real del sistema. La imagen ocupa 3.4 GB.
+- **El Honor** estaba conectado y no recibió ningún comando.
+- Los ensayos encontraron 14 fallas en los propios instrumentos, y Timonel las corrigió y volvió a ensayar.
+- **T-99 sigue «En curso»** por la Fase B.
+
+**Aviso de Timonel para Android.** Con `integration_test` en el `pubspec`, un APK o AAB release compilado con `--no-pub` falla: Flutter no regenera el registrante de plugins y queda dentro el plugin de desarrollo (Timonel cita flutter#162649). Sin `--no-pub`, compila bien.
+- **Regla desde hoy:** toda compilación de Android (Play, demo y Fases B) va **sin `--no-pub`**.
+- El comando de `docs/T47-RESULTADOS.md` (línea 36) lo lleva; para el release de Play hay que quitarlo.
+- Windows y la Web no cambian.
+
+**Lo que decide Yov (T-63 delegó los RNF en Yov):**
+1. **El scroll se dictamina con `FrameTiming`.** Al grabar la traza, `traceAction` infla el tiempo de *build* del scroll con listas grandes: de unos 2 ms a unos 48 ms con 5 000 contenedores. El instrumento altera lo que mide.
+   - Para el scroll (p90 del tiempo de cuadro ≤ 16.67 ms), el dictamen sale de `FrameTiming`: *build* y *raster* por cuadro, sin traza. Es la API del propio motor.
+   - Las latencias de un toque (parseo, bahías, búsqueda y Estadísticas) siguen con `traceAction`, porque ahí la traza no las cambia.
+   - El informe declara el cambio y deja la cifra con traza como referencia, sin dictamen.
+2. **Windows a 1920×1080.** La laptop de Carlos es 2560×1600 al 150 %, y la decisión 1.4 fija una laptop de 1920×1080, que es la que usan los planificadores.
+   - Para la Fase B, Carlos pone la pantalla en 1920×1080 mientras se mide, con la escala que Windows recomiende en esa resolución, y la registra. Después la vuelve a 2560×1600.
+   - Si Windows no ofrece 1920×1080 en esa pantalla, la ventana se fija a 1920×1080 píxeles físicos, sin maximizar, y se declara.
+   - Su pantalla nativa se informa aparte, sin dictamen.
+3. **La RAM se mide con el producto, no con el banco.** El banco no inicializa Firebase y el producto sí, así que su RAM saldría por debajo de la real.
+   - El dictamen de RAM sale del binario release real (namespace `t99`), con el escenario fijo de T-63: en Windows, `WorkingSet64`; en el Honor, RSS.
+   - Si automatizar el escenario en el producto es difícil, se hace a mano con la lista de pasos y las cinco lecturas al final de cada paso.
+   - Lo del banco queda como referencia.
+
+**Para mañana:** Codex hace T-110; Timonel la acepta; después, la ronda del Honor y el commit de cierre.
+
+**El sprint sigue en 48 tareas y ≈ 169.0 h.** El tablero (v49): 38 terminadas, 4 en revisión, 2 en curso (T-98 y T-99, con sus Fases A hechas) y 4 por hacer. El piso, 1016 con el commit de T-99 Fase A.
