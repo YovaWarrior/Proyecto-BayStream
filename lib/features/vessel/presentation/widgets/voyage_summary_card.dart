@@ -123,11 +123,36 @@ class VoyageSummaryCard extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 16),
             
-            // A letra grande cada indicador dispone del ancho completo.
+            // T-111: cada indicador necesita espacio para su texto completo.
             LayoutBuilder(builder: (context, constraints) {
-              final stacked = constraints.maxWidth < 480 &&
-                  MediaQuery.textScalerOf(context).scale(12) > 18;
-              final width = stacked ? constraints.maxWidth : (constraints.maxWidth - 32) / 3;
+              final textTheme = Theme.of(context).textTheme;
+              final scaler = MediaQuery.textScalerOf(context);
+              final columnWidth = (constraints.maxWidth - 32) / 3;
+              double textWidth(String text, TextStyle? style) {
+                final painter = TextPainter(
+                  text: TextSpan(text: text, style: style),
+                  textDirection: Directionality.of(context),
+                  textScaler: scaler,
+                  locale: Localizations.maybeLocaleOf(context),
+                )..layout();
+                final width = painter.width;
+                painter.dispose();
+                return width;
+              }
+
+              final valueStyle = textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              );
+              final stacked = (constraints.maxWidth < 480 &&
+                      scaler.scale(12) > 18) ||
+                  ['Contenedores', 'Bahías', 'Peso Total'].any(
+                    (text) => textWidth(text, textTheme.bodySmall) > columnWidth,
+                  ) ||
+                  [voyage.totalContainers.toString(), voyage.bays.length.toString(),
+                    _formatWeight(voyage.totalWeight)].any(
+                    (text) => textWidth(text, valueStyle) > columnWidth,
+                  );
+              final width = stacked ? constraints.maxWidth : columnWidth;
               return Wrap(spacing: 16, runSpacing: 16, children: [
                 SizedBox(width: width, child: _buildStatItem(
                     context,
@@ -160,7 +185,8 @@ class VoyageSummaryCard extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 '${voyage.totalContainers} contenedores · '
-                '${voyage.totalReservedSlots} celdas reservadas',
+                '${voyage.totalReservedSlots} '
+                '${voyage.totalReservedSlots == 1 ? 'celda reservada' : 'celdas reservadas'}',
                 key: const ValueKey('voyage-reserved-count'),
               ),
             ],
