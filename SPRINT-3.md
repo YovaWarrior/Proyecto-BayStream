@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 169.5 h estimadas** (al 19-oct, 10.90) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 169.5 h estimadas** (al 19-oct, 10.91; commit de cierre `sprint3-cierre`) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -5975,3 +5975,61 @@ El piso sigue en 1034.
 - 3 por hacer: T-87, T-100 y T-101.
 
 El piso queda en 1047.
+
+### 10.91 · T-111, terminada · Todo el código del sprint, aceptado · El commit de cierre · La Fase B de T-98 arranca hoy (19-oct)
+
+**T-111, ACEPTADA con observaciones por Timonel** (`87b32cf`, sobre `0c704c9`):
+- El diff solo toca la tarjeta.
+- 1047/1047 sin omitidas, `analyze` en cero y el corpus 178/178 contra las referencias del padre (`83d0dc1`).
+- Su control de regresión da lo mismo que el de Codex: 9 aprobadas y 4 fallidas sobre la tarjeta vieja.
+- **Su barrido de 192 casos** no parte ninguna palabra en HEAD. 76 quedan idénticos al padre, entre ellos todos los de 1280 dp, y 68 se apilan justo donde el padre partía.
+- Windows y la Web, con `t111acc`, sin textos partidos.
+- **El Honor**, a 360 dp: A07 a 1.0 con «Contenedores» entero; A03 a 1.45 con «7419.5 t» y «Peso Total» enteros; ACC2 con «1 celda reservada» a 1.0, 1.45 y 2.0. La letra quedó en 1.0.
+
+**Lo que decide Yov sobre las observaciones.** Ninguna abre tarea antes del cierre; todas pasan a la lista del Sprint 4 (abajo).
+1. **Las pruebas no detectan el caso de 1.0,** porque con Roboto la palabra cabe. Lo cubren el barrido y el Honor.
+2. **«1 contenedores»** (`voyage_summary_card.dart:187`) solo sale con un viaje de un solo contenedor.
+3. **Las etiquetas están escritas dos veces:** la medición y el dibujo usan copias del mismo texto.
+4. **La tarjeta es más alta a 1.0 en el teléfono.** Es la consecuencia esperada de apilar, y el rediseño la replantea.
+
+**T-111 pasa a Terminado. Con ella, todo el código del Sprint 3 queda aceptado.** Quedan:
+- T-98 y T-99, por sus Fases B;
+- T-100 (el manual y la presentación final);
+- T-101 (el piloto);
+- T-87 (BAPLIE 3.1), que necesita un archivo real.
+
+**El commit de cierre es el de esta decisión,** que Carlos anuncia al correrlo.
+- Su código es el de `87b32cf`, y la etiqueta **`sprint3-cierre`** lo marca.
+- Desde aquí, en `lib/` solo entran correcciones de defectos que salgan de la medición, con la decisión de Yov y de Carlos. Cada corrección obliga a repetir las filas que toque (10.73).
+- Las Fases B se compilan en una copia limpia de `sprint3-cierre`: T-98 con el namespace `t98` y T-99 con `t99`.
+- Una medición a la vez (AGENTS.md, punto 4).
+
+**Carlos decide (19-oct, 19:25): la Fase B de T-98 va primero, hoy.** Codex trabaja en un chat nuevo, con los permisos de 10.88. El orden:
+1. **Lo que no necesita sesión, primero:**
+   - la condición A de RNF-004;
+   - RNF-006, con el control positivo de 10.90;
+   - RNF-008;
+   - RNF-002.
+   La condición A exige que no haya ninguna sesión iniciada en el cliente.
+2. **Lo que necesita a Carlos, al final y en una sola tanda**, cuando Codex lo pida con una línea «CARLOS:»:
+   - crear «PRUEBA T-98» con un BAPLIE sintético;
+   - iniciar sesión en los clientes `t98`;
+   - aprobar el permiso de administrador de `pktmon`.
+   Con eso se miden el TLS de los clientes (10.82), la condición B y la sincronización.
+3. **Si una medición encuentra un defecto,** se anota y no se corrige (10.73).
+
+**Después:** Timonel acepta T-98 (una fila de cada RNF); luego la Fase B de T-99, que Codex acepta.
+
+**Pendientes para el Sprint 4 y el rediseño** (no entran en este sprint):
+
+| Pendiente | De dónde viene |
+|---|---|
+| Todas las bahías del buque, con un inventario declarado por buque | 10.87 |
+| La entrada a la matriz de segregación | 10.89 |
+| El modo de un solo dispositivo que el comentario promete y que, para leer archivos, no existe | 10.89 |
+| La tarjeta del viaje: «1 contenedores», las etiquetas escritas una sola vez, su altura en el teléfono y una prueba que detecte el caso de 1.0 en el dispositivo | 10.91 |
+| La barra de pestañas a 2.0, que se desplaza, y las cifras del borde en los gráficos desplazables | 10.89 |
+| El desborde de 0.23 dp de los gráficos a 1280 dp | 10.84 |
+| Mayús + rueda en la matriz del IMDG | 10.83 |
+
+**El sprint sigue en 49 tareas y ≈ 169.5 h.** El tablero (v54): 44 terminadas, 2 en curso (T-98 y T-99) y 3 por hacer (T-87, T-100 y T-101). El piso queda en 1047.
