@@ -9,6 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Textos del propio Flutter en español: «Atrás», el selector de fecha y la
+  # barra de copiar y pegar (T-112, autorizado por Carlos en 10.93). Viene con
+  # el SDK de Flutter.
+  flutter_localizations:
+    sdk: flutter
   
   # State Management
   flutter_riverpod: ^3.1.0

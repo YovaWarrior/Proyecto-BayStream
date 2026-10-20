@@ -322,66 +322,71 @@ class MovementDraft extends Equatable {
         (payload['reason'] as String?)?.trim().isNotEmpty ?? false;
     final corrects = payload['corrects'];
     if (corrects != null && !type.canCorrect) {
-      return 'Este tipo de movimiento no admite corrección.';
+      return 'Este tipo de movimiento no admite corrección: deshazlo y regístralo de nuevo.';
     }
     switch (type) {
       case MovementType.discharge:
       case MovementType.loadFull:
         if (!_container.hasMatch(target ?? '')) {
-          return 'Falta el número de contenedor.';
+          return 'Falta el número de contenedor: escríbelo.';
         }
         if (!_position.hasMatch(payload['position'] as String? ?? '')) {
-          return 'La posición debe tener 6 o 7 cifras (BBBRRTT).';
+          return 'La posición debe tener 6 o 7 cifras (BBBRRTT): corrígela.';
         }
       case MovementType.assignEmpty:
         if (!_reserved.hasMatch(target ?? '')) {
-          return 'Falta la celda reservada.';
+          return 'Falta la celda reservada: elige una.';
         }
         final container = payload['container'] as String? ?? '';
         if (!RegExp(r'^[A-Z0-9]{1,17}$').hasMatch(container)) {
-          return 'Falta el número del vacío.';
+          return 'Falta el número del vacío: indícalo.';
         }
         final tare = payload['tareKg'];
         if (tare is! num || tare <= 0 || tare >= 15000) {
-          return 'Tara fuera de rango.';
+          return 'Tara fuera de rango: debe ser mayor que 0 y menor que 15 000 kg. '
+              'Corrígela.';
         }
       case MovementType.annul:
         if ((payload['annuls'] as String?)?.isEmpty ?? true) {
-          return 'Falta el movimiento a anular.';
+          return 'Falta el movimiento a anular: vuelve a elegirlo en el detalle de la celda.';
         }
-        if (!hasReason()) return 'Anular exige un motivo.';
+        if (!hasReason()) return 'Anular exige un motivo: escríbelo.';
       case MovementType.cancelItem:
         if (!_container.hasMatch(target ?? '') &&
             !_reserved.hasMatch(target ?? '')) {
-          return 'Falta el contenedor o la reserva a cancelar.';
+          return 'Falta el contenedor o la reserva a cancelar: vuelve a elegirlo en el plano.';
         }
         if (!hasReason() || (payload['reason'] as String).length > 300) {
-          return 'Cancelar exige un motivo de hasta 300 caracteres.';
+          return 'Cancelar exige un motivo de hasta 300 caracteres: escríbelo.';
         }
       case MovementType.requestChange:
       case MovementType.changePosition:
-        if (target != null) return 'Un cambio lleva sus objetos en la lista.';
+        if (target != null) {
+          return 'El cambio llegó mal armado: sus objetos van en la lista, no aparte. '
+              'Vuelve a abrir el formulario y repite el cambio.';
+        }
         if (!hasReason() || (payload['reason'] as String).length > 300) {
-          return 'Escribe un motivo de hasta 300 caracteres.';
+          return 'Falta el motivo: escribe uno de hasta 300 caracteres.';
         }
         final changes = PositionChange.readAll(payload['changes']);
         if (changes == null) {
-          return 'Indica de uno a cuatro cambios válidos, sin repetir objetos ni destinos.';
+          return 'Los cambios de la solicitud no son válidos: indica de uno a cuatro, '
+              'sin repetir objetos ni destinos.';
         }
       case MovementType.rejectChange:
         if (target != null ||
             payload['request'] is! String ||
             (payload['request'] as String).isEmpty) {
-          return 'Falta la solicitud.';
+          return 'Falta la solicitud que se rechaza: vuelve a abrirla desde la bandeja.';
         }
         if (!hasReason() || (payload['reason'] as String).length > 300) {
-          return 'Escribe un motivo de hasta 300 caracteres.';
+          return 'Falta el motivo: escribe uno de hasta 300 caracteres.';
         }
       case MovementType.hatchCover:
         if (!RegExp(r'^T:[0-9]{1,3}-[1-9]$').hasMatch(target ?? '') ||
             !['remove', 'replace'].contains(payload['action']) ||
             payload.keys.any((k) => !['action', 'operatedAt', 'corrects'].contains(k))) {
-          return 'Indica una tapa y la acción quitar o reponer.';
+          return 'Falta la tapa o la acción: indica una tapa y si se quita o se repone.';
         }
     }
     return null;

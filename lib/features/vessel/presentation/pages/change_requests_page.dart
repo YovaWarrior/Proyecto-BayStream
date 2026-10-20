@@ -8,6 +8,7 @@ import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
 import '../widgets/sync_status_chip.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 String _position(String value) => value.length == 7
     ? '${value.substring(0, 3)}-${value.substring(3, 5)}-${value.substring(5)}'
@@ -73,17 +74,18 @@ class _ChangeRequestsPageState extends ConsumerState<ChangeRequestsPage> {
       final data = ref.read(loadingOperationProvider(widget.voyage)).value;
       final actor = ref.read(operatorProvider).value;
       if (operation == null || data == null) {
-        throw StateError('La operación no está disponible.');
+        throw StateError(operationUnavailable);
       }
       final draft = const ChangeRequests().decide(
           operation, actor, data, request.movement.id, reason,
           approve: approve);
       final result = await repository.append(draft, actor!.author);
       result.fold((failure) => throw StateError(failure.message), (_) {});
-    } catch (failure) {
+    } catch (failure, stack) {
       if (mounted) {
-        setState(
-            () => error = failure is StateError ? failure.message : '$failure');
+        setState(() => error = failure is StateError
+            ? failure.message
+            : vesselErrorMessage(failure, stack, 'decidir la solicitud'));
       }
     } finally {
       if (mounted) setState(() => busy = false);
@@ -102,13 +104,14 @@ class _ChangeRequestsPageState extends ConsumerState<ChangeRequestsPage> {
                 Text(office ? 'Bandeja de cambios' : 'Solicitudes de cambio')),
         body: ref.watch(loadingOperationProvider(widget.voyage)).when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text(vesselErrorMessage(e, s))),
+            error: (e, s) => Center(
+                child: Text(vesselErrorMessage(e, s, 'abrir las solicitudes de la operación'))),
             data: (data) =>
                 ListView(padding: const EdgeInsets.all(16), children: [
                   const Align(
                       alignment: Alignment.centerLeft, child: SyncStatusChip()),
                   Text(
-                      '${widget.voyage.vessel.name} · ${widget.voyage.voyageNumber}'),
+                      '${widget.voyage.vessel.name} · ${voyageNumberLabel(widget.voyage.voyageNumber)}'),
                   Text(
                       'Plan efectivo · ${data.state.conflicts.length} conflictos',
                       key: const ValueKey('changes-conflicts')),
@@ -272,7 +275,7 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
       final data = ref.read(loadingOperationProvider(widget.voyage)).value;
       final actor = ref.read(operatorProvider).value;
       if (operation == null || data == null) {
-        throw StateError('La operación no está disponible.');
+        throw StateError(operationUnavailable);
       }
       final draft = widget.direct
           ? const ChangeRequests()
@@ -282,10 +285,11 @@ class _RequestFormState extends ConsumerState<_RequestForm> {
       (await repository.append(draft, actor!.author))
           .fold((failure) => throw StateError(failure.message), (_) {});
       if (mounted) Navigator.pop(context);
-    } catch (failure) {
+    } catch (failure, stack) {
       if (mounted) {
-        setState(
-            () => error = failure is StateError ? failure.message : '$failure');
+        setState(() => error = failure is StateError
+            ? failure.message
+            : vesselErrorMessage(failure, stack, 'enviar el cambio'));
       }
     } finally {
       if (mounted) setState(() => busy = false);

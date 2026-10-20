@@ -16,7 +16,8 @@ class LocalOnlyOperationSync implements OperationSyncRepository {
   static const _failure = FirestoreFailure(
       code: 'no_cloud',
       message: 'Esta compilación no tiene la nube configurada: la app trabaja '
-          'en un solo dispositivo.');
+          'en un solo dispositivo. Para sincronizar, pide al responsable una '
+          'compilación con la nube.');
 
   @override
   SyncCapability get capability => SyncCapability.none;

@@ -199,7 +199,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       return parseBaplieContent(String.fromCharCodes(file.bytes!),
           fileName: file.name);
     } catch (e, stack) {
-      return LoadFileResult.error(vesselErrorMessage(e, stack));
+      return LoadFileResult.error(
+          vesselErrorMessage(e, stack, 'abrir el archivo'));
     }
   }
 
@@ -247,7 +248,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     } catch (error, stack) {
       _clearPending();
       state = previousState;
-      return LoadFileResult.error(vesselErrorMessage(error, stack));
+      return LoadFileResult.error(
+          vesselErrorMessage(error, stack, 'leer el archivo «$fileName»'));
     } finally {
       _busy = false;
     }
@@ -280,7 +282,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     try {
       return await _useProfile(selected);
     } catch (error, stack) {
-      return LoadFileResult.error(vesselErrorMessage(error, stack));
+      return LoadFileResult.error(
+          vesselErrorMessage(error, stack, 'aplicar el perfil del buque'));
     } finally {
       _busy = false;
     }
@@ -320,7 +323,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
           OperationSources.baplieKind(voyage, portOfCall) ?? sourceKind;
       if (kind == null || kind == OperationSourceKind.exportList) {
         throw const VesselActionRequired(
-            'Elige si este BAPLIE es de llegada o de carga.');
+            'Falta indicar si este BAPLIE es de llegada o de carga: elige una opción.');
       }
       final log = await ref.read(movementLogRepositoryProvider.future);
       await OperationSources.save(log, published, portOfCall,
@@ -356,7 +359,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       return 'Hay una operación en curso. Espera a que termine e inténtalo de nuevo.';
     }
     if (_identityCandidates.isNotEmpty) {
-      return 'Confirma primero la identidad del buque.';
+      return 'La identidad del buque está sin confirmar: confírmala primero.';
     }
     final target = _pendingVoyage ?? publishedVoyage;
     if (target == null) {
@@ -370,7 +373,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
         portOfCall != null &&
         OperationSources.baplieKind(target, portOfCall) == null &&
         (sourceKind == null || sourceKind == OperationSourceKind.exportList)) {
-      return 'Elige si este BAPLIE es de llegada o de carga.';
+      return 'Falta indicar si este BAPLIE es de llegada o de carga: elige una opción.';
     }
     final profile = (currentProfile ?? VesselProfile.proposeFrom(target))
         .copyWith(
@@ -389,14 +392,15 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       final saved = await local.saveProfile(profile,
           nameMatchConfirmed: _nameMatchConfirmed || _pendingVoyage == null);
       final error = saved.fold<String?>(
-          (failure) => vesselFailureMessage(failure), (_) => null);
+          (failure) => vesselFailureMessage(failure, 'guardar el perfil del buque'),
+          (_) => null);
       if (error != null) return error;
       ref.invalidate(savedVesselProfilesProvider);
       await _publish(target, profile, portOfCall,
           confirmedCall: true, sourceKind: sourceKind);
       return null;
     } catch (error, stack) {
-      return vesselErrorMessage(error, stack);
+      return vesselErrorMessage(error, stack, 'confirmar la geometría del buque');
     } finally {
       _busy = false;
     }
@@ -432,13 +436,14 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       }
       final result = await local.saveProfile(edited, nameMatchConfirmed: true);
       final error = result.fold<String?>(
-          (failure) => vesselFailureMessage(failure), (_) => null);
+          (failure) => vesselFailureMessage(failure, 'guardar el perfil del buque'),
+          (_) => null);
       if (error != null) return error;
       ref.invalidate(savedVesselProfilesProvider);
       if (applies) await _publish(voyage, edited, voyage.portOfCall);
       return null;
     } catch (error, stack) {
-      return vesselErrorMessage(error, stack);
+      return vesselErrorMessage(error, stack, 'guardar los parámetros del buque');
     } finally {
       _busy = false;
     }
@@ -495,7 +500,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
           effective == geometry ? voyage : voyage.withGeometry(effective));
       return null;
     } catch (error, stack) {
-      return vesselErrorMessage(error, stack);
+      return vesselErrorMessage(error, stack, 'abrir el viaje guardado');
     } finally {
       _busy = false;
     }
@@ -514,7 +519,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       // El viaje abierto sigue visible; borrar la copia local no borra el perfil.
       return null;
     } catch (error, stack) {
-      return vesselErrorMessage(error, stack);
+      return vesselErrorMessage(error, stack, 'eliminar el viaje guardado');
     } finally {
       _busy = false;
     }

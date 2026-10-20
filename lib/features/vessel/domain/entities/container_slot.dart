@@ -65,7 +65,7 @@ class ContainerSlot extends Equatable {
   String get shortCoordinate => '$rowPadded$tierPadded';
 
   /// Formato de display "Bay XX, Row YY, Tier ZZ"
-  String get displayFormat => 'Bay $bayPadded, Row $rowPadded, Tier $tierPadded';
+  String get displayFormat => 'Bahía $bayPadded, Fila $rowPadded, Nivel $tierPadded';
 
   /// Verifica si puede aceptar un contenedor específico
   bool canAccept(ContainerUnit containerToPlace) {

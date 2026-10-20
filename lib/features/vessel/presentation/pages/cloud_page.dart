@@ -11,6 +11,7 @@ import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import '../widgets/sync_status_chip.dart';
 import 'privacy_policy_page.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 /// T-79 · Cuenta, operación de la escala y operaciones abiertas en la nube.
 ///
@@ -38,7 +39,8 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     super.dispose();
   }
 
-  Future<void> _run(Future<String?> Function() action, {String? done}) async {
+  Future<void> _run(Future<String?> Function() action,
+      {String? done, required String operation}) async {
     setState(() {
       _busy = true;
       _message = null;
@@ -47,7 +49,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     try {
       error = await action();
     } catch (failure, stack) {
-      error = vesselErrorMessage(failure, stack);
+      error = vesselErrorMessage(failure, stack, operation);
     }
     if (!mounted) return;
     setState(() {
@@ -77,8 +79,10 @@ class _CloudPageState extends ConsumerState<CloudPage> {
           if (session == null)
             const Text('Leyendo la sesión…')
           else if (!session.supportsAccounts)
+            // T-112: el mismo texto que M056, con su acción.
             const Text('Esta compilación no tiene la nube configurada: la app '
-                'trabaja en un solo dispositivo.')
+                'trabaja en un solo dispositivo. Para sincronizar, pide al '
+                'responsable una compilación con la nube.')
           else if (operator == null)
             _signInForm(context)
           else
@@ -135,9 +139,9 @@ class _CloudPageState extends ConsumerState<CloudPage> {
               key: const ValueKey('password-reset-button'),
               onPressed: _busy
                   ? null
-                  : () => _run(() async {
+                  : () => _run(operation: 'enviar el correo de recuperación', () async {
                         if (_email.text.trim().isEmpty) {
-                          return 'Escribe tu correo para recuperar la contraseña.';
+                          return 'Falta el correo: escríbelo para recuperar la contraseña.';
                         }
                         final session =
                             await ref.read(sessionRepositoryProvider.future);
@@ -157,7 +161,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     );
   }
 
-  void _signIn() => _run(() async {
+  void _signIn() => _run(operation: 'iniciar sesión', () async {
         final session = await ref.read(sessionRepositoryProvider.future);
         final result = await session.signIn(_email.text, _password.text);
         _password.clear();
@@ -178,7 +182,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         key: const ValueKey('sign-out-button'),
         onPressed: _busy
             ? null
-            : () => _run(() async {
+            : () => _run(operation: 'cerrar la sesión', () async {
                   final session = await ref.read(sessionRepositoryProvider.future);
                   return (await session.signOut()).fold((f) => f.message, (_) => null);
                 },
@@ -200,7 +204,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         operator.role == OperatorRole.office;
     final sync = ref.watch(operationSyncProvider).value;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('${operation.vesselName} · ${operation.voyageNumber} · ${operation.portOfCall}'),
+      Text('${operation.vesselName} · ${voyageNumberLabel(operation.voyageNumber)} · ${operation.portOfCall}'),
       Text(operation.published
           ? (operation.closed ? 'Publicada y cerrada' : 'Publicada')
           : 'Solo en este dispositivo'),
@@ -225,7 +229,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
             key: const ValueKey('retry-button'),
             onPressed: _busy || sync == null
                 ? null
-                : () => _run(() async {
+                : () => _run(operation: 'volver a intentar el envío', () async {
                       await sync.retry(operation.id);
                       return null;
                     }, done: 'Se volvió a intentar el envío.'),
@@ -238,10 +242,11 @@ class _CloudPageState extends ConsumerState<CloudPage> {
   Future<void> _publish(Operation operation) async {
     var kept = 0;
     const done = 'Operación publicada.';
-    await _run(() async {
+    await _run(operation: 'publicar la operación', () async {
       final profile = ref.read(voyageNotifierProvider.notifier).publishedProfile;
       if (profile == null) {
-        return 'Abre el plano de la escala para publicarla con su perfil de buque.';
+        return 'No hay un plano abierto con perfil de buque: abre el plano de la '
+            'escala para publicarla con su perfil.';
       }
       final log = await ref.read(movementLogRepositoryProvider.future);
       kept = (await log.records(operation.id)).getOrElse(() => const []).length;
@@ -277,7 +282,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       ),
     );
     if (confirmed != true) return;
-    await _run(() async {
+    await _run(operation: 'cerrar la operación', () async {
       final sync = await ref.read(operationSyncProvider.future);
       return (await sync.close(operation.id)).fold((f) => f.message, (_) {
         _changed();
@@ -292,7 +297,8 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     return remote.when(
       loading: () => const Text('Buscando operaciones abiertas…'),
       error: (error, _) => const Text(
-          'No se pudieron leer las operaciones: revisa la conexión y la cuenta.'),
+          'No se pudieron leer las operaciones abiertas de la nube: puede faltar '
+          'la conexión o el permiso de la cuenta. Revisa la conexión y la cuenta.'),
       data: (operations) {
         if (operations.isEmpty) return const Text('No hay operaciones abiertas.');
         return Column(children: [
@@ -316,7 +322,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('${remote.vesselName} · ${remote.voyageNumber} · ${remote.portOfCall}',
+          Text('${remote.vesselName} · ${voyageNumberLabel(remote.voyageNumber)} · ${remote.portOfCall}',
               style: Theme.of(context).textTheme.titleSmall),
           Text(remote.sources.isEmpty
               ? 'Sin fuentes'
@@ -350,7 +356,7 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     );
   }
 
-  Future<void> _join(String id) => _run(() async {
+  Future<void> _join(String id) => _run(operation: 'unirte a la operación', () async {
         final sync = await ref.read(operationSyncProvider.future);
         return (await sync.join(id)).fold((f) => f.message, (operation) {
           _changed();
@@ -358,12 +364,17 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         });
       }, done: 'Te uniste a la operación. Abre su plano para trabajar.');
 
-  Future<void> _open(Operation operation, OperationSourceKind kind) => _run(() async {
+  Future<void> _open(Operation operation, OperationSourceKind kind) =>
+      _run(operation: 'abrir la fuente publicada', () async {
         final error = await openOperationSource(ref, operation, kind);
         if (error == null && mounted) Navigator.of(context).pop();
         return error;
       });
 }
+
+/// T-112: lectura que terminó sin el viaje y sin un motivo.
+const _sourceNotOpened = 'No se abrió la fuente publicada: la lectura terminó sin '
+    'el viaje ni un motivo. Inténtalo de nuevo y, si se repite, avisa al responsable.';
 
 /// T-79 · Abre una fuente publicada como si fuera el archivo: con el perfil
 /// de buque que publicó la oficina y la escala de la operación, sin pedir la
@@ -371,7 +382,10 @@ class _CloudPageState extends ConsumerState<CloudPage> {
 Future<String?> openOperationSource(
     WidgetRef ref, Operation operation, OperationSourceKind kind) async {
   final source = operation.source(kind);
-  if (source == null) return 'La operación no tiene esa fuente.';
+  if (source == null) {
+    return 'La operación no tiene esa fuente: la oficina no la publicó. Abre otra '
+        'fuente o pide a la oficina que la publique.';
+  }
   final profile = operation.profile;
   if (profile != null) {
     final local = await ref.read(localVesselRepositoryProvider.future);
@@ -383,12 +397,12 @@ Future<String?> openOperationSource(
   final notifier = ref.read(voyageNotifierProvider.notifier);
   var result =
       await notifier.parseBaplieContent(source.content, fileName: source.fileName);
-  if (!result.success) return result.errorMessage ?? 'No se abrió la fuente.';
+  if (!result.success) return result.errorMessage ?? _sourceNotOpened;
   if (result.needsIdentity) {
     final match =
         notifier.identityCandidates.where((p) => p.key == profile?.key).firstOrNull;
     result = await notifier.resolveIdentity(match);
-    if (!result.success) return result.errorMessage ?? 'No se abrió la fuente.';
+    if (!result.success) return result.errorMessage ?? _sourceNotOpened;
   }
   if (result.needsGeometry) {
     final draft = notifier.currentProfile;

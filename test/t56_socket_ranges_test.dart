@@ -50,12 +50,12 @@ void main() {
           ReeferSocketRanges.codesFor(
                   bays: '', rows: '', tiers: '82', geometry: _geometry)
               .error,
-          'Escribe al menos una bahía.');
+          'Faltan las bahías: escribe al menos una.');
       expect(
           ReeferSocketRanges.codesFor(
                   bays: '002', rows: '', tiers: ' ', geometry: _geometry)
               .error,
-          'Escribe al menos un nivel.');
+          'Faltan los niveles: escribe al menos uno.');
       expect(
           ReeferSocketRanges.codesFor(
                   bays: '001-999', rows: '00-99', tiers: '01-99/1',
@@ -220,7 +220,7 @@ void main() {
       await press(tester, 'socket-batch-apply');
       expect(text(tester, 'socket-batch-summary'),
           'Se agregaron 119 tomas; quedan 122.');
-      expect(find.text('Tomas de reefer (122)'), findsOneWidget);
+      expect(find.text('Tomas de refrigerado (122)'), findsOneWidget);
       final saved = await save(tester, captured);
       expect(saved.reeferSlots, hasLength(122));
       expect(saved.reeferSlots.difference(profile.reeferSlots), hasLength(119));
@@ -236,7 +236,7 @@ void main() {
           startsWith('Se agregan 12 tomas'));
       await tester.tap(find.text('Cancelar').last);
       await tester.pumpAndSettle();
-      expect(find.text('Tomas de reefer (3)'), findsOneWidget);
+      expect(find.text('Tomas de refrigerado (3)'), findsOneWidget);
       // Una sola: los textos van en singular.
       await type(tester, 'socket-range-rows', '01');
       await press(tester, 'socket-range-add');
@@ -259,7 +259,7 @@ void main() {
       await type(tester, 'socket-range-tiers', '88-90');
       await press(tester, 'socket-range-add');
       await press(tester, 'socket-batch-apply');
-      expect(find.text('Tomas de reefer (122)'), findsOneWidget);
+      expect(find.text('Tomas de refrigerado (122)'), findsOneWidget);
       // Arriba del todo, el tile queda fuera de la vista y de la caché.
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.drag(
@@ -269,7 +269,7 @@ void main() {
       await tester.scrollUntilVisible(sockets, 400,
           scrollable: find.byType(Scrollable).first);
       await tester.pumpAndSettle();
-      expect(find.text('Tomas de reefer (122)'), findsOneWidget);
+      expect(find.text('Tomas de refrigerado (122)'), findsOneWidget);
       expect(find.byKey(const ValueKey('socket-range-bays')), findsOneWidget,
           reason: 'la sección sigue abierta');
       await tester.scrollUntilVisible(
@@ -326,10 +326,12 @@ void main() {
       await type(tester, 'socket-range-tiers', '82');
       await press(tester, 'socket-range-add');
       expect(text(tester, 'socket-range-error'),
-          'Bahías: «002-0x8» no es un número ni un rango como 02-08.');
+          'Bahías: «002-0x8» no es un número ni un rango como 02-08. Escribe un '
+          'número o un rango así.');
       expect(find.byType(AlertDialog), findsNothing);
       await press(tester, 'socket-paste-add');
-      expect(find.text('Pega al menos un código.'), findsOneWidget);
+      expect(find.text('No hay códigos pegados: pega al menos uno.'),
+          findsOneWidget);
     });
 
     testWidgets('la casilla sigue siendo la única que declara', (tester) async {

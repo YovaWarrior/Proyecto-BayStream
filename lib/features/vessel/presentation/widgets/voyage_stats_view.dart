@@ -232,7 +232,7 @@ class _SummaryGrid extends StatelessWidget {
               color: Colors.amber,
             ),
             _MetricCard(
-              label: 'Reefers',
+              label: 'Refrigerados',
               value: specialCargo.reeferCount.toString(),
               icon: Icons.ac_unit,
               color: Colors.cyan,
@@ -594,7 +594,7 @@ class _SpecialCargoCards extends StatelessWidget {
         if (specialCargo.reeferCount > 0)
           _SpecialCard(
             icon: Icons.ac_unit,
-            label: 'Reefer',
+            label: 'Refrigerado',
             count: specialCargo.reeferCount,
             color: Colors.cyan,
           ),
@@ -628,7 +628,7 @@ class _SpecialCargoCards extends StatelessWidget {
           Expanded(
             child: _SpecialCard(
               icon: Icons.ac_unit,
-              label: 'Reefer',
+              label: 'Refrigerado',
               count: specialCargo.reeferCount,
               color: Colors.cyan,
             ),

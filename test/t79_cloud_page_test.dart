@@ -135,15 +135,17 @@ void main() {
     expect(syncStatusText(const SyncStatus(SyncState.sessionExpired, pending: 4)),
         'Sesión vencida: inicia sesión para enviar 4');
     expect(syncStatusText(const SyncStatus(SyncState.notAuthorized, pending: 1)),
-        'Tu cuenta no está autorizada · 1 espera');
+        'Tu cuenta no está autorizada · 1 espera · pide al responsable que la '
+        'autorice');
     expect(
         syncStatusText(SyncStatus(SyncState.unconfirmed,
             pending: 1, since: DateTime(2026, 10, 9, 14, 5))),
-        'Sin confirmar desde las 14:05 · inicia sesión de nuevo');
+        'Sesión sin confirmar desde las 14:05 · inicia sesión de nuevo');
     expect(
         syncStatusText(const SyncStatus(SyncState.upToDate,
             rejected: 1, otherAuthor: 2, localOnly: 7, closed: true)),
-        'Al día · 1 rechazado · 2 de otra cuenta esperan a su autor · '
+        'Al día · 1 rechazado por la nube, fuera del plan: regístralo de nuevo '
+        'si hace falta · 2 de otra cuenta esperan a su autor · '
         '7 movimientos sin cuenta: solo aquí · operación cerrada');
   });
 

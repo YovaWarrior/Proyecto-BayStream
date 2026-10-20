@@ -9,6 +9,7 @@ import '../providers/discharge_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
 import 'hatch_operation_controls.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 /// T-75 · Resumen del modo Descarga: la bahía elegida y la escala completa.
 class DischargeSummary extends ConsumerWidget {
@@ -21,7 +22,8 @@ class DischargeSummary extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = ref.watch(dischargeProgressProvider(voyage));
     if (progress.hasError) {
-      return Text(vesselErrorMessage(progress.error!, progress.stackTrace));
+      return Text(vesselErrorMessage(progress.error!, progress.stackTrace,
+          'calcular los pendientes de descarga'));
     }
     if (!progress.hasValue) {
       return const Text('Leyendo el estado de la operación…');
@@ -64,7 +66,9 @@ void showDischargeTable(BuildContext context, VesselVoyage voyage) =>
           return progress.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stack) =>
-                Center(child: Text(vesselErrorMessage(error, stack))),
+                Center(
+                    child: Text(vesselErrorMessage(
+                        error, stack, 'calcular los pendientes de descarga'))),
             data: (data) {
               final bays = data.bays.values.toList()
                 ..sort((a, b) => a.bay.compareTo(b.bay));
@@ -74,7 +78,7 @@ void showDischargeTable(BuildContext context, VesselVoyage voyage) =>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                          'Pendientes de descarga · ${voyage.vessel.name} · ${voyage.voyageNumber} · ${voyage.portOfCall}',
+                          'Pendientes de descarga · ${voyage.vessel.name} · ${voyageNumberLabel(voyage.voyageNumber)} · ${voyage.portOfCall}',
                           style: Theme.of(context).textTheme.titleMedium),
                       Text(
                           '${operationCount(bays.length, 'bahía', 'bahías')} · ${operationCount(data.pending, 'pendiente', 'pendientes')} · '

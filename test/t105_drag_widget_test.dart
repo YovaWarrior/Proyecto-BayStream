@@ -358,7 +358,10 @@ void main() {
     await tester.ensureVisible(cell);
     await tester.longPress(cell);
     await tester.pumpAndSettle();
-    expect(find.text('Inicia sesión para mover'), findsOneWidget);
+    expect(
+        find.text('Mover exige una cuenta autorizada: inicia sesión o pide al '
+            'responsable que autorice la tuya.'),
+        findsOneWidget);
     await tester.tap(cell);
     await tester.pumpAndSettle();
     expect(find.byType(Dialog), findsOneWidget);

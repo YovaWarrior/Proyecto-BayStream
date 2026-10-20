@@ -144,7 +144,7 @@ void main() {
           fileName: 'sintetico.edi');
       final geometry = notifier.currentProfile!.geometry;
       expect(await notifier.confirmGeometry(geometry, portOfCall: 'GTSTC'),
-          contains('Elige'));
+          contains('es de llegada o de carga: elige una opción'));
       expect(notifier.publishedVoyage, isNull);
       expect(log.operations, isEmpty);
       expect((await store.repository.getAllProfiles()).getOrElse(() => []),

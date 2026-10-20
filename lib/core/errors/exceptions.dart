@@ -11,6 +11,10 @@ class BayStreamException implements Exception {
 
 /// Excepción durante el parsing de archivos BAPLIE
 class BaplieParsingException extends BayStreamException {
+  /// Código de un fallo inesperado del lector: trae el segmento que se leía
+  /// y, en la carga, su número de orden en el archivo (T-112).
+  static const unexpectedSegment = 'unexpected_segment';
+
   final int? lineNumber;
   final String? segment;
 

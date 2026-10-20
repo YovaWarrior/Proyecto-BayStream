@@ -162,7 +162,9 @@ void main() {
       movementLogRepositoryProvider.overrideWith((ref) async => log),
     ], child: const MaterialApp(home: ExportListImportPage())));
     await tester.pump();
-    expect(find.text('Abre primero el plan de carga (BAPLIE) y confirma la escala.'),
+    expect(
+        find.text('No hay un plan de carga confirmado: abre primero el plan de '
+            'carga (BAPLIE) y confirma la escala.'),
         findsOneWidget);
     expect(find.byKey(const ValueKey('export-list-pick')), findsNothing);
   });

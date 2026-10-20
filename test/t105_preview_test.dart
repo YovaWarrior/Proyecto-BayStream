@@ -91,7 +91,9 @@ void main() {
   }
   test('T-105 preview exige sesión autorizada sin mutar el plan', () {
     final data = t105Data();
-    expect(service.preview(data, null, free).error, 'Inicia sesión para mover');
+    expect(service.preview(data, null, free).error,
+        'Mover exige una cuenta autorizada: inicia sesión o pide al responsable '
+        'que autorice la tuya.');
     expect(data.movements, isEmpty);
     expect(data.plan.loading[f.key]!.plannedPosition, '0030282');
   });

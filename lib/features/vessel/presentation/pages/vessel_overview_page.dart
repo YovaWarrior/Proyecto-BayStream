@@ -200,8 +200,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 } catch (error, stack) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('No se pudo guardar la preferencia. '
-                        '${vesselErrorMessage(error, stack)}'),
+                    content: Text(vesselErrorMessage(
+                        error, stack, 'guardar la preferencia de la barra')),
                     backgroundColor: Theme.of(context).colorScheme.error,
                   ));
                 }
@@ -216,7 +216,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 labelStyle: tabLabelStyle,
                 tabs: [
                   Tab(height: tabHeight, icon: const Icon(Icons.list), text: 'Lista'),
-                  Tab(height: tabHeight, icon: const Icon(Icons.grid_view), text: 'Bay Plan'),
+                  Tab(height: tabHeight, icon: const Icon(Icons.grid_view), text: 'Plano'),
                   Tab(height: tabHeight, icon: const Icon(Icons.bar_chart), text: 'Estadísticas'),
                 ],
               )
@@ -249,7 +249,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  vesselErrorMessage(error, stack),
+                  vesselErrorMessage(error, stack, 'procesar el archivo'),
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
@@ -387,7 +387,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'No se pudo exportar ${format.label}. ${vesselErrorMessage(error, stack)}'),
+              vesselErrorMessage(error, stack, 'exportar ${format.label}')),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -465,7 +465,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         content: Text(
           result.success
               ? 'Archivo "${result.fileName}" cargado correctamente'
-              : result.errorMessage ?? unknownVesselErrorMessage,
+              : result.errorMessage ?? unexpectedErrorMessage('cargar el archivo'),
         ),
         backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
         behavior: SnackBarBehavior.floating,
@@ -522,7 +522,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       notifier.discardPendingVoyage();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(vesselErrorMessage(error, stack))));
+            SnackBar(content: Text(vesselErrorMessage(
+                error, stack, 'aplicar la plantilla del buque'))));
       }
       return false;
     }

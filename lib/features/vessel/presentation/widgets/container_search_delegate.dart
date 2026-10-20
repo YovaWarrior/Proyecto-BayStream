@@ -265,7 +265,7 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Tip: Escribe parte del ID del contenedor (ej: "MSKU123") para encontrarlo rápidamente',
+                    'Consejo: Escribe parte del ID del contenedor (ej: "MSKU123") para encontrarlo rápidamente',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -421,25 +421,32 @@ class _ContainerSearchResultTile extends StatelessWidget {
 
   Widget _buildLeadingIcon(ColorScheme colorScheme) {
     IconData icon;
-    Color color;
+    Color background;
+    Color foreground;
 
+    // T-112: los mismos colores del esquema que las celdas y la leyenda del
+    // plano (bay_plan_view.dart), en vez de colores fijos.
     if (container.isDangerous) {
       icon = Icons.warning_amber;
-      color = Colors.red;
+      background = colorScheme.errorContainer;
+      foreground = colorScheme.onErrorContainer;
     } else if (container.isReefer) {
       icon = Icons.ac_unit;
-      color = Colors.cyan;
+      background = colorScheme.primaryContainer;
+      foreground = colorScheme.onPrimaryContainer;
     } else if (container.status == ContainerStatus.full) {
       icon = Icons.inventory_2;
-      color = Colors.green;
+      background = colorScheme.secondaryContainer;
+      foreground = colorScheme.onSecondaryContainer;
     } else {
       icon = Icons.inventory_2_outlined;
-      color = Colors.orange;
+      background = colorScheme.surfaceContainerHighest;
+      foreground = colorScheme.onSurfaceVariant;
     }
 
     return CircleAvatar(
-      backgroundColor: color.withValues(alpha: 0.1),
-      child: Icon(icon, color: color, size: 20),
+      backgroundColor: background,
+      child: Icon(icon, color: foreground, size: 20),
     );
   }
 
@@ -467,7 +474,8 @@ class _ContainerSearchResultTile extends StatelessWidget {
           TextSpan(
             text: text.substring(startIndex, endIndex),
             style: TextStyle(
-              backgroundColor: Colors.yellow.withValues(alpha: 0.4),
+              backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+              color: Theme.of(context).colorScheme.onTertiaryContainer,
               fontWeight: FontWeight.bold,
             ),
           ),

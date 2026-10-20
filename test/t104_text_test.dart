@@ -112,7 +112,7 @@ void main() {
           container: scope,
           child: _app(const VesselOverviewPage(), brightness)));
       await tester.pumpAndSettle();
-      for (final label in ['Lista', 'Bay Plan', 'Estadísticas']) {
+      for (final label in ['Lista', 'Plano', 'Estadísticas']) {
         final text = find.descendant(
             of: find.byType(TabBar), matching: find.text(label));
         await tester.ensureVisible(text);

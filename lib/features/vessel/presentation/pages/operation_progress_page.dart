@@ -11,6 +11,7 @@ import '../widgets/discharge_controls.dart' show formatMovementTime;
 import '../widgets/loading_controls.dart' show loadingPosition;
 import '../widgets/sync_status_chip.dart';
 import '../widgets/hatch_operation_controls.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 class OperationProgressPage extends ConsumerWidget {
   final VesselVoyage voyage;
@@ -29,7 +30,9 @@ class OperationProgressPage extends ConsumerWidget {
         body: ref.watch(loadingOperationProvider(voyage)).when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) =>
-                  Center(child: Text(vesselErrorMessage(error, stack))),
+                  Center(
+                      child: Text(vesselErrorMessage(
+                          error, stack, 'calcular el avance de la operación'))),
               data: (operation) => _content(context, operation),
             ),
       );
@@ -52,7 +55,7 @@ class OperationProgressPage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                        '${voyage.vessel.name} · ${voyage.voyageNumber} · ${voyage.portOfCall}',
+                        '${voyage.vessel.name} · ${voyageNumberLabel(voyage.voyageNumber)} · ${voyage.portOfCall}',
                         style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 8),
                     // T-79: la oficina ve aquí si el avance está al día.

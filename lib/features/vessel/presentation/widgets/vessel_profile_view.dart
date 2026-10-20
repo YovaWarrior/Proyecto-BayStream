@@ -155,10 +155,10 @@ class _VesselProfileViewState extends State<VesselProfileView> {
                                   child: Semantics(
                                     button: true,
                                     label:
-                                        'Abrir bahía ${bays[index].bayNumberPadded} en Bay Plan',
+                                        'Abrir bahía ${bays[index].bayNumberPadded} en el plano',
                                     child: Tooltip(
                                       message:
-                                          'Abrir bahía ${bays[index].bayNumberPadded} en Bay Plan',
+                                          'Abrir bahía ${bays[index].bayNumberPadded} en el plano',
                                       excludeFromSemantics: true,
                                       child: Material(
                                         color: Colors.transparent,

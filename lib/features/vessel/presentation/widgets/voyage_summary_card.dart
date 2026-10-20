@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
 import 'voyage_call_summary.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 /// T-103 · Aviso de un viaje leído desde una 1.5 (SMDG15), decisión 10.35.
 const smdg15Notice =
-    'Versión 1.5, leída con las reglas de 2.x; revisa pesos y peligrosas';
+    'Versión 1.5 (la cabecera UNH declara SMDG15), leída con las reglas de '
+    '2.x; revisa pesos y peligrosas';
 
 /// Tarjeta que muestra el resumen del viaje cargado
 /// Incluye información del buque, número de viaje y estadísticas
@@ -102,7 +104,7 @@ class VoyageSummaryCard extends StatelessWidget {
                           _buildInfoChip(
                             context,
                             Icons.tag,
-                            'Viaje: ${voyage.voyageNumber}',
+                            'Viaje: ${voyageNumberLabel(voyage.voyageNumber)}',
                           ),
                           if (voyage.vessel.flag != null) ...[
                             _buildInfoChip(
@@ -319,9 +321,9 @@ class _ReadNotice extends StatelessWidget {
   const _ReadNotice({required this.notice});
 
   String get title => switch (notice.kind) {
-        BaplieReadNoticeKind.weight => 'Pesos revisados',
-        BaplieReadNoticeKind.position => 'Posiciones mal formadas',
-        BaplieReadNoticeKind.checkDigit => 'Dígito de control inválido',
+        BaplieReadNoticeKind.weight => 'Pesos revisados en MEA',
+        BaplieReadNoticeKind.position => 'Posiciones mal formadas en LOC+147',
+        BaplieReadNoticeKind.checkDigit => 'Dígito de control inválido en EQD',
         BaplieReadNoticeKind.incomplete => 'Archivo posiblemente incompleto',
       };
 
@@ -331,7 +333,12 @@ class _ReadNotice extends StatelessWidget {
       final missing = count == 1 ? 'falta 1 segmento' : 'faltan $count segmentos';
       return '$title: $missing (${notice.details.join(', ')})';
     }
-    return '$title: $count ${count == 1 ? 'contenedor' : 'contenedores'}';
+    final action = switch (notice.kind) {
+      BaplieReadNoticeKind.weight => 'revisa esos pesos antes de operar',
+      BaplieReadNoticeKind.position => 'pide una exportación corregida',
+      _ => 'revisa esos números con la agencia',
+    };
+    return '$title: $count ${count == 1 ? 'contenedor' : 'contenedores'} · $action';
   }
 
   @override

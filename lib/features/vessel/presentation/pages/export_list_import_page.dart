@@ -5,6 +5,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/export_list_cross_checker.dart';
 import '../providers/export_list_providers.dart';
 import '../providers/vessel_providers.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 /// T-73 · Importar el listado de exportación de la agencia (RF-038): elegir
 /// el archivo, revisar el resumen y las equivalencias, confirmar. La
@@ -35,7 +36,9 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
       body = const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Text('Abre primero el plan de carga (BAPLIE) y confirma la escala.',
+          child: Text(
+              'No hay un plan de carga confirmado: abre primero el plan de carga '
+              '(BAPLIE) y confirma la escala.',
               textAlign: TextAlign.center),
         ),
       );
@@ -44,7 +47,7 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
       body = ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('${plan.vessel.name} · ${plan.voyageNumber} · escala ${plan.portOfCall}',
+          Text('${plan.vessel.name} · ${voyageNumberLabel(plan.voyageNumber)} · escala ${plan.portOfCall}',
               style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           Text('El listado se cruza con el plan de carga abierto.',
@@ -87,7 +90,8 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   'Falta elegir ${state.proposals.where((p) => p.needsUser).length} '
-                  'equivalencias antes de importar.',
+                  'equivalencias antes de importar. Elige una para cada código '
+                  'pendiente.',
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
               ),
@@ -196,7 +200,10 @@ class _ListSummary extends StatelessWidget {
               Text(list.issues.length == 1 ? '1 fila sin entender:' : '${list.issues.length} filas sin entender:',
                   key: const ValueKey('export-list-issues'),
                   style: TextStyle(color: theme.colorScheme.error)),
-              for (final issue in list.issues) Text('Fila ${issue.sheetRow}: ${issue.message}'),
+              // T-112: el aviso guardado no cambia; la acción se agrega al mostrarlo.
+              for (final issue in list.issues)
+                Text('Fila ${issue.sheetRow}: ${issue.message} Corrige esa fila en '
+                    'el Excel y vuelve a importarlo.'),
             ],
           ],
         ),

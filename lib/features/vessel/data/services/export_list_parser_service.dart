@@ -62,7 +62,9 @@ class ExportListParserService {
       book = xlsx.Excel.decodeBytes(withRelativeTargets(bytes));
     } catch (error) {
       throw ExportListParsingException(
-          message: 'El archivo no es un libro de Excel (.xlsx) legible.', cause: error);
+          message: 'El archivo no es un libro de Excel (.xlsx) legible: guárdalo '
+              'como .xlsx desde Excel y vuelve a elegirlo.',
+          cause: error);
     }
     ExportListParsingException? firstError;
     for (final sheet in book.tables.values) {
@@ -73,7 +75,9 @@ class ExportListParserService {
       }
     }
     throw firstError ??
-        const ExportListParsingException(message: 'El libro no tiene hojas con datos.');
+        const ExportListParsingException(
+            message: 'El libro no tiene hojas con datos: elige el listado de la '
+                'agencia.');
   }
 
   /// `excel_community` 1.0.10 (y hasta la 2.6.0) arma `xl/` + destino para
@@ -153,7 +157,8 @@ class ExportListParserService {
     if (headerIndex < 0) {
       throw const ExportListParsingException(
           message: 'No se encontró la fila de encabezados del listado '
-              '(OR, CONTENEDOR, TIPO…).');
+              '(OR, CONTENEDOR, TIPO…): revisa que sea el listado de exportación '
+              'de la agencia.');
     }
     final columns = <String, int>{};
     final header = grid[headerIndex];
@@ -166,7 +171,8 @@ class ExportListParserService {
     final missing = requiredColumns.where((c) => !columns.containsKey(c)).toList();
     if (missing.isNotEmpty) {
       throw ExportListParsingException(
-          message: 'Al listado le faltan columnas: ${missing.join(', ')}.');
+          message: 'Al listado le faltan columnas: ${missing.join(', ')}. Pide a '
+              'la agencia el listado completo.');
     }
 
     final titleLines = <String>[

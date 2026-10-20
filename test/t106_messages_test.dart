@@ -48,18 +48,20 @@ void main() {
 
   test('T-106 no cabe: el contenedor por su orden y la reserva por su celda', () {
     _expectMessage(_plan(), [const PositionChange(one, '0030282', '0040282')],
-        'OR 1 · FULL0001234 no cabe en la bahía 4.');
+        'OR 1 · FULL0001234 no cabe en la bahía 4: un 20 va en bahía impar y '
+        'un 40 en par. Elige una bahía de su tamaño.');
     _expectMessage(
         _plan(),
         [const PositionChange('R:0030182', '0030182', '0050482')],
-        'La reserva 003 01 82 no cabe en la bahía 5.');
+        'La reserva 003 01 82 no cabe en la bahía 5: un 20 va en bahía impar y '
+        'un 40 en par. Elige una bahía de su tamaño.');
   });
 
   test('T-106 el origen cambió y el objeto que no está en el plan', () {
     _expectMessage(_plan(), [const PositionChange(one, '0030682', '0030082')],
         'El origen de OR 1 · FULL0001234 cambió; revisa la solicitud.');
     _expectMessage(_plan(), [const PositionChange('C:NOPE0000001', '0030282', '0030082')],
-        'NOPE0000001 no está en el plan.');
+        'NOPE0000001 no está en el plan de carga: revisa el OR o el número.');
   });
 
   test('T-106 una descarga pendiente a bordo: «marca primero su descarga»', () {
@@ -81,7 +83,7 @@ void main() {
     expect(data.state['C:TRANSIT0000001']!.role, PlanRole.transit);
     _expectMessage(data, [const PositionChange(one, '0030282', '0050482')],
         '0050482 choca con TRANSIT0000001 en 0050482. '
-        'Es carga de paso: no se descarga aquí.');
+        'Es carga de paso: no se descarga aquí. Elige otra celda.');
   });
 
   test('T-106 un 20 y un 40: no se intercambian, en los dos sentidos', () {
@@ -91,12 +93,14 @@ void main() {
     ]);
     _expectMessage(data, [const PositionChange(one, '0030282', '0030182')],
         '0030182 choca con FORTY0000001 en 0040182: un 40 ocupa las dos '
-        'mitades de la celda. Un 20 y un 40 no se intercambian.');
+        'mitades de la celda. Un 20 y un 40 no se intercambian: elige otra '
+        'celda del mismo tamaño.');
     _expectMessage(
         data,
         [const PositionChange('C:FORTY0000001', '0040182', '0040282')],
         '0040282 choca con OR 1 · FULL0001234 en 0030282: un 40 ocupa las dos '
-        'mitades de la celda. Un 20 y un 40 no se intercambian.');
+        'mitades de la celda. Un 20 y un 40 no se intercambian: elige otra '
+        'celda del mismo tamaño.');
   });
 
   test('T-106 otro pendiente del mismo tamaño: «inclúyelo en el intercambio»',
@@ -134,7 +138,8 @@ void main() {
       t76Movement(MovementDraft.loadFull('op', 'FULL0005678', '0030682'), 1),
     ]);
     _expectMessage(loaded, [const PositionChange(one, '0030282', '0030682')],
-        '0030682 choca con OR 2 · FULL0005678 en 0030682.');
+        // T-112: sin segunda frase de regla; queda la acción.
+        '0030682 choca con OR 2 · FULL0005678 en 0030682. Elige otra celda.');
   });
 
   test('T-106 los textos cambian, las reglas no: lo válido sigue válido', () {

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive_ce/hive.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -156,9 +157,12 @@ class FirebaseSessionRepository implements SessionRepository {
       return Right(operator);
     } on FirebaseAuthException catch (error) {
       return Left(ServerFailure(code: error.code, message: signInMessage(error.code)));
-    } catch (_) {
+    } catch (error, stack) {
+      debugPrint('Error inesperado al iniciar sesión: $error\n$stack');
       return const Left(ServerFailure(
-          code: 'unknown', message: 'No se pudo iniciar sesión. Inténtalo de nuevo.'));
+          code: 'unknown',
+          message: 'No se pudo iniciar sesión por un error inesperado del servicio '
+              'de cuentas; el detalle quedó en el registro. Inténtalo de nuevo.'));
     }
   }
 
@@ -167,13 +171,33 @@ class FirebaseSessionRepository implements SessionRepository {
         'wrong-password' ||
         'user-not-found' ||
         'invalid-login-credentials' =>
-          'Correo o contraseña incorrectos.',
-        'invalid-email' => 'El correo no es válido.',
+          'Correo o contraseña incorrectos. Revísalos e inténtalo de nuevo, o usa '
+              '«Olvidé mi contraseña».',
+        'invalid-email' => _invalidEmail,
         'user-disabled' => 'Esta cuenta está deshabilitada. Habla con el responsable.',
         'too-many-requests' => 'Demasiados intentos. Espera un momento.',
-        'network-request-failed' => 'Sin conexión: iniciar sesión requiere red.',
-        _ => 'No se pudo iniciar sesión ($code).',
+        'network-request-failed' =>
+          'Sin conexión: iniciar sesión requiere red. Conéctate e inténtalo de nuevo.',
+        _ => _unknownSignIn(code),
       };
+
+  /// T-112: los códigos de Firebase van al registro, no a la pantalla.
+  static const _invalidEmail =
+      'El correo no es válido: escríbelo completo, como nombre@dominio.';
+
+  static String _unknownSignIn(String code) {
+    debugPrint('Inicio de sesión rechazado por Firebase: $code');
+    return 'No se pudo iniciar sesión: el servicio de cuentas respondió con un '
+        'error que BayStream no reconoce; el código quedó en el registro. '
+        'Inténtalo de nuevo y, si se repite, avisa al responsable.';
+  }
+
+  static String _resetFailed(String code) {
+    debugPrint('Correo de recuperación rechazado por Firebase: $code');
+    return 'No se pudo enviar el correo de recuperación: el servicio de cuentas '
+        'respondió con un error; el código quedó en el registro. Revisa la '
+        'conexión y el correo, e inténtalo de nuevo.';
+  }
 
   @override
   Future<Either<Failure, void>> signOut() async {
@@ -181,9 +205,12 @@ class FirebaseSessionRepository implements SessionRepository {
       await _auth.signOut();
       _set(null);
       return const Right(null);
-    } catch (_) {
-      return const Left(
-          ServerFailure(code: 'sign_out', message: 'No se pudo cerrar la sesión.'));
+    } catch (error, stack) {
+      debugPrint('Error al cerrar la sesión: $error\n$stack');
+      return const Left(ServerFailure(
+          code: 'sign_out',
+          message: 'No se pudo cerrar la sesión por un error del servicio de '
+              'cuentas; el detalle quedó en el registro. Inténtalo de nuevo.'));
     }
   }
 
@@ -196,8 +223,8 @@ class FirebaseSessionRepository implements SessionRepository {
       return Left(ServerFailure(
           code: error.code,
           message: error.code == 'invalid-email'
-              ? 'El correo no es válido.'
-              : 'No se pudo enviar el correo (${error.code}).'));
+              ? _invalidEmail
+              : _resetFailed(error.code)));
     }
   }
 

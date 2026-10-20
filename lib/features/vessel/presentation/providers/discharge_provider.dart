@@ -83,7 +83,10 @@ Future<({MovementRecord? record, String? error})> appendMovement(
         (failure) => (record: null, error: failure.message),
         (record) => (record: record, error: null));
   } catch (error, stack) {
-    return (record: null, error: vesselErrorMessage(error, stack));
+    return (
+      record: null,
+      error: vesselErrorMessage(error, stack, 'registrar el movimiento')
+    );
   }
 }
 

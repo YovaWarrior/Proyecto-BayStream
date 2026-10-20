@@ -16,13 +16,14 @@ class DepartureBaplieWriter {
   }) {
     final source = operation.source(OperationSourceKind.loadingBaplie);
     if (source == null || source.content.trim().isEmpty) {
-      throw StateError('La operación no tiene una fuente loading_baplie. '
-          'Importa el plan de carga antes de generar la salida.');
+      throw StateError('La operación no tiene el plan de carga (BAPLIE): '
+          'impórtalo antes de generar la salida.');
     }
     final header = _header(source.content, now ?? DateTime.now());
     final plan = state.effectivePlan;
     if (plan == null) {
-      throw StateError('No está disponible el plan efectivo de la operación.');
+      throw StateError('No está disponible el plan efectivo de la operación: '
+          'espera a que termine de cargar e inténtalo de nuevo.');
     }
     final arrivalGroups = _groups(
         operation.source(OperationSourceKind.arrivalBaplie)?.content ?? '');
@@ -52,7 +53,8 @@ class DepartureBaplieWriter {
         final backup = arrivalGroups[container];
         if (current == null && backup == null) {
           throw StateError('Falta la fuente del ocupante $container; '
-              'no se puede conservar su información.');
+              'no se puede conservar su información. Vuelve a importar el plano '
+              'de llegada y el plan de carga.');
         }
         group = _aboard(current, backup);
         final loc = group.first.split('+');
@@ -64,7 +66,8 @@ class DepartureBaplieWriter {
         final row = rows[container];
         if (row == null) {
           throw StateError('El contenedor cargado $container no está en el '
-              'listado; faltan sus datos exactos.');
+              'listado; faltan sus datos exactos. Importa el listado de la agencia '
+              'que lo incluye.');
         }
         group = _loaded(row, position, plan.portOfCall);
       }
@@ -180,7 +183,8 @@ class DepartureBaplieWriter {
         .replaceAll(RegExp(r'[\r\n]'), ' ');
     String weight(double value) {
       if (!value.isFinite || value < 0) {
-        throw StateError('El listado contiene un peso inválido.');
+        throw StateError('El listado contiene un peso inválido: corrige los pesos '
+            'en el Excel y vuelve a importarlo.');
       }
       return value == value.truncateToDouble()
           ? value.toInt().toString()
@@ -190,10 +194,12 @@ class DepartureBaplieWriter {
     if (row.status != ContainerStatus.full &&
         row.status != ContainerStatus.empty) {
       throw StateError(
-          'El listado no declara lleno/vacío para ${row.containerId}.');
+          'El listado no declara lleno/vacío para ${row.containerId}: corrige '
+          'esa fila en el Excel y vuelve a importarlo.');
     }
     if (row.isFull && row.vgmKg == null) {
-      throw StateError('El listado no declara el VGM de ${row.containerId}.');
+      throw StateError('El listado no declara el VGM de ${row.containerId}: '
+          'pide el VGM a la agencia y vuelve a importar el listado.');
     }
     return [
       'LOC+147+$position::5',
@@ -226,15 +232,18 @@ class DepartureBaplieWriter {
         unb.length != 1 ||
         segments.where((s) => s.startsWith('UNH+')).length != 1) {
       throw StateError(
-          'La fuente debe contener un único mensaje BAPLIE con UNB y UNH.');
+          'El plan de carga debe contener un único mensaje BAPLIE con sus '
+          'segmentos UNB y UNH: no se generó la salida. Vuelve a importar el '
+          'plan de carga.');
     }
     final messageId = unh.single.split('+').elementAtOrNull(2)?.split(':');
     if (messageId == null ||
         messageId.length != 5 ||
         messageId.take(4).join(':') != 'BAPLIE:D:95B:UN' ||
         !{'SMDG20', 'SMDG21', 'SMDG22'}.contains(messageId[4])) {
-      throw StateError('Versión BAPLIE no reconocida para salida 2.x: '
-          '${messageId?.join(':') ?? 'sin cabecera'}. No se generó el archivo.');
+      throw StateError('Versión BAPLIE no reconocida para salida 2.x en la '
+          'cabecera UNH: ${messageId?.join(':') ?? 'sin cabecera'}. No se generó '
+          'el archivo. Importa el plan de carga en SMDG20, SMDG21 o SMDG22.');
     }
     final utc = clock.toUtc();
     String two(int value) => value.toString().padLeft(2, '0');
@@ -276,7 +285,9 @@ class DepartureBaplieWriter {
     if (text.trimLeft().startsWith('UNA') &&
         !text.trimLeft().startsWith("UNA:+.? '")) {
       throw StateError(
-          'Separadores EDIFACT no reconocidos para generar la salida.');
+          'Separadores EDIFACT no reconocidos en el segmento UNA del plan de '
+          'carga: no se generó la salida. Pide una exportación con los '
+          'separadores estándar.');
     }
     final result = <String>[];
     var start = 0;

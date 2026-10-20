@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
 import '../../domain/services/change_requests.dart';
+import '../formatters/vessel_error_message.dart';
 import '../../domain/services/loading_operation.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
@@ -186,12 +187,12 @@ class PlanDragCell extends ConsumerWidget {
         !operation.published ||
         operation.id != drag.operationId ||
         current.operationId != drag.operationId) {
-      return const ChangePreview.invalid(
-          'La operación debe estar publicada y abierta.');
+      return const ChangePreview.invalid(ChangeRequests.operationNotOpen);
     }
     if (drag.from.substring(0, 3) != position.substring(0, 3)) {
       return const ChangePreview.invalid(
-          'Para otra bahía utiliza el formulario.');
+          'El arrastre solo mueve dentro de la bahía: para otra bahía utiliza '
+          'el formulario.');
     }
     return const ChangeRequests().preview(
         current, ref.read(operatorProvider).value, _changes(current, drag));
@@ -214,7 +215,7 @@ class PlanDragCell extends ConsumerWidget {
     if (enableDrag && pending && actor?.authorized != true) {
       cell = GestureDetector(
           onLongPress: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Inicia sesión para mover'))),
+              const SnackBar(content: Text(ChangeRequests.signInToMove))),
           child: cell);
     } else if (enableDrag && pending && open && actor?.authorized == true) {
       cell = LongPressDraggable<_PlanDrag>(
@@ -384,7 +385,7 @@ class _PlanDragConfirmationState extends ConsumerState<PlanDragConfirmation> {
           data == null ||
           operation.id != widget.operationId ||
           data.operationId != widget.operationId) {
-        throw StateError('La operación no está disponible.');
+        throw StateError(operationUnavailable);
       }
       const service = ChangeRequests();
       final draft = actor?.role == OperatorRole.office
@@ -394,10 +395,11 @@ class _PlanDragConfirmationState extends ConsumerState<PlanDragConfirmation> {
       (await repository.append(draft, actor!.author))
           .fold((failure) => throw StateError(failure.message), (_) {});
       if (mounted) Navigator.pop(context);
-    } catch (failure) {
+    } catch (failure, stack) {
       if (mounted) {
-        setState(
-            () => error = failure is StateError ? failure.message : '$failure');
+        setState(() => error = failure is StateError
+            ? failure.message
+            : vesselErrorMessage(failure, stack, 'guardar el cambio'));
       }
     } finally {
       if (mounted) setState(() => busy = false);

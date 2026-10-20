@@ -159,7 +159,8 @@ class LoadValidator {
     if (coordinate == null) {
       return LoadCheck(position: position, issues: [
         LoadIssue(LoadIssueKind.unknownCell,
-            'La posición «$position» no tiene la forma BBB-RR-TT.')
+            'La posición «$position» no tiene la forma BBB-RR-TT: escríbela así, '
+            'por ejemplo 012-04-82.')
       ]);
     }
     final shown = _shown(position);
@@ -187,7 +188,8 @@ class LoadValidator {
       issues.add(LoadIssue(
           LoadIssueKind.size,
           'Un contenedor de $length pies ($type) no cabe en $shown: la bahía '
-          '${coordinate.bayPadded} es ${coordinate.bay.isOdd ? 'impar, de 20' : 'par, de 40'} pies.'));
+          '${coordinate.bayPadded} es ${coordinate.bay.isOdd ? 'impar, de 20' : 'par, de 40'} pies. '
+          'Elige una celda de su tamaño.'));
     }
     if (issues.isNotEmpty) return LoadCheck(position: position, issues: issues);
 
@@ -198,7 +200,8 @@ class LoadValidator {
           LoadIssueKind.outOfPlan,
           'OR ${row.order} está planificado en ${_shown(numbered.plannedPosition)}; '
           'en $shown quedará «fuera de plan»'
-          '${planned != null && planned.key != numbered.key ? ', y $shown es la celda de ${_name(planned)}' : ''}.'));
+          '${planned != null && planned.key != numbered.key ? ', y $shown es la celda de ${_name(planned)}' : ''}. '
+          'Para cargarlo ahí, escribe el motivo; si no, usa la celda planificada.'));
     }
     final slot = reservation?.reservedSlot;
     if (numbered == null && slot != null) {
@@ -211,7 +214,8 @@ class LoadValidator {
         issues.add(LoadIssue(
             LoadIssueKind.otherGroup,
             'La reserva $shown es de otro grupo (${differences.join(', ')}); '
-            'el OR ${row.order} es ${row.type} · ${row.pod} · ${row.line}.'));
+            'el OR ${row.order} es ${row.type} · ${row.pod} · ${row.line}. '
+            'Para cargarlo ahí, escribe el motivo; si no, elige una reserva de su grupo.'));
       }
     }
     PlanItem? dischargeFirst;
@@ -226,7 +230,8 @@ class LoadValidator {
         issues.add(LoadIssue(
             LoadIssueKind.cellTaken,
             '$shown la ocupa ${_occupantName(occupant)}, que no baja en '
-            '${plan.portOfCall}: la celda está ocupada.'));
+            '${plan.portOfCall}: la celda está ocupada. Para cargarlo ahí, escribe '
+            'el motivo; si no, elige otra celda.'));
       }
     }
 
@@ -234,7 +239,8 @@ class LoadValidator {
     final stack = _stack(coordinate, row, numbered, targetKey,
         leaving: dischargeFirst?.key);
     if (stack.status == StackWeightStatus.exceeded) {
-      issues.add(LoadIssue(LoadIssueKind.stackWeight, stack.message));
+      issues.add(LoadIssue(LoadIssueKind.stackWeight,
+          '${stack.message} Para cargarlo ahí, escribe el motivo; si no, elige otra pila.'));
     }
     return LoadCheck(
         position: position,
@@ -259,12 +265,14 @@ class LoadValidator {
         !(bays.contains(c.bay) ||
             bays.contains(c.bay - 1) ||
             bays.contains(c.bay + 1))) {
-      return 'La bahía ${c.bayPadded} no existe en este buque: $shown no se puede registrar.';
+      return 'La bahía ${c.bayPadded} no existe en este buque: $shown no se puede '
+          'registrar. Elige una celda de una bahía del buque.';
     }
     final geometry = loading.geometry;
     if (geometry != null && !geometry.covers(c)) {
       return '$shown no existe en la geometría del buque (fila ${c.rowPadded}, '
-          'nivel ${c.tierPadded}).';
+          'nivel ${c.tierPadded}). Revisa la celda o amplía la geometría en '
+          'Parámetros del buque.';
     }
     return null;
   }

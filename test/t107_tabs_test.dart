@@ -43,7 +43,7 @@ void main() {
   for (final kind in [PointerDeviceKind.touch, PointerDeviceKind.mouse]) {
     for (final from in [
       ['Lista'],
-      ['Bay Plan', 'Lista'],
+      ['Plano', 'Lista'],
     ]) {
       testWidgets(
           'T-107 a 360×780 dp, ${kind.name}: ${from.join(' → ')} → '

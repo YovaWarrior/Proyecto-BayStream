@@ -193,57 +193,64 @@ void main() {
   });
 
   group('T-107 los avisos del deriver, sin claves internas', () {
+    // T-112: cada conflicto termina con la acción que lo deshace en su
+    // pantalla.
+    const celda = ' Si el registro fue un error, deshazlo desde el detalle de la celda.';
+    const contenedor = ' Si el registro fue un error, deshazlo desde el detalle del contenedor.';
+    const cancelacion =
+        ' Si la cancelación fue un error, la oficina la deshace desde el detalle de la celda.';
+    const bandeja = ' Revísalo en la bandeja de cambios de la oficina.';
     final cases = <(String, List<MovementDraft>, String)>[
       (
         'descarga fuera del plano de llegada',
         [MovementDraft.discharge('op', 'NOPE0000001', '0030282')],
-        'NOPE0000001 no está en el plano de llegada de esta escala.'
+        'NOPE0000001 no está en el plano de llegada de esta escala.$contenedor'
       ),
       (
         'descarga de uno de paso, con «re‑estiba» en U+2011',
         [MovementDraft.discharge('op', 'TRANSIT1', '0010182')],
         'TRANSIT1 no descarga en GTSTC; si sale para volver a subir, es una '
-            're‑estiba.'
+            're‑estiba.$contenedor'
       ),
       (
         'la celda la ocupa lo que llegó',
         [_load('FULL0001234', '0030282', 1)],
-        '0030282 ya la ocupa INCOMING1.'
+        '0030282 ya la ocupa INCOMING1.$celda'
       ),
       (
         'la celda la ocupa un lleno con orden',
         [_load('FULL0005678', '0030682', 2), _load('FULL0001234', '0030682', 1)],
-        '0030682 ya la ocupa OR 2 · FULL0005678.'
+        '0030682 ya la ocupa OR 2 · FULL0005678.$celda'
       ),
       (
         'la celda la ocupa un vacío asignado: se nombra el contenedor',
         [_assign('0030882', 'EMPTY0000012', 12), _load('FULL0005678', '0030882', 2)],
-        '0030882 ya la ocupa OR 12 · EMPTY0000012.'
+        '0030882 ya la ocupa OR 12 · EMPTY0000012.$celda'
       ),
       (
         'cargado fuera de su celda',
         [_load('FULL0005678', '0031082', 2)],
-        'OR 2 · FULL0005678: planificado en 0030682, registrado en 0031082.'
+        'OR 2 · FULL0005678: planificado en 0030682, registrado en 0031082.$celda'
       ),
       (
         'cargado dos veces',
         [_load('FULL0005678', '0030682', 2), _load('FULL0005678', '0031082', 2)],
-        'OR 2 · FULL0005678 ya se cargó en 0030682.'
+        'OR 2 · FULL0005678 ya se cargó en 0030682.$celda'
       ),
       (
         'se carga lo que no sube aquí',
         [_load('INCOMING1', '0031282')],
-        'INCOMING1 no se carga en GTSTC.'
+        'INCOMING1 no se carga en GTSTC.$celda'
       ),
       (
         'se carga lo que no está en el plan',
         [_load('NOPE0000001', '0031282', 9)],
-        'OR 9 · NOPE0000001 no está en el plan de carga de GTSTC.'
+        'OR 9 · NOPE0000001 no está en el plan de carga de GTSTC.$celda'
       ),
       (
         'se carga lo cancelado',
         [_cancel('C:FULL0005678'), _load('FULL0005678', '0030682', 2)],
-        'FULL0005678 está cancelado y se cargó.'
+        'FULL0005678 está cancelado y se cargó.$celda'
       ),
       (
         'se asigna un vacío a un contenedor',
@@ -251,27 +258,27 @@ void main() {
           MovementDraft.raw('op', MovementType.assignEmpty, 'C:FULL0005678',
               {'container': 'EMPTY0000012', 'tareKg': 2185})
         ],
-        'FULL0005678 no es una celda reservada del plan.'
+        'FULL0005678 no es una celda reservada del plan.$celda'
       ),
       (
         'el mismo vacío en dos reservas',
         [_assign('0050282', 'EMPTY0000012'), _assign('0030882', 'EMPTY0000012')],
-        'EMPTY0000012 ya está en la reserva 005 02 82.'
+        'EMPTY0000012 ya está en la reserva 005 02 82.$celda'
       ),
       (
         'la reserva ya tiene vacío',
         [_assign('0050282', 'EMPTY0000012'), _assign('0050282', 'EMPTY0000013')],
-        'La reserva 005 02 82 ya tiene asignado EMPTY0000012.'
+        'La reserva 005 02 82 ya tiene asignado EMPTY0000012.$celda'
       ),
       (
         'se asigna una reserva cancelada',
         [_cancel('R:0050282'), _assign('0050282', 'EMPTY0000012')],
-        'La reserva 005 02 82 está cancelada y se asignó.'
+        'La reserva 005 02 82 está cancelada y se asignó.$celda'
       ),
       (
         'se cancela lo que no está en el plan',
         [_cancel('C:NOPE0000001')],
-        'NOPE0000001 no está en el plan de esta escala.'
+        'NOPE0000001 no está en el plan de esta escala.$cancelacion'
       ),
       (
         'se cancela lo que ya se movió',
@@ -282,19 +289,19 @@ void main() {
       (
         'el cambio cita lo que no está en el plan',
         [_change('C:NOPE0000001', '0031082', '0031282')],
-        'NOPE0000001 no está en el plan de carga.'
+        'NOPE0000001 no está en el plan de carga.$bandeja'
       ),
       (
         'el cambio parte de un origen obsoleto',
         [_change('C:FULL0005678', '0031082', '0031282')],
         'FULL0005678: origen obsoleto; plan efectivo 0030682, cambio desde '
-            '0031082.'
+            '0031082.$bandeja'
       ),
       (
         'el cambio de una reserva parte de un origen obsoleto',
         [_change('R:0050282', '0050482', '0050682')],
         'La reserva 005 02 82: origen obsoleto; plan efectivo 0050282, cambio '
-            'desde 0050482.'
+            'desde 0050482.$bandeja'
       ),
     ];
     for (final (name, drafts, expected) in cases) {

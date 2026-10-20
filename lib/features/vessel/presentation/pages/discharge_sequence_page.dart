@@ -44,8 +44,11 @@ class _DischargeSequencePageState extends State<DischargeSequencePage> {
               child: Text(
                   key: const ValueKey('discharge-unavailable'),
                   geometry == null
-                      ? 'Confirma la geometría del buque para sugerir el orden de descarga.'
-                      : 'El archivo no trae puertos de descarga.',
+                      ? 'La geometría del buque está sin confirmar: confírmala para '
+                          'sugerir el orden de descarga.'
+                      : 'El archivo no trae puertos de descarga (LOC+11) en ningún '
+                          'contenedor: no hay orden que sugerir. Pide una exportación '
+                          'del BAPLIE que los incluya.',
                   textAlign: TextAlign.center),
             ))
           : _body(

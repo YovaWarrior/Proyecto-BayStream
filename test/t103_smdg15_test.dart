@@ -29,6 +29,10 @@ class _ExistingVoyageNotifier extends VoyageNotifier {
 
 /// T-103 · La 1.5 (SMDG15) se lee con las reglas de 2.x y lo avisa; el resto
 /// de la 1.x, la 3.x y lo que no tiene UNH se rechazan como en T-86.
+/// T-112: con identificador, el mensaje nombra la cabecera UNH.
+String _declared(String version) =>
+    version.startsWith('sin UNH') ? version : 'la cabecera UNH declara $version';
+
 void main() {
   final parser = BaplieParserService();
   final smdg21 = File('test/fixtures/t86_smdg21.edi').readAsStringSync();
@@ -92,7 +96,7 @@ void main() {
           throwsA(isA<BaplieParsingException>()
               .having((e) => e.code, 'código', 'unsupported_baplie_version')
               .having((e) => e.message, 'mensaje',
-                  'Versión BAPLIE no admitida: $version. $t86')));
+                  'Versión BAPLIE no admitida: ${_declared(version)}. $t86')));
       var storageOpened = false;
       final scope = ProviderContainer(overrides: [
         vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),
@@ -113,7 +117,8 @@ void main() {
           result.errorMessage,
           version.startsWith('sin UNH')
               ? 'Archivo «$name»: $notBaplieFileMessage'
-              : 'Archivo «$name»: Versión BAPLIE no admitida: $version. $t86');
+              : 'Archivo «$name»: Versión BAPLIE no admitida: '
+                  '${_declared(version)}. $t86');
       expect(result.needsGeometry, isFalse);
       expect(result.needsIdentity, isFalse);
       expect(scope.read(voyageNotifierProvider), previous);
@@ -180,8 +185,8 @@ void main() {
                   child: VoyageSummaryCard(voyage: parser.parse(source))))));
       await pump(smdg15);
       expect(find.text(smdg15Notice), findsOneWidget);
-      expect(find.text('Versión 1.5, leída con las reglas de 2.x; '
-          'revisa pesos y peligrosas'), findsOneWidget);
+      expect(find.text('Versión 1.5 (la cabecera UNH declara SMDG15), leída con '
+          'las reglas de 2.x; revisa pesos y peligrosas'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await pump(smdg21);
       expect(find.byKey(const ValueKey('voyage-smdg15-notice')), findsNothing);

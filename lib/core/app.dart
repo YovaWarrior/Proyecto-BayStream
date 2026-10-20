@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/vessel/domain/entities/app_theme_preference.dart';
 import '../features/vessel/presentation/providers/theme_preference_provider.dart';
@@ -15,6 +16,11 @@ class BayStreamApp extends ConsumerWidget {
     return MaterialApp(
       title: 'BayStream',
       debugShowCheckedModeBanner: false,
+      // T-112: los textos que pone Flutter (botón de volver, diálogos, selector
+      // de fecha, copiar y pegar) también en español.
+      locale: const Locale('es'),
+      supportedLocales: const [Locale('es')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF0D47A1),

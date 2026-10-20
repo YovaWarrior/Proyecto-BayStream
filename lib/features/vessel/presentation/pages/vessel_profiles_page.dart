@@ -17,7 +17,7 @@ class VesselProfilesPage extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Text(vesselErrorMessage(error)),
+                Text(vesselErrorMessage(error, null, 'leer los perfiles guardados')),
                 TextButton(
                     onPressed: () =>
                         ref.invalidate(savedVesselProfilesProvider),

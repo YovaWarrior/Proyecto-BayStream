@@ -265,7 +265,7 @@ class _ContainerCard extends StatelessWidget {
                     if (container.isDangerous)
                       _buildWarningChip(context, Icons.warning, 'IMDG', colorScheme.error),
                     if (container.isReefer)
-                      _buildWarningChip(context, Icons.ac_unit, 'Reefer', colorScheme.primary),
+                      _buildWarningChip(context, Icons.ac_unit, 'Refrigerado', colorScheme.primary),
                     if (container.isOverDimension)
                       _buildWarningChip(context, Icons.open_in_full, 'OOG', colorScheme.tertiary),
                   ],

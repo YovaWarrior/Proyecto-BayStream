@@ -109,7 +109,9 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
       );
     } catch (error, stack) {
       if (ref.mounted) {
-        state = state.copyWith(error: vesselErrorMessage(error, stack));
+        state = state.copyWith(
+            error: vesselErrorMessage(
+                error, stack, 'leer el listado guardado en la operación'));
       }
     }
   }
@@ -126,7 +128,9 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
     final file = picked.files.first;
     final bytes = file.bytes;
     if (bytes == null || bytes.isEmpty) {
-      state = state.copyWith(error: 'El archivo está vacío o no se pudo leer.');
+      state = state.copyWith(
+          error: 'El archivo está vacío o no se pudo leer: vuelve a elegir el '
+              'Excel (.xlsx) de la agencia.');
       return;
     }
     await loadBytes(bytes, fileName: file.name);
@@ -136,7 +140,8 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
     final plan = _plan;
     if (plan == null || plan.portOfCall == null) {
       state = state.copyWith(
-          error: 'Abre primero el plan de carga y confirma la escala.');
+          error: 'No hay un plan de carga confirmado: abre primero el plan de '
+              'carga y confirma la escala.');
       return;
     }
     state = state.copyWith(busy: true);
@@ -160,7 +165,8 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
     } catch (error, stack) {
       if (ref.mounted) {
         state = state.copyWith(
-            busy: false, error: vesselErrorMessage(error, stack));
+            busy: false,
+            error: vesselErrorMessage(error, stack, 'leer el listado'));
       }
     }
   }
@@ -197,12 +203,14 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
     final plan = _plan;
     final normalized = state.normalized;
     if (plan == null || plan.portOfCall == null || normalized == null) {
-      return 'No hay un listado leído para importar.';
+      return 'No hay un listado leído para importar: elige primero el Excel de '
+          'la agencia.';
     }
     if (state.hasPending) {
-      return 'Falta elegir equivalencias: ${state.proposals.where((p) => p.needsUser).map((p) => p.listCode).join(', ')}.';
+      return 'Falta elegir equivalencias: ${state.proposals.where((p) => p.needsUser).map((p) => p.listCode).join(', ')}. '
+          'Elige una para cada código antes de importar.';
     }
-    if (state.busy) return 'Hay una operación en curso.';
+    if (state.busy) return 'Hay una operación en curso: espera a que termine.';
     state = state.copyWith(busy: true);
     try {
       final local = await ref.read(localVesselRepositoryProvider.future);
@@ -231,7 +239,7 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
       );
       return null;
     } catch (error, stack) {
-      final message = vesselErrorMessage(error, stack);
+      final message = vesselErrorMessage(error, stack, 'importar el listado');
       if (ref.mounted) state = state.copyWith(busy: false, error: message);
       return message;
     }

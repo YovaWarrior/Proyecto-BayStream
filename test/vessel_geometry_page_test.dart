@@ -275,7 +275,9 @@ void main() {
     await openPage(tester, (_) {});
 
     expect(confirmEnabled(tester), isFalse);
-    expect(find.text('Falta resolver el límite de apilamiento.'),
+    expect(
+        find.text('Falta resolver el límite de apilamiento: escríbelo o marca '
+            'que no lo tienes.'),
         findsOneWidget);
 
     await tester.enterText(
@@ -317,7 +319,7 @@ void main() {
     expect(
       find.text(
         'El archivo trae carga en la fila 12; con 4 filas a babor quedaría '
-        'fuera del plano.',
+        'fuera del plano. Escribe al menos 6.',
       ),
       findsOneWidget,
     );

@@ -31,11 +31,16 @@ String syncStatusText(SyncStatus status) {
       SyncState.sessionExpired =>
         'Sesión vencida: inicia sesión para enviar ${status.pending}',
       SyncState.notAuthorized =>
-        'Tu cuenta no está autorizada · ${_count(status.pending, 'espera', 'esperan')}',
-      SyncState.unconfirmed => 'Sin confirmar desde las '
+        'Tu cuenta no está autorizada · ${_count(status.pending, 'espera', 'esperan')}'
+            ' · pide al responsable que la autorice',
+      SyncState.unconfirmed => 'Sesión sin confirmar desde las '
           '${_clock(status.since!)} · inicia sesión de nuevo',
     },
-    if (status.rejected > 0) _count(status.rejected, 'rechazado', 'rechazados'),
+    if (status.rejected > 0)
+      status.rejected == 1
+          ? '1 rechazado por la nube, fuera del plan: regístralo de nuevo si hace falta'
+          : '${status.rejected} rechazados por la nube, fuera del plan: regístralos '
+              'de nuevo si hacen falta',
     if (status.otherAuthor > 0)
       '${_count(status.otherAuthor, 'de otra cuenta espera', 'de otra cuenta esperan')} a su autor',
     if (status.localOnly > 0 && status.state != SyncState.localOnly)

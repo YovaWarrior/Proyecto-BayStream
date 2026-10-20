@@ -274,7 +274,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'BAY ${bayNumber.toString().padLeft(2, '0')} ($occupancyLabel)',
+                          'BAHÍA ${bayNumber.toString().padLeft(2, '0')} ($occupancyLabel)',
                           style: TextStyle(
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             fontSize: 12,
@@ -338,7 +338,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             const SizedBox(width: 16),
             _buildLegendItem(scheme.errorContainer, 'IMO', LegendFilterType.imo, activeFilter),
             const SizedBox(width: 16),
-            _buildLegendItem(scheme.primaryContainer, 'Reefer', LegendFilterType.reefer, activeFilter),
+            _buildLegendItem(scheme.primaryContainer, 'Refrigerado', LegendFilterType.reefer, activeFilter),
             const SizedBox(width: 16),
             _buildLegendItem(scheme.tertiaryContainer, 'OOG', LegendFilterType.oog, activeFilter),
             if (widget.voyage.portOfCall != null) ...[
@@ -724,7 +724,7 @@ class _BayGridWidget extends StatelessWidget {
           children: [
           // Título de la bahía
           Text(
-            'BAY ${bay.bayNumber.toString().padLeft(2, '0')}'
+            'BAHÍA ${bay.bayNumber.toString().padLeft(2, '0')}'
             '${hatchCovers == null ? ' · tapas sin declarar' : ''}',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
@@ -782,7 +782,7 @@ class _BayGridWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                '▲ CUBIERTA (DECK)',
+                '▲ CUBIERTA',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -826,7 +826,7 @@ class _BayGridWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                '▼ BODEGA (HOLD)',
+                '▼ BODEGA',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -864,7 +864,8 @@ class _BayGridWidget extends StatelessWidget {
       child: Text(
         '${outside.length} celdas reservadas fuera de la geometría declarada: '
         '${outside.take(6).map((slot) => slot.stowagePosition.toIsoCode()).join(', ')}'
-        '${outside.length > 6 ? ' y ${outside.length - 6} más' : ''}.',
+        '${outside.length > 6 ? ' y ${outside.length - 6} más' : ''}. Amplía la '
+        'geometría en Parámetros del buque.',
         style: TextStyle(color: colorScheme.onErrorContainer),
       ),
     );
@@ -888,7 +889,7 @@ class _BayGridWidget extends StatelessWidget {
             Icon(Icons.straighten, size: 48, color: colorScheme.onSurfaceVariant),
             const SizedBox(height: 16),
             Text(
-              'Bay ${bay.bayNumber.toString().padLeft(2, '0')}',
+              'Bahía ${bay.bayNumber.toString().padLeft(2, '0')}',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
@@ -960,7 +961,8 @@ class _BayGridWidget extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'No se dibujan en la rejilla porque su posición no existe en '
-                  'el buque declarado: ${rest > 0 ? '$shown y $rest más' : shown}.',
+                  'el buque declarado: ${rest > 0 ? '$shown y $rest más' : shown}. '
+                  'Amplía la geometría en Parámetros del buque.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.onErrorContainer,
                       ),

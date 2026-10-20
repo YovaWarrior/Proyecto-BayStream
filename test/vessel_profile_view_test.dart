@@ -115,13 +115,13 @@ void main() {
     expect(find.byType(BayPlanView), findsOneWidget);
 
     final selectedBayChip = find.ancestor(
-      of: find.text('BAY 03 (0%)'),
+      of: find.text('BAHÍA 03 (0%)'),
       matching: find.byType(FilterChip),
     );
     expect(selectedBayChip, findsOneWidget);
     expect(tester.widget<FilterChip>(selectedBayChip).selected, isTrue);
 
-    await tester.tap(find.text('BAY 05 (0%)'));
+    await tester.tap(find.text('BAHÍA 05 (0%)'));
     await tester.pumpAndSettle();
     expect(container.read(selectedBayProvider), 5);
 
@@ -133,7 +133,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final reopenedBayChip = find.ancestor(
-      of: find.text('BAY 03 (0%)'),
+      of: find.text('BAHÍA 03 (0%)'),
       matching: find.byType(FilterChip),
     );
     expect(container.read(selectedBayProvider), 3);

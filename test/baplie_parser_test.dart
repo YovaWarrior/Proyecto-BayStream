@@ -68,7 +68,7 @@ void main() {
 
     test('displayFormat debe mostrar formato legible', () {
       final result = parseIsoCoordinates('0120006');
-      expect(result.displayFormat, 'Bay 012, Row 00, Tier 06');
+      expect(result.displayFormat, 'Bahía 012, Fila 00, Nivel 06');
     });
   });
 

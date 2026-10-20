@@ -79,7 +79,7 @@ Future<ProviderContainer> pumpT91Plan(WidgetTester tester, VesselVoyage voyage,
     ),
   ));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Bay Plan'));
+  await tester.tap(find.text('Plano'));
   await tester.pumpAndSettle();
   await scope.read(planToolbarCollapsedProvider.future);
   await tester.pumpAndSettle();

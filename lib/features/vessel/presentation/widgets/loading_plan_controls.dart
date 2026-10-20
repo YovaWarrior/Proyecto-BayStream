@@ -16,6 +16,7 @@ import '../providers/sync_providers.dart';
 import 'discharge_controls.dart';
 import 'loading_controls.dart';
 import 'sync_status_chip.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 /// Modos de vista del plano. «Descarga» (T-75) solo existe en un plano de
 /// llegada; fuera de ese modo, tocar una celda abre el detalle, como siempre.
@@ -158,7 +159,10 @@ class LoadingPlanControls extends ConsumerWidget {
       return [const Text('Confirma la escala para ver el plan de carga.')];
     }
     if (progress!.hasError) {
-      return [Text(vesselErrorMessage(progress.error!, progress.stackTrace))];
+      return [
+        Text(vesselErrorMessage(progress.error!, progress.stackTrace,
+            'calcular los pendientes de carga'))
+      ];
     }
     if (!progress.hasValue) {
       return [const Text('Leyendo el estado de la operación…')];
@@ -210,7 +214,9 @@ class LoadingPlanControls extends ConsumerWidget {
             return progress.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) =>
-                  Center(child: Text(vesselErrorMessage(error, stack))),
+                  Center(
+                      child: Text(vesselErrorMessage(
+                          error, stack, 'calcular los pendientes de carga'))),
               data: (data) {
                 final bays = data.bays.values.toList()
                   ..sort((a, b) => a.bay.compareTo(b.bay));
@@ -220,7 +226,7 @@ class LoadingPlanControls extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                            'Pendientes de carga · ${voyage.vessel.name} · ${voyage.voyageNumber} · ${voyage.portOfCall}',
+                            'Pendientes de carga · ${voyage.vessel.name} · ${voyageNumberLabel(voyage.voyageNumber)} · ${voyage.portOfCall}',
                             style: Theme.of(context).textTheme.titleMedium),
                         Text(
                             '${operationCount(bays.length, 'bahía', 'bahías')} · ${operationCount(data.total, 'pendiente', 'pendientes')} · '

@@ -43,7 +43,9 @@ class MovementLogRepositoryImpl implements MovementLogRepository {
     } catch (error, stack) {
       debugPrint('Error de la bitácora local: $error\n$stack');
       return const Left(CacheFailure(
-          message: 'No se pudo acceder a la bitácora local. Inténtalo de nuevo.'));
+          message: 'No se pudo usar la bitácora local de este dispositivo: falló su '
+              'lectura o su escritura y el movimiento no se registró. Inténtalo '
+              'de nuevo y, si se repite, reinicia la aplicación.'));
     }
   }
 

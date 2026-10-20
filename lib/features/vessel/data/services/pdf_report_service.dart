@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../domain/entities/entities.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 /// Genera el reporte operativo completo del viaje en PDF.
 class PdfReportService {
@@ -30,7 +31,7 @@ class PdfReportService {
       await rootBundle.load('assets/fonts/Roboto-Medium.ttf'),
     );
     final document = pw.Document(
-      title: 'BayStream - ${voyage.vessel.name} ${voyage.voyageNumber}',
+      title: 'BayStream - ${voyage.vessel.name} ${voyageNumberLabel(voyage.voyageNumber)}',
       author: 'BayStream',
       creator: 'BayStream',
       subject: 'Reporte del plan de estiba',
@@ -116,7 +117,7 @@ class PdfReportService {
                 ),
                 pw.SizedBox(height: 8),
                 pw.Text(
-                  '${voyage.vessel.name} - Viaje ${voyage.voyageNumber}',
+                  '${voyage.vessel.name} - Viaje ${voyageNumberLabel(voyage.voyageNumber)}',
                   style: const pw.TextStyle(
                     color: PdfColors.blueGrey100,
                     fontSize: 14,
@@ -137,7 +138,7 @@ class PdfReportService {
             },
             children: [
               _infoRow(
-                  'Buque', voyage.vessel.name, 'Viaje', voyage.voyageNumber),
+                  'Buque', voyage.vessel.name, 'Viaje', voyageNumberLabel(voyage.voyageNumber)),
               _infoRow('Puerto origen', origin, 'Puerto destino', destination),
               _infoRow(
                 'Dirección',
@@ -264,7 +265,7 @@ class PdfReportService {
         _rowHeader(rows, cellWidth),
         if (deckTiers.isNotEmpty) ...[
           _deckLabel(
-              'CUBIERTA (DECK) - Tiers ${geometry.deckTierFloor} y superiores'),
+              'CUBIERTA - niveles ${geometry.deckTierFloor} y superiores'),
           ...deckTiers.map(
             (tier) => _tierRow(
               tier,
@@ -287,7 +288,7 @@ class PdfReportService {
         ],
         if (holdTiers.isNotEmpty) ...[
           _deckLabel(
-              'BODEGA (HOLD) - Tiers inferiores a ${geometry.deckTierFloor}'),
+              'BODEGA - niveles inferiores a ${geometry.deckTierFloor}'),
           ...holdTiers.map(
             (tier) => _tierRow(
               tier,
@@ -458,7 +459,7 @@ class PdfReportService {
         _legendItem('Lleno', PdfColors.green100, PdfColors.green),
         _legendItem('Vacío', _emptyFill, _emptyInk),
         _legendItem('IMO', PdfColors.red100, PdfColors.red),
-        _legendItem('Reefer', PdfColors.cyan100, PdfColors.cyan),
+        _legendItem('Refrigerado', PdfColors.cyan100, PdfColors.cyan),
         _legendItem('OOG', _oogFill, _oogInk),
         _legendItem('Vecino de 40 pies', _neighborFill, _neighborInk),
         _legendItem('Sin contenedor', PdfColors.grey200, PdfColors.grey300),
@@ -504,7 +505,7 @@ class PdfReportService {
               ),
             ),
             pw.Text(
-              '${voyage.vessel.name} - ${voyage.voyageNumber}',
+              '${voyage.vessel.name} - ${voyageNumberLabel(voyage.voyageNumber)}',
               style: const pw.TextStyle(
                 fontSize: 8,
                 color: PdfColors.blueGrey700,
@@ -731,7 +732,7 @@ class PdfReportService {
   String _specialLabels(ContainerUnit container) {
     final labels = <String>[
       if (container.isDangerous) 'IMO',
-      if (container.isReefer) 'Reefer',
+      if (container.isReefer) 'Refrigerado',
       if (container.isOverDimension) 'OOG',
     ];
     return labels.isEmpty ? '-' : labels.join(' / ');

@@ -237,7 +237,8 @@ class LoadingOperation {
   /// aquí, que se registra justo antes de la carga.
   MovementDraft dischargeDraft(PlanItem occupant) {
     if (operationId == null) {
-      throw StateError('La escala no tiene operación guardada.');
+      throw StateError('La escala no tiene operación guardada: vuelve a abrir el '
+          'plan de carga y confirma la escala.');
     }
     return MovementDraft.discharge(operationId!,
         occupant.container!.containerId, occupant.plannedPosition);
@@ -253,16 +254,19 @@ class LoadingOperation {
       String? reason,
       bool dischargeOccupant = false}) {
     if (operationId == null) {
-      throw StateError('La escala no tiene operación guardada.');
+      throw StateError('La escala no tiene operación guardada: vuelve a abrir el '
+          'plan de carga y confirma la escala.');
     }
     if (list?.byOrder(row.order) != row) {
-      throw StateError('El OR ya no está en el listado.');
+      throw StateError('El OR ya no está en el listado de la agencia: importa de '
+          'nuevo el listado.');
     }
     final hasReason = reason?.trim().isNotEmpty ?? false;
     if (correcting != null &&
         (movementOf(correcting.target!)?.id != correcting.id || !hasReason)) {
       throw StateError(
-          'La corrección exige un movimiento vigente y un motivo.');
+          'La corrección exige un movimiento vigente y un motivo: elige la carga '
+          'vigente y escribe el motivo.');
     }
     if (!available(row, correcting: correcting)) {
       if (_before(correcting)['C:${row.containerId}']?.state ==
@@ -270,17 +274,20 @@ class LoadingOperation {
         throw StateError(
             'Cancelado por la oficina. Debe deshacer la cancelación antes de cargar.');
       }
-      throw StateError('El contenedor ya está operado.');
+      throw StateError('El contenedor ya está operado: para cambiarlo, abre su '
+          'detalle y usa Corregir o Deshacer carga.');
     }
     final item = numbered(row);
     if (item == null) {
       final reservation = plan.loadingItemAt(position);
       if (reservation?.reservedSlot == null ||
           reservation!.role != PlanRole.load) {
-        throw StateError('Un vacío se asigna a una celda reservada del plan.');
+        throw StateError('Un vacío se asigna a una celda reservada del plan: '
+            'elige una celda reservada.');
       }
       if (_before(correcting)[reservation.key]?.state == ItemState.cancelled) {
-        throw StateError('La reserva está cancelada.');
+        throw StateError('La reserva está cancelada: elige otra o pide a la '
+            'oficina que deshaga la cancelación.');
       }
     }
     final review = check(row, position, correcting: correcting);
@@ -293,7 +300,8 @@ class LoadingOperation {
           'marca primero su descarga.');
     }
     if (review.needsReason && !hasReason) {
-      throw StateError('Esta carga se registra solo con un motivo escrito.');
+      throw StateError('Esta carga se registra solo con un motivo escrito: '
+          'escribe el motivo para registrarla.');
     }
     if (item != null) {
       return MovementDraft.loadFull(operationId!, row.containerId, position,

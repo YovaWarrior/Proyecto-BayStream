@@ -8,6 +8,12 @@ import 'load_check.dart';
 class ChangeRequests {
   const ChangeRequests();
 
+  /// T-112: textos que también usa el arrastre del plano.
+  static const operationNotOpen = 'La operación debe estar publicada y abierta: '
+      'la oficina la publica desde «Nube y cuenta»; si ya se cerró, no admite cambios.';
+  static const signInToMove = 'Mover exige una cuenta autorizada: inicia sesión '
+      'o pide al responsable que autorice la tuya.';
+
   bool pending(LoadingOperation data, String key) =>
       data.plan.loading[key]?.role == PlanRole.load &&
       data.state[key]?.state == ItemState.planned;
@@ -16,12 +22,13 @@ class ChangeRequests {
   ChangePreview preview(
       LoadingOperation data, Operator? actor, List<PositionChange> changes) {
     if (actor == null || !actor.authorized) {
-      return const ChangePreview.invalid('Inicia sesión para mover');
+      return const ChangePreview.invalid(signInToMove);
     }
     if (PositionChange.readAll(changes.map((c) => c.toJson()).toList()) ==
         null) {
       return const ChangePreview.invalid(
-          'Indica de uno a cuatro cambios válidos, sin repetir objetos ni destinos.');
+          'Los cambios de la solicitud no son válidos: indica de uno a cuatro, '
+          'sin repetir objetos ni destinos.');
     }
     final error = review(data, changes);
     if (error != null) return ChangePreview.invalid(error);
@@ -30,7 +37,8 @@ class ChangeRequests {
     for (final change in batch) {
       if (!pending(data, change.target)) {
         return const ChangePreview.invalid(
-            'Solo se mueve un objeto pendiente del plan de carga.');
+            'Solo se mueve un objeto pendiente del plan de carga: este ya se '
+            'cargó o se canceló. Elige uno pendiente.');
       }
       final source = data.plan.loading[change.target]!.reservedSlot;
       final destination = data.plan.loadingItemAt(change.to)?.reservedSlot;
@@ -40,7 +48,8 @@ class ChangeRequests {
               source.portOfDischarge != destination.portOfDischarge ||
               source.operatorCode != destination.operatorCode)) {
         return const ChangePreview.invalid(
-            'Las reservas del intercambio deben ser del mismo grupo.');
+            'Las reservas del intercambio deben ser del mismo grupo (tipo, POD '
+            'y línea): elige reservas iguales.');
       }
     }
     return ChangePreview.valid(batch.any((c) =>
@@ -62,7 +71,8 @@ class ChangeRequests {
     _access(operation, actor, OperatorRole.office);
     if (!pending(data, key)) {
       throw StateError(
-          'Solo se cancela un objeto pendiente del plan de carga.');
+          'Solo se cancela un objeto pendiente del plan de carga: este ya se '
+          'cargó o ya está cancelado. Si se cargó, deshaz antes la carga.');
     }
     final draft = MovementDraft.cancelItem(operation.id, key, reason);
     final error = draft.validate();
@@ -86,10 +96,12 @@ class ChangeRequests {
     _access(operation, actor, OperatorRole.office);
     if (data.plan.loading[key]?.role != PlanRole.load ||
         !undoable(data, key).any((m) => m.id == movementId)) {
-      throw StateError('El cambio de oficina ya no está vigente.');
+      throw StateError('El cambio de oficina ya no está vigente: vuelve a abrir '
+          'el detalle para ver el estado actual.');
     }
     if (reason.trim().isEmpty || reason.trim().length > 300) {
-      throw StateError('Deshacer exige un motivo de hasta 300 caracteres.');
+      throw StateError(
+          'Deshacer exige un motivo de hasta 300 caracteres: escríbelo.');
     }
     return MovementDraft.annul(operation.id, movementId, reason.trim(),
         target: key);
@@ -98,11 +110,13 @@ class ChangeRequests {
   void _access(Operation operation, Operator? actor, OperatorRole role) {
     if (actor == null || !actor.authorized || actor.role != role) {
       throw StateError(role == OperatorRole.dock
-          ? 'Solo una cuenta de muelle autorizada puede pedir cambios.'
-          : 'Solo una cuenta de oficina autorizada puede decidir.');
+          ? 'Solo una cuenta de muelle autorizada puede pedir cambios: inicia '
+              'sesión con una.'
+          : 'Solo una cuenta de oficina autorizada puede decidir: inicia sesión '
+              'con una.');
     }
     if (!operation.published || operation.closed) {
-      throw StateError('La operación debe estar publicada y abierta.');
+      throw StateError(operationNotOpen);
     }
   }
 
@@ -110,11 +124,16 @@ class ChangeRequests {
     final batch = PositionChange.readAll(
       changes.map((c) => c.toJson()).toList(),
     );
-    if (batch == null) return 'Indica de uno a cuatro cambios válidos.';
+    if (batch == null) {
+      return 'Los cambios no son válidos: indica de uno a cuatro.';
+    }
     final targets = batch.map((c) => c.target).toSet();
     for (final c in batch) {
       final item = data.plan.loading[c.target];
-      if (item == null) return '${_capital(_label(data, c.target))} no está en el plan.';
+      if (item == null) {
+        return '${_capital(_label(data, c.target))} no está en el plan de carga: '
+            'revisa el OR o el número.';
+      }
       if (item.plannedPosition != c.from) {
         return 'El origen de ${_label(data, c.target)} cambió; revisa la solicitud.';
       }
@@ -122,13 +141,16 @@ class ChangeRequests {
       if (coordinate.bay == 0 ||
           data.loading.geometry?.covers(coordinate) == false ||
           !data.loading.bays.keys.any((b) => (b - coordinate.bay).abs() <= 1)) {
-        return 'La celda ${c.to} no existe en la geometría del buque.';
+        return 'La celda ${c.to} no existe en la geometría del buque: elige una '
+            'celda del plano.';
       }
       final size = nominalLength(
         item.container?.isoSizeType ?? item.reservedSlot?.isoSizeType,
       );
       if (size != null && size != (coordinate.bay.isEven ? 40 : 20)) {
-        return '${_capital(_label(data, c.target))} no cabe en la bahía ${coordinate.bay}.';
+        return '${_capital(_label(data, c.target))} no cabe en la bahía '
+            '${coordinate.bay}: un 20 va en bahía impar y un 40 en par. Elige una '
+            'bahía de su tamaño.';
       }
       // T-105, 10.63: la par ocupa sus dos impares vecinas. Las posiciones
       // actuales y previstas se revisan aquí, también al aprobar solicitudes.
@@ -145,7 +167,8 @@ class ChangeRequests {
         if (_overlaps(coordinate, other)) {
           // T-106: la segunda frase solo si aplica; las reglas no cambian.
           final then = switch (occupant.role) {
-            PlanRole.transit => 'Es carga de paso: no se descarga aquí.',
+            PlanRole.transit =>
+              'Es carga de paso: no se descarga aquí. Elige otra celda.',
             PlanRole.discharge =>
               'La celda está ocupada a bordo; marca primero su descarga.',
             PlanRole.load => _sizes(coordinate, other),
@@ -225,14 +248,15 @@ class ChangeRequests {
   /// distinta paridad es chocar con otro tamaño, y eso no se intercambia.
   String? _sizes(IsoCoordinate destination, IsoCoordinate other) =>
       destination.bay.isEven != other.bay.isEven
-          ? 'Un 20 y un 40 no se intercambian.'
+          ? 'Un 20 y un 40 no se intercambian: elige otra celda del mismo tamaño.'
           : null;
 
   String _collision(IsoCoordinate destination, IsoCoordinate other,
           String name, String? then) =>
       '${destination.toIsoCode()} choca con $name en ${other.toIsoCode()}'
       '${destination.bay != other.bay ? ': un 40 ocupa las dos mitades de la celda.' : '.'}'
-      '${then == null ? '' : ' $then'}';
+      // T-112: sin segunda frase, la acción por defecto.
+      ' ${then ?? 'Elige otra celda.'}';
 
   MovementDraft request(Operation operation, Operator? actor,
       LoadingOperation data, List<PositionChange> changes, String reason) {
@@ -251,7 +275,8 @@ class ChangeRequests {
         .where((r) => r.movement.id == requestId)
         .firstOrNull;
     if (request == null || request.status != ChangeRequestStatus.pending) {
-      throw StateError('La solicitud ya no está pendiente.');
+      throw StateError('La solicitud ya no está pendiente: ya se decidió o se '
+          'anuló. Vuelve a la bandeja para ver su estado.');
     }
     if (approve) {
       final error = review(data, request.changes);

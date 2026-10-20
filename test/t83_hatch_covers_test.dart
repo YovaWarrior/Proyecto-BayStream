@@ -209,6 +209,9 @@ void main() {
     expect(find.textContaining('se solapa'), findsOneWidget);
     await tester.enterText(find.byKey(const ValueKey('hatch-rows-1')), '06');
     // T-56: el desplegable ya no tiene altura fija y el botón queda más abajo.
+    // T-112: el mensaje con su acción ocupa más líneas; se arrastra la lista.
+    await tester.dragUntilVisible(find.byKey(const ValueKey('hatch-apply')),
+        find.byType(ListView), const Offset(0, -100));
     await tester.ensureVisible(find.byKey(const ValueKey('hatch-apply')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('hatch-apply')));

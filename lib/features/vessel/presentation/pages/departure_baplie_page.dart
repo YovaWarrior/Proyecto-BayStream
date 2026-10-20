@@ -13,6 +13,7 @@ import '../providers/loading_operation_provider.dart';
 import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import 'voyage_comparison_page.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 final departureExportRepositoryProvider = Provider<DepartureExportRepository>(
     (ref) => const DepartureExportRepositoryImpl());
@@ -78,7 +79,8 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
             ? const Text('Disponible para oficina o en modo sin cuenta.')
             : operation.hasError || loading.hasError
                 ? Text(vesselErrorMessage(operation.error ?? loading.error!,
-                    operation.stackTrace ?? loading.stackTrace))
+                    operation.stackTrace ?? loading.stackTrace,
+                    'abrir la operación de la escala'))
                 : !operation.hasValue || !loading.hasValue
                     ? const Center(child: CircularProgressIndicator())
                     : _content(operation.value, loading.value!),
@@ -91,7 +93,8 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
     try {
       if (operation == null) {
         throw StateError(
-            'La escala no tiene una operación guardada con fuente loading_baplie.');
+            'La escala no tiene una operación guardada con su plan de carga: abre '
+            'el plan de carga (BAPLIE) y confirma la escala.');
       }
       output = _output(operation, data);
     } on StateError catch (error) {
@@ -99,7 +102,7 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(
-          '${operation.vesselName} · ${operation.voyageNumber} · ${operation.portOfCall}',
+          '${operation.vesselName} · ${voyageNumberLabel(operation.voyageNumber)} · ${operation.portOfCall}',
           style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: 16),
       Text('${output.containers} contenedores a bordo en la salida.'),
@@ -164,7 +167,7 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
     final failure = arrival.fold((f) => f, (_) => null) ??
         departure.fold((f) => f, (_) => null);
     if (failure != null) {
-      _notice(vesselFailureMessage(failure));
+      _notice(vesselFailureMessage(failure, 'comparar la salida con la llegada'));
       return;
     }
     await Navigator.of(context).push(MaterialPageRoute<void>(
@@ -200,7 +203,7 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
       if (mounted) {
         _notice(error is StateError
             ? error.message
-            : vesselErrorMessage(error, stack));
+            : vesselErrorMessage(error, stack, 'generar el BAPLIE de salida'));
       }
     } finally {
       if (mounted) setState(() => _saving = false);

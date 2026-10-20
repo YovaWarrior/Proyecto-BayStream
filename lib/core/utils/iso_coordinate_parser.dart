@@ -22,7 +22,7 @@ class IsoCoordinate {
   });
 
   /// Devuelve la coordenada en formato legible: "Bay 12, Row 00, Tier 06"
-  String get displayFormat => 'Bay $bayPadded, Row $rowPadded, Tier $tierPadded';
+  String get displayFormat => 'Bahía $bayPadded, Fila $rowPadded, Nivel $tierPadded';
 
   /// Bay con padding de 3 dígitos
   String get bayPadded => bay.toString().padLeft(3, '0');

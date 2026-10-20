@@ -2,6 +2,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/constants/baplie_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
+import '../../../../core/utils/voyage_number.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/entities/dangerous_goods.dart';
 import '../../domain/services/iso6346_check_digit.dart';
@@ -14,6 +15,11 @@ import '../../domain/services/iso6346_check_digit.dart';
 /// - Separador de componentes: `:`
 class BaplieParserService {
   final Uuid _uuid = const Uuid();
+
+  // T-112: lo que el lector está leyendo, solo para nombrarlo si falla de
+  // forma inesperada (mensaje M004). No interviene en la lectura.
+  String? _readingTags;
+  int? _readingIndex;
 
   /// Parsea un string completo de archivo BAPLIE/EDI
   /// 
@@ -36,15 +42,41 @@ class BaplieParserService {
       );
     }
 
+    _readingTags = null;
+    _readingIndex = null;
+    try {
+      return _parseSegments(segments);
+    } on BaplieParsingException {
+      rethrow;
+    } catch (error, stack) {
+      // T-112: el fallo inesperado nombra el segmento que se leía; el detalle
+      // técnico sigue en el mensaje de la excepción, para el registro.
+      final index = _readingIndex;
+      Error.throwWithStackTrace(
+        BaplieParsingException(
+          message: 'Fallo inesperado del lector: $error',
+          code: BaplieParsingException.unexpectedSegment,
+          segment: index == null ? _readingTags : _getSegmentType(segments[index]),
+          lineNumber: index == null ? null : index + 1,
+        ),
+        stack,
+      );
+    }
+  }
+
+  VesselVoyage _parseSegments(List<String> segments) {
     // La cabecera decide si este lector aplica, antes del buque o la carga.
+    _readingTags = 'UNH';
     _validateVersion(segments);
 
     // Extraer información del buque (TDT)
+    _readingTags = 'TDT';
     final vesselInfo = _parseVesselInfo(segments);
-    
+
     // Extraer metadatos del mensaje
+    _readingTags = 'UNH y DTM';
     final metadata = _parseMetadata(segments);
-    
+
     // Extraer contenedores (grupos LOC+147 -> EQD -> MEA)
     final notices = <BaplieReadNoticeKind, List<String>>{};
     final missing = ['UNB', 'BGM', 'UNT', 'UNZ']
@@ -54,8 +86,10 @@ class BaplieParserService {
       notices[BaplieReadNoticeKind.incomplete] = missing;
     }
     final cargo = _parseCargo(segments, notices);
+    _readingIndex = null;
+    _readingTags = 'BGM y LOC';
     final containers = cargo.containers;
-    
+
     return VesselVoyage(
       id: _uuid.v4(),
       vessel: vesselInfo.vessel,
@@ -126,7 +160,7 @@ class BaplieParserService {
     }
     final version = identifier == null || identifier.isEmpty
         ? 'sin UNH/S009 reconocible'
-        : identifier;
+        : 'la cabecera UNH declara $identifier';
     throw BaplieParsingException(
       code: 'unsupported_baplie_version',
       segment: 'UNH',
@@ -305,7 +339,7 @@ class BaplieParserService {
         flag: flag,
         operator: operatorCode,
       ),
-      voyageNumber: voyageNumber ?? 'UNKNOWN',
+      voyageNumber: voyageNumber ?? unknownVoyageNumber,
     );
   }
 
@@ -506,6 +540,7 @@ class BaplieParserService {
     }
 
     for (int i = 0; i < segments.length; i++) {
+      _readingIndex = i;
       final segment = segments[i];
       final segmentType = _getSegmentType(segment);
 

@@ -26,7 +26,10 @@ class VesselRepositoryImpl implements VesselRepository {
     try {
       final voyage = _parserService.parse(content);
       return Right(voyage);
-    } on BaplieParsingException catch (e) {
+    } on BaplieParsingException catch (e, stack) {
+      if (e.code == BaplieParsingException.unexpectedSegment) {
+        debugPrint('Error inesperado al analizar BAPLIE: ${e.message}\n$stack');
+      }
       return Left(BaplieParsingFailure(
         message: e.message,
         code: e.code,

@@ -20,31 +20,33 @@ extension VoyageExportFormatX on VoyageExportFormat {
 
 /// Serializa y guarda viajes en formatos interoperables.
 class ExportService {
+  /// Encabezados en español (T-112), en el orden de las propiedades de
+  /// [ContainerUnit]. Nada del producto vuelve a leer este CSV.
   static const List<String> csvHeaders = [
     'id',
-    'containerId',
-    'isoSizeType',
-    'status',
-    'stowagePosition',
-    'grossWeight',
-    'vgmWeight',
-    'tareWeight',
-    'portOfLoading',
-    'portOfDischarge',
-    'finalDestination',
-    'operatorCode',
-    'isDangerous',
-    'imdgClass',
-    'unNumber',
-    'isReefer',
-    'temperature',
-    'temperatureUnit',
-    'isOverDimension',
-    'overHeight',
-    'overWidthLeft',
-    'overWidthRight',
-    'overLengthFront',
-    'overLengthRear',
+    'Contenedor',
+    'Tipo ISO',
+    'Estado',
+    'Posición',
+    'Peso bruto (kg)',
+    'Peso VGM (kg)',
+    'Tara (kg)',
+    'Puerto de carga',
+    'Puerto de descarga',
+    'Destino final',
+    'Operador',
+    'Peligroso',
+    'Clase IMDG',
+    'Número ONU',
+    'Refrigerado',
+    'Temperatura',
+    'Unidad de temperatura',
+    'Sobredimensionado',
+    'Sobrealtura (cm)',
+    'Sobreancho izquierdo (cm)',
+    'Sobreancho derecho (cm)',
+    'Sobrelongitud frontal (cm)',
+    'Sobrelongitud trasera (cm)',
   ];
 
   const ExportService();
@@ -60,7 +62,7 @@ class ExportService {
         container.id,
         container.containerId,
         container.isoSizeType,
-        container.status.name,
+        _statusValue(container.status),
         container.stowagePosition?.rawCode,
         container.grossWeight,
         container.vgmWeight,
@@ -69,13 +71,13 @@ class ExportService {
         container.portOfDischarge,
         container.finalDestination,
         container.operatorCode,
-        container.isDangerous,
+        _yesNo(container.isDangerous),
         container.imdgClass,
         container.unNumber,
-        container.isReefer,
+        _yesNo(container.isReefer),
         container.temperature,
         container.temperatureUnit,
-        container.isOverDimension,
+        _yesNo(container.isOverDimension),
         container.overHeight,
         container.overWidthLeft,
         container.overWidthRight,
@@ -89,6 +91,15 @@ class ExportService {
 
     return buffer.toString();
   }
+
+  /// Valores en español en el CSV (T-112); lo guardado no cambia.
+  static String _statusValue(ContainerStatus status) => switch (status) {
+        ContainerStatus.full => 'lleno',
+        ContainerStatus.empty => 'vacío',
+        ContainerStatus.unknown => 'desconocido',
+      };
+
+  static String _yesNo(bool value) => value ? 'sí' : 'no';
 
   /// JSON completo del viaje, reutilizando la serialización del dominio.
   String serializeJson(VesselVoyage voyage) {

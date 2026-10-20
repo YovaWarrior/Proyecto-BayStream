@@ -8,6 +8,7 @@ import '../formatters/operation_text.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/vessel_providers.dart';
 import '../widgets/voyage_summary_card.dart' show smdg15Notice;
+import '../../../../core/utils/voyage_number.dart';
 
 /// T-96 · El archivo que se compara: nombre y texto, nada más.
 typedef ComparisonFile = ({String name, String content});
@@ -50,7 +51,8 @@ Future<void> compareWithAnotherBaplie(
     if (!context.mounted) return;
     parsed.fold(
         (failure) =>
-            notice('Archivo «${file.name}»: ${vesselFailureMessage(failure)}'),
+            notice('Archivo «${file.name}»: '
+                '${vesselFailureMessage(failure, 'leer el archivo')}'),
         (second) => Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (_) => VoyageComparisonPage(
                 first: open,
@@ -58,7 +60,9 @@ Future<void> compareWithAnotherBaplie(
                 firstLabel: 'Viaje abierto',
                 secondLabel: file.name))));
   } catch (error, stack) {
-    if (context.mounted) notice(vesselErrorMessage(error, stack));
+    if (context.mounted) {
+      notice(vesselErrorMessage(error, stack, 'comparar los dos archivos'));
+    }
   }
 }
 
@@ -138,7 +142,7 @@ class _VoyageComparisonPageState extends State<VoyageComparisonPage> {
           ]),
         );
     String side(String label, VesselVoyage v) =>
-        '$label: ${v.vessel.name} · ${v.voyageNumber} · '
+        '$label: ${v.vessel.name} · ${voyageNumberLabel(v.voyageNumber)} · '
         '${operationCount(v.totalContainers, 'contenedor', 'contenedores')}';
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),

@@ -37,7 +37,8 @@ Future<void> onLoadingContainerTap(BuildContext context, WidgetRef ref,
     }
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content:
-            Text('Este contenedor no tiene OR en el listado de agencia.')));
+            Text('Este contenedor no tiene OR en el listado de la agencia: '
+                'importa el listado actualizado.')));
     return;
   }
   await openLoadingRow(context, ref, voyage, row, selectedBay: selectedBay);
@@ -55,7 +56,8 @@ class LoadingControls extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) =>
       ref.watch(loadingOperationProvider(voyage)).when(
             loading: () => const Text('Leyendo el plan combinado…'),
-            error: (error, stack) => Text(vesselErrorMessage(error, stack)),
+            error: (error, stack) => Text(vesselErrorMessage(
+                error, stack, 'leer el plan de carga de la operación')),
             data: (data) {
               final bay = selectedBay == null
                   ? null
@@ -420,7 +422,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
       if (input.isNotEmpty) {
         final match = RegExp(r'^([01]?\d|2[0-3]):([0-5]\d)$').firstMatch(input);
         if (match == null) {
-          throw StateError('Escribe la hora como HH:mm (00:00 a 23:59).');
+          throw StateError('Hora no válida: escríbela como HH:mm (00:00 a 23:59).');
         }
         operatedAt = DateTime(date.year, date.month, date.day,
             int.parse(match[1]!), int.parse(match[2]!));
@@ -487,10 +489,11 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                     messenger.showSnackBar(SnackBar(content: Text(error)));
                   }
                 })));
-    } catch (failure) {
+    } catch (failure, stack) {
       if (mounted) {
-        setState(
-            () => error = failure is StateError ? failure.message : '$failure');
+        setState(() => error = failure is StateError
+            ? failure.message
+            : vesselErrorMessage(failure, stack, 'registrar la carga'));
       }
     } finally {
       if (mounted) setState(() => busy = false);

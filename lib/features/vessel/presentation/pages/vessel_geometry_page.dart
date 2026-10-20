@@ -292,7 +292,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             if (widget.proposedReeferSocketCount != null) ...[
               const SizedBox(height: 12),
               Text(
-                'Tomas de reefer: ${widget.proposedReeferSocketCount} posiciones '
+                'Tomas de refrigerado: ${widget.proposedReeferSocketCount} posiciones '
                 'propuestas del archivo (cota inferior). El buque puede tener '
                 'más tomas. Confirmar la geometría no las convierte en declaradas.',
                 key: const ValueKey('reefer-sockets-proposal'),
@@ -421,7 +421,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             if (!_limitResolved) ...[
               const SizedBox(height: 8),
               Text(
-                'Falta resolver el límite de apilamiento.',
+                'Falta resolver el límite de apilamiento: escríbelo o marca que '
+                'no lo tienes.',
                 textAlign: TextAlign.center,
                 style: textTheme.bodySmall
                     ?.copyWith(color: colorScheme.onSurfaceVariant),
@@ -455,7 +456,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
       key: const ValueKey('profile-sockets'),
       initiallyExpanded: _socketsExpanded,
       onExpansionChanged: (open) => _socketsExpanded = open,
-      title: Text('Tomas de reefer (${_sockets.length})'),
+      title: Text('Tomas de refrigerado (${_sockets.length})'),
       subtitle: Text(source),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -516,7 +517,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             final code = _socketInput.text.trim();
             setState(() {
               if (!IsoCoordinateParser.isValid(code) || code.startsWith('000')) {
-                _socketError = 'Escribe siete dígitos y una bahía distinta de 000.';
+                _socketError = 'Posición de toma no válida: escribe siete dígitos y '
+                    'una bahía distinta de 000.';
                 return;
               }
               _socketError = null;
@@ -547,7 +549,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     final geometry = _buildGeometry();
     if (geometry == null) {
       setState(() => _rangeError =
-          'Revisa la frontera y las anclas antes de cargar tomas.');
+          'La frontera y las anclas no forman una geometría válida: revísalas '
+          'antes de cargar tomas.');
       return;
     }
     final range = ReeferSocketRanges.codesFor(bays: _rangeBays.text,
@@ -563,9 +566,10 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     final geometry = _buildGeometry();
     final pasted = ReeferSocketRanges.parsePasted(_pastedSockets.text);
     setState(() => _pasteError = geometry == null
-        ? 'Revisa la frontera y las anclas antes de cargar tomas.'
+        ? 'La frontera y las anclas no forman una geometría válida: revísalas '
+            'antes de cargar tomas.'
         : pasted.codes.isEmpty && pasted.invalid.isEmpty
-            ? 'Pega al menos un código.'
+            ? 'No hay códigos pegados: pega al menos uno.'
             : null);
     if (_pasteError != null) return;
     _showBatch(ReeferSocketRanges.previewAdd(pasted.codes, _sockets, geometry!,
@@ -665,7 +669,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             const SizedBox(height: 12),
             Text(
               'El archivo BAPLIE no transmite las dimensiones del buque. Solo '
-              'revela los slots que este viaje trae ocupados, así que la '
+              'revela las posiciones que este viaje trae ocupadas, así que la '
               'aplicación puede deducir el mínimo, nunca el total: un buque de '
               'catorce filas que hoy carga en diez se ve, desde el archivo, '
               'como un buque de diez filas.',
@@ -863,12 +867,12 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
       ),
       validator: (raw) {
         final value = int.tryParse((raw ?? '').trim());
-        if (value == null) return 'Escribe un número.';
+        if (value == null) return 'Valor no numérico: escribe un número.';
         if (value < minimum) {
           return observed == null
-              ? 'No puede ser menor que $minimum.'
+              ? 'No puede ser menor que $minimum: escribe $minimum o más.'
               : 'El archivo trae carga en $observed; con $value $unit '
-                  'quedaría fuera del plano.';
+                  'quedaría fuera del plano. Escribe al menos $minimum.';
         }
         return null;
       },
@@ -1028,7 +1032,8 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
                 if (_limitUnavailable) return null;
                 final value = double.tryParse((raw ?? '').trim());
                 if (value == null || value <= 0) {
-                  return 'Escribe el límite o marca que no lo tienes.';
+                  return 'Falta el límite de apilamiento: escríbelo o marca que no '
+                      'lo tienes.';
                 }
                 return null;
               },

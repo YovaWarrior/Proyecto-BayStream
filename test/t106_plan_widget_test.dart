@@ -73,9 +73,9 @@ LoadingOperation _arriving([List<Movement> movements = const []]) =>
 Finder _inCell(String position, Finder matching) => find.descendant(
     of: find.byKey(ValueKey('plan-cell-$position')), matching: matching);
 
-/// El título de la rejilla; el selector también dice «BAY 03 (…)».
+/// El título de la rejilla; el selector también dice «BAHÍA 03 (…)».
 Finder _title(int bay) => find.textContaining(
-    RegExp('^BAY ${bay.toString().padLeft(2, '0')}(\$| ·)'));
+    RegExp('^BAHÍA ${bay.toString().padLeft(2, '0')}(\$| ·)'));
 
 void main() {
   for (final width in [1600.0, 1920.0]) {
@@ -304,7 +304,7 @@ void main() {
       expect(
           find.text('0040282 choca con OR 1 · FULL0001234 en 0030282: un 40 '
               'ocupa las dos mitades de la celda. Un 20 y un 40 no se '
-              'intercambian.'),
+              'intercambian: elige otra celda del mismo tamaño.'),
           findsOneWidget);
       expect(find.byType(PlanDragConfirmation), findsNothing);
       expect(tester.takeException(), isNull);

@@ -7,6 +7,7 @@ import '../providers/vessel_providers.dart';
 import '../formatters/vessel_error_message.dart';
 import '../formatters/operation_text.dart';
 import '../widgets/empty_state_widget.dart';
+import '../../../../core/utils/voyage_number.dart';
 
 /// Viajes de este dispositivo; la pantalla solo consulta el contrato local.
 class RecentVoyagesPage extends ConsumerStatefulWidget {
@@ -50,7 +51,7 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
         builder: (context) => AlertDialog(
               title: const Text('Eliminar viaje guardado'),
               content: Text(
-                  '¿Eliminar ${voyage.vessel.name}, viaje ${voyage.voyageNumber}, de este dispositivo? '
+                  '¿Eliminar ${voyage.vessel.name}, viaje ${voyageNumberLabel(voyage.voyageNumber)}, de este dispositivo? '
                   'El perfil del buque se conserva.'),
               actions: [
                 TextButton(
@@ -91,7 +92,8 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
                     error: (error, _) => Center(
                         child:
                             Column(mainAxisSize: MainAxisSize.min, children: [
-                      Text(vesselErrorMessage(error)),
+                      Text(vesselErrorMessage(
+                          error, null, 'leer los viajes recientes')),
                       TextButton(
                           onPressed: () =>
                               ref.invalidate(recentVoyagesProvider),
@@ -105,7 +107,7 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
                               ListTile(
                                   key: ValueKey('recent-${voyage.id}'),
                                   title: Text(
-                                      '${voyage.vessel.name} · ${voyage.voyageNumber}'),
+                                      '${voyage.vessel.name} · ${voyageNumberLabel(voyage.voyageNumber)}'),
                                   subtitle: Text(
                                       '${operationCount(voyage.totalContainers, 'contenedor', 'contenedores')} · ${operationCount(voyage.bays.length, 'bahía', 'bahías')}'),
                                   leading: const Icon(

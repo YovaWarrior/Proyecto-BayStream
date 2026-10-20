@@ -35,21 +35,23 @@ class HatchCoverDeclaration extends Equatable {
 
   String? validate(VesselGeometry geometry, {required bool hasHold}) {
     if (!hasHold || geometry.holdTiers.isEmpty) {
-      return 'Una bahía sin bodega no puede declarar tapas.';
+      return 'Una bahía sin bodega no puede declarar tapas: déjala «Sin declarar».';
     }
     if (kind == HatchCoverKind.openHold) {
-      return covers.isEmpty ? null : 'Una bodega abierta no lleva tapas.';
+      return covers.isEmpty
+          ? null
+          : 'Una bodega abierta no lleva tapas: quita las filas de tapa.';
     }
     if (kind == HatchCoverKind.automatic && covers.length != 1) {
-      return 'Declara exactamente una tapa automática.';
+      return 'Falta la tapa automática o hay más de una: declara exactamente una.';
     }
     if (kind == HatchCoverKind.crane && (covers.isEmpty || covers.length > 3)) {
-      return 'Declara de una a tres tapas de grúa.';
+      return 'Faltan las tapas de grúa o hay más de tres: declara de una a tres.';
     }
     final seen = <int>{};
     for (var i = 0; i < covers.length; i++) {
       if (covers[i].isEmpty) {
-        return 'La tapa ${i + 1} necesita al menos una fila.';
+        return 'La tapa ${i + 1} necesita al menos una fila: escribe sus filas.';
       }
       for (final row in covers[i]) {
         if (row < 0 ||
@@ -60,10 +62,12 @@ class HatchCoverDeclaration extends Equatable {
                 tier: geometry.holdTiers.first,
                 rawCode: ''))) {
           return 'La fila ${row.toString().padLeft(2, '0')} de la tapa ${i + 1} '
-              'no pertenece a la geometría de bodega de esta bahía.';
+              'no pertenece a la geometría de bodega de esta bahía. Usa filas de '
+              'esa geometría.';
         }
         if (!seen.add(row)) {
-          return 'La fila ${row.toString().padLeft(2, '0')} se solapa entre tapas.';
+          return 'La fila ${row.toString().padLeft(2, '0')} se solapa entre tapas: '
+              'déjala en una sola.';
         }
       }
     }

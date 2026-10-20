@@ -129,7 +129,8 @@ class VoyageComparison {
           'Confirma que es el mismo buque antes de usar la comparación.';
     }
     return 'No parece el mismo buque: ${first.name} '
-        '(${first.profileKey}) y ${second.name} (${second.profileKey}).';
+        '(${first.profileKey}) y ${second.name} (${second.profileKey}). Revisa '
+        'que el segundo archivo sea del mismo buque.';
   }
 
   static String _identity(VesselIdentity key) => switch (key.source) {

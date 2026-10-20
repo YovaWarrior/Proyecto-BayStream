@@ -113,7 +113,7 @@ void main() {
           .overrideWith((ref) => Stream.value(t82Derive())),
     ], child: MaterialApp(home: DepartureBapliePage(voyage: t82Loading))));
     await tester.pumpAndSettle();
-    expect(find.textContaining('loading_baplie'), findsOneWidget);
+    expect(find.textContaining('no tiene el plan de carga (BAPLIE)'), findsOneWidget);
     expect(find.byKey(const ValueKey('departure-save')), findsNothing);
   });
 }

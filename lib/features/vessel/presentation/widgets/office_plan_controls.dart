@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/change_requests.dart';
+import '../formatters/vessel_error_message.dart';
 import '../pages/change_requests_page.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
@@ -35,7 +36,7 @@ class _OfficePlanActionsState extends ConsumerState<OfficePlanActions> {
       final data = ref.read(loadingOperationProvider(widget.voyage)).value;
       final actor = ref.read(operatorProvider).value;
       if (operation == null || data == null) {
-        throw StateError('La operación no está disponible.');
+        throw StateError(operationUnavailable);
       }
       final draft = undo == null
           ? const ChangeRequests()
@@ -44,10 +45,11 @@ class _OfficePlanActionsState extends ConsumerState<OfficePlanActions> {
               .undo(operation, actor, data, widget.itemKey, undo.id, reason);
       (await repository.append(draft, actor!.author))
           .fold((failure) => throw StateError(failure.message), (_) {});
-    } catch (failure) {
+    } catch (failure, stack) {
       if (mounted) {
-        setState(
-            () => error = failure is StateError ? failure.message : '$failure');
+        setState(() => error = failure is StateError
+            ? failure.message
+            : vesselErrorMessage(failure, stack, 'guardar la acción de la oficina'));
       }
     } finally {
       if (mounted) setState(() => busy = false);

@@ -40,7 +40,8 @@ class ReeferSocketRanges {
       if (match == null) {
         return (
           values: const <int>[],
-          error: '$field: «$token» no es un número ni un rango como 02-08.'
+          error: '$field: «$token» no es un número ni un rango como 02-08. '
+              'Escribe un número o un rango así.'
         );
       }
       final from = int.parse(match.group(1)!);
@@ -50,19 +51,22 @@ class ReeferSocketRanges {
       if (from < min || to > max) {
         return (
           values: const <int>[],
-          error: '$field: «$token» sale de ${_pad(min, max)} a ${_pad(max, max)}.'
+          error: '$field: «$token» sale de ${_pad(min, max)} a ${_pad(max, max)}. '
+              'Escribe valores entre esos dos.'
         );
       }
       if (to < from) {
         return (
           values: const <int>[],
-          error: '$field: en «$token» el final es menor que el inicio.'
+          error: '$field: en «$token» el final es menor que el inicio: escribe '
+              'primero el menor.'
         );
       }
       if (step < 1) {
         return (
           values: const <int>[],
-          error: '$field: en «$token» el paso tiene que ser 1 o más.'
+          error: '$field: en «$token» el paso tiene que ser 1 o más: escríbelo así, '
+              'como 002-038/4.'
         );
       }
       for (var v = from; v <= to; v += step) {
@@ -87,10 +91,16 @@ class ReeferSocketRanges {
     required VesselGeometry geometry,
   }) {
     if (bays.trim().isEmpty) {
-      return (codes: const <String>[], error: 'Escribe al menos una bahía.');
+      return (
+        codes: const <String>[],
+        error: 'Faltan las bahías: escribe al menos una.'
+      );
     }
     if (tiers.trim().isEmpty) {
-      return (codes: const <String>[], error: 'Escribe al menos un nivel.');
+      return (
+        codes: const <String>[],
+        error: 'Faltan los niveles: escribe al menos uno.'
+      );
     }
     final bayList =
         parseNumbers(bays, field: 'Bahías', min: 1, max: 999);

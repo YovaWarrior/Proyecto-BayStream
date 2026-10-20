@@ -68,12 +68,13 @@ class _HatchCoversPageState extends State<HatchCoversPage> {
         final tokens = _rows[i].text.trim().split(RegExp(r'[,;\s]+'));
         if (tokens.any((r) => !RegExp(r'^\d{1,2}$').hasMatch(r))) {
           setState(() => _error =
-              'Tapa ${i + 1}: escribe filas de uno o dos dígitos separadas por coma.');
+              'Tapa ${i + 1}: las filas no tienen el formato esperado; escribe filas '
+              'de uno o dos dígitos separadas por coma.');
           return false;
         }
         final parsed = tokens.map(int.parse).toList();
         if (parsed.toSet().length != parsed.length) {
-          setState(() => _error = 'Tapa ${i + 1}: hay una fila repetida.');
+          setState(() => _error = 'Tapa ${i + 1}: hay una fila repetida; quítala.');
           return false;
         }
         covers.add(parsed.toSet());

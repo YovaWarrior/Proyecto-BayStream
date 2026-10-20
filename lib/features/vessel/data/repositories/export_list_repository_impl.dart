@@ -23,7 +23,9 @@ class ExportListRepositoryImpl implements ExportListRepository {
     } catch (e, stack) {
       debugPrint('Error inesperado al leer el listado: $e\n$stack');
       return const Left(ValidationFailure(
-          message: 'No se pudo leer el listado. Revisa que sea el Excel de la agencia.',
+          message: 'No se pudo leer el listado por un error interno de la '
+              'aplicación; el detalle técnico quedó en el registro. Revisa que '
+              'sea el Excel de la agencia e inténtalo de nuevo.',
           field: 'listado'));
     }
   }

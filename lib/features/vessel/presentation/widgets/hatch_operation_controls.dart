@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
+import '../formatters/vessel_error_message.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
@@ -80,7 +81,9 @@ class _HatchOperationPageState extends ConsumerState<HatchOperationPage> {
         appBar: AppBar(title: const Text('Tapas en la operación')),
         body: ref.watch(loadingOperationProvider(widget.voyage)).when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('$error')),
+              error: (error, stack) => Center(
+                  child: Text(vesselErrorMessage(
+                      error, stack, 'leer las tapas de la operación'))),
               data: (operation) {
                 final bays = {
                   ...operation.loading.bays.keys,

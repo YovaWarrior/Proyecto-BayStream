@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/movement.dart';
@@ -51,12 +52,15 @@ class FirestoreOperationSync implements OperationSyncRepository {
     if (operator == null) {
       return const Left(FirestoreFailure(
           code: 'no_session',
-          message: 'Inicia sesión con una cuenta de oficina.'));
+          message:
+              'Publicar y cerrar exige sesión: inicia sesión con una cuenta de oficina.'));
     }
     if (!operator.authorized || operator.role != OperatorRole.office) {
       return const Left(FirestoreFailure(
           code: 'not_office',
-          message: 'Solo una cuenta de oficina autorizada publica y cierra operaciones.'));
+          message: 'Solo una cuenta de oficina autorizada publica y cierra '
+              'operaciones: inicia sesión con una o pide al responsable que '
+              'autorice la tuya.'));
     }
     return Right(operator);
   }
@@ -133,8 +137,24 @@ class FirestoreOperationSync implements OperationSyncRepository {
         'permission-denied' =>
           'La nube no aceptó la publicación: revisa que la cuenta sea de oficina '
               'y esté activa.',
-        'unavailable' => 'Sin conexión con la nube. Publicar requiere red.',
-        _ => 'La nube devolvió un error (${error.code}).',
+        'unavailable' => 'Sin conexión con la nube: publicar o cerrar requiere '
+            'red. Conéctate e inténtalo de nuevo.',
+        _ => _unknownCloudError(error),
+      };
+
+  /// T-112: el código de Firebase va al registro, no a la pantalla.
+  static String _unknownCloudError(FirebaseException error) {
+    debugPrint('La nube devolvió ${error.code}: ${error.message}');
+    return 'La nube devolvió un error que BayStream no reconoce; el código '
+        'técnico quedó en el registro. Inténtalo de nuevo y, si se repite, '
+        'avisa al responsable.';
+  }
+
+  /// T-112: la fuente con su nombre en español, no con su identificador.
+  static String _sourceName(OperationSourceKind kind) => switch (kind) {
+        OperationSourceKind.arrivalBaplie => 'plano de llegada',
+        OperationSourceKind.loadingBaplie => 'plan de carga',
+        OperationSourceKind.exportList => 'listado de la agencia',
       };
 
   @override
@@ -175,7 +195,9 @@ class FirestoreOperationSync implements OperationSyncRepository {
       final data = snapshot.data();
       if (!snapshot.exists || data == null) {
         return const Left(FirestoreFailure(
-            code: 'not_found', message: 'La operación ya no está en la nube.'));
+            code: 'not_found',
+            message: 'La operación ya no está en la nube: se retiró después de '
+                'publicarse. Pide a la oficina que la publique de nuevo.'));
       }
       final parts = await ref
           .collection('sources')
@@ -199,8 +221,8 @@ class FirestoreOperationSync implements OperationSyncRepository {
             pieces.any((p) => p['sha256'] != entry['sha256'])) {
           return Left(FirestoreFailure(
               code: 'source_mismatch',
-              message: 'La fuente ${kind.wire} llegó incompleta o distinta de la '
-                  'publicada. No se guardó nada: vuelve a intentarlo.'));
+              message: 'La fuente «${_sourceName(kind)}» llegó incompleta o '
+                  'distinta de la publicada. No se guardó nada: vuelve a intentarlo.'));
         }
         sources.add(OperationSource(
             kind: kind, fileName: entry['fileName'] as String? ?? kind.wire, content: content));
@@ -224,10 +246,13 @@ class FirestoreOperationSync implements OperationSyncRepository {
           code: error.code,
           message: error.code == 'permission-denied'
               ? 'Tu cuenta no puede leer esta operación: revisa que esté autorizada.'
-              : 'Sin conexión con la nube. Unirse requiere red.'));
+              : 'Sin conexión con la nube: unirse requiere red. Conéctate e '
+                  'inténtalo de nuevo.'));
     } on TimeoutException {
       return const Left(FirestoreFailure(
-          code: 'timeout', message: 'Sin respuesta de la nube. Unirse requiere red.'));
+          code: 'timeout',
+          message: 'Sin respuesta de la nube: unirse requiere red. Revisa la red e '
+              'inténtalo de nuevo.'));
     }
   }
 
@@ -253,7 +278,9 @@ class FirestoreOperationSync implements OperationSyncRepository {
       final local = (await _log.getOperation(operationId)).getOrElse(() => null);
       if (local == null || closedAt == null) {
         return const Left(FirestoreFailure(
-            code: 'not_found', message: 'No se encontró la operación para cerrarla.'));
+            code: 'not_found',
+            message: 'No se encontró la operación para cerrarla en este dispositivo '
+                'o en la nube. Vuelve a abrir «Nube y cuenta» e inténtalo de nuevo.'));
       }
       final closed = local.copyWith(closedAt: closedAt);
       return (await _log.saveOperation(closed)).map((_) => closed);
@@ -261,7 +288,9 @@ class FirestoreOperationSync implements OperationSyncRepository {
       return Left(FirestoreFailure(code: error.code, message: _publishMessage(error)));
     } on TimeoutException {
       return const Left(FirestoreFailure(
-          code: 'timeout', message: 'Sin respuesta de la nube. Cerrar requiere red.'));
+          code: 'timeout',
+          message: 'Sin respuesta de la nube: cerrar requiere red. Revisa la red e '
+              'inténtalo de nuevo.'));
     }
   }
 

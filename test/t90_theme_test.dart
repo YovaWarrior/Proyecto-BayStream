@@ -148,7 +148,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Oscuro').last);
     await tester.pumpAndSettle();
-    expect(find.textContaining('No se pudo guardar el tema.'), findsOneWidget);
+    expect(
+        find.textContaining(
+            'No se pudo guardar el tema: falló la lectura o la escritura'),
+        findsOneWidget);
     expect(local.theme, AppThemePreference.system);
     local.fail = false;
     await tester.tap(find.byType(DropdownButtonFormField<AppThemePreference>));

@@ -35,7 +35,7 @@ class ParametersPage extends ConsumerWidget {
             } catch (error, stack) {
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('No se pudo guardar el tema. ${vesselErrorMessage(error, stack)}'),
+                content: Text(vesselErrorMessage(error, stack, 'guardar el tema')),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ));
             }
@@ -45,7 +45,8 @@ class ParametersPage extends ConsumerWidget {
         const Text('La elección se guarda en este dispositivo. Seguir al sistema adapta el tema a sus cambios.'),
         if (preference.hasError) ...[
           const SizedBox(height: 8),
-          Text('No se pudo leer el tema guardado. Puedes elegirlo de nuevo.',
+          Text('No se pudo leer el tema guardado: falló la lectura de las preferencias '
+              'de este dispositivo; se usa el del sistema. Elígelo de nuevo.',
               style: TextStyle(color: Theme.of(context).colorScheme.error)),
         ],
         // T-88: la política, sin viaje y sin sesión.

@@ -85,8 +85,11 @@ class _PlanChanges {
   _PlanChanges(this.plan, this.movements);
 
   void problem(Movement m, String message, {String key = ''}) {
+    // T-112: la acción va con el conflicto.
     conflicts.add(OperationConflict(kind: ConflictKind.invalidChange,
-        key: key, movementId: m.id, message: message));
+        key: key,
+        movementId: m.id,
+        message: '$message Revísalo en la bandeja de cambios de la oficina.'));
   }
 
   void apply() {
@@ -94,7 +97,10 @@ class _PlanChanges {
       final valid = PositionChange.readAll(m.payload['changes']) != null;
       requests[m.id] = ChangeRequest(m,
           valid ? ChangeRequestStatus.pending : ChangeRequestStatus.conflict);
-      if (!valid) problem(m, 'Solicitud con cambios inválidos.');
+      if (!valid) {
+        problem(m, 'Solicitud con cambios inválidos: no trae de uno a cuatro '
+            'cambios válidos.');
+      }
     }
     for (final m in movements) {
       if (m.type != MovementType.changePosition && m.type != MovementType.rejectChange) continue;
@@ -301,14 +307,31 @@ class _Run {
   }
 
   void _conflict(ConflictKind kind, String key, Movement m, String message,
-      {String? other}) {
+      {String? other, bool remedy = true}) {
     conflicts.add(OperationConflict(
-        kind: kind, key: key, movementId: m.id, otherMovementId: other, message: message));
+        kind: kind,
+        key: key,
+        movementId: m.id,
+        otherMovementId: other,
+        message: remedy ? '$message ${_remedy(m)}' : message));
     final status = items[key];
     if (status != null) {
       items[key] = status.copyWith(conflicts: [...status.conflicts, kind]);
     }
   }
+
+  /// T-112: qué hacer con un conflicto, según el registro que lo produjo y
+  /// el botón que lo deshace en su pantalla.
+  static String _remedy(Movement m) => switch (m.type) {
+        MovementType.hatchCover =>
+          'Si el registro fue un error, deshazlo con «Deshacer conflicto».',
+        MovementType.discharge =>
+          'Si el registro fue un error, deshazlo desde el detalle del contenedor.',
+        MovementType.cancelItem =>
+          'Si la cancelación fue un error, la oficina la deshace desde el detalle '
+              'de la celda.',
+        _ => 'Si el registro fue un error, deshazlo desde el detalle de la celda.',
+      };
 
   void _discharge(Movement m) {
     final key = m.target!;
@@ -482,7 +505,8 @@ class _Run {
     if (status.state == ItemState.moved) {
       _conflict(ConflictKind.cancelledItem, key, m,
           '${_name(key)} ya se movió; para cancelarlo, anula antes ese movimiento.',
-          other: status.movementId);
+          other: status.movementId,
+          remedy: false);
       return;
     }
     items[key] = status.copyWith(state: ItemState.cancelled, movementId: m.id);
