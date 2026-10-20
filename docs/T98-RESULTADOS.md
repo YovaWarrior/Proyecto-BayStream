@@ -2,9 +2,10 @@
 
 Capitán Codex · 17-oct-2026 · Fase A · base `9ae744a` de `sprint-3`.
 
-**Vigencia:** la sección «Corrección 10.81», del 18-oct, prevalece sobre la
-entrega histórica del 17-oct que se conserva después. La corrección está sin
-commit, verificada y lista para revisión de Yov. La Fase B continúa pendiente.
+**Vigencia:** la sección «Fase B · Cierre 90dce4b», al final, registra el
+trabajo actual del 19-oct. Prevalece sobre los pendientes y bloques Git
+históricos de las secciones anteriores, que se conservan como trazabilidad.
+La corrección 10.81 fue versionada en `46202d7` (decisión 10.82).
 
 ## Corrección 10.81
 
@@ -804,7 +805,7 @@ El Honor ejecutó la sonda antes/después de cargar un BAPLIE sin red, sin sesi�
 Se corrigieron atribución Android 15 y falsos buckets BPF; cinco autopruebas pasan.
 No hay dictamen RNF; Fase B, frescura y transferencia de control siguen pendientes.
 
-Mensaje para Yov:
+Mensaje histórico para Yov (ensayo del Honor):
 
 Ensayo T-98 en Honor completado, sin dictamen ni sesión, sobre el APK aislado
 HEAD 83d0dc1 + tarjeta T-111. El original falló por userId/appId; después se
@@ -816,3 +817,471 @@ Antes/después: avión 1, Wi-Fi 0, ping fallido; ningún historial atribuible,
 no «cero tráfico». Fase B y transferencia de control pendientes. Honor restaurado
 a avión 0, Wi-Fi 1, letra 1.0 y app detenida. Commit propuesto
 «Sprint 3: ensaya y corrige sonda del Honor T-98».
+
+## Fase B · Cierre 90dce4b
+
+Capitán Codex · 19–20-oct-2026 · **En curso; entrega parcial reanudable.**
+Las tablas de esta sección son las vigentes. Un pendiente no equivale a una
+medición aprobada. Carlos autorizó la sesión en solitario, Flutter secuencial,
+Honor, Chrome y modo avión; las cuentas y `pktmon` siguen a cargo de Carlos.
+
+### Procedencia y aislamiento
+
+- `git log --oneline --decorate -3` confirmó en primer lugar la decisión
+  10.91, HEAD de `sprint-3` y etiqueta `sprint3-cierre`.
+- SHA completo: `90dce4bf09ab57e16a937460854c4a6d2b4034e5`.
+- `git archive sprint3-cierre`, sin modificar rama, índice ni repositorio.
+  Copia: `%TEMP%\t98-b-90dce4b-19oct\app\`.
+- Se verificaron **726 archivos** byte a byte por SHA-256 antes de compilar:
+  `manifiesto-original.json` y `preparacion.json`, bajo esa raíz TEMP.
+- Los cambios funcionales Android, en la copia, son `applicationId`
+  `gt.cmartinez.baystream.t98` y etiqueta «BayStream T98». No se copió
+  `android/key.properties`. Android se compila **sin `--no-pub`**.
+- Entrada `tool/t98_main.dart`, `T98_FIREBASE=true`, proyecto autorizado,
+  FirebaseApp `t98`, Auth y Firestore explícitos. Configuración pasada con
+  `--dart-define-from-file`, sin abrirla ni imprimir sus valores.
+- **Corrección preventiva del banco:** antes de abrir Windows, se detectó
+  que sus cajas `t98` aún apuntaban al directorio real. Se añadió
+  `T98_WINDOWS_STORE` obligatorio en TEMP, como en el banco T-111.
+  No se abrió el primer binario; se recompiló el banco antes del arranque.
+  No cambia `lib/` ni el comportamiento del producto.
+- Almacén Windows efectivo: `%TEMP%\t98-b-90dce4b-19oct\store-windows\`.
+  Se abrió mediante `explorer.exe`, mostró Inicio y creó cajas
+  `t98_profiles`, `t98_settings` y `t98_voyages`. PID 12596, cerrado por PID.
+  `smoke-windows.json` registra esta comprobación. No se examinó ni contó
+  el almacén real, y no se abrieron otras apps BayStream.
+- Honor antes: Android 15, NAA-LX3, 720×1600, densidad 320 (360 dp), letra
+  1.0, avión 0, Wi-Fi 1. **46 paquetes previos** inventariados mediante
+  nombre y `lastUpdateTime`, sin UID: `honor-paquetes-antes.json`.
+- Flutter **3.38.9**, Dart **3.10.8**. Sin dependencias nuevas. Se comprobó
+  que `pubspec.yaml` y `pubspec.lock` de la copia conservan su huella original.
+
+La copia superpone exclusivamente instrumentos `tool/t98_*` corregidos en
+esta sesión. El manifiesto original permite distinguirlos del código de
+producto congelado. No se atribuye a esta medición la evidencia de Fase A.
+
+Comprobación final `procedencia-20oct.json`: los **136 archivos de `lib/`**
+de la copia conservan exactamente sus huellas. Los tres archivos generados
+de Windows solo cambiaron finales de línea. Las superposiciones de herramientas
+sin corrección también difieren únicamente por finales de línea. Al preparar
+el manifiesto Android se dañaron acentos de tres comentarios XML; se restauraron
+desde los bytes del archivo original, conservando la etiqueta T98. El APK medido
+se compiló antes de restaurar esos comentarios: no cambian configuración ni
+código ejecutable y no se recompiló ni sustituyó el binario medido.
+`AndroidManifest-t98.xml` conserva la fuente usada y `manifest-comentarios.json`
+sus huellas. `pubspec.*` de la copia conserva sus bytes originales; en el repo,
+`pubspec.lock` solo difiere del archivo archivado por CRLF y no tiene diff Git.
+
+### Estado de binarios y evidencias
+
+Raíz de evidencia: `%TEMP%\t98-b-90dce4b-19oct\`.
+
+| Cliente | Estado | SHA-256 |
+|---|---|---|
+| Windows release, banco con almacén TEMP | Compilado, arranque comprobado | `596db54f24bee78cf23b28249aca2ebf6f75ef25e31c5c5f572977c3002be359` |
+| Android release `.t98`, 66,314,415 bytes | Compilado e instalado; Firebase activo y sesión inicial ausente | `8c59cabbd239998ada0de3ef6d19c4a06b9b196027adb58a40cbd343b9017cd9` |
+| Web release, `main.dart.js`, 4,991,653 bytes | Origen exclusivo `http://127.0.0.1:5898`, visible; Firebase activo y sin sesión | `94802e9dc3b985f11f17be8e2fdf50c78fb012272c6e7c0bcca0e9388bb100f3` |
+
+Windows: `build-windows-aislado.txt`, código 0, 32.1 s. Se conservan los
+avisos MSB8029 de MSBuild por compilar en TEMP. El primer build (161.3 s) se
+conserva en `build-windows.txt`, pero **no se usó para medición ni se abrió**.
+
+Android: `build-android.txt`, código 0, Gradle 103.4 s. Web:
+`build-web.txt`, código 0, 49.2 s; conserva el aviso de CupertinoIcons.
+`binarios.json` y `web-manifiesto.json` contienen tamaños y huellas. El
+manifiesto Web agregado tiene SHA-256
+`44757b4543d20155cbc6a9531cdd25ae42059efc0365404bdbdea4f70ddfca3e`.
+
+**Verificaciones antes de medir:** `flutter analyze --no-pub`: **0
+incidencias**, 36.1 s (`analyze.txt`). La primera suite sobre la copia de
+medición dio 1046 aprobadas y 1 fallo: T-88 exige la etiqueta «BayStream»,
+pero la copia Android tiene «BayStream T98». Se repitió con los bytes del
+manifiesto original de `cierre.tar`, sin cambiar la prueba: **1047/1047**, sin
+omitidas, código 0, 47 s (`suite-manifiesto-original.txt`). Se repuso después
+la identidad de la copia de medición; ningún binario cambió por esta prueba.
+Es una diferencia del banco, no un defecto atribuido al producto. Python:
+**10/10** autopruebas; sonda Honor: cinco autocomprobaciones correctas.
+
+### RNF-004 · Tabla vigente
+
+| Submétrica | Umbral | Medición de cierre | Dictamen |
+|---|---|---|---|
+| Operaciones locales A | 100% de 11 operaciones por cliente sin transmisión T63 4.2, Firebase activo y sin sesión | 11/11 operaciones funcionales observadas en cada cliente; límites instrumentales abajo | No medible para el 100% sin transmisión |
+| Condición B, fuera de compartida | Informativa | Pendiente Carlos; nadie ha iniciado sesión | No medible; informativa |
+| TLS real | TLS ≥1.2; 10.82 | Pendiente sesión y aprobación de `pktmon`; Android se declarará con su limitación | No medible |
+| Credenciales | Mecanismos nativos seguros por plataforma | Inventario histórico por fuentes; corroboración de versiones y mecanismos pendiente | No medible |
+
+**RNF-004: no medible** en este corte. No hay un resultado de transmisión
+en A. El muestreo de sockets no certifica ausencia de contenido transmitido.
+La ausencia de historial Android tampoco demuestra cero tráfico.
+TLS 1.1 del proveedor es observación, sin dictamen BayStream (10.82).
+
+**Recorrido común:** A01 abre el perfil; se declara «No lo tengo» para el
+límite, sin inventar un umbral. Viaje: 977 contenedores, 34 bahías, 8366.1 t.
+Bay Plan 01 y 02 (esta última: 4 unidades, 97.3 t); filtro NV6: 32, Todas:
+977; búsqueda por un ID anonimizado; Estadísticas; Alertas (0 posibles
+incumplimientos, 6 no evaluados, 0 conformes en las reglas evaluadas); CSV;
+Recientes restaura 977/34; Parámetros y geometría accesibles sin modificarlos.
+
+| Cliente | Evidencia y observación | Límite |
+|---|---|---|
+| Web | `web/operaciones-a.json`, `web/condicion-a-sanitizado.har`, `web/bay-plan-a.png`. 20 GET: 19 recursos locales y 1 recurso de la extensión; 0 peticiones HTTP externas, 0 cuerpos ni escrituras observadas. Durante carga, confirmación, filtros y búsqueda no hubo peticiones nuevas. El GET posterior fue una fuente pública local. | CDP de la pestaña; NetLog global bloqueado. 19 respuestas indican `fromServiceWorker`, lo que prueba intermediación, no cobertura de toda su actividad. No se pudo adjuntar automáticamente el worker con la API disponible. |
+| Honor | `honor-operaciones-a.json` y 22 JSON en `honor-red/` (antes/después de cada operación). Sin historial atribuible en los 22; 22 consultas TCP válidas, 0 filas; poll aceptado. Avión 0, Wi-Fi 1, ping responde. `honor/bay-plan-a.png`, recortada sin barra de estado. | Sin control positivo de contabilización, no calcular delta cero ni certificar ausencia de tráfico. |
+| Windows | `windows/operaciones-a.json`, `windows-red-a-valido.json`, `windows/parametros-a.png`. PID 5796; 1788 consultas TCP/UDP válidas en 300.225 s, 0 errores, 0 sockets observados. CSV de 122,773 bytes en TEMP. Cerrado por PID al terminar el bloque. | Muestreo, sin payload ni bytes, puede perder conexiones breves. El intervalo solicitado de 200 ms no es el intervalo efectivo de todas las consultas. |
+
+**NetLog bloqueado:** la revisión automática de seguridad rechazó abrir
+`chrome://net-export` por el protocolo/superficie del navegador. No se intentó
+eludirlo mediante comandos ni otra superficie. Carlos tendría que iniciar
+manualmente el NetLog requerido. La limitación no se sustituye por un HAR.
+
+Web exportó realmente `BayStream_BUQUE ALFA_V01N (2).csv`, 120,730 bytes,
+19-oct 19:48, en Descargas; se copió a `web-export-a.csv` en TEMP. El evento
+`download` de la API expiró. El archivo sin sufijo era del 27-ago y **no es
+evidencia**: su copia inicial se apartó como `descartado-export-preexistente.csv`.
+Los archivos anteriores no se tocaron. Honor mostró «Exportación CSV
+completada» y guardó en `Descargas/t98b/`. No se compara el contenido de los
+CSV entre clientes, ya que incorporan identificadores internos del viaje.
+
+El primer intento Windows abrió el selector incorrectamente; no cargó un
+viaje. Se conserva `windows-red-a.json` (818 consultas, 147.661 s, sin
+sockets) como **intento descartado**, no como recorrido. Se cerró su PID y
+se repitió con el campo Nombre del selector. La sonda corregida añade UTC
+de inicio/fin para próximas corridas; no se inventan esas marcas en las
+salidas anteriores. El primer intento de «Siguiente» en Web desplazó el
+selector; se repitió seleccionando BAY 02 directamente. No es un fallo de
+navegación del producto. Nadie inició sesión durante estos recorridos.
+
+### RNF-006 · Tabla vigente
+
+| Submétrica | Umbral | Medición de cierre | Dictamen |
+|---|---|---|---|
+| Recuperación | <3 s; error visible, viaje anterior y carga operativa | Honor: cuatro casos con cota <3 s; 02 inconcluso, 01 sin inicio inequívoco; 03/04 admitidos. Windows/Web pendientes | No medible para el conjunto |
+| Mensajes | 100% causa y acción; segmento si parseo | Hay mensajes alcanzables sin acción sugerida, por lectura de fuentes; censo completo pendiente | No cumple |
+| Disponibilidad funcional | ≥99.9% de operaciones básicas sin red | Honor: 11/11 (100%) con avión 1, Wi-Fi 0 y ping fallido antes/después; Windows/Web pendientes | Cumple el recorrido del Honor; conjunto no medible |
+
+**RNF-006: no cumple** por los mensajes sin acción sugerida. Recuperación y
+disponibilidad conservan su estado pendiente; no se inventa un porcentaje
+del inventario incompleto. Catálogo final en
+`catalogo-final/`: ocho entradas, semilla 98, clases, tamaños y SHA-256 en
+`catalogo.json`. La copia de A01 para control válido está en `control/`.
+El corpus se entrega al programa mediante una definición de compilación
+`BAYSTREAM_CORPUS_DIRECTORY` (`dart --define`, equivalente de Dart a
+`flutter --dart-define`); no queda una ruta de corpus incrustada en el código.
+La sonda del Honor pasó sus **cinco autocomprobaciones**, no son mediciones.
+
+**Mensajes revisados por fuente del cierre, sin iniciar sesión:**
+
+| Mensaje | Causa | Acción sugerida | Ruta visible corroborada |
+|---|---|---|---|
+| «Correo o contraseña incorrectos.» | Sí | No | `firebase_session_repository.dart:170` → `CloudPage._signIn` → `_run` → `Text(_message)` |
+| «El correo no es válido.» | Sí | No | `firebase_session_repository.dart:171` y `:199`, misma salida de `_run` |
+| «Esta cuenta está deshabilitada. Habla con el responsable.» | Sí | Sí | `firebase_session_repository.dart:172`, misma salida |
+| «Demasiados intentos. Espera un momento.» | Sí | Sí | `firebase_session_repository.dart:173`, misma salida |
+| «Sin conexión: iniciar sesión requiere red.» | Sí | No explícita | `firebase_session_repository.dart:174`, misma salida |
+| «No se pudo cerrar la sesión.» | Genérica | No | `firebase_session_repository.dart:186`, misma salida |
+
+`operation_text.dart:9`, `rejectionText`, solo normaliza puntos al final;
+no añade instrucciones. Se revisó la composición completa de estos mensajes,
+no únicamente su literal. Los contraejemplos bastan para descartar el 100%,
+pero **no sustituyen la revisión de los 804 candidatos** ni el recorrido de
+todas las rutas. No se provocaron fallos de cuenta ni se escribieron credenciales.
+
+**Control con red del Honor (10.90):** `reabrir_reciente_a-antes.json` y
+`-despues.json` corresponden a reabrir el viaje con avión 0, Wi-Fi 1 y ping
+que responde. No hay historial atribuible en ninguno. La sonda no acredita
+contabilización; su silencio sin red será referencia, y la disponibilidad se
+juzgará por el recorrido funcional con la red caída y verificada.
+
+**Grabación del catálogo, en curso:** se grabaron los ocho casos del Honor.
+El 03 entra en Parámetros; el 04 se admite con el aviso visible
+«Archivo posiblemente incompleto: faltan 2 segmentos (UNT, UNZ)». No se
+convierten esas rutas en un rechazo ni se les asigna un tiempo de error
+recuperado sin satisfacer los hitos del criterio. El perfil del 03 se canceló.
+El 04 conserva los datos de A01 (977/34), con su aviso, y pasa a ser el viaje
+anterior de las capturas siguientes.
+
+**Incidencia del instrumento de video:** el primer recorte con FFmpeg
+(`-fps_mode passthrough` sin base explícita del codificador) cuantizó PTS en
+varios clips y produjo marcas repetidas. Los ocho clips de
+`recuperacion-honor-final/` quedan **descartados para medición temporal**;
+no son ocho recuperaciones aprobadas. El ensayo anterior de
+`recuperacion-honor/` tampoco se presenta como una medición.
+
+Se corrigió el banco para tomar `time_base` del video original, pasarlo a
+`-enc_time_base`, conservar el video original hasta comparar todos los PTS y
+exigir igualdad y crecimiento estricto antes de retirar el transitorio propio.
+No se deduplican cuadros ni se reconstruyen marcas perdidas. El intento con
+`-1` fue rechazado por el FFmpeg que ejecuta Python y conservó el transitorio;
+se reprocesó ese original con su proporción explícita.
+
+En `recuperacion-honor-pts/rec01-corregido.mp4`, **132/132 PTS** coinciden con
+el original y son estrictamente crecientes. `rec01-conservacion-pts.json`
+conserva ambas listas, tasas, bases temporales y huellas de origen/salida.
+El original transitorio se retiró después de esa comprobación. Se completaron
+los ocho clips de esa serie con la corrección, sin modificar el producto.
+Los seis rechazos se volvieron a grabar con indicador de toque en
+`recuperacion-honor-marcada/`; ambas listas PTS coinciden cuadro por cuadro
+y son estrictamente crecientes. Los casos 03/04 conservan evidencia cualitativa
+en `recuperacion-honor-pts/`.
+
+El arnés espera **1 s fijo solicitado** entre confirmar el archivo y tocar
+de nuevo la posición de carga observada antes del selector. Ese retraso y
+las marcas ADB no son la medición y no se restan. El evaluador debe ver en
+el video el error/aviso, el viaje anterior y el selector reabierto. No basta
+que el script termine sin error. La barra de estado se recorta 80 px;
+no se grabaron pantallas de cuenta. Los cuadros se anotan con índice desde
+cero y PTS del video, mediante `t98_video_cuadros.py` y `t98_video.py`.
+
+**Anotación revisada del Honor, 20-oct:** la pulsación estacionaria de 120 ms
+hace visible el contacto. Se usó conservadoramente el primer cuadro con
+puntero activo, anterior a soltar el archivo; no se descuentan esos 120 ms
+ni la espera solicitada de 1 s. El final es un cuadro comprobado con el
+selector completamente reabierto, después de ver el mensaje y el viaje
+anterior (977/34). No se afirma que sea el primer cuadro posible de respuesta.
+La incertidumbre suma los intervalos anteriores a inicio y final; se compara
+su cota superior con 3 s. El largo intervalo inicial de estos videos variables
+se conserva, sin sustituirlo por 1/fps.
+
+| Caso | Cuadros inicio / error y viaje / selector | Diferencia PTS (s) | Incertidumbre (s) | Cota superior (s) | Dictamen de la observación |
+|---|---|---|---|---|---|
+| 02 texto sin EDIFACT | 52 / 102 / 147 | 2.039 | 0.995 | 3.034 | No medible frente a 3 s: intervalo cruza el umbral |
+| 05 sin TDT | 52 / 96 / 140 | 1.956 | 0.976 | 2.932 | Cumple |
+| 06 COPRAR | 53 / 98 / 143 | 1.975 | 0.976 | 2.951 | Cumple |
+| 07 versión no admitida | 55 / 100 / 144 | 1.923 | 0.994 | 2.917 | Cumple |
+| 08 vacío | 52 / 84 / 134 | 1.892 | 0.988 | 2.879 | Cumple |
+
+Las tasas medias reales respectivas son 22.312, 20.942, 21.784, 21.868 y
+20.987 fps, con PTS variables. Las fracciones exactas, índices y marcas
+están en `recuperacion-honor-anotada/casoNN/video-anotado.json` y `resumen.json`.
+El 01 muestra la selección y el rechazo, pero el indicador no ofrece un
+inicio inequívoco: **no se publica un tiempo**. El 02 no demuestra lentitud
+del producto: la incertidumbre impide decidir. Los mensajes 06/07 explican
+la versión y sugieren pedir una exportación compatible, pero no nombran
+explícitamente UNH; esto tampoco satisface el criterio de segmento del parseo.
+
+**Disponibilidad del Honor, 20-oct:** entre 06:39:43Z y 06:45:19Z, las sondas
+anterior y posterior comprobaron avión 1, Wi-Fi 0 y ping fallido. Se recorrieron
+las once operaciones y se guardaron observaciones sanitizadas en
+`honor-offline/01-carga.json` a `15-confirmado.json`, con `resultado.json`.
+La carga reutilizó el perfil guardado; la confirmación se probó además desde
+el editor, sin cambiar geometría ni inventar un límite. NV6 filtró 977 a 32,
+la búsqueda encontró el ID anonimizado, las estadísticas conservaron
+977/34/8366.1 t y las alertas 0/6/0. El CSV propio
+`Descargas/t98b/t98b_offline.csv` quedó comprobado por tamaño (122,725 bytes).
+Recientes reabrió A01 y los parámetros siguieron accesibles. **11/11 funcional**
+en este recorrido; no se estima disponibilidad longitudinal. El control con
+red no demostró historial atribuible, por lo que no se afirma cero bytes.
+`restauracion.json` verifica avión 0, Wi-Fi 1, letra 1.0 y puntero `null`.
+
+### RNF-008 · Tabla vigente
+
+| Submétrica | Umbral | Medición de cierre | Dictamen |
+|---|---|---|---|
+| BAPLIE 2.2.1 | 0 negativos aceptados sin aviso, guía SMDG | 2 positivos y 9 negativos resueltos en batería; cobertura contextual 21/24 rutas no X del corpus, con límites declarados | Cumple batería acotada; conformidad completa no medible |
+| BBBRRTT | 0 casos fallidos | 3 positivos conservados; 4 negativos con aviso visible; 6,271 posiciones del corpus bien formadas | Cumple casos medidos de formato |
+| ISO 6346 | 0 casos fallidos con sintéticos; corpus anonimizado aparte | 3 dígitos válidos y 3 alterados: 0 fallos; corpus contado aparte | Cumple casos sintéticos medidos |
+| UN/LOCODE | Lista oficial con edición y 0 casos fallidos | UNECE 2025-1: GTSTC/PAMIT presentes; ZZZZZ ausente y aceptado sin aviso | No cumple |
+| KGM y VGM | 0 casos fallidos | WT/VGM 24,000 kg leídos en campos distintos; LBR/TNE convertidos con aviso; corpus y reservas cotejados | Cumple casos medidos; no certifica SOLAS documental |
+| IMDG 42-24 | 8.1, incluye disposiciones por ONU | T-85: cotejos previos 289/289 y 60/60; columna 16b no evaluada | No cumple |
+
+**RNF-008: no cumple**, por UN/LOCODE y la limitación IMDG fijada en 8.1.
+No se ejecutó de nuevo el cotejo privado de T-85. No se corrige el producto.
+
+**Batería del cierre:** `conformidad-cierre/conformidad.csv` y `.md` contienen
+31 observaciones: 30 casos de norma y un control SMDG15 con aviso visible.
+La prueba manual es un registrador, no una aserción automática de conformidad:
+su `+1` no significa que 31 casos cumplan. La revisión encuentra 29/30 casos
+de norma satisfactorios y **uno fallido**, el puerto inexistente ZZZZZ.
+Se renderizó `VoyageSummaryCard` real a 1280×900; no sustituye el recorrido
+visual de los tres clientes. Los 13 negativos cubiertos por T-108 avisan
+(posiciones, dígitos, unidades y ausencia de UNB/BGM/UNT/UNZ); los cinco
+negativos restantes de cabecera/TDT se rechazan. El nuevo negativo de puerto
+se acepta en silencio. La pertenencia a UNECE se comprobó desde sus tres
+partes oficiales, no por el formato de cinco caracteres.
+
+Los positivos BBBRRTT comprueban forma y conservación del valor, incluido
+9999999; no certifican que ese hueco exista en un buque. WT y VGM conservan
+24,000 kg en sus campos respectivos. LBR 24,000 se convierte a 10,886 kg y
+TNE 24,000 a 24,000,000 kg, ambos con «Pesos revisados». Es lectura y aviso,
+sin demostrar verificación física ni documentación SOLAS de esa masa.
+
+**Barrido agregado:** `corpus-cierre-reservas/estandares-corpus.json` conserva
+SHA-256 por archivo, edición y huellas de los CSV. Los diez archivos se
+admiten; A06 activa la lectura 1.5 con aviso. Hay 6,271 posiciones, ninguna
+mal formada; 6,161 identificadores no vacíos, de los que 5,444 pasan el dígito
+y los 717 de A06 no lo pasan. Los otros nueve archivos tienen el 100% de sus
+IDs no vacíos con dígito válido. Estos datos son de un corpus **anonimizado**;
+no se usan como certificación ISO del producto ni de números reales.
+A08 y A08v_VGM contienen además 55 EQD sin identificador cada uno: son
+reservas y se cuentan aparte, fuera del porcentaje de IDs.
+
+Hay 16,452 ocurrencias de puerto cotejadas y 2,563 ausentes de la edición;
+son ocurrencias, no códigos distintos. No se atribuyen automáticamente a
+defectos ni se revelan códigos del corpus: pueden depender de la
+anonimización y la edición. El fallo reproducible se apoya en el sintético
+ZZZZZ, cuya ausencia se verificó. Las huellas de las tres partes oficiales
+son `a578f1caa76850f0d46ff7dab71bed53be84f8a0b0b3b6157e7de6d169ba37f2`,
+`b63c997fd42acfffbc8b3d8dd4ad6d97182dd8a0f123f6fa29bad41219b68dcc` y
+`65898aef20602d63b5394af4ebb2ddb1f0d0ad2ee0841c07040046b111a9371d`.
+La edición se conserva intencionalmente fija en 2025-1; no se afirma que sea
+la publicación más reciente. [Publicaciones UNECE](https://unlocode.unece.org/publications/).
+
+Todas las MEA WT/VGM/T encontradas llevan KGM con valor comparable; no hay
+taras T en este corpus. Los totales por calificador coinciden entre fuente
+y modelo en ocho archivos. En A08/A08v_VGM la fuente suma 7,081,500 kg y
+los 405 contenedores suman 6,899,700 kg: los 181,800 kg restantes coinciden
+con el peso nominal de las 55 reservas del modelo. No son pesos perdidos.
+Las variantes VGM preservan su calificador y sus sumas; los datos completos
+están en JSON, sin fragmentos comerciales.
+
+**Cobertura SMDG:** la presencia por contexto alcanza 21 de las 24 rutas
+no X del instrumento; faltan SG2/GID, SG2/DIM y SG3/EQA. Los cuatro grupos
+aparecen en los diez archivos. RNG solo aparece en A04. Los tres contextos
+X (RFF/NAD de cabecera y FTX de SG1) no se exigen. Esto es cobertura de
+presencia, sin validar cada cardinalidad, dato ni orden. No demuestra
+conformidad integral, y las tres ausencias se declaran sin ocultarlas.
+La referencia es la [guía SMDG BAPLIE 2.2.1](https://smdg.org/wp-content/uploads/MIGs/BAPLIE/Baplie221-03.pdf),
+capítulos 4, 5.2 y 7: se cotejaron estructura por grupos, BBBRRTT, KGM y VGM.
+
+**Incidencia de ejecución:** `conformidad-b/` fue ejecutada por error desde
+el repositorio de trabajo y queda descartada como medición de cierre. La
+corrida válida `conformidad-cierre/` se repitió desde la copia limpia de
+TEMP y su registro identifica esa ruta. No se cambió código de producto.
+
+### RNF-002 · Tabla vigente y piloto
+
+| Submétrica | Umbral | Medición de cierre | Dictamen |
+|---|---|---|---|
+| Primera visualización sin perfil, rige | ≤3 pasos y ≤30 s hasta rejilla; 5 repeticiones por cliente | 15 filas vacías preparadas; sin videos medidos todavía | No medible |
+| Con perfil | Informativa, 5 repeticiones por cliente | 15 filas vacías preparadas | No medible; informativa |
+| Idioma | Español / total de cadenas visibles | 4,997 literales candidatos; revisión pendiente | No medible |
+| Material 3 | 100% controles interactivos; Material y colorScheme | 210 controles candidatos; revisión pendiente | No medible |
+| Aprendizaje | Cinco tareas sin ayuda en <10 min | Piloto pendiente de Carlos, cinco participantes COMAR | No medible |
+| SUS, indicador 6 | Meta ≥68 | Sin participantes ni respuestas | No medible |
+
+**RNF-002: no medible** en este corte. No se extrapolan los dictámenes de
+T-44 al cierre. La rejilla queda excluida del denominador M3 por carecer de
+equivalente Material; sus controles externos sí cuentan.
+
+El recorrido del Honor devuelve «Back» para el control de retroceso de
+Alertas, Recientes y Parámetros (`honor-offline/04-alertas.json`,
+`10-recientes.json`, `12-parametros.json`). Es una etiqueta de accesibilidad
+observada, sin captura del tooltip desplegado ni censo completo. Se registra
+como hallazgo para la revisión de idioma, sin convertir 4,997 candidatos en
+un denominador revisado. `BayStreamApp` activa Material 3 en ambos temas;
+la lectura de selector de bahías, leyenda y Alertas comprobó componentes
+Material y colores derivados de `colorScheme`. Eso tampoco certifica el
+100% de los 210 candidatos, que incluye entradas H5 ajenas a rutas de producto.
+
+`hojas/` contiene el protocolo vigente con el SHA completo, las 99 filas de
+operaciones (11×3×3), 24 recuperaciones y 30 primeras visualizaciones; también
+25 filas de tareas P1–P5 y cinco cuestionarios SUS vacíos. Las tareas fijas y
+la fuente SUS constan en la sección histórica «Hoja de medición y piloto» y
+en `hojas/protocolo.md`. No hay nombres, correos, respuestas ni datos inventados.
+
+### Pendientes para reanudar
+
+1. RNF-004 A: las 11 operaciones por cliente ya se recorrieron. Falta el NetLog
+   global que Carlos debe iniciar manualmente y verificar frente al service
+   worker; el HAR limitado no lo sustituye. El Honor no demuestra control
+   positivo de contabilización. Conservar esos límites al dictaminar.
+2. RNF-006: completar videos y anotación de los ocho casos en Windows/Web,
+   repetir Honor 01/02 con inicio e incertidumbre suficientes, revisar el censo
+   completo de mensajes y medir disponibilidad con red realmente desconectada
+   en Windows/Web. Los casos admitidos 03/04 no se convierten en rechazos.
+3. RNF-008: revisar independientemente las tablas y completar la cobertura
+   normativa faltante si corresponde. Conservar el fallo ZZZZZ y la limitación
+   IMDG, sin arreglar el producto ni afirmar conformidad integral por presencia.
+4. RNF-002: grabar las 30 primeras visualizaciones y anotar sus pasos/PTS;
+   completar censos revisados de idioma y controles. Piloto/SUS preparado,
+   todavía sin participantes.
+5. Al final, una tanda con Carlos: crear «PRUEBA T-98» desde la app con un
+   BAPLIE sintético, iniciar él mismo las sesiones `t98` y aprobar `pktmon`.
+   Chrome Security y NetLog requieren su intervención manual; no capturar el
+   inicio de sesión ni «Nube y cuenta». TLS real antes de sincronizar; condición
+   B informativa. Carlos cierra las sesiones al terminar.
+6. Aceptación cruzada por Timonel de una fila de cada RNF. No realizada;
+   Capitán no contactó ni delegó en otro programador.
+
+**Punto de suspensión de interfaz:** al intentar activar la ventana Chrome
+de T98 con Computer Use, la herramienta detuvo automáticamente el control
+porque no pudo determinar la URL actual con confianza suficiente para aplicar
+su política. No se intentó la misma interacción mediante otra superficie.
+Antes ya había rechazado abrir `chrome://net-export` porque solo admite
+HTTP/HTTPS; no se buscó un rodeo por shell/CDP. Estos son límites de la
+automatización, no fallos de BayStream. La siguiente sesión debe recuperar
+el control permitido antes de nuevas mediciones visuales. El origen local es
+`http://127.0.0.1:5898/`; el servidor propio quedó disponible (PID 31172),
+y el almacén Web del origen se conserva aunque se cierre su pestaña.
+
+### Validación final de este corte
+
+- `flutter analyze --no-pub` en la copia: **0 issues**, 46.5 s,
+  `analyze-20oct.txt`.
+- Suite por defecto en la copia: **1047/1047, sin omisiones**, código 0,
+  43 s, `suite-20oct.txt`. Se usó el manifiesto original únicamente durante
+  la suite para la aserción de etiqueta de T-88 y se restauró el T98 en
+  `finally`; no se recompilaron los binarios medidos.
+- Batería manual: registrador **1/1** y 31 observaciones revisadas aparte;
+  el caso UN/LOCODE fallido no se oculta detrás de ese verde.
+- Auxiliares Python: **10/10**, `python test/t98_auxiliares_test.py`.
+  La invocación previa con `python -m unittest test/t98_auxiliares_test.py`
+  falló al importar el módulo; se corrigió la invocación y se ejecutaron los
+  diez casos. Compilación sintáctica de los tres nuevos Python correcta.
+- Sonda Honor: **5/5** autocomprobaciones. Honor restaurado: avión 0,
+  Wi-Fi 1, letra 1.0, indicador de puntero `null`. No se alteró densidad.
+- Sin Windows BayStream ni FFmpeg activos al cerrar la verificación.
+- La inspección Git de solo lectura muestra documentos de tesis ajenos
+  modificados: no se tocaron y no se incluyen en los comandos de esta tarea.
+
+No se cambian criterios T63. Sin Git de escritura, publicaciones, Firebase
+CLI/consola, acceso a T-105, demo17, archivos de producto o almacén real.
+`pubspec.yaml` y `pubspec.lock` **sin cambios**.
+
+### Archivos de este corte y entrega a Carlos
+
+Modificados: `docs/T98-RESULTADOS.md`, `tool/t98_main.dart`,
+`tool/t98_catalogo_invalidos.dart`, `tool/t98_estandares_corpus.dart`,
+`tool/t98_estandares_test.dart` y `tool/t98_sonda_red_windows.ps1`.
+Nuevos: `tool/t98_honor_ui.py`, `tool/t98_recuperacion_honor.py` y
+`tool/t98_video_cuadros.py`. No se modificó `test/`, `lib/` ni `pubspec.*`.
+Ninguna de estas nueve rutas está ignorada; la evidencia en TEMP no se versiona.
+
+Tres líneas de resumen:
+
+1. Condición A recorrida en tres clientes, con límites de captura de red explícitos.
+2. Honor sin red 11/11; recuperación parcial anotada por PTS y errores descriptivos pendientes de censo.
+3. Estándares medidos sobre cierre: fallo de UN/LOCODE, IMDG limitado y corpus con reservas cotejadas.
+
+Comandos **solo para Carlos**, un commit para este corte de T-98:
+
+```powershell
+git add -- docs/T98-RESULTADOS.md
+git add -- tool/t98_main.dart
+git add -- tool/t98_catalogo_invalidos.dart
+git add -- tool/t98_estandares_corpus.dart
+git add -- tool/t98_estandares_test.dart
+git add -- tool/t98_sonda_red_windows.ps1
+git add -- tool/t98_honor_ui.py
+git add -- tool/t98_recuperacion_honor.py
+git add -- tool/t98_video_cuadros.py
+git commit -m "Sprint 3: medir Fase B de T98 y registrar limites"
+git push
+```
+
+**Mensaje para Yov:**
+
+> Yov: continué T-98 B sobre 90dce4bf09ab57e16a937460854c4a6d2b4034e5.
+> RNF-004 sigue no medible: A funcional 11/11 por cliente, sin NetLog global
+> ni control positivo atribuible del Honor. RNF-006 no cumple por mensajes;
+> Honor sin red 11/11, cuatro recuperaciones con cota <3 s y dos inconclusas;
+> 03/04 se admiten y Windows/Web siguen pendientes. RNF-008 no cumple:
+> ZZZZZ ausente de UNECE 2025-1 se acepta en silencio, además de IMDG 16b.
+> Batería de 30 casos de norma: 29 satisfactorios y uno fallido; más un
+> control. Corpus de diez archivos procesado, reservas y pesos cotejados,
+> GID/DIM/EQA ausentes. RNF-002 sigue no medible; hojas y piloto preparados.
+> Analyze 0 y suite 1047/1047 en copia. Solo informe y ocho instrumentos;
+> producto/pubspec intactos, sin Git ni publicaciones. Interfaz suspendida
+> por bloqueo automático al no poder verificar la URL de Chrome. Informe
+> vigente en docs/T98-RESULTADOS.md; pendientes precisos al final. Carlos
+> aún debe completar la tanda de cuentas/pktmon después de lo sin sesión.

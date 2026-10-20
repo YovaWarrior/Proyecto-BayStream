@@ -33,13 +33,19 @@ Map<String, List<int>> t98Invalids(String a01) {
 }
 
 void main(List<String> args) {
-  if (args.length != 2) {
+  const corpus = String.fromEnvironment('BAYSTREAM_CORPUS_DIRECTORY');
+  if (args.length != 1 || corpus.isEmpty) {
     throw ArgumentError(
-        'Uso: dart run tool/t98_catalogo_invalidos.dart A01 SALIDA_TEMP');
+        'Declarar BAYSTREAM_CORPUS_DIRECTORY por --define y pasar SALIDA_TEMP.');
   }
-  final source = File(args[0]);
-  final output = t98Output(args[1]);
+  final source = File('$corpus/CORPUS_A01.edi');
+  final output = t98Output(args[0]);
   final cases = t98Invalids(source.readAsStringSync());
+  // Control válido para la UI, leído por la misma definición del corpus.
+  final control = Directory('${output.path}/control')..createSync();
+  final controlFile = File('${control.path}/A01.edi');
+  if (controlFile.existsSync()) throw StateError('No sobrescribir el control.');
+  source.copySync(controlFile.path);
   final manifest = <Object>[];
   var i = 0;
   for (final entry in cases.entries) {

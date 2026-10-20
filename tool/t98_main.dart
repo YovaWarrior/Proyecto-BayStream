@@ -3,10 +3,13 @@
 import 'dart:async';
 
 import 'package:baystream/core/app.dart';
+import 'package:baystream/features/vessel/data/datasources/hive_movement_data_source.dart';
+import 'package:baystream/features/vessel/data/datasources/hive_vessel_data_source.dart';
 import 'package:baystream/features/vessel/data/datasources/local_store_directory.dart';
 import 'package:baystream/features/vessel/data/repositories/firebase_session_repository.dart';
 import 'package:baystream/features/vessel/data/repositories/firestore_operation_sync.dart';
-import 'package:baystream/features/vessel/data/repositories/local_vessel_repository_factory.dart';
+import 'package:baystream/features/vessel/data/repositories/local_vessel_repository_impl.dart';
+import 'package:baystream/features/vessel/data/repositories/movement_log_repository_impl.dart';
 import 'package:baystream/features/vessel/data/repositories/local_only_operation_sync.dart';
 import 'package:baystream/features/vessel/data/repositories/vessel_repository_impl.dart';
 import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
@@ -21,6 +24,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Windows no debe abrir ni crear cajas dentro del almacén real (10.88).
+  const temporary = String.fromEnvironment('T98_WINDOWS_STORE');
+  if (!kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.windows &&
+      !RegExp(r'[/\\]Temp[/\\]').hasMatch(temporary)) {
+    throw StateError('T98_WINDOWS_STORE debe apuntar a TEMP.');
+  }
+  final directory = kIsWeb
+      ? null
+      : defaultTargetPlatform == TargetPlatform.windows
+          ? temporary
+          : await localStoreDirectory();
   const configured = bool.fromEnvironment('T98_FIREBASE');
   FirebaseApp? app;
   if (configured) {
@@ -49,16 +64,21 @@ Future<void> main() async {
   }
   final database = app == null ? null : FirebaseFirestore.instanceFor(app: app);
   final auth = app == null ? null : FirebaseAuth.instanceFor(app: app);
+  // Solo estado booleano: nunca imprimir correo, UID ni datos de la sesión.
+  debugPrint('T98 Firebase=$configured; '
+      'sesionInicial=${auth?.currentUser == null ? "ausente" : "presente"}');
   runApp(ProviderScope(overrides: [
     vesselRepositoryProvider.overrideWith(
         (ref) => VesselRepositoryImpl(firestore: database ?? _NoCloud())),
     localVesselRepositoryProvider.overrideWith((ref) async {
-      final repo = await openLocalVesselRepository(namespace: 't98');
+      final repo = LocalVesselRepositoryImpl(await HiveVesselDataSource.open(
+          directory: directory, namespace: 't98'));
       ref.onDispose(() => unawaited(repo.close()));
       return repo;
     }),
     movementLogRepositoryProvider.overrideWith((ref) async {
-      final repo = await openMovementLogRepository(namespace: 't98');
+      final repo = MovementLogRepositoryImpl(await HiveMovementDataSource.open(
+          directory: directory, namespace: 't98'));
       ref.onDispose(() => unawaited(repo.close()));
       return repo;
     }),
@@ -70,7 +90,7 @@ Future<void> main() async {
           auth,
           database,
           await HiveLastOperatorStore.open(
-              directory: await localStoreDirectory(), namespace: 't98'));
+              directory: directory, namespace: 't98'));
       ref.onDispose(() => unawaited(repo.dispose()));
       return repo;
     }),

@@ -64,6 +64,12 @@ List<_Case> _cases() {
     cases.add(_Case('Cabecera ${pair[1]}', 'BAPLIE 2.2.1', 'negativo',
         t98Message().replaceFirst(pair[0], pair[1])));
   }
+  // El barrido corrobora estos códigos contra la edición UNECE declarada.
+  // Se observa al producto; la pertenencia a la lista no sustituye su aviso.
+  cases.add(
+      _Case('Puertos GTSTC y PAMIT', 'UN/LOCODE', 'positivo', t98Message()));
+  cases.add(_Case('Puerto inexistente ZZZZZ', 'UN/LOCODE', 'negativo',
+      t98Message().replaceAll('PAMIT', 'ZZZZZ')));
   // Control del propio detector de aviso visible, separado de BAPLIE 2.2.1.
   // Una advertencia almacenada pero no dibujada NO cuenta como aviso visible.
   cases.add(_Case(

@@ -5,6 +5,8 @@ param(
   [ValidateRange(50,5000)][int]$IntervaloMs = 200,
   [Parameter(Mandatory=$true)][ValidatePattern('^[a-z0-9_-]+$')][string]$Operacion,
   [ValidateSet('A','B','autoprueba')][string]$Condicion = 'A',
+  [ValidateSet('A','B')][string]$Fase = 'A',
+  [ValidatePattern('^$|^[0-9a-f]{7,40}$')][string]$Base = '',
   [string]$Salida = "$env:TEMP\t98\red-windows.json"
 )
 $ErrorActionPreference = 'Stop'
@@ -17,6 +19,7 @@ if ($Condicion -ne 'autoprueba' -and ($process.ProcessName -ne 'baystream' -or $
   throw 'Se requiere el PID de un cliente BayStream en una carpeta t98, nunca la app real/demo17.'
 }
 $started = $process.StartTime.ToUniversalTime()
+$startedUtc = [DateTime]::UtcNow
 $clock = [Diagnostics.Stopwatch]::StartNew()
 $samples = [Collections.Generic.List[object]]::new()
 $errors = [Collections.Generic.List[object]]::new()
@@ -45,7 +48,8 @@ while ($clock.Elapsed.TotalSeconds -lt $Segundos) {
   Start-Sleep -Milliseconds $IntervaloMs
 }
 New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
-[ordered]@{ fase='A: ensayo, no medicion'; operacion=$Operacion; condicion=$Condicion;
+[ordered]@{ fase=$Fase; base=$Base; operacion=$Operacion; condicion=$Condicion;
+  inicioUtc=$startedUtc.ToString('o'); finUtc=[DateTime]::UtcNow.ToString('o');
   intervaloSolicitadoMs=$IntervaloMs; duracionRealMs=$clock.ElapsedMilliseconds;
   pidTermino=$exited; consultasValidas=$samples.Count; errores=@($errors.ToArray());
   limitacion='Muestreo de sockets: pierde conexiones breves; UDP no da destino ni bytes. No clasifica contenido ni prueba cero transmisiones.';

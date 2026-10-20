@@ -68,18 +68,24 @@ Set<String> t98Coverage(List<String> segments) {
 }
 
 void main(List<String> args) {
-  if (args.length != 4) {
-    throw ArgumentError('Uso: dart run tool/t98_estandares_corpus.dart '
-        'CORPUS UNECE_CSV EDICION SALIDA_TEMP');
+  const corpus = String.fromEnvironment('BAYSTREAM_CORPUS_DIRECTORY');
+  const phase = String.fromEnvironment('T98_FASE', defaultValue: 'A');
+  const base = String.fromEnvironment('T98_BASE');
+  if (args.length != 3 ||
+      corpus.isEmpty ||
+      !['A', 'B'].contains(phase) ||
+      (phase == 'B' && !RegExp(r'^[a-f0-9]{40}$').hasMatch(base))) {
+    throw ArgumentError('Declarar BAYSTREAM_CORPUS_DIRECTORY, T98_FASE y '
+        'T98_BASE por --define; pasar UNECE_CSV EDICION SALIDA_TEMP.');
   }
-  final output = t98Output(args[3]);
-  final locodes = t98Locodes(Directory(args[1]));
+  final output = t98Output(args[2]);
+  final locodes = t98Locodes(Directory(args[0]));
   final rows = <Object>[];
   final coverage = <String, List<String>>{
     for (final path in t98GuidePaths) path: [],
   };
   for (final name in t98CorpusNames) {
-    final file = File('${args[0]}/CORPUS_$name.edi');
+    final file = File('$corpus/CORPUS_$name.edi');
     if (!file.existsSync()) throw StateError('Falta CORPUS_$name.edi.');
     final source = file.readAsStringSync();
     final segments = t98Segments(source);
@@ -93,6 +99,10 @@ void main(List<String> args) {
     var unknownPorts = 0;
     var ids = 0;
     var validIds = 0;
+    var eqdWithoutId = 0;
+    final weightUnits = <String, int>{};
+    final sourceKg = <String, double>{};
+    var weightsNotComparable = 0;
     for (final segment in segments) {
       final e = segment.split('+');
       if (e.first == 'LOC' && e.length >= 3) {
@@ -106,16 +116,62 @@ void main(List<String> args) {
         }
       }
       if (e.first == 'EQD' && e.length >= 3 && e[1] == 'CN') {
-        ids++;
-        if (t98ValidId(e[2])) validIds++;
+        if (e[2].trim().isEmpty) {
+          eqdWithoutId++;
+        } else {
+          ids++;
+          if (t98ValidId(e[2])) validIds++;
+        }
+      }
+      if (e.first == 'MEA' && e.length >= 4) {
+        const qualifiers = {'WT', 'VGM', 'T'};
+        final qualifier = qualifiers.contains(e[1]) ? e[1] : e[2];
+        if (!qualifiers.contains(qualifier)) continue;
+        final components = e[3].split(':');
+        final unit = components.first;
+        final publicUnit =
+            {'KGM', 'LBR', 'TNE'}.contains(unit) ? unit : 'OTRA_O_AUSENTE';
+        weightUnits.update('$qualifier/$publicUnit', (n) => n + 1,
+            ifAbsent: () => 1);
+        final value = double.tryParse(components.elementAtOrNull(1) ?? '');
+        if (unit == 'KGM' && value != null && value.isFinite) {
+          sourceKg.update(qualifier, (sum) => sum + value,
+              ifAbsent: () => value);
+        } else {
+          // No adivinar cifras ni convertir formatos fuera del cotejo KGM.
+          weightsNotComparable++;
+        }
       }
     }
     var accepted = false;
     var notice = false;
+    final parsedWeights = <String, Object>{};
     try {
       final voyage = BaplieParserService().parse(source);
       accepted = true;
       notice = voyage.metadata?.readWithV2Rules ?? false;
+      final reservedWeights = voyage.reservedSlots
+          .map((slot) => slot.nominalWeight)
+          .whereType<double>()
+          .toList();
+      parsedWeights['reservas'] = {
+        'huecos': voyage.reservedSlots.length,
+        'conPesoNominal': reservedWeights.length,
+        'sumaNominalKg':
+            reservedWeights.fold<double>(0, (sum, weight) => sum + weight),
+      };
+      final values = {
+        'WT': voyage.containers.map((c) => c.grossWeight),
+        'VGM': voyage.containers.map((c) => c.vgmWeight),
+        'T': voyage.containers.map((c) => c.tareWeight),
+      };
+      for (final entry in values.entries) {
+        final weights = entry.value.whereType<double>().toList();
+        parsedWeights[entry.key] = {
+          'contenedoresConPeso': weights.length,
+          'sumaKg': weights.fold<double>(0, (sum, weight) => sum + weight),
+        };
+      }
     } catch (_) {
       // No volcar la excepción: puede contener datos comerciales.
     }
@@ -129,25 +185,39 @@ void main(List<String> args) {
       'puertosOcurrencias': ports,
       'puertosAusentesLista': unknownPorts,
       'ids': ids,
+      'eqdSinIdentificador': eqdWithoutId,
       'idsDigitoValido': validIds,
       'porcentajeIdsValido': ids == 0 ? null : validIds * 100 / ids,
+      'meaUnidadesPorCalificador': weightUnits,
+      'sumaFuenteKgm': sourceKg,
+      'meaFueraCotejoKgmCanonico': weightsNotComparable,
+      'pesosModelo': parsedWeights,
     });
   }
-  final csvFiles = Directory(args[1])
+  final csvFiles = Directory(args[0])
       .listSync(recursive: true)
       .whereType<File>()
       .where((f) => f.path.endsWith('.csv'));
   t98Json(File('${output.path}/estandares-corpus.json'), {
-    'fase': 'A: ensayo del instrumento; no es medición RNF',
+    'fase': phase,
+    'base': base,
     'guia': t98Guide,
-    'edicionUnlocode': args[2],
+    'edicionUnlocode': args[1],
+    'controlListaUnlocode': {
+      for (final code in ['GTSTC', 'PAMIT', 'ZZZZZ'])
+        code: locodes.contains(code),
+    },
     'listaHuella': {
       for (final f in csvFiles)
         f.uri.pathSegments.last: t98Hash(f.readAsBytesSync())
     },
     'aviso': 'Corpus anonimizado: los IDs no certifican ISO 6346. '
         'Presencia de segmentos/grupos no certifica conformidad; '
-        'la cobertura ausente queda visible. A06 es 1.5 con aviso.',
+        'la cobertura ausente queda visible. A06 es 1.5 con aviso. '
+        'Pesos de fuente: MEA WT/VGM/T con KGM:valor. La fuente puede incluir '
+        'reservas sin contenedor; el modelo cuenta solo contenedores. '
+        'El porcentaje ISO excluye EQD sin identificador y los cuenta aparte. '
+        'Los formatos no comparables se declaran, sin inventar conversiones.',
     'cobertura': coverage,
     'grupos': {
       for (final group in ['SG1', 'SG2', 'SG3', 'SG4'])
