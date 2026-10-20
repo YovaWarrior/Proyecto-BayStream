@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.95; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.96; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -6256,3 +6256,36 @@ El piso queda en 1063.
 4. **El resto de T-98** (Codex, sobre `sprint3-cierre-2`) va en otra ventana, y entonces es Timonel quien no mide tiempos.
 
 **El sprint sigue en 50 tareas y ≈ 173.5 h.** El tablero (v58): T-99 en curso, con la Fase B empezada. El piso queda en 1063.
+
+### 10.96 · T-112, terminada · El cierre `sprint3-cierre-2` se sostiene · Los primeros resultados de T-99 · Cómo se turnan la máquina (20-oct)
+
+**T-112, ACEPTADA con observaciones por Codex** (sobre `33404a5`):
+- 1063/1063 sin omitidas, `analyze` en cero, el corpus 157/157, y los datos y el codec iguales a `cdab56b`.
+- **Los censos:** el idioma en 100 %, Material 3 sin excepciones, los mensajes 218/218 y los de lectura 12/12.
+- **Su muestra independiente,** de 20 mensajes con semilla registrada: 20/20 con causa y acción.
+- Los tres clientes, con `t112acc`.
+- **Las observaciones:** la leyenda desplazable a 360 dp (ya en la lista del rediseño, 10.94), el supuesto histórico de T-111acc y un cierre del primer banco de Windows con la accesibilidad forzada, que no se repitió en el recorrido final.
+- **No pide cambios en `lib/` ni otro cierre.** `sprint3-cierre-2` se sostiene, y T-112 pasa a **Terminado**.
+
+**Los primeros resultados de la Fase B de T-99** (Timonel, en el árbol). Son resultados, no se corrigen (10.73), y van al informe y a la tesis tal cual.
+
+| Medición | Resultado | Dictamen |
+|---|---|---|
+| **RAM en Windows** (1920×1080, escala 125 %, maximizada, con Firebase en una app aparte `t99` y sin sesión) | A01 entre 466 y 474 MB; el sintético de 5000, entre 1854 y 1857 MB. El pico siempre llega al volver a Lista | **No cumple** (< 200 MB) |
+| **Documentación** | 59.02 % (225 de 549 sin documentar) | **No cumple** |
+| **Capas** | 11 violaciones de presentación → datos | **No cumple** |
+| **Código compartido** | 98.86 % | **Cumple** |
+
+- **Lo que se descartó:** Timonel descartó las mediciones hechas con la ventana del arnés redimensionada, porque se dibujaba corrida.
+- **La ventana:** a 1600×900 físicos (1280×720 lógicos al 125 %) se ve bien; la de 1920×1080 que pide 10.86 sale desplazada. Si eso se mantiene al reabrir, es un hallazgo del producto al cambiar la escala, y va al Sprint 4.
+
+**Cómo se turnan la máquina desde aquí** (Carlos da el semáforo). El límite de uso de Codex marca el ritmo:
+- **En cada ventana de Codex,** Codex compila, corre la suite y mide T-98. Mientras tanto, Timonel no corre Flutter ni mide tiempos: escribe el informe, analiza y hace lo que no use la máquina.
+- **Cuando Codex escribe «SEMÁFORO: libre» o se le acaba el límite,** la máquina es de Timonel para medir los tiempos de T-99.
+
+**El sprint sigue en 50 tareas y ≈ 173.5 h.** El tablero (v59):
+- 45 terminadas;
+- T-98 y T-99 en curso;
+- 3 por hacer: T-87, T-100 y T-101.
+
+El piso queda en 1063.
