@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 169.5 h estimadas** (al 19-oct, 10.91; commit de cierre `sprint3-cierre`) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 169.5 h estimadas** (al 20-oct, 10.92; commit de cierre `sprint3-cierre`) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -6033,3 +6033,57 @@ El piso queda en 1047.
 | Mayús + rueda en la matriz del IMDG | 10.83 |
 
 **El sprint sigue en 49 tareas y ≈ 169.5 h.** El tablero (v54): 44 terminadas, 2 en curso (T-98 y T-99) y 3 por hacer (T-87, T-100 y T-101). El piso queda en 1047.
+
+### 10.92 · La Fase B de T-98, a la mitad · RNF-008 no cumple también por UN/LOCODE · La Web, en el navegador integrado de Codex · Timonel hace los censos en paralelo (20-oct)
+
+**Lo que lleva Codex** (dos sesiones, `55cede9`; las suspendió el límite de uso de ChatGPT):
+- **Los tres clientes** compilados de `sprint3-cierre` (`90dce4b`), con sus huellas. Sobre la copia: 1047/1047 y `analyze` en cero.
+- **RNF-004, condición A:** las 11 operaciones básicas en los tres clientes, sin sesión.
+  - Web: 0 peticiones externas en el HAR. Honor: 22 lecturas sin historial atribuible. Windows: 1788 consultas, 0 sockets.
+  - El NetLog de Chrome falta: la automatización no abre `chrome://net-export`.
+  - Ninguna sonda certifica cero bytes.
+- **RNF-006:**
+  - **Disponibilidad sin red en el Honor:** 11/11, con modo avión, Wi-Fi apagado y ping fallido, antes y después.
+  - **Recuperación en el Honor:** 05, 06, 07 y 08 cumplen, con cotas de 2.88 a 2.95 s. El 02 no se puede decidir, porque su cota es 3.03 s. El 01 no tiene un inicio claro. El 03 y el 04 se admiten (el 04, con el aviso de T-108), así que no son recuperaciones.
+  - Windows y la Web, pendientes.
+  - **El control positivo de 10.90:** con red, la sonda tampoco ve historial. Por eso la disponibilidad se juzga por el recorrido funcional.
+  - Hay mensajes sin acción sugerida (los de inicio de sesión), así que «Mensajes» queda en «no cumple» mientras se hace el censo completo (804 candidatos).
+- **RNF-008, terminado: no cumple.**
+  - 29 de 30 casos de norma satisfactorios.
+  - **El que falla: un puerto inexistente (`ZZZZZ`) se acepta sin aviso.** Se comprobó contra UNECE 2025-1.
+  - BBBRRTT, ISO 6346, KGM y VGM cumplen en los casos medidos. Los 13 negativos de T-108 avisan.
+  - En la guía SMDG faltan 3 de 24 rutas en el corpus; se declaran.
+  - El IMDG queda en «no cumple» por 8.1, como estaba previsto.
+- **RNF-002:** solo las hojas. El Honor dice «Back» como etiqueta de accesibilidad: va al censo del idioma.
+
+**Lo que decide Yov:**
+1. **`ZZZZZ` es un resultado, no se corrige antes del cierre.** RNF-008 ya no cumplía por el IMDG (8.1), así que validar el UN/LOCODE no cambia el dictamen. Pasa al Sprint 4: el lector avisa de un puerto que no está en la lista de UNECE.
+2. **«Mensajes» de RNF-006** se decide cuando esté el censo completo. Si lo que falta es solo agregar la acción a unos textos, Yov propone a Carlos una tarea chica de textos antes del 24. Repetiría solo esa fila, que es un censo estático (10.73).
+3. **La condición con perfil de RNF-002, que es informativa,** baja a 1 repetición por cliente. La condición sin perfil, que rige, sigue con 5 por cliente.
+4. **Codex no desconecta la red de la laptop.** Se quedaría sin conexión, y Timonel también. La disponibilidad sin red de Windows y la Web va en la tanda con Carlos:
+   - Codex prepara la lista de las 11 operaciones y graba la pantalla;
+   - Carlos apaga el Wi-Fi, hace las operaciones y lo vuelve a encender;
+   - Codex anota la grabación.
+
+**Carlos decide (20-oct, 09:40):**
+- **La Web se mide en el navegador integrado de Codex,** declarado, como en 10.55 y 10.70. El control de pantalla de Codex se detiene en Chrome porque no puede verificar la dirección.
+- **En la tanda final, Carlos abre a mano** el NetLog (`chrome://net-export`) y el panel Security de Chrome.
+- **Timonel hace en paralelo los tres censos:** el idioma (4997 literales), Material 3 (210 controles) y los mensajes de error de RNF-006. Solo lee código: no corre Flutter, no abre la app y no toca el Honor. Los entrega en `docs/T98-CENSOS-RESULTADOS.md`; Codex los cita y da el dictamen. En la aceptación, Timonel repite filas que no hizo él.
+
+**La tanda con Carlos, al final, en una sola vez:**
+- crear «PRUEBA T-98» con un BAPLIE sintético;
+- iniciar sesión él mismo en los clientes `t98`;
+- aprobar el permiso de administrador de `pktmon`;
+- abrir el NetLog y el panel Security de Chrome;
+- la disponibilidad sin red de Windows y la Web, con el Wi-Fi apagado;
+- cerrar las sesiones.
+
+**El siguiente turno de Codex, en el mismo chat:**
+1. Windows: los 8 casos de recuperación.
+2. Repetir el 01 y el 02 del Honor.
+3. La Web en el navegador integrado: los 8 casos.
+4. RNF-002: la primera visualización, sin perfil (5 por cliente) y con perfil (1 por cliente).
+5. La lista de la tanda.
+6. Citar los censos de Timonel cuando lleguen.
+
+**El sprint sigue en 49 tareas y ≈ 169.5 h.** El tablero (v55): T-98 en curso, con el avance de la Fase B en su nota. El piso queda en 1047.
