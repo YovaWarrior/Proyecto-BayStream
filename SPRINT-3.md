@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 169.5 h estimadas** (al 20-oct, 10.92; commit de cierre `sprint3-cierre`) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.93; commit de cierre `sprint3-cierre`, y `sprint3-cierre-2` después de T-112) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2251,6 +2251,69 @@ Es lo primero que ve el planificador al abrir un viaje en el teléfono, y el pil
 - [ ] **Los clientes:** Windows y la Web con `t111`; el Honor, a 360 dp con letra 1.0 y 1.45.
 - [ ] **Validaciones:** el piso (1034) más las nuevas, `analyze` en cero y el corpus en verde.
 
+#### T-112 · La interfaz en español, Material 3 sin excepciones y los mensajes de error con causa y acción · 4.0 h · Timonel (ficha completa, 20-oct; la acepta Codex)
+
+**Para qué.** Los censos de T-98 (`docs/T98-CENSOS-RESULTADOS.md`, 10.93) dan tres incumplimientos:
+- **el idioma:** entre 95.5 y 98.5 %, frente al 100 % «español»;
+- **Material 3:** 1 excepción de 237 controles;
+- **los mensajes de error:** 22.5 % con causa y acción explícitas (50 % contando las implícitas), frente al 100 %; solo 4 de 12 errores de lectura nombran el segmento.
+
+**Carlos decide arreglarlo todo antes del 24 (20-oct)**, y que los términos del oficio queden en español. Es un cambio después del cierre (10.73): trae un commit de cierre nuevo y obliga a repetir filas de T-98 (10.93).
+
+**La fuente es el censo de Timonel:** las tablas I-5 (las 52 cadenas), I-7 (los textos de Flutter) y M-2/M-3 (Material 3), y la tabla de los 218 mensajes con su «arreglo sugerido». Los identificadores M001… e I01… son los del censo.
+
+**Qué construye.**
+1. **El idioma.**
+   - **a. La localización de Flutter en español.** `flutter_localizations`, que viene con el SDK de Flutter, entra en `pubspec.yaml` (Carlos lo autoriza, 10.93). En `app.dart` se declaran `locale` `es`, `supportedLocales` y los *delegates*. Así «Back», «Alert», el selector de fecha y la barra de copiar y pegar salen en español.
+   - **b. Los términos del oficio** (Carlos: todo en español):
+
+     | Hoy | Queda |
+     |---|---|
+     | «Bay 002, Row 01, Tier 82» | «Bahía 002, Fila 01, Nivel 82» |
+     | «BAY 02» / «Bay 02» | «BAHÍA 02» / «Bahía 02» |
+     | «Reefer» / «Reefers» | «Refrigerado» / «Refrigerados» |
+     | «CUBIERTA (DECK)» / «BODEGA (HOLD)» | «CUBIERTA» / «BODEGA» |
+     | «Tiers» | «niveles» |
+     | La pestaña «Bay Plan» y «… en Bay Plan» | «Plano» y «… en el plano» |
+     | «Tip» | «Consejo» |
+     | «slots» | «posiciones» |
+
+     También el PDF.
+   - **c. «UNKNOWN»** solo cambia en lo que se muestra: «sin número». El valor guardado, la identidad del viaje y los nombres de archivo no cambian.
+   - **d. Los identificadores en los mensajes:**
+     - `loading_baplie` pasa a «el plan de carga».
+     - Los códigos de Firebase interpolados se traducen a un texto en español con causa y acción, y el código técnico no se muestra.
+   - **e. El CSV exportado:** encabezados en español, y los valores en español («lleno», «vacío», «desconocido», «sí», «no»).
+2. **Material 3.** Los resultados del buscador toman sus colores de `colorScheme` en vez de `Colors.red`, `cyan`, `green`, `orange` y `yellow`, sin perder la distinción entre categorías.
+3. **Los mensajes de error, los 218:**
+   - todos con la causa y la acción explícitas;
+   - los de lectura de un BAPLIE, con el segmento;
+   - los seis sitios que muestran el `toString()` de una excepción pasan a un mensaje en español con causa y acción, y el detalle técnico va al registro, no a la pantalla;
+   - los seis que piden código (M001, M004, M006, M050, M217 y M218), como dice el censo.
+
+**Lo que no cambia:** la lógica, las reglas, el codec, lo guardado, los identificadores, `lib/main.dart` ni los congelados (`lib/latency_test_screen.dart` y `lib/c3_reconciliation_screen.dart`).
+
+**Carril.**
+- **Toca:** `lib/` salvo lo anterior; `test/`; `pubspec.yaml` y `pubspec.lock`, solo con `flutter_localizations`; `tool/t112_*` y `docs/T112-RESULTADOS.md`.
+- **Las pruebas que hoy comprueban un texto que cambia** se actualizan al texto nuevo. El informe da la lista. No se borra ninguna prueba ni se agrega *skip*.
+
+**Detente y avisa si:**
+- un cambio de texto obliga a cambiar datos guardados o identificadores;
+- algo del producto lee el CSV exportado;
+- un mensaje vive en un archivo congelado;
+- cambiar «Bay Plan» toca algo más que textos.
+
+**Terminada cuando:**
+- [ ] **Los censos, corridos otra vez** con los scripts de Timonel (`tool/t98c_*`):
+  - el idioma en 100 % (lo que no se pueda, explicado una por una);
+  - Material 3 sin excepciones;
+  - los mensajes, 100 % con causa y acción, y el segmento en los de lectura.
+- [ ] **Validaciones:**
+  - pruebas: 1047 más las nuevas de `test/t112_*` (la localización, una muestra de mensajes, el CSV y la posición), todas en verde y sin *skip*;
+  - `analyze` en cero;
+  - el corpus en verde, con los datos y el formato guardado iguales a HEAD.
+- [ ] **Los clientes:** Windows, la Web y el Honor (360 dp, con letra 1.0 y 1.45), con `t112`.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-88** | USO | 2.5 | Requisitos de Play: política de privacidad nueva (con sincronización sí salen datos; micrófono opcional y voz del servicio del sistema, 10.31), enlace en la app, ícono propio, decisión D3 (10.34). La hace Timonel y la acepta Codex (10.43) · **ficha completa arriba** |
@@ -2268,6 +2331,7 @@ Es lo primero que ve el planificador al abrir un viaje en el teléfono, y el pil
 | **T-109** | TC | 1.0 | Estadísticas sin desbordes a 360 dp con letra 1.45 y 2.0, y el último guion de «re-estibas» en la política (10.81). La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 | **T-110** | ERS | 1.0 | Las mismas bahías al leer y al reabrir, con la evidencia del archivo: carga, reservas y sombras de los 40/45 (Carlos, 10.87; antes, «todas las del buque», 10.85), y dos textos de T-108. La hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
 | **T-111** | USO | 0.5 | La tarjeta del viaje sin palabras partidas a 360 dp (apilar los indicadores por ancho, no solo por escala), y «1 celda reservada». Lo encontró Timonel en el Honor (10.89); la hace Codex y la acepta Timonel, antes del commit de cierre · **ficha completa arriba** |
+| **T-112** | USO | 4.0 | La interfaz en español (localización de Flutter y términos del oficio), Material 3 sin excepciones y los 218 mensajes de error con causa y acción, según los censos de T-98 (Carlos, 10.93). La hace Timonel y la acepta Codex; trae el commit de cierre `sprint3-cierre-2` · **ficha completa arriba** |
 
 ### Ola 6 · Resto del ERS
 
@@ -6087,3 +6151,51 @@ El piso queda en 1047.
 6. Citar los censos de Timonel cuando lleguen.
 
 **El sprint sigue en 49 tareas y ≈ 169.5 h.** El tablero (v55): T-98 en curso, con el avance de la Fase B en su nota. El piso queda en 1047.
+
+### 10.93 · Los censos de T-98 · Carlos decide arreglarlo todo antes del 24: nace T-112 · Cambia el orden: T-112, un cierre nuevo, el resto de T-98 y después T-99 (20-oct)
+
+**Los censos de Timonel** (`docs/T98-CENSOS-RESULTADOS.md` y `tool/t98c_*.py`). Los hizo solo leyendo `lib/` de `sprint3-cierre`: no corrió Flutter ni tocó el Honor.
+
+| Censo | Resultado | Criterio |
+|---|---|---|
+| **Idioma** | 52 de 1727 cadenas visibles en inglés o mixtas: 25 de la interfaz, 4 del PDF y 23 encabezados del CSV. A eso se suman 20 grupos de textos de Flutter, «Back» incluido, porque `MaterialApp` no declara la localización. Entre **95.5 % y 98.5 %**, según el alcance | 100 % «español» |
+| **Material 3** | 237 controles en 19 pantallas, sin la rejilla; **1 excepción**: los colores fijos del buscador | 100 % |
+| **Mensajes** | 218. Con causa y acción explícitas, 49 (**22.5 %**); contando las implícitas, 109 (50 %). 4 de 12 errores de lectura nombran el segmento, y en 6 sitios la pantalla muestra el `toString()` de una excepción | 100 % |
+
+Timonel señala dónde un criterio de T-63 no se aplica tal cual, y dos diferencias con la tabla de la Fase A de Codex (M004 y M024).
+
+**Codex** se detuvo a las 11:30 por el límite de uso; vuelve a las 14:45.
+
+**Carlos decide (20-oct, 11:35):**
+1. **Arreglarlo todo antes del 24.** Nace **T-112**: la interfaz en español, Material 3 sin excepciones y los 218 mensajes con causa y acción. ≈ 4.0 h; la hace Timonel y la acepta Codex. Ficha completa en la Ola 5. Incluye `flutter_localizations`, que viene con el SDK de Flutter y que Carlos autoriza.
+2. **Los términos del oficio, todos en español:**
+   - «Bahía 002, Fila 01, Nivel 82»;
+   - «BAHÍA 02»;
+   - «Refrigerado»;
+   - «CUBIERTA» y «BODEGA», sin la glosa en inglés;
+   - la pestaña «Plano».
+3. **Timonel hace T-112 ahora**, mientras Codex está parado. T-99 espera, porque tiene que medir el código ya arreglado.
+
+**El orden nuevo:**
+1. Timonel hace T-112.
+2. Codex la acepta, sin medir mientras tanto.
+3. **Un commit de cierre nuevo**, con la etiqueta `sprint3-cierre-2`; `sprint3-cierre` se queda donde está.
+4. Codex termina T-98 sobre ese cierre.
+5. T-99, de Timonel. Los dos se turnan la máquina: uno mide mientras el otro no compila, y Carlos da el semáforo.
+
+**Lo que se repite de T-98 sobre el cierre nuevo (Yov):**
+- **Se repite:** la recuperación (los 8 casos en los tres clientes, porque los mensajes cambian), la batería de conformidad de RNF-008 y los tres censos.
+- **Se conserva, declarado:**
+  - la condición A de RNF-004;
+  - la disponibilidad sin red del Honor (11/11);
+  - el barrido del corpus de RNF-008;
+  - la primera visualización que Codex ya midió esta mañana. T-112 cambia los nombres, no los pasos. Lo que falte se mide sobre el cierre nuevo.
+
+  T-112 solo cambia textos y la localización, y no agrega red ni cambia lo que se lee. Si la aceptación de T-112 encuentra que cambió algo más, esto se revisa.
+
+**El sprint pasa a 50 tareas y ≈ 173.5 h.** El tablero (v56) suma 228.5 h:
+- 44 terminadas;
+- 3 en curso: T-98, T-99 y T-112;
+- 3 por hacer: T-87, T-100 y T-101.
+
+El piso queda en 1047.
