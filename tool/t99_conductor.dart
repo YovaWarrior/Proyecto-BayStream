@@ -3,12 +3,12 @@
 //
 // Escenarios (`--dart-define=T99_ESCENARIO=…`):
 //   - `ram`: el escenario fijo de T-63 (1, «Operación normal») para medir la
-//     RAM desde fuera: cargar, Bay Plan, todas las bahías, Estadísticas,
+//     RAM desde fuera: cargar, Plano, todas las bahías, Estadísticas,
 //     buscar un ID y volver a Lista. Tras cada paso anuncia «T99 PASO <paso>»
 //     (consola y logcat; en Windows también T99_PASOS) y espera T99_PAUSA_MS
 //     sin tocar nada, para que el muestreador tome sus cinco lecturas.
 //   - `anchos`: RNF-003 (3.3 a). Para cada tamaño de T99_ANCHOS impone ese
-//     tamaño lógico a la app, recorre Lista, Bay Plan, Estadísticas y la
+//     tamaño lógico a la app, recorre Lista, Plano, Estadísticas y la
 //     búsqueda, y guarda una captura PNG de cada pantalla con lo que encontró:
 //     textos que no caben (RenderParagraph.didExceedMaxLines), desplazables
 //     horizontales con contenido oculto y errores de Flutter. Los desbordes
@@ -44,6 +44,11 @@ const _pausaMs = int.fromEnvironment('T99_PAUSA_MS', defaultValue: 12000);
 const _idBuscado = String.fromEnvironment('T99_ID');
 const _anchos = String.fromEnvironment('T99_ANCHOS',
     defaultValue: '360x800,600x960,840x1200,1200x800,2560x1440,real');
+
+// Textos de la interfaz que el conductor toca. T-112 (10.94) cambió «Bay Plan»
+// por «Plano» y «BAY nn (» por «BAHÍA nn (»; si vuelven a cambiar, es aquí.
+const _pestanaPlano = 'Plano';
+String _rotuloDeBahia(int bahia) => 'BAHÍA ${bahia.toString().padLeft(2, '0')} (';
 
 /// El conductor, o `null` si la compilación no pide un escenario.
 T99Conductor? conductorDesdeDefiniciones() =>
@@ -111,7 +116,7 @@ class T99Conductor {
     await _registrar('cargar', {});
     await _pausa();
 
-    await _tocar(_pestana('Bay Plan'));
+    await _tocar(_pestana(_pestanaPlano));
     await _asentar();
     await _registrar('bay_plan', {});
     await _pausa();
@@ -193,7 +198,7 @@ class T99Conductor {
       await _tocar(_pestana('Lista'));
       await _asentar();
       await _capturar(especificacion, 'lista');
-      await _tocar(_pestana('Bay Plan'));
+      await _tocar(_pestana(_pestanaPlano));
       await _asentar();
       await _capturar(especificacion, 'bay_plan');
       await _tocar(_pestana('Estadísticas'));
@@ -331,7 +336,7 @@ class T99Conductor {
       'el botón $mensaje');
 
   Element? _chipSiHay(int bahia) {
-    final rotulo = 'BAY ${bahia.toString().padLeft(2, '0')} (';
+    final rotulo = _rotuloDeBahia(bahia);
     return _buscarElemento((e) =>
         e.widget is Text && ((e.widget as Text).data?.startsWith(rotulo) ?? false));
   }

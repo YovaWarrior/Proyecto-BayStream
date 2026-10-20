@@ -1,6 +1,6 @@
 // T-99 · Resume las lecturas de RAM de t99_ram_windows.ps1 y t99_ram_honor.ps1.
 //
-// Escenario fijo de T-63 (1, «Operación normal»): cargar, Bay Plan, todas las
+// Escenario fijo de T-63 (1, «Operación normal»): cargar, Plano, todas las
 // bahías, Estadísticas, buscar un ID y volver a Lista. Tras cada paso, 5 s sin
 // interacción y cinco lecturas separadas 0.5 s. Por corrida:
 //   - estable: la mediana de las lecturas del último paso (volver a Lista);

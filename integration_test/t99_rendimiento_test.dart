@@ -50,6 +50,13 @@ const _esperados = int.fromEnvironment('T99_CONTENEDORES');
 const _repeticiones = int.fromEnvironment('T99_REPETICIONES', defaultValue: 5);
 const _maximizar = bool.fromEnvironment('T99_MAXIMIZAR', defaultValue: true);
 
+// Textos de la interfaz que el arnés toca. T-112 (10.94) cambió «Bay Plan» por
+// «Plano» y «BAY nn (» por «BAHÍA nn (»; si vuelven a cambiar, es aquí.
+const _pestanaPlano = 'Plano';
+const _prefijoDeBahia = 'BAHÍA ';
+String _rotuloDeBahia(int bahia) => '$_prefijoDeBahia${bahia.toString().padLeft(2, '0')} (';
+final _rotuloConNumero = RegExp('^$_prefijoDeBahia' r'(\d+) \(');
+
 /// Los eventos que necesitan las reglas de TimelineSummary y las marcas.
 bool _conservar(Object? nombre) =>
     nombre is String &&
@@ -232,7 +239,7 @@ void main() {
     entorno['bahias'] = viaje.bays.length;
 
     // 2 · Navegación entre bahías: de la bahía rep a la siguiente.
-    await tester.tap(find.widgetWithText(Tab, 'Bay Plan'));
+    await tester.tap(find.widgetWithText(Tab, _pestanaPlano));
     await tester.pumpAndSettle();
     // Las bahías que se tocan son las del selector, como las ve el usuario:
     // la lista de chips es perezosa y no construye lo que queda fuera de vista.
@@ -244,16 +251,16 @@ void main() {
     final bahias = {
       for (final t in tester.widgetList<Text>(
           find.descendant(of: find.byKey(const ValueKey('bay-selector')), matching: find.byType(Text))))
-        if (RegExp(r'^BAY (\d+) \(').firstMatch(t.data ?? '') case final m?) int.parse(m.group(1)!)
+        if (_rotuloConNumero.firstMatch(t.data ?? '') case final m?) int.parse(m.group(1)!)
     }.toList()
       ..sort();
     entorno['bahias_del_viaje'] = (viaje.bays.keys.toList()..sort()).join(' ');
     entorno['bahias_del_selector_al_inicio'] = bahias.join(' ');
     Finder chip(int bahia) {
-      final f = find.textContaining('BAY ${bahia.toString().padLeft(2, '0')} (');
+      final f = find.textContaining(_rotuloDeBahia(bahia));
       if (f.evaluate().isEmpty) {
         final vistas = tester
-            .widgetList<Text>(find.textContaining('BAY '))
+            .widgetList<Text>(find.textContaining(_prefijoDeBahia))
             .map((t) => t.data)
             .join(' | ');
         fail('No está el chip de la bahía $bahia. Se ven: $vistas');
@@ -264,7 +271,7 @@ void main() {
     // Elegir una bahía desplaza la lista de chips: antes de tocar uno se trae
     // a la vista, desde el inicio de la lista si hace falta.
     Future<void> chipALaVista(int bahia) async {
-      final f = find.textContaining('BAY ${bahia.toString().padLeft(2, '0')} (');
+      final f = find.textContaining(_rotuloDeBahia(bahia));
       if (f.evaluate().isEmpty) {
         tester.state<ScrollableState>(selector).position.jumpTo(0);
         await tester.pumpAndSettle();

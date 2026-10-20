@@ -384,7 +384,7 @@ reconstruye, no cuánto tarda. Con DevTools 2.51.1 (el de Flutter 3.38.9):
 
 1. En la copia del cierre, `flutter run -d windows --debug -t tool/t99_main.dart` (semáforo).
 2. Abrir DevTools desde la URL que imprime `flutter run`, en el navegador, con la ventana
-   visible. Cargar A01 a mano y abrir Bay Plan.
+   visible. Cargar A01 a mano y abrir la pestaña «Plano» (antes «Bay Plan», T-112).
 3. Activar «Track widget build counts» y limpiar los contadores.
 4. Tocar el chip de la bahía siguiente una vez y esperar a que no haya cuadros.
 5. Anotar en «Rebuild Stats» qué widgets se reconstruyeron y cuántas veces. Cumple si solo se
@@ -394,7 +394,7 @@ reconstruye, no cuánto tarda. Con DevTools 2.51.1 (el de Flutter 3.38.9):
 
 Si el contador no aparece, se declara y se usa la opción de T-63 que Yov elija. Nota:
 `TabBarView` solo construye la pestaña visible, así que Lista y Estadísticas no están montadas
-mientras se ve Bay Plan. Que no aparezcan es correcto, pero no prueba granularidad; conviene
+mientras se ve «Plano». Que no aparezcan es correcto, pero no prueba granularidad; conviene
 repetirlo con la búsqueda abierta sobre la Lista.
 
 **Entrada (RNF-003).** El recorrido de RNF-002 (cargar A01, ver una bahía, encontrar un ID,
@@ -481,3 +481,21 @@ Emulador API 26 (Android 8.0.0) instalado: el APK release .t99 abrió A01 con el
 Para decidir: traceAction infla el build del scroll con listas grandes (2 → 48 ms con 5 000); las latencias no cambian. Propongo dictaminar el scroll con FrameTiming.
 Para decidir también: la laptop es 2560×1600 al 150 %, no 1920×1080 (1.4); y el banco no inicializa Firebase, que el producto sí.
 Nada son mediciones; la Fase B y el Honor quedan pendientes.
+
+## Preparación de la Fase B (20-oct, 10.94)
+
+Timonel · sobre HEAD `6a2962d`, con T-112. **No se midió nada**: T-99 se mide sobre el cierre
+nuevo, `sprint3-cierre-2`.
+
+- **T-112 cambió dos textos que tocan los instrumentos**, comprobados en `lib/`: la pestaña
+  «Bay Plan» ahora es «Plano» y el chip «BAY nn (» ahora es «BAHÍA nn (». Se cambiaron en
+  `tool/t99_conductor.dart` y en `integration_test/t99_rendimiento_test.dart`, cada uno con sus
+  textos en una constante y una nota, para que el próximo cambio sea en un solo lugar.
+- **Siguen igual** los tooltips que se tocan («Buscar contenedor», «Cargar archivo BAPLIE» y
+  «Volver» de la búsqueda), las pestañas «Lista» y «Estadísticas», y las claves
+  `bay-selector`, `plan-zoom-<bahía>` y `plan-toolbar-actions`. Ningún instrumento busca
+  «Reefer»/«Refrigerado» ni el «Back»/«Atrás» de Flutter.
+- **No cambian** los identificadores internos: el paso `bay_plan` del escenario de RAM y los
+  nombres de las capturas de anchos.
+- `flutter analyze` de los archivos cambiados, en 0; `test/t99_*`, 22/22. No se corrió la
+  suite completa ni el arnés.
