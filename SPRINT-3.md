@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.94; commit de cierre `sprint3-cierre`, y `sprint3-cierre-2` después de T-112) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.95; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -6232,3 +6232,27 @@ El piso queda en 1047.
 - 3 por hacer: T-87, T-100 y T-101.
 
 El piso queda en 1063.
+
+### 10.95 · El commit de cierre nuevo, `sprint3-cierre-2` · La Fase B de T-99 arranca ya · Timonel y Codex se turnan la máquina (20-oct)
+
+**Timonel preparó la Fase B de T-99 sin medir** (13:45):
+- `tool/t99_conductor.dart` y `integration_test/t99_rendimiento_test.dart` usan los textos de T-112 («Plano» y «BAHÍA nn (»), cada uno en una sola constante.
+- `analyze` en cero y sus 22 autopruebas, en verde.
+- Ningún instrumento busca «Refrigerado» ni «Atrás».
+- Quedó encendido un `dart.exe` de T-112, que sirve `tool/t99_servidor.dart` desde las 13:03.
+
+**Carlos decide (20-oct, 13:46): Timonel corre la Fase B de T-99 ya.** Para eso hace falta el cierre nuevo antes de que Codex acepte T-112.
+
+**El commit de cierre nuevo es el de esta decisión,** con la etiqueta **`sprint3-cierre-2`**:
+- Su código de producto es el de `b1a0b5f` (T-112), y lleva los instrumentos de T-99 ya preparados (`4f80ac3`). `sprint3-cierre` se queda donde está.
+- **Se declara antes de la aceptación de T-112** para no parar a Timonel. T-112 tiene 1063/1063 y los cotejos iguales, y solo cambia textos.
+- Si la aceptación de Codex pide un cambio en `lib/`, Yov decide qué filas de T-98 y de T-99 se repiten (10.73).
+- Desde aquí rige lo mismo que con el primer cierre: en `lib/` solo entran correcciones que salgan de la medición, con la decisión de Yov y de Carlos.
+
+**El turno de la máquina** (Carlos da el semáforo; AGENTS.md, punto 4):
+1. **Ahora y hasta las 14:45,** Timonel mide los tiempos de RNF-001 y RNF-003. Antes cierra el `dart.exe` de T-112, anotando su PID. Carlos pone la pantalla en 1920×1080 cuando Timonel lo pida (10.86).
+2. **Desde las 14:45, Codex acepta T-112.** Compila y corre la suite. Mientras tanto, Timonel no mide tiempos ni corre Flutter: hace la parte estática de RNF-005 y RNF-007 (capas, documentación, código compartido y módulos).
+3. **Cuando Codex termine,** Timonel retoma los tiempos.
+4. **El resto de T-98** (Codex, sobre `sprint3-cierre-2`) va en otra ventana, y entonces es Timonel quien no mide tiempos.
+
+**El sprint sigue en 50 tareas y ≈ 173.5 h.** El tablero (v58): T-99 en curso, con la Fase B empezada. El piso queda en 1063.
