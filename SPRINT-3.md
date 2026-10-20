@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.93; commit de cierre `sprint3-cierre`, y `sprint3-cierre-2` después de T-112) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.94; commit de cierre `sprint3-cierre`, y `sprint3-cierre-2` después de T-112) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -6199,3 +6199,36 @@ Timonel señala dónde un criterio de T-63 no se aplica tal cual, y dos diferenc
 - 3 por hacer: T-87, T-100 y T-101.
 
 El piso queda en 1047.
+
+### 10.94 · T-112 entregada · El piso sube a 1063 · La acepta Codex y después viene el cierre nuevo (20-oct)
+
+**T-112, entregada** (Timonel, `b1a0b5f`; la corrió Carlos a las 13:37, en ≈ 2 h de 4.0):
+- **Los censos, corridos de nuevo** con `tool/t98c_*`:
+  - el idioma, en **100 %**: 1790 cadenas visibles, ninguna en inglés, y los textos de Flutter en español;
+  - Material 3: 237 controles y **0 excepciones**;
+  - los mensajes: **218/218** con causa y acción, y **12/12** de los de lectura con el segmento.
+- **Las pruebas:** **1063/1063** (1047 + 16 nuevas en `test/t112_*`), sin omitidas, y `analyze` en cero. 20 pruebas se actualizaron por texto, y el informe las lista.
+- **El corpus:** 157/157. Los cotejos contra HEAD (T-108, T-110, T-110acc y T-111acc) salen iguales. T-111acc marca 48 casos de ACC2 por diseño, porque espera el texto del padre; campo por campo, los 192 casos son idénticos.
+- **Los clientes:** Windows, la Web y el Honor (360 dp, con letra 1.0 y 1.45): ninguna palabra en inglés y ningún error. En Windows, el control del escritorio salió denegado, y Timonel lo comprobó con un recorrido automático dentro del banco.
+- **`pubspec`:** entra `flutter_localizations` (del SDK), y con él `intl` 0.20.2, como dependencia transitiva.
+- **Corrección a su censo de T-98:** el segmento de M004 no viajaba con el fallo. Ahora el lector lo anota.
+- **Ningún caso de «detente y avisa»:** lo guardado, los identificadores, `lib/main.dart` y los congelados no cambian.
+- **El piso sube a 1063.**
+
+**Lo que decide Yov:**
+1. **Los textos más largos a 360 dp.** Con letra 1.0, la leyenda deja «Refrigerad…» en el borde; en el lienzo de Windows con 1.45, el peso «2.2 t» se lee desplazando. Lo que no cabe es lo mismo que en el control de HEAD. No se toca antes del cierre: pasa a la lista del Sprint 4 y del rediseño (10.91).
+2. **Los instrumentos de T-99 buscaban «Bay Plan» y «BAY nn (»** (`tool/t99_conductor.dart`). Timonel los cambia a «Plano» y «BAHÍA nn (» al empezar su Fase B, antes de medir.
+
+**El orden sigue el de 10.93:**
+1. **Codex acepta T-112** en un chat nuevo, cuando vuelva su límite. Revisa el diff, las 20 pruebas actualizadas y una muestra al azar de 20 mensajes.
+2. **El cierre nuevo** (`sprint3-cierre-2`), con su decisión.
+3. **Codex termina T-98**, en su chat de la Fase B, sobre ese cierre.
+4. **Timonel hace T-99,** turnándose la máquina con Codex.
+
+**El sprint sigue en 50 tareas y ≈ 173.5 h.** El tablero (v57):
+- 44 terminadas;
+- T-112 en revisión;
+- T-98 y T-99 en curso;
+- 3 por hacer: T-87, T-100 y T-101.
+
+El piso queda en 1063.
