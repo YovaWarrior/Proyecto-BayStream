@@ -6618,3 +6618,35 @@ RNF-004 se cita de T-98.
 **El informe:** `docs/PENTEST-RESULTADOS.md`, con la forma del «estado de los hallazgos» del Incremento 2.
 
 **No cambia el conteo del sprint** (sigue en 49 tareas): el pentest es del cierre del proyecto, como el piloto y la presentación final.
+
+### 10.105 · La recuperación en Windows cumple (2.267 s) · RNF-006 queda en «cumple» · T-98, terminada (21-oct)
+
+**Timonel midió la recuperación en Windows, limpia** (copia `t98rec` de `33404a5`; exe `d90fc9dc…`, app.so `ea1ba64a…`; una sola BayStream, `explorer.exe`, cerrada por PID, maximizada a 1920×1080 y 125 %; los 8 archivos de `catalogo-final`, grabación gdigrab continua, `t98_video.py`):
+- **El aviso crudo sale 0.29 a 0.52 s** después de cerrarse el selector, en 32 rechazos.
+- Con la espera fija de la sonda (como en el Honor), del cierre al selector reabierto y completo pasan **1.754 a 2.206 s** en 14 casos. **Cota: 2.267 s, por debajo de los 3 s.**
+- El 03 abre «Parámetros» y cancelar conserva el viaje; el 04 se admite con el aviso de UNT/UNZ.
+
+**RNF-006, recuperación en Windows: cumple.** Con los mensajes (218/218) y la disponibilidad sin red (33/33) ya cumpliendo, **RNF-006 queda en «cumple»**. Es el único RNF que pasa.
+
+**Lo de Codex (3.4 a 3.7 s) no se reproduce.** En la toma con disparo humano, el 02 llegó a 3.44 a 3.51 s solo por **2.2 s de reacción** de la persona. Desde la toma 6, el disparo lo hace un script (sin el control de escritorio) y el tiempo baja. Quedan dos diferencias con Codex, su ventana de 1600×900 y su binario/entorno, y la causa queda sin determinar; pero la medición válida es la de Timonel, a la resolución de la decisión 1.4.
+- **Precedente:** en Windows, el disparo de una medición de tiempo se hace con un script, no con el control de escritorio ni a mano; el tiempo de reacción humana contamina.
+
+**Timonel retira el NO PASA (`0cb1c48`). T-98 queda ACEPTADA con observaciones y pasa a Terminado.** Timonel confirmó por su cuenta las cuatro filas; el único punto abierto era este.
+
+**El marcador final de T-98:**
+
+| RNF | Dictamen |
+|---|---|
+| 004 · Seguridad | **No medible** (el Honor cumple la condición A; el TLS se infiere ≥ 1.3 en Chrome) |
+| 006 · Tolerancia a fallos | **Cumple** |
+| 008 · Estándares | **No cumple** (`ZZZZZ` y el IMDG) |
+| 002 · Usabilidad | **No cumple** (6 pasos); el SUS y el aprendizaje, pendientes del piloto |
+
+Las observaciones 2 a 8 de Timonel y el `// ignore_for_file` del arranque (en `tool/`, no en `lib/`) pasan a la lista del Sprint 4. Nada se corrige antes del 24.
+
+**Lo que sigue:** Codex acepta T-99 y el manual; después Timonel hace T-113.
+
+**El sprint sigue en 49 tareas y ≈ 160.5 h.** El tablero (v66):
+- 46 terminadas;
+- 2 en revisión: T-99 y T-100;
+- 1 por hacer: T-113.
