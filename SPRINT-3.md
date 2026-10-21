@@ -6699,3 +6699,11 @@ Las observaciones 2 a 8 de Timonel y el `// ignore_for_file` del arranque (en `t
 **El sprint sigue en 49 tareas y ≈ 160.5 h.** El tablero (v68):
 - 48 terminadas;
 - 1 en revisión: T-113.
+
+### 10.108 · El cotejo de las reglas cierra T113-01: producción es idéntica a lo auditado (21-oct)
+
+**Timonel cerró el cotejo del SHA.** Las reglas publicadas en `baystream-app` son **idénticas byte a byte** a `docs/T80-firestore.rules.propuesta` (SHA-256 `7E57F227…` del blob de `sprint3-cierre-2`). Así, lo que la batería probó en el emulador (69/69 y 25/25 de abuso) es lo que rige en producción.
+- El texto de las reglas llegó pegado en el chat, no por archivo, porque el `%TEMP%` de Timonel (app empaquetada) no es el de Carlos; queda declarado. El archivo quedó en `build/t113/`, que está en el `.gitignore`.
+- **T113-01: resuelto.** Los demás pendientes ya están decididos en 10.107 (T113-04 al pentest, T113-06 con `output/` ignorado, T113-07 aceptado).
+
+**T-113 queda completa y lista para la aceptación de Codex.** Con ella se cierran las tareas de la entrega del 24. La siguiente decisión es la **10.109**.
