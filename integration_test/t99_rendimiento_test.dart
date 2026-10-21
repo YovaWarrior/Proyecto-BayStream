@@ -49,6 +49,7 @@ const _archivo = String.fromEnvironment('T99_ARCHIVO');
 const _esperados = int.fromEnvironment('T99_CONTENEDORES');
 const _repeticiones = int.fromEnvironment('T99_REPETICIONES', defaultValue: 5);
 const _maximizar = bool.fromEnvironment('T99_MAXIMIZAR', defaultValue: true);
+const _ventana = String.fromEnvironment('T99_VENTANA');
 
 // Textos de la interfaz que el arnés toca. T-112 (10.94) cambió «Bay Plan» por
 // «Plano» y «BAY nn (» por «BAHÍA nn (»; si vuelven a cambiar, es aquí.
@@ -180,7 +181,20 @@ void main() {
     }
     final antes = tester.view.physicalSize;
     entorno['vista_fisica_al_abrir'] = '${antes.width.round()}x${antes.height.round()}';
-    final tocadas = _maximizar ? maximizarVentanaPropia() : 0;
+    // T99_VENTANA=1920x1080 fija la ventana a esos píxeles físicos sin
+    // maximizar (10.86); en la Fase B, maximizada a 1920×1080 y 125 % se
+    // dibujaba corrida y cortada (hallazgo del 20-oct).
+    final medida = _ventana.split('x');
+    final tocadas = medida.length == 2
+        ? fijarVentanaPropia(int.parse(medida[0]), int.parse(medida[1]))
+        : _maximizar
+            ? maximizarVentanaPropia()
+            : 0;
+    entorno['ventana_pedida'] = medida.length == 2
+        ? '$_ventana sin maximizar'
+        : _maximizar
+            ? 'maximizada'
+            : 'sin cambio';
     if (tocadas > 0) {
       for (var i = 0; i < 60 && tester.view.physicalSize == antes; i++) {
         await tester.pump(const Duration(milliseconds: 50));

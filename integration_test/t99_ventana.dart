@@ -46,6 +46,21 @@ int maximizarVentanaPropia() {
   return propias.length;
 }
 
+/// Fija las ventanas visibles de este proceso a [ancho]×[alto] píxeles
+/// físicos en la esquina superior izquierda, sin maximizar (10.86). Devuelve
+/// cuántas tocó; fuera de Windows no hace nada y devuelve 0.
+int fijarVentanaPropia(int ancho, int alto) {
+  if (!Platform.isWindows) return 0;
+  final setWindowPos = _user32.lookupFunction<
+      Int32 Function(IntPtr, IntPtr, Int32, Int32, Int32, Int32, Uint32),
+      int Function(int, int, int, int, int, int, int)>('SetWindowPos');
+  final propias = _ventanasPropias();
+  for (final v in propias) {
+    setWindowPos(v, 0, 0, 0, ancho, alto, 0x0004 | 0x0010); // SWP_NOZORDER | SWP_NOACTIVATE
+  }
+  return propias.length;
+}
+
 /// Si la ventana visible de este proceso quedó maximizada (IsZoomed), para
 /// anotarlo; `null` fuera de Windows o sin ventana.
 bool? ventanaPropiaMaximizada() {

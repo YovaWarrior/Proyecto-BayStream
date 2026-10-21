@@ -163,7 +163,20 @@ switch ($Accion) {
         while ((Get-Date) -lt $limite) {
             if ($p.HasExited) { throw 'El banco se cerró antes de terminar.' }
             # Solo líneas completas: el conductor puede estar escribiendo la última.
-            $texto = if (Test-Path $Pasos) { [IO.File]::ReadAllText($Pasos) } else { '' }
+            # Lectura compartida: el banco puede tener el archivo abierto (ensayo
+            # de la Fase B: IOException al leer «fin»). Si choca, se reintenta.
+            $texto = ''
+            if (Test-Path $Pasos) {
+                try {
+                    $flujo = New-Object IO.FileStream($Pasos, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+                    $lector = New-Object IO.StreamReader($flujo)
+                    $texto = $lector.ReadToEnd()
+                    $lector.Dispose()
+                } catch [IO.IOException] {
+                    Start-Sleep -Milliseconds 100
+                    continue
+                }
+            }
             $lineas = @($texto -split "`n" | Select-Object -SkipLast 1 | ForEach-Object { $_.TrimEnd("`r") })
             if ($lineas.Count -gt $vistos) {
                 $nuevas = $lineas[$vistos..($lineas.Count - 1)]

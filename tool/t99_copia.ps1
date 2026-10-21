@@ -42,10 +42,13 @@ if ((Test-Path $dest) -and @(Get-ChildItem $dest -Force).Count -gt 0) {
 }
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 
-$sha = (& git -C $Repo rev-parse $Commit).Trim()
+$sha = (& git -C $Repo rev-parse "$Commit^{commit}").Trim()
 $tar = "$dest.tar"
-& git -C $Repo archive --format=tar -o $tar $sha -- . ':(exclude)docs' ':(exclude)outputs' `
-    ':(exclude)design' ':(exclude)prototipos' ':(exclude)presentacion' ':(exclude).claude'
+$excluir = @(':(exclude)docs', ':(exclude)outputs', ':(exclude)design', ':(exclude)prototipos',
+    ':(exclude)presentacion', ':(exclude).claude')
+# Sin conversión de finales de línea: la copia queda byte a byte como los blobs
+# del commit, y así se verifica contra su árbol (el manifiesto del cierre).
+& git -C $Repo -c core.autocrlf=false archive --format=tar -o $tar $sha -- . @excluir
 if ($LASTEXITCODE -ne 0) { throw 'git archive falló' }
 & tar -xf $tar -C $dest
 if ($LASTEXITCODE -ne 0) { throw 'tar falló' }
@@ -53,6 +56,29 @@ Remove-Item $tar
 # Fecha actual: una limpieza de temporales borra antes lo que trae fechas viejas.
 $ahora = Get-Date
 Get-ChildItem $dest -Recurse -File | ForEach-Object { $_.LastWriteTime = $ahora }
+
+# Verificación contra el árbol del commit: cada archivo, con su hash de blob.
+$arbol = @{}
+foreach ($l in @(& git -C $Repo -c core.quotepath=false ls-tree -r $sha)) {
+    $p = $l -split "`t", 2
+    if ($p[1] -notmatch '^(docs|outputs|design|prototipos|presentacion|\.claude)/') {
+        $arbol[$p[1]] = ($p[0] -split ' ')[2]
+    }
+}
+$rutas = @($arbol.Keys | Sort-Object)
+# Por lotes y como argumentos: en PowerShell 5.1 la tubería a git agrega un BOM.
+$hashes = @()
+for ($i = 0; $i -lt $rutas.Count; $i += 80) {
+    $lote = @($rutas[$i..([math]::Min($i + 79, $rutas.Count - 1))] | ForEach-Object { Join-Path $dest $_ })
+    $hashes += @(& git -C $Repo hash-object --no-filters -- @lote)
+}
+$distintos = @(for ($i = 0; $i -lt $rutas.Count; $i++) { if ($hashes[$i] -ne $arbol[$rutas[$i]]) { $rutas[$i] } })
+$sobrantes = @(Get-ChildItem $dest -Recurse -File | ForEach-Object {
+        $_.FullName.Substring($dest.Length + 1).Replace('\', '/') } | Where-Object { -not $arbol.ContainsKey($_) })
+if ($distintos.Count -gt 0 -or $sobrantes.Count -gt 0) {
+    throw "La copia no cuadra con $sha`: $($distintos.Count) distintos, $($sobrantes.Count) sobrantes"
+}
+$verificacion = [ordered]@{ archivos = $rutas.Count; distintos = 0; sobrantes = 0; contra = "git ls-tree -r $sha" }
 
 $superpuestos = @()
 if ($ConInstrumentos) {
@@ -128,6 +154,7 @@ $registro = [ordered]@{
     android            = 'applicationIdSuffix .t99, rótulo BayStream T99 (solo en la copia)'
     entradas           = $entradasCopiadas
     paquetes           = $paquetes
+    verificacion       = $verificacion
     fecha              = (Get-Date).ToString('o')
 }
 Set-Texto (Join-Path $dest 't99_copia.json') ($registro | ConvertTo-Json -Depth 5)
