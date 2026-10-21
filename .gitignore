@@ -74,3 +74,6 @@ docs/temp_*.txt
 !.claude/agents/
 !.claude/commands/
 .claude/settings.local.json
+
+# Salidas generadas del corpus (no van al repo; T113-06)
+output/

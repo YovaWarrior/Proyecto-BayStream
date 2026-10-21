@@ -6675,3 +6675,27 @@ Las observaciones 2 a 8 de Timonel y el `// ignore_for_file` del arranque (en `t
 **El sprint sigue en 49 tareas y ≈ 160.5 h.** El tablero (v67):
 - 48 terminadas;
 - 1 por hacer: T-113.
+
+### 10.107 · T-113 entregada: ninguna vulnerabilidad crítica ni alta · Las decisiones sobre los 13 hallazgos (21-oct)
+
+**T-113, entregada** (Timonel, `af3f3ea`, sobre `sprint3-cierre-2`, ≈ 0.7 h de 3.0). **Dictamen: cumple.**
+- **Las reglas:** 69/69 con la batería de T-80 y 25/25 con una nueva de abuso (`tool/t113_reglas_abuso.mjs`), en el emulador `demo-t113`. **El cotejo del SHA con las publicadas queda pendiente** porque falta el archivo de la consola (T113-01).
+  - **Corrección a la huella de referencia:** `21894B7F…` era el hash crudo de una copia con finales de línea mezclados; el blob versionado y normalizado da **`7E57F227…`**, y ese es el que usa el cotejo.
+- **Dependencias:** 117 paquetes y los SDK nativos, **0 avisos** (H-07 cerrado).
+- **Secretos:** ninguno nuevo; lo único real es H-04 (las opciones del proyecto temporal de H5 en la historia, ya conocido).
+- **Permisos:** coherentes con las declaraciones de Play (T-88) en un APK limpio del cierre.
+- **13 hallazgos, ninguno crítico ni alto:** 1 medio (aceptado), 5 bajos y 6 informativos.
+
+**Lo que decide Yov sobre los pendientes:**
+- **T113-01 (el cotejo):** Carlos copia las reglas publicadas a `%TEMP%\t113\reglas-publicadas.txt` y Timonel cierra el cotejo. Es lo único que le falta a T-113.
+- **T113-06 (las salidas del corpus sin ignorar):** Yov agregó `output/` al `.gitignore`. Los dos PDF (`output/pdf/T52-` y `T53-CORPUS_A01.pdf`) siguen sin versionar y no entran a la historia; Carlos los puede mover a `%TEMP%` o borrar.
+- **T113-07 (números del corpus anonimizado en 9 archivos):** **se aceptan.** Son anonimizados, con prefijos inventados que no mapean a contenedores reales (la base de toda la anonimización, `docs/S3-CASO-MAGELLAN-STAR.md`), y el repo ya es privado (10.41). Queda declarado; los documentos nuevos usan sintéticos, no corpus anonimizado.
+- **T113-04 (las cabeceras de Hosting, sin CSP):** **va al pentest** (10.103, A05). No se tocan antes del 24: una CSP mal puesta rompe la Web de Flutter, y no da tiempo de probarla.
+- **T113-11 (H-06 sin verificar en producción):** Carlos mira los Cloud Audit Logs de `baystream-app` en la consola (solo lectura) antes del 24; si no, se declara como limitación.
+- Los demás (T113-02, 03, 05, 08, 09, 10, 12, 13) quedan **aceptados** con su justificación en el informe.
+
+**Lo que sigue:** Carlos deja el texto de las reglas, Timonel cierra el cotejo, y Codex acepta T-113. Con eso, las tareas del 24 quedan listas y pasamos a la mezcla, el despliegue y el documento.
+
+**El sprint sigue en 49 tareas y ≈ 160.5 h.** El tablero (v68):
+- 48 terminadas;
+- 1 en revisión: T-113.
