@@ -1,10 +1,14 @@
-# T-98 · Instrumentos RNF-004, 006, 008 y 002
+# T-98 · Resultados RNF-004, 006, 008 y 002
 
-Capitán Codex · 17-oct-2026 · Fase A · base `9ae744a` de `sprint-3`.
+Historial de instrumentación: Capitán Codex · 17-oct-2026 · Fase A · base `9ae744a`.
 
-**Vigencia:** las secciones finales del cierre **33404a5 (sprint3-cierre-2)**
-registran el trabajo vigente del 20-oct. Prevalecen sobre los pendientes y bloques Git
-históricos de las secciones anteriores, que se conservan como trazabilidad.
+**Entrega de Fase B: 21-oct-2026.** Base de las repeticiones:
+`33404a5804be4fad85aab80dd923a7ae9e878ee9`, etiqueta `sprint3-cierre-2`.
+El apartado final **Cierre de Fase B · 21-oct-2026** contiene las cuatro tablas,
+los dictámenes, las limitaciones y el único bloque Git vigente de esta entrega.
+Prevalece sobre pendientes, conclusiones y bloques Git históricos conservados.
+**RNF-004: no medible · RNF-006: no medible · RNF-008: no cumple · RNF-002: no cumple.**
+Disponibilidad funcional sin red: **11/11 por cliente**; SUS pendiente del piloto.
 La corrección 10.81 fue versionada en `46202d7` (decisión 10.82).
 
 ## Corrección 10.81
@@ -1957,8 +1961,8 @@ expresamente y confirmar valores ya existentes.
 | 6 | Buscar | Buscar CSQU3054383 y comprobar el único resultado; limpiar la búsqueda. |
 | 7 | Estadísticas | Abrir Estadísticas y comprobar 2 unidades / 36 t. |
 | 8 | Alertas de estiba | Abrir Alertas y comprobar que termina la evaluación; ausencia de alertas no significa fallo. Límites sin especificación siguen PROVISIONALES/no evaluados. |
-| 9 | Exportar | Exportar BAPLIE al banco TEMP (nombre distinto por cliente), confirmar la creación y conservar el archivo para cotejo. No publicar ni sincronizar. |
-| 10 | Reabrir reciente | Volver al inicio y reabrir el sintético desde Recientes; comprobar 2 unidades. |
+| 9 | Exportar | Exportar viaje en CSV al banco TEMP (nombre distinto por cliente), confirmar la creación y conservar el archivo para cotejo. No publicar ni sincronizar. |
+| 10 | Reabrir reciente | Abrir Viajes recientes con el reloj y reabrir el sintético; comprobar 2 unidades. |
 | 11 | Parámetros del buque | Abrir Parámetros y comprobar los controles; salir sin cambios adicionales. |
 
 `tool/t98_tanda_red.ps1` observa, sin cambiar configuración: adaptadores
@@ -2023,6 +2027,7 @@ Archivos propios pendientes de versionar, incluida la continuación anterior:
 - `tool/t98_primera_windows.ps1`
 - `tool/t98_sintetico.dart`
 - `tool/t98_tanda_red.ps1`
+- `tool/t98_pktmon.ps1`
 
 Bloque para Carlos; registra avance, **no declara T-98 terminada**:
 
@@ -2039,6 +2044,7 @@ git add -- tool/t98_primera_honor.py
 git add -- tool/t98_primera_windows.ps1
 git add -- tool/t98_sintetico.dart
 git add -- tool/t98_tanda_red.ps1
+git add -- tool/t98_pktmon.ps1
 git commit -m "Sprint 3: registra avance de mediciones T98 sobre cierre 2"
 git push
 ```
@@ -2132,3 +2138,707 @@ bloque Git de doce rutas explícitas anterior sigue vigente y solo lo ejecuta
 Carlos. pubspec.yaml/pubspec.lock permanecen sin cambios. **T-98 continúa
 en curso** por TLS/sesiones, disponibilidad sin red Windows/Web y demás
 limitaciones expresamente declaradas.
+
+### Tanda guiada con Carlos · nuevo orden autorizado · paso 1
+
+Carlos solicita guiar un paso por turno y esperar su «listo». Su orden
+nuevo **sustituye el a–f anterior**: pktmon y NetLog antes de iniciar sesión;
+después sesiones en los tres clientes, publicar PRUEBA T-98 desde Windows,
+Security y cierre de pktmon; luego sin red Windows, sin red Web y finalmente
+cerrar sesiones y NetLog. Así se captura el saludo TLS desde la autenticación.
+No se graba pantalla durante correo/contraseña. Las once operaciones se
+entregan antes del primer corte, que solo ejecuta Carlos.
+
+Paso 1: las consultas sin elevar devolvieron Acceso denegado. Se preparó
+`tool/t98_pktmon.ps1` y Carlos aprobó la elevación de administrador. Worker
+oculto, sin automatizar UAC. Preflight elevado: **supervisión inactiva y
+ningún filtro**; no se detuvo ni se borró una captura ajena. Tras comprobarlo
+se dio la señal de arranque. Estado confirmado **capturando**, inicio UTC
+2026-10-21T03:13:20.0592245Z (20-oct, 21:13:20 Guatemala): NIC, paquetes
+completos, TCP/UDP 443, filtros propios t98_https/t98_quic, circular 128 MB.
+Original privado: `tanda/tls-01/t98-tls.etl`. No se captura pantalla.
+
+El helper espera la señal propia de cierre y tiene límite automático de
+1800 s. Retira únicamente los filtros que él añadió. Se verificó su sintaxis
+antes de elevar y se confirmó la salida real de pktmon start; esto no prueba
+todavía una negociación TLS. Se comprobará que no se haya perdido el saludo
+por rotación del archivo circular. El paso siguiente queda esperando el
+«listo» de Carlos; todavía no se le indicó iniciar sesión ni publicar.
+
+Paso 2: Carlos confirmó NetLog registrando. Tras observar su captura de la
+pantalla de configuración se precisó seleccionar el radio **Strip private
+information** (las opciones son excluyentes) y JSON Default, sin cookies ni
+bytes crudos. Archivo `tanda/tls-01/netlog.json` presente, 54343 bytes al
+comprobar, sin leer su contenido. Worker pktmon sigue en capturando. Se
+confirmó un único cliente Windows del EXE t98 propio. Se guía ahora el
+inicio de sesión manual **solo en Windows**, sin pantalla grabada ni
+capturas del panel de cuenta; publicación todavía pendiente.
+
+Paso 3: Carlos confirma «listo» tras el inicio de sesión manual en Windows.
+No se capturó su pantalla ni se inspeccionó el panel de cuenta. Pktmon sigue
+en capturando antes del paso Honor. Paquete .t98 confirmado; avión 0,
+Wi-Fi 1. Se tomó netstats filtrado previo al inicio de sesión Honor, sin UID
+persistido. Esta sonda registra contadores, **no versión TLS**; pktmon de
+la NIC de la laptop tampoco cubre el tráfico Wi-Fi propio del teléfono.
+Se guía ahora solo el acceso manual en Honor; publicación aún pendiente.
+
+Paso 4: Carlos confirma sesión Honor terminada. Se tomó el netstats filtrado
+posterior: poll solicitado correctamente, 2 buckets atribuibles y consulta
+TCP válida (1 fila propia). Se conserva antes/después sin UID; todavía no
+se confunden esos contadores con prueba de negociación TLS.
+
+Preparación del paso Web: la pestaña IAB anterior ya no existía (inventario
+vacío y Tab not found). Se reabrió la URL autorizada 127.0.0.1:5898 en IAB
+visible, nueva pestaña 2. Sin interacción con Chrome ni formularios de acceso.
+Se habilitó Network CDP y se guardó cursor 50 previo al inicio de sesión
+para recoger después únicamente respuestas y protocolos TLS sanitizados,
+sin guardar cuerpos, cabeceras, correo o tokens. No se tomó screenshot ni
+video del acceso. Se mantiene la pestaña para el usuario. Se guía ahora
+solo el inicio de sesión Web manual; publicación Windows todavía pendiente.
+
+Paso 5: Carlos confirma acceso Web terminado y salida del panel de cuenta.
+La lectura posterior CDP desde cursor 50 devolvió **truncated=true**, sin
+respuestas atribuibles a los tres hosts permitidos y cursor final 96. No
+se obtiene una versión TLS del acceso IAB de esa lectura ni se declara
+cumplido. Pktmon permanece capturando; su evidencia se revisa después, sin
+confundir el NetLog Chrome con el IAB. Se arma sonda de sockets de Windows
+(180 s, TCP/UDP por PID propio) antes de indicar la publicación sintética.
+Es atribución complementaria, no prueba de contenido ni de cero bytes.
+Se guía publicar solo la operación ficticia identificada como BUQUE PRUEBA,
+viaje T98, escala GTSTC, 2 unidades y 36 t: «PRUEBA T-98» es la referencia de
+la tanda; la UI identifica la operación por buque/viaje/escala y no ofrece
+un campo independiente de nombre en Publicar operación. No se captura el
+panel de cuenta ni credenciales. Publicación todavía pendiente del «listo».
+
+Incidencia en paso 6: Carlos aporta una captura con «Cuenta sin comprobar ·
+Muelle» y «Cuenta sin autorizar», operación local BUQUE PRUEBA/T98/GTSTC;
+no aparece Publicar operación. **No se publicó**. Carlos confirma que usó
+la cuenta de **Oficina**. No se interpreta el rótulo Muelle como su rol
+real: FirebaseSessionRepository._unknown usa dock/authorized=false como
+estado provisional. signIn conserva esa falta de autorización si no obtiene
+el documento authorized; captura de FirebaseException y documento ausente
+pueden acabar en data=null. El listener también conserva el estado ante
+error. La pantalla no distingue esas causas. CloudPage solo ofrece publicar
+si authorized=true y role=office. No se atribuye todavía a contraseña,
+cuenta incorrecta, reglas, red o SDK, ni se declara fallo de TLS.
+
+Se conserva como evidencia la captura aportada por Carlos, no una captura
+del agente. No se editaron reglas, permisos, cuentas ni lib. La publicación
+y sus verificaciones quedan pendientes. El siguiente diagnóstico compara
+el estado visible de autorización en la Web integrada con la misma cuenta,
+sin registrar nombre, correo, UID ni contraseña. Pktmon sigue activo con su
+límite de 1800 s; NetLog no se ha detenido.
+
+### Pausa solicitada por Carlos · 20-oct, 21:36 Guatemala
+
+Carlos confirma **Web: Oficina autorizada** y pide continuar mañana,
+21-oct temprano. Contraste conservado: Windows con «Cuenta sin comprobar»
+y sin Publicar, Web con Oficina autorizada. Se revisará primero la lectura
+de autorización de Windows y el instrumento t98; no se supone que falten
+permisos globales ni se cambian cuenta, reglas o producto. No se publicó
+la operación, no se revisó todavía Security y no se hizo el corte de red.
+
+Se detuvo pktmon mediante la señal propia: **fase detenida, solicitado**,
+UTC 2026-10-21T03:36:34.3086036Z. El cierre de pktmon informa **sin eventos
+perdidos**. ETL privado `tanda/tls-01/t98-tls.etl`, **58115538 bytes**. Esa
+salida no sustituye todavía la comprobación de integridad/rotación ni la
+atribución TLS: el análisis queda para la reanudación. No se tomó pantalla
+de la autenticación. El helper elevado terminó y solo retira sus dos filtros.
+
+**Pendiente inmediato de Carlos:** pulsar Stop Logging en la pestaña de
+NetLog para cerrar el JSON; se espera su «listo» y no se toma huella de un
+archivo aún abierto. Los accesos siguen iniciados según sus confirmaciones;
+no se afirma cierre de sesiones. La Web queda conservada para retomar.
+Honor comprobado nuevamente: avión 0, Wi-Fi 1, letra 1.0, puntero null.
+**SEMÁFORO: libre.**
+
+La continuación incorpora `tool/t98_pktmon.ps1` como **decimotercera ruta
+propia** al inventario y bloque Git anteriores. Validado por parser de
+PowerShell y por arranque/cierre real de la captura autorizada. No modifica
+configuración de cuentas ni credenciales. pubspec.yaml/pubspec.lock siguen
+sin cambios. T-98 permanece en curso y pausada por decisión de Carlos.
+
+Carlos confirmó «listo» tras **Stop Logging** en Chrome. NetLog cerrado
+según su confirmación: 4073819 bytes, SHA-256
+f535e2a87e9328508ec40a52b2e158cf634c50598b8a026f05b0d139c985f30d.
+Identidad archivada en `tanda/tls-01/cierre-netlog.json`. No se leyó el
+contenido del registro en este cierre; análisis TLS/NetLog pendiente para
+mañana. Pktmon ya estaba detenido. Las sesiones no se dieron por cerradas:
+esa acción sigue pendiente. Se conserva la pausa solicitada por Carlos,
+con el contraste Windows sin comprobar / Web Oficina autorizada y sin
+publicación ni prueba sin red todavía. **SEMÁFORO: libre.**
+
+### Reanudación 21-oct · diagnóstico acotado de Windows
+
+Inicio del bloque de diagnóstico: UTC 2026-10-21T16:01:46 (10:01:46 Guatemala),
+con límite solicitado de 20 minutos. Se leyeron 10.98–10.100 y la sección 4
+de T100. Honor: paquete .t98 confirmado al frente mediante actividad
+reanudada y XML de su app; pantalla Inicio sin viaje abierto. Avión 0,
+Wi-Fi 1, letra 1.0 y puntero null. La primera sonda de foco (dumpsys window
+windows) no daba el dato en ese formato: el falso de esa sonda **no prueba
+que hubiera otra app al frente**; se resolvió con dumpsys activity y los
+nodos .t98. No se tocó t100 ni los almacenes, ni se afirma igualdad total de
+archivos del Honor sin una huella previa comparable.
+
+Windows ya no tenía proceso t98 al empezar. Se preservó el Release usado
+en mediciones en `reanudacion-21oct/windows-original/`. Se creó una app de
+sonda propia `tool/t98_autorizacion.dart`, con las mismas opciones compiladas
+y FirebaseApp t98. Solo consulta por SDK el documento de autorización de la
+cuenta actual, usando su identificador **en memoria**. No lee tokens ni
+archivos de sesión, ni guarda nombre/correo/UID; registra existencia, rol,
+active, origen de caché y códigos de error. No usa consola/CLI de Firebase.
+La primera preparación corrigió únicamente la normalización de la ruta de
+salida del propio instrumento; no produjo una lectura útil y se excluye.
+
+**Lectura sin corregir el arranque:** `autorizacion-named.json` confirma
+app=t98, authApp=t98, firestoreApp=t98, proyecto correcto, sesión presente,
+**errorCodigo=no-app** (UTC 16:09:49). No es permission-denied ni prueba de
+que falte el registro de oficina. La pantalla del producto oculta esa
+excepción y conserva la autorización falsa/provisional.
+
+**Causa del banco localizada en el código instalado:**
+`cloud_firestore_platform_interface` **8.0.6**, fijado en pubspec.lock,
+`FirebaseFirestorePlatform.instance` construye primero
+`MethodChannelFirebaseFirestore(app: Firebase.app())` (líneas 52–54) antes
+de `delegateFor(app: t98)`. Windows no tiene [DEFAULT] en este banco; la
+entrada del producto sí la inicializa. Las fábricas C++ de Auth y Firestore
+reciben el nombre t98 correctamente; la excepción ocurre antes de llegar
+al get del adaptador nativo. La implementación Web registra su propia
+plataforma, por eso no demuestra el fallo Windows.
+
+Corrección **solo del instrumento**, `tool/t98_firestore_bootstrap.dart`:
+sembrar la instancia de plataforma con el mismo MethodChannelFirebaseFirestore
+pero ligado a t98, antes de delegar. No se crea una app [DEFAULT], que podría
+restaurar una sesión ajena; Auth y Firestore siguen t98. Se usan clases de
+la dependencia transitiva ya fijada, sin añadir dependencias de producción.
+`tool/t98_main.dart` aplica este arranque solo a Windows; lib y pubspec no
+se editan. Se prepara la lectura de contraste corregida; su resultado se
+registra a continuación, sin anticipar éxito.
+
+La decisión 10.99 permite entregar T98 con **SUS pendiente del piloto** del
+25/26-oct: no es un impedimento para esta entrega. Se mantienen separados
+el diagnóstico del banco, la autorización de la cuenta y los dictámenes RNF.
+
+**Contraste corregido (21-oct, UTC 16:13:44):** misma sonda, Auth y Firestore
+ligados a t98, consulta Source.server: registro existente, desdeCache=false,
+active=true, role=dock. Desaparece no-app. Esto demuestra el defecto del
+arranque del banco, pero no explica por sí solo la diferencia con Oficina
+autorizada en la Web: no se compararon identificadores ni se leyeron tokens.
+Se prepara el cliente completo corregido y se pedirá una nueva entrada
+manual de Oficina, sin grabar la autenticación. No se cambian roles ni
+registros de autorización. Las mediciones previas conservan sus binarios y
+huellas históricos; el nuevo ejecutable se identificará aparte.
+
+El worker pktmon admite ahora una ronda propia validada (tls-01 a tls-09),
+sin sobrescribir la captura anterior. Segunda ronda preparada en tls-02;
+preflight elevado: captura inactiva y ningún filtro. Se señalizó el inicio
+solo después de revisar ese estado. Sigue sin tomarse pantalla del acceso.
+
+El cliente completo corregido compiló en Release (48.9 s). La advertencia
+MSB8029 por compilar en TEMP ya existía. La huella del lanzador baystream.exe
+permanece 324b3c935ce92e61e5349b75dafd16d1bcdd44b98c3f32b6f9bef28c66a9366f;
+**la corrección Dart cambia data/app.so**, 12059568 bytes, SHA-256
+277d61d5c33a1b288e2d770f42a64c90adf0c747a0e38d4543ccd25c0540386f.
+Se conservó el manifiesto completo de Release en
+reanudacion-21oct/cliente-corregido-manifiesto.json: 18 archivos idénticos
+al Release anterior y únicamente data/app.so distinto. No debe usarse
+solo la huella del lanzador para identificar el código Dart.
+
+Pktmon segunda ronda confirmado **capturando** desde UTC 16:18:18.9864480Z,
+con límite de 1800 s. Cliente completo t98 abierto mediante Explorer,
+sin capturas de pantalla. La nueva entrada manual queda condicionada a
+que Carlos inicie primero el nuevo NetLog, conforme al orden acordado.
+
+Carlos confirmó el inicio del nuevo NetLog en Chrome, tls-02/netlog.json,
+tras la instrucción Strip private information y JSON. La confirmación es
+manual; el contenido y la integridad se comprobarán al cerrar. El registro
+corresponde a Chrome, no al navegador integrado. Sigue prohibida la captura
+de pantalla durante la entrada de credenciales. El contraste pendiente se
+comprobará en el cliente completo Windows ya corregido, sin nuevas sondas
+ni cambios del producto.
+
+UTC 16:22:08: se cumplió el límite de 20 minutos desde 16:01:46 sin resolver
+el contraste de rol entre clientes. Se termina aquí el diagnóstico adicional
+y se aplica la alternativa autorizada: publicar PRUEBA T-98 desde la Web,
+previa comprobación manual de Oficina autorizada. Windows conserva su
+captura TLS aunque no autorice publicar. No se corrige lib ni se prolonga
+la investigación para bloquear la tanda. La comprobación de una nueva
+entrada en Windows queda aplazada; no se afirma realizada.
+
+Carlos confirma de nuevo Web «Oficina autorizada» (21-oct). Se continúa en
+el navegador integrado con el sintético definitivo de 492 bytes; SHA-256
+recomprobada 2b8ba3998d288ac2eaae3ed4b6fc89160bcc305a17ef5955330499ac33562344.
+La publicación aún no se ha realizado. No se capturó la pantalla de cuenta.
+
+Revisión visual del navegador integrado tras la selección manual del
+sintético: diálogo «Perfil del buque nuevo», opciones «Proponer desde el
+archivo» y «Plantilla: BUQUE ALFA / imo:9000003». Todavía no se abrió el
+viaje ni se publicó. Se guía usar Proponer desde el archivo para el
+sintético; no se usa la plantilla de otro buque ni se inventan límites.
+
+Parámetros Web revisados en UI: archivo PRUEBA_T98.edi, mínimo observado,
+babor 0/estribor 1, nivel de cubierta 82, puerto GTSTC seleccionado,
+0 descargas/2 cargas/0 de paso. Rejilla 2 columnas × 1 nivel por bahía;
+tomas y tapas sin declaración operativa. Confirmar deshabilitado hasta
+resolver el límite de apilamiento. Se guía marcar «No lo tengo», sin
+inventar un umbral, y confirmar. La lectura accesible se habilitó como
+instrumento de revisión; no es una medición de pasos/tiempos nueva.
+
+Verificación de los tres instrumentos Dart modificados/nuevos: dart analyze
+sobre t98_main.dart, t98_firestore_bootstrap.dart y t98_autorizacion.dart,
+**No issues found**. Producto de la copia: 139 archivos comprobados,
+137 Dart bajo lib y pubspec.yaml/pubspec.lock, sin diferencias del cierre.
+
+Viaje Web comprobado por UI tras confirmar: BUQUE PRUEBA / T98 / GTSTC,
+2 contenedores, 2 bahías, 36.0 t, 0 descargas/2 cargas/0 de paso. Lista
+muestra los dos identificadores sintéticos esperados y Todas (2). Estado
+del acceso Nube y cuenta: Solo este dispositivo. Todavía no publicado.
+
+Carlos confirma «listo, publicada» en el navegador integrado, tras publicar
+BUQUE PRUEBA / T98 / GTSTC. Se registra como publicación manual confirmada,
+sin captura de cuenta y sin consultar consola/CLI de Firebase. Es la
+alternativa autorizada al contraste de autorización de Windows. El nombre
+lógico PRUEBA T-98 no es un campo independiente del producto. Verificación
+posterior de estado compartido/TLS pendiente; no se extrapola el NetLog de
+Chrome al navegador integrado.
+
+Tras la publicación, la Web quedó de nuevo en Lista, con BUQUE PRUEBA/T98/
+GTSTC y el acceso Nube y cuenta en «Al día». La comprobación de «Publicada»
+es la confirmación manual de Carlos; no se capturó la pantalla de cuenta.
+CDP del navegador integrado: buffer truncado, 0 responseReceived disponibles
+para atribuir TLS; no demuestra versión negociada ni se usa como aprobado.
+Se inicia muestreo propio de sockets Windows 120 s, correlacionable con la
+captura NIC tls-02. Se guiará Chrome como comprobación TLS auxiliar manual;
+las mediciones de funcionamiento y tiempos Web permanecen en el IAB.
+
+Carlos confirmó preparado el acceso auxiliar en Chrome tras la instrucción
+de entrar con Oficina si se requería. No se grabó la autenticación ni se
+leyeron datos de la cuenta. Se procede a Security manualmente en ese
+contexto; no se atribuyen sus resultados al IAB por equivalencia.
+
+Chrome auxiliar: captura aportada por Carlos confirma panel Security abierto,
+«Reload to view details» y «This page has a non-HTTPS secure origin» para
+127.0.0.1:5898. No contiene todavía detalles TLS de Firebase y no se interpreta
+como fallo de TLS del SDK. Copia privada security-inicial.png y huella en
+tls-02/security-inicial-identidad.json. Se guía recargar con el panel abierto,
+sin cambiar ajustes de seguridad ni detener NetLog.
+
+Security tras recargar Chrome auxiliar, según captura aportada por Carlos:
+Main origin http://127.0.0.1:5898; Secure origins https://apis.google.com y
+https://identitytoolkit.googleapis.com. Firestore no aparece en esa captura.
+Los candados no prueban por sí solos la versión de TLS; se pide abrir los
+detalles de identitytoolkit (autenticación). Evidencia privada conservada
+como security-origenes.png con su huella. No se afirma cobertura Firestore.
+
+Sonda sockets Windows de tls-02: 516 consultas válidas, 0 errores, proceso
+continuó, 0 muestras TCP con destino 443 en su intervalo. No demuestra cero
+bytes ni permite atribuir un ServerHello; no se convierte en conformidad TLS.
+
+Detalle Security aportado por Carlos para identitytoolkit.googleapis.com en
+Chrome auxiliar: Protocol QUIC; Key exchange X25519MLKEM768; Server signature
+ECDSA with SHA-256; Cipher AES_256_GCM. La captura no indica explícitamente
+una versión TLS; se conserva como negociación QUIC cifrada observada, no
+como lectura literal de TLS 1.3 ni como conexión Firestore/Windows/Honor.
+Evidencia security-identitytoolkit-quic.png y JSON de metadatos con SHA-256.
+Se comprobará explícitamente la sesión Oficina del contexto Chrome antes
+de buscar la conexión Firestore; no se presupone que comparte la del IAB.
+
+Carlos confirma explícitamente «Oficina autorizada» también en Chrome
+auxiliar. Esta confirmación es independiente de la sesión del navegador
+integrado. Se mantuvo NetLog activo y no hubo grabación de credenciales.
+Se guía volver al Inicio y recargar con Security abierto para observar
+Firestore, conservando los detalles de autenticación ya aportados.
+
+Carlos indica que Firestore no aparece en Security tras verificar Oficina
+en Chrome. Se cierra esta comprobación sin afirmar TLS para ese servicio.
+Pktmon tls-02 detenido por señal propia a UTC 16:43:24.447217Z, motivo
+solicitado, cierre «sin eventos perdidos». ETL 39997761 bytes; SHA-256
+8842d414f0cdc916e63992b358845d207c4edd0c029063775bc5c3f21213e826.
+Huella y estado en tls-02/cierre-identidad.json. El análisis de atribución
+sigue pendiente; no se transforma ausencia de eventos perdidos en prueba
+de conformidad. NetLog sigue abierto por el orden acordado hasta cerrar
+sesiones. Se prepara la tanda sin red, primero Windows y después Web, en
+cortes separados realizados por Carlos y con grabación propia de cada uno.
+
+Preparación sin red Windows: ventana t98 de Release corregido confirmada
+maximizada, Inicio sin cuenta en pantalla; resolución física 1920×1080.
+Se corrige la guía previa del banco: T63 4.1 exige «exportar»; la condición A
+y el Honor sin red ya usaron **CSV**. El texto BAPLIE en la preparación de la
+tanda era un error del instrumento. Operación 9 será Exportar viaje > CSV,
+sin cambiar la lista normativa de once operaciones ni generar una salida
+operativa (que además tiene restricciones de rol). Se informa a Carlos
+antes del corte; se conserva el cambio declarado aquí. No es cambio del
+producto. Lista exacta preparada en tanda/sin-red-windows-01/LISTA-CARLOS.txt.
+Todavía no se inició video ni se cortó la red.
+
+**Ventana Windows sin red iniciada, SEMÁFORO: mido.** Carlos recibió la lista
+exacta de once operaciones y confirmó preparado. Se verificó de nuevo la
+ventana Inicio del único EXE t98, se puso al frente y se inició FFmpeg
+1920×1080, sin audio, límite 600 s. Estado grabando confirmado desde UTC
+2026-10-21T17:02:03.327710+00:00 (host solo trazabilidad, no latencia).
+Sonda de red en segundo plano, límite 600 s y cierre por señal propia;
+primera muestra verificable en red.json.inicio.json. Antes del corte:
+1 adaptador físico activo, 1 ruta IPv4 y ping Success. Se habilitó señal de
+fin y primera muestra en t98_tanda_red.ps1, parser válido y ensayo conectado
+real correcto. Todavía no se afirma que Carlos haya desconectado la red ni
+que las once operaciones hayan terminado. La orden de corte será manual y
+el video/red se anotarán al reconectar.
+
+Windows sin red: Carlos regresó con «listo». Video cerrado por señal propia,
+código 0; 73028436 bytes, duración 540.179100 s, 16206 cuadros, 1920×1080.
+CSV creado: 596 bytes, dos unidades sintéticas y 36000 kg comprobados.
+Sonda cerrada por señal propia: 382 muestras, 305 con adaptadores físicos
+activos=0; primera UTC 17:02:33.1227586Z y última UTC 17:10:08.1132039Z.
+Durante ese intervalo el ping da DestinationHostUnreachable, TimedOut o
+error_sonda (este último es inconcluso por sí solo). La tabla IPv4 conserva
+una ruta: no se interpreta como conectividad efectiva. Primera y última
+muestras conectadas: 1 adaptador activo y ping Success. La vista rápida del
+video confirma interacción offline y exportación, pero las once operaciones
+siguen pendientes del cotejo fino; no se afirma 11/11 todavía.
+**SEMÁFORO: libre**, captura y sonda cerradas, sin cambios de red por Codex.
+
+Cotejo fino Windows, primera ronda: **9/11 verificadas sin red** (1–9).
+Hitos por cuadro/PTS fuente en operaciones-anotadas.json. Plano Bahía 01
+PTS 252.009 aprox.; Bahía 03 255.001; filtro T98A 273.011 y Todas 276.005;
+búsqueda corregida con resultado 309.013; Estadísticas 324.014; Alertas
+333.015; CSV completo 467.005. Todos dentro del intervalo sin adaptador.
+Se observaron errores de tecleo intermedios en búsqueda, corregidos antes
+del resultado; no se cuentan como fallo de red/producto. CSV cotejado por
+contenido. No se observaron Recientes ni la revisión final de Parámetros
+antes de reconectar; se prepara complemento solo para 10 y 11.
+Previsualizaciones: primer contacto sin fuente de letra falló por fontconfig;
+contactos detalle-01…04 sin fps_mode vfr duplicaban la primera imagen y se
+excluyen. Las revisiones usan detalle-v2 y cierre-vista con PTS fuente. Los
+videos originales no se modifican; los intervalos no se tratan como latencias.
+
+Complemento Windows para operaciones 10 y 11, SEMÁFORO: mido. Se conserva
+la sesión y el viaje sintético cargado de la primera ronda. Video separado
+windows-complemento.mp4, grabando desde UTC 17:15:48.589896+00:00, límite
+600 s; sonda red.json iniciada y primera muestra conectada con 1 adaptador
+activo y ping Success. Al poner al frente se detectó la ventana restaurada;
+se maximizó antes de autorizar el corte. Ese preámbulo no es medición de
+latencia. Carlos hará únicamente Recientes/reabrir y Parámetros/salir, luego
+reconectará. No se afirman completadas todavía.
+
+**Windows sin red: 11/11 operaciones funcionales verificadas**, en dos
+cortes separados: 1–9 en sin-red-windows-01 y 10–11 en sin-red-windows-02.
+Complemento: video 130.810991 s, 3925 cuadros, código 0; Recientes visible
+PTS 65.000 aprox., viaje reabierto con dos unidades 70.011; Parámetros del
+buque 85.012, controles 90.007 y salida 95.003. Hitos exactos e índices en
+operaciones-anotadas.json del complemento, con SHA y monotonía de PTS.
+Sonda complemento: 107 muestras; 37 sin adaptador activo, desde UTC
+17:16:42.8723872 hasta 17:17:36.110098 (aprox. PTS 54.177–107.415).
+Las acciones 10–11 quedan dentro de ese intervalo. Al final el adaptador
+está activo otra vez y Carlos pudo enviar «listo»; el ping de la última
+muestra aún TimedOut, por eso no se afirma control ICMP positivo posterior
+en esa ronda. Primera ronda sí conserva ping Success antes y después.
+Sin cambios del producto, sin movimientos compartidos ni sesiones en video.
+Se conserva el preámbulo restaurado/maximizado del complemento; ambas
+acciones verificadas se ejecutaron con la ventana maximizada.
+**SEMÁFORO: libre.** Preparación de Web todavía sin corte ni video nuevo.
+
+Preparación Web: IAB 127.0.0.1:5898 revisado en Lista con BUQUE PRUEBA/T98/
+GTSTC, dos unidades, 36 t y estado Al día. Viewport observado 1480×668;
+no se cambia para medir funcionalidad offline. Se prepara lista de las once
+operaciones, incluida Exportar viaje > CSV y reapertura directa por reloj
+(sin limpiar datos para volver a Inicio). Video todavía no iniciado.
+
+**Ventana Web sin red, SEMÁFORO: mido.** Carlos confirmó la lista de once
+operaciones para el navegador integrado. Pantalla pública revisada de nuevo,
+BUQUE PRUEBA/T98/GTSTC, dos unidades y 36 t, motor local precargado. Se
+inició video de escritorio web-offline.mp4, 1920×1080, sin audio y límite
+600 s, estado grabando desde UTC 17:23:18.082914+00:00. Sonda red.json en
+segundo plano con primera muestra archivada y verificable. El corte lo
+hará Carlos; todavía no se declara ejecutado. Se conservaron censos de los
+CSV sintéticos previos en Descargas (dos variantes de espacios/guiones)
+para distinguir una exportación nueva de un archivo preexistente.
+No se recarga ni se cambia el origen Web. NetLog auxiliar Chrome continúa
+activo según el orden acordado, independiente de la grabación del IAB.
+
+**Web sin red: 11/11 operaciones funcionales verificadas**, navegador
+integrado, corte único. Video web-offline.mp4: código 0, 54545424 bytes,
+332.400120 s, 9960 cuadros y PTS estrictamente crecientes; tasa real
+29.9608797673 cuadros/s (no es una medición de rendimiento del producto).
+SHA-256 8e9d2acf74dbb037a37993b85619fe852d7ebda4b9ca6ddcff78dd0865187d2f.
+CSV nuevo 592 bytes, dos unidades y 36000 kg: SHA-256
+1a583eb43c76e7d54015d69b2ab848c4416034fa858404bea0705a4badceac1d.
+Se vio la descarga y el traslado manual a TEMP en el video; no se confundió
+con un archivo preexistente. No se exige igualdad binaria de CSV entre
+clientes porque incluyen identificadores internos diferentes.
+
+Sonda Web: 243 muestras; 169 con adaptador físico activo=0. Intervalo
+conservador con cero adaptador y ping TimedOut: UTC 17:24:01.3221294Z a
+17:28:10.1204876Z (aprox. PTS 43.236–292.035). La tabla conserva una ruta.
+La muestra siguiente (293518 ms desde inicio, **293.518 s** en el reloj)
+leyó adaptador 0 y luego ping Success durante la reconexión: se excluye
+ese borde, pues las consultas no son atómicas. El primer ping de la ronda
+fue TimedOut y no se presenta como control ICMP positivo; el último da
+Success, adaptador activo 1 y Carlos volvió a comunicarse. Se vio a Carlos
+apagar y restaurar Wi-Fi. Todas las acciones verificadas terminan antes del
+borde de reconexión: última salida de Parámetros visible PTS 282.288 aprox.
+
+Hitos por cuadro/PTS fuente: operaciones-anotadas.json. Bahía 01/03 y filtro
+1/2 cotejados con previsualizaciones cada segundo. En búsqueda Carlos usó
+el prefijo «csq», obtuvo CSQU3054383 como único resultado y lo abrió/resaltó;
+se comprueba búsqueda funcional sin afirmar que tecleó todo el identificador.
+Recientes y Parámetros finales confirmados en PTS 260.275–282.288 aprox.
+**SEMÁFORO: libre.** Grabaciones y sondas propias cerradas antes de pedir
+cierre de sesiones. Funcionalidad sin red consolidada: Windows 11/11 en dos
+rondas, Web 11/11 en una, Honor 11/11 conservado por 10.93. Esto no mide la
+disponibilidad longitudinal 99.9 % ni resuelve recuperación temporal Windows.
+
+Cierre manual de sesiones, paso 22: Carlos confirmó «listo» después de
+cerrar la sesión de Windows t98 y salir de la pantalla de cuenta (o verificar
+Iniciar sesión, si ya no había sesión). Es confirmación manual; no se abrió
+el almacén de Auth, no se leyeron tokens ni se capturó Nube y cuenta.
+Sesiones restantes para cerrar: Honor t98, IAB y Chrome auxiliar. NetLog
+sigue abierto hasta completar esas acciones, conforme al orden acordado.
+
+Cierre manual de sesiones, paso 23: Carlos confirmó «listo» después de
+cerrar o verificar ausente la sesión de BayStream T98 en el Honor y volver
+a una pantalla pública. No se capturó Nube y cuenta ni se accedió a tokens.
+Quedan por cerrar el navegador integrado y Chrome auxiliar; NetLog sigue
+abierto hasta el final. El paquete t100 no se tocó.
+
+Cierre manual de sesiones, paso 24: Carlos confirmó «listo» tras cerrar la
+sesión del navegador integrado y volver al viaje. Sin grabación ni captura
+de cuenta. Honor restaurado y comprobado por lecturas de ajustes: avión 0,
+Wi-Fi 1, font_scale 1.0 y pointer_location null (UTC 17:35:56.9565010Z),
+archivado en reanudacion-21oct/honor-ajustes-finales.json. ADB no estaba en
+PATH; se usó su ruta existente del SDK, sin instalar nada ni cambiar ajustes.
+Queda Chrome auxiliar y el cierre de NetLog.
+
+Pktmon tls-02 convertido con herramienta local etl2pcap: 37717 paquetes,
+0 descartes y 37717 con formato, salida privada t98-tls.pcapng. La conversión
+no atribuye por sí sola los paquetes a Windows t98 ni demuestra una versión
+negociada. El ETL original y su huella permanecen conservados.
+
+Cierre manual de sesiones, paso 25: Carlos confirmó «listo» tras cerrar la
+sesión del contexto auxiliar de Chrome y volver a una pantalla pública.
+Windows t98, Honor t98, IAB y Chrome auxiliar quedan cerrados según sus
+confirmaciones. No se automatizó autenticación ni se capturaron cuentas.
+Se solicita ahora Stop Logging para cerrar el NetLog de tls-02; todavía
+no se toma huella de un archivo abierto ni se afirma que ya terminó.
+
+## Cierre de Fase B · 21-oct-2026
+
+**Fase B entregada para aceptación cruzada, con resultados y limitaciones.**
+Base `sprint3-cierre-2`, SHA completo
+`33404a5804be4fad85aab80dd923a7ae9e878ee9`. Este cierre prevalece sobre todos
+los estados y bloques Git anteriores del informe. SUS y tareas con cinco
+participantes quedan **pendientes del piloto del 25/26-oct**, por 10.99;
+no se presentan respuestas ni puntajes ficticios.
+
+### RNF-004 · Tabla final
+
+| Submétrica | Umbral o condición | Evidencia y resultado | Dictamen |
+|---|---|---|---|
+| Operaciones locales A | 100 % de las once operaciones sin transmisión T63 4.2; Firebase configurado, sin sesión | Se conserva el recorrido funcional 11/11 de los tres clientes por 10.93. HAR sin cobertura probada del worker, muestreo Windows y falta de control atribuible Android impiden probar cero bytes. El defecto de arranque del banco Windows detectado hoy refuerza esa limitación | No medible para el 100 % sin transmisión |
+| Con sesión, fuera de compartida (B) | Informativa | Sesiones y estados contrastados; Windows llegó a no-app y luego el servidor devolvió dock/active. Web Oficina autorizada. No se obtuvo un recorrido online de las once operaciones con atribución de tráfico por cada cliente | Observación parcial; sin dictamen normativo |
+| TLS de conexiones reales | TLS ≥1.2 en clientes, decisión 10.82 | Chrome auxiliar: seis sesiones QUIC RFCv1 completas, tres Firestore, dos identitytoolkit y una securetoken, todas en partición local. Inferencia TLS ≥1.3 por RFC9001 §4.2. IAB no tiene negociación atribuible recuperable; Windows sin ServerHello atribuible; Honor declarado sin saludo observado | Cumple las seis conexiones de Chrome auxiliar; conjunto no medible |
+| Credenciales | Mecanismos nativos seguros por plataforma | Se conserva inventario por fuentes de Auth C++/Android/Web y caché propia Hive; no se inspeccionan secretos. La ruta de datos del banco y el nombre t98 no prueban por sí solos el mecanismo seguro efectivo | No medible en las tres plataformas |
+| Operación compartida | Sintético propio; sincronización evaluable con TLS acreditado | Carlos publicó BUQUE PRUEBA/T98/GTSTC desde el IAB (referencia PRUEBA T-98). Se observó Al día. No se ejecutó una batería adicional de movimientos compartidos ni se atribuye a IAB la negociación de Chrome | Publicación manual confirmada; sincronización completa no medida |
+
+**RNF-004: no medible.** No se observó una negociación inferior a 1.2
+atribuible a BayStream; tampoco se certifica ese mínimo para todos sus
+canales. No se afirma que una captura global sin eventos perdidos pruebe
+atribución, cobertura del worker o ausencia de contenido transmitido.
+La aceptación de TLS 1.1 por el proveedor del 18-oct conserva su carácter
+informativo de 10.82; no se convierte en incumplimiento de BayStream.
+
+### RNF-006 · Tabla final
+
+| Submétrica | Umbral o condición | Evidencia y resultado | Dictamen |
+|---|---|---|---|
+| Recuperación | <3 s, error visible, viaje anterior preservado y selección operativa | Ocho escenarios por tres clientes sobre cierre 2. En cada cliente seis rechazos; 03/04 admitidos con el comportamiento declarado. Honor: seis cotas conservadoras 2.55, 2.07, 2.23, 2.20, 2.21 y 2.08 s. IAB: seis cotas de video completo entre 0.821791 y 1.309699 s. Windows: comprobación funcional y videos, tiempos contaminados por pausas del agente | Cumple el umbral en rechazos medidos de Honor/IAB; Windows no medible |
+| Mensajes de error | 100 % causa y acción; segmento en lectura BAPLIE | Censos del cierre: 218/218 explícitos, 12/12 de lectura con segmento. Envolturas declaradas; control independiente 20/20 de la aceptación T-112 sobre el mismo SHA, citado y no repetido como muestra nueva | Cumple el censo y control declarados |
+| Disponibilidad funcional sin red | ≥99.9 % del recorrido de operaciones básicas T63 | Windows 11/11 en dos cortes; IAB 11/11 en uno; Honor 11/11 conservado por 10.93. Total 33/33 funcionales, 100 % del recorrido. Videos, cuadros/PTS, desconexión manual verificada y exportaciones cotejadas | Cumple el recorrido de los tres clientes |
+
+**RNF-006: no medible globalmente por la recuperación temporal de Windows.**
+El fallo histórico de mensajes del primer cierre fue sustituido por T-112.
+El recorrido funcional no es una medición de disponibilidad longitudinal.
+La Web se recorrió con el motor local precargado y sin recargar la página;
+la prueba acredita ese recorrido, sin extenderlo a un origen vacío sin red.
+No se convierte una pausa de automatización en una latencia del producto.
+Las fuentes de censos son `docs/T98-CENSOS-RESULTADOS.md` y los scripts de
+Timonel ejecutados en la copia; el control citado es
+`docs/T112-ACEPTACION-RESULTADOS.md`.
+
+### RNF-008 · Tabla final
+
+| Submétrica | Umbral o condición | Evidencia y resultado | Dictamen |
+|---|---|---|---|
+| Posición BBBRRTT, ISO 6346, pesos KGM/WT/VGM | Cero casos fallidos en batería; negativos deben rechazar o avisar | Batería nueva: 30 casos normativos y un control de aviso, 29/30 satisfactorios. Posiciones y dígitos alterados avisan; LBR/TNE avisan; positivos WT/VGM conservan 24000 kg. Corpus preservado: diez archivos, con anonimización declarada | Cumple los casos de esas reglas medidos, con límites del corpus |
+| UN/LOCODE | Edición identificada; negativo detectado | UNECE 2025-1: ZZZZZ ausente, aceptado en silencio en la repetición del cierre 2 | No cumple |
+| BAPLIE/EDIFACT y SMDG | Contexto 2.2.1 y avisos de versiones/estructura según catálogo | Cabeceras no admitidas y ausencias UNH/TDT rechazan; ausencias UNB/BGM/UNT/UNZ admitidas avisan; control SMDG15 muestra aviso. Barrido del corpus conservado por 10.93, sin adjudicar validación total de una guía por unas muestras | Conforme en casos medidos; alcance contextual declarado |
+| IMDG | Cobertura completa requerida, incluida 8.1 | Se cita comprobador T-85 y su aceptación; disposiciones especiales/columna 16b fuera de cobertura | No cumple |
+
+**RNF-008: no cumple** por ZZZZZ y cobertura IMDG. No se corrigió el producto;
+ambos resultados quedan para Sprint 4. El exit 0 de la batería acredita el
+instrumento ejecutado, no treinta casos de producto aprobados.
+
+### RNF-002 · Tabla final
+
+| Submétrica | Umbral o condición | Evidencia y resultado | Dictamen |
+|---|---|---|---|
+| Primera visualización, pasos | ≤3 sin perfil; cinco repeticiones por cliente | Cinco sin perfil y una con perfil por cliente: 18 recorridos. Sin perfil exige seis pasos en los tres; con perfil cuatro, informativos. Honor conservado por 10.93, Windows maximizado e IAB repetidos | No cumple |
+| Primera visualización, tiempo | ≤30 s sin perfil | Honor: cinco cotas ≤30 s conservadas; IAB: cinco cotas 5.291536–5.577890 s. Windows: videos 57.5–85.4 s contienen pausas de agente y no permiten atribuir tiempo intrínseco | Cumple cotas Honor/IAB; Windows no medible |
+| Idioma | 100 % interfaz en español según denominador T63 | 1790 visibles: 1657 en español, 133 neutros, cero ingleses; localización Flutter y exclusiones documentadas | Cumple el censo |
+| Material 3 | 100 % de controles interactivos incluidos por T63 2.4 | 237 controles, 12 exclusiones declaradas, cero excepciones. No equivale a auditar todos los colores del código | Cumple el censo |
+| Aprendizaje y SUS, indicador 6 | Productivo <10 min; meta SUS ≥68 | Hojas y protocolo preparados para cinco participantes. Sin datos imputados; la tanda con Carlos no sustituye el piloto | Pendiente del piloto, 10.99 |
+
+**RNF-002: no cumple por pasos.** El SUS es el indicador 6 de la hipótesis
+única, no una hipótesis adicional. No se mide el tiempo con fps nominales
+ni se descuentan pausas del agente inventando una latencia limpia.
+
+### Tanda cerrada y evidencia TLS
+
+Carlos confirmó Stop Logging (paso 26). NetLog tls-02 cerrado y JSON completo
+parseado: **30466316 bytes**, 143343 eventos, SHA-256
+`d65036deef8ba549553699e7c44adbe3c340083637dcb3597e86ddfc46250d81`.
+El resumen `tanda/tls-02/netlog-tls-final.json` extrae solo metadatos de
+sesiones QUIC de los tres hosts permitidos y partición 127.0.0.1. Cada una
+tiene RFCv1 negociado y saludo criptográfico completo. De eso se **infiere**
+TLS ≥1.3, conforme a [RFC 9001, §4.2](https://www.rfc-editor.org/rfc/rfc9001.html#section-4.2);
+no se presenta como campo TLS visible en Security. Captura Security aportada
+por Carlos: identitytoolkit, QUIC, AES_256_GCM, X25519MLKEM768 y firma ECDSA
+con SHA-256. El cifrado de esa captura no se copia a las otras sesiones.
+Chrome es contexto **auxiliar manual de TLS**: las mediciones Web y la
+publicación principal se hicieron en el IAB y así permanecen declaradas.
+
+Windows: tls-01 convertido a PCAPNG con 44849 paquetes y cero descartes;
+SHA de PCAPNG `cebc229f204d72e73cd8254be466f372ba46cea5283067f57782d8724847a60e`.
+La sonda de anoche tiene 768 consultas válidas, cero errores y 215 muestras
+TCP:443, correspondientes a una tupla. El primer lector Ethernet no
+reconocía las cabeceras Wi-Fi/LLC de esta NIC y se excluye su salida
+`windows-saludos.json`. El lector corregido valida trama Wi-Fi y LLC/SNAP,
+no busca IP arbitrariamente: `windows-saludos-wifi.json` encuentra dos
+paquetes de servidor coincidentes y **ningún ServerHello completo**. Sin
+reensamblado ni saludo atribuible no se declara versión de Windows. En
+tls-02, 37717 paquetes convertidos; su sonda propia no observó TCP:443.
+No se extrapolan negociaciones ajenas. Android 15 del Honor, sin root ni
+saludo observado: limitación explícita de 10.82.
+
+Todo el material bruto queda privado bajo
+`C:\Users\Giova\AppData\Local\Temp\t98-b-33404a5-20oct` y el banco anterior
+referenciado para los resultados conservados. No se versionan ETL, PCAPNG,
+NetLog, videos, CSV de datos ni capturas. Los originales no se publican; el
+informe solo incorpora metadatos permitidos y resultados sintéticos.
+
+### Autorización Windows y límite del diagnóstico
+
+Se leyó por SDK `authorized/<cuenta actual>`, identificador solo en memoria,
+con FirebaseApp **t98** en Auth y Firestore. La sonda original devolvió
+`no-app` con sesión presente. `cloud_firestore_platform_interface` 8.0.6
+intentaba crear primero el adaptador con `Firebase.app()` predeterminada;
+el banco solo había creado la nombrada. El arranque del producto inicializa
+la predeterminada: no se identificó ese fallo como defecto de `lib/`.
+
+Corrección confinada a `tool/t98_firestore_bootstrap.dart` y su llamada
+Windows en `tool/t98_main.dart`: inicializar el adaptador ya instalado con
+t98. No se crea [DEFAULT] ni se abre su sesión. Tras la corrección, lectura
+real de servidor: registro existe, active=true, role=dock, sin caché. No se
+resolvió dentro de veinte minutos el contraste de rol con la Oficina Web;
+no se sustituyó ese dato por una suposición de cuenta equivocada. Se aplicó
+la alternativa autorizada y Carlos publicó desde el IAB. El código del
+producto y los roles remotos se mantuvieron sin modificaciones.
+
+La corrección recompiló solo el banco Windows: el lanzador conserva SHA
+`324b3c935ce92e61e5349b75dafd16d1bcdd44b98c3f32b6f9bef28c66a9366f`, pero
+**data/app.so cambió** a
+`277d61d5c33a1b288e2d770f42a64c90adf0c747a0e38d4543ccd25c0540386f`.
+Manifiesto completo y Release anterior preservados en reanudacion-21oct.
+No se adjudica esa huella de Dart a los videos anteriores a la corrección.
+Web mantiene main.dart.js `1fd04bfb2ef45f414e9d05fbc235c74e664b498314c427f86ada8a955b9a2fec`;
+Honor mantiene APK `845a4ae2ea251dc5e03ae4b836623d9f23fb291b201c265864508bd4fe863313`.
+La primera condición A se conserva por decisión 10.93, con sus límites y el
+nuevo límite del banco Windows expresamente declarados, sin proclamar cero
+transmisiones demostradas.
+
+### Validación final y restauración
+
+- Copia limpia de cierre 2: suite **1063/1063** y analyze **0** ejecutados
+  antes de medir; no se repite la suite hoy como si hubiera cambiado lib.
+- Comprobación final: **139 archivos de producto idénticos** al manifiesto
+  original, incluidos 137 Dart de lib y ambos pubspec. Sin diferencias.
+- Release Windows corregido compilado; tres instrumentos Dart analizados,
+  **No issues found**. Sus fuentes de la copia y el árbol coinciden por SHA.
+- Python: diez autopruebas auxiliares existentes, **10/10**; lector TLS nuevo,
+  **8 controles correctos** (incluyen legacy_version, TLS 1.3, truncado,
+  HelloRetryRequest y Ethernet/Wi-Fi). Son controles de instrumento.
+- Dos helpers PowerShell con sintaxis válida; inicio/cierre reales de pktmon
+  y tres rondas de captura/red completados sin forzar procesos ajenos.
+- Tres MP4 offline cerrados con código 0; PTS estrictos y CSV cotejados.
+  Los hitos de recuperación y primera visualización conservan sus anotaciones.
+- Censos ejecutados y batería repetida; resultados del corpus y Honor
+  conservados solo donde lo autoriza 10.93, con procedencia declarada.
+- Carlos confirmó cierre de las sesiones de Windows, Honor, IAB y Chrome
+  auxiliar, y cierre de NetLog. Cero workers propios de red pendientes.
+- Honor: avión **0**, Wi-Fi **1**, letra **1.0**, puntero **null** y t98 al
+  frente, t100 no. Se resolvió el falso de la sonda que solo buscaba
+  mResumedActivity usando también topResumedActivity. Archivo correcto:
+  reanudacion-21oct/honor-restauracion-verificada.json. Sin capturas de cuenta.
+
+**SEMÁFORO: libre.** No se ejecutó Git de escritura, git status ni Firebase
+CLI/consola/deploy. No se tocaron lib, pubspec, opciones Firebase, congelados,
+SPRINT-3, T100, almacenes reales ni PRUEBA T-105.
+
+### Archivos de esta entrega y Git vigente
+
+La inspección de solo lectura distingue el trabajo previo ya versionado de
+lo que sigue sin commit. **Siete rutas propias** en esta entrega:
+
+1. `docs/T98-RESULTADOS.md`: mediciones, dictámenes, cierre y limitaciones.
+2. `tool/t98_main.dart`: arranque del banco Windows.
+3. `tool/t98_firestore_bootstrap.dart`: adaptador Firestore nombrado.
+4. `tool/t98_autorizacion.dart`: sonda por SDK, sin identidades ni tokens.
+5. `tool/t98_tanda_red.ps1`: primera muestra y cierre propio verificable.
+6. `tool/t98_pktmon.ps1`: captura elevada autorizada y rondas sin sobrescribir.
+7. `tool/t98_tls_evidencia.py`: lectura de metadatos TLS y controles del lector.
+
+**pubspec.yaml y pubspec.lock no cambiaron.** Los otros instrumentos t98 y
+el test auxiliar ya están versionados y no se incluyen por comodidad en
+este bloque. Los bloques anteriores de 12/13 rutas son históricos.
+Solo Carlos ejecuta:
+
+```powershell
+git add -- docs/T98-RESULTADOS.md
+git add -- tool/t98_main.dart
+git add -- tool/t98_firestore_bootstrap.dart
+git add -- tool/t98_autorizacion.dart
+git add -- tool/t98_tanda_red.ps1
+git add -- tool/t98_pktmon.ps1
+git add -- tool/t98_tls_evidencia.py
+git commit -m "Sprint 3: entrega Fase B de T-98 con mediciones y limites"
+git push
+```
+
+### Tres líneas de entrega
+
+Se completaron la recuperación, las primeras visualizaciones y la tanda;
+la disponibilidad funcional sin red quedó en 11/11 por cliente.
+Se corrigió únicamente el banco Windows y se documentaron los resultados con
+los límites TLS y temporales, sin corregir defectos del producto.
+Quedan RNF-004/006 no medibles, RNF-008/002 no conformes y el SUS pendiente
+del piloto; corresponde la aceptación cruzada de Timonel.
+
+### Mensaje para Yov
+
+Yov: entrego T-98 Fase B sobre sprint3-cierre-2,
+33404a5804be4fad85aab80dd923a7ae9e878ee9, para aceptación cruzada. Base
+1063/1063 y analyze 0; producto de la copia sigue idéntico en 139 archivos.
+Recuperación: ocho escenarios por tres clientes, con Windows temporal no
+medible y cotas <3 s en rechazos Honor/IAB. Disponibilidad sin red: 11/11
+por cliente; Windows en dos cortes, IAB en uno y Honor conservado por 10.93.
+RNF-002 no cumple por seis pasos sin perfil; RNF-008 no cumple por ZZZZZ e
+IMDG. Censos del cierre conformes (mensajes 218/218), SUS pendiente del
+piloto por 10.99. RNF-004 sigue no medible global: Chrome auxiliar tiene seis
+QUIC v1 completos de Firebase en partición local; no se atribuyen al IAB y
+Windows no tiene ServerHello atribuible. Su no-app fue del arranque del
+banco nombrado, corregido solo en tool; luego servidor devolvió dock/active,
+sin resolver el contraste con Oficina dentro de veinte minutos. Carlos
+publicó PRUEBA T-98 desde el IAB por la alternativa autorizada. No se cambió
+lib ni se hizo una batería de movimientos compartidos. Sesiones y capturas
+cerradas, Honor restaurado, semáforo libre. Informe vigente en su apartado
+final y bloque Git de siete rutas para Carlos; falta la aceptación de Timonel, no se
+marca T-98 aceptada desde este chat.

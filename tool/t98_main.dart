@@ -22,6 +22,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 't98_firestore_bootstrap.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Windows no debe abrir ni crear cajas dentro del almacén real (10.88).
@@ -62,6 +64,7 @@ Future<void> main() async {
     }
     app = await Firebase.initializeApp(name: 't98', options: options);
   }
+  if (app != null) t98PrepararFirestoreWindows(app);
   final database = app == null ? null : FirebaseFirestore.instanceFor(app: app);
   final auth = app == null ? null : FirebaseAuth.instanceFor(app: app);
   // Solo estado booleano: nunca imprimir correo, UID ni datos de la sesión.

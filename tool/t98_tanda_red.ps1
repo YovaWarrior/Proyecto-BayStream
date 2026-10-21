@@ -8,13 +8,18 @@ $destino = [IO.Path]::GetFullPath($Salida)
 $banco = [IO.Path]::GetFullPath("$env:TEMP/t98-b-33404a5-20oct/tanda")
 if (!$destino.StartsWith($banco + [IO.Path]::DirectorySeparatorChar,
         [StringComparison]::OrdinalIgnoreCase)) { throw 'Salida fuera de la tanda T98.' }
-if (Test-Path -LiteralPath $destino) { throw 'No sobrescribir evidencia.' }
+$senalFin = $destino + '.detener'
+$senalInicio = $destino + '.inicio.json'
+foreach ($rutaPropia in @($destino, $senalFin, $senalInicio)) {
+    if (Test-Path -LiteralPath $rutaPropia) { throw 'No sobrescribir evidencia.' }
+}
 New-Item -ItemType Directory -Path $banco -Force | Out-Null
 $reloj = [Diagnostics.Stopwatch]::StartNew()
 $muestras = [Collections.Generic.List[object]]::new()
 $ping = [Net.NetworkInformation.Ping]::new()
 try {
-    while ($reloj.Elapsed.TotalSeconds -lt $Segundos) {
+    while ($reloj.Elapsed.TotalSeconds -lt $Segundos -and
+           !(Test-Path -LiteralPath $senalFin)) {
         $fila = [ordered]@{
             utc = [DateTime]::UtcNow.ToString('o')
             msDesdeInicio = $reloj.ElapsedMilliseconds
@@ -37,12 +42,16 @@ try {
         try { $fila.pingExterno = [string]$ping.Send('1.1.1.1', 800).Status }
         catch { $fila.pingExterno = 'error_sonda' }
         $muestras.Add($fila)
+        if ($muestras.Count -eq 1) {
+            $fila | ConvertTo-Json | Set-Content -LiteralPath $senalInicio -Encoding utf8
+        }
         Start-Sleep -Milliseconds 1000
     }
 } finally { $ping.Dispose() }
 [ordered]@{
     base = '33404a5804be4fad85aab80dd923a7ae9e878ee9'
     duracionRealMs = $reloj.ElapsedMilliseconds
+    motivoCierre = $(if (Test-Path -LiteralPath $senalFin) { 'senal_propia' } else { 'limite_tiempo' })
     declaracion = 'Solo lectura. Carlos cambia Wi-Fi; el instrumento no lo cambia.'
     limite = 'Un ping fallido solo no prueba desconexion. Correlacionar adaptadores, rutas y video; no clasifica trafico ni latencia del producto.'
     muestras = @($muestras.ToArray())
