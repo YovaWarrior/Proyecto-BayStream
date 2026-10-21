@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 157.5 h estimadas** (al 21-oct, 10.100; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`; el piloto y la presentación final, aparte; T-87 al Sprint 4) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 157.5 h estimadas** (al 21-oct, 10.101; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`; el piloto y la presentación final, aparte; T-87 al Sprint 4) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -6505,3 +6505,31 @@ El piso queda en 1063.
 - 45 terminadas;
 - 2 en revisión: T-99 y T-100;
 - T-98 en curso.
+
+### 10.101 · T-98, entregada · Sus dictámenes finales · Las aceptaciones cruzadas (21-oct)
+
+**T-98, Fase B, entregada** (Codex, `f9a0096`, sobre `sprint3-cierre-2`):
+
+| RNF | Dictamen | Lo que pesa |
+|---|---|---|
+| **004 · Seguridad** | **No medible** | La condición A (sin sesión) se recorrió 11/11 en los tres clientes, pero ningún instrumento prueba cero bytes. **TLS:** en Chrome, seis sesiones QUIC completas con Firestore, Identity Toolkit y Secure Token, de las que se infiere TLS ≥ 1.3 (RFC 9001). En Windows no apareció un ServerHello atribuible, y en el Honor se declara. Las credenciales no se pueden verificar sin abrir secretos. Carlos publicó «PRUEBA T-98» desde el navegador integrado, y se vio «Al día» |
+| **006 · Tolerancia a fallos** | **No medible en conjunto**, solo por el tiempo de Windows | **Mensajes:** 218/218, cumple. **Disponibilidad sin red:** 33/33 en los tres clientes, cumple. **Recuperación:** en el Honor y en la Web, los seis rechazos en menos de 3 s (Honor 2.07 a 2.55 s; Web 0.82 a 1.31 s), cumple; en Windows, las pausas del agente contaminan el tiempo |
+| **008 · Estándares** | **No cumple** | `ZZZZZ` aceptado sin aviso, y la cobertura del IMDG (8.1). Las posiciones, ISO 6346, KGM y VGM cumplen en los casos medidos |
+| **002 · Usabilidad** | **No cumple** | **6 pasos** sin perfil (umbral, 3). El tiempo: en el Honor y en la Web, en menos de 30 s (Web, 5.3 a 5.6 s); en Windows no se puede medir. El idioma y Material 3 cumplen. **El SUS y el aprendizaje quedan pendientes del piloto (10.99)** |
+
+**La autorización en Windows.** El fallo `no-app` era del banco de Codex: el SDK buscaba la app de Firebase predeterminada, y el banco solo creaba la que tiene nombre (`t98`). Se corrigió solo en `tool/` y no es un defecto de `lib/`. Después de la corrección, Windows lee el registro de la cuenta con el rol **muelle**, y la Web lo muestra como **oficina**. Ese contraste quedó declarado sin suponer la causa. Carlos revisa con qué cuenta entró en cada cliente. El banco de Windows se recompiló (`app.so` cambió), y los videos de antes no se atribuyen a la huella nueva.
+
+**Lo que decide Yov:**
+- T-98 pasa a «En revisión» con estos dictámenes. Como ya dice 10.73, en el producto no se corrige nada.
+- **Las aceptaciones cruzadas, una a la vez en la máquina** (Carlos da el semáforo):
+  1. **Timonel acepta T-98.** Repite por su cuenta una fila de cada RNF que no hizo él:
+     - de 004, la condición A en un cliente;
+     - de 006, la recuperación de dos casos en el Honor;
+     - de 008, el caso `ZZZZZ` y la batería;
+     - de 002, una primera visualización en el Honor.
+     Los censos los hizo él, así que no cuentan como su fila.
+  2. **Codex acepta T-99** (una fila de cada RNF) **y T-100** (los tres procedimientos del manual), en su siguiente ventana.
+
+**El sprint sigue en 48 tareas y ≈ 157.5 h.** El tablero (v64):
+- 45 terminadas;
+- 3 en revisión: T-98, T-99 y T-100.
