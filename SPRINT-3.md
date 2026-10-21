@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.96; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.97; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -6286,6 +6286,61 @@ El piso queda en 1063.
 **El sprint sigue en 50 tareas y ≈ 173.5 h.** El tablero (v59):
 - 45 terminadas;
 - T-98 y T-99 en curso;
+- 3 por hacer: T-87, T-100 y T-101.
+
+El piso queda en 1063.
+
+### 10.97 · La Fase B de T-99, medida: los cuatro RNF no cumplen · La ventana corrida era del arnés · La pantalla sigue en 1920×1080 hasta que Codex termine (20-oct)
+
+**La ventana corrida (corrige 10.96).** El producto se dibuja bien maximizado a 1920×1080 y 125 %. Lo que salía corrido era la ventana del arnés de pruebas cuando se le cambiaba el tamaño. **Es un hallazgo del instrumento, no del producto,** y sale de la lista del Sprint 4.
+- **Timonel midió los tiempos de Windows en la ventana del arnés sin cambiarle el tamaño:** 1600×900 por fuera, 1582×853 físicos y 1266×682 lógicos.
+- **El sesgo, declarado:** esa ventana dibuja menos píxeles que una de 1920×1080, así que un «no cumple» ahí es firme, y un «cumple» lleva la advertencia.
+- La RAM se midió con el producto maximizado (10.86).
+
+**La Fase B de T-99** (Timonel, `d2910ff`, sobre `sprint3-cierre-2`). Los cuatro RNF **no cumplen**:
+
+| RNF | No cumple por | Cumple |
+|---|---|---|
+| **001 · Rendimiento** | **La RAM:** en Windows, 466 MB con A01 y 1855 MB con 5000; en el Honor, 455 y 1521 MB (umbral, 200 MB). **El tablero:** con 5000, 2.9 s en Windows y 12.0 s en el Honor, y en el Honor 2.2 s con A01 (umbral, 1 s). **La navegación en el Honor:** 117 ms con A01 y 286 ms con 5000 (umbral, 100 ms). **El scroll de Lista en el Honor con 5000:** raster de 17.02 ms (umbral, 16.67 ms) | El parseo (5000 en 47 ms en Windows y 558 ms en el Honor) y la búsqueda (31 a 57 ms) |
+| **007 · Escalabilidad** | La RAM con A06 (363 MB) y con 10 000 (3581 MB); con 10 000, también la navegación, el tablero y el scroll. Los módulos: ninguna función se agregó sin tocar archivos existentes | Los tiempos de A06, dentro de los umbrales |
+| **005 · Mantenibilidad** | La documentación: 59.02 % (umbral, 80 %). Las capas: 11 violaciones de presentación → datos, en 7 archivos | El análisis estático, en cero, y las reconstrucciones (5.3 b) |
+| **003 · Portabilidad** | A 360 y a 600 dp, la etiqueta «100 %» tapa el título de la bahía. Windows 10 no se probó (10.83) | Windows 11, Android 8.0 (emulador API 26), la Web (cargando desde el *asset*), el código compartido (98.86 %) y la entrada con mouse, teclado y toque |
+
+**Declarado en el informe:**
+- la ventana del arnés sin cambiarle el tamaño;
+- `--no-dds` en el Honor;
+- la app T-98 de Codex, cerrada a pedido de Carlos, con su corrida repetida;
+- las entradas, repuestas después de la limpieza de TEMP;
+- las mayúsculas que `SendKeys` no envía.
+
+**Sin medir:** Windows 10, y A06 y 10 000 en el Honor.
+
+**La causa de la RAM, según Timonel:** la Lista construye las 977 tarjetas a la vez (`shrinkWrap`), unos 0.35 MB por contenedor. Fuera de la Lista, A01 se queda entre 145 y 184 MB.
+
+**Lo que decide Yov:**
+1. **Nada se corrige antes del 24.**
+   - Arreglar la Lista bajaría la RAM, pero RNF-001 seguiría sin cumplir por el tablero, la navegación y el scroll en el Honor.
+   - Además obligaría a un tercer cierre y a repetir filas de T-98 y T-99.
+   - Los resultados van a la tesis tal como salieron, con su causa.
+2. **Pasan a la lista del Sprint 4 y del rediseño:**
+   - la Lista perezosa, sin `shrinkWrap`;
+   - el tablero con 5000;
+   - la navegación y el scroll en el Honor;
+   - la documentación al 80 %;
+   - las 11 violaciones de capas;
+   - la etiqueta «100 %» a 360 y 600 dp;
+   - «Confirmar y ver el plano», que abre Lista en vez del plano (T-63, 2.2).
+3. **La pantalla de la laptop sigue en 1920×1080** hasta que Codex termine sus mediciones de Windows de T-98: la primera visualización y la tanda. La decisión 1.4 de T-63 fija esa laptop para todas las mediciones. Después, Carlos la vuelve a 2560×1600.
+
+**Lo que sigue:**
+1. **Codex, desde las 19:46:** la primera visualización en Windows y en la Web, y la tanda con Carlos («CARLOS:»).
+2. **Las aceptaciones cruzadas:** Codex acepta T-99 y Timonel acepta T-98, cada uno repitiendo una fila de cada RNF que no hizo.
+3. **Yov:** las fichas de T-100 (el manual y la presentación final) y de T-101 (el piloto).
+
+**El sprint sigue en 50 tareas y ≈ 173.5 h.** El tablero (v60):
+- 45 terminadas;
+- T-99 en revisión;
+- T-98 en curso;
 - 3 por hacer: T-87, T-100 y T-101.
 
 El piso queda en 1063.
