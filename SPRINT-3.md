@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.98; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 157.5 h estimadas** (al 20-oct, 10.99; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`; el piloto y la presentación final, aparte; T-87 al Sprint 4) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -1122,7 +1122,7 @@ alguna línea todavía puede mandar una 1.x. A06 del corpus es una SMDG15 real
 | **T-84** | RF-040 | 4.0 | Tapas en la operación: quitar y reponer como movimientos; aviso al marcar bodega bajo tapa cerrada | Los movimientos de tapa cuentan en el avance · **ficha completa arriba** |
 | **T-85** | RF-027+ | 10.0 | Segregación por clase con las tablas 7.2.4 y 7.4.3.2 del IMDG 42-24, transcritas a ciegas por Yov y Gru y verificadas (10.60). La hace Timonel y la acepta Codex · **ficha completa arriba** | Los casos sintéticos de la transcripción dan lo que dice la tabla; la clase 9 sale «no evaluado» |
 | **T-86** | BAP | 3.0 | Detectar la versión por la cabecera y leer toda la familia 2.x; si llega otra, decirlo | A01 … A08 siguen igual; una 1.x o una 3.x se rechaza con un mensaje claro · **ficha completa arriba** |
-| **T-87** | BAP | 10.0 | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza |
+| ~~**T-87**~~ | BAP | ~~10.0~~ | Leer BAPLIE 3.1 | Necesita un archivo real; sin él, se declara y no se empieza. **Pasa al Sprint 4 (10.99):** no hay un archivo real de esa versión |
 | **T-103** | BAP | 1.0 | Leer la 1.5 (SMDG15) con aviso visible; el resto de la 1.x y la 3.x se siguen rechazando (10.35; adelantada a Timonel en 10.41; terminada en 10.45) · **ficha completa arriba** | A06 abre con sus cifras de antes de T-86 y el aviso; los corpus esperan la lectura con aviso |
 
 ### Ola 5 · Uso fuera del aula y voz
@@ -3016,8 +3016,8 @@ para RNF-003.
 |---|---|---:|---|
 | **T-98** | TC | 26.0 | RNF primera parte sobre los binarios de cierre: 004 (con TLS y sesión), 006, 008 y 002 (SUS en el piloto), según `docs/T63-DECISIONES-RNF.md`. La hace Codex y la acepta Timonel (10.73), en dos fases · **ficha completa arriba** |
 | **T-99** | TC | 31.0 | RNF segunda parte sobre los binarios de cierre: 001 y 007 (sintéticos de 5 000 y 10 000, arnés con `integration_test`), 005 y 003 (emulador API 26; Windows 10 no probado). La hace Timonel y la acepta Codex (10.83), en dos fases · **ficha completa arriba** |
-| **T-100** | TC | 6.0 | Manual de usuario con el anexo de geometría a mano (TC-02) y presentación final (TC-05). Parte A, el manual: Timonel (10.98); parte B, la presentación: Yov · **ficha completa arriba** |
-| **T-101** | PIL | 4.0 | Prueba piloto: BayStream en paralelo al papel en una escala real, con permiso de COMAR |
+| **T-100** | TC | 4.0 | Manual de usuario con el anexo de geometría a mano (TC-02): Timonel (10.98), formato UMG de Yov. La presentación final (TC-05, ≈ 2.0 h) sale del sprint y va al cierre del proyecto (7 o 14-nov, 10.99) · **ficha completa arriba** |
+| ~~**T-101**~~ | PIL | ~~4.0~~ | Prueba piloto: BayStream en paralelo al papel en una escala real, con permiso de COMAR. **Sale del sprint (10.99):** va al cierre del proyecto, el 25 o el 26-oct |
 
 ---
 
@@ -6419,3 +6419,40 @@ El piso queda en 1063.
 - T-99 en revisión;
 - T-98 y T-100 en curso;
 - 2 por hacer: T-87 y T-101.
+
+### 10.99 · El manual, entregado · El sprint cierra el 24: el piloto y la presentación van aparte, y T-87 pasa al Sprint 4 (20-oct)
+
+**T-100, parte A, entregada** (Timonel, `99a404d`; ≈ 1 h de trabajo):
+- **El manual:** `docs/MANUAL-USUARIO.md`, con los 14 capítulos y el anexo de la geometría a mano.
+- **Las capturas:** 71 en `docs/manual/` (5.7 MB): 47 de Windows y 24 del Honor a 360 dp. Todas salen de sintéticos (`t99_sintetico.dart` con 1600 y 600, y `PRUEBA_T98.edi`), sin cuentas ni «Nube y cuenta».
+- **La base:** una copia limpia de `33404a5` con el namespace `t100` (`tool/t100_main.dart`). El informe es `docs/T100-RESULTADOS.md`.
+- **PROVISIONAL:** el MSIX, Play y la Web nueva.
+- **No recorridos,** por falta de descargas en los sintéticos o porque exigen cuenta: la descarga, OR, arrastrar, las solicitudes, el dictado, «Es otro buque» y la edición de un perfil. Van en texto, marcados «(no recorrido en esta edición)».
+- **Un hallazgo nuevo:** a 360 dp y con letra 1.45, el botón flotante tapa «Seleccionar archivo». Pasa a la lista del Sprint 4.
+- **Dos incidentes de proceso, declarados:**
+  - En el Honor, la tecla Atrás dejó al frente la app `t98` de Codex dos veces, y una vez Timonel abrió sus «Viajes recientes». Fue solo lectura y no cambió nada.
+  - Un CSV de prueba cayó en `test/fixtures`, y se movió a TEMP.
+
+**Lo que decide Yov:**
+- **Completar lo «no recorrido» que el piloto va a usar:** la descarga y OR. Timonel los recorre con un sintético con descargas (o el listado de `tool/t73_listado_sintetico.py`), con capturas solo de sintéticos. Si no logra un sintético con descargas, los recorre con A07 **sin capturas** y lo declara.
+- **Arrastrar y las solicitudes** se quedan en texto, citando las aceptaciones de T-105 y T-106, que se probaron con sesión.
+- **El dictado** se queda en texto.
+- **Yov pasa el manual a Word** con el formato UMG.
+- **Codex lo acepta** siguiendo tres procedimientos: los capítulos 3–4, el 6.2 y el A.5.
+
+**Carlos decide (20-oct, 22:40):**
+1. **El Sprint 3 cierra el 24-oct**, con todo lo medido.
+2. **El piloto (T-101) va aparte,** en un bloque de cierre del proyecto. Será el 25 o el 26-oct, con cinco participantes de COMAR. Su SUS y la prueba de tareas se suman después al informe de T-98 y a la tesis. T-98 cierra con el SUS «pendiente del piloto».
+3. **La presentación final (TC-05) también va aparte.** Será el 7 o el 14-nov. T-100 queda solo con el manual (≈ 4.0 h); la presentación (≈ 2.0 h) sale del sprint.
+4. **T-87 (BAPLIE 3.1) pasa al Sprint 4,** porque no hay un archivo real de esa versión.
+
+**Antes del piloto** (Yov arma el plan con Carlos):
+- la mezcla de `sprint-3` a `main`;
+- la publicación, que hace Carlos: la Web (Hosting), el instalador de Windows y el APK o la prueba cerrada de Play;
+- el documento de cierre del Sprint 3.
+
+**El sprint pasa a 48 tareas y ≈ 157.5 h.** Salen T-87 (10.0 h), T-101 (4.0 h) y la presentación de T-100 (2.0 h). El tablero (v62) suma 212.5 h:
+- 45 terminadas;
+- T-99 en revisión;
+- T-98 y T-100 en curso;
+- ninguna por hacer.
