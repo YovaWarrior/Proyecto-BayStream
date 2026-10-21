@@ -2,7 +2,7 @@
 
 Timonel · 21-oct-2026 · rama `sprint-3`, cabeza `2272e8a` (10.106) · producto de `sprint3-cierre-2` (`f631efa`).
 
-**Estado: entregada con un punto pendiente de evidencia.** Cinco de las seis partes tienen su evidencia y su dictamen. La parte 1 tiene la batería, pero le falta el cotejo del SHA-256 contra las reglas publicadas, porque **el archivo `%TEMP%\t113\reglas-publicadas.txt` no está en la máquina** (sección 1.1). Cuando Carlos lo deje ahí, el cotejo es un solo comando y no cambia nada más del informe.
+**Estado: completa.** Las seis partes tienen su evidencia y su dictamen. **Las reglas publicadas son idénticas a la propuesta de T-80** (`7E57F227…`, byte a byte; sección 1.1), y con eso queda cerrado T113-01.
 
 **Lo que no toqué:** `lib/`, `test/`, `pubspec.*`, Firebase de producción (ni consola, ni CLI contra el proyecto real, ni lecturas; la Web publicada tampoco se consultó). Solo usé el emulador local, con el proyecto `demo-t113`.
 
@@ -12,7 +12,7 @@ Después de `sprint3-cierre-2` no cambió ningún archivo de producto: `git log 
 
 | Parte | Dictamen | Evidencia |
 |---|---|---|
-| 1 · Reglas de Firestore | **Batería 69/69 y abuso 25/25 en el emulador. El código pide lo mismo que permiten las reglas. El cotejo con las publicadas, pendiente: falta el archivo** | 1.1 a 1.4 |
+| 1 · Reglas de Firestore | **Batería 69/69 y abuso 25/25 en el emulador. El código pide lo mismo que permiten las reglas. Las publicadas son idénticas a la propuesta (`7E57F227…`)** | 1.1 a 1.4 |
 | 2 · Dependencias | **Cero avisos vigentes** en 117 paquetes (OSV y GitHub Advisory) y en los SDK nativos de Firebase que tienen ecosistema | 2 |
 | 3 · Secretos | **Ningún secreto nuevo.** La única clave real en la historia es la del proyecto temporal de H5, ya conocida (H-04) | 3 |
 | 4 · Permisos | **Coherentes** en Android (APK limpio, contra T-88), en el MSIX y en la Web | 4 |
@@ -21,15 +21,25 @@ Después de `sprint3-cierre-2` no cambió ningún archivo de producto: `git log 
 
 ## 1. Las reglas de Firestore
 
-### 1.1 El cotejo con las reglas publicadas: pendiente
+### 1.1 El cotejo con las reglas publicadas: coinciden
 
-La ficha dice que Carlos dejó el texto de la consola en `%TEMP%\t113\reglas-publicadas.txt`. **No está.** Lo busqué:
-- en `C:\Users\Giova\AppData\Local\Temp\t113\`, que no existía antes de esta tarea (ahora solo tiene mis carpetas `emu`, `apk-f631efa` y archivos de trabajo);
-- con el nombre `*reglas-publicadas*`, en Temp, el Escritorio, Descargas, `C:\Proyectos` y las carpetas de paquetes de Claude y de Codex en `%LOCALAPPDATA%\Packages`.
+**Las reglas publicadas son idénticas a la propuesta versionada.**
 
-No aparece en ninguna parte. Puede ser que se guardara en otra ruta o que la consola de Claude vea un %TEMP% distinto (AGENTS.md describe la virtualización de los agentes empaquetados), así que **no lo doy por inexistente: lo declaro no encontrado.**
+| | Bytes | Líneas | CRLF | SHA-256 normalizada |
+|---|---:|---:|---:|---|
+| `docs/T80-firestore.rules.propuesta`, blob de `sprint3-cierre-2` | 13 258 | 298 | 0 | `7E57F227BADC118F823265B0CFE9FF0E9A067F39F5AD387C932AD901F894F125` |
+| Copia de trabajo de la propuesta | 13 493 | 298 | 235 | `7E57F227…` (cruda: `21894B7F…`) |
+| **Texto publicado** (`build/t113/reglas-publicadas.txt`) | 13 258 | 298 | 0 | **`7E57F227…`** |
 
-**Lo que queda listo:** `tool/t113_reglas.mjs` compara el texto publicado con la propuesta y da tres huellas de cada uno: la cruda, la de finales LF y la normalizada (sin BOM, sin espacios al final de línea ni líneas vacías al final, que es lo que cambia al copiar desde un navegador). Si la normalizada no coincide, lista las líneas distintas. Lo probé:
+- `node tool/t113_reglas.mjs build/t113/reglas-publicadas.txt`: **`equal: true`**, salida 0.
+- Además, un `diff` contra `git show sprint3-cierre-2:docs/T80-firestore.rules.propuesta` no da ninguna diferencia: el texto publicado es **igual byte a byte** al blob LF, sin normalizar nada. Su huella cruda también es `7E57F227…`.
+- **Contra lo que pide el código:** como el texto publicado es la propuesta, vale el cotejo de 1.2, que coincide en las siete filas. Las dos baterías de 1.3 y 1.4 (69/69 y 25/25) corrieron sobre ese mismo texto.
+
+**De dónde salió el texto.** Carlos copió las reglas de la consola, sin cambiarlas, el 21-oct. La ruta `%TEMP%\t113\reglas-publicadas.txt` de la ficha no se veía desde la consola de Timonel. Tampoco se vio la copia que Carlos puso después en `build\t113\`: lo más probable es que se guardara en otra máquina. Al final, Carlos **pegó el texto en el chat**, y Timonel lo guardó tal cual en `build/t113/reglas-publicadas.txt`, que Git ignora.
+- **Lo que eso implica:** el cotejo prueba el texto que Carlos pegó, no un archivo exportado directamente de la consola.
+- **El riesgo es bajo:** al pegar puede cambiar el espacio en blanco, pero no la lógica de una regla. Aun así, la coincidencia salió exacta, byte a byte.
+
+**El script:** `tool/t113_reglas.mjs` da tres huellas de cada archivo: la cruda, la de finales LF y la normalizada (sin BOM, sin espacios al final de línea ni líneas vacías al final, que es lo que cambia al copiar desde un navegador). Si la normalizada no coincide, lista las líneas distintas. Antes del cotejo lo probé:
 - contra el blob versionado de `sprint3-cierre-2`: **iguales**, salida 0;
 - contra una copia con una regla alterada (`allow delete: if true`): **distintos**, salida 1, con las líneas señaladas.
 
@@ -72,7 +82,7 @@ La batería de T-80 prueba bien la forma de cada movimiento, pero no prueba la e
 
 **Resultado: 25 de 25.** Con `T113_DETALLE=1`, cada denegación cae en la regla esperada (L76 `authorized`, L85 operaciones, L145 movimientos). Evidencia: `build/t113/reglas-abuso.log`.
 
-**AVANCE del bloque 1:** batería y abuso en verde; el cotejo de la huella, pendiente del archivo.
+**AVANCE del bloque 1:** cerrado. Batería y abuso en verde, y las reglas publicadas, idénticas a la propuesta.
 
 ## 2. Las dependencias
 
@@ -207,7 +217,7 @@ Son del SDK, como ya registró el inventario de T-88.
 
 | # | Hallazgo | Sev. | Estado al cierre del Sprint 2 | **Estado al cierre del Sprint 3** | Evidencia |
 |---|---|---|---|---|---|
-| H-01 | Reglas fuera del control de versiones | Crítica | Resuelto | **Resuelto.** Las de producción están en `docs/T80-firestore.rules.propuesta`; las de H5, en `firestore.rules`. Falta el cotejo con las publicadas (T113-01) | 1.1, 1.3 |
+| H-01 | Reglas fuera del control de versiones | Crítica | Resuelto | **Resuelto.** Las de producción están en `docs/T80-firestore.rules.propuesta`; las de H5, en `firestore.rules`. **Las publicadas son idénticas a la propuesta** (`7E57F227…`, T113-01) | 1.1, 1.3 |
 | H-02 | Creación y actualización anónimas | Alta | Reacotado, con riesgo residual | **Resuelto en producción:** sesión, lista de autorizados y roles (T-79, T-80); 69 + 25 casos. **Aceptado** el residual del proyecto temporal de H5, que sigue con reglas sin identidad (T113-13) | 1.3, 1.4 |
 | H-03 | Reglas de prueba expiradas | Crítica | Resuelto | **Resuelto** | — |
 | H-04 | Credenciales en el código | Media | Cerrado en el código; las del temporal, en el historial | **Cerrado en el código:** cero claves en el árbol. **Aceptado** el residual: las opciones del temporal, en 2 apariciones de la historia (T113-05) | 3 |
@@ -231,7 +241,7 @@ Severidad con la escala de la línea base (Crítica, Alta, Media, Baja), más **
 
 | # | Hallazgo | Sev. | Estado | Qué hace falta |
 |---|---|---|---|---|
-| **T113-01** | El cotejo de las reglas publicadas no se hizo: falta el archivo de la consola | — (evidencia) | **Pendiente** | Carlos deja el texto en `%TEMP%\t113\reglas-publicadas.txt` (o dice la ruta) y Timonel corre `node tool/t113_reglas.mjs <ruta>` |
+| **T113-01** | El cotejo de las reglas publicadas con la propuesta, que faltaba en la primera entrega | — (evidencia) | **Resuelto:** idénticas, byte a byte (`7E57F227…`). El texto llegó pegado en el chat (1.1) | — |
 | **T113-02** | Cualquier cuenta autorizada lee **todas** las operaciones, con sus fuentes y movimientos; el rol solo limita lo que se escribe. No hay alcance por operación | Media | **Aceptado** (10.47, punto 2; la política lo dice). Abierto para el revisor de Play (T-88, 4.1) | Si se da una cuenta a terceros, otra regla o solo operaciones de prueba |
 | **T113-03** | App Check sin apps registradas y Fraud Defense (reCAPTCHA) de Authentication apagado | Baja | **Aceptado** (10.49). Las reglas siguen exigiendo una cuenta de la lista | Al abrir la app a más usuarios |
 | **T113-04** | Hosting sin cabeceras de seguridad (CSP, `X-Content-Type-Options`, `frame-ancestors`, `Referrer-Policy`, `Permissions-Policy`) | Baja | **Pendiente** | El pentest (10.103, A05) lo verifica en vivo; el cambio en `firebase.json` lo decide Carlos |
@@ -247,7 +257,7 @@ Severidad con la escala de la línea base (Crítica, Alta, Media, Baja), más **
 
 **Lo que T-113 cerró por su cuenta:** la batería de T-80 no cubría la escalada de rol sobre la lista de autorizados ni el cambio directo de la oficina. Ahora sí, con `tool/t113_reglas_abuso.mjs`, 25/25 (sección 1.4). **Resuelto**, solo en `tool/`.
 
-**Por severidad:** ninguna crítica ni alta; 1 media (aceptada); 5 bajas (2 aceptadas, 3 pendientes); 6 informativas (5 aceptadas, 1 pendiente de decisión); y el pendiente de evidencia T113-01.
+**Por severidad:** ninguna crítica ni alta; 1 media (aceptada); 5 bajas (2 aceptadas, 3 pendientes); 6 informativas (5 aceptadas, 1 pendiente de decisión). El pendiente de evidencia, T113-01, quedó resuelto.
 
 **AVANCE del bloque 5:** cerrado.
 
@@ -269,6 +279,7 @@ Medición de Codex en `f9a0096` (`docs/T98-RESULTADOS.md`, «RNF-004 · Tabla vi
 | `node tool/t113_reglas_abuso.mjs 8181 demo-t113` | **25/25**, salida 0 |
 | `node tool/t113_reglas.mjs <blob LF de sprint3-cierre-2>` | iguales, salida 0 (autoprueba) |
 | `node tool/t113_reglas.mjs <copia alterada>` | distintos, salida 1 (autoprueba) |
+| `node tool/t113_reglas.mjs build/t113/reglas-publicadas.txt` | **iguales** (`7E57F227…`), salida 0; `diff` contra el blob, sin diferencias |
 | `node tool/t113_dependencias.mjs` | 117 paquetes, 0 vigentes, salida 0 |
 | `python -I tool/t113_secretos.py --corpus <carpeta anonimizada>` | salida 1 por H-04 en la historia y por los falsos positivos de la tabla; revisados uno por uno |
 | `flutter build apk --release` en la copia limpia | correcto, 139 s |
@@ -276,7 +287,7 @@ Medición de Codex en `f9a0096` (`docs/T98-RESULTADOS.md`, «RNF-004 · Tabla vi
 
 No corrí la suite ni `analyze`: esta tarea no toca `lib/` ni `test/`, y los scripts nuevos son de Node, Python y PowerShell, fuera de `flutter analyze`.
 
-**Evidencia local, ignorada por Git** (`build/t113/`): `reglas-bateria.log`, `reglas-bateria-2.log`, `reglas-abuso.log`, `dependencias.md`, `dependencias.json`, `dependencias-salida.json` y `secretos.json` (cuentas y rutas, sin valores). **Fuera del repo** (`%TEMP%\t113\`): `revision-privada.json` (los valores, para la revisión a mano; no se comparte), `apk-f631efa\` (la copia y su APK), `apk-manifest.txt`, `apk-build.log` y `emu\`.
+**Evidencia local, ignorada por Git** (`build/t113/`): `reglas-bateria.log`, `reglas-bateria-2.log`, `reglas-abuso.log`, `dependencias.md`, `dependencias.json`, `dependencias-salida.json`, `secretos.json` (cuentas y rutas, sin valores), `reglas-publicadas.txt` (el texto que pegó Carlos), `reglas-cotejo.json` y `reglas-cotejo.out`. **Fuera del repo** (`%TEMP%\t113\`): `revision-privada.json` (los valores, para la revisión a mano; no se comparte), `apk-f631efa\` (la copia y su APK), `apk-manifest.txt`, `apk-build.log` y `emu\`.
 
 **Lo que dejé corriendo y apagué:** el emulador, cerrado por su PID (`java`, 34812); la CLI terminó con él. También cerré los demonios de Gradle (19488) y de Kotlin (4848) que dejó la compilación del APK. El JAR queda en `%USERPROFILE%\.cache\firebase\emulators\cloud-firestore-emulator-v1.22.0.jar`, donde lo guarda `firebase-tools`. No usé ningún cliente, ni el Honor, ni Chrome.
 
