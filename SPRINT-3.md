@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 157.5 h estimadas** (al 21-oct, 10.101; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`; el piloto y la presentación final, aparte; T-87 al Sprint 4) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **49 tareas · ≈ 160.5 h estimadas** (al 21-oct, 10.102; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`; el piloto y la presentación final, aparte; T-87 al Sprint 4) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -3012,11 +3012,37 @@ para RNF-003.
 
 **Parte B · La presentación final (TC-05).** La hace Yov, con la fecha y el formato que dé Carlos, a partir de la presentación del Incremento 2 y de los resultados de los RNF (T-98 y T-99).
 
+#### T-113 · Las pruebas de seguridad del Sprint 3, para la entrega del 24-oct · 3.0 h · Timonel (ficha completa, 21-oct; la acepta Codex)
+
+**Para qué.** La entrega del curso del 24-oct lleva las pruebas de seguridad (10.102), como la del Incremento 2 llevó su «Seguridad: estado de los hallazgos». T-98 ya midió RNF-004: la condición A, el TLS y las credenciales. Esta tarea cubre lo demás, sobre `sprint3-cierre-2`.
+
+**Qué hace.**
+1. **Las reglas de Firestore.**
+   - Carlos copia el texto de las reglas publicadas desde la consola a un archivo en %TEMP%, sin cambiar nada.
+   - Timonel compara su SHA-256 con `docs/T80-firestore.rules.propuesta` (`21894B7F…`) y con lo que pida el código del sprint (operaciones, solicitudes, autorización y roles).
+   - Vuelve a pasar la batería de `tool/t80_reglas.mjs` en el emulador local. Si no corre, lo declara. Nunca contra el proyecto real.
+2. **Las dependencias.** Con `pubspec.lock`, las directas y las transitivas contra los avisos conocidos (OSV o GitHub Advisory). Si la red no llega, lo declara. Incluye `flutter_localizations` e `intl` 0.20.2 (T-112).
+3. **Secretos en el repo.** Busca en el árbol y en la historia de `sprint-3` claves, correos, UID, rutas de `baystream-privado`, `key.properties` y contenido del corpus. El informe da cuentas y rutas, nunca el valor encontrado.
+4. **Los permisos:** el manifiesto de Android (contra las declaraciones de Play de T-88), las capacidades del MSIX y lo que pide la Web.
+5. **Los hallazgos de seguridad abiertos** del Incremento 2 y de este sprint, con su estado: resuelto, aceptado o pendiente.
+6. **Se cita RNF-004 de T-98** (10.101), sin repetirlo.
+
+**Carril.**
+- **Toca:** `tool/t113_*` y `docs/T113-SEGURIDAD-RESULTADOS.md`.
+- **No toca:** `lib/`, `pubspec.*` ni Firebase (ni consola, ni CLI contra el proyecto real, ni lecturas).
+- **Detente y avisa si** encuentras un secreto real en el árbol o en la historia: Carlos decide qué hacer.
+
+**Terminada cuando:**
+- [ ] las seis partes, con su evidencia y su dictamen;
+- [ ] una tabla de hallazgos con su severidad;
+- [ ] la aceptación de Codex, que repite la búsqueda de secretos y una consulta de dependencias.
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-98** | TC | 26.0 | RNF primera parte sobre los binarios de cierre: 004 (con TLS y sesión), 006, 008 y 002 (SUS en el piloto), según `docs/T63-DECISIONES-RNF.md`. La hace Codex y la acepta Timonel (10.73), en dos fases · **ficha completa arriba** |
 | **T-99** | TC | 31.0 | RNF segunda parte sobre los binarios de cierre: 001 y 007 (sintéticos de 5 000 y 10 000, arnés con `integration_test`), 005 y 003 (emulador API 26; Windows 10 no probado). La hace Timonel y la acepta Codex (10.83), en dos fases · **ficha completa arriba** |
 | **T-100** | TC | 4.0 | Manual de usuario con el anexo de geometría a mano (TC-02): Timonel (10.98), formato UMG de Yov. La presentación final (TC-05, ≈ 2.0 h) sale del sprint y va al cierre del proyecto (7 o 14-nov, 10.99) · **ficha completa arriba** |
+| **T-113** | TC | 3.0 | Las pruebas de seguridad del Sprint 3 para la entrega del 24-oct: reglas publicadas y su batería, dependencias, secretos, permisos y hallazgos abiertos (10.102). La hace Timonel y la acepta Codex · **ficha completa arriba** |
 | ~~**T-101**~~ | PIL | ~~4.0~~ | Prueba piloto: BayStream en paralelo al papel en una escala real, con permiso de COMAR. **Sale del sprint (10.99):** va al cierre del proyecto, el 25 o el 26-oct |
 
 ---
@@ -6533,3 +6559,62 @@ El piso queda en 1063.
 **El sprint sigue en 48 tareas y ≈ 157.5 h.** El tablero (v64):
 - 45 terminadas;
 - 3 en revisión: T-98, T-99 y T-100.
+
+### 10.102 · La entrega del curso del 24-oct · Nace T-113, las pruebas de seguridad · El plan hasta el 24 (21-oct)
+
+**Carlos confirma (21-oct, 12:40) la entrega del curso del 24-oct** (10 puntos). Lleva:
+- el documento de calidad y seguridad del Sprint 3;
+- el manual de usuario;
+- las pruebas de seguridad;
+- el despliegue publicado;
+- una presentación corta del avance.
+
+La defensa final sigue el 7 o el 14-nov, y el piloto, el 25 o el 26-oct (10.99).
+
+**Nace T-113, las pruebas de seguridad del Sprint 3** (≈ 3.0 h; la hace Timonel y la acepta Codex). Ficha completa junto a la de T-100. Cubre:
+- las reglas de Firestore publicadas, contra la propuesta y la batería del emulador;
+- las dependencias, contra los avisos conocidos;
+- secretos en el repo;
+- los permisos de las tres plataformas;
+- los hallazgos abiertos.
+RNF-004 se cita de T-98.
+
+**El plan hasta el 24:**
+
+| Día | Quién | Qué |
+|---|---|---|
+| 21 (mié) | Timonel | Acepta T-98, y después hace T-113 |
+| 21 (mié) | Codex | Acepta T-99 y T-100 en su ventana |
+| 21 y 22 | Yov | El manual en Word con el formato UMG |
+| 22 (jue) | Yov | La guía de la mezcla y del despliegue, y el borrador del documento del Incremento 3, con la estructura del Incremento 2 |
+| 22 (jue) | Codex | Acepta T-113 |
+| 22 y 23 | Carlos | Mezcla `sprint-3` en `main`, y publica la Web (Hosting), el instalador de Windows (MSIX) y Android (la prueba interna de Play), con la guía de Yov. Un agente compila los binarios desde el cierre; Carlos firma y publica |
+| 23 (vie) | Yov | El documento completo y la presentación corta, a partir de la del 17-oct |
+| 24 (sáb) | Carlos | Entrega. El tablero cierra el sprint |
+
+**El sprint pasa a 49 tareas y ≈ 160.5 h.** El tablero (v65) suma 215.5 h:
+- 45 terminadas;
+- 3 en revisión: T-98, T-99 y T-100;
+- 1 por hacer: T-113.
+
+### 10.103 · La auditoría de seguridad del cierre: un pentest OWASP con GLM en Kali, contra staging y el emulador (21-oct)
+
+**Carlos decide (21-oct, 13:00) hacer un pentest de verdad,** con OWASP y las tres cajas (negra, gris y blanca), para encontrar y parchar las vulnerabilidades. **Va aparte del Sprint 3,** en el bloque de cierre junto al piloto; no entra en la entrega del 24. El plan completo está en `docs/PENTEST-PLAN.md`. Amplía la auditoría de Gru de 10.56.
+
+**El objetivo, acordado con Carlos (no producción con escritura):**
+- un **proyecto de Firebase de staging** (`baystream-staging`), que crea Carlos, con las mismas reglas publicadas y solo datos sintéticos;
+- el **Emulator Suite** local;
+- los **binarios** apuntando a esos dos;
+- la **Web en vivo, solo de lectura** (TLS, cabeceras, service worker).
+
+**Por qué no producción:** las vulnerabilidades viven en las reglas y en el código, que son idénticos en staging; así se hallan los mismos fallos (IDOR, escalada de rol, BOLA) sin tocar datos reales, sin romper la regla de que solo Carlos toca Firebase y sin arriesgar el piloto del 25/26. La Web en vivo solo se mira en lectura. El proyecto `baystream-h5-temporal` nunca se toca.
+
+**Quién hace qué:**
+- **Yov** redacta el plan, las listas OWASP por superficie (Web Top 10, API Top 10, Móvil MASVS, Escritorio) y la estructura del informe.
+- **GLM 5.3**, en Kali, ejecuta las tres cajas y guarda la evidencia sanitizada (sin UID, correos ni «Nube y cuenta»).
+- **Carlos** crea el staging, publica allí las reglas y crea las cuentas sintéticas de oficina y de muelle. Solo él toca Firebase.
+- **Yov** revisa los hallazgos y decide con Carlos qué se parcha. RNF-004 de T-98 se cita, no se repite.
+
+**El informe:** `docs/PENTEST-RESULTADOS.md`, con la forma del «estado de los hallazgos» del Incremento 2.
+
+**No cambia el conteo del sprint** (sigue en 49 tareas): el pentest es del cierre del proyecto, como el piloto y la presentación final.
