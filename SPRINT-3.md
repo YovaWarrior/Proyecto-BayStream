@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 157.5 h estimadas** (al 20-oct, 10.99; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`; el piloto y la presentación final, aparte; T-87 al Sprint 4) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **48 tareas · ≈ 157.5 h estimadas** (al 21-oct, 10.100; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`; el piloto y la presentación final, aparte; T-87 al Sprint 4) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -6456,3 +6456,52 @@ El piso queda en 1063.
 - T-99 en revisión;
 - T-98 y T-100 en curso;
 - ninguna por hacer.
+
+### 10.100 · El manual, completo · El hallazgo 5: un plano de llegada propone como escala el puerto de salida · T-100 pasa a revisión (21-oct)
+
+**T-100, parte A, completa** (Timonel, `f7e38a3`, en su segunda noche):
+- **La escala completa, con capturas:**
+  - el plano de llegada, con la elección de la escala;
+  - el modo Descarga: la descarga y la re-estiba con Deshacer, y los pendientes de descarga;
+  - el plan de carga;
+  - el listado importado (las equivalencias se proponen solas, y cruzan 20/20) y el número de orden;
+  - la carga por OR y los vacíos («Marcar su descarga y cargar»);
+  - el avance;
+  - el BAPLIE de salida, guardado y comparado con la llegada.
+- **Las capturas:** 32 nuevas y **103 en total** (8.4 MB).
+- **La escala es sintética y propia,** así que no hizo falta A07:
+  - `tool/t100_sintetico.dart` arma la llegada y el plan de carga de BUQUE MANUAL / M100 / GTSTC, verificados con el lector y con `OperationSources.baplieKind` (15 comprobaciones);
+  - `tool/t100_listado.py` arma los 30 OR con el escritor de T-73, sin cambiarlo.
+- **En texto:** arrastrar, las solicitudes y el dictado, citando T-105, T-106 y T-94. El selector con el micrófono sí está capturado.
+- **Sin recorrer:** «Tipo de BAPLIE», porque solo aparece con cargas y descargas en el mismo puerto, y los sintéticos no lo provocan. Va descrito desde el código.
+- **No tocó nada de Codex.** Su app `t98` sigue al frente en el Honor, como estaba.
+
+**Los cinco hallazgos del manual:**
+
+| # | Hallazgo | Estado |
+|---|---|---|
+| 1 | «Confirmar y ver el plano» abre la Lista | Conocido (10.97) |
+| 2 | Con letra 1.45, el botón flotante tapa «Seleccionar archivo» | Nuevo; menor |
+| 3 | A 360 dp, la barra superior esconde acciones sin avisar que hay más; en Windows, en «Plano», la lupa y «Exportar viaje» solo aparecen tras «Desplegar acciones» | Nuevo; de diseño |
+| 4 | Con letra 1.45 se cortan la línea de resumen y la leyenda | Conocido (10.94) |
+| 5 | **Un plano de llegada propone como escala el puerto de salida.** Si se confirma así y se corrige después desde «Parámetros del buque», la operación del puerto correcto no existe hasta reabrir el archivo (la app lo avisa) | Nuevo |
+
+**Lo que decide Yov:**
+- **Los cinco pasan a la lista del Sprint 4 y del rediseño.** Nada se corrige antes del 24 (10.73 y 10.97).
+- **El 5 importa para el piloto:** un planificador puede confirmar el puerto equivocado. El manual ya dice cómo elegir la escala al abrir la llegada. Para el piloto, la hoja de tareas de Carlos lo repite como primer paso: **«al abrir la llegada, elige GTSTC como escala»**.
+- **T-100 pasa a «En revisión».** La acepta Codex siguiendo tres procedimientos con la escala sintética:
+  - abrir la llegada eligiendo la escala, y registrar una descarga y una re-estiba (4.3 y 8.1);
+  - importar el listado y registrar una carga por OR (8.5 y 8.1);
+  - cargar tomas por rangos (A.5).
+- **Después,** Yov pasa el manual a Word con el formato UMG.
+
+**El orden de hoy:**
+1. **Codex y Carlos:** la tanda, empezando por la autorización de la cuenta de oficina en Windows. Después, Codex entrega T-98.
+2. **Timonel:** acepta T-98. Mientras Codex mide, no usa la máquina.
+3. **Codex:** acepta T-99 y T-100.
+4. **Yov:** el manual en Word, y el plan de la mezcla, la publicación y el cierre del 24.
+
+**El sprint sigue en 48 tareas y ≈ 157.5 h.** El tablero (v63):
+- 45 terminadas;
+- 2 en revisión: T-99 y T-100;
+- T-98 en curso.
