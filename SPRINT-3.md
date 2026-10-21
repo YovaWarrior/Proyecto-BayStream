@@ -1,6 +1,6 @@
 # BayStream · Sprint 3 — instrucciones de implementación
 
-**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.97; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`) · rama **`sprint-3`**
+**Ventana:** 7 → 24 de octubre de 2026 · **50 tareas · ≈ 173.5 h estimadas** (al 20-oct, 10.98; commits de cierre `sprint3-cierre` y `sprint3-cierre-2`) · rama **`sprint-3`**
 **Entrega del curso:** 24-oct, calidad, manual, pruebas de seguridad, despliegue y presentación final (10 pts).
 El 17-oct se presenta el Incremento 2 con la versión congelada de la rama principal.
 
@@ -2969,11 +2969,54 @@ para RNF-003.
 - [ ] **El informe,** con dictámenes y limitaciones.
 - [ ] **La aceptación de Codex:** repite por su cuenta una fila de cada RNF y lo anota.
 
+#### T-100 · El manual de usuario, con el anexo de la geometría a mano (TC-02), y la presentación final (TC-05) · 6.0 h · Timonel (el manual) y Yov (el formato y la presentación) · ficha del manual, 20-oct; la acepta Codex
+
+**Para qué.** TC-02 pide un manual de usuario para quien opera BayStream: el planificador de la oficina y el personal del muelle de COMAR. Lo van a usar los participantes del piloto (T-101) y entra en la entrega final. TC-05 es la presentación final del curso. Esta ficha cubre el manual; la presentación espera la fecha que dé Carlos.
+
+**Parte A · El manual (Timonel).** Se escribe en `docs/MANUAL-USUARIO.md`, con las capturas en `docs/manual/`. Después, Yov lo pasa a Word con el formato UMG.
+- **Para quién:** un planificador que conoce el BAPLIE y el plano de estiba, pero no la app. En español, sin jerga de programación, con los términos de T-112 («Plano», «Bahía/Fila/Nivel», «Refrigerado»).
+- **Contra qué se escribe:** la app de `sprint3-cierre-2`. Cada procedimiento se sigue en la app antes de escribirlo, con los nombres exactos de los botones. Nada se describe de memoria ni desde las fichas.
+- **Los capítulos:**
+  1. Qué es BayStream y para quién.
+  2. Cómo se instala y se abre en Windows, Android y la Web. Lo que todavía no está publicado se marca **PROVISIONAL**, porque publica Carlos después de la mezcla.
+  3. Cómo se carga un BAPLIE: el selector, las versiones admitidas (2.x, y la 1.5 con aviso) y los avisos de lectura (T-108).
+  4. El perfil del buque: confirmar, «No lo tengo» y los Parámetros.
+  5. El plano: bahías, cubierta y bodega, la leyenda, las sombras de los 40, el zoom y la letra grande.
+  6. La Lista, los filtros, la búsqueda y el dictado (T-94).
+  7. Estadísticas y Alertas de estiba (el IMDG como apoyo a la decisión, no como verificación).
+  8. La operación:
+     - Carga y Descarga, los pendientes, OR y re-estibas;
+     - el orden de descarga y arrastrar para mover;
+     - las solicitudes de cambio entre muelle y oficina;
+     - comparar la llegada con la salida, el BAPLIE de salida y el listado de la agencia.
+  9. Nube y cuenta: iniciar sesión, los roles, publicar una operación y trabajar sin conexión. Va solo en texto, porque esa pantalla nunca se captura.
+  10. Exportar: CSV y PDF.
+  11. Modo claro y oscuro.
+  12. Mensajes de error y qué hacer, agrupados, a partir del censo de T-98 y T-112.
+  13. Privacidad.
+  14. Glosario.
+- **El anexo: la geometría a mano.** Cómo declarar filas, niveles, tapas y tomas de refrigerados cuando el archivo no las trae, incluida la carga por rangos (T-56), con un ejemplo paso a paso. «Todas las bahías del buque» no existe todavía (Sprint 4, 10.87), y el anexo lo dice.
+- **Las capturas:**
+  - solo con archivos sintéticos (`tool/t98_sintetico.dart`, `tool/t99_sintetico.dart` o `PRUEBA_T98.edi`), nunca del corpus;
+  - en Windows (1920×1080) y en el teléfono (360 dp);
+  - sin cuentas, sin «Nube y cuenta» y sin datos personales;
+  - con un namespace propio, `t100`, en una copia limpia de `sprint3-cierre-2` y una app aparte en el Honor (`.t100`).
+- **Lo que no toca:** `lib/`, `test/`, `pubspec.*`, los clientes y sesiones `t98` de Codex, sus capturas y «PRUEBA T-105».
+- **Detente y avisa si** un procedimiento no funciona como debería. Es un hallazgo: se anota y no se corrige (10.73).
+
+**Parte A, terminada cuando:**
+- [ ] los 14 capítulos y el anexo, escritos y comprobados en la app;
+- [ ] las capturas, sintéticas y sin cuentas, citadas en el texto;
+- [ ] una lista de lo que el manual marca como PROVISIONAL y de los hallazgos;
+- [ ] Codex lo acepta: sigue tres procedimientos del manual al pie de la letra y anota dónde se pierde.
+
+**Parte B · La presentación final (TC-05).** La hace Yov, con la fecha y el formato que dé Carlos, a partir de la presentación del Incremento 2 y de los resultados de los RNF (T-98 y T-99).
+
 | Tarea | Elemento | h | Qué |
 |---|---|---:|---|
 | **T-98** | TC | 26.0 | RNF primera parte sobre los binarios de cierre: 004 (con TLS y sesión), 006, 008 y 002 (SUS en el piloto), según `docs/T63-DECISIONES-RNF.md`. La hace Codex y la acepta Timonel (10.73), en dos fases · **ficha completa arriba** |
 | **T-99** | TC | 31.0 | RNF segunda parte sobre los binarios de cierre: 001 y 007 (sintéticos de 5 000 y 10 000, arnés con `integration_test`), 005 y 003 (emulador API 26; Windows 10 no probado). La hace Timonel y la acepta Codex (10.83), en dos fases · **ficha completa arriba** |
-| **T-100** | TC | 6.0 | Manual de usuario con el anexo de geometría a mano (TC-02) y presentación final (TC-05) |
+| **T-100** | TC | 6.0 | Manual de usuario con el anexo de geometría a mano (TC-02) y presentación final (TC-05). Parte A, el manual: Timonel (10.98); parte B, la presentación: Yov · **ficha completa arriba** |
 | **T-101** | PIL | 4.0 | Prueba piloto: BayStream en paralelo al papel en una escala real, con permiso de COMAR |
 
 ---
@@ -6344,3 +6387,35 @@ El piso queda en 1063.
 - 3 por hacer: T-87, T-100 y T-101.
 
 El piso queda en 1063.
+
+### 10.98 · T-98: la primera visualización y la tanda empezada · En Windows, la cuenta de oficina sale sin autorización · El manual (T-100) arranca con Timonel (20-oct)
+
+**Codex, la Fase B de T-98** (`feb1881` y su ventana de las 19:46):
+- **Las 18 primeras visualizaciones:** 6 en Windows maximizado, 6 en la Web (en el navegador integrado) y las 6 del Honor, que se conservan (10.93).
+- **RNF-002 no cumple:** sin perfil hacen falta **6 pasos**, y el umbral es 3. Uno de ellos lo agrega «Confirmar y ver el plano», que abre la Lista (10.97). En la Web y en el Honor el tiempo queda por debajo de 30 s. En Windows, el tiempo no se puede medir, por las pausas del agente.
+- **El idioma, Material 3 y los mensajes** cumplen sobre el cierre nuevo (T-112). El SUS espera al piloto.
+- **RNF-008 no cumple** (`ZZZZZ` y el IMDG).
+- **RNF-004 y RNF-006** esperan la tanda.
+
+**La tanda con Carlos empezó a las 21:00 y se detuvo:**
+- En el cliente `t98` de Windows, la cuenta de oficina de Carlos **no obtiene una autorización válida**. En la Web, la misma cuenta sale «Oficina autorizada».
+- No se sabe todavía si falta el registro o si falla su lectura en Windows.
+- No se publicó nada.
+- Codex llegó a su límite, y se sigue mañana temprano.
+- **Si resulta ser un defecto del producto en Windows,** se anota y no se corrige (10.73), y Yov decide con Carlos.
+
+**Carlos decide (20-oct, 21:36): Timonel avanza esta noche con lo que queda.**
+- **La aceptación de T-98** espera a que Codex la entregue completa.
+- Así que Timonel toma **T-100, parte A: el manual de usuario con el anexo de la geometría a mano.** Ficha completa en la Ola 6.
+- **Cómo usa la máquina:**
+  - la usa mientras Codex está parado;
+  - con su propio namespace `t100`, sin sesión y sin tocar los clientes, las sesiones ni las capturas `t98` de Codex;
+  - cuando Codex vuelva, Timonel solo escribe.
+
+**Antes de dormir, Carlos detiene las capturas de la tanda que estén corriendo:** `pktmon stop` en la terminal de administrador y «Stop Logging» en `chrome://net-export`. Mañana Codex las vuelve a arrancar.
+
+**El sprint sigue en 50 tareas y ≈ 173.5 h.** El tablero (v61):
+- 45 terminadas;
+- T-99 en revisión;
+- T-98 y T-100 en curso;
+- 2 por hacer: T-87 y T-101.
