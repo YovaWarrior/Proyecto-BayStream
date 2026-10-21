@@ -52,7 +52,8 @@ def prepare(output, commit, phase):
           ['cliente', 'perfil', 'repeticion', 'video', 'fps_real', 'inicio_icono_cuadro',
            'rejilla_cuadro', 'pasos_detalle', 'pasos', 'tiempo_pts_s', 'dictamen'],
           ({'cliente': c, 'perfil': p, 'repeticion': r}
-           for c in CLIENTS for p in ['sin_perfil_rige', 'con_perfil_informativo'] for r in range(1, 6)))
+           for c in CLIENTS for p in ['sin_perfil_rige', 'con_perfil_informativo']
+           for r in range(1, 6 if p == 'sin_perfil_rige' else 2)))
     sheet(output / 'piloto_tiempos.csv',
           ['participante', 'tarea', 'inicio_s', 'fin_s', 'completa_sin_ayuda', 'incidencia_sin_datos_personales'],
           ({'participante': f'P{p}', 'tarea': t} for p in range(1, 6) for t in TASKS))
@@ -110,8 +111,8 @@ de carga que responde; manda el último hito. Umbral estricto <3 s.
 Si el archivo se acepta sin aviso, registrar aceptación; no inventar recuperación.
 No usar tiempos de parseo de un script como tiempo de recuperación de interfaz.
 
-Primera visualización: 5 repeticiones por condición y cliente (30).
-Inicio: toque/clic al ícono; fin: primer cuadro con rejilla Bay Plan.
+Primera visualización (10.92): 5 sin perfil y 1 con perfil por cliente (18).
+Inicio: toque/clic al ícono; fin: primer cuadro con rejilla Plano.
 Un paso por control propio/decisión; selector del sistema = uno; scroll = cero.
 El inicio en el ícono también cuenta. Sin perfil rige <=3 pasos y <=30 s;
 con perfil es informativo. Anotar cada acción, no solo el total.

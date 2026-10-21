@@ -2,8 +2,8 @@
 
 Capitán Codex · 17-oct-2026 · Fase A · base `9ae744a` de `sprint-3`.
 
-**Vigencia:** la sección «Fase B · Cierre 90dce4b», al final, registra el
-trabajo actual del 19-oct. Prevalece sobre los pendientes y bloques Git
+**Vigencia:** las secciones finales del cierre **33404a5 (sprint3-cierre-2)**
+registran el trabajo vigente del 20-oct. Prevalecen sobre los pendientes y bloques Git
 históricos de las secciones anteriores, que se conservan como trazabilidad.
 La corrección 10.81 fue versionada en `46202d7` (decisión 10.82).
 
@@ -1285,3 +1285,850 @@ git push
 > por bloqueo automático al no poder verificar la URL de Chrome. Informe
 > vigente en docs/T98-RESULTADOS.md; pendientes precisos al final. Carlos
 > aún debe completar la tanda de cuentas/pktmon después de lo sin sesión.
+
+## Continuación · Decisión 10.92 · 20-oct-2026
+
+Esta sección incorpora la instrucción actual de Carlos y prevalece sobre los
+pendientes históricos del corte anterior. **En curso.** La Web pasa al
+navegador integrado de Codex, en `http://127.0.0.1:5898/`; no se vuelve a
+automatizar Chrome. Se declara ese entorno, como en 10.55 y 10.70. RNF-002
+requiere ahora **cinco repeticiones sin perfil y una con perfil por cliente**
+(18 en total, no 30). La condición con perfil es informativa.
+
+Los censos de idioma, Material 3 y mensajes de error pertenecen a Timonel,
+en `docs/T98-CENSOS-RESULTADOS.md`. Capitán no los duplica ni modifica ese
+archivo: los citará cuando estén entregados. No se vuelve a ejecutar RNF-008
+ni se corrige ZZZZZ; queda el resultado «no cumple», para Sprint 4. No se
+desconecta la laptop: Windows/Web sin red se reservan para Carlos al final.
+
+### Windows · Catálogo grabado, anotación en curso
+
+Se reutilizó el mismo EXE release, SHA-256
+`596db54f24bee78cf23b28249aca2ebf6f75ef25e31c5c5f572977c3002be359`,
+abierto con `explorer.exe`, PID 15804. Almacén efectivo: el directorio T98
+aislado de TEMP declarado antes. Se reabrió A01 desde Recientes (977/34),
+sin sesión; no se abrió «Nube y cuenta». La app se cerró por su PID al
+terminar el catálogo.
+
+Evidencia nueva en `%TEMP%\t98-b-90dce4b-19oct\continuacion-20oct\windows\`.
+`formal/rec01.mp4` a `rec08.mp4` registran los ocho casos. El 03 abre
+Parámetros del buque: se canceló sin confirmar ni reemplazar el viaje anterior.
+El 04 se admite con el aviso de UNT/UNZ y mantiene 977/34/8366.1 t; es el
+viaje anterior de los casos siguientes. Los otros seis rechazan y el botón
+de carga vuelve a abrir el selector. Los PTS y sus hitos aún se están revisando;
+**ocho grabaciones no significan ocho recuperaciones aprobadas**.
+
+El instrumento nuevo `tool/t98_grabar_escritorio.py` captura un rectángulo
+de 1900×1068 que contiene la app y el selector; usa FFmpeg, sin entrada de
+Windows por script. Inicia y cierra por archivo de control bajo TEMP,
+conserva PID propio y metadatos, limita la captura a 180 s y evita sobrescribir.
+Se piden 30 fps, pero la tasa y los intervalos se leen del video. Los tiempos
+del host no son la medición. El recorte por título de app se descartó para
+este uso porque excluye el selector nativo.
+
+**Calibraciones descartadas:** `encuadre-*.mkv`, el primer `rec01.mp4` fuera
+de `formal/`, y las carpetas `serie/`, `medicion/`, `catalogo/` y
+`escala-explicita/` son ensayos del instrumento. Cambiar entre el selector
+y la app invalida referencias de captura/escala: hubo sondas fuera del
+botón, un intento de teclado que no lo activó y una referencia de captura
+rechazada como desconocida. Ninguno se atribuye al producto ni aprueba una
+recuperación. La serie `formal/` refresca la captura de la app antes de
+aplicar la sonda y muestra su reapertura real.
+
+La lectura intermedia del instrumento añade aproximadamente 2.8–3.2 s
+antes de la sonda. Ese retraso queda incluido; no se resta ni se presenta
+como demora del producto. Si la prueba solo confirma operatividad después
+de 3 s por ese retraso, no permite decidir si BayStream ya era operativa
+antes. Se publicarán cotas observadas y la limitación, sin convertirla en
+un incumplimiento de recuperación. El dictamen de mensajes se consolidará
+con el censo de Timonel.
+
+**Anotación Windows terminada para esta serie:** los ocho videos conservan
+PTS estrictamente crecientes, verificados en `formal/pts-verificados.json`.
+Se revisaron cuadros originales y contactos; `anotacion-revisada.json`
+conserva índices, PTS, tasas y limitaciones. El inicio anotado es una cota
+conservadora del selector antes de confirmarse/cerrarse, no una marca exacta
+del contacto. El error se anotó con el texto completo y el viaje anterior
+visibles; el final muestra el selector reabierto con su lista. GDI deja
+blancas algunas superficies nativas del selector: no se afirma que todos
+sus controles estén dibujados en ese cuadro.
+
+| Caso Windows | Cuadros inicio conservador / error y viaje / selector | Intervalo observado (s) | Incertidumbre de cuadros (s) | Tasa media real (fps) | Dictamen temporal |
+|---|---|---|---|---|---|
+| 01 bytes aleatorios | 161 / 230 / 320 | 5.298 | 0.063 | 30.051 | No medible frente a 3 s por espera instrumental |
+| 02 texto sin EDIFACT | 306 / 399 / 453 | 4.902 | 0.052 | 30.038 | No medible frente a 3 s por espera instrumental |
+| 03 segmento cortado | Abre Parámetros; cancelado | — | — | PTS en JSON | No es un rechazo recuperado |
+| 04 sin UNT/UNZ | Admitido con aviso, 977/34 | — | — | PTS en JSON | No es un rechazo recuperado |
+| 05 sin TDT | 383 / 477 / 541 | 5.276 | 0.079 | 30.051 | No medible frente a 3 s por espera instrumental |
+| 06 COPRAR | 278 / 349 / 434 | 5.195 | 0.062 | 30.034 | No medible frente a 3 s por espera instrumental |
+| 07 versión no admitida | 160 / 256 / 314 | 5.127 | 0.062 | 30.030 | No medible frente a 3 s por espera instrumental |
+| 08 vacío | 182 / 239 / 325 | 4.769 | 0.064 | 30.039 | No medible frente a 3 s por espera instrumental |
+
+Son intervalos conservadores observados con una comprobación tardía, **no
+latencias intrínsecas de recuperación**. La incertidumbre de cuadros no
+incluye ni elimina el efecto de esa espera. No se infiere que el producto
+incumpla ni que cumpla <3 s. Los seis rechazos conservaron el viaje y
+reabrieron carga; los mensajes se ven en `errores-verificacion.jpg` y los
+cuadros completos. 06/07 no nombran UNH explícitamente, igual que en Honor.
+
+Durante la búsqueda de candidatos, la salida raw de miniaturas advirtió
+DTS cuantizados en su muxer. No se modificó el MP4 y el número de imágenes
+decodificadas coincidió con todos los cuadros del original. Las lecturas
+posteriores usan una secuencia de índices para las miniaturas y **siempre
+los PTS originales del MP4 para medir**; no se reconstruyen marcas del video.
+
+### Honor · Repetición 01/02 resuelta
+
+Se mantuvieron APK y datos T98 del cierre. Se reabrió A01 desde Recientes:
+977/34/8366.1 t, sin aviso de incompleto. Los ensayos anteriores no se borran.
+El nuevo 01 con 120 ms volvió a omitir el contacto activo en la captura y
+queda sin tiempo publicable. El 02 con 120 ms sí muestra la transición.
+
+Se añadió a `tool/t98_recuperacion_honor.py` la opción `--pulsacion-ms`
+(120 o 300). Para 300 exige leer y acreditar que el umbral de pulsación
+larga del dispositivo sea superior: se comprobó **400 ms**, sin modificarlo.
+La repetición 01 con 300 ms conserva el tramo de contacto y su liberación.
+Se restauró el indicador de puntero al finalizar cada corrida; el calentamiento
+previo de las primeras dos también se restauró en `finally`.
+
+**Evento inicial declarado antes de anotar:** último cuadro con contacto
+activo P=1 antes de la liberación P=0 que confirma el archivo. Es una cota
+conservadora inmediatamente anterior a confirmar, en vez del primer contacto
+separado por un largo intervalo estático del video. Se conservan ambos
+cuadros como intervalo de confirmación. No se resta la duración del gesto
+ni la espera solicitada de 1 s de la sonda. El final es un cuadro verificado
+con selector completo, sin afirmar que sea el primero posible.
+
+| Caso | Fuente bajo `continuacion-20oct/` | Último P=1 / primer P=0 / error y viaje / selector | Confirmación acotada por PTS (s) | Intervalo conservador (s) | Incertidumbre (s) | Cota superior (s) | Dictamen |
+|---|---|---|---|---|---|---|---|
+| 01 | `honor-300ms/rec01.mp4` | 72 / 73 / 111 / 147 | [3.759633, 3.785033] | 1.849 | 0.030 | 1.880 | Cumple esta recuperación |
+| 02 | `honor/rec02.mp4` | 63 / 64 / 114 / 150 | [3.599400, 3.618156] | 2.005 | 0.032 | 2.037 | Cumple esta recuperación |
+
+Las tasas medias reales son **22.313 y 23.419 fps**, respectivamente, con
+PTS variables. Los 168 cuadros del 01 y los 157 del 02 conservan exactamente
+los PTS de origen y su crecimiento estricto. `honor-repeticion-anotada.json`
+reúne los datos y cada carpeta conserva `anotadoNN/video-anotado.json`, los
+cuadros originales, contactos de hitos y tiras del indicador.
+
+Estos resultados sustituyen únicamente los pendientes temporales 01/02 del
+Honor. Junto con 05/06/07/08 del corte previo, los seis rechazos medidos
+acreditan <3 s; 03/04 siguen siendo admisiones, sin tiempo de rechazo.
+RNF-006 global continúa pendiente de Web, de los límites de Windows y del
+censo de mensajes encargado a Timonel. Estado comprobado tras las corridas:
+avión 0, Wi-Fi 1, letra 1.0, puntero `null`, umbral largo 400 ms intacto.
+
+### Web integrada · Ocho casos y PTS revisados
+
+Se utilizó el navegador **integrado de Codex**, visible, autorizado por Carlos
+en 10.92. Origen exclusivo `http://127.0.0.1:5898/`, mismo build release y
+SHA del cierre. El registro de inicio confirmó `Firebase=true` y
+`sesionInicial=ausente`; no se abrió la cuenta. A01 se cargó con el selector
+real, «No lo tengo» y confirmación: 977/34/8366.1 t. Después del 04, el
+viaje previo es esa copia admitida con aviso de UNT/UNZ.
+
+`tool/t98_iab_grabar.mjs` conserva los JPEG originales de
+`Page.screencastFrame`, su `metadata.timestamp`, secuencia CDP y confirmaciones
+de los eventos reales de selector. No se asumieron fps constantes. El
+selector interceptado **no se dibuja en la página**: el final combina el
+cuadro revisado del error/viaje con `Page.fileChooserOpened`, seguido por
+cuadros posteriores y la resolución real de `waitForEvent('filechooser')`.
+Es una comprobación instrumental de reapertura; no se presenta como video
+de un selector nativo visible. La sonda solicita carga después de 500 ms;
+ese tiempo permanece incluido.
+
+Inicio conservador: primer cuadro recibido y reconocido antes de confirmar
+el archivo. Final conservador: último cuadro de la captura, posterior al
+evento del selector y a su confirmación. La incertidumbre suma los dos
+intervalos extremos de cuadros; no se resta ninguna espera. Se revisaron
+los originales finales completos: error legible y viaje previo conservado.
+
+| Caso Web | Fuente bajo `continuacion-20oct/web-iab/` | Cuadros; inicio/final | Intervalo (s) | Incertidumbre (s) | Cota superior (s) | Tasa media real (fps) | Resultado |
+|---|---|---|---|---|---|---|---|
+| 01 | `serie/rec01/` | 30; 0/29 | 1.422 | 0.116 | 1.539 | 20.390 | Recuperación <3 s corroborada por selector |
+| 02 | `serie/rec02/` | 25; 0/24 | 1.349 | 0.890 | 2.238 | 17.794 | Recuperación <3 s corroborada por selector |
+| 03 | `serie3/rec03/` | 11 | — | — | — | 3.621 | Abre Parámetros; cancelado sin confirmar |
+| 04 | `serie/rec04/` | 11 | — | — | — | 5.740 | Admitido, aviso UNT/UNZ, 977/34/8366.1 t |
+| 05 | `serie2/rec05/` | 32; 0/31 | 1.376 | 0.122 | 1.498 | 22.527 | Recuperación <3 s corroborada por selector |
+| 06 | `serie/rec06/` | 27; 0/26 | 1.207 | 0.009 | 1.216 | 21.541 | Recuperación <3 s corroborada por selector |
+| 07 | `serie/rec07/` | 29; 0/28 | 1.250 | 0.115 | 1.365 | 22.399 | Recuperación <3 s corroborada por selector |
+| 08 | `serie/rec08/` | 44; 0/43 | 1.141 | 0.118 | 1.260 | 37.675 | Recuperación <3 s corroborada por selector |
+
+`tool/t98_iab_video.py` empaqueta los cuadros en MP4 con base temporal de
+microsegundos, sin interpolar ni añadir cuadros. La dimensión JPEG de
+1203×960 exige una columna negra para H.264: no se escala la interfaz.
+Se verificaron **todos los PTS y cantidades de los ocho MP4**, iguales a los
+timestamps relativos originales cuantizados a 1 µs (error máximo 0.5 µs).
+Cada carpeta conserva `captura.json`, `video-verificado.json` y huellas SHA.
+`revision-candidata.json` contiene los cálculos; los seis originales finales
+se revisaron manualmente, además del contacto `verificacion-errores.jpg`.
+
+**Ensayos descartados:** `rec01/`, `formal01/`, `valido01/`, `serie/rec03/`,
+`serie2/rec03/` y `serie/rec05/` conservan errores de referencia del selector,
+comprobaciones prematuras o la cancelación no soportada por `setFiles([])`.
+No son defectos de BayStream ni mediciones aprobadas. El 03 válido es
+`serie3/rec03/`; el 05 válido es `serie2/rec05/`. El aviso gris residual
+«Carga cancelada» del 03 sigue visible durante el 04; no se confunde con el
+aviso rojo de archivo incompleto, que sí corresponde al 04.
+
+**AVANCE del bloque:** los seis rechazos Web tienen cotas inferiores a 3 s,
+con la limitación explícita del selector interceptado. Honor también tiene
+los seis; Windows confirma conservación y reapertura, pero sus sondas
+tardías no deciden el umbral temporal. RNF-006 global aún no se cierra.
+
+### RNF-002 · Primera visualización Honor completa
+
+Instrumento `tool/t98_primera_honor.py`, únicamente paquete `.t98`. Se abrió
+desde el icono real «BayStream T98» del launcher, con contacto corto de
+300 ms, inferior al umbral de 400 ms. El indicador se restauró en `finally`.
+La corrida con perfil conservó el perfil existente; antes de cada corrida
+sin perfil se reiniciaron **solo los datos desechables de `.t98`** con
+`pm clear gt.cmartinez.baystream.t98`. Ninguna otra app se tocó. El selector
+usó A01 de `Descargas/t98b`. Al terminar: avión 0, Wi-Fi 1, letra 1.0,
+puntero `null`; `.t98` cerrada por su paquete, datos de la última corrida
+conservados para la tanda con Carlos.
+
+**Seis acciones sin perfil:** (1) icono, (2) Seleccionar archivo, (3) A01 en
+el selector, (4) No lo tengo, (5) Confirmar y ver el plano, (6) Bay Plan.
+Con perfil son cuatro: se omiten 4/5. No se cuentan los desplazamientos.
+La confirmación abre Lista; por eso Bay Plan es otra acción necesaria.
+
+Se anotó el inicio entre el último cuadro verificado P=0 y el primer P=1
+legible del contacto sobre el icono. Algunos cuadros intermedios muestran
+negro en la franja del indicador: no se les atribuye un estado. El final
+está entre el último cuadro sin rejilla y el primero con rejilla. Para
+inicio `[i0,i1]` y final `[f0,f1]`, se informa el intervalo de duración
+`[f0-i1, f1-i0]`: **la cota superior ya incluye la incertidumbre de ambos
+extremos; no se suma otra vez**. Todos los originales y sus vecinos se
+revisaron. Los tiempos ADB no se usan para el dictamen.
+
+| Honor, corrida | Cuadros P0/P1; sin rejilla/con rejilla | Duración acotada (s) | Anchura de incertidumbre (s) | Pasos | Tasa media real (fps) | Dictamen |
+|---|---|---|---|---|---|---|
+| Sin 01 | 0/3; 409/410 | [29.037, 29.527] | 0.490 | 6 | 13.077 | No cumple pasos; tiempo ≤30 s |
+| Sin 02 | 0/3; 405/406 | [29.068, 29.625] | 0.557 | 6 | 12.881 | No cumple pasos; tiempo ≤30 s |
+| Sin 03 | 1/3; 408/409 | [29.349, 29.600] | 0.251 | 6 | 12.878 | No cumple pasos; tiempo ≤30 s |
+| Sin 04 | 0/3; 407/408 | [29.017, 29.538] | 0.521 | 6 | 13.004 | No cumple pasos; tiempo ≤30 s |
+| Sin 05 | 1/4; 405/406 | [29.196, 29.456] | 0.259 | 6 | 12.792 | No cumple pasos; tiempo ≤30 s |
+| Con, informativa (`con02`) | 1/3; 262/263 | [18.693, 18.930] | 0.237 | 4 | 12.512 | Informativa; tiempo ≤30 s |
+
+Las cinco sin perfil incumplen ≤3 pasos aunque sus cotas temporales estén
+dentro de 30 s. Los intervalos incluyen observaciones del instrumento y
+navegación del selector: no son una estimación del tiempo mínimo humano.
+Fuente: `continuacion-20oct/primera/honor/primera-anotada.json`; cada corrida
+conserva video, SHA, todos sus PTS, acciones y `anotacion.json`. Se cotejaron
+exactamente los PTS originales y recortados de los seis videos. `con01` es
+un ensayo descartado: el texto de carga de inicio se duplicaba en un título
+y un botón; el instrumento se detuvo sin elegir un control ambiguo.
+
+**RNF-002 ya tiene evidencia de no cumple por pasos**; faltan Windows/Web
+y los censos de Timonel para completar la tabla, no para invertir este fallo.
+
+## Continuación vigente · Cierre 2 · Decisiones 10.93–10.96
+
+**Base nueva:** `sprint3-cierre-2`, commit completo
+`33404a5804be4fad85aab80dd923a7ae9e878ee9`. La etiqueta es anotada: su objeto
+es `f631efa8c756a7df4f6923d7ca15a5a5eae97c70`; al resolver `^{commit}` se
+obtiene el SHA anterior. No se confunde el objeto etiqueta con el commit.
+Al retomar, HEAD era `70270f5`, decisión 10.96, en `sprint-3`.
+
+Se comprobó el chat «Aceptar T-112» y
+`docs/T112-ACEPTACION-RESULTADOS.md`: **ACEPTADA con observaciones**, ya
+versionada en `6206615`, sin cambios pendientes de producto ni otro cierre.
+La decisión 10.96 mantiene `33404a5` y asigna a Codex la máquina durante su
+ventana; se anuncia `SEMÁFORO: mido` al ocuparla y `SEMÁFORO: libre` al
+terminar o parar. No se contacta a Timonel; Carlos coordina los turnos.
+
+**Conservación autorizada por 10.93:** condición A de RNF-004 en los tres
+clientes, Honor sin red 11/11, barrido del corpus RNF-008 y las seis primeras
+visualizaciones del Honor anotadas arriba. T-112 cambia textos y localización,
+sin cambiar pasos, datos o red; su aceptación no encontró un cambio que
+invalide esa conservación. Se conservan también las limitaciones originales
+de las sondas: ninguna certifica cero bytes.
+
+**Repeticiones obligatorias sobre el cierre 2:** ocho casos de recuperación
+por cada cliente (24), batería de conformidad RNF-008, tres censos y las
+primeras visualizaciones Windows/Web (5 sin perfil +1 con perfil por cliente).
+Las recuperaciones del cierre anterior son **evidencia histórica**, aunque
+hubieran aprobado: no se trasladan al dictamen del cierre 2.
+
+Windows llegó a grabar primeras visualizaciones del cierre anterior en
+`continuacion-20oct/primera/windows/`: `con02`, `sin01b`, `sin02b` y `sin03`
+completaron la rejilla; `sin04` se interrumpió al recibirse la nueva decisión,
+antes de completar el selector. No se usan para cumplir las doce corridas
+Windows/Web ahora solicitadas. `con01`, `sin01` y `sin02` son ensayos
+descartados; `sin02` alcanzó el límite de captura de 180 s. Las pausas de
+observación impiden atribuir esos intervalos a rendimiento intrínseco.
+Se cerró solo el PID de T98 y no se tocó otro BayStream. Los almacenes TEMP
+apartados se conservan. El primer traslado se detuvo con un archivo todavía
+retenido tras cerrar el proceso; se verificaron ambos directorios, se trasladó
+solo el archivo propio restante y se acreditó el origen vacío. Los traslados
+siguientes esperaron `WaitForExit` antes de mover.
+
+### Copia nueva e instrumentos
+
+`tool/t98_cierre2.py preparar` creó por `git archive` una copia nueva en
+`%TEMP%\t98-b-33404a5-20oct\app`, con manifiesto SHA-256 de todos los originales
+antes de superponer **solo** instrumentos `tool/t98_*`. `lib/` y `pubspec.*`
+se verifican byte a byte contra el archivo original. No se copian la firma
+de subida ni la configuración privada; esta última solo se pasa por ruta a
+Flutter, sin abrirla ni imprimirla. Los tres binarios nuevos y sus huellas
+quedan pendientes hasta finalizar la compilación.
+
+Instrumentos ajustados antes de medir: «Plano» sustituye a «Bay Plan» en el
+recorrido Android; los grabadores Honor/IAB exigen el SHA completo por
+argumento, en vez de incrustar el cierre anterior. Las hojas preparan **18**
+primeras visualizaciones, según 10.92. La comprobación Python existente se
+actualizó para exigir cinco sin perfil y una con perfil en cada cliente:
+**10/10 auxiliares pasan**; `node --check` del grabador IAB pasa.
+El grabador de escritorio amplió su límite automático de 180 a **600 s** para
+conservar recorridos largos del instrumento; el umbral RNF sigue en 30 s.
+
+### Censos repetidos sobre 33404a5
+
+Se ejecutó el `tool/t112_censos.py` archivado en la copia nueva, que importa
+los cinco `tool/t98c_*` archivados, sin modificarlos. `--antes` apunta al
+`app/lib` byte idéntico de `90dce4b`, conservado del primer cierre. No hubo
+cadenas pendientes ni errores. Evidencia y huellas:
+`%TEMP%\t98-b-33404a5-20oct\censos\`.
+
+| Submétrica | Umbral | Medición repetida | Dictamen de Capitán |
+|---|---|---|---|
+| RNF-002 idioma | Español en el 100 % de textos visibles | 4853 cadenas censadas; 1790 visibles: 1657 español, 133 sin idioma; 0 inglés/mixtas. 20 grupos Flutter en español | Cumple en el alcance del censo |
+| RNF-002 Material 3 | 100 % de controles interactivos incluidos | 237 controles, 12 exclusiones declaradas, 0 excepciones | Cumple en el denominador T63 2.4 |
+| RNF-006 mensajes | 100 % causa y acción; segmento cuando es lectura BAPLIE | 218/218 explícitos; 12/12 de lectura con segmento; envolturas declaradas en CSV | Cumple el censo |
+
+El censo traslada decisiones semánticas declaradas por línea; ejecutarlo no
+equivale a revisar manualmente 218 mensajes. El control independiente ya se
+realizó sobre **este mismo cierre** en la aceptación de T-112: muestra de 20
+sin reemplazo, semilla `11220261020`, **20/20** con causa y acción, con fuentes
+en `build/t112acc/muestra-independiente.json`. Se cita esa aceptación y su
+informe, sin presentarla como una segunda muestra nueva de este chat.
+Las exclusiones de Material y las cadenas sin idioma conservan las reglas
+del censo; no se afirma haber auditado todos los colores de `lib/`.
+
+Estos resultados sustituyen los fallos históricos de idioma, buscador y
+mensajes del primer cierre. RNF-002 sigue **no cumple por pasos**, demostrado
+en Honor y conservado por decisión expresa. RNF-006 global queda **no medible**
+en este corte: falta repetir recuperación y medir sin red Windows/Web. No se
+arrastra al cierre 2 el anterior «no cumple» de mensajes. RNF-008 conserva
+**no cumple**, por IMDG y ZZZZZ, pendiente de repetir su batería. RNF-004
+permanece **no medible** hasta completar sus evidencias con Carlos.
+
+### Validación y conformidad repetidas · Cierre 2
+
+`tool/t98_cierre2.py validar`, en la copia nueva: pub get offline, suite,
+analyze y batería de conformidad, **en serie**. Se hicieron antes de cambiar
+la etiqueta Android del banco, que la prueba T-88 exige literalmente.
+
+| Validación | Resultado ejecutado |
+|---|---|
+| Suite Flutter | **1063/1063**, cero fallas y cero omitidas. Conteo de eventos `testDone` no ocultos del registro JSON; no se cuentan cargas o auxiliares ocultos |
+| Analyze | **0 incidencias**, 32.8 s |
+| Batería RNF-008 | **31 observaciones**: 30 casos de norma y un control del detector de avisos. El test de instrumento termina en exit 0; eso no significa que los 30 casos cumplan |
+| Huellas posteriores | Los 137 Dart de `lib/` y `pubspec.yaml`/`pubspec.lock` siguen idénticos al archivo original del cierre |
+
+La clasificación manual de las filas vuelve a dar **29/30 satisfactorias**.
+Los negativos BBBRRTT, dígito ISO 6346 y unidades LBR/TNE avisan; las
+cabeceras no admitidas y las ausencias UNH/TDT se rechazan; las ausencias
+UNB/BGM/UNT/UNZ admitidas muestran aviso visible. El control SMDG15 muestra
+su aviso en la tarjeta real. Pesos WT/VGM de los positivos: 24000 kg,
+sin conversión inventada. El negativo **«Puerto inexistente ZZZZZ» vuelve
+a aceptarse en silencio**, sin aviso visible. No se corrige (10.93).
+
+Evidencia nueva: `suite.log`, `analyze.log`, `conformidad.log`, metadatos de
+ejecución y `conformidad/conformidad.csv`/`.md`, bajo el banco `33404a5`.
+Los CSV conservan el SHA de cada entrada sintética, el SHA completo de base
+y las observaciones del lector. El barrido del corpus y su contraste UNECE
+2025-1 se conservan del primer cierre por decisión expresa; **no se anuncian
+como un barrido nuevo**. RNF-008 sigue **no cumple** por ZZZZZ y por IMDG
+(8.1), con las coberturas y límites ya declarados.
+
+### Binarios del cierre 2 e inicio de recuperación
+
+Los tres builds release terminaron con exit 0, en serie y sin cambiar
+`lib/`, `lib/main.dart` ni `pubspec.*`. Windows: 198.6 s; Web: 58.3 s;
+Android: 105.8 s. Son tiempos de compilación, no métricas RNF.
+
+| Artefacto nuevo | Bytes | SHA-256 |
+|---|---|---|
+| EXE Windows | 15937536 | `8944a08616efe2f5b7c5acb1f6fb7062f93c306ee8d751f61cf6852adb67a7d6` |
+| Web `main.dart.js` | 5545522 | `dd9fdc47d1415fe4f98b8745f430fea440f58edc791767b223b1983a66966ffe` |
+| APK release `.t98` | 68477323 | `845a4ae2ea251dc5e03ae4b836623d9f23fb291b201c265864508bd4fe863313` |
+
+El manifiesto de los 49 archivos Web, antes de añadir cualquier lanzador del
+instrumento, tiene SHA `028db6ff5a3dee4c7ac8e0e92b54bf4d05f1492eebd4d234912783ca82c869ac`.
+`binarios.json` y `producto-despues-pruebas.json` acreditan 137 Dart de `lib/`
+y ambos pubspec sin diferencias respecto del cierre archivado. Android solo
+cambia `applicationId` a `gt.cmartinez.baystream.t98` y la etiqueta a
+«BayStream T98» en la copia; `aapt` confirmó ambas y su actividad original.
+No se copió `key.properties`. Firebase se compiló activo por definición y
+configuración privada por ruta. Los avisos de compilación fueron MSB8029
+por TEMP, la familia CupertinoIcons ausente y las notas Java de Firestore;
+no se silenciaron ni se modificaron dependencias.
+
+**Windows, ocho casos nuevos grabados:** PID 32912, abierto mediante
+`explorer.exe`, almacén `%TEMP%\t98-b-33404a5-20oct\store-windows`, namespace
+`t98`. A01: 977/34/8366.1 t. El 03 abre Parámetros y se cancela sin confirmar;
+el 04 se admite con aviso UNT/UNZ y conserva esas cifras. Los seis rechazos
+reabren carga. Se cerró solo ese PID al acabar. Los ocho videos tienen PTS
+estrictamente crecientes; la anotación está en revisión. Las sondas siguen
+siendo tardías por observar la pantalla antes de pulsar: **no se aprueba
+ni se reprueba <3 s por una reapertura posterior al umbral**.
+
+La captura original de 1900×1068 incluía el navegador de fondo porque la
+ventana Windows ocupa 1600×900 físicos en este entorno. Se detectó al revisar
+los cuadros y se prepara un recorte 1600×900 de la ventana propia, conservando
+y comparando todos los PTS; no se usará el fondo como evidencia. Los contactos
+de revisión acotados muestran el mensaje y el viaje. Los MP4 recortados y sus
+comprobaciones temporales quedan pendientes de finalizar esa revisión.
+
+**Honor, preparación del cierre 2:** el APK nuevo se instaló con `adb install -r`
+solo sobre `.t98`. Se reabrió A01 desde Recientes, 977/34/8366.1 t, y «Plano»
+confirma la interfaz nueva. El registro filtrado del PID propio confirma
+`Firebase=true; sesionInicial=ausente`. Los nueve archivos del dispositivo
+(ocho casos y A01) se cotejaron por SHA contra el catálogo nuevo y su
+`origenSha256`: todos coinciden. El control local A01 no apareció en la
+inspección del catálogo; se materializó desde la copia del Honor, **solo
+después de acreditar su SHA contra el origen de la nueva generación**.
+No se atribuye una causa a esa ausencia. Evidencia: `honor-inicio.json`.
+Estado previo: avión 0, Wi-Fi 1, letra 1.0 y puntero `null`.
+
+Se preparó además `tool/t98_sintetico.dart` para la tanda con Carlos:
+**dos unidades totalmente ficticias, 36000 kg y dos bahías**, sin corpus.
+Lo valida el lector real y sus dígitos ISO antes de escribir el archivo;
+`dart analyze` del instrumento da 0. El primer borrador no compiló por
+tratar un peso nullable como obligatorio; se corrigió con validación
+explícita antes de generar el archivo. El sintético final y su huella están
+en `sintetico/`; **no se creó ni se publicó ninguna operación**.
+
+### Recuperación Honor repetida · Cierre 2
+
+Se ejecutaron los ocho casos con el APK nuevo. Los MP4 están acotados a la
+app/selector, sin barra de estado; todos sus PTS coinciden exactamente con
+los originales y son estrictamente crecientes. La marca de toque duró
+300 ms, por debajo del umbral de pulsación larga de 400 ms. El inicio se
+acota entre el último P=1 y el primer P=0: **liberación de la selección**.
+No se usan tiempos host/ADB ni se restan el gesto o la espera fija de 1 s.
+
+| Caso rechazado | Cuadros P=1/P=0 | PTS de inicio acotado | Cuadro selector completo observado | Cota superior de recuperación |
+|---|---|---|---|---|
+| 01 bytes | 97/98 | [6.435233, 6.452678] | 190 (8.986056) | **2.550823 s** |
+| 02 texto | 76/77 | [3.773511, 3.791756] | 171 (5.847011) | **2.073500 s** |
+| 05 sin TDT | 74/75 | [3.811222, 3.829222] | 160 (6.041578) | **2.230356 s** |
+| 06 COPRAR | 78/79 | [3.843478, 3.862244] | 164 (6.040011) | **2.196533 s** |
+| 07 versión | 74/75 | [3.785778, 3.804922] | 161 (6.000111) | **2.214333 s** |
+| 08 vacío | 78/79 | [3.823911, 3.842378] | 158 (5.902767) | **2.078856 s** |
+
+Cada cota resta el PTS del último contacto al del selector **ya completo**;
+no se atribuye al cuadro elegido ser el primero posible. Esta cota incluye
+la incertidumbre de inicio y la observación tardía del final, y basta para
+resolver **<3 s en los seis rechazos**. Se revisaron mensaje legible, viaje
+anterior A01 (977/34/8366.1 t) y reapertura real, no solo un botón iluminado.
+Los mensajes 06/07 nombran ahora UNH. En 05–08 sigue visible el aviso UNT/UNZ
+del viaje cargado por 04; no se confunde ese aviso previo con el nuevo error.
+
+El **03 admite y abre Parámetros**, cancelado sin confirmar; no tiene error
+ni tiempo de recuperación de rechazo. El **04 admite con aviso UNT/UNZ**
+y conserva las cifras de A01; también se observó la reapertura del selector,
+sin presentarlo como rechazo. Evidencia: `recuperacion/honor/rec01..08`,
+`hitos/`, `cierre/`, `puntero.jpg` y `recuperacion-anotada.json` del banco nuevo.
+
+Restauración comprobada al acabar: avión **0**, Wi-Fi **1**, letra **1.0**,
+puntero **null**. No se tocó la red de la laptop ni otra app del Honor.
+
+### Windows y Web · revisión de recuperación del cierre 2
+
+Los ocho MP4 Windows se recortaron a 1600×900. `recortes-verificados.json`
+compara **todos** los PTS de cada origen y salida, sin diferencias, pérdida,
+repetición ni cambio de orden. Se revisaron los seis mensajes de rechazo,
+A01 preservado y el selector nativo reabierto. El 03 muestra Parámetros en
+los cuadros 900/1200 y luego se cancela; el 04 muestra aviso UNT/UNZ.
+
+| Windows | Último selector previo visible: cuadro/PTS | Error: cuadro/PTS | Selector reabierto observado: cuadro/PTS | Dictamen <3 s |
+|---|---|---|---|---|
+| 01 | 2247 / 74.975537 | 2351 / 78.434848 | 3724 / 124.200411 | No medible |
+| 02 | 585 / 19.546182 | 691 / 23.068891 | 2094 / 69.834310 | No medible |
+| 05 | 970 / 32.335292 | 1080 / 36.002182 | 1927 / 64.244519 | No medible |
+| 06 | 461 / 15.378493 | 527 / 17.578752 | 1880 / 62.672298 | No medible |
+| 07 | 435 / 14.510603 | 543 / 18.114200 | 1390 / 46.342465 | No medible |
+| 08 | 439 / 14.648507 | 493 / 16.442118 | 1670 / 55.676244 | No medible |
+
+El cierre visible del selector es un **proxy**, no el evento exacto de
+confirmación. Los intervalos hasta las sondas tardías son 31.832–50.288 s;
+no son latencia intrínseca de BayStream y no permiten aprobar ni reprobar
+<3 s. Evidencia funcional completa; limitación temporal conservada.
+
+**Corrección de preparación Web:** al arrancar desde caché limpia, el primer
+build no tenía CanvasKit local y produjo 404/pantalla en blanco. No se usó
+para mediciones. Se archivó en `web-incompleto-archivo/` y se repitió el
+build con `--no-web-resources-cdn` (60.7 s). El bootstrap del producto exige
+esas rutas locales. No se cambió código del producto. `tool/t92_verify.dart`
+del cierre confirma **49 archivos, 36432661 bytes, sin errores**, antes de
+añadir el lanzador del instrumento. Se actualizó el preparador T98 para
+reproducir ese comando correcto.
+
+**Huella Web vigente que sustituye la tabla anterior:** `main.dart.js`,
+5545449 bytes, SHA `1fd04bfb2ef45f414e9d05fbc235c74e664b498314c427f86ada8a955b9a2fec`.
+Manifiesto `web-local-manifiesto.json`: SHA
+`b9d24192b42c9da229d5eda7363638bb3179d6bfad836eb152c17d080be231d8`.
+Se cotejó además el cuerpo recibido en el IAB contra esa huella, sin
+imprimir ni guardar su contenido de configuración. Inicio filtrado:
+`Firebase=true; sesionInicial=ausente`. Servidor nuevo PID 30132,
+únicamente `127.0.0.1:5898`, en la copia nueva. Se retiraron los workers,
+cachés y almacenes de prueba del **único origen T98**; nada de otros sitios.
+El comando CDP Storage no está disponible; se hizo mediante Runtime del
+origen, tras salir al lanzador para cerrar sus bases.
+
+La primera tanda Web rápida mostró mensajes transitorios anteriores todavía
+en cola. Se conserva para auditoría y **no decide los seis rechazos**.
+Las repeticiones `rec01/02/05/06/07/08-sin-cola` esperan fuera del video la
+desaparición del aviso previo y verifican el mensaje propio antes de sondear.
+Los casos 03/04 de la primera tanda sí documentan admisión y se conservan.
+
+| Rechazo Web válido | Cuadros | Cota superior: video completo |
+|---|---|---|
+| 01 | 35 | 1.309699 s |
+| 02 | 36 | 1.227233 s |
+| 05 | 37 | 1.221961 s |
+| 06 | 35 | 1.215439 s |
+| 07 | 37 | 1.235731 s |
+| 08 | 46 | 0.821791 s |
+
+La cota va desde un cuadro **antes de confirmar** hasta el último cuadro,
+posterior al evento real `Page.fileChooserOpened`. Incluye toda la captura,
+por lo que resuelve <3 s sin fingir un instante exacto del selector que el
+IAB intercepta y no dibuja. La secuencia CDP ubica ese evento antes del último
+cuadro en los seis casos. Se revisaron visualmente error propio y A01
+(977/34/8366.1 t), además de la apertura real. Se mantiene visible el aviso
+UNT/UNZ previo de 04, sin confundirlo con el nuevo rechazo.
+
+Los ocho MP4 Web válidos conservan cantidad y PTS relativos de **cada** JPEG
+fuente con cuantización máxima de 0.5 microsegundos, sin interpolar cuadros;
+`video-verificado.json`, capturas, eventos y anotaciones están bajo
+`recuperacion/web/`. **Navegador integrado autorizado por Carlos (10.92)**,
+visible durante las pruebas; Chrome no se usó para medir esta recuperación.
+
+### Reanudación de las 19:46 · decisión 10.97 y primera visualización
+
+Base vigente: **33404a5804be4fad85aab80dd923a7ae9e878ee9**. La decisión
+10.97 corrige la atribución del desplazamiento de ventana: era del arnés,
+no del producto. Windows debe medirse maximizado en la laptop a 1920×1080,
+125 %. No se cambió la resolución ni la escala desde este instrumento.
+
+Tras la pausa faltaban dependencias del banco TEMP. La corrida Windows
+`primera/windows/con01` terminó por el límite automático de 600 s y se
+excluye; `con02` mostró el fallo del SO por DLL ausente y también se excluye.
+Son incidencias de preparación, no fallos medidos de BayStream. Se apartó
+el Release incompleto y se reconstruyó la misma copia limpia (100.6 s).
+**EXE vigente para primera visualización y tanda:** 15937536 bytes, SHA
+`324b3c935ce92e61e5349b75dafd16d1bcdd44b98c3f32b6f9bef28c66a9366f`.
+`windows-repuesto-manifiesto.json` identifica los 19 archivos del Release.
+La recuperación Windows anterior conserva su EXE `8944a086…` declarado;
+no se le atribuye retroactivamente el nuevo binario. Los 137 Dart de lib y
+los dos pubspec siguen idénticos al archivo del cierre (139/139).
+
+En Web se repusieron 13 recursos del SDK local, cotejando cada SHA con el
+manifiesto anterior: los 49 archivos vuelven a coincidir. No cambió
+`main.dart.js` (`1fd04bfb…`) ni se recompiló para esta reposición.
+Registro: `web-reposicion-pausa.json`. Servidor reiniciado PID 17140,
+solo `127.0.0.1:5898`; sustituye el PID anterior del informe.
+
+**Web: seis videos válidos**, en `primera/web/`, navegador integrado visible
+autorizado por Carlos, nunca Chrome para esta medición. MP4, JPEG fuente,
+PTS y conteos cotejados por corrida (`video-verificado.json`). Se revisaron
+la primera rejilla y su cuadro inmediatamente anterior. El cuadro cero
+antecede al clic del icono del lanzador propio; se informa una cota superior,
+no un instante de clic ficticio. El lanzador no modifica el producto.
+
+| Perfil / repetición | Último sin / primero con rejilla | Cota superior desde antes del icono | Incertidumbre del final | Pasos |
+|---|---|---|---|---|
+| Con, 01 (informativa) | 34 / 35 | 7.428063 s | 0.810518 s | 4 |
+| Sin, 01 | 69 / 70 | 5.468549 s | 0.731845 s | 6 |
+| Sin, 02 | 66 / 67 | 5.472654 s | 0.691551 s | 6 |
+| Sin, 03 | 67 / 68 | 5.407416 s | 0.707930 s | 6 |
+| Sin, 04 | 66 / 67 | 5.577890 s | 0.733008 s | 6 |
+| Sin, 05 | 61 / 62 | 5.291536 s | 0.694881 s | 6 |
+
+Pasos sin perfil: **icono → Seleccionar archivo → selector del sistema →
+No lo tengo → Confirmar y ver el plano → pestaña Plano**. Scroll no cuenta.
+Con perfil se omiten No lo tengo y Confirmar: cuatro pasos informativos.
+La confirmación todavía abre Lista; no se corrige para reducir el conteo.
+Activar semántica con Enter es una acción del instrumento: excluida de los
+pasos de producto, pero incluida íntegramente en el tiempo. El selector es
+interceptado por el navegador, con su evento real registrado. Recursos
+públicos en caché; cada repetición sin perfil elimina únicamente las bases
+y el almacenamiento local del origen T98 desde el lanzador, cerrando antes
+las conexiones de la app. No se limpia ningún otro origen.
+
+**Web: tiempo cumple ≤30 s por cota conservadora; pasos no cumple (6>3)**
+en las cinco repeticiones que rigen. El perfil conservado del Honor y sus
+seis grabaciones de la mañana siguen vigentes por decisión 10.93, sin
+presentarlas como repeticiones del cierre nuevo.
+
+**Windows: exclusión adicional por tamaño.** `primera/windows/con03` y
+`sin01..05` tienen video y rejilla revisada, pero la ventana era 1600×900
+sin maximizar. Quedan como evidencia auxiliar, fuera de la serie normativa.
+Sus intervalos incluyen pausas del agente entre observaciones y tampoco
+resuelven el tiempo intrínseco del producto. Las seis aperturas maximizadas
+se repiten en `primera/windows-max/`; mientras no estén verificadas, esa
+serie queda **pendiente**, no aprobada por extrapolación.
+
+### Tanda preparada con Carlos · orden obligatorio (a–f)
+
+**Estado: preparada, todavía no ejecutada.** Nadie ha creado PRUEBA T-98,
+no se inició pktmon, no se capturó una sesión y no se desconectó la laptop.
+Esta lista no es evidencia de que las acciones hayan ocurrido.
+
+**a. Crear PRUEBA T-98 desde la app.** Carlos usa exclusivamente los clientes
+t98 y el archivo ficticio del banco nuevo:
+`C:\Users\Giova\AppData\Local\Temp\t98-b-33404a5-20oct\sintetico-tanda\PRUEBA_T98.edi`.
+492 bytes, SHA `2b8ba3998d288ac2eaae3ed4b6fc89160bcc305a17ef5955330499ac33562344`.
+El generador lo validó con el parser del producto: **2 unidades, 36000 kg,
+bahías 001 y 003**. IDs ficticios CSQU3054383 y TSTU0000987; no es corpus.
+La operación compartida la crea Carlos mediante la app; ningún script
+publica ni usa consola/CLI de Firebase. Si la creación solicita entrar,
+Carlos resuelve ese acceso sin captura; el paso b completa las sesiones
+de los demás clientes. No usar PRUEBA T-105 ni operaciones reales.
+
+**b. Carlos inicia sesión en los clientes t98.** Sin grabación ni captura de
+cuentas/contraseñas. Windows usa el EXE 324b3c93… y `store-windows` de TEMP;
+Web usa el origen exclusivo 127.0.0.1:5898; Honor, paquete .t98. La condición
+B, con sesión fuera de operación compartida, es informativa. Registrar el
+estado de sesión mediante señales no identificadoras, nunca leer tokens ni
+volcar almacenes de autenticación. La persistencia de sesión y su mecanismo
+no se dan por comprobados solo por el nombre t98.
+
+**c. Aprobar pktmon.** Carlos autoriza la captura elevada antes de que se
+inicie. Se comprobó únicamente la ayuda local de los comandos disponibles.
+Preparación concreta, sin ejecutar todavía: consultar `pktmon status` y
+`pktmon filter list`; si hay otra captura/filtros ajenos, no detenerlos ni
+borrarlos. En una ventana exclusiva, incorporar filtros propios
+`t98_https` (TCP 443) y `t98_quic` (UDP 443), capturar NIC con paquetes
+completos en `tanda/t98-tls.etl` y máximo 128 MB. Comando previsto:
+
+```powershell
+pktmon filter add t98_https -t TCP -p 443
+pktmon filter add t98_quic -t UDP -p 443
+pktmon start --capture --comp nics --pkt-size 0 --file-size 128 --file-name "$env:TEMP\t98-b-33404a5-20oct\tanda\t98-tls.etl"
+# Solo al cerrar la captura propia confirmada:
+pktmon stop
+pktmon etl2pcap "$env:TEMP\t98-b-33404a5-20oct\tanda\t98-tls.etl" --out "$env:TEMP\t98-b-33404a5-20oct\tanda\t98-tls.pcapng"
+```
+
+El tráfico de NIC es global: se correlaciona con conexiones del proceso y
+con el intervalo de acción; un paquete ajeno no prueba TLS de BayStream.
+Los originales quedan privados en TEMP, sin incorporarlos a Git. No hay
+tshark disponible en PATH; no se instala software. La decodificación y
+atribución de ServerHello/QUIC, o su limitación, se documentan después de
+capturar. Si no se puede demostrar la negociación del cliente, permanece
+**no medible**. La sonda TLS de Python negocia por sí misma: no sustituye
+la negociación efectiva de los SDK. TLS real se verifica antes de ejecutar
+sincronización. No se afirma TLS 1.2+ por ver únicamente HTTPS/puerto 443.
+
+**d. Carlos abre a mano chrome://net-export y el panel Security de Chrome.**
+Modo predeterminado, sin incluir cookies, credenciales ni bytes crudos en
+NetLog. No se automatiza Chrome. Conservar HAR y NetLog en TEMP privado;
+el resumen se obtiene con `t98_sanitizar.py`. Comprobar con una solicitud
+del worker la cobertura global: un HAR solo no basta. **La recuperación y
+primera visualización Web se midieron en el navegador integrado**; una
+negociación observada en Chrome identifica ese contexto y no se atribuye
+al IAB por equivalencia. El panel debe corresponder al host remoto usado
+por la sincronización, no al origen HTTP local.
+
+**e. Disponibilidad sin red, Windows y Web.** Antes de apagar Wi-Fi:
+abrir ambos clientes, precargar motor Web local, dejar este archivo y el
+sintético accesibles; ocultar notificaciones y cerrar toda pantalla de
+cuenta. Iniciar grabación y la sonda de red propia. Carlos apaga Wi-Fi,
+realiza **las once operaciones siguientes en Windows y luego las mismas
+once en la Web**, y vuelve a encenderlo. Codex no desconecta adaptadores.
+No se depende del agente conectado durante el corte. El grabador corta a
+600 s; si la tanda requiere más, se divide antes del corte, sin perder
+operaciones ni reiniciar la red desde Codex. Confirmar éxito de cada acción,
+no solo presencia del control. Si aparecen Parámetros por primera carga,
+la operación 2 corresponde a ese diálogo; con perfil existente, abrirlo
+expresamente y confirmar valores ya existentes.
+
+| # | Operación exacta | Acción y evidencia a anotar en cada cliente |
+|---|---|---|
+| 1 | Cargar BAPLIE | Seleccionar el archivo PRUEBA_T98.edi local. No importar otro archivo. |
+| 2 | Confirmar perfil | Usar No lo tengo si falta perfil y confirmar. Si hay perfil, abrir Parámetros y confirmar los valores existentes. No inventar dimensiones o umbrales del buque. |
+| 3 | Ver Plano | Abrir la pestaña Plano y comprobar la rejilla del sintético. Hay una unidad en cada bahía. |
+| 4 | Navegar bahías | Pasar de Bahía 01 (ISO 001) a Bahía 03 (ISO 003) y comprobar el cambio. |
+| 5 | Lista y filtros | Abrir Lista, aplicar T98A (1) y comprobar una unidad; volver a Todas (2) y comprobar las dos. |
+| 6 | Buscar | Buscar CSQU3054383 y comprobar el único resultado; limpiar la búsqueda. |
+| 7 | Estadísticas | Abrir Estadísticas y comprobar 2 unidades / 36 t. |
+| 8 | Alertas de estiba | Abrir Alertas y comprobar que termina la evaluación; ausencia de alertas no significa fallo. Límites sin especificación siguen PROVISIONALES/no evaluados. |
+| 9 | Exportar | Exportar BAPLIE al banco TEMP (nombre distinto por cliente), confirmar la creación y conservar el archivo para cotejo. No publicar ni sincronizar. |
+| 10 | Reabrir reciente | Volver al inicio y reabrir el sintético desde Recientes; comprobar 2 unidades. |
+| 11 | Parámetros del buque | Abrir Parámetros y comprobar los controles; salir sin cambios adicionales. |
+
+`tool/t98_tanda_red.ps1` observa, sin cambiar configuración: adaptadores
+físicos activos, cantidad de rutas predeterminadas IPv4 y ping externo,
+con UTC para correlacionar el video. Errores de consulta quedan inconclusos,
+nunca se convierten en cero. Su prueba conectada dio **1 adaptador activo,
+1 ruta y ping Success**; no es evidencia sin red. La aceptación sin red
+requiere el corte visible por Carlos, sonda coherente y las 11 operaciones;
+un ping fallido por sí solo no prueba desconexión. Tras reconectar, Codex
+anota PTS, coteja exportaciones y completa 11 filas por cliente. Honor
+**11/11 sin red se conserva** por 10.93; no se repite ni se extrapola a estos
+clientes. La disponibilidad longitudinal 99.9 % sigue fuera de esta tanda.
+
+**f. Cerrar las sesiones.** Carlos cierra las sesiones t98 sin grabar la
+pantalla de cuenta. Detener únicamente capturas propias, verificar el cierre
+y revisar que no haya datos identificadores antes de entregar resúmenes.
+No se modifican la app real ni sus almacenes. Honor debe quedar avión 0,
+Wi-Fi 1, letra 1.0 y puntero desactivado al terminar.
+
+### Primera parada de la ventana de medición · 20-oct (histórico)
+
+**T-98 sigue en curso.** Las seis primeras visualizaciones Windows
+maximizadas no se dan por hechas. El control nativo no recuperó el
+Explorador: activarlo devolvió `user input was detected in this window`;
+consultar su estado devolvió `window is minimized`. Tras seleccionar de
+nuevo la ventana, la recuperación volvió a fallar. Se solicitó a Carlos
+restaurar y maximizar «inicio-t98-cierre2» manualmente; no se reemplazó el
+control por otro mecanismo ni se simularon aperturas. No hay medición activa
+y se anunció **SEMÁFORO: libre**. Al recuperarlo se anunciará otra ventana.
+
+| RNF | Dictamen vigente y límite |
+|---|---|
+| 004 | **No medible**: se conserva A de los tres clientes; quedan TLS efectivo, atribución de tráfico/worker y sesión de la tanda. Los sondeos previos no prueban cero bytes. |
+| 006 | **No medible en conjunto**: Honor sin red 11/11 conservado; recuperación nueva 8 casos por cliente registrada funcionalmente, con seis rechazos <3 s en Honor y Web. Windows no resuelve <3 s; disponibilidad sin red Windows/Web pendiente de Carlos. Los casos 03/04 admitidos no se convierten en rechazos. |
+| 008 | **No cumple**: ZZZZZ no se detecta visiblemente y las disposiciones especiales IMDG siguen pendientes. Corpus conservado y batería nueva registrados; no se corrige el producto. |
+| 002 | **No cumple** por seis pasos sin perfil frente a tres. Web cinco cotas ≤30 s; Honor cinco cotas ≤30 s conservadas. Windows maximizado completado en la reanudación siguiente; tiempo intrínseco no medible por pausas del agente. Idioma/Material 3/mensajes satisfacen los censos del cierre; SUS y piloto siguen pendientes, sin imputación. |
+
+Validaciones de cierre de esta continuación: **10/10 autopruebas Python**,
+AST de los seis Python modificados/nuevos correcto, `node --check` del
+instrumento IAB correcto y sintaxis PowerShell de ambos helpers correcta.
+La sonda de tanda se ejercitó conectada, sin cambiar la red. Las huellas
+se volvieron a cotejar: **19/19 Windows, 49/49 Web, 139/139 archivos de
+producto**. `binarios-vigentes.json` reúne los tres artefactos actuales,
+sin reescribir el manifiesto histórico del primer build. La suite de la
+copia limpia ya registrada permanece **1063/1063**, analyze **0**; no se
+repite por cambios documentales o de instrumentación Python/PowerShell.
+Honor comprobado nuevamente: avión **0**, Wi-Fi **1**, letra **1.0**, puntero
+**null**. No se ejecutó Git de escritura ni publicación. **pubspec.yaml y
+pubspec.lock no cambiaron.**
+
+Archivos propios pendientes de versionar, incluida la continuación anterior:
+
+- `docs/T98-RESULTADOS.md`
+- `test/t98_auxiliares_test.py`
+- `tool/t98_preparar.py`
+- `tool/t98_recuperacion_honor.py`
+- `tool/t98_cierre2.py`
+- `tool/t98_grabar_escritorio.py`
+- `tool/t98_iab_grabar.mjs`
+- `tool/t98_iab_video.py`
+- `tool/t98_primera_honor.py`
+- `tool/t98_primera_windows.ps1`
+- `tool/t98_sintetico.dart`
+- `tool/t98_tanda_red.ps1`
+
+Bloque para Carlos; registra avance, **no declara T-98 terminada**:
+
+```powershell
+git add -- docs/T98-RESULTADOS.md
+git add -- test/t98_auxiliares_test.py
+git add -- tool/t98_preparar.py
+git add -- tool/t98_recuperacion_honor.py
+git add -- tool/t98_cierre2.py
+git add -- tool/t98_grabar_escritorio.py
+git add -- tool/t98_iab_grabar.mjs
+git add -- tool/t98_iab_video.py
+git add -- tool/t98_primera_honor.py
+git add -- tool/t98_primera_windows.ps1
+git add -- tool/t98_sintetico.dart
+git add -- tool/t98_tanda_red.ps1
+git commit -m "Sprint 3: registra avance de mediciones T98 sobre cierre 2"
+git push
+```
+
+Tres líneas:
+- Evidencia del cierre 2 y censos incorporados; Web primera visualización completa.
+- Seis aperturas Windows auxiliares excluidas y seis repeticiones maximizadas completadas y anotadas.
+- Tanda a–f y once operaciones preparadas, sin desconectar la laptop ni abrir cuentas.
+
+Mensaje para Yov:
+> T-98 continúa sobre 33404a5. Suite 1063/1063, analyze 0; censos y batería 008 registrados. Recuperación funcional 8×3 grabada: seis rechazos Honor/Web resuelven <3 s; Windows queda temporalmente no medible. Primera visualización: Windows maximizado y Web completan cada uno 5 sin perfil +1 con perfil, con video y PTS; Honor de la mañana conservado. Sin perfil son seis pasos: RNF002 no cumple. Web/Honor resuelven ≤30 s por cota; Windows no resuelve tiempo intrínseco por pausas del agente. Control nativo recuperado después de la intervención de Carlos. Tanda a–f y once operaciones listas; sintético definitivo con navieras ficticias y filtro comprobado, cargado solo localmente en Windows. Cuentas, pktmon y corte de red aún no ejecutados. RNF004/006 no medibles en conjunto; RNF008 no cumple. Honor restaurado; no se declara T-98 terminada.
+
+### Reanudación tras restaurar el Explorador · seis aperturas Windows maximizadas
+
+Carlos confirmó «Ya está restaurada y maximizada» y se anunció
+**SEMÁFORO: mido**. Se recuperó el control nativo y se maximizó el lanzador.
+Una reapertura de la app durante la preparación se cerró por su PID propio,
+**fuera de la serie**. Los seis videos de `primera/windows-max/` empiezan
+antes del clic en el icono, sin avisos de entrada manual durante sus recorridos.
+El acceso directo propio usa WindowStyle=3: la app arranca maximizada,
+con icono Restaurar observado, sin una acción adicional de maximizar en la
+medición. Pantalla física 1920×1080 y escala 125 % ya declarada.
+
+La corrida con perfil conserva el perfil A01 de prueba. Antes de cada
+sin01..05, `t98_primera_windows.ps1 -Corrida max-sinNN` cierra únicamente
+el PID del EXE propio, verifica su salida y aparta `store-windows` bajo
+`primera/almacenes/`. Los cinco JSON de preparación confirman ausencia de
+almacén previo. No se toca LOCALAPPDATA/BayStream ni otra app/namespace.
+
+| Corrida | Último sin / primero con rejilla | PTS de los dos cuadros | Incertidumbre solo del final | FPS promedio observado | Pasos |
+|---|---|---|---|---|---|
+| con01 (informativa) | 1735/1736 | 57.833818 / 57.881933 s | 0.048115 s | 29.999949 | 4 |
+| sin01 | 2017/2018 | 67.234075 / 67.279956 s | 0.045881 s | 29.999889 | 6 |
+| sin02 | 1724/1725 | 57.476000 / 57.506953 s | 0.030953 s | 29.998837 | 6 |
+| sin03 | 1925/1926 | 64.168855 / 64.215933 s | 0.047078 s | 29.999943 | 6 |
+| sin04 | 2053/2054 | 68.433917 / 68.480323 s | 0.046406 s | 29.999406 | 6 |
+| sin05 | 2561/2562 | 85.368307 / 85.415906 s | 0.047599 s | 29.999429 | 6 |
+
+Cuadros numerados desde cero. PTS originales del MP4; los seis videos
+1920×1080 tienen PTS estrictamente crecientes, sin asumir 30 fps exactos.
+Se revisaron los dos cuadros **contiguos** en cada transición: la rejilla
+ya es visible durante la animación; no se espera a que termine para elegir
+el hito. `revision.json`, `fin-NN.jpg`, `pares-rejilla.jpg`, `anotacion.json`
+y `primera-anotada.json` conservan SHA de video, PTS y decisión humana.
+Las seis capturas terminaron con código 0; no queda grabación activa.
+
+El intervalo desde el cuadro cero anterior al icono incluye las pausas
+entre observaciones del agente (57.5–85.4 s hasta la rejilla). **No medible
+para decidir ≤30 s del producto**: no se restan esas pausas, no se convierte
+el intervalo en latencia de BayStream y no se declara un fallo temporal
+atribuible al producto. La incertidumbre de 31–48 ms de la tabla afecta
+solo al final; no elimina ese sesgo. Sí queda firme el conteo del recorrido:
+icono, Seleccionar archivo, selector del sistema, No lo tengo, Confirmar y
+ver el plano, Plano: **6>3, no cumple**, en las cinco corridas sin perfil.
+El scroll cuenta cero; con perfil son cuatro pasos informativos.
+
+**Se completa la serie de 18 primeras visualizaciones requeridas**, con
+las limitaciones temporales explícitas: seis Windows maximizadas nuevas,
+seis Web nuevas en IAB y seis Honor conservadas por 10.93. Esto sustituye
+el pendiente de aperturas Windows de la primera parada. No convierte en
+cumplidos los indicadores de RNF002 ni cierra la tanda de RNF004/006.
+
+**Preparación concreta de la tanda.** Tras terminar los videos se cargó
+localmente el sintético y se observó que la versión inicial no traía NAD:
+el filtro de naviera no aparecía. Se corrigió solo el generador del archivo
+ficticio, añadiendo T98A y T98B, una unidad cada una, y UNT=21. Se conserva
+el original sin filtros como preparación descartada; también se excluye
+una generación que por error usó la copia anterior del instrumento. Ninguno
+se usa para la tanda. El definitivo está en `sintetico-tanda/PRUEBA_T98.edi`,
+492 bytes, SHA `2b8ba3998d288ac2eaae3ed4b6fc89160bcc305a17ef5955330499ac33562344`.
+Parser del cierre: 2 unidades, 36000 kg, dos bahías, ISO válidos y dos
+navieras ficticias. Generación ejecutada y analyze del instrumento en cero;
+no se cambió lib ni se recompilaron binarios.
+
+Windows queda abierto y maximizado en Lista con **BUQUE PRUEBA, viaje T98,
+2 contenedores, 2 bahías y 36.0 t**. Se comprobó T98A → 1 resultado y se
+restauró Todas → 2. Este recorrido fue preparación conectada, sin video:
+**no cuenta como disponibilidad sin red**. Se reutilizó exclusivamente el
+perfil sintético propio; no se creó operación compartida, no se inició
+sesión ni se abrió Nube y cuenta. La lista a–f anterior ya apunta al archivo
+definitivo y al filtro real. Carlos conserva la creación de PRUEBA T-98.
+
+**Cierre de esta ventana:** se anunció **SEMÁFORO: libre** tras completar
+las seis aperturas maximizadas, su anotación y la preparación local del
+sintético. Comprobaciones finales: SHA y cierre correcto de los seis videos,
+UNT=21 correcto en el archivo definitivo, generador analizado idéntico al
+entregado y **139/139 archivos de producto sin diferencias**. Honor vuelve
+a comprobar avión 0, Wi-Fi 1, letra 1.0 y puntero null. No quedan grabadores
+activos; Windows se entrega abierto con el sintético para la tanda. El
+bloque Git de doce rutas explícitas anterior sigue vigente y solo lo ejecuta
+Carlos. pubspec.yaml/pubspec.lock permanecen sin cambios. **T-98 continúa
+en curso** por TLS/sesiones, disponibilidad sin red Windows/Web y demás
+limitaciones expresamente declaradas.

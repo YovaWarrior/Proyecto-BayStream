@@ -89,7 +89,12 @@ class Instruments(unittest.TestCase):
             import csv
             with (output / 'primera_visualizacion.csv').open(encoding='utf-8-sig') as stream:
                 rows = list(csv.DictReader(stream))
-            self.assertEqual(len(rows), 30)
+            self.assertEqual(len(rows), 18)
+            for client in ['windows', 'web', 'honor']:
+                self.assertEqual(sum(r['cliente'] == client and
+                                     r['perfil'] == 'sin_perfil_rige' for r in rows), 5)
+                self.assertEqual(sum(r['cliente'] == client and
+                                     r['perfil'] == 'con_perfil_informativo' for r in rows), 1)
             self.assertTrue(all(row['tiempo_pts_s'] == '' for row in rows))
             with (output / 'recuperacion.csv').open(encoding='utf-8-sig') as stream:
                 self.assertEqual(len(list(csv.DictReader(stream))), 24)
