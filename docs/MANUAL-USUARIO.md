@@ -250,6 +250,28 @@ Si no hay ningún perfil guardado, se pasa directo a «Parámetros del buque».
    cuántos contenedores se cargaron en cada uno; el declarado como puerto de salida
    viene marcado. Debajo, lo que esa elección significa: «0 se descargan · 529 se
    cargan · 1071 de paso». «Sin declarar» deja el plano sin distinguir la carga de paso.
+   **Esta es la decisión más importante de la pantalla**: la escala define qué baja,
+   qué sube y qué va de paso, y crea la operación de esa escala (capítulo 8).
+   - Un **plano de llegada** se emitió en el puerto anterior rumbo a tu puerto. La
+     pantalla lo dice: «El archivo se emitió al salir de PAMIT rumbo a GTSTC: para la
+     salida, la escala es PAMIT; para la llegada, GTSTC.» La ficha marcada es la del
+     puerto de salida; para operar la llegada **elige tu puerto** (la segunda ficha) y
+     comprueba que el reparto cambia a «30 se descargan · 0 se cargan · 30 de paso».
+   - Un **plan de carga** se emitió al salir de tu puerto: la ficha marcada ya es la
+     tuya y el reparto dice «0 se descargan · 30 se cargan · 30 de paso».
+
+   ![La escala de un plano de llegada: hay que elegir el puerto de destino](manual/w04-escala-llegada.png)
+
+   ![La escala de un plan de carga, propuesta desde el archivo](manual/w04-escala-carga.png)
+
+   ![La escala de llegada en el teléfono](manual/h04-escala-llegada.png)
+
+   Si confirmas con el puerto equivocado, la operación queda creada para ese puerto.
+   Cambiar la escala después desde «Parámetros» → «Parámetros del buque» corrige el
+   reparto de la tarjeta, pero **no crea la operación del puerto nuevo**: el plano
+   dirá «Esta escala todavía no tiene operación guardada: vuelve a abrir el BAPLIE de
+   llegada y confirma la escala para registrar.» Vuelve a cargar el archivo y elige el
+   puerto correcto.
 7. **Límite de apilamiento**: «Este dato no está en el archivo. Viene del manual de
    estabilidad del buque.» Escribe «Límite por pila» en kg, o marca «No lo tengo»:
    «Sin límite declarado no se muestra ninguna alerta de peso. La aplicación no
@@ -450,9 +472,11 @@ Con un viaje pequeño se ve entera, con sus dos tarjetas de contenedor:
 
 ### 6.3 El dictado (Android)
 
-El dictado está en el selector de la operación de carga, no en la lupa: al confirmar
-una carga «por OR o contenedor» (capítulo 8), el campo «OR o últimos dígitos» lleva un
-micrófono, «Dictar búsqueda en español».
+El dictado está en el selector de la operación de carga, no en la lupa: al buscar una
+carga «por OR o contenedor» (8.1), el campo «OR o últimos dígitos» lleva un micrófono,
+«Dictar búsqueda en español».
+
+![El selector de carga en el teléfono, con el micrófono del dictado](manual/h08-selector-or.png)
 
 1. Toca el micrófono. La primera vez, Android pide permiso para usar el micrófono.
 2. La app muestra «Escuchando…». Di el OR o el número, letra por letra y cifra por
@@ -468,8 +492,10 @@ micrófono denegado. Puedes escribir la búsqueda.», «Reconocimiento sin conex
 servicio no disponible…», «No se entendió el dictado. Reintenta o escribe la
 búsqueda.», «Reconocimiento en español no disponible…» o «Reconocimiento de voz no
 disponible…». En Windows y en la Web el dictado no está disponible y aparece ese
-último mensaje. **(no recorrido en esta edición:** el selector de carga por OR exige
-un listado de la agencia importado, y no se concedió el permiso del micrófono).
+último mensaje. En esta edición el selector se abrió en el teléfono (captura de
+arriba), pero el dictado en sí no se grabó, porque no se concedió el permiso del
+micrófono; su funcionamiento lo comprobó Carlos a mano en el Honor en la aceptación de
+T-94 (`docs/T94-T104-ACEPTACION-RESULTADOS.md`).
 
 ## 7. Estadísticas y Alertas de estiba
 
@@ -562,25 +588,96 @@ según el plan.»
 
 ![El menú Acciones del plano en el teléfono](manual/h08-acciones-menu.png)
 
-**Registrar una carga** **(no recorrido en esta edición)**: en modo «Carga», toca una
-celda pendiente. Se abre «Confirmar carga por OR o contenedor»: busca por OR o por
-los últimos dígitos (o dicta, 6.3), elige la fila y confirma con «Confirmar carga».
-«Asignar vacío» hace lo mismo con los vacíos del listado. Si la celda donde quedó no
-es la planificada, el formulario pide la celda («Celda donde quedó (opcional)», en
-BBB-RR-TT) y un motivo. Después de registrar aparece «Deshacer» unos segundos; si ya
-pasó, se corrige desde el detalle de la celda.
+#### Registrar una descarga
 
-**Registrar una descarga** **(no recorrido en esta edición:** los archivos de prueba no
-tienen descargas): con un plano de **llegada** («Tipo de BAPLIE» → «Llegada»), el
-modo «Descarga» muestra «Toca un contenedor para marcarlo como descargado.» Si el
-contenedor no baja en esta escala, la app pregunta si es una **re‑estiba**:
-«<contenedor> no se descarga en <puerto>: va a <puerto de descarga>. Si sale del buque
-para volver a estibarlo, se registra como re‑estiba y no cuenta entre los que
-bajan aquí.», con «Motivo (opcional)» y «Registrar re‑estiba». «Pendientes de
-descarga» abre la tabla por bahía («Cub.», «Bod.», «Total», «Desc.», «Re‑est.»). Si
-la escala no tiene operación guardada, la app lo dice: «Esta escala todavía no tiene
-operación guardada: vuelve a abrir el BAPLIE de llegada y confirma la escala para
-registrar.»
+Hace falta el **plano de llegada** con la escala confirmada (4.3, punto 6). La Lista
+lo resume: «30 se descargan · 0 se cargan · 30 de paso».
+
+![La Lista de un plano de llegada](manual/w08-lista-llegada.png)
+
+1. En «Plano», abre «Contenido» y elige «Descarga». Las celdas que bajan en esta
+   escala dicen «BAJA» con una flecha; las que siguen viaje, «PASO». Arriba: «Escala
+   GTSTC: 30 por descargar (6 pendientes en cubierta / 24 pendientes en bodega) · 0
+   descargados · 0 re‑estibas» y «Toca un contenedor para marcarlo como descargado.»
+2. Toca una celda «BAJA». Queda marcada «DESC.» con una palomita y abajo aparece
+   «Descargado · <contenedor> · <celda>» con «Deshacer» durante unos segundos.
+3. Si tocas una celda «PASO», la app pregunta si es una **re‑estiba**: «<contenedor>
+   no se descarga en GTSTC: va a USHOU. Si sale del buque para volver a estibarlo, se
+   registra como re‑estiba y no cuenta entre los que bajan aquí.» Escribe el motivo
+   si quieres y pulsa «Registrar re‑estiba». La celda queda «RE-EST.» y el aviso dice
+   «Re‑estiba registrada · <contenedor> · <celda>».
+4. «Pendientes de descarga» abre la tabla por bahía: «Cub.», «Bod.», «Total», «Desc.»
+   y «Re‑est.», con el total de la escala arriba.
+5. Si el plano no tiene su operación, la app lo dice en vez de registrar: «Esta escala
+   todavía no tiene operación guardada: vuelve a abrir el BAPLIE de llegada y confirma
+   la escala para registrar.»
+
+![El plano en modo Descarga](manual/w08-plano-modo-descarga.png)
+
+![Una descarga registrada, con Deshacer](manual/w08-descargado-snackbar.png)
+
+![La pregunta de re-estiba](manual/w08-reestiba-dialogo.png)
+
+![La re-estiba registrada](manual/w08-reestiba-snackbar.png)
+
+![Pendientes de descarga por bahía](manual/w08-pendientes-descarga.png)
+
+![Avance de la operación tras la primera descarga](manual/w08-avance-descarga.png)
+
+![El modo Descarga en el teléfono](manual/h08-plano-modo-descarga.png)
+
+![Una descarga registrada en el teléfono](manual/h08-descargado.png)
+
+![Pendientes de descarga en el teléfono](manual/h08-pendientes-descarga.png)
+
+#### Registrar una carga por OR
+
+Hace falta el **plan de carga** de la misma escala (se abre como cualquier BAPLIE,
+sobre la misma operación: mismo buque, mismo viaje, mismo puerto) y el **listado de
+la agencia importado** (8.5). Sin listado, el plano avisa «Importa el listado de
+agencia para operar por OR.»
+
+1. En «Plano», elige «Contenido» → «Número de orden»: cada celda pendiente muestra su
+   OR («OR 7»). O elige «Carga»: las pendientes llevan la flecha de subida y arriba
+   está el campo «OR / últimos dígitos» y el botón «Asignar vacío».
+2. Toca la celda pendiente, o escribe el OR en «OR / últimos dígitos» y elígelo en
+   «Confirmar carga por OR o contenedor» (en el teléfono, con el micrófono del dictado,
+   6.3). Escribir «25» deja solo «OR 25 · MNLU0000690».
+3. Se abre «Confirmar carga»: «OR 7 · MNLU0000703», tipo, puerto y línea, «Posición
+   planificada: 002-02-82», «Celda donde quedó (opcional)» («Vacío: la planificada.
+   Otra celda (BBB-RR-TT) pide motivo.»), la pila con su peso («Peso no evaluado: el
+   perfil no declara límite.»), «Revisado: tipo, celda y grupo coinciden con el plan.»,
+   «Hora HH:mm (opcional)», la fecha y «Marchamo (opcional)». Pulsa «Confirmar carga».
+4. La celda queda «CARG.» y abajo dice «Carga registrada · OR 7» con «Deshacer». El
+   resumen baja a «29 pendientes».
+5. **Un vacío**: «Asignar vacío» abre «Vacíos del listado» (los OR con «E», con su
+   tara). Elige uno: el formulario es el mismo, con «Tara real». Si la celda planeada
+   todavía la ocupa un contenedor que baja aquí, la app lo advierte y ofrece «Marcar su
+   descarga y cargar», que registra las dos cosas.
+
+![El plano con los números de orden](manual/w08-plano-numero-orden.png)
+
+![El plano en modo Carga con el listado importado](manual/w08-plano-carga-con-or.png)
+
+![El selector por OR o contenedor](manual/w08-selector-or.png)
+
+![El selector filtrado por un OR](manual/w08-selector-or-filtrado.png)
+
+![Confirmar carga](manual/w08-confirmar-carga.png)
+
+![La carga registrada, con Deshacer](manual/w08-carga-registrada.png)
+
+![Vacíos del listado](manual/w08-vacios-del-listado.png)
+
+![Asignar un vacío cuya celda todavía está ocupada](manual/w08-asignar-vacio.png)
+
+![El modo Carga con OR en el teléfono](manual/h08-plano-carga-or.png)
+
+![Confirmar carga en el teléfono](manual/h08-confirmar-carga.png)
+
+Deshacer: el aviso de abajo ofrece «Deshacer» unos segundos. Después, se corrige desde
+el detalle de la celda; el movimiento no se borra, queda anulado con su motivo en la
+bitácora.
 
 **«Avance de la operación»** (desde el plano o desde «Acciones»): una tabla por bahía
 con «Descarga», «Carga · llenos», «Carga · vacíos», «Cancelados», «Conflictos»,
@@ -588,7 +685,9 @@ con «Descarga», «Carga · llenos», «Carga · vacíos», «Cancelados», «C
 (con «Ir a <posición>»), «Peso de las pilas» («No evaluado: el perfil no declara
 límite de pila» si no hay límite) y los movimientos repetidos.
 
-![Avance de la operación](manual/w08-avance-operacion.png)
+![Avance de la operación de un plan de carga sin listado](manual/w08-avance-operacion.png)
+
+![Avance de la escala con una descarga, una re-estiba y una carga](manual/w08-avance-completo.png)
 
 ### 8.2 Las tapas en la operación
 
@@ -623,16 +722,21 @@ y la geometría está confirmada).
 
 ### 8.4 Arrastrar para mover y las solicitudes de cambio
 
-**Arrastrar** **(no recorrido en esta edición:** exige cuenta): en el plano del plan
-de carga, con una cuenta autorizada, se puede arrastrar un contenedor o una reserva a
+Las dos funciones exigen una cuenta, así que en esta edición van solo en texto. Están
+comprobadas con sesión en las aceptaciones de T-105 (`docs/T105-ACEPTACION-RESULTADOS.md`:
+movimiento, intercambio, solicitudes, aprobación y rechazo en los tres clientes) y de
+T-106 (`docs/T106-ACEPTACION-RESULTADOS.md`: los rechazos de la oficina y el aviso de
+celda ocupada).
+
+**Arrastrar**: en el plano del plan de carga, con una cuenta autorizada, se puede
+arrastrar un contenedor o una reserva a
 otra celda **de la misma bahía** («El arrastre solo mueve dentro de la bahía: para
 otra bahía utiliza el formulario.»). Al soltar, la app enseña «Movimiento válido» o
 «Intercambio» y pide confirmar con un «Motivo obligatorio» (Peso, Segregación, Acceso
 de grúa u otro). Sin cuenta, el mensaje es «Mover exige una cuenta autorizada: inicia
 sesión…».
 
-**Las solicitudes de cambio** **(no recorrido en esta edición:** exigen cuenta y
-operación publicada):
+**Las solicitudes de cambio** (exigen cuenta y operación publicada):
 
 - El **muelle** abre «Solicitudes de cambio» (desde «Acciones» en el plano) y «Pedir
   cambio»: elige el objeto («Objeto 1: OR, contenedor o reserva»), el «Destino
@@ -663,41 +767,76 @@ operación publicada):
 
 **«Generar BAPLIE de salida»** (Lista, con la escala confirmada):
 
-![BAPLIE de salida](manual/w08-baplie-salida.png)
+![BAPLIE de salida de una escala con llegada y carga](manual/w08-baplie-salida-escala.png)
 
 1. La pantalla dice cuántos contenedores quedan a bordo en la salida y los
-   pendientes: «Pendientes: 529 de carga y 0 de descarga. Puedes generar igual: la
-   salida refleja lo registrado hasta ahora. Las cargas pendientes y los cancelados
-   quedan fuera; lo que todavía no se descargó sigue a bordo.»
+   pendientes: «59 contenedores a bordo en la salida. Pendientes: 29 de carga y 29 de
+   descarga. Puedes generar igual: la salida refleja lo registrado hasta ahora. Las
+   cargas pendientes y los cancelados quedan fuera; lo que todavía no se descargó sigue
+   a bordo.»
 2. «Cancelados vigentes (N)» y «Copiar cancelados».
-3. «Guardar BAPLIE de salida» abre el diálogo de guardar y escribe el archivo con las
-   reglas de 2.x. Con un plano de llegada en versión 1.5 no se genera: «… es versión
-   1.5 (SMDG15) y se leyó con las reglas de 2.x … Importa el plano en SMDG20, SMDG21 o
+3. «Guardar BAPLIE de salida» abre «Guardar BAPLIE de salida» con el nombre propuesto
+   `BayStream_<buque>_<viaje>_salida.edi`; elige la carpeta y pulsa «Guardar». Al
+   terminar: «Exportación BAPLIE completada». El archivo sale con las reglas de 2.x
+   (SMDG22). Con un plano de llegada en versión 1.5 no se genera: «… es versión 1.5
+   (SMDG15) y se leyó con las reglas de 2.x … Importa el plano en SMDG20, SMDG21 o
    SMDG22.»
 4. «Comparar con la llegada» compara la salida generada con el plano de llegada de la
-   operación. Sin plano de llegada dice «La operación no tiene un plano de llegada para
-   comparar.»
+   operación, con la pantalla de «Comparar BAPLIE»: en el ejemplo, «2 descargados · 1
+   cargado · 58 permanentes, 0 con cambios» (la descarga y la re‑estiba cuentan como
+   descargados; la carga registrada, como cargado). Sin plano de llegada dice «La
+   operación no tiene un plano de llegada para comparar.»
+
+![Exportación BAPLIE completada](manual/w08-exportacion-baplie-completada.png)
+
+![La salida comparada con la llegada](manual/w08-comparar-llegada-salida.png)
+
+Una operación que solo tiene plan de carga muestra lo mismo sin «Comparar con la
+llegada»:
+
+![BAPLIE de salida sin plano de llegada](manual/w08-baplie-salida.png)
 
 **«Listado de la agencia»** (Lista, con un plan de carga confirmado):
 
 ![Listado de la agencia, antes de elegir](manual/w08-listado-agencia-vacio.png)
 
 1. Pulsa «Elegir listado (.xlsx)» y elige el Excel de la agencia.
-2. La app lo lee y resume: «7 filas en 2 agencias · 4 llenos · 3 vacíos», las filas
-   que no entendió («Fila 14: OR 7: no marca lleno (F) ni vacío (E). Corrige esa fila en
-   el Excel y vuelve a importarlo.»), y «Equivalencias con el plan»: para cada tipo,
-   línea o puerto del listado que no coincide con el plan, propone el código del plan
-   o pide elegirlo («Elige su código en el plan», «Otro código…»).
-3. Abajo, «Cruce con el plan de <escala>»: cuántos llenos cruzan, cuántos del plan no
-   están en el listado y los grupos de reservas.
-4. «Confirmar e importar» queda apagado hasta resolver las equivalencias («Falta
-   elegir 10 equivalencias antes de importar. Elige una para cada código pendiente.»).
-   «Descartar» cierra sin guardar. Importado, el listado se guarda en la operación y
-   el plano puede mostrar el «Número de orden» y operar por OR.
+2. La app lo lee y resume: «30 filas en 2 agencias · 20 llenos · 10 vacíos», las
+   agencias con su cuenta, y las filas que no entendió («Fila 39: No es un contenedor
+   ni un separador de agencia: «TOTAL 30 CONTENEDORES». Corrige esa fila en el Excel y
+   vuelve a importarlo.»; una fila de totales se puede ignorar).
+3. «Equivalencias con el plan»: los códigos del listado que no se escriben igual que
+   en el plan. Cuando los mismos contenedores están en los dos, la app **propone** la
+   equivalencia con su evidencia («Tipo 40HC → 45G1 · Propuesta: 15 contenedores
+   están en el listado y en el plan.») y basta con revisarla; cuando no hay
+   evidencia, pide elegirla («Ningún contenedor de 40HC está en el listado y en el
+   plan. Elige su código en el plan.», con las opciones y «Otro código…»). El lápiz
+   corrige cualquiera.
+4. «Cruce con el plan de <escala>»: «20 de 20 llenos cruzan con el plan», «0
+   contenedores del plan no están en el listado», «10 de 10 vacíos en 7 grupos de
+   reservas» y el detalle por grupo. Si algo no cruza, aparece con su aviso.
+5. Pulsa «Confirmar e importar» (queda apagado hasta resolver las equivalencias:
+   «Falta elegir N equivalencias antes de importar. Elige una para cada código
+   pendiente.»). «Descartar» cierra sin guardar. Importado, la pantalla dice «Listado
+   guardado en la operación de GTSTC: 30 filas.» y «Guardado en la operación», y
+   ofrece «Importar otro listado (.xlsx)». Desde entonces el plano muestra el «Número
+   de orden» y se opera por OR (8.1).
 
-![El listado leído, con sus equivalencias](manual/w08-listado-agencia-leido.png)
+![El listado leído, con las equivalencias propuestas y el cruce](manual/w08-listado-escala-leido.png)
 
-![El cruce con el plan y los botones de importar](manual/w08-listado-agencia-cruce.png)
+![El listado guardado en la operación](manual/w08-listado-importado.png)
+
+![El listado leído en el teléfono](manual/h08-listado-leido.png)
+
+![El listado guardado en el teléfono](manual/h08-listado-importado.png)
+
+Si el listado no es de este plan, el cruce lo dice: ninguna propuesta tiene evidencia,
+«0 de 4 llenos cruzan con el plan» y todos los del plan quedan como «no están en el
+listado». No lo importes: pide el listado correcto.
+
+![Un listado que no corresponde al plan](manual/w08-listado-agencia-leido.png)
+
+![Su cruce, sin coincidencias](manual/w08-listado-agencia-cruce.png)
 
 ## 9. Nube y cuenta
 
@@ -861,6 +1000,7 @@ operación.
 | Esta escala todavía no tiene operación guardada: vuelve a abrir el BAPLIE de llegada y confirma la escala para registrar. | Abre el plano de llegada y confirma el puerto |
 | Confirma la escala para ver el plan de carga. | Elige el puerto en «Parámetros del buque» |
 | Esta operación todavía no tiene listado de agencia. / Importa el listado de agencia para operar por OR. | Importa el listado (8.5) |
+| La celda la ocupa <contenedor>, que baja en <puerto> y no se ha marcado. «Marcar su descarga y cargar» registra las dos cosas. | Al asignar un vacío: confirma con ese botón o descarga primero |
 | Este contenedor no tiene OR en el listado de la agencia: importa el listado actualizado. | Pide el listado al día |
 | Hora no válida: escríbela como HH:mm (00:00 a 23:59). | Corrige la hora |
 | No se registró: … / No se deshizo: … | Lee la causa; la bitácora no cambió |
@@ -1119,19 +1259,28 @@ perfil» (al editar). «Cancelar» o «Cancelar la carga» descarta todo lo escr
    pero conviene decirlo en el manual, y se dice en 2.2.
 4. **Con la letra en 1.45**, la línea de resumen del plano se corta («Pendientes de
    carga: 0 en e…») y la leyenda deja «Refrigera…» en el borde. Conocido (10.94).
+5. **Cambiar la escala después de confirmar no crea la operación del puerto nuevo.**
+   Si se confirma un plano de llegada con el puerto de salida marcado (lo que la app
+   propone) y luego se corrige la escala desde «Parámetros» → «Parámetros del buque»,
+   la tarjeta cambia pero el modo «Descarga» dice «Esta escala todavía no tiene
+   operación guardada…». Hay que volver a abrir el archivo. La app lo avisa, pero la
+   propuesta inicial (el puerto de salida) lleva al error; el manual lo explica en 4.3.
+   Se vio en el teléfono.
 
 ### Limitaciones de esta edición
 
-- Los archivos de prueba (`tool/t99_sintetico.dart` con 1600 y 600 contenedores, y
-  `PRUEBA_T98.edi`) no traen descargas ni avisos de lectura: los procedimientos de
-  **descarga, re‑estiba, pendientes de descarga, «Tipo de BAPLIE», carga por OR,
-  arrastrar, solicitudes de cambio, dictado, avisos de lectura, buques homónimos,
-  «La carga excede el perfil guardado» y exportar en Android** se describen desde los
-  textos de la app y están marcados «(no recorrido en esta edición)».
+- La escala completa (descarga, re‑estiba, pendientes, carga por OR, vacíos, listado
+  de la agencia, BAPLIE de salida y comparación con la llegada) se recorrió con una
+  escala sintética hecha para el manual (`tool/t100_sintetico.dart` y
+  `tool/t100_listado.py`: buque «BUQUE MANUAL», viaje M100, escala GTSTC). Lo que
+  sigue sin recorrer, y se describe desde los textos de la app, está marcado «(no
+  recorrido en esta edición)»: el diálogo «Tipo de BAPLIE» (los sintéticos no lo
+  provocan), los avisos de lectura, los buques homónimos, «La carga excede el perfil
+  guardado» y exportar en Android.
+- Arrastrar, las solicitudes de cambio y el dictado exigen cuenta o micrófono: van en
+  texto, con cita de las aceptaciones de T-105, T-106 y T-94 que los comprobaron con
+  sesión y en el Honor.
 - La operación con cuenta (publicar, unirse, roles, sin conexión) va solo en texto:
   esta edición se escribió sin sesión y sin capturar «Nube y cuenta».
-- El listado de la agencia se recorrió con el listado sintético de las pruebas
-  (`test/fixtures/t73_listado_sintetico_excel.xlsx`), que no coincide con el plan de
-  prueba; por eso las equivalencias quedan sin resolver y no se importó.
 - La Web se abrió y se comprobó en la máquina local; no hay capturas de la Web.
 - El instalador de Windows y Google Play no se recorrieron.
