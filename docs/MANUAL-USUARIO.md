@@ -308,7 +308,7 @@ En el teléfono la pantalla es la misma, en una sola columna:
 4. Si para el puerto elegido hay cargas y descargas y el archivo no dice qué plano
    es, aparece «Tipo de BAPLIE: En <puerto> hay N cargas y M descargas. Indica qué
    plano representa este archivo.» con «Llegada» y «Carga». Con los archivos de esta
-   edición el diálogo no apareció, porque no tienen descargas **(no recorrido en esta
+   edición el diálogo no apareció, porque ninguno trae cargas y descargas del mismo puerto a la vez: la llegada y el plan de carga vienen en archivos separados **(no recorrido en esta
    edición)**.
 
 ### 4.5 «Perfiles guardados» y editar un perfil
@@ -598,7 +598,7 @@ lo resume: «30 se descargan · 0 se cargan · 30 de paso».
 1. En «Plano», abre «Contenido» y elige «Descarga». Las celdas que bajan en esta
    escala dicen «BAJA» con una flecha; las que siguen viaje, «PASO». Arriba: «Escala
    GTSTC: 30 por descargar (6 pendientes en cubierta / 24 pendientes en bodega) · 0
-   descargados · 0 re‑estibas» y «Toca un contenedor para marcarlo como descargado.»
+   descargados · 0 re‑estibas» y «Toca un contenedor para marcarlo como descargado.» Si la bahía que ves solo tiene sombras de las vecinas y ninguna celda «BAJA» ni «PASO», pasa con el selector a una bahía con carga propia; en el ejemplo, la 02 (ver 5.2).
 2. Toca una celda «BAJA». Queda marcada «DESC.» con una palomita y abajo aparece
    «Descargado · <contenedor> · <celda>» con «Deshacer» durante unos segundos.
 3. Si tocas una celda «PASO», la app pregunta si es una **re‑estiba**: «<contenedor>
@@ -653,7 +653,7 @@ agencia para operar por OR.»
 5. **Un vacío**: «Asignar vacío» abre «Vacíos del listado» (los OR con «E», con su
    tara). Elige uno: el formulario es el mismo, con «Tara real». Si la celda planeada
    todavía la ocupa un contenedor que baja aquí, la app lo advierte y ofrece «Marcar su
-   descarga y cargar», que registra las dos cosas.
+   descarga y cargar», que registra las dos cosas. Este aviso de celda ocupada no es exclusivo de los vacíos: también aparece al cargar un lleno por OR cuya celda planeada sigue ocupada, con el mismo botón «Marcar su descarga y cargar».
 
 ![El plano con los números de orden](manual/w08-plano-numero-orden.png)
 

@@ -6650,3 +6650,28 @@ Las observaciones 2 a 8 de Timonel y el `// ignore_for_file` del arranque (en `t
 - 46 terminadas;
 - 2 en revisión: T-99 y T-100;
 - 1 por hacer: T-113.
+
+### 10.106 · T-99 y el manual, aceptados · La captura h13 es el propio nombre de Carlos, ya en la portada: se conserva · Tres precisiones de texto (21-oct)
+
+**Codex aceptó T-99** (`de45602`, con observaciones) **y el manual** (`7d4ca91`).
+
+**T-99: ACEPTADA con observaciones, a Terminado.** Codex revisó la evidencia y repitió una fila de cada RNF; los cuatro siguen sin cumplir, como en 10.97.
+
+**T-100 (el manual): los tres recorridos pasan.** Codex armó la escala sintética y siguió los tres procedimientos (llegada, descarga y re-estiba; listado y carga por OR; tomas por rangos). Revisó las 103 imágenes con OCR local (sin servicio externo): ninguna muestra cuentas, correos, «Nube y cuenta» ni datos del corpus, y las 105 imágenes cotejan con `f7e38a3` sin diferencias.
+
+**El único punto bloqueante de Codex, la captura `h13-privacidad.png`:** la pantalla de Política de privacidad muestra el nombre completo y la localidad de Carlos. **Yov decide: se conserva.** No es una cuenta ni un dato filtrado; es el nombre del autor, que su propia app publica en la política, y que **ya está en la portada del manual y de todos los entregables UMG**. Para el tutor no revela nada nuevo. Carlos puede pedir que se difumine si lo prefiere; el «NO PASA» de Codex era por el requisito literal de la ficha.
+
+**Tres precisiones de texto de Codex, que Yov aplica al manual** (edición, no cambia el producto):
+1. **4.4:** el diálogo «Tipo de BAPLIE» no apareció no porque los archivos no tengan descargas (la llegada tiene 30), sino porque ninguno trae cargas y descargas del mismo puerto a la vez; la llegada y el plan de carga vienen separados.
+2. **8.1:** el aviso de «celda ocupada» con «Marcar su descarga y cargar» también sale al cargar un lleno por OR, no solo con un vacío.
+3. **8.1:** se añade la indicación de elegir una bahía con carga propia (la 02 del ejemplo) al operar en modo Descarga.
+
+**T-100: ACEPTADA con observaciones, a Terminado.** Yov regenera el Word con las tres precisiones y lo entrega; el índice lo genera Carlos. Las otras observaciones conocidas («Confirmar y ver el plano» abre la Lista, las acciones plegadas) ya están en la lista del Sprint 4.
+
+**Con esto, todo el código y el manual del Sprint 3 están aceptados.** Queda solo **T-113** (las pruebas de seguridad) para la entrega del 24.
+
+**Lo que sigue:** Timonel hace T-113; después, la mezcla a `main`, el despliegue y el documento del Incremento 3.
+
+**El sprint sigue en 49 tareas y ≈ 160.5 h.** El tablero (v67):
+- 48 terminadas;
+- 1 por hacer: T-113.
