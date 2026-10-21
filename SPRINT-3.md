@@ -6707,3 +6707,20 @@ Las observaciones 2 a 8 de Timonel y el `// ignore_for_file` del arranque (en `t
 - **T113-01: resuelto.** Los demás pendientes ya están decididos en 10.107 (T113-04 al pentest, T113-06 con `output/` ignorado, T113-07 aceptado).
 
 **T-113 queda completa y lista para la aceptación de Codex.** Con ella se cierran las tareas de la entrega del 24. La siguiente decisión es la **10.109**.
+
+### 10.109 · T-113 aceptada · Todas las tareas del Sprint 3, terminadas · La guía del cierre (21-oct)
+
+**Codex aceptó T-113** (`664bf21`): 69/69 y 25/25 reproducidos, ningún secreto nuevo, cero avisos aplicables, y T113-01 confirmado byte a byte. **T-113 pasa a Terminado.**
+
+**Con esto, las 49 tareas del Sprint 3 están terminadas.** El trabajo del sprint quedó cerrado el 21-oct, tres días antes de la entrega.
+
+**El único pendiente de seguridad, T113-11 (H-06):** antes del 24, Carlos mira los Cloud Audit Logs de `baystream-app` en la consola (Registros → Registros de auditoría), o se declara como limitación en el documento, como en el Incremento 2. Recomendación de Yov: declararlo (es severidad Baja y es coherente con el Incremento 2), con la opción de verificarlo si Carlos quiere una afirmación más fuerte.
+
+**Lo que queda para el 24 son actividades de cierre, no tareas del sprint.** La guía paso a paso está en `docs/CIERRE-DESPLIEGUE.md`:
+1. la mezcla de `sprint-3` a `main` (Carlos);
+2. el despliegue (Carlos): la Web, el instalador de Windows y la prueba interna de Play;
+3. el documento del Incremento 3 y la presentación corta (Yov).
+
+**El sprint cierra con 49 tareas y ≈ 160.5 h.** El tablero (v70): **49 terminadas, nada pendiente.**
+
+La siguiente decisión es la **10.110**.
