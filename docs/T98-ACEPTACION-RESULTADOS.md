@@ -3,18 +3,27 @@
 Timonel · 21-oct-2026 · Base `sprint3-cierre-2` (`33404a5804be4fad85aab80dd923a7ae9e878ee9`) ·
 entrega de Codex `f9a0096`, decisión 10.101 (`0af8da5`).
 
-**Dictamen: NO PASA, por un solo dictamen: RNF-006.**
+**Dictamen (actualizado con la 10.104): ACEPTADA con observaciones**, con RNF-006 en
+**«cumple»** por la medición limpia de Windows (sección 5).
+
+La primera versión de este informe (`0cb1c48`) decía **NO PASA por RNF-006**, porque los videos
+de Windows de Codex mostraban el error más de 3 s después de cerrarse el selector. Esa lectura de
+sus cuadros era correcta, pero el retraso **no es del producto**: en una medición limpia no se
+reproduce en ninguna de 32 cargas rechazadas (sección 5).
 
 1. **Mis cuatro filas reproducen lo que dice Codex.** Honor sin sesión: 11/11 operaciones sin un
    byte del paquete. Recuperación en el Honor: 2.079 s (caso 01) y 2.076 s (caso 05). Batería de
    RNF-008: CSV idéntico byte a byte, y `ZZZZZ` se acepta en silencio también en el cliente.
    Primera visualización sin perfil: 6 pasos, en 15.5 s con el selector en la carpeta recordada y
    en 20.1 s navegando desde las raíces.
-2. **RNF-006 no es «no medible»: según su propia evidencia, no cumple.** En los videos de Windows
-   de Codex, el error aparece más de 3 s después de cerrarse el selector en 4 de los 6 rechazos
-   (3.40, 3.44, 3.59 y 3.54 s como mínimo). La confirmación no puede ser posterior a ese cierre,
-   así que el intervalo es una cota inferior de la recuperación. La sonda tardía solo impedía dar
-   una cota superior; nunca impidió ver que el error ya llegaba tarde.
+2. **RNF-006 cumple (10.104).** Medí la recuperación de Windows en una copia limpia, sin agente:
+   - el aviso de error aparece **0.29–0.52 s** después de cerrarse el selector, en las 32 cargas
+     rechazadas de las tomas 1 a 4, 6 y 8;
+   - con la sonda a espera fija, igual que en el Honor, del cierre al selector reabierto pasan
+     **1.754–2.206 s** en 14 casos, y la **cota más alta es 2.267 s**, con la espera incluida.
+
+   Por la regla de la 10.104 (cota < 3 s), Windows cumple, y RNF-006 queda en «cumple»: mensajes
+   218/218, disponibilidad sin red 33/33 y recuperación por debajo de 3 s en los tres clientes.
 3. **RNF-004 sigue en «no medible», pero sus razones hay que corregirlas.** El Honor tiene control
    positivo atribuible (el inicio de sesión de la tanda dejó 2 buckets del paquete), y con mi fila
    el Honor cumple la condición A. El defecto del banco de Windows no afecta a la condición A,
@@ -24,9 +33,9 @@ entrega de Codex `f9a0096`, decisión 10.101 (`0af8da5`).
    `lib/`, pero deja el único `// ignore_for_file` del código Dart del repositorio. El contraste
    de rol del informe es coherente.
 
-**Para que pase** basta una corrección de texto, sin repetir mediciones: RNF-006 en «no cumple»
-por la recuperación de Windows, en el informe de T-98 y en la decisión de Yov. Con eso, la
-aceptación queda **ACEPTADA con observaciones** (sección 4), y mis cuatro filas siguen valiendo.
+**Lo que queda por corregir** en el informe de T-98 y en la 10.101 es de texto: RNF-006 pasa de
+«no medible» a «cumple» con la medición de la sección 5, y las razones de RNF-004 cambian como
+dice la sección 1. Las observaciones están en la sección 4.
 
 ## Base, permisos y aislamiento
 
@@ -84,7 +93,11 @@ Cada fila se contrastó con la evidencia que cita, en `%TEMP%\t98-b-33404a5-20oc
 ni Windows tienen un instrumento que mida bytes. Lo que el informe tiene que decir es: el Honor
 cumple la condición A; la Web y Windows no se pueden demostrar.
 
-### RNF-006 · Tolerancia a fallos: la evidencia de Windows da «no cumple»
+### RNF-006 · Tolerancia a fallos: lo que mostraban los videos de Windows de Codex
+
+> **Corregido por la sección 5 (10.104).** La relectura de abajo es fiel a los videos de Codex,
+> pero su retraso de más de 3 s no se reproduce en una medición limpia: allí el aviso sale en
+> 0.29–0.52 s. La conclusión «no cumple» de la primera versión queda retirada.
 
 **Mensajes (218/218)** y **disponibilidad sin red (33/33):** consistentes con lo citado. Los dos
 mensajes que vi en el Honor nombran causa, segmento y acción. **Honor y Web:** las cotas cuadran
@@ -125,8 +138,9 @@ videos (PTS estrictamente crecientes, a unos 30 cuadros por segundo):
     actualiza en todos los cuadros, y Codex vio la animación de la rejilla con el mismo
     grabador.
 
-**Conclusión:** el «no medible» no depende solo de que falte el tiempo de Windows. El tiempo de
-Windows existe como cota inferior, y da **no cumple**. RNF-006 debería quedar en «no cumple».
+**Conclusión de la primera versión, retirada:** decía que la cota inferior de esos videos daba
+«no cumple». Esa cota valía para esos videos, pero no para el producto. La medición limpia de la
+sección 5 da menos de 3 s, y con ella RNF-006 queda en «cumple».
 
 ### RNF-008 · Estándares: «no cumple», confirmado
 
@@ -339,12 +353,11 @@ python tool/t98acc_honor.py recuperacion rec01 01
 
 ## 4. Observaciones
 
-**La que decide el dictamen:**
+**La que cambia un dictamen:**
 
-1. **RNF-006 en Windows** (sección 1): la cota inferior supera 3 s en 4 de 6 rechazos, así que
-   el dictamen correcto es «no cumple». Si Yov prefiere una medición propia de Windows, sin
-   agente y con el diálogo guiado por script, cabe aparte. La cota de arriba no depende de
-   ella.
+1. **RNF-006 pasa de «no medible» a «cumple».** La medición limpia de Windows (sección 5) da una
+   cota de 2.267 s. El retraso de más de 3 s de los videos de Codex no se reproduce, y su causa
+   queda sin determinar.
 
 **Las que no cambian dictámenes:**
 
@@ -364,8 +377,8 @@ python tool/t98acc_honor.py recuperacion rec01 01
    - Lo sé por lectura del código; no lo probé con sesión.
    - Sin sesión no afecta a nada. Con la sesión de la tanda, el Honor tampoco podía leer la
      autorización, y el informe no lo menciona.
-5. **El cliente Windows `t98` de Codex sigue abierto** (PID 35788), aunque las sesiones ya se
-   cerraron. No lo cerré.
+5. **El cliente Windows `t98` de Codex quedó abierto** (PID 35788) después de su entrega, aunque
+   las sesiones ya se habían cerrado. Lo cerró Carlos antes de la medición de la 10.104.
 6. **El caso 03 se admite con aviso.** Codex lo canceló siempre en Parámetros. Al confirmarlo,
    la app abre «Tipo de BAPLIE» («En GTPBR hay 0 cargas y 0 descargas») y luego muestra
    «Archivo posiblemente incompleto: faltan 2 segmentos (UNT, UNZ)», con 1 contenedor y 4.0 t.
@@ -375,6 +388,143 @@ python tool/t98acc_honor.py recuperacion rec01 01
    vio en la Web y no lo tomó como fallo. Lo anoto por la etiqueta, que se presta a confusión.
 8. **«1 llenos»** en el chip de un viaje con un solo contenedor. Es de la misma familia que
    «1 contenedores» (10.91, lista del Sprint 4).
+
+## 5. Recuperación en Windows, medida limpia (10.104)
+
+Timonel · 21-oct-2026, de 13:18 a 14:15. Yov pidió esta medición para decidir RNF-006 con una
+regla fija: si la cota pasa de 3 s, Windows no cumple; si queda por debajo, cumple.
+
+**Resultado: la cota más alta es 2.267 s. Windows cumple, y RNF-006 queda en «cumple».**
+
+### Base y aislamiento
+
+- **Copia limpia nueva** de `33404a5` en `%TEMP%\t98rec-33404a5-21oct\app`, hecha igual que la de
+  `t98acc`: 139 archivos de producto idénticos a los blobs del commit. El banco es
+  `tool/t98acc_main.dart`, ahora con el namespace `t98rec` por `--dart-define`.
+- **Binario release de Windows.** `baystream.exe` SHA-256
+  `d90fc9dcc9314ebbe85e2e5ec2e085429601b7b3c2e51f3994aa8837121da9e9`; `data/app.so`
+  `ea1ba64a87876922ffa10fddf09b5a557c13e9099e2e5f8f38fe4fe9ba9e2cf3`; 18 archivos en el Release.
+  - Firebase va configurado y sin sesión, con la app con nombre `t98rec`.
+  - El SDK C++ de Firebase 13.9.0 se tomó en solo lectura del que ya estaba extraído en la copia
+    de Codex (`FIREBASE_CPP_SDK_DIR`).
+- **Una sola BayStream.** Carlos cerró antes el cliente de Codex (PID 35788). Mi cliente se abrió
+  con `explorer.exe` (PID 30080), guardó su almacén en TEMP y se cerró por su PID al final.
+- **Pantalla:** 1920×1080 al 125 %, como en las mediciones de Codex. La ventana estuvo
+  **maximizada**, que es el estándar de Windows de la 10.97. Codex grabó su recuperación con la
+  ventana de 1600×900.
+- **El viaje anterior** es A01: BUQUE ALFA, 977 contenedores, 34 bahías y 8366.1 t.
+- **Los ocho archivos** son los de `catalogo-final` de Codex
+  (`%TEMP%\t98-b-90dce4b-19oct\catalogo-final`), con las mismas huellas que su recuperación del
+  cierre 2.
+- **La grabación** se hizo con el grabador de Codex (`tool/t98_grabar_escritorio.py`): gdigrab
+  continuo a unos 30 cuadros por segundo, solo el rectángulo de la ventana (1920×1020), una toma
+  sin cortes por tanda.
+
+### Cómo se midió
+
+- **El disparo.**
+  - En las tomas 1 a 4 lo hizo Carlos, con el ratón.
+  - Desde la toma 6, por decisión de Carlos («hazla tú, hazla solo»), lo hizo un script mío,
+    `tool/t98acc_recuperacion_auto.py`. Abre el selector con un clic en «Cargar archivo BAPLIE»,
+    escribe la ruta en «Nombre» y confirma «Abrir» por mensaje de Win32.
+  - No intervino el agente ni el control de escritorio que paró a Codex.
+- **La sonda del botón.** Igual que en el Honor, se hace a espera fija: el script pulsa
+  «Cargar archivo BAPLIE» después del cierre del selector, solo si el aviso rojo está a la vista
+  y BayStream está al frente y maximizada.
+  - La espera pedida es de 1 s. La efectiva fue de 1.15–1.20 s, por las comprobaciones previas al
+    clic, y queda dentro de la medición.
+  - El botón está en (1764, 65), medido por su resaltado. La X de «Limpiar datos» está en x 1815.
+- **La medición** se hizo con `tool/t98_video.py` de Codex:
+  - **inicio:** el primer cuadro sin el selector;
+  - **fin:** el primer cuadro con el selector reabierto y ya completo, es decir, después del
+    marco blanco y del pintado parcial;
+  - en ese cuadro se ven a la vez el aviso de error y el viaje anterior;
+  - la incertidumbre suma el intervalo de cuadro de los dos extremos, y la cota es la medición
+    más esa incertidumbre.
+- **La comprobación a ojo** se hizo con `tool/t98_video_cuadros.py`, sobre los casos 01 y 05 de
+  la toma 6.
+- **Para ubicar los cuadros** se usó un detector propio (`tool/t98acc_recuperacion_windows.py`),
+  que propone cuándo aparece y desaparece el selector y el aviso rojo.
+
+### Los ocho casos (tomas 6 y 7)
+
+| # | Caso | Cuadros: cierre / aviso / selector completo | Cierre → aviso | Cierre → selector (`t98_video`) | Cota |
+|---|---|---|---|---|---|
+| 1 | 01 bytes aleatorios | 178 / 189 / 231 | 0.33–0.41 s | 1.773 ± 0.074 s | 1.847 s |
+| 2 | 02 texto sin EDIFACT | 425 / 438 / 479 | 0.40–0.47 s | 1.812 ± 0.073 s | 1.885 s |
+| 3 | 05 sin TDT | 669 / 681 / 734 | 0.37–0.44 s | 2.206 ± 0.060 s | **2.267 s** |
+| 4 | 06 COPRAR | 915 / 928 / 971 | 0.42–0.45 s | 1.873 ± 0.045 s | 1.918 s |
+| 5 | 07 versión no admitida | 1159 / 1171 / 1214 | 0.38–0.44 s | 1.829 ± 0.046 s | 1.876 s |
+| 6 | 08 vacío | 1403 / 1413 / 1458 | 0.31–0.37 s | 1.824 ± 0.054 s | 1.878 s |
+| 7 | 01, repetición | 1648 / 1660 / 1702 | 0.37–0.43 s | 1.822 ± 0.066 s | 1.888 s |
+| 8 | 02, repetición | 1892 / 1904 / 1948 | 0.36–0.44 s | 1.862 ± 0.062 s | 1.925 s |
+| 9 | 05, repetición | 2134 / 2147 / 2190 | 0.40–0.46 s | 1.856 ± 0.072 s | 1.928 s |
+| 10 | 07, repetición | 2379 / 2392 / 2432 | 0.39–0.47 s | 1.773 ± 0.095 s | 1.868 s |
+| — | 03 segmento cortado | — | — | — | No es un rechazo: abre «Parámetros del buque» sin aviso. Al cancelar vuelve BUQUE ALFA intacto, con «Carga cancelada: no se confirmó la geometría del buque» |
+| — | 04 sin UNT/UNZ | — | — | — | No es un rechazo: se admite con el aviso rojo «Archivo posiblemente incompleto: faltan 2 segmentos (UNT, UNZ)» y el gris «cargado correctamente», con 977 / 34 / 8366.1 t |
+
+- **Lo que pesa en el intervalo.** Del clic de la sonda al selector completo pasan 0.46–1.04 s.
+  El caso 3 es el más lento porque el selector tardó más en terminar de pintarse.
+- **Los mensajes** son los del Honor: nombran el archivo, la causa, el segmento (UNH/S009, TDT o
+  UNH) y la acción.
+- **El viaje anterior** queda a la vista detrás del aviso y del selector en todos los casos.
+
+### La prueba de la carpeta de OneDrive (toma 8)
+
+El selector de Codex mostraba la carpeta del corpus en OneDrive (Escritorio › Archivos .EDI ›
+Anonimizados › files, con la columna «Estado»), y su agente escribía la ruta completa. Repetí eso:
+el script entra primero a esa carpeta y después escribe la ruta del caso.
+
+| Caso | Cierre → aviso | Cierre → selector (`t98_video`) | Cota |
+|---|---|---|---|
+| 01 | 0.37–0.44 s | 1.754 ± 0.059 s | 1.813 s |
+| 02 | 0.39–0.48 s | 1.801 ± 0.082 s | 1.882 s |
+| 05 | 0.42–0.50 s | 1.757 ± 0.080 s | 1.837 s |
+| 07 | 0.40–0.47 s | 1.782 ± 0.082 s | 1.864 s |
+
+**El retraso de Codex no se reproduce.** Repetí sus condiciones: la misma base, los mismos
+archivos, la misma pantalla, la ruta escrita en «Nombre» y la carpeta de OneDrive.
+- Quedan dos diferencias sin controlar:
+  - la ventana: mía maximizada, la suya de 1600×900;
+  - su sesión: el binario `8944a086…`, compilado antes de la corrección del banco, y su entorno de
+    control.
+- La causa de sus 3.4–3.7 s queda sin determinar.
+
+### Las tomas con Carlos (1 a 4), como apoyo
+
+| Toma | Lo que se hizo | Del cierre al aviso | Por qué no decide |
+|---|---|---|---|
+| 1 | 7 rechazos (01 dos veces, 02, 05, 06, 07 y 08) | 0.29–0.40 s | Hacia el segundo 122 se pulsó la X de «Limpiar datos» y los casos se hicieron sin viaje anterior. El botón se pulsó 5–11 s después |
+| 2 | Reabrir A01 y el 01 | 0.37–0.44 s | Sin sonda |
+| 3 | 01, 02, 05, 06, 07 y 08, con A01 | 0.30–0.51 s | Sin sonda inmediata. Durante el aviso del 02 se abrió la ficha de un contenedor con un clic: la app respondía |
+| 4 | 01, 02, 05 y 07, con sonda humana en los tres primeros | 0.39–0.52 s | Del cierre al selector: 01, 2.79–2.89 s; 02, 3.44–3.51 s; 05, 2.69–2.77 s. La reacción de Carlos, del aviso al clic, fue de 1.4–2.2 s, y la app respondió al clic en 0.73–0.93 s |
+
+La toma 4 muestra por qué la sonda tiene que ser a espera fija, como en el Honor y la Web:
+con una persona, el 02 pasa de 3 s solo por los 2.2 s de reacción. La toma 5 quedó vacía, porque
+Carlos pidió que la hiciera yo solo.
+
+### Incidentes y privacidad
+
+- Una captura inicial de pantalla completa mostraba el navegador de Carlos. **Se borró**, y desde
+  entonces solo se grabó el rectángulo de la ventana.
+- La toma 1 incluye unos segundos de la ventana de este chat, mientras Carlos leía. Es evidencia
+  privada en TEMP.
+- La toma 8 muestra los nombres de la carpeta del corpus en OneDrive. También es privada.
+
+### Evidencia
+
+En `%TEMP%\t98rec-33404a5-21oct\`:
+- **la copia y su compilación:** `app\`, `preparacion.json`, `build-windows.log` y
+  `release-manifiesto.json`;
+- **los videos:** `video\toma1.mp4` a `toma8.mp4`, con su `.captura.json`. Las huellas de 16
+  caracteres son `bdee9062…`, `47f9abe6…`, `083005df…`, `2a1e5475…`, `0b15c80f…`, `1c4c47e1…`,
+  `0a36d895…` y `a717b68f…`;
+- **el análisis, en `rev\`:**
+  - los PTS de cada toma, los eventos del detector y los casos;
+  - la medición de `t98_video.py` (`toma6-medicion\`, `toma8-medicion\`);
+  - los cuadros de `t98_video_cuadros.py`;
+  - los registros del conductor (`toma6-conductor.json`, `toma8-conductor.json` y
+    `toma7-03.json` / `toma7-04.json`).
 
 ## Estado final
 
@@ -386,8 +536,10 @@ python tool/t98acc_honor.py recuperacion rec01 01
     archivos en `Descargas/t98acc`: A01 anonimizado, su CSV, los casos 01, 03 y 05, y los dos
     sintéticos UN/LOCODE. Carlos decide si se borran
     (`adb uninstall gt.cmartinez.baystream.t98acc` y `adb shell rm -r /sdcard/Download/t98acc`).
-- **La laptop:** no queda ningún comando de Flutter, `ffmpeg` ni app mía abierta. La única
-  BayStream abierta es la de Codex.
+  - En la medición de la 10.104 no se tocó el Honor.
+- **La laptop:** mi cliente `t98rec` (PID 30080) se cerró por su PID al terminar. No queda
+  ninguna BayStream abierta, ni `ffmpeg`, ni scripts de sonda, ni comandos de Flutter. Carlos ya
+  había cerrado el cliente de Codex.
 
 **SEMÁFORO: libre.**
 
@@ -399,52 +551,67 @@ python tool/t98acc_honor.py recuperacion rec01 01
 - `tool/t98acc_honor.py`: netstats, muestreo, grabación, primera visualización y recuperación
   (nuevo).
 
+Ya versionados en `0cb1c48`. En la 10.104 se suman:
+- `docs/T98-ACEPTACION-RESULTADOS.md`: el resumen corregido y la sección 5 (modificado).
+- `tool/t98acc_main.dart`: el namespace por `--dart-define` (`T98ACC_NAMESPACE`); por omisión
+  sigue siendo `t98acc` (modificado).
+- `tool/t98acc_sonda_windows.py`: las comprobaciones y el clic de la sonda de Windows (nuevo).
+- `tool/t98acc_recuperacion_auto.py`: el conductor de los casos sin persona (nuevo).
+- `tool/t98acc_recuperacion_windows.py`: el detector de cuadros candidatos (nuevo).
+
 No cambian `lib/`, `test/`, `pubspec.yaml` ni `pubspec.lock`.
 
 ## Tres líneas para Carlos
 
-Repetí una fila de cada RNF en una copia limpia de `sprint3-cierre-2` con `t98acc`, y las cuatro coinciden con Codex.
-La evidencia de Windows de Codex muestra el error más de 3 s después del selector en 4 de 6 rechazos: RNF-006 no cumple.
-NO PASA solo por eso; corrigiendo ese dictamen (y las razones de RNF-004) queda ACEPTADA con observaciones.
+Repetí una fila de cada RNF en una copia limpia de `sprint3-cierre-2`, y las cuatro coinciden con Codex.
+Medí la recuperación de Windows sin agente: el aviso sale en 0.29–0.52 s y el selector se reabre con una cota máxima de 2.267 s.
+RNF-006 queda en «cumple», y T-98 queda ACEPTADA con observaciones.
 
 ## Mensaje para Yov
 
-> Yov: acepté T-98 (Timonel, 21-oct) en una copia limpia de `33404a5` con `t98acc`. Suite
-> 1063/1063 y analyze 0. Dictamen: **NO PASA, solo por RNF-006**.
+> Yov: terminé la medición de la 10.104. **La recuperación de Windows cumple, con una cota de
+> 2.267 s.** Con tu regla, RNF-006 queda en «cumple», y mi aceptación de T-98 pasa a **ACEPTADA
+> con observaciones**. El NO PASA de `0cb1c48` queda retirado.
 >
-> **Mis filas:**
-> - 004: Honor sin sesión, 11/11 con 0 bytes en 19 lecturas forzadas de netstats y 1 827 barridos
->   de sockets; control del instrumento +5 140 B.
-> - 006: Honor, 01 en 2.079 s y 05 en 2.076 s.
-> - 008: CSV de la batería idéntico al de Codex; `ZZZZZ` sin aviso también en el Honor.
-> - 002: 6 pasos, 15.5 s con la carpeta recordada y 20.1 s navegando.
+> **Cómo:**
+> - copia limpia de `33404a5` con `t98rec`; exe `d90fc9dc…`, app.so `ea1ba64a…`;
+> - una sola BayStream, abierta con `explorer.exe` y cerrada por su PID; ventana maximizada a
+>   1920×1080 y 125 %; los ocho archivos de `catalogo-final`;
+> - gdigrab continuo, medido con `t98_video.py`.
 >
-> **RNF-006:** en los videos de Windows de Codex, con sus propios cuadros anotados, el error
-> aparece más de 3.40, 3.44, 3.59 y 3.54 s después del cierre del selector en los casos 01, 02,
-> 05 y 07. Eso es una cota inferior: la sonda tardía no la invalida. RNF-006 debería quedar en
-> «no cumple». Es una corrección de texto, sin repetir mediciones.
+> **El resultado:**
+> - en 32 rechazos, el aviso aparece 0.29–0.52 s después de cerrarse el selector;
+> - con la sonda del botón a espera fija, como en el Honor (1 s pedido, 1.15–1.20 s efectivo y
+>   dentro de la medición), del cierre al selector reabierto y completo pasan 1.754–2.206 s en 14
+>   casos: los seis rechazos, la repetición de 01, 02, 05 y 07, y otros cuatro con el selector en
+>   la carpeta de OneDrive, como lo tenía Codex. La cota más alta es 2.267 s;
+> - el 03 abre «Parámetros» sin aviso y cancelar conserva el viaje; el 04 se admite con el aviso
+>   de UNT/UNZ.
 >
-> **RNF-004** sigue «no medible», pero:
-> - el Honor sí tiene control positivo (la tanda dejó 2 buckets del paquete) y cumple la
->   condición A;
-> - el `no-app` de Windows no afecta a la condición A, porque sin sesión no se usa Firestore.
+> **Por qué el disparo es del script:** por decisión de Carlos («hazla tú, hazla solo»), desde la
+> toma 6 el archivo se confirma por mensaje de Win32, sin el control de escritorio. En la toma 4,
+> con sonda humana, el 02 llegó a 3.44–3.51 s solo por 2.2 s de reacción.
 >
-> **Otras observaciones:** el `// ignore_for_file` de `t98_firestore_bootstrap.dart` es el único
-> del código Dart; el banco Android de Codex tiene la misma trampa de `[DEFAULT]`; el cliente
-> Windows de Codex sigue abierto (PID 35788); el caso 03 se admite con aviso de UNT/UNZ.
+> **Lo de Codex:** su retraso de 3.4–3.7 s no se reproduce, ni siquiera con su carpeta de
+> OneDrive y la ruta escrita. Quedan dos diferencias: su ventana de 1600×900, y su binario
+> (`8944a086…`) y su entorno. La causa queda sin determinar.
 >
-> El contraste de rol es coherente: apunta a dos cuentas distintas, y el informe no lo supone.
-> Honor en 1.0 y sin avión. SEMÁFORO: libre.
+> **Sigue igual:** RNF-004 en «no medible», con el Honor que cumple la condición A; RNF-008 y
+> RNF-002 en «no cumple», y las observaciones 2 a 8.
+>
+> Windows cerrado por PID; no toqué el Honor; SEMÁFORO: libre.
 
 ## Git: solo Carlos ejecuta
 
-`pubspec.yaml` y `pubspec.lock` no cambian.
+`pubspec.yaml` y `pubspec.lock` no cambian. El primer bloque ya se ejecutó (`0cb1c48`); este es
+el de la 10.104:
 
 ```powershell
 git add -- docs/T98-ACEPTACION-RESULTADOS.md
 git add -- tool/t98acc_main.dart
-git add -- tool/t98acc_sinteticos.dart
-git add -- tool/t98acc_honor.py
-git commit -m "Sprint 3: aceptacion cruzada de T-98, cuatro filas repetidas y RNF-006 por corregir"
+git add -- tool/t98acc_sonda_windows.py
+git add -- tool/t98acc_recuperacion_auto.py
+git add -- tool/t98acc_recuperacion_windows.py
+git commit -m "Sprint 3: T-98 aceptada, recuperacion de Windows medida sin agente y RNF-006 cumple"
 git push
 ```

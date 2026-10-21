@@ -23,7 +23,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const _namespace = 't98acc';
+// La recuperación de Windows (10.104) usa el mismo banco con el namespace t98rec.
+const _namespace =
+    String.fromEnvironment('T98ACC_NAMESPACE', defaultValue: 't98acc');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
