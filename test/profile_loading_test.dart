@@ -11,6 +11,24 @@ import 'support/local_profile_test_support.dart';
 import 'support/t74_movement_log_support.dart';
 import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
 
+/// Los campos sustantivos de un perfil, uno por uno, salvo `updatedAt`: la
+/// identidad, el nombre, la geometría (con el límite), las tapas, las bahías
+/// de bodega observadas, las tomas y los dos orígenes (10.15, O2).
+void _mismoPerfil(VesselProfile actual, VesselProfile esperado,
+    {String? reason}) {
+  String de(String campo) => reason == null ? campo : '$reason: $campo';
+  expect(actual.identity, esperado.identity, reason: de('identidad'));
+  expect(actual.vesselName, esperado.vesselName, reason: de('nombre'));
+  expect(actual.geometry, esperado.geometry, reason: de('geometría'));
+  expect(actual.hatchCovers, esperado.hatchCovers, reason: de('tapas'));
+  expect(actual.observedHoldBayNumbers, esperado.observedHoldBayNumbers,
+      reason: de('bahías de bodega observadas'));
+  expect(actual.reeferSlots, esperado.reeferSlots, reason: de('tomas'));
+  expect(actual.reeferSlotsOrigin, esperado.reeferSlotsOrigin,
+      reason: de('origen de las tomas'));
+  expect(actual.origin, esperado.origin, reason: de('origen del perfil'));
+}
+
 void main() {
   late ProviderContainer container;
   late VoyageNotifier notifier;
@@ -136,20 +154,23 @@ void main() {
     // Fase 3 (10.9): elegido el homónimo, el plano queda en previo con su
     // perfil (el archivo no declara escala); confirmar publica sin duplicar.
     expect((await notifier.resolveIdentity(saved)).preview, isTrue);
-    expect(notifier.currentProfile!.key, saved.key);
+    // 10.15 (O2): se comparan los campos que importan del perfil (identidad,
+    // geometría, tapas, tomas y sus orígenes), no solo la clave; `updatedAt`
+    // cambia al confirmar otra vez y queda fuera.
+    _mismoPerfil(notifier.currentProfile!, saved);
     expect(await notifier.confirmGeometry(saved.geometry), isNull);
     expect(notifier.publishedVoyage!.vessel.callSign, 'ZZALFA');
-    expect(notifier.currentProfile!.key, saved.key);
+    _mismoPerfil(notifier.currentProfile!, saved);
     final recentId = notifier.publishedVoyage!.id;
     expect(notifier.publishedVoyage!.vesselProfileKey, saved.key);
     notifier.clearVoyage();
     expect(await notifier.openRecentVoyage(recentId), isNull);
-    expect(notifier.currentProfile!.key, saved.key,
+    _mismoPerfil(notifier.currentProfile!, saved,
         reason: 'reabrir recuerda la elección explícita del homónimo');
-    expect(
-        (await store.repository.getAllProfiles())
-            .getOrElse(() => <VesselProfile>[]),
-        hasLength(1));
+    final guardados = (await store.repository.getAllProfiles())
+        .getOrElse(() => <VesselProfile>[]);
+    expect(guardados, hasLength(1));
+    _mismoPerfil(guardados.single, saved, reason: 'el perfil guardado');
   });
 
   test(

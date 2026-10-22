@@ -26,6 +26,12 @@ Parámetros del buque → No lo tengo → Confirmar y ver el plano) y mide con e
 perfil y la escala confirmados en el almacén; por 7.2 de DESIGN.md el plano
 abre publicado, sin previo.
 
+Cada corrida escribe en una subcarpeta de <salida> que nombra su condición:
+sin-caliente, sin-fria o con-perfil. Ninguna parte de la ruta puede ser un
+dispositivo reservado de Windows (con, prn, aux, nul, com1 a com9, lpt1 a
+lpt9): una carpeta llamada «con» existe pero Git y el Explorador no la ven
+(10.15, O1), y el instrumento se niega a escribir ahí.
+
 python tool/t114_primera_web.py <salida en TEMP> --url http://127.0.0.1:5899/ ^
     --archivo T99_SINTETICO_977.edi --perfil sin --repeticiones 5
 python tool/t114_primera_web.py <salida en TEMP> --perfil sin --cache fria --repeticiones 5
@@ -42,6 +48,28 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 from t98_inventario import output_directory
+
+# Los nombres de dispositivo que Windows reserva: una carpeta así existe en el
+# disco, pero Git, el Explorador y las herramientas de Windows no la ven.
+RESERVADOS_DE_WINDOWS = frozenset(
+    ['con', 'prn', 'aux', 'nul']
+    + [f'com{n}' for n in range(1, 10)]
+    + [f'lpt{n}' for n in range(1, 10)])
+
+
+def sin_nombres_reservados(ruta: Path) -> Path:
+    """La misma ruta, o un error si alguna de sus partes es un nombre reservado
+    de Windows (con o sin extensión)."""
+    for parte in ruta.parts:
+        if parte.split('.')[0].lower() in RESERVADOS_DE_WINDOWS:
+            raise ValueError(f'«{parte}» es un dispositivo reservado de Windows: '
+                             'Git no lo ve. Usa otro nombre (por ejemplo, con-perfil).')
+    return ruta
+
+
+def carpeta_de_corrida(perfil: str, cache: str) -> str:
+    """El nombre de la subcarpeta de una corrida: su condición, nunca «con»."""
+    return 'con-perfil' if perfil == 'con' else f'sin-{cache}'
 
 INSTRUMENTO_JS = Path(__file__).with_name('t114_primera_web.js')
 UMBRAL_PASOS = 3
@@ -144,7 +172,9 @@ def main():
         raise ValueError('Solo el banco servido en 127.0.0.1.')
     if args.perfil == 'con' and args.cache == 'fria':
         raise ValueError('Con perfil, la caché es caliente: el perfil vive en el almacén del contexto.')
-    out = output_directory(args.salida)
+    out = sin_nombres_reservados(
+        output_directory(args.salida) / carpeta_de_corrida(args.perfil, args.cache))
+    out.mkdir(exist_ok=True)
     if any(out.iterdir()):
         raise ValueError('No sobrescribir una corrida.')
     ruta = f'/t114/{args.archivo}'

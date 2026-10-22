@@ -1283,7 +1283,10 @@ segundo plano y de uno en uno. El Honor no se tocó (el emulador hace de teléfo
   `ListView(` y no son listas con `children`. En `vessel_providers.dart` siguen los dos
   `RIVERPOD_PROVIDER_IN_CLASS` que la línea base ya declaró como falsos positivos.
 - Censos de T-112 sobre el árbol (`tool/t112_censos.py`, salida en
-  `docs/rediseno/fase3/censos/`): idioma, **1816 cadenas visibles: 1677 en español y 139
+  `docs/rediseno/fase3/censos/`; **la referencia de `--antes` es el `lib/` de
+  `5406e20`**, el commit de la corrección de la Fase 2: con `sprint3-cierre` las
+  decisiones por línea no coinciden y salen 1834 cadenas y M3 251/16/0, como
+  comprobó Codex en 10.15, O3): idioma, **1816 cadenas visibles: 1677 en español y 139
   sin idioma (siglas, nombres o unidades), 0 en inglés o mixtas**; con los 20 textos de
   Flutter, 100 % en las dos lecturas de T-98. Material 3: **259 controles incluidos, 8
   exclusiones declaradas y 5 excepciones**, las cinco anteriores (`GestureDetector`,
@@ -1394,7 +1397,7 @@ cuadro muestreado tras el clic; el reloj es `performance.now()`). En «con
 perfil» el perfil se confirmó antes como lo haría la oficina (Confirmar →
 Parámetros del buque → No lo tengo → Confirmar y ver el plano) y la segunda
 carga abrió publicada, sin previo: la regla de 7.2. Registros en
-`docs/rediseno/fase3/rnf-002/web/` (`sin-caliente/`, `sin-fria/`, `con/`:
+`docs/rediseno/fase3/rnf-002/web/` (`sin-caliente/`, `sin-fria/`, `con-perfil/`:
 `*-registro.json` con todas las marcas, `resumen.json`, y el inicio y la
 rejilla de la primera repetición en PNG).
 
@@ -1660,11 +1663,11 @@ git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00061.jpg
 git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00062.jpg
 git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00063.jpg
 git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadros.json
-git add -- docs/rediseno/fase3/rnf-002/web/con/con00-publicado.png
-git add -- docs/rediseno/fase3/rnf-002/web/con/con01-inicio.png
-git add -- docs/rediseno/fase3/rnf-002/web/con/con01-registro.json
-git add -- docs/rediseno/fase3/rnf-002/web/con/con01-rejilla.png
-git add -- docs/rediseno/fase3/rnf-002/web/con/resumen.json
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/con00-publicado.png
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/con01-inicio.png
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/con01-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/con01-rejilla.png
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/resumen.json
 git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/resumen.json
 git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin01-inicio.png
 git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin01-registro.json
@@ -1734,3 +1737,484 @@ orden», que son controles del plano de antes y van con la entrega del plano; el
 se tocó. Por tu alto parcial, la entrega se cerró solo en lo funcional y la entrega 2 no
 se empieza; el traspaso para el chat que sigue está en
 `docs/rediseno/fase3/traspaso-entrega1.md`. Me detengo: Codex acepta.
+
+---
+
+## Fase 3 · Entrega 1 · Corrección tras la aceptación de Codex (22-oct-2026, 10.15)
+
+Codex dictaminó NO PASA (`docs/rediseno/fase3/aceptacion-codex.md`, sobre `16fa15d`): H1
+bloquea y O1 a O3 son observaciones mías; O4 (el informe de la Fase 2 ausente en la copia
+de QA) lo resuelve Carlos. Esta corrección va en su propio bloque de git, separada de la
+Fase 1 bis y la Fase 2 bis, que siguen después en este mismo informe.
+
+### 3c.1 Resultado en tres líneas
+
+- **H1, «No lo tengo» ya no viene marcado por una plantilla ni por la propuesta del
+  archivo.** En `vessel_geometry_page.dart` (`initState`) la casilla empieza marcada solo si
+  el perfil es de este mismo buque, lo declaró el usuario (`declaredByUser`) y no tiene
+  límite; en los demás casos el usuario tiene que elegir, y sin elegir no se confirma.
+  Cuatro pruebas nuevas lo fijan, incluido el caso de Codex (BUQUE BETA como plantilla
+  para BUQUE ALFA).
+- **O1, la carpeta `con`** (un dispositivo reservado de Windows, que Git no veía) se
+  renombró a `con-perfil` con sus cinco archivos intactos; el instrumento Web escribe en
+  `con-perfil` y rechaza nombres reservados; el informe y su bloque de git apuntan a la
+  ruta nueva. **O2,** las tres comparaciones de `profile_loading_test.dart` vuelven a
+  comparar los campos del perfil, salvo `updatedAt`. **O3,** la referencia `5406e20` de
+  los censos queda declarada en 3.4 y en la ayuda de `tool/t112_censos.py`.
+- Validado en una copia limpia de `HEAD` con solo estos archivos encima: `analyze` **«No
+  issues found»** y la suite **1159 en verde de 1160, 0 omitidas, y un solo fallo que no es del producto: `t114_fuentes_test` espera `LICENSE-IBMPlex.txt` con 4456 bytes (CRLF, como está en el árbol) y `git archive` lo exporta con 4363 (LF); en el árbol esa prueba pasa**. Piso: 1156 → **1160** (4 nuevas, ninguna
+  omitida). La Fase 2 bis no entra en este bloque.
+
+### 3c.2 Lo hecho, hallazgo por hallazgo
+
+- **H1 (`lib/features/vessel/presentation/pages/vessel_geometry_page.dart:171`).** Antes:
+  marcado si había geometría inicial, o era solo el perfil, o el perfil venía de plantilla,
+  siempre que el límite fuera nulo. Ahora:
+  `mismoBuque && perfil.origin == declaredByUser && start.stackWeightLimitKg == null`,
+  donde `mismoBuque` es que el perfil tenga la clave del buque del viaje (o que no haya
+  viaje, al editar el perfil solo). `useTemplate` clona con origen `template` y la
+  propuesta del archivo nace `proposedFromFile`, así que las dos empiezan sin marcar;
+  `_canConfirm` ya exigía `_limitResolved`, así que sin escribir el límite ni marcar la
+  casilla el botón sigue deshabilitado. No cambia nada más de la página.
+- **Pruebas (`test/t114_fase3_correccion_test.dart`, 4):** la plantilla sin límite de otro
+  buque empieza sin marcar y no se confirma hasta marcar; la propuesta del archivo empieza
+  sin marcar y escribir el límite también resuelve; el perfil declarado del mismo buque sin
+  límite viene marcado, con viaje y al editar el perfil solo; y un perfil declarado de otro
+  buque no marca nada. Abren `VesselGeometryPage` con la propuesta y las posiciones del
+  archivo sintético de BUQUE ALFA (`profileTestEdi`), sin almacén.
+- **O1.** `docs/rediseno/fase3/rnf-002/web/con` → `con-perfil`, renombrada con el prefijo
+  `\\?\` desde Python (ni Git ni el Explorador la veían): los cinco archivos
+  (`con00-publicado.png`, `con01-inicio.png`, `con01-registro.json`, `con01-rejilla.png`,
+  `resumen.json`) son los mismos bytes; la medición no se regeneró.
+  `tool/t114_primera_web.py` crea ahora la subcarpeta de la corrida por su condición
+  (`sin-caliente`, `sin-fria`, `con-perfil`) y rechaza cualquier parte de la ruta que sea
+  `con`, `prn`, `aux`, `nul`, `com1` a `com9` o `lpt1` a `lpt9`; su docstring lo explica.
+  En este informe, 3.5 y el bloque de git de la entrega 1 apuntan a `con-perfil/`.
+- **O2 (`test/profile_loading_test.dart`).** `_mismoPerfil` compara identidad, nombre,
+  geometría (con el límite), tapas, bahías de bodega observadas, tomas y los dos orígenes,
+  y se usa en los tres puntos (antes `.key`, `.key` y `hasLength(1)`); `updatedAt` queda
+  fuera porque confirmar otra vez lo cambia.
+- **O3.** La ayuda de `--antes` en `tool/t112_censos.py` dice que la referencia es el
+  `lib/` de `5406e20` (con `sprint3-cierre` las decisiones por línea no coinciden), y 3.4
+  lo declara con las cifras que Codex obtuvo con la otra referencia (1834 y M3 251/16/0).
+
+### 3c.3 Validaciones ejecutadas
+
+Para no mezclar esta corrección con la Fase 2 bis, que ya estaba escrita en el árbol, la
+validé en una copia limpia: `git archive HEAD` (`16fa15d`) exportado a TEMP, más los
+archivos de esta corrección y el `package_config.json` del árbol; un comando de Flutter a
+la vez, en segundo plano.
+
+- `flutter analyze --no-pub` en la copia → **«No issues found»**.
+- `flutter test --no-pub` en la copia → **`+1159 -1`, 0 omitidas (1160 = 1156 + 4). El fallo es `t114_fuentes_test.dart` «provenance.json cubre los siete TTF y la licencia»: `LICENSE-IBMPlex.txt` mide 4363 bytes en la copia (LF, lo que `git archive` exporta) y 4456 en el árbol (CRLF, lo que `provenance.json` registra). Es de la copia, no del producto: en el árbol la prueba pasa (abajo, 2b.4) y Codex la vio pasar en la suya. La primera corrida en la copia tenía además dos fallos de mi prueba nueva (el perfil propuesto no cubría las posiciones sintéticas que le pasaba a la página); se corrigió la prueba, no el producto, y la segunda corrida es la de arriba.**
+- `flutter test --no-pub test/t114_fase3_correccion_test.dart` en el árbol → `+4: All tests
+  passed!`.
+- `python -X utf8 -I -c "import ast; ast.parse(open('tool/t114_primera_web.py').read())"` →
+  compila; no se corrió el instrumento (no se regenera la medición).
+
+### 3c.4 Archivos de esta corrección
+
+- `lib/features/vessel/presentation/pages/vessel_geometry_page.dart` (la condición de
+  `_limitUnavailable`).
+- `test/t114_fase3_correccion_test.dart` (nuevo, 4 pruebas) y `test/profile_loading_test.dart`.
+- `tool/t114_primera_web.py` y `tool/t112_censos.py`.
+- `docs/rediseno/fase3/rnf-002/web/con-perfil/` (los cinco archivos, renombrados; eran los
+  que faltaban en `a609241`).
+- `docs/REDISENO-RESULTADOS.md` (3.4, 3.5, el bloque de la entrega 1 y esta sección).
+- Sin cambios: `domain/`, `data/`, `lib/main.dart`, `pubspec.*`, los congelados, los
+  instrumentos de T-98 y `lib/core/design/` (que cambia en la Fase 2 bis, aparte).
+
+### 3c.5 Horas
+
+De las 16:50 (el mensaje de Carlos con 10.15) a las 17:10 del 22-oct-2026, entre la Fase 1 bis
+y la Fase 2 bis: ≈ 0.3 h, con las dos corridas de la copia limpia en segundo plano.
+
+### Git para Carlos (Fase 3, entrega 1, corrección)
+
+Este bloque va **antes** del de la Fase 1 bis y la Fase 2 bis. Los cinco archivos de
+`con-perfil` son los de la entrega 1 que Git no pudo agregar.
+
+```
+git add -- lib/features/vessel/presentation/pages/vessel_geometry_page.dart
+git add -- test/t114_fase3_correccion_test.dart
+git add -- test/profile_loading_test.dart
+git add -- tool/t114_primera_web.py
+git add -- tool/t112_censos.py
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/con00-publicado.png
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/con01-inicio.png
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/con01-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/con01-rejilla.png
+git add -- docs/rediseno/fase3/rnf-002/web/con-perfil/resumen.json
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: correccion de la entrega 1, No lo tengo sin marcar por omision, carpeta con-perfil y pruebas"
+git push
+```
+
+Nota: `docs/REDISENO-RESULTADOS.md` lleva también, más abajo, las secciones de la Fase 1
+bis y la Fase 2 bis; si Carlos quiere los dos commits con informes separados, este
+`git add` del informe puede ir en el segundo bloque y aquí solo el resto.
+
+### Tres líneas
+
+- «No lo tengo» viene marcado solo con un perfil declarado por el usuario para este mismo
+  buque y sin límite; plantilla y propuesta empiezan sin marcar, y sin elegir no se confirma.
+- La evidencia Web «con perfil» vuelve a existir para Git en `con-perfil`, el instrumento
+  no vuelve a crear un nombre reservado, y las tres aserciones comparan el perfil completo.
+- Piso 1156 → 1160, `analyze` en cero, validado en una copia limpia de `16fa15d` con solo
+  la corrección encima.
+
+---
+
+## Fase 1 bis · La dirección C «Puente de mando» en `DESIGN.md` (22-oct-2026)
+
+### 1b.1 Resultado en tres líneas
+
+- `DESIGN.md` tiene la dirección C en una sección nueva, la **13**, que pasa a ser la
+  activa; la A queda en la 4 como historia, con la línea de por qué cambió (10.14), y las
+  secciones 2, 3, 5, 9 y 12 anotan dónde la 13 las sustituye. Ningún archivo de `lib/`
+  cambió en esta fase.
+- La 13 trae la noche y el día con los roles de M3 y los de `BsColoresSemanticos` y el
+  contraste de cada pareja; el plano como el ícono (los cinco estados de la vista Estado,
+  el casco de la bodega, la curva de las celdas de los extremos y el radio 8); la regla del
+  naranja; las fichas en OKLCH con la tabla reordenada y sus 24 valores; el tema por
+  omisión según el equipo; las nueve piezas con su API; dónde va la marca; los dos
+  wireframes que cambian; lo que no se toma y los datos que no se inventan; y los tokens
+  y duraciones que cambian en la Fase 2.
+- Todo número de contraste del documento sale de `tool/rediseno_contraste.py`, que ahora
+  calcula la noche, las fichas en OKLCH y la permutación, con 0 pares que no cumplen
+  (`docs/rediseno/fase2bis/contraste.md`).
+
+### 1b.2 Lo hecho
+
+- Leí `CLAUDE.md`, `AGENTS.md`, `SPRINT-4.md` (la sección 2, T-114 y 10.1 a 10.14), el
+  traspaso de la entrega 1, `DESIGN.md`, las cuatro mesas del concepto por sus valores
+  exactos (`docs/rediseno/concepto/*.dc.html`; no hay PNG), `design/icono/baystream.svg`
+  y su `LEEME.md`, `lib/core/design/**` y las secciones de las Fases 2 y 3 del informe.
+  El paso 0 estaba en orden: la entrega 1 en `a609241` y su sección en el informe.
+- **La noche, calculada antes de escribirla.** Las parejas de 10.14 se verificaron una por
+  una (16.5, 15.2 y 13.8 la tinta; 9.5, 8.7 y 8.0 la tinta suave; 5.9 la selección; 8.6
+  el blanco sobre la marca; 3.9, 3.6, 3.3 y 3.3 la línea fuerte). Dos decisiones que el
+  concepto no fijaba: **la marca `#0D47A1` no sirve como texto de noche** (1.6:1 sobre la
+  noche), así que `primary` pasa a la selección `#4F8EF7` (5.9:1) y la marca queda como
+  superficie (`primaryContainer`, el riel activo, la banda); y **la selección de segmentos
+  y chips se invierte de noche** (tinta con la noche encima, 16.5:1), como el «Descarga»
+  del lienzo. Se añade la **tinta tenue** (`#8DA0BE` / `#566986`, 7.1 y 5.2 sobre el
+  papel) para los metadatos terciarios del concepto, y la **marca profunda** `#0A3A85` y
+  la **frase** `#BCD2F7` de la banda (10.7 y 5.6 con blanco y sobre la marca).
+- **Las fichas en OKLCH.** Implementé la conversión OKLCH → sRGB (Ottosson) en el script;
+  con la receta del encargo (suaves: relleno L 0.34 C 0.075, código y contorno L 0.84
+  C 0.12) salen los valores del lienzo: ámbar `#4E3100` / `#F8BF6C`, hierba `#1B421E` /
+  `#98DF9A` y uva `#462B52` exactos; cielo y rosa difieren por unas unidades porque el
+  lienzo recortó la gama de otra forma (el script baja el croma hasta que el color quepa,
+  sin tocar tono ni luminosidad). **Las intensas** las elegí probando cinco recetas:
+  relleno L 0.44 C 0.12 y código y contorno L 0.93 C 0.06, que separan a las suaves por
+  luminosidad (el relleno más claro y cromático, el código más claro: relación 1.3 a 1.5
+  con la suave del mismo tono) y dan 6.1 a 6.7 de código sobre relleno y 12.7 a 13.3 de
+  contorno sobre los fondos; las recetas más oscuras (L 0.25 a 0.27) daban más contraste
+  (11 a 12) pero se separaban menos de las suaves.
+- **La tabla reordenada** es una permutación de qué tono pinta cada ranura; los códigos y
+  el FNV-1a no cambian. En la rueda de doce tonos a 30°, los cinco primeros puertos quedan
+  en 345°, 195°, 105°, 285° y 45° (mínimo 60° entre cualquier par; antes 30°); en los matices
+  OKLCH de las fichas, que no van a pasos iguales, uva y rosa quedan a 55°, y así lo dice
+  13.4. La 5.3 y la 5.2 del documento remiten a la 13.4.
+- **La regla del naranja** (13.3) se escribió completa, con lo que el concepto dejaba
+  implícito: la pantalla apaga el estado (la celda no tiene reloj), el destello de la
+  silueta dura lo mismo, con reducción de movimiento nada se mueve (la celda queda naranja
+  en su sitio y el destello es un anillo fijo), y el anuncio al lector de pantalla va en
+  el panel «En vivo» y en la etiqueta de la celda.
+- **El tema por omisión** (13.5) se escribió con su límite: el almacén devuelve `system`
+  tanto si el usuario nunca eligió como si eligió «Seguir al sistema»; sin tocar `data/`
+  no se distinguen. Queda declarada la decisión de esta fase y las dos salidas para
+  Carlos (abajo, 2b.6).
+- **Las piezas** (13.6) quedaron con su API escrita antes del código: `BsMarca`,
+  `BsSiluetaBuque` (evoluciona `BsTiraDeBahias`, que se conserva), `BsCascoBodega`, los
+  estados y la curva de `BsCelda`, `BsTarjetaCifra`, `BsAnilloAvance`, `BsPanelEnVivo` (su
+  API solo admite el rol del equipo: `BsEquipo.muelle` u `oficina`), `BsBandaMuelle` y
+  `BsFondoDePlano`.
+- **Los wireframes** 9.2 (1920 px) y 9.3 (360 dp) quedaron sustituidos por los de 13.8:
+  el plano de noche con el riel, la silueta, las cuatro tarjetas, la bahía como el ícono,
+  el detalle y «En vivo»; y el muelle de día con la banda, «Baja» en la marca y la celda
+  que sale de su sitio. Sin «Grúa 2» ni nombres de equipos.
+- **Lo que cambia en los tokens** (13.10): `radioCelda` 2 → 8 (las esquinas del ícono),
+  `radioPanel` 18, `radioCasco` 18, `pasoRejilla` 32; `BsMovimiento.recienMovido` 1500 ms,
+  `salida` 150, `espera` 1200, `pulso` 2200; `BsRol.punteado`; y la regla nueva de la celda
+  atenuada (abajo).
+- **Un hallazgo del instrumento al escribir el documento:** con los rellenos nuevos de «por
+  bajar», la celda atenuada (relleno al 35 %, código en tinta suave) deja el código en
+  **3.5:1 de día y 3.1:1 de noche**. La regla de 10.7 pasa a «tinta suave, y si no llega a
+  4.5:1 sobre lo compuesto, tinta», decidida por el rol y verificada compuesta; con los 42
+  rellenos de cada modo, caen a tinta 2 de día y 1 de noche y el peor queda en 4.69 y 5.10.
+  Está en 13.2, en el script y en `BsRol.atenuado` (Fase 2 bis).
+
+### 1b.3 Validaciones ejecutadas
+
+- `python -X utf8 -I tool/rediseno_contraste.py` → «Pares que no cumplen: 0» sobre la
+  dirección C en claro y en oscuro (27 pares por modo), la A oscura como historia, las 24
+  ranuras en los dos modos (texto y contorno), 19 roles semánticos × 2 modos y la celda
+  atenuada con los 42 rellenos por modo. Salida en `docs/rediseno/fase2bis/contraste.md`.
+- Los valores de las fichas se cotejaron con los cinco ejemplos de `Sistema.dc.html`
+  (arriba). No se compiló ni se corrió la app: la fase no toca `lib/`.
+
+### 1b.4 Archivos de esta fase
+
+`DESIGN.md` (sección 13 nueva, 357 líneas; cabecera, 2, 3, 4, 5.1, 5.2, 5.3, 9.2, 9.3 y 12
+anotadas), `tool/rediseno_contraste.py` (la dirección C, OKLCH, la permutación, las fichas,
+el respaldo a tinta de la celda atenuada y `--dart`) y `docs/rediseno/fase2bis/contraste.md`.
+
+### 1b.5 Lo que no se pudo y por qué
+
+- No hay exportaciones PNG del concepto en `docs/rediseno/concepto/`, así que las mesas se
+  leyeron por su código; los valores que cito son los del código del lienzo.
+- La ilustración de la grúa del inicio y el dibujo del muelle de las pantallas vacías no
+  se diseñan aquí: llegan en el paquete de 10.14 (13.7 y 13.9).
+
+### 1b.6 Horas
+
+De las 16:15 (aprox., el mensaje de Carlos con el encargo) a las 16:45 del 22-oct-2026:
+≈ 0.5 h, con las lecturas del paso 0 y del contexto.
+
+---
+
+## Fase 2 bis · La fundación de la dirección C (22-oct-2026)
+
+### 2b.1 Resultado en tres líneas
+
+- La noche está en `bs_paleta.dart` y en `BayStreamTema.oscuro`; el día no cambia. Los
+  roles de la vista Estado, el rol «información», la tinta tenue y las fichas de noche
+  están en `bs_colores_semanticos.dart`; la tabla reordenada en `bs_categorico.dart` y en
+  el script; el tema por omisión según el equipo en `lib/core/app.dart`; y las nueve piezas
+  nuevas en `lib/core/design/componentes/`, con vista previa, documentación y prueba.
+  **Ninguna pantalla cambia todavía**: solo cambian los valores del tema que ya estaba
+  conectado.
+- Suite **1223** (piso 1160 tras la corrección + 63 nuevas, ninguna
+  omitida); `analyze` **«No issues found»**; contraste con 0 pares que no cumplen; auditoría de
+  `flutter-ui` con **cero críticos y cero avisos en `lib/core/design/`** fuera de los dos
+  archivos de tokens, que son la única fuente de color (17 críticos, 272 avisos y 19 informativos en 165 archivos; los 41 avisos nuevos son hexadecimales en `bs_paleta.dart` y `bs_colores_semanticos.dart`).
+- Me detengo: **ALTO: Codex acepta la Fase 2 bis**. Después viene la Fase 3 con el plano
+  por bahía, ya en la dirección C.
+
+### 2b.2 Lo hecho
+
+1. **La noche (`bs_paleta.dart`, `bs_tema.dart`).** `BsPaleta.oscuro` lleva los valores de
+   13.1 y la clase suma cinco colores con nombre en los dos modos: `tintaTenue`,
+   `marcaSuperficie`, `sobreMarcaSuperficie`, `sobreMarcaSuave` y `marcaProfunda`. En el
+   tema: `primary` es la selección de noche; `primaryContainer` la marca como superficie;
+   el indicador del riel y de la barra lleva el icono en blanco de noche y en tinta de
+   día; los segmentos y los chips seleccionados se invierten de noche (tinta con la noche
+   encima); la pista de las barras de progreso es la línea de noche. El día es byte a byte
+   el de la Fase 2.
+2. **Los roles (`bs_colores_semanticos.dart`).** Nuevos: `informacion` (la banda, que ya no
+   toma el esquema: de noche el icono en marca no llegaba a 3:1 sobre la marca como
+   superficie), `porBajarCubierta`, `porBajarBodega`, `bajado`, `recienMovido` y el color
+   `tintaTenue`. Los de la Fase 2 toman los valores de la noche (de paso apagado en el
+   panel alto; hecho, revisar y error con los contornos de 10.14; cubierta y bodega con el
+   panel y el acero tenue). `BsRol` suma `punteado` (el bajado de noche) y `atenuado`
+   acepta `tinta` como respaldo cuando la tinta suave no llega a 4.5:1 sobre lo compuesto.
+   Las 24 ranuras se regeneraron con `--dart`: de día los rellenos de la Fase 2 en el orden
+   nuevo; de noche las fichas.
+3. **La tabla reordenada (`bs_categorico.dart`).** `tonosPorRanura` = `[11, 6, 3, 9, 1, 8,
+   4, 0, 10, 5, 2, 7]`, `tonoDeRanura(k)` y `nombresDeTono`; `tablaFijaDePuertos`,
+   `tablaFijaDeTipos` y `ranuraCategorica` (FNV-1a) no cambian.
+4. **El tema por omisión (`lib/core/app.dart`): preparado, no conectado.**
+   `bayStreamTemaPorOmision` (oscuro salvo en Android e iOS) está listo y probado, pero
+   `bayStreamThemeMode` deja `system` → `ThemeMode.system`: la prueba de T-90
+   (`t90_theme_test`, «sistema responde y elección explícita prevalece») exige que «Seguir
+   al sistema» siga al sistema, y el almacén devuelve el mismo `system` para quien nunca
+   eligió. Resolverlo exige `domain/` y `data/`, así que lo propongo y me detengo en ese
+   punto (2b.6); el resto de la fase no depende de él.
+5. **Las piezas**, todas en `lib/core/design/componentes/`:
+   - `BsMarca` (`bs_marca.dart`): el ícono pintado desde la geometría del SVG (las ocho
+     celdas de cubierta con el hueco, la tapa, las seis celdas y los ocho bloques curvos de
+     la bodega transcritos punto a punto, el contenedor), con recuadro (lienzo de 126.6 y
+     esquinas de 27), sin recuadro y monocroma; la espera sube y baja el contenedor medio
+     módulo (6.9 unidades) con `Transform` en un bucle de 1.2 s; `RepaintBoundary`;
+     etiqueta «BayStream» y «BayStream, leyendo».
+   - `BsSiluetaBuque` (`bs_silueta_buque.dart`): el casco (proa a la izquierda, línea de
+     flotación, sin superestructura), una pila por bahía (niveles de cubierta sobre la
+     tapa, de bodega dentro del casco; con trabajo más claras, las demás apagadas), la
+     seleccionada en cubierta y acero con su marco, el número y la barra de avance bajo
+     cada bahía (hecho si llegó a 1, marca si va), el destello de la recién movida
+     (anillo en grúa que se apaga en 1.5 s; fijo con reducción de movimiento), «Proa» y
+     «Popa»; cada bahía es un botón de 56 dp con etiqueta («Bahía 14, 4 niveles en cubierta
+     y 4 en bodega, avance 25 %»). El alto sale de los niveles y de la escala de letra.
+   - `BsCascoBodega` (`bs_casco_bodega.dart`): el casco detrás de las filas de bodega, en
+     acero tenue con contorno de línea fuerte, dentro de un `RepaintBoundary`.
+   - `BsCelda` (`bs_celda.dart`): `estado` (los cinco de 13.2) y `curva` (babor, estribor,
+     ambas; radio 18 en la esquina exterior); el estado manda en el relleno y la marca pone
+     icono y rótulo («Bajando» y «Subiendo» cuando se acaba de mover); bajado sin marca es
+     solo la palomita; el contorno punteado es un `CustomPainter` público
+     (`BsContornoPunteado`) para que las pruebas midan su color; recién movida sale de su
+     celda con `AnimatedSlide` (media celda, 150 ms) sobre el hueco punteado en grúa y
+     añade «se acaba de mover» a su etiqueta; con reducción de movimiento se queda quieta
+     y naranja. La celda atenuada usa la tinta como respaldo (13.2).
+   - `BsTarjetaCifra` y `BsAnilloAvance`: la tarjeta del mosaico (hoja, radio 18, borde en
+     línea o teñido por el rol; rótulo, cifra a 34 / 600 tabular, detalle en tinta tenue;
+     etiqueta «Por bajar: 30, 18 en la bahía 14») y el anillo (pista en línea, arco desde
+     las doce, sin animación; «80 por ciento»).
+   - `BsPanelEnVivo` y `BsPulso`: el panel de 13.6 con el rol del equipo por enum, el tipo
+     del evento que decide la marca de color, el momento o la acción, la región en vivo en
+     el evento más reciente y el punto que pulsa en opacidad (quieto con reducción de
+     movimiento o sin conexión).
+   - `BsBandaMuelle` y `BsChipDeNube`: la banda en la marca como superficie, con la marca
+     sin recuadro, el buque, el viaje, el chip de la nube (marca profunda, punto en hecho)
+     y el `SegmentedButton` Descarga / Carga de 48 dp (seleccionado blanco con texto
+     marca).
+   - `BsFondoDePlano`: la rejilla de 32 dp en acero al 5 % solo de noche.
+   - `BsBanda` toma el rol `informacion`; `design.dart` exporta las piezas nuevas.
+6. **Las medidas y el movimiento.** `radioCelda` 8, `radioPanel` 18, `radioCasco` 18 y
+   `pasoRejilla` 32 en las dos densidades; `BsMovimiento.salida`, `recienMovido`,
+   `espera`, `pulso`, `vaiven` y `reducido(context)`.
+7. **Las vistas previas (`vistas_previas.dart`).** Ocho nuevas: las celdas de la vista
+   Estado de noche con el casco y de día en el muelle, la marca, la silueta, las tarjetas,
+   «En vivo», la banda del muelle y el fondo de plano; las de la Fase 2 se conservan.
+8. **El informe de la corrección** de la entrega 1 (sección anterior) se hizo entre la
+   Fase 1 bis y esta, como pidió 10.15.
+
+### 2b.3 Pruebas
+
+- **`test/t114_fase2bis_test.dart` (24):** los valores de la noche y la marca
+  como superficie; las parejas nuevas en AA en los dos modos y las cifras de 13.1; el tema
+  de noche (primary, primaryContainer, superficies, indicador del riel, selección
+  invertida, pista de progreso) y el de día intacto; los roles de la vista Estado y de la
+  noche en AA sobre el relleno y 3:1 sobre los cuatro fondos de cada modo; sus valores del
+  concepto; el respaldo a tinta de la celda atenuada; la permutación y los 60° de los
+  cinco primeros puertos; **las 24 fichas de noche recalculadas en Dart con la receta
+  OKLCH** (y las de día con la de HSL), su contraste y la separación suave / intensa; el
+  script con la misma permutación y receta; el tema por omisión por plataforma (función y
+  `BayStreamApp` en Windows y Android: «Seguir al sistema» sigue al sistema y la elección
+  explícita manda, como en T-90); y **el contraste compuesto de los
+  estados nuevos de la celda**: 5 estados × 4 marcas × atenuada × insignia, sobre papel,
+  cubierta y bodega, en dos temas y dos densidades (240 casos por combinación, 960 en
+  total), midiendo también el contorno punteado.
+- **`test/t114_piezas_test.dart` (39):** cada pieza (qué dibuja, qué responde al
+  toque, su etiqueta, sus medidas), la curva y el radio de la celda, el estado que manda
+  sobre la categoría, el punteado de noche y el relleno de día, la celda que sale y vuelve
+  a su alto de siempre; **con `disableAnimations` nada se mueve** (la marca en espera, el
+  pulso, el destello y la celda recién movida: `hasRunningAnimations` falso y sin
+  `AnimatedSlide` ni `TweenAnimationBuilder`), y con animaciones sí se mueven; las tres
+  pautas de accesibilidad (`textContrastGuideline`, `androidTapTargetGuideline`,
+  `labeledTapTargetGuideline`) sobre las siete piezas en el día y en la noche; y las ocho
+  vistas previas nuevas construidas en los dos temas.
+- **Actualizadas:** `t114_fundacion_test.dart` y `t114_fase3_inicio_test.dart` solo cambian
+  el nombre de una prueba («dirección A» → «dirección C» / «el tema»); sus aserciones
+  siguen valiendo con los valores nuevos (`BsPaleta.oscuro.marca`, `.papel`). Las 75 ×
+  3 × 4 = 900 celdas de `t114_celda_contraste_test.dart` pasan con la noche sin tocar la
+  prueba.
+
+### 2b.4 Validaciones ejecutadas
+
+Con la luz verde del encargo para `flutter test` y `flutter analyze`, un comando a la vez
+(los dos de la copia limpia de la corrección terminaron antes de empezar estos). Sin
+compilaciones ni arranques de app; `flutter-mcp` y `maestro` no hicieron falta (ninguna
+pantalla cambia).
+
+- `flutter analyze` → **«No issues found»**.
+- `flutter test --no-pub` (suite completa) → **`+1223: All tests passed!`, 0 fallos, 0 omitidas (incluidas las 4 de la corrección y la de las fuentes, que en el árbol pasa)**. Piso: 1160 (tras la
+  corrección) → **1223**.
+- `python -X utf8 -I tool/rediseno_contraste.py` → «Pares que no cumplen: 0».
+- Auditoría de `flutter-ui` (`python …/flutter_ui_audit.py . --all`, salida en
+  `docs/rediseno/fase2bis/flutter-ui-audit.txt`): 165 archivos (157 + 8 nuevos), **17 críticos, 272 avisos y 19 informativos** (la entrega 1: 17, 231 y 19). Los críticos y los informativos son los mismos de la entrega 1, ninguno en `lib/core/`. Los 41 avisos nuevos son todos `PERF_HARDCODED_COLOR` en los dos archivos de tokens: `bs_colores_semanticos.dart` pasa de 128 a 159 (los roles nuevos, la noche y las fichas) y `bs_paleta.dart` de 32 a 42 (los cinco colores nuevos en dos modos). Son la única fuente de color del sistema, como desde 10.7 (O1). `bs_movimiento.dart` conserva el `ANIM_ZERO_DURATION` del interruptor de accesibilidad. **En los nueve componentes nuevos, en `bs_celda.dart`, `bs_banda.dart`, `bs_tema.dart`, `bs_medidas.dart`, `bs_categorico.dart`, `vistas_previas.dart` y `lib/core/app.dart`: cero críticos y cero avisos.**
+
+### 2b.5 Archivos de esta fase
+
+- `lib/core/app.dart`.
+- `lib/core/design/`: `bs_paleta.dart`, `bs_categorico.dart`, `bs_colores_semanticos.dart`,
+  `bs_medidas.dart`, `bs_movimiento.dart`, `bs_tema.dart`, `design.dart`,
+  `vistas_previas.dart`; en `componentes/`: `bs_celda.dart` y `bs_banda.dart`
+  (modificados) y, nuevos, `bs_marca.dart`, `bs_silueta_buque.dart`, `bs_casco_bodega.dart`,
+  `bs_tarjeta_cifra.dart`, `bs_anillo_avance.dart`, `bs_panel_en_vivo.dart`,
+  `bs_banda_muelle.dart` y `bs_fondo_de_plano.dart`.
+- `test/t114_fase2bis_test.dart` y `test/t114_piezas_test.dart` (nuevos);
+  `test/t114_fundacion_test.dart` y `test/t114_fase3_inicio_test.dart` (un nombre).
+- `tool/rediseno_contraste.py`, `docs/rediseno/fase2bis/contraste.md` y
+  `docs/rediseno/fase2bis/flutter-ui-audit.txt` (compartidos con la Fase 1 bis).
+- `DESIGN.md` (Fase 1 bis) y `docs/REDISENO-RESULTADOS.md` (las dos secciones).
+- Sin cambios: `lib/features/vessel/presentation/**` (salvo la corrección 10.15, aparte),
+  `domain/`, `data/`, `lib/main.dart`, `pubspec.yaml`, `pubspec.lock`, los congelados de H5
+  y los instrumentos de T-98. Ninguna dependencia nueva. `windows/flutter/generated_plugin*`
+  los regenera `flutter test` y no se versionan (10.2).
+
+### 2b.6 Lo que no se pudo, lo que queda y lo que Carlos decide
+
+- **El tema por omisión según el equipo no se conectó: exige `domain/` y `data/`.**
+  «Seguir al sistema» y «nunca eligió» son el mismo `system` para la presentación
+  (`hive_vessel_data_source.dart:117`), y la primera corrida de la suite lo dejó claro:
+  resolver `system` por equipo rompe `t90_theme_test` («sistema responde»), que es la
+  preferencia de T-90 que 10.14 dice que no cambia. Así que `bayStreamTemaPorOmision` queda
+  listo y probado, `system` sigue al sistema, y **propongo** (DESIGN.md 13.5) un cuarto valor
+  `AppThemePreference.equipo` («Según el equipo») que el almacén devuelva cuando no hay nada
+  guardado: dos líneas en `domain/` y `data/`, una en `app.dart` y una opción en Parámetros
+  (Fase 3). **Carlos decide y Yov lo escribe como tarea**; mientras tanto, en Windows y la
+  Web la app abre según el sistema operativo, como hasta hoy.
+- **Los avisos de la auditoría en los dos archivos de tokens** (`bs_paleta.dart` y
+  `bs_colores_semanticos.dart`) suben con la noche y las fichas: son la única fuente de
+  color del sistema, como desde 10.7 (O1), y fuera de ellos `lib/core/design/` queda en
+  cero críticos y cero avisos. `bs_movimiento.dart` conserva el falso positivo de
+  `Duration.zero` (el interruptor de accesibilidad).
+- Las vistas previas se comprobaron por prueba (se construyen en los dos temas); el visor
+  no se arrancó (cuenta en el semáforo y la fase no lo pide). No hay capturas: ninguna
+  pantalla cambia.
+- Las fichas de cielo y rosa difieren del lienzo por el recorte de gama (13.4); si Carlos
+  prefiere los valores del lienzo tal cual, son dos constantes.
+- **Queda para la Fase 3** (el plano por bahía): usar `BsSiluetaBuque`, `BsCascoBodega`, la
+  vista Estado y la regla del naranja en la pantalla; el código íntegro a 2.0 (10.8); la
+  banda que pone la acción debajo del texto cuando no cabe (3.8); y la etiqueta de la
+  tira que el conductor de T-99 busca.
+
+### 2b.7 Horas
+
+De las 16:45 a las 17:20 del 22-oct-2026: ≈ 0.6 h de reloj, sin cronómetro,
+con la corrección 10.15 en medio (≈ 0.3 h de esas, contadas en la sección de la corrección).
+
+### Git para Carlos (Fase 1 bis y Fase 2 bis)
+
+Después del bloque de la corrección. Un `git add` por ruta; `pubspec.yaml` y
+`pubspec.lock` no cambian.
+
+```
+git add -- DESIGN.md
+git add -- lib/core/app.dart
+git add -- lib/core/design/bs_paleta.dart
+git add -- lib/core/design/bs_categorico.dart
+git add -- lib/core/design/bs_colores_semanticos.dart
+git add -- lib/core/design/bs_medidas.dart
+git add -- lib/core/design/bs_movimiento.dart
+git add -- lib/core/design/bs_tema.dart
+git add -- lib/core/design/design.dart
+git add -- lib/core/design/vistas_previas.dart
+git add -- lib/core/design/componentes/bs_celda.dart
+git add -- lib/core/design/componentes/bs_banda.dart
+git add -- lib/core/design/componentes/bs_marca.dart
+git add -- lib/core/design/componentes/bs_silueta_buque.dart
+git add -- lib/core/design/componentes/bs_casco_bodega.dart
+git add -- lib/core/design/componentes/bs_tarjeta_cifra.dart
+git add -- lib/core/design/componentes/bs_anillo_avance.dart
+git add -- lib/core/design/componentes/bs_panel_en_vivo.dart
+git add -- lib/core/design/componentes/bs_banda_muelle.dart
+git add -- lib/core/design/componentes/bs_fondo_de_plano.dart
+git add -- test/t114_fase2bis_test.dart
+git add -- test/t114_piezas_test.dart
+git add -- test/t114_fundacion_test.dart
+git add -- test/t114_fase3_inicio_test.dart
+git add -- tool/rediseno_contraste.py
+git add -- docs/rediseno/fase2bis/contraste.md
+git add -- docs/rediseno/fase2bis/flutter-ui-audit.txt
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: rediseno, fase 1 bis y 2 bis, direccion Puente de mando: la noche, las fichas, la tabla reordenada, el tema por equipo y las piezas nuevas"
+git push
+```
+
+### Tres líneas
+
+- `DESIGN.md` 13 es la dirección C completa, con cada pareja de color verificada por el
+  script; la A queda como historia.
+- `lib/core/design/` tiene la noche, los roles de la vista Estado, las fichas OKLCH con la
+  tabla a saltos, el tema por equipo en `app.dart` y nueve piezas nuevas con prueba y vista
+  previa; ninguna pantalla cambia.
+- Suite 1223 y `analyze` en cero; el tema por omisión según el equipo queda
+  preparado y propuesto, no conectado, porque exige `data/` (2b.6). ALTO: Codex acepta la
+  Fase 2 bis.
+
+### Mensaje para Yov
+
+Yov: la corrección 10.15 y las Fases 1 bis y 2 bis quedan listas para Codex, en dos bloques de git (primero la corrección). **Corrección:** «No lo tengo» viene marcado solo si el perfil es del mismo buque, declarado por el usuario y sin límite (`vessel_geometry_page.dart`, `initState`); plantilla y propuesta empiezan sin marcar y sin elegir no se confirma; 4 pruebas nuevas, incluido BUQUE BETA para BUQUE ALFA. La carpeta `con` es `con-perfil` con los mismos cinco archivos; `t114_primera_web.py` escribe por condición y rechaza nombres reservados; las tres aserciones de `profile_loading_test` comparan identidad, geometría, tapas, tomas y orígenes salvo `updatedAt`; la referencia `5406e20` está en 3.4 y en la ayuda de `t112_censos.py`. Validada en una copia limpia de `16fa15d` con solo la corrección: analyze 0 y 1159 de 1160 (el único fallo es la licencia en LF de `git archive` contra los 4456 bytes CRLF del árbol; en el árbol pasa). Piso 1160. **Fase 1 bis:** `DESIGN.md` 13 es la dirección C (noche y día con los roles de M3 y los semánticos y el contraste de cada pareja, el plano como el ícono, la regla del naranja, las fichas OKLCH con la tabla a saltos y sus 24 valores, el tema por equipo, nueve piezas con API, dónde va la marca, 9.2 y 9.3 bis, lo que no se toma); la A queda como historia con su porqué. Dos decisiones que el concepto no fijaba y quedan escritas: de noche la marca `#0D47A1` no sirve como texto (1.6:1), así que `primary` es la selección `#4F8EF7` y la marca va como superficie; y la selección de segmentos y chips se invierte de noche. **Fase 2 bis:** la noche en paleta y tema, los roles nuevos (información, por bajar en cubierta y en bodega, de paso apagado, bajado punteado, recién movido, tinta tenue), las fichas y la permutación en Dart y en el script (las fichas se recalculan en la prueba con la receta OKLCH), el tema por equipo en `app.dart`, y `BsMarca`, `BsSiluetaBuque`, `BsCascoBodega`, `BsCelda` con `estado` y `curva`, `BsTarjetaCifra`, `BsAnilloAvance`, `BsPanelEnVivo` (solo el rol del equipo, por enum), `BsBandaMuelle` y `BsFondoDePlano`, cada una con vista previa, prueba y las tres pautas, y con `disableAnimations` nada se mueve. Suite 1223 (63 nuevas, ninguna omitida), analyze 0, contraste 0 pares bajos, auditoría con cero críticos y cero avisos en `lib/core/design/` y `app.dart` fuera de los dos archivos de tokens (201 hexadecimales, antes 160). Un hallazgo del instrumento: con los rellenos de «por bajar» la celda atenuada dejaba el código en 3.5:1 y 3.1:1; la regla pasa a «tinta suave, y si no llega, tinta» (13.2, script y `BsRol.atenuado`). **Para Carlos:** (1) el tema por omisión según el equipo queda preparado (`bayStreamTemaPorOmision`) pero no conectado: el almacén devuelve el mismo `system` para quien nunca eligió y para quien eligió «Seguir al sistema», y la prueba de T-90 exige que este siga al sistema; propongo en 13.5 un cuarto valor `AppThemePreference.equipo` que el almacén devuelva cuando no hay nada guardado (dos líneas en domain/ y data/, una en app.dart y la opción en Parámetros), para que lo decidas y lo escribas como tarea; (2) cielo y rosa difieren del lienzo por el recorte de gama de sRGB. Ninguna pantalla cambia. Me detengo: ALTO: Codex acepta la Fase 2 bis.

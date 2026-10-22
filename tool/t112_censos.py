@@ -344,7 +344,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('fuente', type=Path)
     ap.add_argument('salida')
-    ap.add_argument('--antes', type=Path, required=True, help='raíz con el lib/ de sprint3-cierre')
+    ap.add_argument('--antes', type=Path, required=True, help='raíz con el lib/ de la referencia: 5406e20 para la Fase 3, entrega 1 (10.15, O3); con sprint3-cierre las decisiones por línea no coinciden')
     a = ap.parse_args()
     root = a.fuente.resolve()
     out = C.salida(a.salida)
