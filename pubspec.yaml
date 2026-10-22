@@ -71,6 +71,38 @@ flutter:
     - assets/fonts/Roboto-Regular.ttf
     - assets/fonts/Roboto-Medium.ttf
 
+  # Rediseno (T-114, 10.4): IBM Plex como asset, con LICENSE-IBMPlex.txt y
+  # provenance.json en assets/fonts/plex/ (SIL Open Font License 1.1). Roboto,
+  # que ya estaba empaquetada para el PDF, queda declarada como familia de
+  # respaldo para cualquier glifo que Plex no tenga.
+  fonts:
+    - family: IBM Plex Sans
+      fonts:
+        - asset: assets/fonts/plex/IBMPlexSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/plex/IBMPlexSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/plex/IBMPlexSans-SemiBold.ttf
+          weight: 600
+    - family: IBM Plex Sans Condensed
+      fonts:
+        - asset: assets/fonts/plex/IBMPlexSansCondensed-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/plex/IBMPlexSansCondensed-SemiBold.ttf
+          weight: 600
+    - family: IBM Plex Mono
+      fonts:
+        - asset: assets/fonts/plex/IBMPlexMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/plex/IBMPlexMono-Medium.ttf
+          weight: 500
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+
 # Instalador de Windows (T-93). Sin secretos: la huella del certificado llega por
 # la linea de comandos en tool/t93_msix.ps1 (--signtool-options). Nombres de las
 # opciones confirmados en lib/src/configuration.dart de msix 3.18.0.

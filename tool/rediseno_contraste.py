@@ -155,26 +155,53 @@ TONOS = [15 + 30 * i for i in range(12)]
 NOMBRES = ['arcilla', 'ámbar', 'oliva', 'hierba', 'verde mar', 'turquesa',
            'cielo', 'cobalto', 'índigo', 'uva', 'magenta', 'rosa']
 
+# Dos luminosidades por tono (10.4): la «suave» y la «intensa». En claro la
+# intensa es un tinte más oscuro; en oscuro es una sombra más oscura, porque
+# una sombra más clara deja el texto claro por debajo de 4.5:1 en los verdes.
+LUMINOSIDADES = {
+    'suave': {'claro': (0.55, 0.85, 0.60, 0.32), 'oscuro': (0.45, 0.30, 0.55, 0.68)},
+    'intensa': {'claro': (0.50, 0.74, 0.60, 0.26), 'oscuro': (0.45, 0.21, 0.55, 0.76)},
+}
+
+# Tablas fijas propuestas (10.4): solo códigos, en el orden de asignación.
+# Ranura k → tono k mod 12, luminosidad «suave» para k < 12 e «intensa» después.
+# Los puertos de destino (LOC+11) y los tipos ISO de vacío que salen en el corpus.
+TABLA_PUERTOS = ['JMKIN', 'USHOU', 'GTSTC', 'JMKCT', 'PAMIT', 'COSPC', 'JMKWL',
+                 'PACCT', 'GTPBR', 'USPEF', 'PAONX', 'VEPBL', 'VELAG', 'COCTG',
+                 'USMSY', 'XXVSL']
+TABLA_TIPOS = ['45G1', '22G1', '45G0', 'L5G1', '45R1', '42G1', '42U1', '42P3',
+               'L5G0', '22K2', '22U1', '22T1', '45R8']
+
+
+def ranura(k: int) -> dict:
+    """Relleno, borde y texto de la ranura k (0..23) en claro y oscuro."""
+    nombre, h = NOMBRES[k % 12], TONOS[k % 12]
+    lumi = 'suave' if k < 12 else 'intensa'
+    fila = {'ranura': k, 'nombre': f'{nombre} {lumi}', 'tono': h}
+    for modo, (s_rel, l_rel, s_bor, l_bor) in LUMINOSIDADES[lumi].items():
+        relleno, borde = hsl(h, s_rel, l_rel), hsl(h, s_bor, l_bor)
+        texto = '#10243F' if modo == 'claro' else '#F2F6FB'
+        papel = '#F5F8FC' if modo == 'claro' else '#0B1626'
+        fila[modo] = {'relleno': relleno, 'borde': borde, 'texto': texto,
+                      'contraste texto': round(contrast(texto, relleno), 2),
+                      'contraste borde': round(contrast(borde, papel), 2)}
+    return fila
+
 
 def categorica() -> list[dict]:
-    filas = []
-    for nombre, h in zip(NOMBRES, TONOS):
-        relleno_claro = hsl(h, 0.55, 0.85)
-        borde_claro = hsl(h, 0.60, 0.32)
-        relleno_oscuro = hsl(h, 0.45, 0.30)
-        borde_oscuro = hsl(h, 0.55, 0.68)
-        filas.append({
-            'nombre': nombre, 'tono': h,
-            'claro': {'relleno': relleno_claro, 'borde': borde_claro,
-                      'texto': '#10243F',
-                      'contraste texto': round(contrast('#10243F', relleno_claro), 2),
-                      'contraste borde': round(contrast(borde_claro, '#F5F8FC'), 2)},
-            'oscuro': {'relleno': relleno_oscuro, 'borde': borde_oscuro,
-                       'texto': '#F2F6FB',
-                       'contraste texto': round(contrast('#F2F6FB', relleno_oscuro), 2),
-                       'contraste borde': round(contrast(borde_oscuro, '#0B1626'), 2)},
-        })
-    return filas
+    return [ranura(k) for k in range(24)]
+
+
+def fnv1a(codigo: str) -> int:
+    """FNV-1a de 32 bits sobre el código en mayúsculas, como en Dart."""
+    h = 0x811C9DC5
+    for byte in codigo.upper().encode('utf-8'):
+        h = ((h ^ byte) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
+def tabla(codigos: list[str]) -> list[tuple[str, int]]:
+    return [(codigo, k) for k, codigo in enumerate(codigos)]
 
 
 def escala_secuencial(base: str = '#0D47A1', pasos: int = 5) -> list[str]:
@@ -234,16 +261,29 @@ def main() -> int:
             for f in datos['pares']:
                 print(f"| {f['par']} | {f['que']} | {f['hex']} | {f['contraste']:.2f} | "
                       f"{f['umbral']} | {'sí' if f['cumple'] else '**no**'} |")
-    print('\n### Paleta categórica «Colorear por» (12 tonos, los mismos en claro y oscuro)\n')
-    print('| Tono | Claro: relleno / borde | Texto sobre relleno | Borde sobre papel | '
+    print('\n### Paleta categórica «Colorear por»: 24 ranuras (12 tonos × 2 luminosidades)\n')
+    print('| Ranura | Tono | Claro: relleno / borde | Texto sobre relleno | Borde sobre papel | '
           'Oscuro: relleno / borde | Texto sobre relleno | Borde sobre papel |')
-    print('|---|---|---:|---:|---|---:|---:|')
+    print('|---:|---|---|---:|---:|---|---:|---:|')
     for f in informe['categorica']:
         c, o = f['claro'], f['oscuro']
-        print(f"| {f['nombre']} ({f['tono']}°) | {c['relleno']} / {c['borde']} | "
+        print(f"| {f['ranura']} | {f['nombre']} ({f['tono']}°) | {c['relleno']} / {c['borde']} | "
               f"{c['contraste texto']:.2f} | {c['contraste borde']:.2f} | "
               f"{o['relleno']} / {o['borde']} | {o['contraste texto']:.2f} | "
               f"{o['contraste borde']:.2f} |")
+    print('\n### Tabla fija propuesta: puertos de destino (solo códigos; Carlos confirma)\n')
+    print('| Código | Ranura | Tono |')
+    print('|---|---:|---|')
+    for codigo, k in tabla(TABLA_PUERTOS):
+        print(f'| {codigo} | {k} | {informe["categorica"][k]["nombre"]} |')
+    print('\n### Tabla fija propuesta: tipos ISO de vacío (solo códigos; Carlos confirma)\n')
+    print('| Código | Ranura | Tono |')
+    print('|---|---:|---|')
+    for codigo, k in tabla(TABLA_TIPOS):
+        print(f'| {codigo} | {k} | {informe["categorica"][k]["nombre"]} |')
+    print('\n### Códigos fuera de la tabla: ranura = FNV-1a(código) mod 24\n')
+    for codigo in ['MXVER', 'PABLB', '22P1']:
+        print(f'- {codigo} → ranura {fnv1a(codigo) % 24} ({informe["categorica"][fnv1a(codigo) % 24]["nombre"]})')
     print('\n### Roles semánticos (relleno / texto sobre el relleno / contorno)\n')
     print('| Rol | Modo | Relleno | Texto | Contorno | Texto sobre relleno | '
           'Contorno sobre papel (peor caso) | Cumple |')

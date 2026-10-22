@@ -712,3 +712,245 @@ wireframes. El contraste está verificado con `tool/rediseno_contraste.py`
 (`docs/rediseno/fase1/contraste.md`, 0 pares bajos). Recomiendo A, tomando de B la barra
 de operación del muelle. El ALTO lista seis decisiones para Carlos; la cobertura de
 glifos de la fuente se comprueba con el TTF en la Fase 2. Me detengo aquí.
+
+## Fase 2 · Fundación (21-oct-2026)
+
+### 2.1 Resultado en tres líneas
+
+- `DESIGN.md` queda reducido a la dirección A «Plano de a bordo» con todo lo de 10.4
+  (649 líneas; antes 923 con dos direcciones): Plex Sans, Mono y Condensed, el puerto con
+  sus cinco letras en la celda, 24 ranuras con las dos tablas fijas propuestas (solo
+  códigos, a la espera de Carlos), la barra inferior con «Más» y su contador, la celda del
+  muelle de 56 × 48, «sin evaluar hasta confirmar el perfil», sin exportar en el previo,
+  la regla estricta de publicación directa y buques sintéticos.
+- La fundación está en `lib/core/design/`: paleta, tipografía, medidas, trece roles
+  semánticos con las 24 ranuras, asignación por FNV-1a, formatos, movimiento, el tema
+  claro y oscuro en densidad de oficina o de muelle, ocho componentes con vista previa,
+  documentación y prueba, y las fuentes Plex empaquetadas con licencia y procedencia.
+- Suite **1126** (piso 1063 + 63 nuevas, ninguna omitida); `analyze` **en cero en lo
+  nuevo** (queda un aviso anterior en `tool/t100_sintetico.dart:21`, que no es de esta
+  tarea; 2.6); auditoría de `flutter-ui` sin críticos nuevos. **Ninguna pantalla cambia**
+  y `lib/core/app.dart` sigue con el tema de v3.0. Me detengo: Codex acepta la Fase 2.
+
+### 2.2 Lo hecho
+
+- Leí 10.4 de `SPRINT-4.md` y reescribí `DESIGN.md` (secciones 1 a 12): queda solo A, con
+  la barra de operación de B en el muelle; el nombre del buque del caso de campo no
+  aparece (los wireframes usan BUQUE MANUAL, BUQUE PRUEBA y T99 SINTÉTICO); la sección 7
+  trae la regla de publicación directa (perfil que cubre la carga **y** escala propuesta
+  igual a la última confirmada de ese buque; si falta una, previo) y los «sin evaluar»
+  con icono; la 5.3 trae las dos tablas fijas con solo códigos del corpus: 16 puertos de
+  descarga y 13 tipos ISO de vacío.
+- Fuentes (`assets/fonts/plex/`): siete TTF estáticos del repositorio `IBM/plex`, commit
+  `71f558992315a12ca1f06a2215d57962a1992162` (Google Fonts solo trae la variable), con
+  `LICENSE-IBMPlex.txt` (OFL 1.1) y `provenance.json` (URL, commit, bytes y SHA-256 de
+  cada archivo, como `web/fonts/` en T-92). Con fontTools sobre los TTF: las siete cubren
+  `· ‑ … × •`, el español, `« » – — ° ‰`, U+00A0 y U+202F; faltan solo `▲ ▼`, que pasan a
+  iconos; los dígitos miden 600 unidades en Sans y Mono y 540 en Condensed, así que son
+  tabulares de serie (`tnum` no existe en las fuentes). `pubspec.yaml` declara cuatro
+  familias bajo `fonts:`: IBM Plex Sans (400, 500, 600), IBM Plex Sans Condensed (500,
+  600), IBM Plex Mono (400, 500) y Roboto (400, 500, los TTF que ya estaban para el PDF),
+  que el tema usa de respaldo con `fontFamilyFallback`.
+- `tool/rediseno_contraste.py` ahora calcula las 24 ranuras (doce tonos en dos
+  luminosidades), aplica las tablas fijas, trae el FNV-1a de referencia y el par «sobre
+  grúa / acero»; la salida está en `docs/rediseno/fase2/contraste.md`: 0 pares que no
+  cumplen. La primera corrida de las 24 ranuras falló en oscuro: la luminosidad «intensa»
+  como sombra más clara deja el texto claro por debajo de 4.5:1 en los verdes; se resolvió
+  haciéndola más oscura (21 % en vez de 30 %) y queda escrito en `DESIGN.md`, 5.2.
+- Tokens y tema (`lib/core/design/`): `bs_paleta.dart` (`BsPaleta`, 17 colores con nombre
+  por brillo), `bs_tipografia.dart` (`BsFuentes`, `BsEscala`, el `TextTheme` y la extensión
+  `BsTextos` con cifra grande, dato mono, celda y su segunda línea), `bs_medidas.dart`
+  (`BsMedidas`, extensión con espacios, radios, alturas, celda de 52 × 48 en oficina y
+  56 × 48 en muelle, objetivos de 48), `bs_colores_semanticos.dart` (`BsColoresSemanticos`,
+  trece roles con relleno, texto y contorno, las 24 ranuras y `categorico(codigo)`),
+  `bs_categorico.dart` (`fnv1a32` con multiplicación segura para Web y `ranuraCategorica`),
+  `bs_formato.dart` (contenedor «MSCU 123456 7», posición «002-01-82», toneladas «28.7 t»,
+  kilos «28 650 kg», porcentaje «91 %»), `bs_movimiento.dart` (duraciones y curvas; cero
+  con `disableAnimations`) y `bs_tema.dart` (`BayStreamTema.claro` y `.oscuro`, con
+  `muelle` y `tablaFija`: `ColorScheme.fromSeed` de la marca ajustado con la paleta, las
+  fuentes, el `TextTheme`, los temas de componentes de Material 3 con mínimos de 48 y las
+  tres extensiones). `design.dart` reexporta todo.
+- Componentes (`lib/core/design/componentes/`), cada uno con doc, vista previa y prueba:
+  `BsCelda`, `BsTiraDeBahias`, `BsCartela`, `BsBanda`, `BsCifra`, `BsHojaDeDetalle`,
+  `BsBarraDeOperacion` con `BsAvisoDeOperacion` y `BsNumeroDeContenedor` (qué es cada uno:
+  `DESIGN.md`, 4.4). Las vistas previas son ocho funciones `@Preview` en
+  `vistas_previas.dart`, en claro y oscuro con el tema de muelle.
+- Pruebas (`test/t114_*`, 63): `t114_fundacion_test.dart` (el tema trae las extensiones y
+  las fuentes; contraste AA de paleta, roles y 24 ranuras calculado en Dart; estabilidad
+  de la ranura por código y precedencia de la tabla fija; medidas de 48; formatos;
+  movimiento reducido; las ocho vistas previas construyen en claro y oscuro),
+  `t114_componentes_test.dart` (el comportamiento de cada componente: celda de 56 × 48 en
+  muelle y 48 de alto en oficina, sin `Opacity`; cartela en `Wrap`; hoja de detalle a
+  360 dp con letra 2.0 sin desborde; abrir y cerrar; número mono y tabular),
+  `t114_accesibilidad_test.dart` (las tres pautas de Flutter, `textContrastGuideline`,
+  `androidTapTargetGuideline` y `labeledTapTargetGuideline`, sobre ocho grupos de
+  componentes en claro y en oscuro, más la celda de oficina) y `t114_fuentes_test.dart`
+  (familias en `pubspec.yaml`, los nueve assets existen, `provenance.json` con SHA-256 y
+  bytes exactos, la licencia).
+- Un defecto que encontró la prueba: `formatearToneladas(28650)` daba «28.6 t» porque
+  `toStringAsFixed(1)` redondea 28.65 hacia abajo por cómo se guarda en binario; ahora
+  redondea a la décima con el medio hacia arriba y la prueba cubre 28 650, 28 640 y un
+  negativo.
+
+### 2.3 Validaciones ejecutadas
+
+Con la luz verde de 10.4 para `flutter test` y `flutter analyze`; no hubo compilaciones
+ni arranques de app, y no se usaron `flutter-mcp` ni `maestro` (ninguna pantalla cambia).
+
+- `flutter test --no-pub test/t114_fundacion_test.dart test/t114_componentes_test.dart
+  test/t114_accesibilidad_test.dart test/t114_fuentes_test.dart` → `+63: All tests passed!`.
+- `flutter test --no-pub` (suite completa, sobre los archivos finales) → `+1126: All tests
+  passed!` en 39 s; 0 fallos, 0 omitidas. Piso: 1063 → **1126**.
+- `flutter analyze` → `1 issue found`: `warning - Unused import: 'dart:convert' -
+  tool\t100_sintetico.dart:21:8`. No es de esta tarea: el archivo no tiene cambios contra
+  `HEAD` y su último commit es `f7e38a3` (T-100 parte A). Durante la fase el analizador
+  señaló tres cosas en lo nuevo (`clamp` que devuelve `num` en dos componentes y un
+  `const` en una prueba) y las tres están corregidas: **cero en lo nuevo, sin `// ignore:`**.
+- `python tool/rediseno_contraste.py` → «Pares que no cumplen: 0» (24 ranuras, trece
+  roles, dos luminosidades, claro y oscuro).
+- fontTools (Python, fuera del repositorio) sobre los siete TTF: cobertura de glifos y
+  anchos de dígitos de 2.2.
+- `python …/flutter_ui_audit.py . --all` → 2.4.
+- Lo que no se corrió: `dart format` (los archivos existentes del repositorio tampoco lo
+  pasan, así que no es convención y no se aplicó a lo nuevo) y el visor de vistas previas
+  (`flutter widget-preview start` es un arranque que cuenta en el semáforo; cada vista
+  previa se construye en las pruebas en claro y oscuro).
+
+### 2.4 Auditoría de `flutter-ui` (Fase 2)
+
+Mismo comando que en 0.8; salida completa en `docs/rediseno/fase2/flutter-ui-audit.txt`
+(1 107 líneas). 155 archivos (137 de la línea base + 18 nuevos): **18 críticos, 235
+avisos y 19 informativos**. Los críticos y los informativos son exactamente los de la
+línea base (ninguno nuevo); los 161 avisos nuevos están todos en `lib/core/design/`:
+
+| Regla | Hallazgos | Dónde | Qué es |
+|---|---|---|---|
+| PERF_HARDCODED_COLOR (aviso) | 160 | `bs_colores_semanticos.dart` | Los hexadecimales de los roles y de las 24 ranuras. Es, con `bs_paleta.dart` (32 literales más, que el script no marca), la **única fuente de color** del sistema: la regla del script existe para que no haya hexadecimales fuera del tema, y estos dos archivos son el tema. Fuera de ellos, `lib/core/design/` no tiene ninguno |
+| ANIM_ZERO_DURATION (aviso) | 1 | `bs_movimiento.dart:36` | `Duration.zero` cuando el sistema pide reducir el movimiento: es el interruptor de accesibilidad, no una animación de cero |
+
+La meta de 0.8 sigue en pie para la Fase 3: cero críticos y cero avisos en
+`presentation/` y `core/` fuera de esos dos archivos de tokens.
+
+### 2.5 Archivos de esta entrega
+
+- `DESIGN.md` (reescrito: una sola dirección).
+- `pubspec.yaml` (**cambia**: bloque `fonts:` con cuatro familias). `pubspec.lock` **no
+  cambia**: no hay dependencias nuevas.
+- `assets/fonts/plex/`: `IBMPlexSans-Regular.ttf`, `IBMPlexSans-Medium.ttf`,
+  `IBMPlexSans-SemiBold.ttf`, `IBMPlexSansCondensed-Medium.ttf`,
+  `IBMPlexSansCondensed-SemiBold.ttf`, `IBMPlexMono-Regular.ttf`, `IBMPlexMono-Medium.ttf`,
+  `LICENSE-IBMPlex.txt` y `provenance.json` (nuevos, 1.26 MB en total).
+- `lib/core/design/`: `design.dart`, `bs_paleta.dart`, `bs_categorico.dart`,
+  `bs_colores_semanticos.dart`, `bs_formato.dart`, `bs_medidas.dart`, `bs_movimiento.dart`,
+  `bs_tipografia.dart`, `bs_tema.dart`, `vistas_previas.dart` y, en `componentes/`,
+  `bs_banda.dart`, `bs_barra_de_operacion.dart`, `bs_cartela.dart`, `bs_celda.dart`,
+  `bs_cifra.dart`, `bs_hoja_de_detalle.dart`, `bs_numero_de_contenedor.dart` y
+  `bs_tira_de_bahias.dart` (nuevos).
+- `test/t114_fundacion_test.dart`, `test/t114_componentes_test.dart`,
+  `test/t114_accesibilidad_test.dart` y `test/t114_fuentes_test.dart` (nuevos).
+- `tool/rediseno_contraste.py` (modificado), `docs/rediseno/fase2/contraste.md` y
+  `docs/rediseno/fase2/flutter-ui-audit.txt` (nuevos).
+- `docs/REDISENO-RESULTADOS.md` (esta sección).
+- Sin cambios: `lib/core/app.dart`, `lib/main.dart`, `domain/`, `data/`, `presentation/`
+  y los archivos congelados de H5. `windows/flutter/generated_plugin*` los regenera
+  `flutter test` y no se versionan (10.2).
+
+### 2.6 Lo que no se pudo y por qué
+
+- **Las tablas fijas no entran al código todavía**: 10.4 pide que Carlos las confirme
+  antes. Están propuestas en `DESIGN.md`, 5.3 (solo códigos); el tema recibe `tablaFija`
+  vacía y todo sale por cálculo. Cuando Carlos confirme, son dos mapas en
+  `BayStreamTema.claro` y `.oscuro`, con su prueba.
+- **`analyze` no queda en cero absoluto** por el aviso previo de
+  `tool/t100_sintetico.dart:21` (un `import 'dart:convert'` sin uso, de `f7e38a3`). No lo
+  toqué: es del carril de T-100 y no es de esta tarea. Se quita borrando esa línea; que
+  lo autorice Carlos.
+- **El tema no está conectado en `lib/core/app.dart`**, a propósito: la Fase 3 lo conecta
+  con la primera pantalla, para que las capturas del antes y el después se comparen
+  pantalla a pantalla y para que en esta fase no cambie ninguna pantalla.
+- Las vistas previas se comprobaron por prueba (construyen en claro y oscuro), no en el
+  visor: arrancarlo cuenta en el semáforo y no lo pide la fase.
+- No hay capturas nuevas: ninguna pantalla cambia.
+
+### 2.7 Horas
+
+De las 23:05 (aprox.) a las 23:55 del 21-oct-2026: ≈ 0.8 h de reloj, sin cronómetro (la
+hora de inicio es la del mensaje de Yov con la aceptación de la Fase 1).
+
+### Git para Carlos (Fase 2)
+
+```
+git add -- DESIGN.md
+git add -- pubspec.yaml
+git add -- assets/fonts/plex/IBMPlexSans-Regular.ttf
+git add -- assets/fonts/plex/IBMPlexSans-Medium.ttf
+git add -- assets/fonts/plex/IBMPlexSans-SemiBold.ttf
+git add -- assets/fonts/plex/IBMPlexSansCondensed-Medium.ttf
+git add -- assets/fonts/plex/IBMPlexSansCondensed-SemiBold.ttf
+git add -- assets/fonts/plex/IBMPlexMono-Regular.ttf
+git add -- assets/fonts/plex/IBMPlexMono-Medium.ttf
+git add -- assets/fonts/plex/LICENSE-IBMPlex.txt
+git add -- assets/fonts/plex/provenance.json
+git add -- lib/core/design/design.dart
+git add -- lib/core/design/bs_paleta.dart
+git add -- lib/core/design/bs_categorico.dart
+git add -- lib/core/design/bs_colores_semanticos.dart
+git add -- lib/core/design/bs_formato.dart
+git add -- lib/core/design/bs_medidas.dart
+git add -- lib/core/design/bs_movimiento.dart
+git add -- lib/core/design/bs_tipografia.dart
+git add -- lib/core/design/bs_tema.dart
+git add -- lib/core/design/vistas_previas.dart
+git add -- lib/core/design/componentes/bs_banda.dart
+git add -- lib/core/design/componentes/bs_barra_de_operacion.dart
+git add -- lib/core/design/componentes/bs_cartela.dart
+git add -- lib/core/design/componentes/bs_celda.dart
+git add -- lib/core/design/componentes/bs_cifra.dart
+git add -- lib/core/design/componentes/bs_hoja_de_detalle.dart
+git add -- lib/core/design/componentes/bs_numero_de_contenedor.dart
+git add -- lib/core/design/componentes/bs_tira_de_bahias.dart
+git add -- test/t114_fundacion_test.dart
+git add -- test/t114_componentes_test.dart
+git add -- test/t114_accesibilidad_test.dart
+git add -- test/t114_fuentes_test.dart
+git add -- tool/rediseno_contraste.py
+git add -- docs/rediseno/fase2/contraste.md
+git add -- docs/rediseno/fase2/flutter-ui-audit.txt
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: rediseno, fase 2, fundacion con tokens, tema claro y oscuro, fuentes Plex y ocho componentes probados"
+git push
+```
+
+### Tres líneas
+
+- `DESIGN.md` queda en la dirección A con las decisiones de 10.4: Plex, el puerto con
+  cinco letras en la celda, 24 ranuras con las dos tablas fijas propuestas, «Más» con
+  contador, celda de 56 × 48, «sin evaluar», sin exportar en el previo y la regla de
+  publicación directa.
+- `lib/core/design/` trae tokens, tema claro y oscuro, trece roles y 24 ranuras con
+  contraste AA, las fuentes Plex con licencia y procedencia y ocho componentes con vista
+  previa, doc y prueba (incluidas las tres pautas de accesibilidad); ninguna pantalla cambia.
+- Suite 1126 (piso 1063 + 63), `analyze` en cero en lo nuevo (queda un aviso previo de
+  T-100 en `tool/`), auditoría sin críticos nuevos.
+
+### Mensaje para Yov
+
+Yov: Fase 2 entregada. `DESIGN.md` queda reducido a la dirección A con las decisiones y
+correcciones de 10.4: Plex Sans, Mono y Condensed; el puerto con cinco letras en la celda;
+24 ranuras con las dos tablas fijas propuestas en 5.3 (solo códigos, a la espera de
+Carlos; hasta entonces el tema lleva la tabla vacía); barra Plano, Lista, Avance,
+Estadísticas y Más con contador de alertas; celda del muelle de 56 × 48; «sin evaluar
+hasta confirmar el perfil» con icono; sin exportar en el previo; buques sintéticos; la
+regla estricta de publicación directa en 7.2. La fundación está en `lib/core/design/`
+(tokens, tema claro y oscuro con densidad de oficina o de muelle, trece roles y 24 ranuras
+verificados AA por script y por prueba en Dart, FNV-1a, formatos, movimiento y ocho
+componentes con vista previa, doc y prueba con las tres pautas `meetsGuideline`), y las
+fuentes Plex en `assets/fonts/plex/` con OFL y `provenance.json` (fontTools: cubren
+`· ‑ … × •` y el español; faltan solo ▲▼, que pasan a iconos; dígitos tabulares de serie).
+`pubspec.yaml` cambia (bloque `fonts:`, cuatro familias con Roboto de respaldo);
+`pubspec.lock` no. Suite 1126 (1063 + 63, ninguna omitida); `analyze` en cero en lo nuevo,
+y queda un aviso previo en `tool/t100_sintetico.dart:21` (`dart:convert` sin uso, de
+`f7e38a3`; no lo toqué). Auditoría de flutter-ui: los mismos 18 críticos y 19 informativos
+de la línea base; 161 avisos nuevos, 160 son los hexadecimales del archivo de tokens y 1
+el `Duration.zero` del movimiento reducido. Ninguna pantalla cambia y `lib/core/app.dart`
+sigue en v3.0 hasta la primera pantalla de la Fase 3. Me detengo: Codex acepta la Fase 2.

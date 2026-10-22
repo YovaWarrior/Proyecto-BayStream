@@ -1,0 +1,1107 @@
+🔍 Scanning Flutter project: C:\Proyectos\baystream-rediseno
+📁 Found 155 Dart files
+📊 State manager detected: RIVERPOD
+
+
+============================================================
+FLUTTER UI AUDIT RESULTS
+============================================================
+🔴 Critical: 18  🟡 Warning: 235  🟢 Info: 19
+============================================================
+
+🔴 CRITICAL (18 findings):
+----------------------------------------
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\change_requests_page.dart:110
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\change_requests_page.dart:307
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\cloud_page.dart:69
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\export_list_import_page.dart:47
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\hatch_covers_page.dart:157
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\parameters_page.dart:19
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\privacy_policy_page.dart:26
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\recent_voyages_page.dart:105
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\vessel_geometry_page.dart:288
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\vessel_overview_page.dart:772
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\vessel_overview_page.dart:852
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [RIVERPOD_NO_ERROR_HANDLER] lib\features\vessel\presentation\pages\vessel_overview_page.dart:225
+  ⚠  AsyncValue.when() called without error: handler
+  ✅  Fix: Add error: (e, stack) => ErrorWidget(error: e, onRetry: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\pages\vessel_profiles_page.dart:30
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [RIVERPOD_PROVIDER_IN_CLASS] lib\features\vessel\presentation\providers\vessel_providers.dart:587
+  ⚠  Provider defined inside a class — creates new instance per build
+  ✅  Fix: Move provider definition to file top-level
+
+  [RIVERPOD_PROVIDER_IN_CLASS] lib\features\vessel\presentation\providers\vessel_providers.dart:669
+  ⚠  Provider defined inside a class — creates new instance per build
+  ✅  Fix: Move provider definition to file top-level
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\widgets\containers_list_view.dart:10
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\widgets\hatch_operation_controls.dart:95
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+  [PERF_LIST_VIEW_CHILDREN] lib\features\vessel\presentation\widgets\reserved_slots_list_view.dart:10
+  ⚠  ListView() with children renders ALL items eagerly
+  ✅  Fix: Use ListView.builder(itemCount: n, itemBuilder: ...)
+
+🟡 WARNING (235 findings):
+----------------------------------------
+  [PERF_HARDCODED_FONT_SIZE] lib\c3_reconciliation_screen.dart:294
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\latency_test_screen.dart:175
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_COLOR] lib\core\app.dart:26
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\app.dart:37
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [ANIM_ZERO_DURATION] lib\features\vessel\presentation\pages\vessel_overview_page.dart:362
+  ⚠  Zero-duration animation is meaningless
+  ✅  Fix: Remove the animation or use minimum 150ms
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\pages\vessel_overview_page.dart:872
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:280
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:287
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:384
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:425
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:787
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:831
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1001
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1024
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1051
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1086
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1256
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1264
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1269
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1275
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1390
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1420
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1570
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1586
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1591
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1608
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1620
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\bay_plan_view.dart:1633
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\containers_list_view.dart:119
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\containers_list_view.dart:157
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\containers_list_view.dart:184
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\containers_list_view.dart:204
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\containers_list_view.dart:339
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\container_search_delegate.dart:18
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\container_search_delegate.dart:207
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\container_search_delegate.dart:240
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\container_search_delegate.dart:374
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\container_search_delegate.dart:387
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\container_search_delegate.dart:394
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\container_search_delegate.dart:405
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\container_search_delegate.dart:413
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\hatch_cover_diagram.dart:73
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\loading_controls.dart:1006
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\loading_controls.dart:1011
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_INTRINSIC_SIZE] lib\features\vessel\presentation\widgets\loading_plan_controls.dart:386
+  ⚠  IntrinsicHeight/Width is O(N²) — avoid in lists
+  ✅  Fix: Use fixed heights or SliverFixedExtentList instead
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\vessel_profile_view.dart:334
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\vessel_profile_view.dart:342
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\vessel_profile_view.dart:369
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\vessel_profile_view.dart:376
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\voyage_stats_view.dart:545
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\voyage_stats_view.dart:1014
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\presentation\widgets\voyage_stats_view.dart:1112
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:104
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:114
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:123
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:209
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:218
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:319
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:337
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:358
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:420
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:483
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:502
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:510
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:538
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:543
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:587
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:605
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:641
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:646
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:664
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:669
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:685
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_FONT_SIZE] lib\features\vessel\data\services\pdf_report_service.dart:689
+  ⚠  Hardcoded fontSize — breaks accessibility and text scaling
+  ✅  Fix: Use Theme.of(context).textTheme.bodyLarge or similar
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:74
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:75
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:76
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:78
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:79
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:80
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:82
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:83
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:84
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:86
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:87
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:88
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:90
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:91
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:92
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:94
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:95
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:96
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:98
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:99
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:100
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:102
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:103
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:104
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:106
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:107
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:108
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:110
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:111
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:112
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:114
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:115
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:116
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:118
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:119
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:120
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:122
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:123
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:124
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:133
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:134
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:135
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:137
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:138
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:139
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:141
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:142
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:143
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:145
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:146
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:147
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:149
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:150
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:151
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:153
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:154
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:155
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:157
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:158
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:159
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:161
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:162
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:163
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:165
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:166
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:167
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:169
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:170
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:171
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:173
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:174
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:175
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:177
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:178
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:179
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:181
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:182
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:183
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:309
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:310
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:313
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:314
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:315
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:316
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:317
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:318
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:319
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:320
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:321
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:322
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:323
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:324
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:325
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:326
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:327
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:328
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:329
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:330
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:331
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:332
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:333
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:334
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:335
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:336
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:340
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:341
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:342
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:343
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:344
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:345
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:346
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:347
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:348
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:349
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:350
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:351
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:352
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:353
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:354
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:355
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:356
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:357
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:358
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:359
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:360
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:361
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:362
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_colores_semanticos.dart:363
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [ANIM_ZERO_DURATION] lib\core\design\bs_movimiento.dart:36
+  ⚠  Zero-duration animation is meaningless
+  ✅  Fix: Remove the animation or use minimum 150ms
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:90
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:91
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:92
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:93
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:94
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:95
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:96
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:97
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:98
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:99
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:100
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:101
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:102
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:103
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:104
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:105
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:111
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:112
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:113
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:114
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:115
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:116
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:117
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:118
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:119
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:120
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:121
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:122
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:123
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:124
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:125
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+  [PERF_HARDCODED_COLOR] lib\core\design\bs_paleta.dart:126
+  ⚠  Hardcoded Color() — breaks theming and dark mode
+  ✅  Fix: Use Theme.of(context).colorScheme.* or ThemeExtension
+
+🟢 INFO (19 findings):
+----------------------------------------
+  [NAV_NO_POP_SCOPE] lib\c3_reconciliation_screen.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\latency_test_screen.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\main.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\change_requests_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\cloud_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\departure_baplie_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\discharge_sequence_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\export_list_import_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\hatch_covers_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\operation_progress_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\parameters_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\privacy_policy_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\recent_voyages_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\segregation_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\stowage_alerts_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\vessel_geometry_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\vessel_profiles_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\pages\voyage_comparison_page.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+  [NAV_NO_POP_SCOPE] lib\features\vessel\presentation\widgets\hatch_operation_controls.dart:1
+  ⚠  No PopScope found — back button behavior may be unhandled
+  ✅  Fix: Add PopScope at root screen with canPop: false if needed
+
+============================================================
+❌ Fix all 🔴 CRITICAL issues before shipping.
