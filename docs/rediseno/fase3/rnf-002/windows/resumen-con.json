@@ -1,0 +1,15 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "con",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-fase3\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "repeticiones": [
+  {
+   "repeticion": 1,
+   "tiempoHastaRejillaS": 2.566,
+   "pasos": 3,
+   "cumpleTiempo": true
+  }
+ ],
+ "incertidumbreS": 0.05
+}

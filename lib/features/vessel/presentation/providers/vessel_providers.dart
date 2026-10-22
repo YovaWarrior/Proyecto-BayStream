@@ -9,6 +9,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/current_profile_parameters.dart';
 import '../../domain/services/operation_sources.dart';
 import 'movement_log_provider.dart';
+import 'voyage_ui_state.dart' show PreviewReason;
 import '../../domain/repositories/vessel_repository.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
 import '../../data/repositories/local_vessel_repository_factory.dart';
@@ -69,12 +70,18 @@ class LoadFileResult {
   final bool needsGeometry;
   final bool needsIdentity;
 
+  /// El plano se ve en previo («ver primero, confirmar después»): hay viaje
+  /// visible y nada guardado. Trae también [needsGeometry], porque confirmar
+  /// el perfil sigue siendo el paso que publica.
+  final bool preview;
+
   const LoadFileResult._({
     required this.success,
     this.fileName,
     this.errorMessage,
     this.needsGeometry = false,
     this.needsIdentity = false,
+    this.preview = false,
   });
 
   factory LoadFileResult.success(String fileName) =>
@@ -82,6 +89,9 @@ class LoadFileResult {
 
   factory LoadFileResult.needsGeometry(String fileName) =>
       LoadFileResult._(success: true, fileName: fileName, needsGeometry: true);
+
+  factory LoadFileResult.preview(String fileName) => LoadFileResult._(
+      success: true, fileName: fileName, needsGeometry: true, preview: true);
 
   factory LoadFileResult.needsIdentity(String fileName) =>
       LoadFileResult._(success: true, fileName: fileName, needsIdentity: true);
@@ -113,10 +123,34 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   String? _lastConfirmedPortOfCall;
   String? get lastConfirmedPortOfCall => _lastConfirmedPortOfCall;
 
+  // El previo («ver primero, confirmar después», DESIGN.md 7): el viaje
+  // pendiente se ve en `state` con la geometría propuesta, sin guardar nada.
+  // Lo que había antes se guarda para volver a ello si se descarta.
+  bool _preview = false;
+  PreviewReason? _previewReason;
+  String? _previewPortOfCall;
+  AsyncValue<VesselVoyage?>? _stateBeforePreview;
+  VesselProfile? _publishedBeforePreview;
+  List<VesselParameter> _keptBeforePreview = const [];
+
+  /// Hay un plano en previo: visible, sin confirmar, sin guardar.
+  bool get isPreview => _preview;
+
+  /// Por qué el plano abrió en previo.
+  PreviewReason? get previewReason => _previewReason;
+
+  /// La escala que la app propone para el previo.
+  String? get previewPortOfCall => _previewPortOfCall;
+
+  /// El nombre del archivo leído (o «BAPLIE» si no se sabe). No se llama
+  /// `fileName` porque los bancos de tool/ ya usan ese nombre en sus subclases.
+  String get loadedFileName => _fileName;
+
   VesselProfile? get currentProfile => _pendingProfile ?? _publishedProfile;
 
-  /// Perfil de la instantánea visible, nunca el borrador de otro buque.
-  VesselProfile? get publishedProfile => _publishedProfile;
+  /// Perfil de la instantánea publicada, nunca el borrador de otro buque. En
+  /// previo no hay: el peso por pila y las tomas quedan sin evaluar.
+  VesselProfile? get publishedProfile => _preview ? null : _publishedProfile;
 
   /// Parámetros del perfil vigente que no se aplicaron al reabrir el viaje
   /// visible porque dejarían carga fuera del plano (T-61).
@@ -152,8 +186,15 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   /// Viaje a la espera de que se confirmen los parámetros del buque.
   VesselVoyage? get pendingVoyage => _pendingVoyage;
 
-  /// Viaje publicado, o `null` si no hay ninguno.
-  VesselVoyage? get publishedVoyage => state.hasValue ? state.value : null;
+  /// Viaje publicado, o `null` si no hay ninguno. En previo es el que estaba
+  /// publicado antes de abrir el archivo, no el que se ve.
+  VesselVoyage? get publishedVoyage {
+    final published = _preview ? _stateBeforePreview : state;
+    return published != null && published.hasValue ? published.value : null;
+  }
+
+  /// El viaje que se ve: el previo o el publicado.
+  VesselVoyage? get visibleVoyage => state.hasValue ? state.value : null;
 
   @override
   AsyncValue<VesselVoyage?> build() {
@@ -215,6 +256,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     }
     _busy = true;
     final previousState = state;
+    _fileName = fileName;
     state = const AsyncValue.loading();
     try {
       final result =
@@ -242,6 +284,11 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       _identityCandidates = lookup.nameCandidates;
       state = previousState;
       if (lookup.requiresConfirmation) {
+        // Homónimo: el plano se ve con el perfil propuesto desde el archivo;
+        // «Confirmar» pide elegir el buque antes de los parámetros.
+        _pendingProfile = VesselProfile.proposeFrom(voyage);
+        _abrirPrevio(PreviewReason.homonimo,
+            voyage.suggestPortOfCall(_lastConfirmedPortOfCall));
         return LoadFileResult.needsIdentity(fileName);
       }
       return await _useProfile(lookup.automaticMatch);
@@ -293,19 +340,88 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     final voyage = _pendingVoyage!;
     _newProfile = saved == null;
     _pendingProfile = (saved ?? VesselProfile.proposeFrom(voyage)).copyWith(
-      observedHoldBayNumbers: {...?saved?.observedHoldBayNumbers,
-        ...observedHoldBays(voyage, saved?.geometry ?? VesselProfile.proposeFrom(voyage).geometry)});
-    // Con dos escalas posibles, conocer el casco no confirma dónde está el buque.
-    if (voyage.portOfNextCall == null &&
-        saved != null &&
-        (voyage.proposedPortOfCall == null ||
-            OperationSources.baplieKind(voyage, voyage.proposedPortOfCall!) !=
-                null) &&
-        saved.geometry.coversAll(voyage.stowagePositions)) {
-      await _publish(voyage, _pendingProfile!, voyage.proposedPortOfCall);
+        observedHoldBayNumbers: {...?saved?.observedHoldBayNumbers,
+          ...observedHoldBays(voyage, saved?.geometry ?? VesselProfile.proposeFrom(voyage).geometry)});
+    final proposedPort = voyage.suggestPortOfCall(_lastConfirmedPortOfCall);
+    final covers =
+        saved != null && saved.geometry.coversAll(voyage.stowagePositions);
+    // Regla estricta de publicación directa (DESIGN.md 7.2; 10.4): el perfil
+    // guardado cubre toda la carga Y la escala propuesta es la última
+    // confirmada para este buque en este dispositivo, y el archivo deja claro
+    // si es de llegada o de carga. Si falta cualquiera, el plano abre en
+    // previo. Un plano de llegada propone el puerto de salida (hallazgo 5 del
+    // manual): sin la coincidencia, no se opera hasta confirmar.
+    if (covers &&
+        proposedPort != null &&
+        proposedPort == await _lastConfirmedPortFor(saved) &&
+        OperationSources.baplieKind(voyage, proposedPort) != null) {
+      await _publish(voyage, _pendingProfile!, proposedPort);
       return LoadFileResult.success(_fileName);
     }
-    return LoadFileResult.needsGeometry(_fileName);
+    _abrirPrevio(
+        saved == null
+            ? PreviewReason.buqueNuevo
+            : !covers
+                ? PreviewReason.fueraDelPerfil
+                : PreviewReason.escalaPorDecidir,
+        proposedPort);
+    return LoadFileResult.preview(_fileName);
+  }
+
+  /// La última escala confirmada para este buque en este dispositivo: la del
+  /// viaje guardado más reciente de este perfil que tenga escala. Se lee del
+  /// almacén local existente; no hay un dato nuevo que guardar.
+  Future<String?> _lastConfirmedPortFor(VesselProfile profile) async {
+    final local = await ref.read(localVesselRepositoryProvider.future);
+    final voyages = (await local.getAllVoyages()).fold(
+        (failure) => throw VesselOperationFailure(failure), (value) => value);
+    for (final voyage in voyages) {
+      final key = voyage.vesselProfileKey ?? voyage.vessel.profileKey;
+      if (key == profile.key && voyage.portOfCall != null) {
+        return voyage.portOfCall;
+      }
+    }
+    return null;
+  }
+
+  /// Publica el previo en `state` («ver primero, confirmar después»): el plano
+  /// se ve con la geometría propuesta, sin escala y sin guardar nada. No es
+  /// una escritura: `_publish` sigue siendo la única.
+  void _abrirPrevio(PreviewReason motivo, String? escala) {
+    final voyage = _pendingVoyage!;
+    final profile = _pendingProfile!;
+    final geometry = profile.geometry.coversAll(voyage.stowagePositions)
+        ? profile.geometry
+        : VesselGeometry.proposeFrom(voyage.stowagePositions,
+            parameters: profile.geometry);
+    if (!_preview) {
+      _stateBeforePreview = state;
+      _publishedBeforePreview = _publishedProfile;
+      _keptBeforePreview = _reopenKeptParameters;
+    }
+    _preview = true;
+    _previewReason = motivo;
+    _previewPortOfCall = escala;
+    _reopenKeptParameters = const [];
+    ref.read(selectedBayProvider.notifier).clear();
+    ref.read(highlightedContainerProvider.notifier).clear();
+    ref.read(selectedCarrierProvider.notifier).clear();
+    ref.read(selectedTypeFilterProvider.notifier).clear();
+    state = AsyncValue.data(voyage
+        .withGeometry(geometry)
+        .copyWith(vesselProfileKey: profile.key));
+  }
+
+  /// Descarta el previo y vuelve a lo que había antes: nada, o el viaje que
+  /// estaba publicado. No borra nada, porque el previo nunca se guardó.
+  void discardPreview() {
+    if (_busy || !_preview) return;
+    final before =
+        _stateBeforePreview ?? const AsyncValue<VesselVoyage?>.data(null);
+    _publishedProfile = _publishedBeforePreview;
+    _reopenKeptParameters = _keptBeforePreview;
+    _clearPending();
+    state = before;
   }
 
   /// Único punto de publicación: siempre inyecta la geometría del perfil.
@@ -525,9 +641,14 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     }
   }
 
-  /// Descarta el viaje pendiente cuando el usuario cancela los parámetros.
+  /// Descarta el viaje pendiente. Si está en previo, vuelve a lo de antes.
   void discardPendingVoyage() {
-    if (!_busy) _clearPending();
+    if (_busy) return;
+    if (_preview) {
+      discardPreview();
+    } else {
+      _clearPending();
+    }
   }
 
   void _clearPending() {
@@ -537,6 +658,12 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     _identityCandidates = const [];
     _nameMatchConfirmed = false;
     _newProfile = false;
+    _preview = false;
+    _previewReason = null;
+    _previewPortOfCall = null;
+    _stateBeforePreview = null;
+    _publishedBeforePreview = null;
+    _keptBeforePreview = const [];
   }
 
   /// Limpia el viaje cargado

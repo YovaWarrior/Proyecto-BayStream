@@ -1,0 +1,181 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "con",
+ "repeticion": 1,
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-fase3\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "inicioUtc": "2026-10-22T19:44:34.304081+00:00",
+ "acciones": [
+  {
+   "paso": 1,
+   "accion": "abrir el binario (icono)",
+   "t": 0.0
+  },
+  {
+   "paso": 2,
+   "accion": "pulsar «Seleccionar archivo»",
+   "t": 0.9814,
+   "punto": [
+    134,
+    266
+   ]
+  },
+  {
+   "paso": 3,
+   "accion": "elegir el archivo en el selector y confirmar",
+   "t": 2.0697
+  }
+ ],
+ "cuadros": [
+  {
+   "t": 0.6533,
+   "dif": null
+  },
+  {
+   "t": 0.9923,
+   "dif": 0.003
+  },
+  {
+   "t": 1.0752,
+   "dif": 12.478
+  },
+  {
+   "t": 1.1639,
+   "dif": 0.463
+  },
+  {
+   "t": 1.2367,
+   "dif": 0.151
+  },
+  {
+   "t": 1.2962,
+   "dif": 0.068
+  },
+  {
+   "t": 1.3657,
+   "dif": 0.219
+  },
+  {
+   "t": 1.4301,
+   "dif": 0.144
+  },
+  {
+   "t": 1.4921,
+   "dif": 0.0
+  },
+  {
+   "t": 2.0699,
+   "dif": 11.048
+  },
+  {
+   "t": 2.129,
+   "dif": 11.067
+  },
+  {
+   "t": 2.1865,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2365,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2868,
+   "dif": 0.0
+  },
+  {
+   "t": 2.337,
+   "dif": 0.0
+  },
+  {
+   "t": 2.3873,
+   "dif": 10.699
+  },
+  {
+   "t": 2.4451,
+   "dif": 0.053
+  },
+  {
+   "t": 2.5096,
+   "dif": 1.468
+  },
+  {
+   "t": 2.5657,
+   "dif": 0.196
+  },
+  {
+   "t": 2.6157,
+   "dif": 0.008
+  },
+  {
+   "t": 2.6662,
+   "dif": 0.0
+  },
+  {
+   "t": 2.7163,
+   "dif": 0.0
+  },
+  {
+   "t": 2.7694,
+   "dif": 0.0
+  },
+  {
+   "t": 2.8194,
+   "dif": 0.0
+  },
+  {
+   "t": 2.8694,
+   "dif": 0.0
+  },
+  {
+   "t": 2.9195,
+   "dif": 0.0
+  },
+  {
+   "t": 2.9794,
+   "dif": 0.0
+  },
+  {
+   "t": 3.0297,
+   "dif": 0.0
+  },
+  {
+   "t": 3.0806,
+   "dif": 0.0
+  },
+  {
+   "t": 3.1475,
+   "dif": 0.0
+  },
+  {
+   "t": 3.1979,
+   "dif": 0.0
+  }
+ ],
+ "hitos": {
+  "ventana": 0.5984331999788992,
+  "confirmado": 2.0697,
+  "rejillaQuieta": 2.5657,
+  "incertidumbreS": 0.05
+ },
+ "ventana": {
+  "pid": 11688,
+  "rect": [
+   -9,
+   -9,
+   1929,
+   1029
+  ],
+  "maximizada": true
+ },
+ "tema": "oscuro",
+ "pasosDelProducto": 3,
+ "tiempoHastaRejillaS": 2.566,
+ "cumpleTiempo": true,
+ "pngs": {
+  "inicio": "inicio.png",
+  "rejilla": "rejilla.png",
+  "final": "final.png"
+ },
+ "finUtc": "2026-10-22T19:44:37.591117+00:00"
+}

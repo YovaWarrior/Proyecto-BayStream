@@ -141,6 +141,9 @@ void main() {
     await tester.pumpWidget(UncontrolledProviderScope(
         container: scope,
         child: const MaterialApp(home: VesselOverviewPage())));
+    // Fase 3 (10.9): el plano abre primero; «Alertas de estiba» está en la Lista.
+    await tester.tap(find.text('Lista'));
+    await tester.pumpAndSettle();
     final button = find.text('Alertas de estiba');
     await tester.ensureVisible(button);
     await tester.tap(button);

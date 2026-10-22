@@ -146,6 +146,25 @@ T112_DECISIONES = {
     (_P + 'pages/vessel_profiles_page.dart', 20): OPERACION,
 }
 
+# T-114 (rediseño, 10.9): los archivos nuevos del sistema de diseño y del
+# inicio y el previo. Van por archivo entero («*»): cada archivo tiene un solo
+# canal, y el idioma lo juzga el censo texto por texto.
+T114_DECISIONES = {
+    ('lib/core/design/bs_formato.dart', '*'): V(
+        'pantalla', 'formatos de número con su unidad («28.7 t», «28 650 kg»), leídos en pantalla (T-114)'),
+    ('lib/core/design/bs_tipografia.dart', '*'): NV(
+        'NV-CODIGO', 'nombres de familias tipográficas (fontFamily): no se leen (T-114)'),
+    ('lib/core/design/componentes/bs_celda.dart', '*'): V(
+        'pantalla', 'rótulos de la marca de operación en la celda del plano (T-114, Fase 2)'),
+    ('lib/core/design/componentes/bs_tira_de_bahias.dart', '*'): V(
+        'accesibilidad', 'etiqueta de accesibilidad de la casilla de bahía (T-114, Fase 2)'),
+    (_P + 'providers/voyage_ui_state.dart', '*'): V(
+        'pantalla', 'textos del previo: la banda, «sin evaluar», exportar y la operación del error (T-114, Fase 3)'),
+    (_P + 'widgets/inicio_view.dart', '*'): V(
+        'pantalla', 'textos del inicio: recientes, perfiles, nube y la operación del error (T-114, Fase 3)'),
+}
+T112_DECISIONES.update(T114_DECISIONES)
+
 # Palabras nuevas sin tilde de las cadenas visibles que no son españolas.
 T112_VOCABULARIO = {
     **{w: (I.SIGLA, 'segmento EDIFACT') for w in ('MEA', 'LOC', 'EQD', 'UNA', 'DTM', 'BGM', 'UNT', 'UNZ')},
@@ -181,6 +200,21 @@ def preparar(root, antes):
     I.FRAMEWORK = [(ES_FLUTTER[f'F{k:02d}'],) + fila[1:] for k, fila in enumerate(I.FRAMEWORK, 1)]
 
     M3.PANTALLA_DE = {rel: trasladar_tabla(tabla, maps.get(rel, {})) for rel, tabla in M3.PANTALLA_DE.items()}
+    # T-114 (10.9): el inicio nuevo es parte de S01; el sistema de diseño
+    # (componentes, tema y vistas previas) todavía no está en una pantalla.
+    M3.PANTALLAS['T114'] = 'Sistema de diseño de T-114: componentes, tema y vistas previas (sin pantalla aún)'
+    M3.PANTALLA_DE[_P + 'widgets/inicio_view.dart'] = {'*': 'S01'}
+    M3.PANTALLA_DE[_P + 'providers/voyage_ui_state.dart'] = {'*': 'S01'}
+    for rel in ('lib/core/design/bs_tema.dart', 'lib/core/design/vistas_previas.dart',
+                'lib/core/design/componentes/bs_banda.dart',
+                'lib/core/design/componentes/bs_barra_de_operacion.dart',
+                'lib/core/design/componentes/bs_cartela.dart',
+                'lib/core/design/componentes/bs_celda.dart',
+                'lib/core/design/componentes/bs_cifra.dart',
+                'lib/core/design/componentes/bs_hoja_de_detalle.dart',
+                'lib/core/design/componentes/bs_numero_de_contenedor.dart',
+                'lib/core/design/componentes/bs_tira_de_bahias.dart'):
+        M3.PANTALLA_DE[rel] = {'*': 'T114'}
     for nombre in ('REJILLA', 'NO_INTERACTIVOS', 'OBSERVACIONES', 'RESUELTOS'):
         setattr(M3, nombre, trasladar_claves(getattr(M3, nombre), maps))
     buscador = (_P + 'widgets/container_search_delegate.dart', maps[_P + 'widgets/container_search_delegate.dart'][347])
@@ -188,6 +222,14 @@ def preparar(root, antes):
         'sí', 'leading: _buildLeadingIcon usa errorContainer, primaryContainer, secondaryContainer y '
               'surfaceContainerHighest del esquema, con sus colores on*: los mismos de las celdas y la leyenda '
               'del plano (T-112); el resaltado usa tertiaryContainer y onTertiaryContainer')
+    # T-114: los componentes toman el color de BsColoresSemanticos, una
+    # ThemeExtension del tema (DESIGN.md 5): son colores del tema.
+    M3.RESUELTOS[('lib/core/design/componentes/bs_banda.dart', 108)] = (
+        'sí', 'icono de cerrar en rol.contorno: el rol semántico de la banda viene de BsColoresSemanticos, '
+              'una ThemeExtension del tema (T-114)')
+    M3.RESUELTOS[('lib/core/design/componentes/bs_tira_de_bahias.dart', 136)] = (
+        'sí', 'relleno y contorno de la casilla del rol semántico (ThemeExtension) y esquema.primary para la '
+              'seleccionada: colores del tema (T-114)')
     implicitos = []
     for pantalla, control, sitio in M3.IMPLICITOS:
         partes = []

@@ -1,9 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/vessel/domain/entities/app_theme_preference.dart';
 import '../features/vessel/presentation/providers/theme_preference_provider.dart';
 import '../features/vessel/presentation/pages/vessel_overview_page.dart';
+import 'design/bs_tema.dart';
+
+/// La densidad del tema (`DESIGN.md` 4.3): la del muelle en el teléfono
+/// (Android e iOS) y la de la oficina en Windows y en la Web.
+bool get bayStreamEsMuelle =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
 
 class BayStreamApp extends ConsumerWidget {
   final Widget home;
@@ -13,6 +22,7 @@ class BayStreamApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final preference = ref.watch(themePreferenceProvider).value ?? AppThemePreference.system;
+    final muelle = bayStreamEsMuelle;
     return MaterialApp(
       title: 'BayStream',
       debugShowCheckedModeBanner: false,
@@ -21,24 +31,10 @@ class BayStreamApp extends ConsumerWidget {
       locale: const Locale('es'),
       supportedLocales: const [Locale('es')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D47A1),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-        ),
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D47A1),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      // T-114 (Fase 3): el tema de la dirección A «Plano de a bordo», en claro
+      // y en oscuro, con la preferencia de tema que ya existía (T-90).
+      theme: BayStreamTema.claro(muelle: muelle),
+      darkTheme: BayStreamTema.oscuro(muelle: muelle),
       themeMode: switch (preference) {
         AppThemePreference.system => ThemeMode.system,
         AppThemePreference.light => ThemeMode.light,

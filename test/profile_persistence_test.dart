@@ -41,17 +41,19 @@ void main() {
         container = providers();
         notifier = container.read(voyageNotifierProvider.notifier);
         final result = await notifier.parseBaplieContent(profileTestEdi);
-        expect(result.needsGeometry, isFalse);
+        // Fase 3 (10.9): el archivo no declara escala, así que el plano abre
+        // en previo con el perfil guardado, sin recalcularlo (DESIGN.md 7.2).
+        expect(result.preview, isTrue);
         expect(notifier.currentProfile!.stackWeightLimitKg, limit);
         // En el viaje nuevo la posición lleva carga seca; la toma es del buque.
-        expect(notifier.publishedVoyage!.containers.single.isReefer, isFalse);
+        expect(notifier.visibleVoyage!.containers.single.isReefer, isFalse);
         expect(notifier.currentProfile!.reeferSlots, {'0020182'});
         expect(notifier.currentProfile!.reeferSlotsOrigin,
             VesselProfileOrigin.proposedFromFile);
         expect(notifier.currentProfile!.origin,
             VesselProfileOrigin.declaredByUser);
-        expect(notifier.publishedVoyage!.geometry!.stackWeightLimitKg, limit);
-        for (final bay in notifier.publishedVoyage!.bays.values) {
+        expect(notifier.visibleVoyage!.geometry!.stackWeightLimitKg, limit);
+        for (final bay in notifier.visibleVoyage!.bays.values) {
           expect(bay.geometry!.stackWeightLimitKg, limit);
         }
       } finally {

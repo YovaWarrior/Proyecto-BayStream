@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Widget que muestra el estado vacío cuando no hay datos cargados
-/// Incluye instrucciones y botón para cargar archivo BAPLIE
+import '../../../../core/design/design.dart';
+
+/// La cabecera del inicio (`DESIGN.md` 9.1): qué hace la app y su única
+/// acción, «Seleccionar archivo», en un botón de 56 dp. También es el estado
+/// vacío de los viajes recientes, cuando no hay ninguno guardado.
+///
+/// El título y el botón no repiten el mismo texto (T-98, `con01`): el título
+/// dice qué se abre y el botón, qué se hace.
 class EmptyStateWidget extends StatelessWidget {
   /// Callback cuando el usuario presiona el botón de cargar archivo
   final VoidCallback onPickFile;
@@ -13,110 +19,38 @@ class EmptyStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final medidas = BsMedidas.de(context);
+    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    
-    return Center(
-      child: SingleChildScrollView(
-        // Reserva espacio para Cargar BAPLIE, también con letra grande.
-        padding: const EdgeInsets.fromLTRB(32, 32, 32, 128),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icono principal
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.directions_boat,
-                size: 80,
-                color: colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Título
-            Text(
-              'BayStream',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            
-            // Subtítulo
-            Text(
-              'Gestión de Carga Marítima',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 48),
-            
-            // Instrucciones
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: colorScheme.outlineVariant,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.upload_file,
-                    size: 40,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Cargar archivo BAPLIE',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Seleccione un archivo BAPLIE para visualizar el plan de estiba del buque. Se valida por su contenido, sin importar la extensión.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Botón de cargar
-                  FilledButton.icon(
-                    onPressed: onPickFile,
-                    icon: const Icon(Icons.folder_open),
-                    label: const Text('Seleccionar archivo'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // La versión se valida por la cabecera, no por el nombre del archivo.
-            Text(
-              'Contenido compatible: BAPLIE 2.x, y la 1.5 con aviso.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('Abre un plano de estiba', style: textTheme.titleLarge),
+        SizedBox(height: medidas.espacioS),
+        // La versión se valida por la cabecera, no por el nombre del archivo
+        // (T-104: sin importar la extensión).
+        Text(
+          'Se valida por su contenido, sin importar la extensión.',
+          style: textTheme.bodyMedium
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
-      ),
+        Text(
+          'Contenido compatible: BAPLIE 2.x, y la 1.5 con aviso.',
+          style: textTheme.bodyMedium
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
+        ),
+        SizedBox(height: medidas.espacioL),
+        FilledButton.icon(
+          key: const ValueKey('select-file'),
+          onPressed: onPickFile,
+          icon: const Icon(Icons.folder_open),
+          label: const Text('Seleccionar archivo'),
+          style: FilledButton.styleFrom(
+            minimumSize: Size.fromHeight(medidas.alturaBotonPrincipal),
+          ),
+        ),
+      ],
     );
   }
 }

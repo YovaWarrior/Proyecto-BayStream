@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/design/design.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../data/services/export_service.dart';
 import '../../data/services/pdf_report_service.dart';
@@ -9,11 +10,12 @@ import '../../domain/services/discharge_sequence.dart';
 import '../../domain/services/operation_sources.dart';
 import '../providers/vessel_providers.dart';
 import '../providers/plan_toolbar_provider.dart';
+import '../providers/voyage_ui_state.dart';
 import '../formatters/vessel_error_message.dart';
 import '../widgets/voyage_summary_card.dart';
 import '../widgets/reserved_slots_list_view.dart';
 import '../widgets/containers_list_view.dart';
-import '../widgets/empty_state_widget.dart';
+import '../widgets/inicio_view.dart';
 import '../widgets/bay_plan_view.dart';
 import '../widgets/container_search_delegate.dart';
 import '../widgets/voyage_stats_view.dart';
@@ -29,7 +31,11 @@ import 'voyage_comparison_page.dart';
 import 'discharge_sequence_page.dart';
 
 /// Página principal de la aplicación BayStream
-/// Permite cargar archivos BAPLIE y visualizar la información del viaje
+///
+/// Sin viaje es el inicio (`DESIGN.md` 9.1). Con un archivo leído, el plano
+/// abre en previo («ver primero, confirmar después», `DESIGN.md` 7): se mira,
+/// se busca y se colorea; para operar, publicar o exportar hay que confirmar
+/// el perfil y la escala desde la banda. Confirmado, es lo de siempre.
 class VesselOverviewPage extends ConsumerStatefulWidget {
   const VesselOverviewPage({super.key});
 
@@ -40,17 +46,22 @@ class VesselOverviewPage extends ConsumerStatefulWidget {
 class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _isBayPlan = false;
+
+  /// La pestaña del plano es la primera que se ve con un viaje (10.2 a):
+  /// la primera visualización termina en la rejilla, sin un paso más.
+  static const int _planoTab = 1;
+  bool _isBayPlan = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController =
+        TabController(length: 3, vsync: this, initialIndex: _planoTab);
     _tabController.addListener(_onTabChanged);
   }
 
   void _onTabChanged() {
-    final isBayPlan = _tabController.index == 1;
+    final isBayPlan = _tabController.index == _planoTab;
     if (_isBayPlan != isBayPlan) {
       setState(() => _isBayPlan = isBayPlan);
     }
@@ -64,8 +75,14 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
 
   @override
   Widget build(BuildContext context) {
-    final voyageAsync = ref.watch(voyageNotifierProvider);
-    final hasVoyage = voyageAsync.hasValue && voyageAsync.value != null;
+    final ui = ref.watch(voyageUiStateProvider);
+    final voyage = switch (ui) {
+      Previo(:final voyage) => voyage,
+      Publicado(:final voyage) => voyage,
+      _ => null,
+    };
+    final hasVoyage = voyage != null;
+    final preview = ui is Previo;
     final showToolbarToggle = hasVoyage && _isBayPlan;
     final toolbarCollapsed = showToolbarToggle &&
         (ref.watch(planToolbarCollapsedProvider).value ?? true);
@@ -73,19 +90,24 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     final tabHeight = 42 + MediaQuery.textScalerOf(context)
         .scale(tabLabelStyle.fontSize ?? 14) * (tabLabelStyle.height ?? 1.5);
 
+    final parametersButton = IconButton(
+      key: const ValueKey('edit-geometry'),
+      icon: const Icon(Icons.straighten),
+      tooltip: 'Parámetros',
+      onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => ParametersPage(
+          onVesselParameters:
+              hasVoyage ? () => _askForGeometry(context) : null,
+        ),
+      )),
+    );
+
     final toolbarActions = <Widget>[
       IconButton(
           key: const ValueKey('recent-voyages'),
           icon: const Icon(Icons.history),
           tooltip: 'Viajes recientes',
-          onPressed: () async {
-            final loadFile = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                    builder: (_) => const RecentVoyagesPage()));
-            if (context.mounted && loadFile == true) {
-              await _loadBaplieFile(context);
-            }
-          }),
+          onPressed: () => _openRecentVoyages(context)),
       IconButton(
           key: const ValueKey('saved-profiles'),
           icon: const Icon(Icons.directions_boat_outlined),
@@ -100,15 +122,22 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         IconButton(
           icon: const Icon(Icons.search),
           tooltip: 'Buscar contenedor',
-          onPressed: () => _openSearch(context, voyageAsync.value!),
+          onPressed: () => _openSearch(context, voyage),
         ),
-      // Único punto de exportación para PDF, CSV y JSON
-      if (hasVoyage)
+      // Único punto de exportación para PDF, CSV y JSON. En previo, exportar
+      // cuenta como operar: el botón dice que falta confirmar (10.4).
+      if (hasVoyage && preview)
+        IconButton(
+          key: const ValueKey('export-preview'),
+          icon: const Icon(Icons.download),
+          tooltip: 'Exportar viaje',
+          onPressed: () => _avisar(context, exportarSinConfirmar),
+        )
+      else if (hasVoyage)
         PopupMenuButton<VoyageExportFormat>(
           icon: const Icon(Icons.download),
           tooltip: 'Exportar viaje',
-          onSelected: (format) =>
-              _exportVoyage(context, voyageAsync.value!, format),
+          onSelected: (format) => _exportVoyage(context, voyage, format),
           itemBuilder: (context) => const [
             PopupMenuItem(
               value: VoyageExportFormat.pdf,
@@ -137,32 +166,19 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           ],
         ),
       // T-90: tema del dispositivo y acceso a la geometría del viaje vigente.
-      IconButton(
-          key: const ValueKey('edit-geometry'),
-          icon: const Icon(Icons.straighten),
-          tooltip: 'Parámetros',
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => ParametersPage(
-              onVesselParameters: hasVoyage ? () => _askForGeometry(context) : null,
-            ),
-          )),
-        ),
+      parametersButton,
       // Botón para cargar archivo BAPLIE
       IconButton(
         icon: const Icon(Icons.upload_file),
         tooltip: 'Cargar archivo BAPLIE',
         onPressed: () => _loadBaplieFile(context),
       ),
-      // Botón para limpiar datos cargados
+      // Botón para limpiar datos cargados. En previo pregunta antes.
       if (hasVoyage)
         IconButton(
           icon: const Icon(Icons.clear),
           tooltip: 'Limpiar datos',
-          onPressed: () {
-            ref.read(voyageNotifierProvider.notifier).clearVoyage();
-            ref.read(highlightedContainerProvider.notifier).clear();
-            ref.read(selectedBayProvider.notifier).clear();
-          },
+          onPressed: () => _clear(context, preview: preview),
         ),
     ];
 
@@ -175,7 +191,11 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         ),
         centerTitle: true,
         actions: [
-          if (!toolbarCollapsed)
+          // El inicio solo lleva Parámetros y Nube (DESIGN.md 9.1): la
+          // carga, los recientes y los perfiles están en el cuerpo.
+          if (!hasVoyage) parametersButton,
+          if (!hasVoyage) const SyncAppBarButton(),
+          if (hasVoyage && !toolbarCollapsed)
               // T-97: reserva espacio visible para el título. T-91 conserva
               // su tira desplazable y el botón fijo con un toque.
               SizedBox(
@@ -222,86 +242,59 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               )
             : null,
       ),
-      body: voyageAsync.when(
-        // Estado: Cargando
-        loading: () => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Procesando archivo BAPLIE...'),
-            ],
+      body: switch (ui) {
+        Leyendo(:final fileName) => _Leyendo(fileName: fileName),
+        Fallo(:final mensaje) => _Fallo(
+            mensaje: mensaje,
+            onRetry: () => _loadBaplieFile(context),
           ),
-        ),
-        // Estado: Error
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
-                const SizedBox(height: 16),
-                Text(
-                  'Error al procesar archivo',
-                  style: Theme.of(context).textTheme.titleLarge,
+        SinViaje() => InicioView(
+            onPickFile: () => _loadBaplieFile(context),
+            onOpenRecent: (recent) => _openRecent(context, recent),
+          ),
+        Previo() || Publicado() => Column(
+            children: [
+              if (ui is Previo) ...[
+                BsBanda(
+                  key: const ValueKey('preview-banner'),
+                  texto: ui.texto,
+                  icono: Icons.info_outline,
+                  accion: 'Confirmar',
+                  onAccion: () => _confirmPreview(context),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  vesselErrorMessage(error, stack, 'procesar el archivo'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => _loadBaplieFile(context),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Intentar de nuevo'),
-                ),
+                const _SinEvaluar(),
               ],
-            ),
-          ),
-        ),
-        // Estado: Datos cargados o vacío
-        data: (voyage) {
-          if (voyage == null) {
-            return EmptyStateWidget(
-              onPickFile: () => _loadBaplieFile(context),
-            );
-          }
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // Pestaña 1: Lista de contenedores
+                    _buildContainersListTab(context, voyage!),
 
-          // Mostrar información del viaje con pestañas
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              // Pestaña 1: Lista de contenedores
-              _buildContainersListTab(context, voyage),
+                    // Pestaña 2: Bay Plan
+                    BayPlanView(voyage: voyage),
 
-              // Pestaña 2: Bay Plan
-              BayPlanView(voyage: voyage),
-
-              // Pestaña 3: Estadísticas
-              VoyageStatsView(
-                voyage: voyage,
-                onBaySelected: _openBayPlan,
+                    // Pestaña 3: Estadísticas
+                    VoyageStatsView(
+                      voyage: voyage,
+                      onBaySelected: _openBayPlan,
+                    ),
+                  ],
+                ),
               ),
             ],
-          );
-        },
-      ),
-      // Botón flotante para cargar archivo
-      floatingActionButton: voyageAsync.maybeWhen(
-        data: (voyage) => voyage == null
-            ? FloatingActionButton.extended(
-                onPressed: () => _loadBaplieFile(context),
-                icon: const Icon(Icons.file_open),
-                label: const Text('Cargar BAPLIE'),
-              )
-            : null,
-        orElse: () => null,
-      ),
+          ),
+      },
     );
+  }
+
+  /// Un aviso corto, con el mismo texto en todas partes.
+  void _avisar(BuildContext context, String texto) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(texto),
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(16),
+    ));
   }
 
   /// Abre el buscador de contenedores
@@ -323,7 +316,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
   void _openBayPlan(int bayNumber) {
     ref.read(highlightedContainerProvider.notifier).clear();
     ref.read(selectedBayProvider.notifier).select(bayNumber);
-    _tabController.animateTo(1);
+    _tabController.animateTo(_planoTab);
   }
 
   Future<void> _openAlerts(VesselVoyage voyage) async {
@@ -359,7 +352,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
             behavior: SnackBarBehavior.floating,
           ),
         );
-        await Future<void>.delayed(Duration.zero);
+        // Deja que el aviso se dibuje antes de generar el PDF.
+        await WidgetsBinding.instance.endOfFrame;
         pdfBytes = await const PdfReportService().generate(
           voyage,
           geometry: voyage.geometry!,
@@ -395,20 +389,121 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     }
   }
 
+  /// Pregunta antes de perder un previo (DESIGN.md 7.2, punto 5). Devuelve
+  /// `true` si se descartó o si no había previo.
+  Future<bool> _discardPreviewIfAny(BuildContext context) async {
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    if (!notifier.isPreview) return true;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Descartar el plano sin confirmar?'),
+        content: const Text(
+            'No se guardó nada. Podrás volver a abrir el archivo cuando quieras.'),
+        actions: [
+          TextButton(
+              key: const ValueKey('preview-keep'),
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Seguir mirando')),
+          FilledButton(
+              key: const ValueKey('preview-discard'),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Descartar')),
+        ],
+      ),
+    );
+    if (discard != true) return false;
+    notifier.discardPreview();
+    ref.read(highlightedContainerProvider.notifier).clear();
+    ref.read(selectedBayProvider.notifier).clear();
+    return true;
+  }
+
+  /// «Limpiar datos»: con un previo pregunta; publicado, limpia como siempre.
+  Future<void> _clear(BuildContext context, {required bool preview}) async {
+    if (preview) {
+      await _discardPreviewIfAny(context);
+      return;
+    }
+    ref.read(voyageNotifierProvider.notifier).clearVoyage();
+    ref.read(highlightedContainerProvider.notifier).clear();
+    ref.read(selectedBayProvider.notifier).clear();
+  }
+
+  /// «Viajes recientes» desde la barra; un previo se descarta antes.
+  Future<void> _openRecentVoyages(BuildContext context) async {
+    if (!await _discardPreviewIfAny(context)) return;
+    if (!context.mounted) return;
+    final loadFile = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const RecentVoyagesPage()));
+    if (context.mounted && loadFile == true) {
+      await _loadBaplieFile(context);
+    }
+  }
+
+  /// Reabre un viaje guardado desde el inicio, sin parser ni archivo.
+  Future<void> _openRecent(BuildContext context, VesselVoyage recent) async {
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    final error = await notifier.openRecentVoyage(recent.id);
+    if (!context.mounted) return;
+    if (error != null) {
+      _avisar(context, error);
+      return;
+    }
+    final kept = notifier.reopenKeptParameters;
+    if (kept.isNotEmpty) {
+      // T-61: el perfil vigente no se aplica si oculta carga; se dice cuál.
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          key: const ValueKey('reopen-kept-parameters'),
+          duration: const Duration(seconds: 10),
+          content: Text('No se aplicó del perfil vigente: '
+              '${kept.map((p) => p.label).join(', ')}. Dejaría contenedores '
+              'de este viaje fuera del plano; se conserva el valor guardado '
+              'con el viaje. Revisa el perfil del buque.')));
+    }
+  }
+
   /// Carga un archivo BAPLIE usando el VoyageNotifier
   ///
-  /// Un perfil conocido permite abrir directamente. Un buque nuevo, homónimo
-  /// o con carga fuera del perfil requiere confirmación antes de publicar.
+  /// El plano abre en previo con el perfil propuesto o el guardado; la banda
+  /// guía la confirmación. Solo con perfil guardado que cubre la carga y la
+  /// escala de siempre abre publicado (DESIGN.md 7.2).
   Future<void> _loadBaplieFile(BuildContext context) async {
+    if (!await _discardPreviewIfAny(context)) return;
+    if (!context.mounted) return;
     final notifier = ref.read(voyageNotifierProvider.notifier);
-    var result = await notifier.loadVesselFromFile();
+    final result = await notifier.loadVesselFromFile();
 
     if (!context.mounted) return;
 
     // No mostrar nada si el usuario canceló el selector de archivos
     if (result.isCancelled) return;
 
-    if (result.needsIdentity) {
+    // En previo (también con homónimos) la banda dice qué falta.
+    if (result.preview || result.needsIdentity) return;
+
+    // Mostrar SnackBar según el resultado
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.success
+              ? 'Archivo "${result.fileName}" cargado correctamente'
+              : result.errorMessage ?? unexpectedErrorMessage('cargar el archivo'),
+        ),
+        backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  /// «Confirmar» en la banda del previo: identidad si hay homónimos, plantilla
+  /// si el buque es nuevo y los parámetros del buque. Cancelar en cualquier
+  /// paso deja el previo como estaba: se sigue mirando, sin operar.
+  Future<void> _confirmPreview(BuildContext context) async {
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    final fileName = notifier.loadedFileName;
+    if (notifier.identityCandidates.isNotEmpty) {
       final candidates = notifier.identityCandidates;
       final selection = await showDialog<int>(
         context: context,
@@ -441,37 +536,29 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           ],
         ),
       );
-      if (!context.mounted) return;
-      if (selection == null) {
-        notifier.discardPendingVoyage();
-        return;
-      }
-      result = await notifier
+      if (!context.mounted || selection == null) return;
+      final result = await notifier
           .resolveIdentity(selection < 0 ? null : candidates[selection]);
       if (!context.mounted) return;
-      if (!result.success) notifier.discardPendingVoyage();
+      if (!result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(result.errorMessage ??
+              unexpectedErrorMessage('aplicar el perfil del buque')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+        ));
+        return;
+      }
+      if (!result.needsGeometry) {
+        // El homónimo elegido cubre la carga y la escala es la de siempre.
+        _avisar(context, 'Archivo "$fileName" cargado correctamente');
+        return;
+      }
     }
-
-    if (result.needsGeometry) {
-      if (notifier.canChooseTemplate && !await _chooseTemplate(context)) return;
-      if (!context.mounted) return;
-      await _askForGeometry(context, fileName: result.fileName);
-      return;
-    }
-
-    // Mostrar SnackBar según el resultado
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result.success
-              ? 'Archivo "${result.fileName}" cargado correctamente'
-              : result.errorMessage ?? unexpectedErrorMessage('cargar el archivo'),
-        ),
-        backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    if (notifier.canChooseTemplate && !await _chooseTemplate(context)) return;
+    if (!context.mounted) return;
+    await _askForGeometry(context, fileName: fileName);
   }
 
   Future<bool> _chooseTemplate(BuildContext context) async {
@@ -512,14 +599,11 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         ),
       );
       if (!context.mounted) return false;
-      if (selection == null) {
-        notifier.discardPendingVoyage();
-        return false;
-      }
+      // Cancelar deja el previo como estaba.
+      if (selection == null) return false;
       if (selection >= 0) notifier.useTemplate(profiles[selection]);
       return true;
     } catch (error, stack) {
-      notifier.discardPendingVoyage();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(vesselErrorMessage(
@@ -531,8 +615,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
 
   /// Abre la pantalla de parámetros del buque con la propuesta deducida.
   ///
-  /// Si el usuario cancela, el viaje pendiente se descarta: no se publica un
-  /// viaje sin geometría confirmada.
+  /// Cancelar deja el previo como estaba: nada publicado, el plano a la
+  /// vista. Confirmar publica y se queda en el Plano (10.2 a).
   Future<void> _askForGeometry(
     BuildContext context, {
     String? fileName,
@@ -566,7 +650,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar carga')),
+                child: const Text('Cancelar')),
             FilledButton(
                 onPressed: () => Navigator.pop(context, true),
                 child: const Text('Revisar ampliación')),
@@ -574,10 +658,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         ),
       );
       if (!context.mounted) return;
-      if (expand != true) {
-        notifier.discardPendingVoyage();
-        return;
-      }
+      if (expand != true) return;
       // Solo un borrador después de aceptar revisar; no se modifica el perfil.
       final saved = profile.geometry;
       initial = saved.copyWith(
@@ -615,21 +696,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
 
       if (!context.mounted) return;
 
-      if (result == null) {
-        // Cancelar deja el árbol como estaba: nada publicado, nada pendiente.
-        notifier.discardPendingVoyage();
-        if (isEditing) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Carga cancelada: no se confirmó la geometría del buque',
-            ),
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(16),
-          ),
-        );
-        return;
-      }
+      // Cancelar deja el árbol como estaba: nada publicado, el previo a la vista.
+      if (result == null) return;
 
       OperationSourceKind? sourceKind;
       if (!isEditing &&
@@ -661,10 +729,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           ),
         );
         if (!context.mounted) return;
-        if (sourceKind == null) {
-          notifier.discardPendingVoyage();
-          return;
-        }
+        if (sourceKind == null) return;
       }
       final error = await notifier.confirmGeometry(result.geometry,
           sourceKind: sourceKind,
@@ -688,6 +753,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         continue;
       }
 
+      if (!isEditing) _tabController.animateTo(_planoTab);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -866,10 +932,104 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w500,
-          fontSize: 12,
+        style: Theme.of(context)
+            .textTheme
+            .labelMedium
+            ?.copyWith(color: color, fontWeight: FontWeight.w500),
+      ),
+    );
+  }
+}
+
+/// Leyendo el archivo: un indicador con su nombre.
+class _Leyendo extends StatelessWidget {
+  const _Leyendo({required this.fileName});
+
+  final String fileName;
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('Leyendo $fileName…'),
+          ],
+        ),
+      );
+}
+
+/// El error con su causa y «Intentar de nuevo».
+class _Fallo extends StatelessWidget {
+  const _Fallo({required this.mensaje, required this.onRetry});
+
+  final String mensaje;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline,
+                  size: 64, color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: 16),
+              Text(
+                'Error al procesar archivo',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                mensaje,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Intentar de nuevo'),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+/// Lo que el previo no evalúa, con su icono, en todas las pestañas: nunca un
+/// hueco ni «sin alertas» (DESIGN.md 7.2, punto 4).
+class _SinEvaluar extends StatelessWidget {
+  const _SinEvaluar();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final medidas = BsMedidas.de(context);
+    return Material(
+      key: const ValueKey('preview-sin-evaluar'),
+      color: colorScheme.surfaceContainerLow,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal: medidas.espacioL, vertical: medidas.espacioS),
+        child: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded,
+                size: 20, color: colorScheme.onSurfaceVariant),
+            SizedBox(width: medidas.espacioS),
+            Expanded(
+              child: Text(
+                sinEvaluarHastaConfirmar,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -13,17 +13,32 @@
 //     textos que no caben (RenderParagraph.didExceedMaxLines), desplazables
 //     horizontales con contenido oculto y errores de Flutter. Los desbordes
 //     de RenderFlex solo se informan en debug; en release los ve la persona.
+//   - `inicio` (Fase 3 de T-114, 10.9): capturas del inicio y del previo a
+//     cada tamaño de T99_ANCHOS, en claro y en oscuro y con la letra a cada
+//     escala de T99_LETRAS. Antes publica T99_ARCHIVO_PUBLICADO (un plan de
+//     carga) y lo cierra, para que el inicio tenga un reciente, y deja el
+//     historial de escala en T99_ESCALA_ANTERIOR, para que el archivo
+//     T99_ARCHIVO abra en previo; cada previo se descarta después.
+//
+// Las definiciones se leen al compilar (--dart-define) y, si faltan, del
+// entorno del proceso al arrancar (Windows y Android): el mismo binario sirve
+// para medir a mano y para los escenarios.
 //
 // Carga (`T99_CARGA`): `asset` lee t99_inputs/<T99_ARCHIVO> de la copia de
 // compilación (nunca del repositorio) y la publica como t99Publicar;
-// `selector` toca «Cargar archivo BAPLIE» y espera a que una persona elija el
-// archivo y confirme, que es el camino completo del producto.
+// `selector` toca «Seleccionar archivo» en el inicio y espera a que una
+// persona elija el archivo, que desde el rediseño (10.9, «ver primero,
+// confirmar después») ya deja el plano a la vista en previo; si la persona
+// además confirma el perfil, el viaje queda publicado. El paso `cargar` anota
+// si quedó en previo.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
 
 import 'package:baystream/core/app.dart';
+import 'package:baystream/features/vessel/domain/entities/app_theme_preference.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
+import 'package:baystream/features/vessel/presentation/providers/theme_preference_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -35,15 +50,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 't99_app.dart';
 import 't99_plataforma.dart';
 
-const _escenario = String.fromEnvironment('T99_ESCENARIO');
-const _archivo = String.fromEnvironment('T99_ARCHIVO');
-const _carga = String.fromEnvironment('T99_CARGA', defaultValue: 'asset');
-const _pasos = String.fromEnvironment('T99_PASOS');
-const _capturas = String.fromEnvironment('T99_CAPTURAS');
-const _pausaMs = int.fromEnvironment('T99_PAUSA_MS', defaultValue: 12000);
-const _idBuscado = String.fromEnvironment('T99_ID');
-const _anchos = String.fromEnvironment('T99_ANCHOS',
-    defaultValue: '360x800,600x960,840x1200,1200x800,2560x1440,real');
+String _definicion(String nombre, String compilada, [String porOmision = '']) {
+  if (compilada.isNotEmpty) return compilada;
+  final entorno = variableDeEntorno(nombre);
+  return entorno.isNotEmpty ? entorno : porOmision;
+}
+
+final _escenario =
+    _definicion('T99_ESCENARIO', const String.fromEnvironment('T99_ESCENARIO'));
+final _archivo = _definicion('T99_ARCHIVO', const String.fromEnvironment('T99_ARCHIVO'));
+final _archivoPublicado = _definicion(
+    'T99_ARCHIVO_PUBLICADO', const String.fromEnvironment('T99_ARCHIVO_PUBLICADO'));
+final _escalaAnterior = _definicion(
+    'T99_ESCALA_ANTERIOR', const String.fromEnvironment('T99_ESCALA_ANTERIOR'));
+final _carga = _definicion('T99_CARGA', const String.fromEnvironment('T99_CARGA'), 'asset');
+final _pasos = _definicion('T99_PASOS', const String.fromEnvironment('T99_PASOS'));
+final _capturas = _definicion('T99_CAPTURAS', const String.fromEnvironment('T99_CAPTURAS'));
+final _pausaMs = int.parse(
+    _definicion('T99_PAUSA_MS', const String.fromEnvironment('T99_PAUSA_MS'), '12000'));
+final _idBuscado = _definicion('T99_ID', const String.fromEnvironment('T99_ID'));
+final _anchos = _definicion('T99_ANCHOS', const String.fromEnvironment('T99_ANCHOS'),
+    '360x800,600x960,840x1200,1200x800,2560x1440,real');
+final _letras = _definicion(
+    'T99_LETRAS', const String.fromEnvironment('T99_LETRAS'), '1.0,1.45,2.0');
 
 // Textos de la interfaz que el conductor toca. T-112 (10.94) cambió «Bay Plan»
 // por «Plano» y «BAY nn (» por «BAHÍA nn (»; si vuelven a cambiar, es aquí.
@@ -59,6 +88,7 @@ class T99Conductor {
   T99Conductor(this.escenario);
 
   final _tamano = ValueNotifier<Size?>(null);
+  final _letra = ValueNotifier<double>(1.0);
   final _lienzo = GlobalKey();
   final _errores = <String>[];
   var _puntero = 9900;
@@ -68,18 +98,25 @@ class T99Conductor {
   Widget envoltorio(BuildContext context, Widget? child) =>
       ValueListenableBuilder<Size?>(
           valueListenable: _tamano,
-          builder: (context, tamano, _) {
-            final lienzo = RepaintBoundary(key: _lienzo, child: child);
-            if (tamano == null) return lienzo;
-            return ColoredBox(
-                color: Theme.of(context).colorScheme.surfaceContainerLowest,
-                child: FittedBox(
-                    child: SizedBox.fromSize(
-                        size: tamano,
-                        child: MediaQuery(
-                            data: MediaQuery.of(context).copyWith(size: tamano),
-                            child: lienzo))));
-          });
+          builder: (context, tamano, _) => ValueListenableBuilder<double>(
+              valueListenable: _letra,
+              builder: (context, letra, _) {
+                final lienzo = RepaintBoundary(key: _lienzo, child: child);
+                final datos = MediaQuery.of(context).copyWith(
+                    size: tamano,
+                    textScaler: letra == 1.0 ? null : TextScaler.linear(letra));
+                if (tamano == null) {
+                  return letra == 1.0
+                      ? lienzo
+                      : MediaQuery(data: datos, child: lienzo);
+                }
+                return ColoredBox(
+                    color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                    child: FittedBox(
+                        child: SizedBox.fromSize(
+                            size: tamano,
+                            child: MediaQuery(data: datos, child: lienzo))));
+              }));
 
   void iniciar() {
     final anterior = FlutterError.onError;
@@ -100,6 +137,8 @@ class T99Conductor {
           await _escenarioRam();
         case 'anchos':
           await _escenarioAnchos();
+        case 'inicio':
+          await _escenarioInicio();
         default:
           throw StateError('Escenario desconocido: $escenario');
       }
@@ -113,7 +152,9 @@ class T99Conductor {
 
   Future<void> _escenarioRam() async {
     await _cargar();
-    await _registrar('cargar', {});
+    await _registrar('cargar', {
+      'previo': _contenedorRiverpod().read(voyageNotifierProvider.notifier).isPreview,
+    });
     await _pausa();
 
     await _tocar(_pestana(_pestanaPlano));
@@ -157,9 +198,9 @@ class T99Conductor {
   Future<void> _cargar() async {
     final contenedor = _contenedorRiverpod();
     if (_carga == 'selector') {
-      await _tocar(_conTooltip('Cargar archivo BAPLIE'));
+      await _tocar(_conClave('select-file'));
       final limite = DateTime.now().add(const Duration(minutes: 10));
-      while (contenedor.read(voyageNotifierProvider.notifier).publishedVoyage == null) {
+      while (contenedor.read(voyageNotifierProvider.notifier).visibleVoyage == null) {
         if (DateTime.now().isAfter(limite)) throw StateError('Nadie eligió el archivo');
         await Future<void>.delayed(const Duration(milliseconds: 500));
       }
@@ -210,6 +251,64 @@ class T99Conductor {
       await _asentar();
     }
     _tamano.value = null;
+  }
+
+  // --- Escenario del inicio (Fase 3 de T-114) ---------------------------
+
+  Future<void> _escenarioInicio() async {
+    final contenedor = _contenedorRiverpod();
+    final n = contenedor.read(voyageNotifierProvider.notifier);
+    // Un reciente en el inicio: el plan publicado como lo haría la oficina.
+    if (_archivoPublicado.isNotEmpty) {
+      final datos = await rootBundle.load('t99_inputs/$_archivoPublicado');
+      final error = await t99Publicar(
+          n, String.fromCharCodes(datos.buffer.asUint8List()), _archivoPublicado);
+      if (error != null) throw StateError(error);
+      await _asentar();
+      n.clearVoyage();
+      await _asentar();
+    }
+    // El historial de escala del dispositivo: con otra escala, un plano de
+    // llegada propone el puerto de salida y abre en previo (hallazgo 5).
+    if (_escalaAnterior.isNotEmpty) {
+      final local = await contenedor.read(localVesselRepositoryProvider.future);
+      await local.setLastConfirmedPortOfCall(_escalaAnterior);
+    }
+    final texto = String.fromCharCodes(
+        (await rootBundle.load('t99_inputs/$_archivo')).buffer.asUint8List());
+    for (final tema in [AppThemePreference.light, AppThemePreference.dark]) {
+      await contenedor.read(themePreferenceProvider.notifier).select(tema);
+      await _asentar();
+      final nombreTema = tema == AppThemePreference.light ? 'claro' : 'oscuro';
+      for (final letra in _letras.split(',').map((s) => double.parse(s.trim()))) {
+        _letra.value = letra;
+        for (final especificacion in _anchos.split(',').map((s) => s.trim())) {
+          final partes = especificacion.split('x');
+          _tamano.value = especificacion == 'real'
+              ? null
+              : Size(double.parse(partes[0]), double.parse(partes[1]));
+          await _asentar();
+          final sufijo = '${especificacion}_${nombreTema}_letra$letra';
+          await _capturar(sufijo, 'inicio');
+          final r = await n.parseBaplieContent(texto, fileName: _archivo);
+          if (!r.success) throw StateError(r.errorMessage ?? 'No abrió $_archivo');
+          await _asentar();
+          await _capturar(sufijo, r.preview ? 'previo' : 'publicado');
+          if (n.isPreview) {
+            n.discardPreview();
+          } else {
+            n.clearVoyage();
+          }
+          await _asentar();
+        }
+      }
+    }
+    _letra.value = 1.0;
+    _tamano.value = null;
+    await contenedor
+        .read(themePreferenceProvider.notifier)
+        .select(AppThemePreference.system);
+    await _asentar();
   }
 
   Future<void> _capturar(String tamano, String pantalla) async {
@@ -299,9 +398,10 @@ class T99Conductor {
     return ProviderScope.containerOf(e);
   }
 
+  /// El viaje a la vista: publicado o, con el selector, quizá en previo.
   VesselVoyage _viaje() {
-    final v = _contenedorRiverpod().read(voyageNotifierProvider.notifier).publishedVoyage;
-    if (v == null) throw StateError('No hay viaje publicado');
+    final v = _contenedorRiverpod().read(voyageNotifierProvider.notifier).visibleVoyage;
+    if (v == null) throw StateError('No hay viaje a la vista');
     return v;
   }
 
@@ -334,6 +434,9 @@ class T99Conductor {
   Element _conTooltip(String mensaje) => _exigir(
       _buscarElemento((e) => e.widget is Tooltip && (e.widget as Tooltip).message == mensaje),
       'el botón $mensaje');
+
+  Element _conClave(String clave) => _exigir(
+      _buscarElemento((e) => e.widget.key == ValueKey(clave)), 'el control $clave');
 
   Element? _chipSiHay(int bahia) {
     final rotulo = _rotuloDeBahia(bahia);
@@ -407,7 +510,7 @@ class T99Conductor {
     return listo.future;
   }
 
-  Future<void> _pausa() => Future<void>.delayed(const Duration(milliseconds: _pausaMs));
+  Future<void> _pausa() => Future<void>.delayed(Duration(milliseconds: _pausaMs));
 
   Future<void> _registrar(String paso, Map<String, Object?> datos) async {
     final ahora = DateTime.now().toUtc().toIso8601String();

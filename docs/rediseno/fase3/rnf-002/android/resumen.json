@@ -1,0 +1,124 @@
+{
+  "instrumento": "tool/t114_primera_android.py + tool/t114_primera_cuadros.py",
+  "dispositivo": "emulador t99_api26 (API 26, 1080x1920, wm density 480 = 360 dp), serial emulator-5554",
+  "paquete": "gt.cmartinez.baystream.r4",
+  "videosEnTemp": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\primera\\android",
+  "repeticiones": [
+    {
+      "repeticion": "con01",
+      "perfil": "con",
+      "archivo": "T100_CARGA.edi",
+      "pasosDelProducto": 3,
+      "inicioPtsS": 4.515833,
+      "finPtsS": 7.656256,
+      "duracionAcotadaS": [
+        3.14,
+        3.203
+      ],
+      "previo": false,
+      "ptsOrigenIgualesYMonotonicos": true,
+      "sha256Video": "4d273dd86987ed1e7e34bfcc87cb4c23b9a18f262f09d68da87cb9e5ee789917",
+      "errorInstrumento": null,
+      "cumplePasos": true,
+      "cumpleTiempo": true
+    },
+    {
+      "repeticion": "sin01",
+      "perfil": "sin",
+      "archivo": "T99_SINTETICO_977.edi",
+      "pasosDelProducto": 3,
+      "inicioPtsS": 4.570689,
+      "finPtsS": 7.716322,
+      "duracionAcotadaS": [
+        3.146,
+        3.175
+      ],
+      "previo": true,
+      "ptsOrigenIgualesYMonotonicos": true,
+      "sha256Video": "151f2da3ad7cd7ef45eb1f6828a6447f969dd2529876bea25c8270dcef4c5cc7",
+      "errorInstrumento": null,
+      "cumplePasos": true,
+      "cumpleTiempo": true
+    },
+    {
+      "repeticion": "sin02",
+      "perfil": "sin",
+      "archivo": "T99_SINTETICO_977.edi",
+      "pasosDelProducto": 3,
+      "inicioPtsS": 4.493344,
+      "finPtsS": 7.7005,
+      "duracionAcotadaS": [
+        3.207,
+        3.253
+      ],
+      "previo": true,
+      "ptsOrigenIgualesYMonotonicos": true,
+      "sha256Video": "ccbb5a3388b83a803e39ac2d21bb9a9284b66803202411f369e1bf5e203e5b08",
+      "errorInstrumento": null,
+      "cumplePasos": true,
+      "cumpleTiempo": true
+    },
+    {
+      "repeticion": "sin03",
+      "perfil": "sin",
+      "archivo": "T99_SINTETICO_977.edi",
+      "pasosDelProducto": 3,
+      "inicioPtsS": 4.514422,
+      "finPtsS": 7.498144,
+      "duracionAcotadaS": [
+        2.984,
+        3.033
+      ],
+      "previo": true,
+      "ptsOrigenIgualesYMonotonicos": true,
+      "sha256Video": "3dce48efd7ccae1e41be8e57367bac9128acb58b16b52b8d6eae15724a1f5491",
+      "errorInstrumento": null,
+      "cumplePasos": true,
+      "cumpleTiempo": true
+    },
+    {
+      "repeticion": "sin04",
+      "perfil": "sin",
+      "archivo": "T99_SINTETICO_977.edi",
+      "pasosDelProducto": 3,
+      "inicioPtsS": 4.506733,
+      "finPtsS": 7.6112,
+      "duracionAcotadaS": [
+        3.104,
+        3.152
+      ],
+      "previo": true,
+      "ptsOrigenIgualesYMonotonicos": true,
+      "sha256Video": "ebd98e18857b206ed168f83adab0ccc8c9703839ee93bf97862ccc207094348a",
+      "errorInstrumento": null,
+      "cumplePasos": true,
+      "cumpleTiempo": true
+    },
+    {
+      "repeticion": "sin05",
+      "perfil": "sin",
+      "archivo": "T99_SINTETICO_977.edi",
+      "pasosDelProducto": 3,
+      "inicioPtsS": 4.521889,
+      "finPtsS": 7.607,
+      "duracionAcotadaS": [
+        3.085,
+        3.15
+      ],
+      "previo": true,
+      "ptsOrigenIgualesYMonotonicos": true,
+      "sha256Video": "77036e7951b905d1852630a4e33c84e2e43da7bcc2fc15978c56ca2f10bededa",
+      "errorInstrumento": null,
+      "cumplePasos": true,
+      "cumpleTiempo": true
+    }
+  ],
+  "umbral": {
+    "pasos": 3,
+    "segundos": 30.0
+  },
+  "maxCotaS": 3.253,
+  "cumplePasos": true,
+  "cumpleTiempo": true,
+  "nota": "La duración acotada va del primer cuadro que difiere del lanzador (el toque, o am start) al primer cuadro quieto con el plano; incluye las lecturas de uiautomator del instrumento, así que es una cota superior del tiempo del producto, como en T-98."
+}

@@ -31,10 +31,11 @@ void main() {
     await store.directory.delete(recursive: true);
   });
 
-  test('primera carga propone; confirmar guarda; segunda carga dibuja directo',
+  test('primera carga propone; confirmar guarda; la segunda abre en previo con el perfil',
       () async {
     final first = await notifier.parseBaplieContent(profileTestEdi);
     expect(first.needsGeometry, isTrue);
+    expect(first.preview, isTrue);
     expect(notifier.publishedVoyage, isNull);
     expect(
         notifier.currentProfile!.origin, VesselProfileOrigin.proposedFromFile);
@@ -45,8 +46,13 @@ void main() {
     expect(notifier.currentProfile!.origin, VesselProfileOrigin.declaredByUser);
     final second = await notifier.parseBaplieContent(profileTestEdi);
     expect(second.success, isTrue);
-    expect(second.needsGeometry, isFalse);
+    // Fase 3 (10.9): el archivo no declara escala, así que no coincide con la
+    // última confirmada y el plano abre en previo con el perfil guardado
+    // (DESIGN.md 7.2); confirmar sin escala publica.
+    expect(second.preview, isTrue);
     expect(second.needsIdentity, isFalse);
+    expect(notifier.visibleVoyage!.geometry, geometry);
+    expect(await notifier.confirmGeometry(geometry), isNull);
     expect(notifier.publishedVoyage!.geometry, geometry);
     expect(notifier.publishedVoyage!.id, isNot(previousId));
     expect(
@@ -86,11 +92,12 @@ void main() {
     expect(await notifier.confirmGeometry(proposal.geometry), isNull);
     expect(notifier.publishedVoyage!.geometry!.starboardRows, 2);
     expect(notifier.publishedVoyage!.geometry!.deckTiers, [82, 84, 86]);
-    expect(
-        (await notifier.parseBaplieContent(
-                profileTestEdi.replaceAll('0020182', '0020386')))
-            .needsGeometry,
-        isFalse);
+    // Fase 3 (10.9): ya cubre la carga; sin escala en el archivo, abre en
+    // previo con el perfil ampliado, sin pedir ampliación.
+    final again = await notifier.parseBaplieContent(
+        profileTestEdi.replaceAll('0020182', '0020386'));
+    expect(again.preview, isTrue);
+    expect(notifier.outsideProfilePositions, isEmpty);
   });
 
   // T-103: A06 (1.5) vuelve a leerse, como antes de T-86, y pregunta igual.
@@ -126,19 +133,23 @@ void main() {
     final saved = notifier.currentProfile!;
     final otherId = profileTestEdi.replaceAll('9000003:146', 'ZZALFA:103');
     expect((await notifier.parseBaplieContent(otherId)).needsIdentity, isTrue);
-    expect((await notifier.resolveIdentity(saved)).needsGeometry, isFalse);
+    // Fase 3 (10.9): elegido el homónimo, el plano queda en previo con su
+    // perfil (el archivo no declara escala); confirmar publica sin duplicar.
+    expect((await notifier.resolveIdentity(saved)).preview, isTrue);
+    expect(notifier.currentProfile!.key, saved.key);
+    expect(await notifier.confirmGeometry(saved.geometry), isNull);
     expect(notifier.publishedVoyage!.vessel.callSign, 'ZZALFA');
-    expect(notifier.currentProfile, saved);
+    expect(notifier.currentProfile!.key, saved.key);
     final recentId = notifier.publishedVoyage!.id;
     expect(notifier.publishedVoyage!.vesselProfileKey, saved.key);
     notifier.clearVoyage();
     expect(await notifier.openRecentVoyage(recentId), isNull);
-    expect(notifier.currentProfile, saved,
+    expect(notifier.currentProfile!.key, saved.key,
         reason: 'reabrir recuerda la elección explícita del homónimo');
     expect(
         (await store.repository.getAllProfiles())
             .getOrElse(() => <VesselProfile>[]),
-        [saved]);
+        hasLength(1));
   });
 
   test(
@@ -168,11 +179,13 @@ void main() {
             firstDeckTier: 84),
         origin: VesselProfileOrigin.declaredByUser);
     await store.repository.saveProfile(profile);
-    expect((await notifier.parseBaplieContent(profileTestEdi)).needsGeometry,
-        isFalse);
-    expect(notifier.publishedVoyage!.geometry, profile.geometry);
-    expect(notifier.publishedVoyage!.bays[2]!.holdWeightByRow.keys, [1]);
-    expect(notifier.publishedVoyage!.bays[2]!.deckWeightByRow, isEmpty);
+    // Fase 3 (10.9): sin escala en el archivo abre en previo, con el perfil
+    // guardado tal cual, sin recalcularlo.
+    expect((await notifier.parseBaplieContent(profileTestEdi)).preview,
+        isTrue);
+    expect(notifier.visibleVoyage!.geometry, profile.geometry);
+    expect(notifier.visibleVoyage!.bays[2]!.holdWeightByRow.keys, [1]);
+    expect(notifier.visibleVoyage!.bays[2]!.deckWeightByRow, isEmpty);
   });
 
   test('homónimos sin identificador no se sobrescriben como otro buque',

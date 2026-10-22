@@ -1,0 +1,45 @@
+{
+  "instrumento": "tool/t114_primera_web.py",
+  "perfil": "sin",
+  "archivo": "/t114/T99_SINTETICO_977.edi",
+  "tema": "oscuro",
+  "repeticiones": 5,
+  "pasosDelProducto": 3,
+  "tiemposHastaRejillaS": [
+    0.421,
+    0.297,
+    0.36,
+    0.325,
+    0.315
+  ],
+  "minS": 0.297,
+  "maxS": 0.421,
+  "mediaS": 0.344,
+  "primerCuadroS": [
+    0.212,
+    0.161,
+    0.176,
+    0.184,
+    0.18
+  ],
+  "clicARejillaS": [
+    0.209,
+    0.136,
+    0.184,
+    0.141,
+    0.135
+  ],
+  "previos": [
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "umbral": {
+    "pasos": 3,
+    "segundos": 30.0
+  },
+  "cumplePasos": true,
+  "cumpleTiempo": true
+}

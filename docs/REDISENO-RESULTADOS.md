@@ -1141,3 +1141,596 @@ atenuada y la línea fuerte sobre hoja y acero tenue), auditoría 18/235/19 como
 entrega. Ninguna pantalla cambia; `pubspec` no cambia. Queda anotado para la Fase 3
 (`DESIGN.md`, 12) que el código de cinco letras se corta con elipsis a escala 2.0 en
 52/56 dp. Me detengo: Codex vuelve a aceptar.
+
+## Fase 3 · Entrega 1: el inicio y la primera visualización (22-oct-2026)
+
+### 3.1 Resultado en tres líneas
+
+- **El inicio y el previo están en la app**: el tema claro y oscuro conectado en
+  `lib/core/app.dart` con la preferencia de T-90; el inicio de `DESIGN.md` 9.1 con
+  «Seleccionar archivo» como única acción, los recientes, los perfiles y, con cuenta, las
+  operaciones abiertas; y «ver primero, confirmar después» (7): el plano abre en previo con
+  la banda y «Confirmar», peso por pila y tomas dicen «sin evaluar hasta confirmar el
+  perfil», sin modos, sin exportar, descartar pregunta, y al confirmar se queda en el Plano.
+  La regla estricta de publicación directa (7.2) está probada con el hallazgo 5 del manual.
+- **RNF-002 pasa de seis pasos a tres en los tres clientes**, medido con instrumentos
+  nuevos y declarados: Windows 1.83–1.90 s, la Web 0.30–0.42 s (1.28–1.51 s en la primera
+  visita) y el emulador Android con cotas de 2.98–3.25 s, contra ≤ 3 pasos y ≤ 30 s.
+- Suite **1156** (piso 1143 + 13 nuevas, 19 actualizadas sin bajar el conteo, ninguna
+  omitida); `analyze` **«No issues found»**; auditoría de `flutter-ui` con **cero críticos y
+  cero avisos en lo tocado** (dos falsos positivos del patrón `ListView(` declarados); censos
+  de T-112 sin inglés ni excepciones nuevas. `pubspec` no cambia, `domain/` y `data/` no
+  cambian, `main.dart` no cambia. Me detengo: Codex acepta.
+
+### 3.2 Lo hecho
+
+1. **El tema, conectado** (`lib/core/app.dart`, autorizado en 10.9): `BayStreamTema.claro` y
+   `.oscuro` con la preferencia de tema de T-90 (`themePreferenceProvider`), en la densidad
+   que decide la plataforma (`bayStreamEsMuelle`: muelle en Android e iOS, oficina en
+   Windows y la Web; `DESIGN.md` 4.3). Con eso cambian el color y la letra de todas las
+   pantallas a la vez; la suite completa las recorre y no hay desbordes nuevos.
+2. **Los estados del viaje** (`presentation/providers/voyage_ui_state.dart`, nuevo): la
+   `sealed class` de `DESIGN.md` 7.1 (`SinViaje`, `Leyendo`, `Previo`, `Publicado`,
+   `Fallo`), derivada del notifier por `voyageUiStateProvider`, con el motivo del previo
+   (`PreviewReason`: buque nuevo, homónimo, fuera del perfil, escala por decidir) y los
+   textos de la banda. El notifier sigue siendo la única fuente y `_publish`, la única
+   escritura.
+3. **El previo en el notifier** (`vessel_providers.dart`): `parseBaplieContent` deja el
+   plano a la vista con la geometría propuesta (`_abrirPrevio`), sin guardar nada;
+   `isPreview`, `previewReason`, `previewPortOfCall`, `visibleVoyage` y
+   `discardPreview`; `publishedVoyage` y `publishedProfile` no ven el previo, así que los
+   validadores de peso por pila y de tomas no evalúan sin perfil confirmado. Lo que
+   había antes (nada, o el viaje publicado) se restaura al descartar.
+4. **La regla estricta de publicación directa** (`_useProfile`, `DESIGN.md` 7.2): un viaje
+   abre publicado sin previo solo si el perfil guardado cubre toda la carga **y** la
+   escala propuesta es la última confirmada para ese buque en este dispositivo (la del
+   viaje guardado más reciente de ese perfil con escala, leída del almacén que ya existe:
+   `domain/` y `data/` no cambian) **y** el archivo deja claro si es de llegada o de
+   carga. Si falta cualquiera, previo. Un plano de llegada que propone el puerto de
+   salida (hallazgo 5 del manual) abre en previo con «El archivo sale de PAMIT rumbo a
+   GTSTC: confirma la escala.».
+5. **El inicio** (`widgets/inicio_view.dart`, nuevo; `widgets/empty_state_widget.dart`,
+   rehecho), según `DESIGN.md` 9.1: «Abre un plano de estiba», la validación por
+   contenido y «Seleccionar archivo» a 56 dp como acción única; los recientes de este
+   dispositivo (hasta cinco, cada uno con buque, viaje, cuentas y escala; «Ver todos»
+   lleva a la pantalla que los borra); «Perfiles guardados (N)»; y, con cuenta
+   autorizada, «Operaciones abiertas en la nube (N)» hacia Nube y cuenta. La barra
+   superior lleva solo Parámetros y Nube; no hay botón flotante ni acciones repetidas
+   (T-98, `con01`). Desde 840 dp, dos columnas dentro del ancho máximo de 1440.
+6. **El previo en la página** (`pages/vessel_overview_page.dart`): `switch` sobre el
+   estado; **el plano es la primera pestaña** (10.2 a), así que la primera
+   visualización termina en la rejilla; la banda `BsBanda` con el motivo y «Confirmar»;
+   el aviso «Peso por pila y tomas de refrigerado: sin evaluar hasta confirmar el
+   perfil.» con icono, en todas las pestañas; sin escala no aparecen los modos Carga y
+   Descarga, ni el listado ni la salida; exportar avisa «Para exportar, confirma el
+   perfil del buque.»; «Limpiar datos», abrir otro archivo o los recientes preguntan
+   «¿Descartar el plano sin confirmar?»; cancelar en los parámetros, en la identidad o
+   en la plantilla deja el previo a la vista; al confirmar, el viaje se publica y se
+   queda en el Plano. En Alertas de estiba (`stowage_alerts_page.dart`), el previo dice
+   «sin evaluar» en vez de «no hay resultados».
+7. **Lo que se tocó de paso en la página**, porque la auditoría de `flutter-ui` exige
+   cero avisos en lo que se toca: el tamaño de letra escrito a mano de los chips de
+   «llenos / vacíos» pasa al tema, y el `Future.delayed(Duration.zero)` de la exportación
+   a PDF pasa a esperar el final del cuadro (`WidgetsBinding.instance.endOfFrame`), que
+   es lo que buscaba.
+8. **Instrumentos** (`tool/`): el conductor de T-99 (`t99_conductor.dart`) toca
+   «Seleccionar archivo» en el inicio, espera el viaje a la vista (previo o publicado),
+   anota si quedó en previo, lee sus definiciones también del entorno del proceso (el
+   mismo binario mide y recorre escenarios) y trae el escenario `inicio` (capturas del
+   inicio y del previo por tamaño, tema y letra; `t99_plataforma_*.dart`); el banco toma
+   el namespace de `T99_NAMESPACE` (`t99_app.dart`); `t99_copia.ps1` copia el árbol de
+   trabajo (`-Arbol`) con la identidad del cliente (`-Sufijo r4`); la primera
+   visualización en tres pasos se mide con `t114_primera_android.py` (sucesor de
+   `t98_primera_honor.py`, que se conserva como el instrumento de T-98 para el paquete
+   `.t98` y sus seis pasos), `t114_primera_windows.py` (sin persona ni agente),
+   `t114_primera_web.py` con `t114_primera_web.js` (el Chrome instalado, abierto
+   por Playwright en un perfil temporal y en una ventana visible, con el instrumento
+   inyectado antes de cada documento) y `t114_primera_cuadros.py` (el primer cuadro
+   con rejilla de un video); `t114_capturas_windows.ps1`, `t114_capturas_android.py` y
+   `t114_capturas_web.py` toman las capturas del inicio y del previo; `t112_censos.py` conoce
+   los archivos nuevos (decisiones de idioma por archivo y pantalla para Material 3).
+9. **`DESIGN.md`**: la densidad por plataforma (4.3), los textos del previo y la regla
+   de descartar y de «la última escala confirmada para ese buque» (7), las capas que
+   tocó la entrega (7.3), lo hecho del inicio (9.1) y el estado de la Fase 3 (12).
+
+### 3.3 Pruebas
+
+- **Nuevas, `test/t114_fase3_inicio_test.dart` (13):** el tema conectado en claro y en
+  oscuro con la preferencia; el inicio con una sola acción, los recientes y los
+  perfiles, y abrir un reciente va al Plano; un buque nuevo abre en previo con la banda,
+  «sin evaluar», sin modos ni exportar (y Alertas dice «sin evaluar»); «Confirmar»
+  publica, guarda y se queda en el Plano; cancelar en los parámetros deja el previo y
+  descartar pregunta y vuelve al inicio; y la regla estricta: perfil que cubre con la
+  escala de siempre abre publicado; otra escala, previo; **el hallazgo 5** (un plano de
+  llegada que propone el puerto de salida abre en previo, y con el historial de la misma
+  escala abre publicado como llegada); perfil que no cubre, previo con la geometría
+  ampliada; descartar vuelve al viaje publicado; buque nuevo sin escala en el archivo;
+  homónimo en previo con la identidad pendiente. Son sintéticos (BUQUE MANUAL).
+- **Actualizadas sin bajar el conteo (8 archivos, 19 pruebas), porque esperaban que
+  «Parámetros del buque» se abriera solo o el inicio de antes:**
+  `profile_loading_page_test.dart` (las seis: `load` toca «Seleccionar archivo» y
+  `confirmar` toca la banda; cancelar deja el previo; la segunda carga sin escala abre
+  en previo con el perfil guardado; el repositorio falso responde `getAllVoyages`);
+  `profile_loading_test.dart` (cuatro: la segunda carga sin escala abre en previo y
+  confirmar publica; el homónimo elegido queda en previo y confirmar no duplica; el
+  perfil con anclas distintas se usa sin recalcularlo, en el previo; ampliar y volver a
+  cargar abre en previo sin ampliación pendiente); `profile_persistence_test.dart`
+  (las dos: el límite sobrevive en el previo, con `visibleVoyage`);
+  `recent_voyages_test.dart` (el plano abre primero y pliega la barra: la Lista la
+  muestra); `stowage_alerts_page_test.dart` («Alertas de estiba» está en la Lista);
+  `t104_text_test.dart` (las dos: la cabecera del inicio vive dentro de un desplazable);
+  `t86_baplie_version_test.dart` (las dos) y `t89_file_input_test.dart` (una): en el
+  inicio la carga es «Seleccionar archivo».
+- Las 80 de T-114 de la Fase 2 no cambian.
+
+### 3.4 Validaciones ejecutadas
+
+Con la luz verde de 10.9: un comando de Flutter a la vez; los de varios minutos, en
+segundo plano y de uno en uno. El Honor no se tocó (el emulador hace de teléfono).
+
+- `flutter test --no-pub` completa → `+1156: All tests passed!`, 0 fallos, 0 omitidas.
+  Piso: 1143 → **1156** (13 nuevas).
+- `flutter analyze` → **«No issues found»**.
+- Auditoría de `flutter-ui` (`docs/rediseno/fase3/flutter-ui-audit.txt`): 157 archivos,
+  **17 críticos, 231 avisos y 19 informativos** (la entrega anterior: 18, 235 y 19).
+  En los archivos que toqué: `app.dart`, `inicio_view.dart`, `empty_state_widget.dart`,
+  `voyage_ui_state.dart` y `stowage_alerts_page.dart`, **cero críticos y cero avisos**
+  (solo el informativo `NAV_NO_POP_SCOPE` de cada `Scaffold`); en
+  `vessel_overview_page.dart` desaparecen el aviso de letra escrita a mano, el
+  `ANIM_ZERO_DURATION` y el crítico `RIVERPOD_NO_ERROR_HANDLER` (que era un falso
+  positivo: ya no hay `.when(`), y quedan **dos críticos que son falsos positivos del
+  script**: `ReservedSlotsListView(` y `ContainersListView(` coinciden con su patrón
+  `ListView(` y no son listas con `children`. En `vessel_providers.dart` siguen los dos
+  `RIVERPOD_PROVIDER_IN_CLASS` que la línea base ya declaró como falsos positivos.
+- Censos de T-112 sobre el árbol (`tool/t112_censos.py`, salida en
+  `docs/rediseno/fase3/censos/`): idioma, **1816 cadenas visibles: 1677 en español y 139
+  sin idioma (siglas, nombres o unidades), 0 en inglés o mixtas**; con los 20 textos de
+  Flutter, 100 % en las dos lecturas de T-98. Material 3: **259 controles incluidos, 8
+  exclusiones declaradas y 5 excepciones**, las cinco anteriores (`GestureDetector`,
+  `LongPressDraggable` y `DragTarget` del plano y del arrastre, S02), ninguna en lo que
+  toqué; los 48 controles de S01 (inicio y Lista) son Material y toman el color del
+  esquema o del tema, y los 7 de los componentes del sistema de diseño también (dos
+  toman el color de `BsColoresSemanticos`, una `ThemeExtension`: declarados como
+  resueltos). Mensajes: los **218** de T-112, sin cambios. Las 34 cadenas nuevas sin
+  decisión (formatos, familias tipográficas, rótulos de la celda, etiquetas de la tira,
+  los textos del previo y del inicio) se decidieron por archivo en `T114_DECISIONES`.
+
+### 3.5 RNF-002: la primera visualización en tres pasos
+
+Los tres pasos del producto son (1) abrir la app, (2) «Seleccionar archivo» y (3) elegir el
+archivo en el selector del sistema; el fin es la rejilla a la vista, que desde esta entrega
+es el previo, sin confirmar nada. El umbral es **≤ 3 pasos y ≤ 30 s**, y rige la
+condición «sin perfil»; «con perfil» es informativa. En T-98 (10.97) eran **seis pasos sin
+perfil en los tres clientes: no cumplía**. Ahora son **tres en los tres clientes, y el
+tiempo queda muy por debajo del umbral**: Windows 1.83–1.90 s, la Web 0.30–0.42 s (1.28–1.51
+s en la primera visita) y el emulador Android con cotas de 2.98–3.25 s.
+
+| Cliente | Condición | Rep. | Pasos | Hasta la rejilla (s) | ≤ 3 pasos y ≤ 30 s |
+|---|---|---|---|---|---|
+| Windows (1920×1080, oscuro) | sin perfil | 5 | 3 | 1.900, 1.871, 1.832, 1.870, 1.887 (± 0.05) | cumple |
+| | con perfil | 1 | 3 | 2.566 | cumple |
+| Web (Chrome 155, 1280×720, oscuro) | sin perfil, caché caliente | 5 | 3 | 0.421, 0.297, 0.360, 0.325, 0.315 | cumple |
+| | sin perfil, primera visita | 5 | 3 | 1.510, 1.284, 1.294, 1.288, 1.295 | cumple |
+| | con perfil | 1 | 3 | 2.915 | cumple |
+| Emulador Android (API 26, 360 dp, claro) | sin perfil | 5 | 3 | cotas 3.146–3.175, 3.207–3.253, 2.984–3.033, 3.104–3.152, 3.085–3.150 | cumple |
+| | con perfil | 1 | 3 | cota 3.140–3.203 | cumple |
+
+**Qué cambia en los instrumentos respecto de T-98 (10.97), declarado.** T-98 midió con
+`tool/t98_primera_honor.py` en el Honor (seis pasos, video y PTS), con el agente en Windows
+(pausas que impidieron medir el tiempo) y con el screencast CDP del navegador integrado de
+Codex en la Web. Los instrumentos de T-98 se conservan sin tocar, para el paquete `.t98` y
+sus seis pasos. Los de esta entrega son nuevos, uno por cliente, miden el recorrido de tres
+pasos y terminan en la rejilla del previo:
+
+- **Windows, `tool/t114_primera_windows.py`:** sin persona ni agente. Un proceso de Python
+  abre el binario del banco r4 como una persona (`explorer.exe`, fuera del paquete de la
+  consola), localiza «Seleccionar archivo» por el color de la marca en la captura de la
+  ventana (claro y oscuro), escribe la ruta en el selector nativo y lo confirma por mensaje
+  Win32, y captura la ventana a unos 20 cuadros por segundo con el reloj monotónico del
+  host; el fin es el primer cuadro en que la ventana queda quieta con el plano. La
+  incertidumbre es el intervalo entre cuadros (0.05 s). Hitos por repetición (s desde el
+  arranque): la ventana a la vista 0.443, 0.440, 0.440, 0.462, 0.439; el archivo confirmado
+  1.630, 1.585, 1.598, 1.588, 1.595; la rejilla quieta 1.900, 1.871, 1.832, 1.870, 1.887.
+  «Con perfil»: 0.598, 2.070, 2.566. «Sin perfil» aparta el almacén de la copia antes de
+  cada repetición (`T99_ALMACEN` en `%TEMP%`); «con perfil» lo conserva con el perfil
+  confirmado por una corrida previa. Registros en `docs/rediseno/fase3/rnf-002/windows/`
+  (`sinNN/registro.json` con todos los instantes y diferencias entre cuadros,
+  `resumen-sin.json`, `resumen-con.json`, y el inicio y la rejilla de `sin01` en PNG).
+- **Web, `tool/t114_primera_web.py` con `tool/t114_primera_web.js`:** se describe abajo.
+- **Android, `tool/t114_primera_android.py` con `tool/t114_primera_cuadros.py`:** sucesor
+  de `t98_primera_honor.py` para el emulador (el Honor solo con `--serial` y el permiso de
+  Carlos): ADB, uiautomator y `screenrecord`. El icono no está a la vista en el lanzador
+  del emulador, así que el paso 1 es `am start` del paquete r4 (anotado); el paso 2 toca
+  «Seleccionar archivo» en el inicio; el paso 3 elige el archivo en el selector de AOSP, que
+  abre en «Recent» vacío la primera vez: el instrumento abre el cajón de raíces, Descargas y
+  `t114` (el selector cuenta una vez, como en T-98, donde el del Honor recordaba la carpeta;
+  en las cinco repeticiones ya recordaba `t114`). El tiempo sale del video: el primer cuadro
+  que difiere del lanzador (el lanzamiento) y el primer cuadro quieto con el plano,
+  propuestos por `t114_primera_cuadros.py` y revisados a ojo; los JPEG candidatos y los PTS
+  quedan en el registro. La cota incluye las lecturas de uiautomator del instrumento (unas
+  dos por recorrido), así que es un **límite superior** del tiempo del producto, como en
+  T-98. «Sin perfil» hace `pm clear` solo del paquete r4 antes de cada video; «con perfil»
+  conserva el perfil que `tool/t114_capturas_android.py` confirmó antes (BUQUE MANUAL, de
+  `T100_CARGA.edi`) y abre ese mismo archivo, que por 7.2 abre publicado. Registros en
+  `docs/rediseno/fase3/rnf-002/android/` (`captura.json`, `cuadros.json` y los JPEG por
+  repetición, `resumen.json`); los MP4 quedan en `%TEMP%` con su SHA-256 en el registro.
+
+#### Web (Chrome 155, ventana visible de 1280×800, vista 1280×720, tema oscuro)
+
+El navegador integrado de la consola no sirvió para medir: cuando nadie mira la
+sesión, su panel queda oculto, la página no pinta ni corre
+`requestAnimationFrame`, y la primera corrida dio un FCP de 7.99 s que era del
+panel, no del producto. La medición se hizo con el Chrome instalado, abierto por
+Playwright en un perfil temporal vacío y en una ventana visible del escritorio
+(`tool/t114_primera_web.py`), sin tocar el Chrome de Carlos ni cuentas. El
+instrumento (`tool/t114_primera_web.js`) se inyecta antes de cada documento, así
+que observa desde la navegación: el primer cuadro del motor (FCP del navegador
+o, si falta, el lienzo observado), la activación de la semántica (acción del
+instrumento) y, del clic en «Seleccionar archivo» a la primera bahía en la
+semántica, el tiempo del producto. El selector lo intercepta el navegador, como
+en T-98: el archivo ya descargado se asigna al `<input type=file>`. El origen es
+`http://127.0.0.1:5899/` con `build/web` de la copia r4; el archivo,
+`T99_SINTETICO_977.edi` (977 contenedores).
+
+| Condición | Rep. | Pasos | Primer cuadro (s) | Clic → rejilla (s) | Total (s) | Previo |
+|---|---|---|---|---|---|---|
+| Sin perfil, caché caliente | 1 | 3 | 0.212 | 0.209 | 0.421 | sí |
+| | 2 | 3 | 0.161 | 0.136 | 0.297 | sí |
+| | 3 | 3 | 0.176 | 0.184 | 0.360 | sí |
+| | 4 | 3 | 0.184 | 0.141 | 0.325 | sí |
+| | 5 | 3 | 0.180 | 0.135 | 0.315 | sí |
+| Sin perfil, primera visita (sin caché) | 1 | 3 | 1.308 | 0.202 | 1.510 | sí |
+| | 2 | 3 | 1.100 | 0.184 | 1.284 | sí |
+| | 3 | 3 | 1.112 | 0.182 | 1.294 | sí |
+| | 4 | 3 | 1.068 | 0.220 | 1.288 | sí |
+| | 5 | 3 | 1.076 | 0.219 | 1.295 | sí |
+| Con perfil (informativa) | 1 | 3 | 2.612 | 0.303 | 2.915 | no: publicado directo |
+
+«Caché caliente» es la visita normal (una navegación de calentamiento que no
+cuenta, y el almacén borrado antes de cada repetición); «primera visita» es un
+contexto nuevo del navegador por repetición, sin caché ni almacén. La
+incertidumbre es un cuadro de animación (la rejilla apareció en el primer
+cuadro muestreado tras el clic; el reloj es `performance.now()`). En «con
+perfil» el perfil se confirmó antes como lo haría la oficina (Confirmar →
+Parámetros del buque → No lo tengo → Confirmar y ver el plano) y la segunda
+carga abrió publicada, sin previo: la regla de 7.2. Registros en
+`docs/rediseno/fase3/rnf-002/web/` (`sin-caliente/`, `sin-fria/`, `con/`:
+`*-registro.json` con todas las marcas, `resumen.json`, y el inicio y la
+rejilla de la primera repetición en PNG).
+
+### 3.6 Capturas
+
+Todas en `docs/rediseno/fase3/`, con datos sintéticos (BUQUE MANUAL de T-100 y
+T99 SINTETICO 977), sin cuentas y sin el corpus.
+
+- **Antes (`antes/`, 11):** las del manual de T-100 que muestran lo que cambia: el
+  inicio de Windows en oscuro y en claro (`w00-inicio*.png`) y el del Honor con la letra
+  normal y grande (`h00-inicio*.png`), con el botón flotante y las acciones repetidas en la
+  barra; los viajes recientes como pantalla aparte (`w03`, `h03`); y lo que antes abría
+  solo al cargar: «Perfil del buque nuevo», «Parámetros del buque» con «No lo tengo» y la
+  escala de llegada (`w04-*`, `h04-escala-llegada.png`).
+- **Después, Windows (`despues/arnes-windows/`, 36 PNG + `anchos.jsonl`):** el arnés de
+  T-99 (`tool/t114_capturas_windows.ps1`, escenario `inicio`) sobre el banco r4: el inicio
+  con un reciente y el previo de un plano de llegada que propone el puerto de salida
+  (hallazgo 5), a 360×800, 600×960 y 1920×1080, en claro y oscuro, con la letra a 1.0,
+  1.45 y 2.0. `anchos.jsonl` anota, por captura, los textos que el arnés encontró
+  recortados: ninguno en el inicio; en el previo a 360 dp con letra 1.45 y 2.0 se recortan
+  «Contenido» y «Número de orden», que son los controles del plano de antes y van con la
+  entrega del plano.
+- **Después, Web (`despues/web/`, 12 PNG):** `tool/t114_capturas_web.py` en el Chrome de
+  Playwright: el inicio con un reciente y un perfil guardado, y el previo de un buque
+  nuevo, a 360×800, 600×960 y 1280×800, en claro y oscuro.
+- **Después, emulador (`despues/emulador/`, 8 PNG):** `tool/t114_capturas_android.py` en
+  el emulador API 26 a 360 dp (`wm density 480`): el inicio con un reciente y un perfil
+  guardado (BUQUE MANUAL, confirmado desde `T100_CARGA.edi` como lo haría la oficina) y el
+  previo de un buque nuevo (`T99_SINTETICO_977.edi`), con la letra del sistema a 1.0, 1.45 y
+  2.0 en claro, y a 1.0 en oscuro (Parámetros → Tema → Oscuro). Con ese perfil confirmado
+  en GTSTC, `T100_LLEGADA.edi` abre publicado en el emulador, porque propone esa misma
+  escala (la regla de 7.2 cumpliéndose): el previo del hallazgo 5 está en las capturas de
+  Windows, donde el conductor deja el historial en USHOU. La letra y el tema vuelven a 1.0
+  y «Seguir al sistema» al terminar. El Honor no se usó.
+- **RNF-002 (`rnf-002/`):** por cliente, el inicio y la rejilla de la primera repetición
+  (PNG en Windows y la Web; en Android, los cuadros candidatos del video en JPEG) y los
+  registros (3.5).
+
+### 3.7 Archivos de esta entrega
+
+- `lib/core/app.dart` (el tema conectado; autorizado en 10.9).
+- `lib/features/vessel/presentation/providers/voyage_ui_state.dart` (nuevo),
+  `providers/vessel_providers.dart`, `pages/vessel_overview_page.dart`,
+  `pages/stowage_alerts_page.dart`, `widgets/inicio_view.dart` (nuevo),
+  `widgets/empty_state_widget.dart`.
+- `test/t114_fase3_inicio_test.dart` (nuevo) y las actualizadas de 3.3:
+  `test/profile_loading_page_test.dart`, `test/profile_loading_test.dart`,
+  `test/profile_persistence_test.dart`, `test/recent_voyages_test.dart`,
+  `test/stowage_alerts_page_test.dart`, `test/t104_text_test.dart`,
+  `test/t86_baplie_version_test.dart`, `test/t89_file_input_test.dart`.
+- `tool/t99_conductor.dart`, `tool/t99_app.dart`, `tool/t99_plataforma_io.dart`,
+  `tool/t99_plataforma_web.dart`, `tool/t99_copia.ps1`, `tool/t112_censos.py`
+  (modificados); `tool/t114_primera_android.py`, `tool/t114_primera_windows.py`,
+  `tool/t114_primera_web.py`, `tool/t114_primera_web.js`, `tool/t114_primera_cuadros.py`,
+  `tool/t114_capturas_windows.ps1`, `tool/t114_capturas_android.py`,
+  `tool/t114_capturas_web.py` (nuevos).
+- `DESIGN.md`.
+- `docs/rediseno/fase3/`: `flutter-ui-audit.txt`, `censos/tablas.md`,
+  `censos/resumen.json`, `antes/` (las 11 capturas del manual que muestran el inicio,
+  los recientes y los parámetros de antes), `despues/` (las capturas nuevas),
+  `rnf-002/` (los registros de la medición) y `traspaso-entrega1.md` (el traspaso para el
+  chat que sigue, pedido por Yov en el alto parcial).
+- `docs/REDISENO-RESULTADOS.md` (esta sección).
+- Sin cambios: `domain/`, `data/`, `lib/main.dart`, `pubspec.yaml`, `pubspec.lock`,
+  los archivos congelados de H5, las apps instaladas y las carpetas de otras tareas.
+  `windows/flutter/generated_plugin*` los regenera `flutter test` y no se versionan
+  (10.2).
+
+### 3.8 Lo que no se pudo y lo que queda
+
+- **El navegador integrado de la consola no midió la Web.** Con la sesión sin nadie
+  mirando, su panel queda oculto, la página no pinta ni corre
+  `requestAnimationFrame` y el primer intento dio 7.99 s de «primer cuadro» que eran del
+  panel. La medición se hizo con el Chrome instalado abierto por Playwright en un perfil
+  temporal y en una ventana visible (`tool/t114_primera_web.py`): el instrumento cambia
+  y queda declarado en 3.5; no se tocó el Chrome de Carlos ni ninguna cuenta.
+- **El selector del emulador abre en «Recent», vacío.** El instrumento de Android abre
+  su cajón de raíces, entra en Descargas y en `t114` y elige el archivo: sigue siendo el
+  paso 3 (el selector cuenta una vez, como en T-98, donde el selector del Honor recordaba
+  la carpeta). El tiempo de navegar el selector es del instrumento y no del producto,
+  y en el video queda a la vista.
+- **A 360 dp con letra 1.45 y 2.0, el previo recorta «Contenido» y «Número de orden»**
+  (`anchos.jsonl`): son los controles del plano de antes, no del inicio ni de la banda, y
+  van con la entrega del plano.
+- **A 360 dp con letra 2.0, la banda del previo parte palabras** («pr-opuesto»,
+  «confirmar-:») porque el botón «Confirmar» le deja poco ancho al texto, y la pestaña
+  «Estadísticas» se corta (`emulador_360_claro_letra2.0_previo.png`). No se corrigió por el
+  alto parcial en lo visual: queda declarado para la dirección nueva (la banda tendría que
+  poner la acción debajo del texto cuando no cabe).
+- **El Honor no se midió** (el emulador hace de teléfono, como pide la entrega); la
+  medición en el Honor queda para cuando Carlos lo autorice, con la letra en 1.0.
+- **Alto parcial en lo visual (Yov, 22-oct, durante el cierre):** Carlos y Yov revisan
+  una dirección visual nueva («Puente de mando»); lo de la Fase 2 se queda y cambiarán
+  valores. Esta entrega se cerró solo en lo funcional (el flujo «ver primero, confirmar
+  después», los instrumentos y RNF-002), sin pulir colores, tarjetas ni el inicio más de lo
+  que ya estaba. **La entrega 2 (el plano por bahía) no se empieza** hasta que Carlos
+  apruebe la dirección. El traspaso para el chat que sigue está en
+  `docs/rediseno/fase3/traspaso-entrega1.md`.
+
+### 3.9 Horas
+
+De las 12:20 (aprox.) a las 16:05 del 22-oct-2026: ≈ 3.8 h de reloj, sin
+cronómetro (la hora de inicio es la del mensaje de Yov que abre la Fase 3). Incluye las
+compilaciones de los tres bancos r4 (Windows, Web y el APK), las mediciones y las capturas.
+
+### Git para Carlos (Fase 3, entrega 1)
+
+```
+git add -- DESIGN.md
+git add -- lib/core/app.dart
+git add -- lib/features/vessel/presentation/providers/voyage_ui_state.dart
+git add -- lib/features/vessel/presentation/providers/vessel_providers.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/pages/stowage_alerts_page.dart
+git add -- lib/features/vessel/presentation/widgets/inicio_view.dart
+git add -- lib/features/vessel/presentation/widgets/empty_state_widget.dart
+git add -- test/t114_fase3_inicio_test.dart
+git add -- test/profile_loading_page_test.dart
+git add -- test/profile_loading_test.dart
+git add -- test/profile_persistence_test.dart
+git add -- test/recent_voyages_test.dart
+git add -- test/stowage_alerts_page_test.dart
+git add -- test/t104_text_test.dart
+git add -- test/t86_baplie_version_test.dart
+git add -- test/t89_file_input_test.dart
+git add -- tool/t99_conductor.dart
+git add -- tool/t99_app.dart
+git add -- tool/t99_plataforma_io.dart
+git add -- tool/t99_plataforma_web.dart
+git add -- tool/t99_copia.ps1
+git add -- tool/t112_censos.py
+git add -- tool/t114_primera_android.py
+git add -- tool/t114_primera_windows.py
+git add -- tool/t114_primera_web.py
+git add -- tool/t114_primera_web.js
+git add -- tool/t114_primera_cuadros.py
+git add -- tool/t114_capturas_windows.ps1
+git add -- tool/t114_capturas_android.py
+git add -- tool/t114_capturas_web.py
+git add -- docs/rediseno/fase3/antes/h00-inicio-letra-grande.png
+git add -- docs/rediseno/fase3/antes/h00-inicio.png
+git add -- docs/rediseno/fase3/antes/h03-viajes-recientes.png
+git add -- docs/rediseno/fase3/antes/h04-escala-llegada.png
+git add -- docs/rediseno/fase3/antes/w00-inicio-claro.png
+git add -- docs/rediseno/fase3/antes/w00-inicio.png
+git add -- docs/rediseno/fase3/antes/w03-viajes-recientes.png
+git add -- docs/rediseno/fase3/antes/w04-escala-llegada.png
+git add -- docs/rediseno/fase3/antes/w04-parametros-arriba.png
+git add -- docs/rediseno/fase3/antes/w04-parametros-no-lo-tengo.png
+git add -- docs/rediseno/fase3/antes/w04-perfil-buque-nuevo.png
+git add -- docs/rediseno/fase3/censos/resumen.json
+git add -- docs/rediseno/fase3/censos/tablas.md
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_claro_letra1.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_claro_letra1.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_claro_letra1.45_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_claro_letra1.45_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_claro_letra2.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_claro_letra2.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_oscuro_letra1.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_oscuro_letra1.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_oscuro_letra1.45_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_oscuro_letra1.45_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_oscuro_letra2.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/1920x1080_oscuro_letra2.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_claro_letra1.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_claro_letra1.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_claro_letra1.45_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_claro_letra1.45_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_claro_letra2.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_claro_letra2.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_oscuro_letra1.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_oscuro_letra1.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_oscuro_letra1.45_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_oscuro_letra1.45_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_oscuro_letra2.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/360x800_oscuro_letra2.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_claro_letra1.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_claro_letra1.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_claro_letra1.45_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_claro_letra1.45_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_claro_letra2.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_claro_letra2.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_oscuro_letra1.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_oscuro_letra1.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_oscuro_letra1.45_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_oscuro_letra1.45_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_oscuro_letra2.0_inicio.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/600x960_oscuro_letra2.0_previo.png
+git add -- docs/rediseno/fase3/despues/arnes-windows/anchos.jsonl
+git add -- docs/rediseno/fase3/despues/emulador/emulador_360_claro_letra1.0_inicio.png
+git add -- docs/rediseno/fase3/despues/emulador/emulador_360_claro_letra1.0_previo.png
+git add -- docs/rediseno/fase3/despues/emulador/emulador_360_claro_letra1.45_inicio.png
+git add -- docs/rediseno/fase3/despues/emulador/emulador_360_claro_letra1.45_previo.png
+git add -- docs/rediseno/fase3/despues/emulador/emulador_360_claro_letra2.0_inicio.png
+git add -- docs/rediseno/fase3/despues/emulador/emulador_360_claro_letra2.0_previo.png
+git add -- docs/rediseno/fase3/despues/emulador/emulador_360_oscuro_letra1.0_inicio.png
+git add -- docs/rediseno/fase3/despues/emulador/emulador_360_oscuro_letra1.0_previo.png
+git add -- docs/rediseno/fase3/despues/web/web_1280_claro_inicio.png
+git add -- docs/rediseno/fase3/despues/web/web_1280_claro_previo.png
+git add -- docs/rediseno/fase3/despues/web/web_1280_oscuro_inicio.png
+git add -- docs/rediseno/fase3/despues/web/web_1280_oscuro_previo.png
+git add -- docs/rediseno/fase3/despues/web/web_360_claro_inicio.png
+git add -- docs/rediseno/fase3/despues/web/web_360_claro_previo.png
+git add -- docs/rediseno/fase3/despues/web/web_360_oscuro_inicio.png
+git add -- docs/rediseno/fase3/despues/web/web_360_oscuro_previo.png
+git add -- docs/rediseno/fase3/despues/web/web_600_claro_inicio.png
+git add -- docs/rediseno/fase3/despues/web/web_600_claro_previo.png
+git add -- docs/rediseno/fase3/despues/web/web_600_oscuro_inicio.png
+git add -- docs/rediseno/fase3/despues/web/web_600_oscuro_previo.png
+git add -- docs/rediseno/fase3/flutter-ui-audit.txt
+git add -- docs/rediseno/fase3/rnf-002/android/con01/captura.json
+git add -- docs/rediseno/fase3/rnf-002/android/con01/cuadro-00008.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/con01/cuadro-00009.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/con01/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/con01/cuadro-00049.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/con01/cuadro-00050.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/con01/cuadro-00051.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/con01/cuadro-00052.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/con01/cuadros.json
+git add -- docs/rediseno/fase3/rnf-002/android/resumen.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/captura.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/cuadro-00011.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/cuadro-00012.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/cuadro-00057.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/cuadro-00058.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/cuadro-00059.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/cuadro-00060.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin01/cuadros.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/captura.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/cuadro-00009.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/cuadro-00011.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/cuadro-00059.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/cuadro-00060.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/cuadro-00061.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/cuadro-00062.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin02/cuadros.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/captura.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/cuadro-00011.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/cuadro-00012.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/cuadro-00057.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/cuadro-00058.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/cuadro-00059.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/cuadro-00060.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin03/cuadros.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/captura.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/cuadro-00011.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/cuadro-00012.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/cuadro-00057.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/cuadro-00058.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/cuadro-00059.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/cuadro-00060.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin04/cuadros.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/captura.json
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00011.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00012.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00060.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00061.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00062.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadro-00063.jpg
+git add -- docs/rediseno/fase3/rnf-002/android/sin05/cuadros.json
+git add -- docs/rediseno/fase3/rnf-002/web/con/con00-publicado.png
+git add -- docs/rediseno/fase3/rnf-002/web/con/con01-inicio.png
+git add -- docs/rediseno/fase3/rnf-002/web/con/con01-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/con/con01-rejilla.png
+git add -- docs/rediseno/fase3/rnf-002/web/con/resumen.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/resumen.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin01-inicio.png
+git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin01-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin01-rejilla.png
+git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin02-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin03-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin04-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-caliente/sin05-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-fria/resumen.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-fria/sin01-inicio.png
+git add -- docs/rediseno/fase3/rnf-002/web/sin-fria/sin01-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-fria/sin01-rejilla.png
+git add -- docs/rediseno/fase3/rnf-002/web/sin-fria/sin02-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-fria/sin03-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-fria/sin04-registro.json
+git add -- docs/rediseno/fase3/rnf-002/web/sin-fria/sin05-registro.json
+git add -- docs/rediseno/fase3/rnf-002/windows/con01/registro.json
+git add -- docs/rediseno/fase3/rnf-002/windows/resumen-con.json
+git add -- docs/rediseno/fase3/rnf-002/windows/resumen-sin.json
+git add -- docs/rediseno/fase3/rnf-002/windows/sin01-inicio.png
+git add -- docs/rediseno/fase3/rnf-002/windows/sin01-rejilla.png
+git add -- docs/rediseno/fase3/rnf-002/windows/sin01/registro.json
+git add -- docs/rediseno/fase3/rnf-002/windows/sin02/registro.json
+git add -- docs/rediseno/fase3/rnf-002/windows/sin03/registro.json
+git add -- docs/rediseno/fase3/rnf-002/windows/sin04/registro.json
+git add -- docs/rediseno/fase3/rnf-002/windows/sin05/registro.json
+git add -- docs/rediseno/fase3/traspaso-entrega1.md
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: rediseno, fase 3, entrega 1, el inicio y la primera visualizacion en tres pasos con el previo"
+git push
+```
+
+### Tres líneas
+
+- El inicio y el previo de `DESIGN.md` (7 y 9.1) están en la presentación: estados
+  sellados (`voyage_ui_state.dart`), el previo en el notifier sin tocar `domain/` ni
+  `data/`, la regla estricta de publicación directa con «la última escala confirmada para
+  ese buque», el inicio nuevo (`inicio_view.dart`) y el tema conectado en `app.dart`.
+- RNF-002: tres pasos en Windows, la Web y Android (antes seis), con tiempos de 0.3 a 3.3 s
+  contra 30; instrumentos nuevos por cliente (`tool/t114_primera_*`), declarados, y los de
+  T-98 intactos.
+- Suite 1156, `analyze` en cero, auditoría sin críticos ni avisos en lo tocado, censos
+  limpios; capturas del antes y del después en `docs/rediseno/fase3/`.
+
+### Mensaje para Yov
+
+Yov: Fase 3, entrega 1, lista para Codex. Tema conectado en `app.dart` (claro y oscuro con
+la preferencia de T-90, densidad por plataforma); estados del viaje en una `sealed class`
+(`presentation/providers/voyage_ui_state.dart`); el previo vive en el notifier (lo muestra
+sin guardar, `_publish` sigue siendo la única escritura, `publishedVoyage` no lo ve, así que
+peso por pila y tomas quedan «sin evaluar hasta confirmar el perfil»); regla estricta de
+7.2 en `_useProfile`: cubre la carga **y** la escala propuesta es la última confirmada para
+ese buque (del almacén que ya existe) **y** el archivo dice si es llegada o carga; si no,
+previo. Hallazgo 5 probado: la llegada que propone el puerto de salida abre en previo. El
+inicio de 9.1 (`inicio_view.dart`): una acción, recientes, perfiles, nube con cuenta; sin
+botón flotante ni acciones repetidas. Sin navegación adaptable: no hizo falta para el
+inicio, va con el plano. RNF-002 en tres pasos en los tres clientes (antes seis): Windows
+1.83–1.90 s, Web 0.30–0.42 s (primera visita 1.28–1.51), emulador cotas 2.98–3.25 s;
+instrumentos nuevos y declarados (`tool/t114_primera_*`; la Web se midió con el Chrome
+instalado abierto por Playwright en un perfil temporal porque el navegador integrado no
+pinta oculto; los de T-98 intactos). Suite 1156 (1143 + 13; 19 actualizadas, ninguna
+omitida), `analyze` 0, auditoría 17/231/19 con cero críticos y cero avisos en lo tocado,
+censos 1816 cadenas sin inglés y M3 259/8/5 sin excepciones nuevas. Capturas antes y
+después (Windows 36, Web 12, emulador 8, más las de RNF-002) en `docs/rediseno/fase3/`.
+Queda anotado: a 360 dp con letra 1.45 y 2.0 el previo recorta «Contenido» y «Número de
+orden», que son controles del plano de antes y van con la entrega del plano; el Honor no
+se tocó. Por tu alto parcial, la entrega se cerró solo en lo funcional y la entrega 2 no
+se empieza; el traspaso para el chat que sigue está en
+`docs/rediseno/fase3/traspaso-entrega1.md`. Me detengo: Codex acepta.

@@ -232,7 +232,10 @@ void main() {
       _size(tester);
       await tester.pumpWidget(_app(
           Scaffold(
-              body: EmptyStateWidget(onPickFile: () {}),
+              // Fase 3 (10.9): la cabecera del inicio vive dentro del
+              // desplazable del inicio; aquí se le da uno.
+              body: SingleChildScrollView(
+                  child: EmptyStateWidget(onPickFile: () {})),
               floatingActionButton: FloatingActionButton.extended(
                   onPressed: () {},
                   icon: const Icon(Icons.file_open),

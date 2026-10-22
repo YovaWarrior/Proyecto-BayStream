@@ -1,0 +1,158 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "sin",
+ "repeticion": 5,
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-fase3\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "inicioUtc": "2026-10-22T19:23:04.880842+00:00",
+ "acciones": [
+  {
+   "paso": 1,
+   "accion": "abrir el binario (icono)",
+   "t": 0.0
+  },
+  {
+   "paso": 2,
+   "accion": "pulsar «Seleccionar archivo»",
+   "t": 0.6495,
+   "punto": [
+    411,
+    266
+   ]
+  },
+  {
+   "paso": 3,
+   "accion": "elegir el archivo en el selector y confirmar",
+   "t": 1.595
+  }
+ ],
+ "cuadros": [
+  {
+   "t": 0.4772,
+   "dif": null
+  },
+  {
+   "t": 0.6568,
+   "dif": 0.164
+  },
+  {
+   "t": 0.7315,
+   "dif": 0.233
+  },
+  {
+   "t": 0.789,
+   "dif": 0.033
+  },
+  {
+   "t": 0.8521,
+   "dif": 0.075
+  },
+  {
+   "t": 0.9101,
+   "dif": 0.096
+  },
+  {
+   "t": 0.997,
+   "dif": 0.088
+  },
+  {
+   "t": 1.5952,
+   "dif": 10.005
+  },
+  {
+   "t": 1.6679,
+   "dif": 10.25
+  },
+  {
+   "t": 1.7337,
+   "dif": 0.109
+  },
+  {
+   "t": 1.7839,
+   "dif": 0.0
+  },
+  {
+   "t": 1.8366,
+   "dif": 12.908
+  },
+  {
+   "t": 1.8866,
+   "dif": 0.0
+  },
+  {
+   "t": 1.9367,
+   "dif": 0.0
+  },
+  {
+   "t": 1.9867,
+   "dif": 0.0
+  },
+  {
+   "t": 2.037,
+   "dif": 0.0
+  },
+  {
+   "t": 2.087,
+   "dif": 0.0
+  },
+  {
+   "t": 2.1465,
+   "dif": 0.0
+  },
+  {
+   "t": 2.1971,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2471,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2971,
+   "dif": 0.0
+  },
+  {
+   "t": 2.3475,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4131,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4636,
+   "dif": 0.0
+  },
+  {
+   "t": 2.5139,
+   "dif": 0.0
+  }
+ ],
+ "hitos": {
+  "ventana": 0.438951599993743,
+  "confirmado": 1.595,
+  "rejillaQuieta": 1.8866,
+  "incertidumbreS": 0.05
+ },
+ "almacenApartado": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\primera\\windows-sin5\\almacen-apartado-sin05",
+ "ventana": {
+  "pid": 636,
+  "rect": [
+   -9,
+   -9,
+   1929,
+   1029
+  ],
+  "maximizada": true
+ },
+ "tema": "oscuro",
+ "pasosDelProducto": 3,
+ "tiempoHastaRejillaS": 1.887,
+ "cumpleTiempo": true,
+ "pngs": {
+  "inicio": "inicio.png",
+  "rejilla": "rejilla.png",
+  "final": "final.png"
+ },
+ "finUtc": "2026-10-22T19:23:07.502307+00:00"
+}

@@ -15,12 +15,18 @@
 #
 #   ./tool/t99_copia.ps1 -Destino "$env:TEMP\t99-b-<sha>\copia" -Commit <sha> `
 #     -Entradas "<corpus>\CORPUS_A01.edi,$env:TEMP\t99-…\sinteticos\T99_SINTETICO_5000.edi"
+#   Fase 3 de T-114 (10.9): -Arbol copia el árbol de trabajo (lo que todavía no
+#   tiene commit) en vez de un commit, sin verificación contra git, y -Sufijo
+#   da la identidad del cliente (por ejemplo r4: gt.cmartinez.baystream.r4 y
+#   «BayStream R4»), siempre aparte de la app instalada.
 param(
     [Parameter(Mandatory = $true)] [string] $Destino,
     [string] $Commit = 'HEAD',
     [string] $Repo = '',
     [string[]] $Entradas = @(),
-    [switch] $ConInstrumentos
+    [switch] $ConInstrumentos,
+    [switch] $Arbol,
+    [string] $Sufijo = 't99'
 )
 $ErrorActionPreference = 'Stop'
 # En Windows PowerShell 5.1, $PSScriptRoot llega vacío en los valores por defecto.
@@ -43,6 +49,18 @@ if ((Test-Path $dest) -and @(Get-ChildItem $dest -Force).Count -gt 0) {
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 
 $sha = (& git -C $Repo rev-parse "$Commit^{commit}").Trim()
+if ($Arbol) {
+    # El árbol de trabajo tal cual, sin build, .dart_tool ni lo que no compila.
+    $sha = "arbol-de-trabajo-sobre-$sha"
+    # Solo las carpetas de la raíz, con su ruta completa: «design» también es
+    # lib/core/design, el sistema de diseño, que sí se copia.
+    $raiz = $repoCompleto.TrimEnd('\')
+    $fuera = @('build', '.dart_tool', '.git', 'docs', 'outputs', 'design', 'prototipos', 'presentacion', '.claude', 'windows/flutter/ephemeral') | ForEach-Object { Join-Path $raiz $_ }
+    & robocopy $raiz $dest /E /NFL /NDL /NJH /NJS /XD @fuera | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "robocopy falló con $LASTEXITCODE" }
+    $ahora = Get-Date
+    Get-ChildItem $dest -Recurse -File | ForEach-Object { $_.LastWriteTime = $ahora }
+} else {
 $tar = "$dest.tar"
 $excluir = @(':(exclude)docs', ':(exclude)outputs', ':(exclude)design', ':(exclude)prototipos',
     ':(exclude)presentacion', ':(exclude).claude')
@@ -56,29 +74,36 @@ Remove-Item $tar
 # Fecha actual: una limpieza de temporales borra antes lo que trae fechas viejas.
 $ahora = Get-Date
 Get-ChildItem $dest -Recurse -File | ForEach-Object { $_.LastWriteTime = $ahora }
+}
 
 # Verificación contra el árbol del commit: cada archivo, con su hash de blob.
-$arbol = @{}
-foreach ($l in @(& git -C $Repo -c core.quotepath=false ls-tree -r $sha)) {
+# (En PowerShell $arbolGit y $Arbol son la misma variable: la bandera va aparte.)
+$verificarContraGit = -not $Arbol
+$arbolGit = @{}
+foreach ($l in @(if ($verificarContraGit) { & git -C $Repo -c core.quotepath=false ls-tree -r $sha })) {
     $p = $l -split "`t", 2
     if ($p[1] -notmatch '^(docs|outputs|design|prototipos|presentacion|\.claude)/') {
-        $arbol[$p[1]] = ($p[0] -split ' ')[2]
+        $arbolGit[$p[1]] = ($p[0] -split ' ')[2]
     }
 }
-$rutas = @($arbol.Keys | Sort-Object)
+if (-not $verificarContraGit) {
+    $verificacion = [ordered]@{ archivos = @(Get-ChildItem $dest -Recurse -File).Count; distintos = 'sin verificar'; sobrantes = 'sin verificar'; contra = 'arbol de trabajo (-Arbol), no un commit' }
+} else {
+$rutas = @($arbolGit.Keys | Sort-Object)
 # Por lotes y como argumentos: en PowerShell 5.1 la tubería a git agrega un BOM.
 $hashes = @()
 for ($i = 0; $i -lt $rutas.Count; $i += 80) {
     $lote = @($rutas[$i..([math]::Min($i + 79, $rutas.Count - 1))] | ForEach-Object { Join-Path $dest $_ })
     $hashes += @(& git -C $Repo hash-object --no-filters -- @lote)
 }
-$distintos = @(for ($i = 0; $i -lt $rutas.Count; $i++) { if ($hashes[$i] -ne $arbol[$rutas[$i]]) { $rutas[$i] } })
+$distintos = @(for ($i = 0; $i -lt $rutas.Count; $i++) { if ($hashes[$i] -ne $arbolGit[$rutas[$i]]) { $rutas[$i] } })
 $sobrantes = @(Get-ChildItem $dest -Recurse -File | ForEach-Object {
-        $_.FullName.Substring($dest.Length + 1).Replace('\', '/') } | Where-Object { -not $arbol.ContainsKey($_) })
+        $_.FullName.Substring($dest.Length + 1).Replace('\', '/') } | Where-Object { -not $arbolGit.ContainsKey($_) })
 if ($distintos.Count -gt 0 -or $sobrantes.Count -gt 0) {
     throw "La copia no cuadra con $sha`: $($distintos.Count) distintos, $($sobrantes.Count) sobrantes"
 }
 $verificacion = [ordered]@{ archivos = $rutas.Count; distintos = 0; sobrantes = 0; contra = "git ls-tree -r $sha" }
+}
 
 $superpuestos = @()
 if ($ConInstrumentos) {
@@ -106,11 +131,11 @@ $g = [IO.File]::ReadAllText($gradle)
 $nl = if ($g.Contains("`r`n")) { "`r`n" } else { "`n" }
 $ancla = 'applicationId = "gt.cmartinez.baystream"'
 if (-not $g.Contains($ancla)) { throw "No está el applicationId esperado en $gradle" }
-Set-Texto $gradle ($g.Replace($ancla, "$ancla$nl        applicationIdSuffix = `".t99`""))
+Set-Texto $gradle ($g.Replace($ancla, "$ancla$nl        applicationIdSuffix = `".$Sufijo`""))
 $manifiesto = Join-Path $dest 'android\app\src\main\AndroidManifest.xml'
 $m = [IO.File]::ReadAllText($manifiesto)
 if (-not $m.Contains('android:label="BayStream"')) { throw "No está el rótulo esperado en $manifiesto" }
-Set-Texto $manifiesto ($m.Replace('android:label="BayStream"', 'android:label="BayStream T99"'))
+Set-Texto $manifiesto ($m.Replace('android:label="BayStream"', ('android:label="BayStream ' + $Sufijo.ToUpper() + '"')))
 
 # Entradas como assets de la copia.
 $entradasCopiadas = @()

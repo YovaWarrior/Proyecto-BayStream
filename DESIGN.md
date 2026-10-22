@@ -156,6 +156,10 @@ la escala de letra del sistema; en el muelle no se dibuja aunque la celda la rec
 
 ### 4.3 Tokens (`BsMedidas`, en `bs_medidas.dart`)
 
+La densidad la decide la plataforma (`lib/core/app.dart`, `bayStreamEsMuelle`): el
+muelle en Android e iOS, la oficina en Windows y en la Web. El tema de la app lleva la
+que toca, en claro y en oscuro, con la preferencia de tema de T-90.
+
 | Grupo | Oficina | Muelle |
 |---|---|---|
 | Espacio (base 4) | 4 · 8 · 12 · 16 · 24 · 32 · 40; dentro de un bloque 12, entre bloques 24 | Igual; dentro de un bloque 16, entre bloques 24 |
@@ -318,16 +322,21 @@ textos de T-112 que las pruebas comprueban.
 | Estado | Qué se ve | Qué se puede hacer |
 |---|---|---|
 | `SinViaje` | El inicio: «Seleccionar archivo», recientes, perfiles | Abrir |
-| `Leyendo` | Indicador con el nombre del archivo | Nada |
+| `Leyendo` | Indicador con el nombre del archivo («Leyendo A01.edi…») | Nada |
 | `Previo(viaje, perfil propuesto, escala propuesta, motivo)` | **El plano**, la lista y las estadísticas, con la **banda de «sin confirmar»** | Mirar, buscar, colorear, confirmar o descartar |
 | `Publicado(viaje, perfil, escala)` | Lo de hoy | Todo: operar, publicar, listado, salida, exportar |
 | `Fallo(mensaje)` | El error con causa y acción e «Intentar de nuevo» | Volver a abrir |
 
 El motivo del `Previo` escribe la banda: *buque nuevo* («Plano sin confirmar: perfil
-propuesto desde el archivo. Escala propuesta GTSTC.»), *homónimo* («Hay perfiles con
-el mismo nombre: confirma el buque antes de operar.»), *fuera del perfil* («El perfil
-guardado no cubre esta carga: revisa la ampliación.»), *escala por decidir* («El
-archivo sale de PAMIT rumbo a GTSTC: confirma la escala.»).
+propuesto desde el archivo. Escala propuesta GTSTC.»; sin escala en el archivo, «… El
+archivo no declara la escala.»), *homónimo* («Hay perfiles con el mismo nombre: confirma
+el buque antes de operar.»), *fuera del perfil* («El perfil guardado no cubre esta carga:
+revisa la ampliación.»), *escala por decidir* («El archivo sale de PAMIT rumbo a GTSTC:
+confirma la escala.»; sin las dos escalas, «Plano sin confirmar. Escala propuesta GTSTC:
+confírmala para operar.»). La banda lleva un solo botón, «Confirmar». Están en
+`presentation/providers/voyage_ui_state.dart` (`Previo.texto`), con el resto de los
+textos del previo: «Peso por pila y tomas de refrigerado: sin evaluar hasta confirmar el
+perfil.» y «Para exportar, confirma el perfil del buque.».
 
 ### 7.2 El recorrido y la regla de publicación directa
 
@@ -349,20 +358,26 @@ archivo sale de PAMIT rumbo a GTSTC: confirma la escala.»).
    pila, las tomas y las alertas de peso muestran **«sin evaluar hasta confirmar el
    perfil»** con el icono de aviso, en la cartela, en la columna de pesos de la rejilla,
    en Alertas y en el Avance. Nunca un hueco ni «sin alertas».
-5. Abrir otro archivo o un reciente en `Previo` descarta el previo con una pregunta
-   corta («¿Descartar el plano sin confirmar?»).
+5. Abrir otro archivo, un reciente o «Limpiar datos» en `Previo` descarta el previo con
+   una pregunta corta («¿Descartar el plano sin confirmar?», «Seguir mirando» /
+   «Descartar»). Cancelar en los parámetros, en la identidad o en la plantilla no
+   descarta nada: el plano sigue a la vista, sin operar.
+6. **La última escala confirmada para ese buque** se lee del almacén que ya existe: la
+   del viaje guardado más reciente de ese perfil con escala. No hay dato nuevo que
+   guardar y `domain/` y `data/` no cambian.
 
 ### 7.3 Las capas que toca
 
 | Capa | Archivo | Qué cambia |
 |---|---|---|
-| presentation/providers | `vessel_providers.dart` (`VoyageNotifier`) | `parseBaplieContent` publica el previo en `state`; nuevos `isPreview`, `previewPortOfCall`, `previewReason`, `discardPreview`; la regla de 7.2; `_publish` sigue siendo la única escritura |
-| presentation/providers | nuevo `voyage_ui_state.dart` | La `sealed class` de 7.1 |
-| presentation/pages | `vessel_overview_page.dart` | Deja de empujar la geometría al cargar; banda; «Confirmar» abre S09; al confirmar, el Plano; exportar deshabilitado en previo |
-| presentation/widgets | `bay_plan_view.dart`, `loading_plan_controls.dart` | La banda y los «sin evaluar» |
-| presentation/pages | `recent_voyages_page.dart`, `empty_state_widget.dart` | Recientes en el inicio |
-| test/ | las pruebas de carga y perfil | Esperan que la página de parámetros se abra sola: se actualizan y se declaran |
-| tool/ | `t99_conductor.dart`, `t98_primera_*` | Los pasos de la primera visualización |
+| presentation/providers | `vessel_providers.dart` (`VoyageNotifier`) | `parseBaplieContent` publica el previo en `state` (`_abrirPrevio`); nuevos `isPreview`, `previewReason`, `previewPortOfCall`, `visibleVoyage`, `discardPreview`; `publishedVoyage` y `publishedProfile` no ven el previo; la regla de 7.2 en `_useProfile`; `_publish` sigue siendo la única escritura |
+| presentation/providers | `voyage_ui_state.dart` | La `sealed class` de 7.1, `voyageUiStateProvider` derivado del notifier y los textos del previo |
+| presentation/pages | `vessel_overview_page.dart` | `switch` sobre el estado; el plano es la primera pestaña; la banda con «Confirmar»; el aviso «sin evaluar» en todas las pestañas; exportar avisa en previo; la pregunta al descartar; el inicio sin barra de acciones duplicadas |
+| presentation/widgets | `inicio_view.dart` (nuevo), `empty_state_widget.dart` | El inicio de 9.1: cabecera, recientes, perfiles y nube |
+| presentation/pages | `stowage_alerts_page.dart` | «Sin evaluar» en lugar de «no hay resultados» |
+| presentation/widgets | `bay_plan_view.dart`, `loading_plan_controls.dart` | Con la entrega del plano: el «sin evaluar» en la cartela y en la columna de pesos |
+| test/ | `t114_fase3_inicio_test.dart` (nuevo) y las pruebas de carga y perfil | Las que esperaban que la página de parámetros se abriera sola se actualizaron y se declaran en el informe |
+| tool/ | `t99_conductor.dart`, `t98_primera_*` | Los pasos de la primera visualización: tres, y termina en la rejilla |
 | domain/ y data/ | — | **Nada** (verificado por Yov en 10.4) |
 
 ## 8. Navegación adaptable
@@ -392,6 +407,14 @@ llevan el puerto con sus cinco letras; `!` es peligrosa, `❄` refrigerado. Buqu
 viajes sintéticos.
 
 ### 9.1 Inicio
+
+Hecho en la entrega 1 de la Fase 3 (`inicio_view.dart`): la cabecera («Abre un plano de
+estiba», la validación por contenido y «Seleccionar archivo» a 56 dp) y, debajo, los
+recientes de este dispositivo (hasta cinco, con «Ver todos» hacia la pantalla que los
+borra), «Perfiles guardados (N)» y, con cuenta autorizada, «Operaciones abiertas en la
+nube (N)». La barra superior lleva solo Parámetros y Nube; no hay botón flotante ni
+acciones repetidas (T-98, `con01`). Desde 840 dp la cabecera va a la izquierda y las
+listas a la derecha, dentro del ancho máximo de 1440.
 
 **360 dp**
 ```
@@ -687,6 +710,11 @@ lo resuelve la rejilla con el zoom y el tamaño de la celda, y se comprueba con 
 capturas a 1.45 y 2.0 de esa entrega. **Fuera del rediseño:** las 9 ranuras de puertos
 que asigna la oficina (T-115).
 
-**Fase 3, en este orden:** inicio (con el flujo de la sección 7 y el tema aplicado),
-plano por bahía con los modos de carga y descarga, avance en la oficina, estadísticas;
-después, las demás pantallas.
+**Fase 3, entrega 1 (22-oct):** el tema conectado en `lib/core/app.dart` (4.3), el
+inicio (9.1), el previo con su banda, «sin evaluar» y sin exportar (7), la regla estricta
+de publicación directa (7.2) y el plano como primera pestaña (10.2 a). La navegación
+adaptable (8) no hizo falta para entregar el inicio: va con el plano.
+
+**Fase 3, en este orden:** plano por bahía con los modos de carga y descarga (con la
+navegación adaptable, la cartela y el código íntegro a 2.0), avance en la oficina,
+estadísticas; después, las demás pantallas.
