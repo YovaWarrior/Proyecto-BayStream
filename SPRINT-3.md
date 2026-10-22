@@ -6724,3 +6724,20 @@ Las observaciones 2 a 8 de Timonel y el `// ignore_for_file` del arranque (en `t
 **El sprint cierra con 49 tareas y ≈ 160.5 h.** El tablero (v70): **49 terminadas, nada pendiente.**
 
 La siguiente decisión es la **10.110**.
+
+### 10.110 · El despliegue del Sprint 3: la Web publicada, el MSIX firmado y el AAB listo para Play (21-oct)
+
+**La mezcla y el despliegue, hechos por Carlos con la guía `docs/CIERRE-DESPLIEGUE.md`.**
+- **La mezcla:** `sprint-3` entró en `master` (de `468a003` a `ecba06a`, un avance limpio con `git push origin sprint-3:master`, sin tocar el `.docx` modificado de Carlos). Etiqueta **`v3.0`**. El repo sigue privado.
+  - Nota de proceso: `git checkout master` falló por los cambios locales (el docx del Incremento 2 y la guía), así que la mezcla se hizo con el *push* de rama a rama, sin checkout. Queda como precedente.
+- **La Web:** `flutter build web --release` y **`firebase deploy --only hosting`** (nunca a secas, para no tocar las reglas). «Deploy complete», 50 archivos, en **https://baystream-app.web.app**.
+- **Windows:** `flutter build windows --release` y `dart run msix:create`. **MSIX firmado** con `CN=BayStream` en `build/t93/BayStream.msix`.
+- **Android:** `flutter build appbundle --release` **sin `--no-pub`** (10.86). AAB de 50 MB en `build/app/outputs/bundle/release/app-release.aab`, para la prueba interna de Play.
+
+**Pendiente de Carlos:**
+- subir el AAB a la prueba interna de Google Play;
+- verificar la Web en incógnito y el MSIX en una instalación limpia.
+
+**Después:** Yov actualiza la sección III.F (Despliegue) del documento del Incremento 3 con el despliegue confirmado.
+
+La siguiente decisión es la **10.111**.
