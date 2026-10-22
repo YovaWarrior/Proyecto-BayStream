@@ -257,3 +257,68 @@ La siguiente decisión es la **10.9**.
 La navegación adaptable y el plano van en la entrega siguiente, salvo que Timonel justifique que el inicio no se puede entregar sin ellas.
 
 La siguiente decisión es la **10.10**.
+
+### 10.10 · Nace T-116: pruebas automatizadas para la exposición del curso (22-oct, 12:30)
+
+**El encargo del curso.** Hay que exponer la automatización de pruebas aplicada al proyecto: elegir una herramienta distinta de las de los compañeros, explicar sus funciones y mostrar ejemplos de pruebas de requerimientos funcionales, de caja blanca y de interfaz, más un entregable de las pruebas. **Carlos elige el stack del propio proyecto:** `flutter_test`, `integration_test` y `fake_cloud_firestore`, más el emulador de Firebase, que el proyecto ya usa para las reglas (T-113). Firebase Test Lab se presenta como opción y no se usa, porque tocaría Firebase.
+
+**Lo que el proyecto ya tiene** y la exposición aprovecha: 1063 pruebas en `v3.0` (1143 en `sprint-4`); `integration_test` en el arnés de rendimiento de T-99; y la batería de reglas de Firestore en el emulador (69/69 y 25/25 de abuso, T-113).
+
+**T-116 · Pruebas para la exposición** (≈ 2 h; la hace Codex, que está libre mientras Timonel hace la Fase 3; la revisa Yov):
+- **Dónde:** una carpeta y una rama propias, `C:\Proyectos\baystream-pruebas` en `pruebas-curso`, desde `origin/master` (el código de `v3.0`, el publicado). Así no se cruza con el rediseño ni con la carpeta del piloto. Después de la exposición, Carlos la mezcla en `sprint-4`.
+- **Caja blanca:** `Iso6346CheckDigit.isValid` (`domain/services/iso6346_check_digit.dart`). Hay que cubrir cada camino: el formato que no cumple la expresión regular, la rama de dígitos, la de letras (con el salto de los múltiplos de 11), el residuo 10 que se escribe 0, y el dígito correcto y el incorrecto.
+- **Requerimiento funcional:** la sincronización entre la oficina y el muelle (RF-032), con `FakeFirebaseFirestore` inyectado en `FirestoreOperationSync` y `FirestoreRemoteMovementStore`. La oficina publica, el muelle se une y registra una descarga, y la oficina la recibe. Más las reglas de negocio: sin sesión no se publica, y el muelle no publica. El falso no evalúa las reglas de seguridad: eso lo hace la batería de T-113.
+- **Interfaz:** el buscador de contenedores (`ContainerSearchDelegate`) dentro de `showSearch`: escribir, ver los resultados, tocar uno, y el caso sin resultados.
+- **El entregable:** `flutter test --reporter expanded`, `flutter test --coverage` y un reporte HTML de cobertura hecho con un script de Python sin dependencias en `tool/`, porque en Windows `genhtml` no viene instalado. `/coverage/` entra al `.gitignore`.
+- **`fake_cloud_firestore` se autoriza** como dependencia de desarrollo, con versión fija y sin mover ningún paquete existente del `pubspec.lock`. Si para resolverla hay que mover alguno, Codex se detiene y avisa.
+- **Reglas:** no se toca `lib/`; solo `test/curso/`, el script, `pubspec.*` y `.gitignore`. Cuenta el semáforo con Timonel, porque comparten la máquina.
+
+**Yov** prepara el contenido de la exposición (la explicación de la herramienta y el guion de las diapositivas) cuando Codex entregue, con los números reales.
+
+La siguiente decisión es la **10.11**.
+
+### 10.11 · T-116: `fake_cloud_firestore` 4.1.1, para no mover `equatable` (22-oct, 12:35)
+
+**Codex se detuvo, como pedía la ficha:** `fake_cloud_firestore` 4.2.0 movía `equatable` de 2.0.8 a 2.1.0. Los otros nueve paquetes eran nuevos, y no tocó ningún archivo.
+
+**Yov no autoriza el cambio.** `equatable` es una dependencia de la app (las entidades del dominio comparan con ella), y una herramienta solo de pruebas no debe cambiar el código que se publica.
+- **La alternativa, comprobada en pub.dev:** `fake_cloud_firestore` **4.1.1** pide `equatable ^2.0.5`, `cloud_firestore ^6.4.0` y `cloud_firestore_platform_interface ^8.0.0`. El `pubspec.lock` de `master` trae 2.0.8, 6.8.0 y 8.0.6, así que encaja sin mover nada.
+- Codex fija 4.1.1 y repite la resolución en seco. Si aun así se mueve algún paquete existente, se detiene otra vez.
+
+La siguiente decisión es la **10.12**.
+
+### 10.12 · T-116: 4.1.1 no compila; se autoriza `equatable` 2.1.0 con `fake_cloud_firestore` 4.2.0 (22-oct, 12:45)
+
+**Codex comprobó que 4.1.1 no sirve.** Conserva los 117 paquetes, pero no compila con `cloud_firestore` 6.8.0: su `update` de las transacciones tiene la firma vieja (`Map<Object, Object?>`), y 6.8.0 exige `update<T>(DocumentReference<T>, T)`. Codex propuso una copia local de 4.1.1 con esa corrección.
+
+**Yov no recomienda la copia corregida:** sería mantener código de terceros modificado dentro del repo, solo para una prueba. En cambio, revisó qué cambia de `equatable` 2.0.8 a 2.1.0, comparando el código de los dos paquetes de pub.dev:
+- **La lógica de igualdad no cambia** (`equatable_utils.dart` solo suma un comentario).
+- `Equatable` pasa a ser `abstract mixin class`, y `EquatableMixin` queda obsoleto.
+- El proyecto no usa `EquatableMixin` en `lib/`, `test/` ni `tool/`: sus 19 clases usan `extends Equatable`, que sigue igual. No hay aviso nuevo de `analyze`, ni cambio de comportamiento.
+
+**Se autoriza, con la conformidad de Carlos:** `fake_cloud_firestore` **4.2.0**, fija, hecha para `cloud_firestore` ^6.7.1, y con ella `equatable` 2.0.8 → **2.1.0**, el único paquete existente que se mueve.
+- **Condiciones:** la resolución en seco no mueve nada más; la suite completa de `master` (1063) sigue en verde; `analyze` no suma avisos (el de T-100 ya es conocido); el informe anota el cambio y por qué.
+- Al mezclar `pruebas-curso` en `sprint-4`, se repiten la suite y `analyze`.
+- **10.11 queda sustituida.**
+
+La siguiente decisión es la **10.13**.
+
+### 10.13 · T-116, entregada y revisada (22-oct, 13:00)
+
+**Codex terminó T-116** en `pruebas-curso` (`docs/PRUEBAS-CURSO.md`):
+- **21 pruebas nuevas en `test/curso/`:**
+  - **16 de caja blanca** sobre `Iso6346CheckDigit`, con la tabla de camino → caso y los dígitos calculados por su cuenta (Yov recomprobó el residuo 10 de `AAAU0000060`);
+  - **3 funcionales de RF-032** con `FakeFirebaseFirestore`: la oficina publica, el muelle se une y la descarga llega por la escucha; sin sesión, `no_session`; el muelle no publica, `not_office`;
+  - **2 de interfaz** sobre el buscador abierto con `showSearch`.
+- **La suite:** **1084/1084** (1063 + 21), sin omitidas. `analyze` da solo el aviso conocido de T-100, que en `master` sigue.
+- **Las dependencias:** `fake_cloud_firestore` 4.2.0 fija, y entre los 117 paquetes originales solo cambia `equatable` (10.12).
+- **La cobertura:** **89.28 % de las líneas instrumentadas.** Son las de los 122 archivos de `lib/` que la suite carga; los otros 15 no entran en el denominador, y así se dice en la exposición. Iso 6346 tiene el 100 %, la sincronización el 62 % y el buscador el 89 %.
+- **El reporte HTML** (`tool/cobertura_html.py`) se abre sin red; Codex lo verificó en Edge con la red cortada.
+- **La prueba de integración opcional no se hizo:** `main()` exige Firebase, y la ficha decía que entonces no.
+- **Los límites, declarados:** el falso no evalúa las reglas de seguridad (eso lo hace la batería de T-113), y la cobertura de LCOV es de líneas, no de ramas.
+
+**Yov la revisó y la acepta** como material del curso. Después de la exposición, Carlos mezcla `pruebas-curso` en `sprint-4`, repitiendo la suite y `analyze` (10.12).
+
+**Yov** prepara el contenido de la exposición: la explicación de la herramienta y el guion de las diapositivas.
+
+La siguiente decisión es la **10.14**.
