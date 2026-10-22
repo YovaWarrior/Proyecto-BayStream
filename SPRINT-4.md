@@ -214,3 +214,25 @@ La siguiente decisión es la **10.7**.
 **Después:** Carlos versiona la corrección y pone la copia limpia en el commit nuevo, y Codex vuelve a aceptar. Basta con repetir los puntos 2, 4, 5, 8 y 10, más los dos hallazgos, con sus pruebas de diagnóstico.
 
 La siguiente decisión es la **10.8**.
+
+### 10.8 · La corrección de la Fase 2, entregada: la prueba nueva encontró dos defectos más (22-oct, 11:40)
+
+**Timonel corrigió lo de 10.7** (≈ 0.6 h; sección «Fase 2 · Corrección» del informe). Ninguna pantalla cambia:
+- **H1, la celda atenuada:** ya no pone alfa en el texto. El relleno baja al 35 %, compuesto sobre el papel y opaco; el código va en tinta suave y el contorno en línea fuerte. Vale para todos los estados, en claro y en oscuro, y en las dos densidades. La etiqueta accesible se conserva.
+- **La prueba que mide lo que se dibuja** (`test/t114_celda_contraste_test.dart`): compone con `Color.alphaBlend` el relleno sobre el fondo, y el texto, los iconos y el contorno sobre el relleno. Son 75 estados, sobre papel, cubierta y bodega, en dos temas y dos densidades: 900 casos. Exige 4.5:1 al texto y 3:1 a iconos y contorno, sin depender de `textContrastGuideline`.
+- **Esa prueba encontró dos defectos más, ya corregidos:**
+  - la línea fuerte de la Fase 1 quedaba en 2.87:1 sobre el acero tenue de la bodega; el token pasa a `#6D809F` en claro y `#6983A3` en oscuro (Yov recalculó: 3.76 y 3.39 en claro; 4.65 y 3.44 en oscuro);
+  - la insignia de carga especial no llegaba a 3:1 sobre los rellenos intensos en oscuro; ahora toma el primer color de su rol que llega a 3:1.
+- **H2:** `BsCelda` recibe un `zoom` explícito. La segunda línea sale solo en la oficina, con zoom de 100 % o más, y si cabe con la escala de letra; en el muelle, nunca.
+- **Las tablas de 10.6, en el tema por omisión:** 15 puertos sin `XXVSL` y 13 tipos; las ranuras 15 a 23 quedan para T-115.
+- **El aviso de T-100,** quitado: `analyze` da **«No issues found»**.
+- **El reparto de la auditoría,** corregido en el informe (128, 32 y 1).
+- **Validaciones:** **1143/1143** (1126 + 17, ninguna omitida), el contraste con 0 pares bajos y la auditoría igual a la entrega. La celda de la oficina pasa de 52×44 a 52×48.
+
+**Yov la revisó** contra el informe y `bs_celda.dart`, y recalculó la línea fuerte nueva. Que la prueba nueva encontrara dos defectos más confirma lo de 10.7: la forma de probar era el problema.
+
+**Para la Fase 3, una condición que pasa a ser obligatoria.** El código de cinco letras con la letra del sistema a 2.0 no cabe en una celda de 52 o 56 dp, y se corta con elipsis (`DESIGN.md`, 12). Para RNF-003, un código cortado es un texto cortado. La rejilla del plano tiene que dimensionar la celda según la escala de letra: más ancha, con desplazamiento y zoom, pero con el código completo a 1.0, 1.45 y 2.0. Se comprueba con las capturas.
+
+**Siguiente:** Carlos versiona la corrección y pone la copia limpia en el commit nuevo, y Codex vuelve a aceptar lo que tocó la corrección.
+
+La siguiente decisión es la **10.9**.
