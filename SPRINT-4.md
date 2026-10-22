@@ -236,3 +236,24 @@ La siguiente decisión es la **10.8**.
 **Siguiente:** Carlos versiona la corrección y pone la copia limpia en el commit nuevo, y Codex vuelve a aceptar lo que tocó la corrección.
 
 La siguiente decisión es la **10.9**.
+
+### 10.9 · La Fase 2 del rediseño, terminada · La Fase 3 arranca por el inicio (22-oct, 12:15)
+
+**Codex aceptó la corrección: ACEPTADA con observaciones** (`docs/rediseno/fase2/reaceptacion-codex.md`, sobre `5406e20`).
+- **Pasa:** el alcance (17 archivos exactos); 1143/1143 y `analyze` limpio; la prueba compuesta (900 casos), más dos estados que Codex probó por su cuenta; la línea fuerte nueva sobre los cuatro fondos; las 144 combinaciones de insignias (la peor, 3.12:1); las 60 de la segunda línea; las tablas, iguales en Dart y en el script; y en T-100, solo la línea del `import`.
+- **O1:** su diagnóstico de la primera ronda ya no compila con la firma nueva de `BsRol.atenuado`. Hizo una copia compatible, y pasa 10/10. No es un defecto del producto.
+- **O2:** el contorno se exige 3:1 contra el fondo exterior, que es lo que delimita la celda. Hacia su propio relleno puede quedar por debajo (2.55:1 en «en movimiento» atenuada sobre la bodega en oscuro). **Yov acepta ese criterio:** es el de WCAG 1.4.11 para el borde de un componente.
+- **O3:** que nada desborde a 2.0 no significa que el código de cinco letras se vea entero. Sigue siendo una obligación de la Fase 3 (10.8).
+- **`CupertinoIcons`:** el aviso de la compilación Web también sale en `v3.0`. `lib/` no usa `CupertinoIcons` ni depende de `cupertino_icons`, así que es inofensivo, y se deja.
+
+**T-114, Fase 2: Terminada.** El piso sube a **1143**, con `analyze` en cero absoluto.
+
+**La Fase 3 arranca** con Timonel en Ultracode, una pantalla por entrega y Codex aceptando cada una. **La primera entrega es el inicio, con la primera visualización en tres pasos:**
+- el tema conectado en `lib/core/app.dart`;
+- el estado de previo («ver primero, confirmar después», `DESIGN.md` 7), con su banda, «sin evaluar hasta confirmar el perfil» y sin exportar;
+- los recientes en el inicio, y la regla estricta de publicación directa;
+- los instrumentos de T-98 y T-99 actualizados, y RNF-002 medido otra vez.
+
+La navegación adaptable y el plano van en la entrega siguiente, salvo que Timonel justifique que el inicio no se puede entregar sin ellas.
+
+La siguiente decisión es la **10.10**.
