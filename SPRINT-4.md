@@ -322,3 +322,35 @@ La siguiente decisión es la **10.13**.
 **Yov** prepara el contenido de la exposición: la explicación de la herramienta y el guion de las diapositivas.
 
 La siguiente decisión es la **10.14**.
+
+### 10.14 · El rediseño cambia de dirección: «Puente de mando» (22-oct, 15:51)
+
+**Por qué.** Carlos vio la entrega 1 de la Fase 3 y la sintió pobre y sin impacto. Yov coincide, y una parte es suya: recomendó la dirección A pensando en leer al sol, y el encargo era impacto. Además:
+- lo que se vio era el tema nuevo sobre las pantallas de antes; el plano por bahía todavía no se rediseñaba;
+- la tabla fija (10.6) da a los cinco primeros puertos (JMKIN, USHOU, GTSTC, JMKCT y PAMIT) cinco tonos seguidos de la rueda, a 30° uno de otro, y en claro casi no se distinguen;
+- del ícono se tomaron los colores, no su forma.
+
+**Carlos aprueba el concepto completo (15:51)**, que Yov dibujó en un lienzo de diseño con las siete referencias que reunió Carlos y lo útil de las sugerencias de Google. Las fuentes de sus cuatro mesas (oficina, muelle, inicio y sistema) quedan en `docs/rediseno/concepto/`, con su `LEEME.md`.
+
+**La dirección C, «Puente de mando»: la app es el ícono en grande.**
+- **El tema por omisión depende del equipo:** oscuro en Windows y la Web (la oficina) y claro en Android (el muelle). La preferencia de T-90 (claro, oscuro o sistema) sigue igual: solo cambia lo que pasa cuando el usuario nunca eligió.
+- **La noche (oscuro):** noche `#07111F`, con la rejilla de plano al 5 % de `#6E9DE6`; panel `#0C1A31`; panel alto `#11223F`; línea `#1E3457`; línea fuerte `#5272A6` (3.6:1 sobre el panel); tinta `#EAF0F9`; tinta suave `#A9B9D2`; tinta tenue `#8DA0BE`; selección `#4F8EF7`; hecho `#3DD68C`; aviso `#F5B83D`; crítico `#F2777A`. La marca `#0D47A1` va como superficie con texto blanco (8.6:1): el riel activo y la banda del muelle. **El día (claro) no cambia:** es el de la Fase 2.
+- **El plano se dibuja como el ícono (vista Estado):** por bajar, en el blanco de la cubierta `#F5F8FC` y el acero de la bodega `#6E9DE6`, con tinta oscura (17:1 y 6.6:1); de paso, apagado (panel alto con tinta suave, 7.9:1); bajado, la celda vacía con su contorno punteado y la marca de hecho. La bodega se cierra con la curva del casco, y sus celdas de los extremos llevan esa curva, como en el ícono.
+- **El naranja marca solo lo que se acaba de mover.** La celda que otro equipo acaba de bajar o cargar sale de su celda, como el contenedor del ícono, y se apaga en 1.5 s; la bahía donde pasó destella en la silueta. En el muelle, el toque en «Baja» hace lo mismo antes del aviso con «Deshacer». Sin animación si el sistema pide reducir movimiento, y siempre con su anuncio para el lector de pantalla.
+- **No se inventan datos.** La app no sabe qué grúa mueve qué ni dónde está la superestructura del buque, y el panel «En vivo» dice el rol (Muelle u Oficina), nunca un nombre ni un identificador. El «Grúa 2» del lienzo es solo ilustración.
+- **El muelle:** una banda azul de la marca arriba, con el ícono sin recuadro, el buque, la nube y Descarga o Carga; «Baja» en el azul de la marca con texto blanco; «Hecho» y «Paso» con los roles de la Fase 2.
+- **Destino y tipo en oscuro, como fichas:** relleno profundo del tono, y código y contorno en el tono vivo (≈ 7:1). En claro, los rellenos suaves de la Fase 2.
+- **La tabla reparte los tonos dando saltos:** ranura k → tono [11, 6, 3, 9, 1, 8, 4, 0, 10, 5, 2, 7][k mod 12], suave hasta la 11 e intensa desde la 12. Los cinco primeros puertos quedan a 60° o más: JMKIN rosa, USHOU cielo, GTSTC hierba, JMKCT uva y PAMIT ámbar. Las tablas de códigos de 10.6 y la ranura de reserva (FNV-1a) no cambian.
+- **Piezas nuevas:** la marca en código (con recuadro, sin él y monocroma, y la espera: el contenedor naranja que sube y baja); la silueta del buque de proa a popa, con el avance por bahía; el casco de la bodega; las tarjetas de cifra grande y el anillo de avance; el panel «En vivo»; la banda del muelle.
+- **De las sugerencias de Google entra** el mosaico de cifras, el oscuro técnico solo en la oficina, CustomPainter para la silueta y el casco (las celdas siguen siendo widgets, por el toque, el foco y la etiqueta accesible) y el pulso de lo que llega por Firebase. **No entra:** los mapas (no hay geografía en el alcance, y los mapas en línea rompen el trabajo sin conexión), arrastrar contenedores (es una función nueva que toca el dominio), shimmer, hugeicons ni lucide.
+- **Ninguna dependencia nueva.** Los íconos del dominio y las ilustraciones los hace el chat de la nube de Carlos, con el prompt de `claude/BayStream_Puente_de_mando.md` (proyecto de Claude): primero tres estilos y después un zip con una fuente empaquetada, sus códigos, los SVG y las ilustraciones como JSON de trazos que la app pinta sola. Lo integra Timonel en una entrega y lo acepta Codex, como el ícono en T-88. Mientras tanto, Material Symbols.
+
+**Lo que se queda:** todo lo de la Fase 2 (tokens, tema, `ThemeExtension`, componentes, Plex y pruebas) y lo funcional de la entrega 1. Cambian valores y se suman piezas. Material 3 sigue de base.
+
+**La entrega 1 de la Fase 3 quedó cerrada en lo funcional** (sección «Fase 3 · Entrega 1» de `docs/REDISENO-RESULTADOS.md` y `docs/rediseno/fase3/traspaso-entrega1.md`): el tema conectado, los estados del viaje en una `sealed class`, «ver primero, confirmar después» y RNF-002 en tres pasos en los tres clientes, antes seis (Windows 1.83–1.90 s, la Web 0.30–0.42 s y el emulador 2.98–3.25 s). El piso sube a **1156**: 13 pruebas nuevas, 19 actualizadas y ninguna omitida. **Yov revisó** que el bloque de git cubre los 190 archivos que cambiaron (fuera quedan solo los `__pycache__` de `tool/`) y una muestra de las capturas, sin datos reales, correos ni el corpus. La acepta Codex en la copia limpia.
+
+**Lo que sigue:**
+1. Timonel, en un chat nuevo, porque el anterior se llenó: la Fase 1 bis (`DESIGN.md` con la dirección C, sin tocar `lib/`) y la Fase 2 bis (la noche, la tabla reordenada, las fichas, el tema por equipo y las piezas nuevas, con sus pruebas y sus vistas previas). Se detiene: Codex acepta y Yov revisa `DESIGN.md`.
+2. La Fase 3 sigue con el plano por bahía, ya en la dirección C; después, el muelle, el avance, las estadísticas y el inicio, con la ilustración cuando llegue el paquete.
+
+La siguiente decisión es la **10.15**.

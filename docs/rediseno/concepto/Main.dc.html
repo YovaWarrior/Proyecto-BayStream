@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Oficina · Plano por bahía</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans+Condensed:wght@500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#07111F}
+a{color:#8FB4F2}a:hover{color:#BCD2F7}
+button{font:inherit}
+input::placeholder{color:#8DA0BE}
+@media (prefers-reduced-motion: no-preference){
+.bs-lift{animation:bsLift 2.6s ease-in-out infinite}
+.bs-ping{animation:bsPing 2.2s ease-out infinite}
+.bs-glow{animation:bsGlow 2.6s ease-in-out infinite}
+}
+@keyframes bsLift{0%,100%{transform:translateY(-18px)}50%{transform:translateY(-23px)}}
+@keyframes bsPing{0%{box-shadow:0 0 0 0 rgba(61,214,140,.6)}100%{box-shadow:0 0 0 7px rgba(61,214,140,0)}}
+@keyframes bsGlow{0%,100%{opacity:.45}50%{opacity:.95}}
+</style>
+</helmet>
+<div style="min-height: 1060px; display: flex; flex-wrap: wrap; align-items: stretch; background-color: #07111F; background-image: linear-gradient(rgba(110,157,230,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(110,157,230,0.05) 1px, transparent 1px); background-size: 32px 32px; color: #EAF0F9; font-family: 'IBM Plex Sans', 'Segoe UI', Roboto, system-ui, sans-serif; font-size: 14px; line-height: 1.4">
+
+<nav aria-label="Secciones" style="flex: 1 1 76px; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 6px; padding: 16px 8px; box-sizing: border-box; background: #0A1628; border-right: 1px solid #1A2E50; font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif">
+<div style="width: 60px; display: flex; justify-content: center; padding-bottom: 12px">
+<svg width="44" height="44" viewBox="-13.3 -13.3 126.6 126.6" role="img" aria-label="BayStream">
+<rect x="-13.3" y="-13.3" width="126.6" height="126.6" rx="27" fill="#0D47A1"></rect>
+<rect x="51.4" y="4.55" width="11" height="11" rx="1.9" fill="#FF7A1A"></rect>
+<g fill="#F5F8FC">
+<rect x="23.8" y="21.05" width="11" height="11" rx="1.9"></rect>
+<rect x="37.6" y="21.05" width="11" height="11" rx="1.9"></rect>
+<rect x="65.2" y="21.05" width="11" height="11" rx="1.9"></rect>
+<rect x="23.8" y="34.85" width="11" height="11" rx="1.9"></rect>
+<rect x="37.6" y="34.85" width="11" height="11" rx="1.9"></rect>
+<rect x="51.4" y="34.85" width="11" height="11" rx="1.9"></rect>
+<rect x="65.2" y="34.85" width="11" height="11" rx="1.9"></rect>
+<rect x="17.8" y="48.65" width="64.4" height="5.4" rx="2.7"></rect>
+</g>
+<g fill="#6E9DE6">
+<path d="M24.87 67L24.67 65.85L24.49 64.71L24.33 63.59L24.19 62.49L24.07 61.41L23.97 60.36L23.9 59.35L23.84 58.4L23.81 57.53L23.8 56.85L34.8 56.85L34.8 67.85L25.04 67.85Z"></path>
+<rect x="37.6" y="56.85" width="11" height="11" rx="1.9"></rect>
+<rect x="51.4" y="56.85" width="11" height="11" rx="1.9"></rect>
+<path d="M65.2 56.85L76.2 56.85L76.19 57.53L76.16 58.4L76.1 59.35L76.03 60.36L75.93 61.41L75.81 62.49L75.67 63.59L75.51 64.71L75.33 65.85L75.13 67L74.96 67.85L65.2 67.85Z"></path>
+<path d="M29.15 81.52L28.73 80.49L28.32 79.44L27.92 78.37L27.54 77.28L27.17 76.18L26.83 75.06L26.49 73.92L26.18 72.78L25.88 71.63L25.64 70.65L34.8 70.65L34.8 81.65L29.21 81.65Z"></path>
+<rect x="37.6" y="70.65" width="11" height="11" rx="1.9"></rect>
+<rect x="51.4" y="70.65" width="11" height="11" rx="1.9"></rect>
+<path d="M65.2 70.65L74.36 70.65L74.12 71.63L73.82 72.78L73.51 73.92L73.17 75.06L72.83 76.18L72.46 77.28L72.08 78.37L71.68 79.44L71.27 80.49L70.85 81.52L70.79 81.65L65.2 81.65Z"></path>
+<path d="M40.78 95.43L40.39 95.35L39.97 95.23L39.52 95.06L39.05 94.84L38.56 94.58L38.07 94.27L37.6 93.93L37.6 84.45L48.6 84.45L48.6 95.45L41.09 95.45Z"></path>
+<path d="M51.4 84.45L62.4 84.45L62.4 93.93L61.93 94.27L61.44 94.58L60.95 94.84L60.48 95.06L60.03 95.23L59.61 95.35L59.22 95.43L58.91 95.45L51.4 95.45Z"></path>
+</g>
+</svg>
+</div>
+<a href="#inicio" style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; padding: 9px 0 7px; border-radius: 14px; color: #A9B9D2; text-decoration: none; font-size: 11.5px; font-weight: 500">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4.5l8 7"></path><path d="M6.5 10v9.5h11V10"></path></svg>
+Inicio</a>
+<a href="#plano" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; padding: 9px 0 7px; border-radius: 14px; background: #0D47A1; color: #FFFFFF; text-decoration: none; font-size: 11.5px; font-weight: 600">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="3.5" width="6.5" height="6" rx="1.4"></rect><rect x="13" y="3.5" width="6.5" height="6" rx="1.4"></rect><path d="M3 12.5h18"></path><path d="M6.5 15.5h4.5v4.5H8.5a2 2 0 0 1-2-2z"></path><path d="M13 15.5h4.5V18a2 2 0 0 1-2 2H13z"></path></svg>
+Plano</a>
+<a href="#lista" style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; padding: 9px 0 7px; border-radius: 14px; color: #A9B9D2; text-decoration: none; font-size: 11.5px; font-weight: 500">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"></path><path d="M4.5 6.5h.5M4.5 12h.5M4.5 17.5h.5"></path></svg>
+Lista</a>
+<a href="#avance" style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; padding: 9px 0 7px; border-radius: 14px; color: #A9B9D2; text-decoration: none; font-size: 11.5px; font-weight: 500">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 3.5A8.5 8.5 0 0 1 20.5 12H12z"></path></svg>
+Avance</a>
+<a href="#estadisticas" style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; padding: 9px 0 7px; border-radius: 14px; color: #A9B9D2; text-decoration: none; font-size: 11.5px; font-weight: 500">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 19.5V12M12 19.5V5M18 19.5v-5"></path></svg>
+Estadísticas</a>
+<a href="#alertas" style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; padding: 9px 0 7px; border-radius: 14px; color: #A9B9D2; text-decoration: none; font-size: 11.5px; font-weight: 500">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 3 19.5h18z"></path><path d="M12 10v4.5M12 17v.01"></path></svg>
+Alertas
+<span aria-label="2 alertas" style="position: absolute; top: 4px; right: 9px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #F5B83D; color: #0B1626; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center">2</span>
+</a>
+<a href="#nube" style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; padding: 9px 0 7px; border-radius: 14px; color: #A9B9D2; text-decoration: none; font-size: 11.5px; font-weight: 500">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 18.5h9.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 9.6a4.5 4.5 0 0 0 1.3 8.9z"></path><path d="M9.5 13.5l2 2 3.5-3.5"></path></svg>
+Nube</a>
+<a href="#parametros" style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; padding: 9px 0 7px; border-radius: 14px; color: #A9B9D2; text-decoration: none; font-size: 11.5px; font-weight: 500">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M18 7h2M4 17h3M12 17h8"></path><circle cx="15.5" cy="7" r="2.2"></circle><circle cx="9.5" cy="17" r="2.2"></circle></svg>
+Parámetros</a>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 18px 24px 28px; box-sizing: border-box">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px">
+<div style="display: flex; flex-direction: column; gap: 2px; margin-right: auto">
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+<h1 style="margin: 0; font-size: 23px; font-weight: 600; letter-spacing: -0.01em">BUQUE MANUAL</h1>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 12px; background: #11223F; border: 1px solid #2A4470; color: #BCD2F7; font-size: 12px; font-weight: 600">Publicado</span>
+</div>
+<div style="font-size: 13.5px; color: #A9B9D2">Viaje M100 · Escala GTSTC, Santo Tomás de Castilla</div>
+</div>
+<div role="group" aria-label="Modo de operación" style="display: flex; gap: 4px; padding: 4px; background: #0C1A31; border: 1px solid #1A2E50; border-radius: 13px">
+<button type="button" aria-pressed="true" style="display: flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #EAF0F9; color: #0B1626; font-size: 14px; font-weight: 600; cursor: pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v13M6.5 11.5 12 17l5.5-5.5"></path><path d="M5 20.5h14"></path></svg>
+Descarga</button>
+<button type="button" aria-pressed="false" style="display: flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: transparent; color: #A9B9D2; font-size: 14px; font-weight: 600; cursor: pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V7M6.5 12.5 12 7l5.5 5.5"></path><path d="M5 3.5h14"></path></svg>
+Carga</button>
+</div>
+<div style="display: flex; align-items: center; gap: 9px; height: 44px; padding: 0 14px; border-radius: 13px; background: #0C1A31; border: 1px solid #1A2E50; font-size: 13.5px">
+<span class="bs-ping" style="width: 9px; height: 9px; border-radius: 5px; background: #3DD68C"></span>
+<span style="font-weight: 600">Al día</span>
+<span style="color: #A9B9D2">3 equipos</span>
+</div>
+<label style="position: relative; display: flex; align-items: center; gap: 9px; height: 44px; padding: 0 14px; flex: 0 1 300px; min-width: 220px; box-sizing: border-box; background: #0C1A31; border: 1px solid #2A4470; border-radius: 13px; color: #A9B9D2">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap">Buscar contenedor</span>
+<input type="search" placeholder="Número, OR o celda" style="flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #EAF0F9; font: inherit; font-size: 14px">
+</label>
+</header>
+
+<section aria-label="Buque y avance" style="display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 3 1 620px; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 14px 18px 12px; background: #0C1A31; border: 1px solid #1A2E50; border-radius: 18px">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px">
+<h2 style="margin: 0; font-size: 13.5px; font-weight: 600; color: #A9B9D2">Bahías de proa a popa</h2>
+<span style="font-size: 12.5px; color: #8DA0BE">Avance de la descarga en GTSTC bajo cada bahía</span>
+</div>
+<svg viewBox="0 0 960 160" style="display: block; width: 100%; height: auto" role="img" aria-label="Perfil del buque con diez bahías de proa a popa. La 14 está seleccionada y la grúa 2 levanta un contenedor de ella.">
+<defs>
+<filter id="bsBrillo" x="-40%" y="-200%" width="180%" height="500%"><feGaussianBlur stdDeviation="5"></feGaussianBlur></filter>
+</defs>
+<rect x="0" y="114" width="960" height="46" fill="#0B2040"></rect>
+<path d="M0 114H960" stroke="#2C4A7A" stroke-width="1" stroke-dasharray="4 6"></path>
+<path d="M20 70H86L92 80H842L848 74H940V100C940 118 928 128 908 128H112C72 128 44 108 20 70Z" fill="#0F2242" stroke="#5272A6" stroke-width="1.5" stroke-linejoin="round"></path>
+<path d="M40 70V50" stroke="#5272A6" stroke-width="1.5" stroke-linecap="round"></path>
+<rect x="852" y="18" width="76" height="9" rx="2" fill="#0F2242" stroke="#5272A6" stroke-width="1.5"></rect>
+<rect x="858" y="27" width="64" height="47" rx="2" fill="#0F2242" stroke="#5272A6" stroke-width="1.5"></rect>
+<path d="M864 34H916" stroke="#6E9DE6" stroke-width="3" stroke-dasharray="7 4"></path>
+<path d="M864 46H916M864 56H916" stroke="#2C4A7A" stroke-width="2" stroke-dasharray="5 5"></path>
+<rect x="926" y="36" width="10" height="38" rx="2" fill="#0F2242" stroke="#5272A6" stroke-width="1.5"></rect>
+<rect x="926" y="36" width="10" height="6" rx="1" fill="#6E9DE6"></rect>
+<g fill="#263F69">
+<rect x="100" y="67" width="64" height="8" rx="1.5"></rect><rect x="100" y="58" width="64" height="8" rx="1.5"></rect>
+<rect x="174" y="67" width="64" height="8" rx="1.5"></rect><rect x="174" y="58" width="64" height="8" rx="1.5"></rect><rect x="174" y="49" width="64" height="8" rx="1.5"></rect>
+<rect x="248" y="67" width="64" height="8" rx="1.5"></rect><rect x="248" y="58" width="64" height="8" rx="1.5"></rect><rect x="248" y="49" width="64" height="8" rx="1.5"></rect><rect x="248" y="40" width="64" height="8" rx="1.5"></rect>
+<rect x="618" y="67" width="64" height="8" rx="1.5"></rect><rect x="618" y="58" width="64" height="8" rx="1.5"></rect><rect x="618" y="49" width="64" height="8" rx="1.5"></rect><rect x="618" y="40" width="64" height="8" rx="1.5"></rect>
+<rect x="692" y="67" width="64" height="8" rx="1.5"></rect><rect x="692" y="58" width="64" height="8" rx="1.5"></rect><rect x="692" y="49" width="64" height="8" rx="1.5"></rect><rect x="692" y="40" width="64" height="8" rx="1.5"></rect>
+<rect x="766" y="67" width="64" height="8" rx="1.5"></rect><rect x="766" y="58" width="64" height="8" rx="1.5"></rect><rect x="766" y="49" width="64" height="8" rx="1.5"></rect>
+</g>
+<g fill="#B9C8E0">
+<rect x="396" y="67" width="64" height="8" rx="1.5"></rect><rect x="396" y="58" width="64" height="8" rx="1.5"></rect><rect x="396" y="49" width="64" height="8" rx="1.5"></rect><rect x="396" y="40" width="64" height="8" rx="1.5"></rect>
+<rect x="470" y="67" width="64" height="8" rx="1.5"></rect><rect x="470" y="58" width="64" height="8" rx="1.5"></rect><rect x="470" y="49" width="64" height="8" rx="1.5"></rect><rect x="470" y="40" width="64" height="8" rx="1.5"></rect>
+<rect x="544" y="67" width="64" height="8" rx="1.5"></rect><rect x="544" y="58" width="64" height="8" rx="1.5"></rect><rect x="544" y="49" width="64" height="8" rx="1.5"></rect><rect x="544" y="40" width="64" height="8" rx="1.5"></rect>
+</g>
+<rect x="316" y="34" width="76" height="90" rx="6" fill="rgba(79,141,247,0.10)" stroke="#4F8EF7" stroke-width="1.5"></rect>
+<g fill="#F5F8FC">
+<rect x="322" y="67" width="64" height="8" rx="1.5"></rect><rect x="322" y="58" width="64" height="8" rx="1.5"></rect><rect x="322" y="49" width="64" height="8" rx="1.5"></rect>
+</g>
+<rect x="322.75" y="40.75" width="62.5" height="6.5" rx="1.5" fill="none" stroke="#FF9A4D" stroke-width="1.2" stroke-dasharray="3 2"></rect>
+<g fill="#6F86AE">
+<rect x="100" y="76" width="64" height="3" rx="1"></rect><rect x="174" y="76" width="64" height="3" rx="1"></rect><rect x="248" y="76" width="64" height="3" rx="1"></rect><rect x="396" y="76" width="64" height="3" rx="1"></rect><rect x="470" y="76" width="64" height="3" rx="1"></rect><rect x="544" y="76" width="64" height="3" rx="1"></rect><rect x="618" y="76" width="64" height="3" rx="1"></rect><rect x="692" y="76" width="64" height="3" rx="1"></rect><rect x="766" y="76" width="64" height="3" rx="1"></rect>
+</g>
+<rect x="322" y="76" width="64" height="3" rx="1" fill="#F5F8FC"></rect>
+<g fill="#1F355A">
+<rect x="100" y="84" width="64" height="8" rx="1.5"></rect><rect x="100" y="93" width="64" height="8" rx="1.5"></rect><rect x="100" y="102" width="64" height="8" rx="1.5"></rect>
+<rect x="174" y="84" width="64" height="8" rx="1.5"></rect><rect x="174" y="93" width="64" height="8" rx="1.5"></rect><rect x="174" y="102" width="64" height="8" rx="1.5"></rect><rect x="174" y="111" width="64" height="8" rx="1.5"></rect>
+<rect x="248" y="84" width="64" height="8" rx="1.5"></rect><rect x="248" y="93" width="64" height="8" rx="1.5"></rect><rect x="248" y="102" width="64" height="8" rx="1.5"></rect><rect x="248" y="111" width="64" height="8" rx="1.5"></rect>
+<rect x="618" y="84" width="64" height="8" rx="1.5"></rect><rect x="618" y="93" width="64" height="8" rx="1.5"></rect><rect x="618" y="102" width="64" height="8" rx="1.5"></rect><rect x="618" y="111" width="64" height="8" rx="1.5"></rect>
+<rect x="692" y="84" width="64" height="8" rx="1.5"></rect><rect x="692" y="93" width="64" height="8" rx="1.5"></rect><rect x="692" y="102" width="64" height="8" rx="1.5"></rect><rect x="692" y="111" width="64" height="8" rx="1.5"></rect>
+<rect x="766" y="84" width="64" height="8" rx="1.5"></rect><rect x="766" y="93" width="64" height="8" rx="1.5"></rect><rect x="766" y="102" width="64" height="8" rx="1.5"></rect><rect x="766" y="111" width="64" height="8" rx="1.5"></rect>
+</g>
+<g fill="#3D5E94">
+<rect x="396" y="84" width="64" height="8" rx="1.5"></rect><rect x="396" y="93" width="64" height="8" rx="1.5"></rect><rect x="396" y="102" width="64" height="8" rx="1.5"></rect><rect x="396" y="111" width="64" height="8" rx="1.5"></rect>
+<rect x="470" y="84" width="64" height="8" rx="1.5"></rect><rect x="470" y="93" width="64" height="8" rx="1.5"></rect><rect x="470" y="102" width="64" height="8" rx="1.5"></rect><rect x="470" y="111" width="64" height="8" rx="1.5"></rect>
+<rect x="544" y="84" width="64" height="8" rx="1.5"></rect><rect x="544" y="93" width="64" height="8" rx="1.5"></rect><rect x="544" y="102" width="64" height="8" rx="1.5"></rect><rect x="544" y="111" width="64" height="8" rx="1.5"></rect>
+</g>
+<g fill="#6E9DE6">
+<rect x="322" y="84" width="64" height="8" rx="1.5"></rect><rect x="322" y="93" width="64" height="8" rx="1.5"></rect><rect x="322" y="102" width="64" height="8" rx="1.5"></rect><rect x="322" y="111" width="64" height="8" rx="1.5"></rect>
+</g>
+<path d="M296 7H412" stroke="#3B5B8F" stroke-width="2" stroke-linecap="round"></path>
+<rect x="344" y="3" width="20" height="8" rx="2" fill="#11223F" stroke="#5272A6" stroke-width="1.2"></rect>
+<path d="M348 11V21M360 11V21" stroke="#A9B9D2" stroke-width="1"></path>
+<rect x="326" y="20" width="56" height="2" rx="1" fill="#A9B9D2"></rect>
+<rect class="bs-glow" x="322" y="22" width="64" height="9" rx="1.5" fill="#FF7A1A" filter="url(#bsBrillo)"></rect>
+<rect x="322" y="22" width="64" height="9" rx="1.5" fill="#FF7A1A"></rect>
+<text x="418" y="12" fill="#A9B9D2" font-size="11" font-family="IBM Plex Sans Condensed, Arial Narrow, sans-serif" font-weight="600">Grúa 2</text>
+<g font-family="IBM Plex Mono, Consolas, monospace" font-size="11" fill="#8DA0BE" text-anchor="middle">
+<text x="132" y="141">02</text><text x="206" y="141">06</text><text x="280" y="141">10</text><text x="428" y="141">18</text><text x="502" y="141">22</text><text x="576" y="141">26</text><text x="650" y="141">30</text><text x="724" y="141">34</text><text x="798" y="141">38</text>
+</g>
+<text x="354" y="141" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="600" fill="#EAF0F9" text-anchor="middle">14</text>
+<g fill="#1E3457">
+<rect x="100" y="147" width="64" height="4" rx="2"></rect><rect x="174" y="147" width="64" height="4" rx="2"></rect><rect x="248" y="147" width="64" height="4" rx="2"></rect><rect x="322" y="147" width="64" height="4" rx="2"></rect><rect x="396" y="147" width="64" height="4" rx="2"></rect><rect x="470" y="147" width="64" height="4" rx="2"></rect><rect x="544" y="147" width="64" height="4" rx="2"></rect><rect x="618" y="147" width="64" height="4" rx="2"></rect><rect x="692" y="147" width="64" height="4" rx="2"></rect><rect x="766" y="147" width="64" height="4" rx="2"></rect>
+</g>
+<g fill="#3DD68C">
+<rect x="100" y="147" width="64" height="4" rx="2"></rect><rect x="174" y="147" width="64" height="4" rx="2"></rect><rect x="248" y="147" width="64" height="4" rx="2"></rect>
+</g>
+<rect x="322" y="147" width="21" height="4" rx="2" fill="#F5F8FC"></rect>
+<rect x="396" y="147" width="38" height="4" rx="2" fill="#4F8EF7"></rect>
+<g font-family="IBM Plex Sans Condensed, Arial Narrow, sans-serif" font-size="11" font-weight="600" fill="#8DA0BE" letter-spacing="1">
+<text x="20" y="157">PROA</text>
+<text x="940" y="157" text-anchor="end">POPA</text>
+</g>
+</svg>
+</div>
+
+<div style="flex: 1 1 300px; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px; padding: 14px 16px; background: #0C1A31; border: 1px solid #1A2E50; border-radius: 18px">
+<div style="display: flex; align-items: center; gap: 12px">
+<svg width="52" height="52" viewBox="0 0 72 72" role="img" aria-label="80 por ciento bajado">
+<circle cx="36" cy="36" r="29" fill="none" stroke="#1E3457" stroke-width="9"></circle>
+<circle cx="36" cy="36" r="29" fill="none" stroke="#3DD68C" stroke-width="9" stroke-linecap="round" stroke-dasharray="145.8 182.2" transform="rotate(-90 36 36)"></circle>
+</svg>
+<div style="font-size: 34px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums">80 %</div>
+</div>
+<div style="font-size: 13px; color: #A9B9D2; font-variant-numeric: tabular-nums">120 de 150 bajados en GTSTC</div>
+</div>
+<div style="display: flex; flex-direction: column; justify-content: space-between; gap: 4px; padding: 14px 16px; background: #0C1A31; border: 1px solid #1A2E50; border-radius: 18px">
+<div style="font-size: 13px; font-weight: 600; color: #A9B9D2">Por bajar</div>
+<div style="font-size: 40px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums">30</div>
+<div style="font-size: 12.5px; color: #8DA0BE">18 en la bahía 14</div>
+</div>
+<div style="display: flex; flex-direction: column; justify-content: space-between; gap: 4px; padding: 14px 16px; background: #0C1A31; border: 1px solid #1A2E50; border-radius: 18px">
+<div style="font-size: 13px; font-weight: 600; color: #A9B9D2">Re‑estibas</div>
+<div style="font-size: 40px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums">3</div>
+<div style="font-size: 12.5px; color: #8DA0BE">2 para abrir la tapa de la 14</div>
+</div>
+<div style="display: flex; flex-direction: column; justify-content: space-between; gap: 4px; padding: 14px 16px; background: #0C1A31; border: 1px solid #4A3A16; border-radius: 18px">
+<div style="font-size: 13px; font-weight: 600; color: #F5B83D">Alertas de estiba</div>
+<div style="font-size: 40px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; color: #F5B83D; font-variant-numeric: tabular-nums">2</div>
+<div style="font-size: 12.5px; color: #8DA0BE">1 de peso por pila · 1 de segregación</div>
+</div>
+</div>
+</section>
+
+<section aria-label="Bahía seleccionada" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px 20px 20px; background: #0C1A31; border: 1px solid #1A2E50; border-radius: 18px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px">
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" aria-label="Bahía anterior" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid #2A4470; background: #11223F; color: #EAF0F9; cursor: pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+</button>
+<div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+<h2 style="margin: 0; font-size: 26px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em">Bahía 14</h2>
+<div style="font-size: 13px; color: #A9B9D2; font-variant-numeric: tabular-nums">{{resumen}}</div>
+</div>
+<button type="button" aria-label="Bahía siguiente" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid #2A4470; background: #11223F; color: #EAF0F9; cursor: pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+</div>
+<div style="margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+<span style="font-size: 13px; color: #A9B9D2">Colorear por</span>
+<div role="group" aria-label="Colorear por" style="display: flex; gap: 4px; padding: 4px; background: #07111F; border: 1px solid #1A2E50; border-radius: 13px">
+<sc-for list="{{vistas}}" as="v" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{v.on}}" onClick="{{v.pick}}" style="height: 38px; padding: 0 14px; border: 0; border-radius: 10px; background: {{v.bg}}; color: {{v.fg}}; font-size: 13.5px; font-weight: 600; cursor: pointer">{{v.label}}</button>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="overflow-x: auto; padding: 6px 0 4px">
+<div style="width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; gap: 10px">
+<div style="width: 40px; flex: 0 0 40px"></div>
+<div style="width: 764px; display: flex; justify-content: space-between; font-size: 12px; color: #8DA0BE">
+<span>Babor</span>
+<span>Estribor</span>
+</div>
+</div>
+<div style="display: flex; gap: 10px; padding-bottom: 20px">
+<div style="width: 40px; flex: 0 0 40px"></div>
+<div style="display: flex; gap: 6px">
+<sc-for list="{{filas}}" as="f" hint-placeholder-count="11">
+<div style="width: 64px; flex: 0 0 64px; text-align: center; font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 12px; color: #A9B9D2">{{f}}</div>
+</sc-for>
+</div>
+</div>
+<sc-for list="{{cubierta}}" as="t" hint-placeholder-count="4">
+<div style="position: relative; display: flex; gap: 10px; align-items: center">
+<div style="width: 40px; flex: 0 0 40px; text-align: right; font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 12px; color: #8DA0BE">{{t.label}}</div>
+<div style="display: flex; gap: 6px">
+<sc-for list="{{t.cells}}" as="c" hint-placeholder-count="11">
+<div style="position: relative; flex: 0 0 64px; width: 64px; height: 46px; box-sizing: border-box; border-radius: 8px; {{c.slot}}">
+<sc-if value="{{c.done}}" hint-placeholder-val="{{false}}">
+<div title="Bajado" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #3DD68C">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</div>
+</sc-if>
+<sc-if value="{{c.box}}" hint-placeholder-val="{{true}}">
+<button type="button" class="{{c.cls}}" aria-label="{{c.aria}}" aria-pressed="{{c.selected}}" onClick="{{c.pick}}" style="position: absolute; inset: 0; z-index: {{c.z}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0; box-sizing: border-box; border-radius: 8px; border: 1.5px solid {{c.bd}}; background: {{c.bg}}; color: {{c.fg}}; box-shadow: {{c.sh}}; transform: {{c.tf}}; cursor: pointer; font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif">
+<span style="font-size: 14px; font-weight: 600; letter-spacing: 0.02em; line-height: 1">{{c.code}}</span>
+<span style="font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 10.5px; line-height: 1; color: {{c.fg2}}">{{c.sub}}</span>
+<sc-if value="{{c.reefer}}" hint-placeholder-val="{{false}}">
+<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true" style="position: absolute; top: 3px; right: 4px"><path d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6"></path></svg>
+</sc-if>
+<sc-if value="{{c.imo}}" hint-placeholder-val="{{false}}">
+<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="position: absolute; top: 3px; right: 4px"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"></path><path d="M12 8.5v4.5M12 16.2v.3"></path></svg>
+</sc-if>
+</button>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<div aria-label="Tapas de escotilla 1, 2 y 3" style="display: flex; gap: 10px; align-items: center; padding: 3px 0">
+<div style="width: 40px; flex: 0 0 40px; text-align: right; font-size: 11.5px; color: #8DA0BE">Tapa</div>
+<div style="width: 764px; display: flex; justify-content: center">
+<div style="width: 624px; display: flex; gap: 4px">
+<div style="flex: 1; height: 9px; border-radius: 5px; background: #DCE5F3"></div>
+<div style="flex: 1; height: 9px; border-radius: 5px; background: #DCE5F3"></div>
+<div style="flex: 1; height: 9px; border-radius: 5px; background: #DCE5F3"></div>
+</div>
+</div>
+</div>
+<div style="position: relative; display: flex; flex-direction: column; gap: 6px; padding: 6px 0 14px">
+<div aria-hidden="true" style="position: absolute; left: 110px; top: 0; width: 644px; height: 100%; box-sizing: border-box; border: 1.5px solid #2D4B7C; border-top: 0; border-radius: 0 0 160px 160px / 0 0 110px 110px; background: rgba(110,157,230,0.05)"></div>
+<sc-for list="{{bodega}}" as="t" hint-placeholder-count="5">
+<div style="position: relative; display: flex; gap: 10px; align-items: center">
+<div style="width: 40px; flex: 0 0 40px; text-align: right; font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 12px; color: #8DA0BE">{{t.label}}</div>
+<div style="display: flex; gap: 6px">
+<sc-for list="{{t.cells}}" as="c" hint-placeholder-count="11">
+<div style="position: relative; flex: 0 0 64px; width: 64px; height: 46px; box-sizing: border-box; border-radius: 8px; {{c.slot}}">
+<sc-if value="{{c.box}}" hint-placeholder-val="{{true}}">
+<button type="button" aria-label="{{c.aria}}" aria-pressed="{{c.selected}}" onClick="{{c.pick}}" style="position: absolute; inset: 0; z-index: {{c.z}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0; box-sizing: border-box; border-radius: {{c.radio}}; border: 1.5px solid {{c.bd}}; background: {{c.bg}}; color: {{c.fg}}; box-shadow: {{c.sh}}; cursor: pointer; font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif">
+<span style="font-size: 14px; font-weight: 600; letter-spacing: 0.02em; line-height: 1">{{c.code}}</span>
+<span style="font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 10.5px; line-height: 1; color: {{c.fg2}}">{{c.sub}}</span>
+<sc-if value="{{c.reefer}}" hint-placeholder-val="{{false}}">
+<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true" style="position: absolute; top: 3px; right: 4px"><path d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6"></path></svg>
+</sc-if>
+<sc-if value="{{c.imo}}" hint-placeholder-val="{{false}}">
+<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" style="position: absolute; top: 3px; right: 4px"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"></path><path d="M12 8.5v4.5M12 16.2v.3"></path></svg>
+</sc-if>
+</button>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; gap: 10px; padding-top: 6px">
+<div style="width: 40px; flex: 0 0 40px"></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; color: #8DA0BE">Peso por pila en cubierta · límite 90 t</div>
+<div style="display: flex; gap: 6px">
+<sc-for list="{{pilas}}" as="p" hint-placeholder-count="11">
+<div style="width: 64px; flex: 0 0 64px; display: flex; flex-direction: column; gap: 5px">
+<div style="height: 5px; border-radius: 3px; background: #1E3457; overflow: hidden"><div style="height: 5px; width: {{p.pct}}; background: {{p.color}}"></div></div>
+<span style="text-align: center; font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 10.5px; color: {{p.tc}}">{{p.label}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 4px; border-top: 1px solid #1A2E50">
+<sc-for list="{{leyenda}}" as="l" hint-placeholder-count="4">
+<span style="display: inline-flex; align-items: center; gap: 8px; height: 34px; margin-top: 10px; padding: 0 12px; border-radius: 17px; background: #11223F; border: 1px solid #1E3457; font-size: 13px">
+<span style="width: 16px; height: 14px; box-sizing: border-box; border-radius: 4px; background: {{l.bg}}; border: 1.5px {{l.bs}} {{l.bd}}"></span>
+<span>{{l.label}}</span>
+<span style="font-family: 'IBM Plex Mono', Consolas, monospace; color: #A9B9D2">{{l.n}}</span>
+</span>
+</sc-for>
+<span style="display: inline-flex; align-items: center; gap: 7px; height: 34px; margin-top: 10px; padding: 0 12px; border-radius: 17px; border: 1px solid #1E3457; color: #A9B9D2; font-size: 13px">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6"></path></svg>
+Refrigerado</span>
+<span style="display: inline-flex; align-items: center; gap: 7px; height: 34px; margin-top: 10px; padding: 0 12px; border-radius: 17px; border: 1px solid #1E3457; color: #A9B9D2; font-size: 13px">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"></path><path d="M12 8.5v4.5M12 16.2v.3"></path></svg>
+Peligrosa IMDG</span>
+</div>
+</div>
+
+<aside aria-label="Detalle y actividad" style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 18px; background: #0C1A31; border: 1px solid #1A2E50; border-radius: 18px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-size: 13.5px; font-weight: 600; color: #A9B9D2">Contenedor</h2>
+<span style="display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 13px; background: {{d.pillBg}}; color: {{d.pillFg}}; font-size: 12.5px; font-weight: 600">{{d.estado}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 27px; font-weight: 500; letter-spacing: 0.01em; line-height: 1">
+<span>{{d.owner}}</span>
+<span>{{d.serial}}</span>
+<span title="Dígito de control ISO 6346" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 36px; box-sizing: border-box; border: 1.5px solid #4F8EF7; border-radius: 7px; color: #BCD2F7">{{d.check}}</span>
+</div>
+<div style="font-size: 14px; color: #A9B9D2">{{d.tipo}}</div>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; padding: 14px 0; border-top: 1px solid #1A2E50; border-bottom: 1px solid #1A2E50">
+<div><dt style="font-size: 12px; color: #8DA0BE">Celda</dt><dd style="margin: 3px 0 0; font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 15px">{{d.celda}}</dd></div>
+<div><dt style="font-size: 12px; color: #8DA0BE">Destino</dt><dd style="margin: 3px 0 0; display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif; font-size: 15px; font-weight: 600"><span style="width: 14px; height: 14px; box-sizing: border-box; border-radius: 4px; background: {{d.podBg}}; border: 1.5px solid {{d.podBd}}"></span>{{d.pod}}</dd></div>
+<div><dt style="font-size: 12px; color: #8DA0BE">Origen</dt><dd style="margin: 3px 0 0; font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif; font-size: 15px; font-weight: 600">{{d.pol}}</dd></div>
+<div><dt style="font-size: 12px; color: #8DA0BE">Peso</dt><dd style="margin: 3px 0 0; font-size: 15px; font-variant-numeric: tabular-nums">{{d.peso}}</dd></div>
+<div><dt style="font-size: 12px; color: #8DA0BE">VGM</dt><dd style="margin: 3px 0 0; font-size: 15px; font-variant-numeric: tabular-nums">{{d.vgm}}</dd></div>
+<div><dt style="font-size: 12px; color: #8DA0BE">Carga especial</dt><dd style="margin: 3px 0 0; font-size: 15px">{{d.especial}}</dd></div>
+</dl>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 12px; border: 1px solid #3B5B8F; background: #11223F; color: #EAF0F9; font-size: 14px; font-weight: 600; cursor: pointer">Pedir cambio</button>
+<button type="button" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 0; background: transparent; color: #8FB4F2; font-size: 14px; font-weight: 600; cursor: pointer">Historial</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 18px; background: #0C1A31; border: 1px solid #1A2E50; border-radius: 18px">
+<div style="display: flex; align-items: center; gap: 9px; padding-bottom: 6px">
+<span class="bs-ping" style="width: 9px; height: 9px; border-radius: 5px; background: #3DD68C"></span>
+<h2 style="margin: 0; font-size: 13.5px; font-weight: 600; color: #A9B9D2">En vivo</h2>
+<span style="margin-left: auto; font-size: 12.5px; color: #8DA0BE">Oficina y 2 teléfonos del muelle</span>
+</div>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+<li style="display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 2px 10px; align-items: start; padding: 11px 0; border-top: 1px solid #1A2E50">
+<span style="margin-top: 6px; width: 9px; height: 9px; border-radius: 2px; background: #FF7A1A"></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 600">Bajando · Grúa 2</span><span style="font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 12.5px; color: #A9B9D2">TSTU 000110 8 · 014-02-86</span></div>
+<span style="font-size: 12.5px; color: #FFB27A">ahora</span>
+</li>
+<li style="display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 2px 10px; align-items: start; padding: 11px 0; border-top: 1px solid #1A2E50">
+<span style="margin-top: 6px; width: 9px; height: 9px; border-radius: 2px; background: #3DD68C"></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 600">Bajado · Muelle 1</span><span style="font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 12.5px; color: #A9B9D2">TSTU 004218 0 · 014-01-86</span></div>
+<span style="font-size: 12.5px; color: #8DA0BE">hace 1 min</span>
+</li>
+<li style="display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 2px 10px; align-items: start; padding: 11px 0; border-top: 1px solid #1A2E50">
+<span style="margin-top: 6px; width: 9px; height: 9px; border-radius: 2px; background: #F5B83D"></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 600">Cambio pedido · Muelle 2</span><span style="font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 12.5px; color: #A9B9D2">TSTU 020493 3 · 014-03-84</span></div>
+<button type="button" style="height: 32px; padding: 0 12px; border-radius: 9px; border: 1px solid #5A4A1E; background: #1D1A12; color: #F5B83D; font-size: 12.5px; font-weight: 600; cursor: pointer">Revisar</button>
+</li>
+<li style="display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 2px 10px; align-items: start; padding: 11px 0; border-top: 1px solid #1A2E50">
+<span style="margin-top: 6px; width: 9px; height: 9px; border-radius: 2px; background: #3DD68C"></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 600">Bajado · Muelle 1</span><span style="font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 12.5px; color: #A9B9D2">TSTU 012775 5 · 014-08-86</span></div>
+<span style="font-size: 12.5px; color: #8DA0BE">hace 3 min</span>
+</li>
+<li style="display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 2px 10px; align-items: start; padding: 11px 0; border-top: 1px solid #1A2E50">
+<span style="margin-top: 6px; width: 9px; height: 9px; border-radius: 2px; background: #6E9DE6"></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 600">Re‑estiba aprobada · Oficina</span><span style="font-family: 'IBM Plex Mono', Consolas, monospace; font-size: 12.5px; color: #A9B9D2">TSTU 031167 5 · 018-07-84 → 018-05-86</span></div>
+<span style="font-size: 12.5px; color: #8DA0BE">hace 9 min</span>
+</li>
+</ol>
+</div>
+</aside>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"vistaInicial":{"editor":"enum","options":["estado","destino","tipo"],"default":"estado"},"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  digito(codigo) {
+    var v = { A: 10, B: 12, C: 13, D: 14, E: 15, F: 16, G: 17, H: 18, I: 19, J: 20, K: 21, L: 23, M: 24, N: 25, O: 26, P: 27, Q: 28, R: 29, S: 30, T: 31, U: 32, V: 34, W: 35, X: 36, Y: 37, Z: 38 };
+    var suma = 0;
+    for (var i = 0; i < 10; i++) {
+      var ch = codigo.charAt(i);
+      var n = (ch >= '0' && ch <= '9') ? Number(ch) : v[ch];
+      suma += n * Math.pow(2, i);
+    }
+    return String((suma % 11) % 10);
+  }
+  kilos(t) {
+    var s = String(Math.round(t * 1000));
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' kg';
+  }
+  renderVals() {
+    var self = this;
+    var st = this.state || {};
+    var vista = st.vista || this.props.vistaInicial || 'estado';
+    var sel = st.sel || 'c-86-4';
+    var FILAS = ['10', '08', '06', '04', '02', '00', '01', '03', '05', '07', '09'];
+    var PUERTOS = {
+      G: { code: 'GTSTC', fill: '#1B421E', line: '#98DF9A', pol: 'USHOU' },
+      U: { code: 'USHOU', fill: '#003E57', line: '#6ED9FF', pol: 'PAMIT' },
+      P: { code: 'PAMIT', fill: '#4E3100', line: '#F8BF6C', pol: 'USHOU' },
+      K: { code: 'JMKCT', fill: '#462B52', line: '#E8B3FF', pol: 'PAMIT' }
+    };
+    var CUBIERTA = [
+      ['88', '. . x x x x x x x . .'],
+      ['86', '. x G G G* G x G G U .'],
+      ['84', 'U G G Gv K G G Gr U P U'],
+      ['82', 'U U P P K K U U Pi P U']
+    ];
+    var BODEGA = [
+      ['10', '. G G U Gr G U G Gv P .'],
+      ['08', '. U U K K Ui U K P P .'],
+      ['06', '. . U U K K Kr P P . .'],
+      ['04', '. . U K K P P P P . .'],
+      ['02', '. . . K K P P P . . .']
+    ];
+    var SERIES = { 'c-86-4': '000110', 'c-84-7': '020493' };
+    var PESOS = { 'c-86-9': 29.4, 'c-84-9': 28.8, 'c-82-9': 27.5 };
+    var DESC = { '45G1': '40′ HC', '45R1': '40′ HC refrigerado', '42G1': '40′' };
+    var n = 0;
+    var cuenta = { pend: 0, live: 0, done: 0, paso: 0, total: 0, cub: 0, bod: 0, peso: 0, vac: 0, llenos: 0 };
+    var porPuerto = { G: 0, U: 0, P: 0, K: 0 };
+    var pilas = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var detalle = null;
+
+    function fila(def, zona) {
+      var toks = def[1].split(' ');
+      var bodegaFila = zona === 'bodega';
+      var primera = -1, ultima = -1;
+      toks.forEach(function (t, i) { if (t !== '.') { if (primera < 0) primera = i; ultima = i; } });
+      var cells = toks.map(function (tok, col) {
+        n += 1;
+        var id = 'c-' + def[0] + '-' + col;
+        if (tok === '.') return { done: false, box: false, slot: '' };
+        if (tok === 'x') { cuenta.done += 1; return { done: true, box: false, slot: 'border: 1.5px dashed #4A6799;' }; }
+        var p = tok.charAt(0);
+        var port = PUERTOS[p];
+        var live = tok.indexOf('*') >= 0;
+        var reefer = tok.indexOf('r') >= 0;
+        var imo = tok.indexOf('i') >= 0;
+        var vacio = tok.indexOf('v') >= 0;
+        var peso = PESOS[id] || (vacio ? 3.9 : 14 + ((n * 37) % 150) / 10 + (reefer ? 1.5 : 0));
+        peso = Math.round(peso * 10) / 10;
+        var tipo = vacio ? '45G1' : (reefer ? '45R1' : (imo ? '42G1' : '45G1'));
+        cuenta.total += 1;
+        cuenta.peso += peso;
+        if (bodegaFila) cuenta.bod += 1; else { cuenta.cub += 1; pilas[col] += peso; }
+        porPuerto[p] += 1;
+        if (vacio) cuenta.vac += 1; else cuenta.llenos += 1;
+        if (live) cuenta.live += 1; else if (p === 'G') cuenta.pend += 1; else cuenta.paso += 1;
+        var selected = id === sel;
+        var bg, fg, fg2, bd;
+        if (live) { bg = '#FF7A1A'; fg = '#0B1626'; fg2 = '#3A1A04'; bd = '#FFB27A'; }
+        else if (vista === 'destino') { bg = port.fill; fg = port.line; fg2 = port.line; bd = port.line; }
+        else if (vista === 'tipo') {
+          if (vacio) { bg = '#58281C'; fg = '#FFAE95'; fg2 = '#FFAE95'; bd = '#FFAE95'; }
+          else { bg = '#12233F'; fg = '#A9B9D2'; fg2 = '#8DA0BE'; bd = '#2D4B7C'; }
+        } else if (p === 'G') {
+          if (bodegaFila) { bg = '#6E9DE6'; fg = '#0B1626'; fg2 = '#12284A'; bd = '#6E9DE6'; }
+          else { bg = '#F5F8FC'; fg = '#0B1626'; fg2 = '#33445E'; bd = '#F5F8FC'; }
+        } else { bg = '#12233F'; fg = '#A9B9D2'; fg2 = '#8DA0BE'; bd = '#2D4B7C'; }
+        var sh = 'none';
+        if (live && selected) sh = '0 0 0 3px #0C1A31, 0 0 0 5px #4F8EF7, 0 12px 28px rgba(255,122,26,0.5)';
+        else if (live) sh = '0 0 0 3px #0C1A31, 0 12px 28px rgba(255,122,26,0.5)';
+        else if (selected) sh = '0 0 0 2px #0C1A31, 0 0 0 4px #4F8EF7';
+        var radio = '8px';
+        if (bodegaFila && col === primera) radio = '8px 8px 8px 18px';
+        if (bodegaFila && col === ultima) radio = '8px 8px 18px 8px';
+        var celda = '014-' + FILAS[col] + '-' + def[0];
+        var estado = live ? 'Bajando ahora' : (p === 'G' ? 'Por bajar' : 'De paso');
+        if (selected) {
+          var serie = SERIES[id] || ('000000' + ((n * 7349 + 30011) % 1000000)).slice(-6);
+          detalle = {
+            owner: 'TSTU', serial: serie, check: self.digito('TSTU' + serie),
+            tipo: tipo + ' · ' + DESC[tipo] + ' · ' + (vacio ? 'vacío' : 'lleno'),
+            celda: celda, pod: port.code, podBg: port.fill, podBd: port.line, pol: port.pol,
+            peso: peso.toFixed(1) + ' t', vgm: self.kilos(peso),
+            especial: reefer ? 'Refrigerado' : (imo ? 'IMDG clase 3' : 'Ninguna'),
+            estado: estado,
+            pillBg: live ? '#FF7A1A' : (p === 'G' ? '#EAF0F9' : '#1E3457'),
+            pillFg: live ? '#0B1626' : (p === 'G' ? '#0B1626' : '#BCD2F7')
+          };
+        }
+        return {
+          done: false, box: true,
+          slot: live ? 'border: 1.5px dashed #FF9A4D;' : '',
+          code: vista === 'tipo' ? tipo : port.code,
+          sub: live ? 'Grúa 2' : peso.toFixed(1) + ' t',
+          bg: bg, fg: fg, fg2: fg2, bd: bd, sh: sh, radio: radio,
+          tf: live ? 'translateY(-20px)' : 'none',
+          cls: live ? 'bs-lift' : '',
+          z: live ? 3 : (selected ? 2 : 1),
+          reefer: reefer, imo: imo, selected: selected,
+          aria: 'Celda ' + celda + ', ' + port.code + ', ' + estado.toLowerCase(),
+          pick: function () { self.setState({ sel: id }); }
+        };
+      });
+      return { label: def[0], cells: cells };
+    }
+
+    var cubierta = CUBIERTA.map(function (d) { return fila(d, 'cubierta'); });
+    var bodega = BODEGA.map(function (d) { return fila(d, 'bodega'); });
+
+    if (!detalle) {
+      detalle = { owner: 'TSTU', serial: '000110', check: '8', tipo: '45G1 · 40′ HC · lleno', celda: '014-02-86', pod: 'GTSTC', podBg: '#1B421E', podBd: '#98DF9A', pol: 'USHOU', peso: '24.1 t', vgm: '24 100 kg', especial: 'Ninguna', estado: 'Bajando ahora', pillBg: '#FF7A1A', pillFg: '#0B1626' };
+    }
+
+    var vistas = [['estado', 'Estado'], ['destino', 'Destino'], ['tipo', 'Tipo de vacío']].map(function (v) {
+      var on = v[0] === vista;
+      return { label: v[1], on: on, bg: on ? '#EAF0F9' : 'transparent', fg: on ? '#0B1626' : '#A9B9D2', pick: function () { self.setState({ vista: v[0] }); } };
+    });
+
+    var leyenda;
+    if (vista === 'destino') {
+      leyenda = ['G', 'U', 'P', 'K'].map(function (k) {
+        return { label: PUERTOS[k].code, n: String(porPuerto[k]), bg: PUERTOS[k].fill, bd: PUERTOS[k].line, bs: 'solid' };
+      });
+    } else if (vista === 'tipo') {
+      leyenda = [
+        { label: '45G1 vacío', n: String(cuenta.vac), bg: '#58281C', bd: '#FFAE95', bs: 'solid' },
+        { label: 'Llenos', n: String(cuenta.llenos), bg: '#12233F', bd: '#2D4B7C', bs: 'solid' }
+      ];
+    } else {
+      leyenda = [
+        { label: 'Por bajar', n: String(cuenta.pend), bg: 'linear-gradient(90deg, #F5F8FC 50%, #6E9DE6 50%)', bd: '#F5F8FC', bs: 'solid' },
+        { label: 'Bajando', n: String(cuenta.live), bg: '#FF7A1A', bd: '#FFB27A', bs: 'solid' },
+        { label: 'Bajados', n: String(cuenta.done), bg: 'transparent', bd: '#4A6799', bs: 'dashed' },
+        { label: 'De paso', n: String(cuenta.paso), bg: '#12233F', bd: '#2D4B7C', bs: 'solid' }
+      ];
+    }
+
+    var pilasVista = pilas.map(function (w) {
+      if (!w) return { pct: '0%', color: '#1E3457', tc: '#8DA0BE', label: '—' };
+      var r = w / 90;
+      var alto = r >= 0.9;
+      return { pct: Math.min(100, Math.round(r * 100)) + '%', color: alto ? '#F5B83D' : '#4F8EF7', tc: alto ? '#F5B83D' : '#A9B9D2', label: w.toFixed(1) + ' t' };
+    });
+
+    var resumen = cuenta.total + ' contenedores · ' + cuenta.peso.toFixed(1) + ' t · cubierta ' + cuenta.cub + ' · bodega ' + cuenta.bod;
+
+    return { filas: FILAS, cubierta: cubierta, bodega: bodega, vistas: vistas, leyenda: leyenda, pilas: pilasVista, d: detalle, resumen: resumen };
+  }
+}
+</script>
+</body>
+</html>
