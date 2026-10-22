@@ -2,7 +2,7 @@
 
 **Todo esto lo hace Carlos.** Yov redacta; Carlos ejecuta Git, Flutter, la firma y
 Firebase. Base del release: el commit de cierre **`sprint3-cierre-2`** (su código es
-el de T-112; `main` recibe exactamente eso al mezclar). Antes de nada, confirma que no
+el de T-112; `main` recibe exactamente eso al mezclar en `master` (la rama principal del repo)). Antes de nada, confirma que no
 quede nada sin commitear de las tareas y aceptaciones.
 
 ---
@@ -21,14 +21,14 @@ firebase deploy --only hosting
 
 ---
 
-## 1. La mezcla de `sprint-3` a `main`
+## 1. La mezcla de `sprint-3` a `master`
 
 ```powershell
-git checkout main
+git checkout master
 git pull
-git merge --no-ff sprint-3 -m "Sprint 3: cierre, mezcla a main"
+git merge --no-ff sprint-3 -m "Sprint 3: cierre, mezcla a master"
 git tag -a v3.0 -m "BayStream Sprint 3"
-git push origin main
+git push origin master
 git push origin v3.0
 ```
 
