@@ -3,6 +3,7 @@
 // El contraste se calcula aquí con la fórmula de WCAG 2, igual que en
 // tool/rediseno_contraste.py, para que la paleta que entra al código sea la
 // misma que la verificada en docs/rediseno/fase2/contraste.md.
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:baystream/core/design/design.dart';
@@ -50,10 +51,65 @@ void main() {
     });
 
     test('la tabla fija entra en la extensión semántica', () {
-      final tema = BayStreamTema.claro(tablaFija: const {'GTSTC': 2});
+      final tema = BayStreamTema.claro(tablaFija: const {'GTSTC': 7});
       final semanticos = tema.extension<BsColoresSemanticos>()!;
-      expect(semanticos.tablaFija['GTSTC'], 2);
-      expect(semanticos.categorico('gtstc'), same(semanticos.categoricos[2]));
+      expect(semanticos.tablaFija['GTSTC'], 7);
+      expect(semanticos.categorico('gtstc'), same(semanticos.categoricos[7]));
+    });
+  });
+
+  group('las tablas fijas confirmadas (10.6)', () {
+    test('los 15 puertos ocupan las ranuras 0 a 14 en orden, sin XXVSL', () {
+      expect(tablaFijaDePuertos.keys.toList(), <String>[
+        'JMKIN', 'USHOU', 'GTSTC', 'JMKCT', 'PAMIT', 'COSPC', 'JMKWL', 'PACCT',
+        'GTPBR', 'USPEF', 'PAONX', 'VEPBL', 'VELAG', 'COCTG', 'USMSY',
+      ]);
+      expect(tablaFijaDePuertos.values.toList(),
+          List<int>.generate(15, (i) => i));
+      expect(tablaFijaDePuertos.containsKey('XXVSL'), isFalse);
+      expect(primeraRanuraLibreDePuertos, 15);
+      expect(
+          tablaFijaDePuertos.values.every((k) => k < primeraRanuraLibreDePuertos),
+          isTrue,
+          reason: 'las ranuras 15 a 23 son de la oficina (T-115)');
+    });
+
+    test('los 13 tipos de vacío ocupan las ranuras 0 a 12 en orden', () {
+      expect(tablaFijaDeTipos.keys.toList(), <String>[
+        '45G1', '22G1', '45G0', 'L5G1', '45R1', '42G1', '42U1', '42P3', 'L5G0',
+        '22K2', '22U1', '22T1', '45R8',
+      ]);
+      expect(tablaFijaDeTipos.values.toList(), List<int>.generate(13, (i) => i));
+    });
+
+    test('la tabla confirmada junta las dos y es la del tema por omisión', () {
+      expect(tablaFijaConfirmada, hasLength(28));
+      for (final tema in [BayStreamTema.claro(), BayStreamTema.oscuro(muelle: true)]) {
+        final semanticos = tema.extension<BsColoresSemanticos>()!;
+        expect(semanticos.tablaFija, tablaFijaConfirmada);
+        expect(semanticos.categorico('gtstc'), same(semanticos.categoricos[2]));
+        expect(semanticos.categorico('USMSY'), same(semanticos.categoricos[14]));
+        expect(semanticos.categorico('45R8'), same(semanticos.categoricos[12]));
+        // Lo que no está en la tabla sigue saliendo por el cálculo.
+        expect(semanticos.categorico('XXVSL'),
+            same(semanticos.categoricos[fnv1a32('XXVSL') % ranurasCategoricas]));
+      }
+      expect(BsColoresSemanticos.claro().tablaFija, tablaFijaConfirmada);
+      expect(BsColoresSemanticos.oscuro().tablaFija, tablaFijaConfirmada);
+      expect(BayStreamTema.claro(tablaFija: const {}).extension<BsColoresSemanticos>()!.tablaFija, isEmpty);
+    });
+
+    test('tool/rediseno_contraste.py lleva las mismas tablas', () {
+      final script = File('tool/rediseno_contraste.py').readAsStringSync();
+      List<String> lista(String nombre) => RegExp("'([A-Z0-9]{4,5})'")
+          .allMatches(RegExp('$nombre = ' r'\[(.*?)\]', dotAll: true)
+              .firstMatch(script)!
+              .group(1)!)
+          .map((m) => m.group(1)!)
+          .toList();
+      expect(lista('TABLA_PUERTOS'), tablaFijaDePuertos.keys.toList());
+      expect(lista('TABLA_TIPOS'), tablaFijaDeTipos.keys.toList());
+      expect(script, contains('PRIMERA_RANURA_LIBRE_DE_PUERTOS = 15'));
     });
   });
 
@@ -81,6 +137,10 @@ void main() {
         }
         expect(_contraste(paleta.lineaFuerte, paleta.papel), greaterThanOrEqualTo(3),
             reason: 'línea fuerte sobre papel');
+        for (final fondo in [paleta.hoja, paleta.hojaAlta, paleta.aceroTenue]) {
+          expect(_contraste(paleta.lineaFuerte, fondo), greaterThanOrEqualTo(3),
+              reason: 'línea fuerte sobre hoja, hoja alta y acero tenue en $modo');
+        }
         expect(_contraste(paleta.grua, paleta.papel), greaterThanOrEqualTo(3),
             reason: 'contorno de grúa sobre papel');
       });
@@ -229,6 +289,7 @@ void main() {
     final previas = <String, Widget Function()>{
       'celdas': vistaPreviaCeldas,
       'celdas oscuro': vistaPreviaCeldasOscuro,
+      'celdas oficina': vistaPreviaCeldasOficina,
       'tira de bahías': vistaPreviaTiraDeBahias,
       'cartela': vistaPreviaCartela,
       'bandas': vistaPreviaBandas,

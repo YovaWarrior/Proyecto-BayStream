@@ -58,14 +58,14 @@ DIRECCIONES = {
     'A · Plano de a bordo': {
         'claro': {
             'papel': '#F5F8FC', 'hoja': '#FFFFFF', 'tinta': '#10243F',
-            'tinta suave': '#4A5B73', 'linea': '#C9D3E0', 'linea fuerte': '#7A8DA6',
+            'tinta suave': '#4A5B73', 'linea': '#C9D3E0', 'linea fuerte': '#6D809F',
             'marca': '#0D47A1', 'sobre marca': '#FFFFFF',
             'marca tenue': '#DCE7F8', 'acero': '#6E9DE6', 'acero tenue': '#E3EDFB',
             'grua': '#C2410C', 'grua relleno': '#FF7A1A', 'sobre grua': '#10243F',
         },
         'oscuro': {
             'papel': '#0B1626', 'hoja': '#13223A', 'tinta': '#E6EEF8',
-            'tinta suave': '#A9B8CC', 'linea': '#2E4260', 'linea fuerte': '#5C7392',
+            'tinta suave': '#A9B8CC', 'linea': '#2E4260', 'linea fuerte': '#6983A3',
             'marca': '#8FB4F2', 'sobre marca': '#0B1626',
             'marca tenue': '#1E3A66', 'acero': '#6E9DE6', 'acero tenue': '#1C2F4D',
             'grua': '#FF9A4D', 'grua relleno': '#FF7A1A', 'sobre grua': '#0B1626',
@@ -105,6 +105,8 @@ PARES = [
     ('grua', 'papel', AA_TEXT, 'texto o icono naranja sobre el fondo'),
     ('sobre grua', 'grua relleno', AA_TEXT, 'texto sobre relleno naranja (marca de celda)'),
     ('linea fuerte', 'papel', AA_NON_TEXT, 'borde esencial (celda) sobre el fondo'),
+    ('linea fuerte', 'hoja', AA_NON_TEXT, 'borde esencial sobre la hoja (cubierta)'),
+    ('linea fuerte', 'acero tenue', AA_NON_TEXT, 'borde esencial sobre el acero tenue (bodega)'),
     ('grua', 'papel', AA_NON_TEXT, 'borde naranja (contorno de celda en movimiento)'),
     ('marca', 'papel', AA_NON_TEXT, 'borde o icono de marca sobre el fondo'),
 ]
@@ -120,7 +122,7 @@ SEMANTICOS = {
         'claro': ('#D3EFDB', '#10243F', '#1E6B43'),
         'oscuro': ('#1D4A33', '#E6EEF8', '#6FCF97')},
     'cancelado': {
-        'claro': ('#E4E8EE', '#4A5B73', '#7A8DA6'),
+        'claro': ('#E4E8EE', '#4A5B73', '#6D809F'),
         'oscuro': ('#2A3850', '#A9B8CC', '#8A9DB8')},
     'revisar (conflicto, aviso)': {
         'claro': ('#FBE7B5', '#10243F', '#8A5A00'),
@@ -138,13 +140,17 @@ SEMANTICOS = {
         'claro': ('#E3C4EE', '#10243F', '#6B2E8A'),
         'oscuro': ('#4A2A5E', '#F2F6FB', '#C9A0DE')},
     'de paso': {
-        'claro': ('#F5F8FC', '#4A5B73', '#7A8DA6'),
-        'oscuro': ('#0B1626', '#A9B8CC', '#5C7392')},
+        'claro': ('#F5F8FC', '#4A5B73', '#6D809F'),
+        'oscuro': ('#0B1626', '#A9B8CC', '#6983A3')},
     'reservado (contorno)': {
-        'claro': ('#FFFFFF', '#4A5B73', '#7A8DA6'),
+        'claro': ('#FFFFFF', '#4A5B73', '#6D809F'),
         'oscuro': ('#13223A', '#A9B8CC', '#8A9DB8')},
 }
-PAPEL = {'claro': ['#F5F8FC', '#FFFFFF'], 'oscuro': ['#0B1626', '#061120']}
+# Los fondos sobre los que se apoya una celda o un chip: el papel, la hoja de la
+# cubierta, la hoja alta y el acero tenue de la bodega (10.7: la prueba compuesta
+# encontró que la línea fuerte de antes quedaba en 2.9:1 sobre el acero tenue).
+PAPEL = {'claro': ['#F5F8FC', '#FFFFFF', '#E9EFF7', '#E3EDFB'],
+         'oscuro': ['#0B1626', '#061120', '#13223A', '#1B2D4A', '#1C2F4D']}
 
 # ---------------------------------------------------------------------------
 # Paleta categórica para «Colorear por» (destino y tipo de vacío).
@@ -163,12 +169,46 @@ LUMINOSIDADES = {
     'intensa': {'claro': (0.50, 0.74, 0.60, 0.26), 'oscuro': (0.45, 0.21, 0.55, 0.76)},
 }
 
-# Tablas fijas propuestas (10.4): solo códigos, en el orden de asignación.
-# Ranura k → tono k mod 12, luminosidad «suave» para k < 12 e «intensa» después.
-# Los puertos de destino (LOC+11) y los tipos ISO de vacío que salen en el corpus.
+# Tablas fijas confirmadas por Carlos (10.6): solo códigos, en el orden de
+# asignación. Ranura k → tono k mod 12, luminosidad «suave» para k < 12 e
+# «intensa» después. Los puertos de destino (LOC+11) y los tipos ISO de vacío
+# que salen en el corpus; XXVSL salió porque no es un UN/LOCODE. Las ranuras
+# 15 a 23 de puertos las asigna la oficina (T-115).
 TABLA_PUERTOS = ['JMKIN', 'USHOU', 'GTSTC', 'JMKCT', 'PAMIT', 'COSPC', 'JMKWL',
                  'PACCT', 'GTPBR', 'USPEF', 'PAONX', 'VEPBL', 'VELAG', 'COCTG',
-                 'USMSY', 'XXVSL']
+                 'USMSY']
+PRIMERA_RANURA_LIBRE_DE_PUERTOS = 15
+
+# La celda atenuada (10.7, H1): el relleno del rol al 35 % sobre el papel, el
+# código en tinta suave y el contorno en línea fuerte. Se verifica compuesto,
+# como lo dibuja Flutter (Color.alphaBlend, canal a canal en sRGB), igual que
+# test/t114_celda_contraste_test.dart.
+ALFA_ATENUADA = 0.35
+TINTA_SUAVE = {'claro': '#4A5B73', 'oscuro': '#A9B8CC'}
+LINEA_FUERTE = {'claro': '#6D809F', 'oscuro': '#6983A3'}
+PAPEL_CELDA = {'claro': '#F5F8FC', 'oscuro': '#0B1626'}
+
+
+def compuesto(frente: str, fondo: str, alfa: float) -> str:
+    """`frente` al `alfa` sobre `fondo`, canal a canal en sRGB."""
+    f, b = _hex_to_rgb(frente), _hex_to_rgb(fondo)
+    return _rgb_to_hex(tuple(alfa * fc + (1 - alfa) * bc for fc, bc in zip(f, b)))
+
+
+def atenuadas(informe: dict) -> list[dict]:
+    """El peor contraste de la celda atenuada por modo: la tinta suave sobre el
+    relleno compuesto (4.5) y la línea fuerte sobre el papel (3), para las 24
+    ranuras y los roles semánticos."""
+    filas = []
+    for modo in ('claro', 'oscuro'):
+        rellenos = [f[modo]['relleno'] for f in informe['categorica']]
+        rellenos += [s['relleno'] for s in informe['semanticos'] if s['modo'] == modo]
+        peor = min(((contrast(TINTA_SUAVE[modo], compuesto(r, PAPEL_CELDA[modo], ALFA_ATENUADA)), r)
+                    for r in rellenos), key=lambda par: par[0])
+        filas.append({'modo': modo, 'rellenos': len(rellenos),
+                      'peor texto': round(peor[0], 2), 'peor relleno': peor[1],
+                      'borde': round(contrast(LINEA_FUERTE[modo], PAPEL_CELDA[modo]), 2)})
+    return filas
 TABLA_TIPOS = ['45G1', '22G1', '45G0', 'L5G1', '45R1', '42G1', '42U1', '42P3',
                'L5G0', '22K2', '22U1', '22T1', '45R8']
 
@@ -271,12 +311,13 @@ def main() -> int:
               f"{c['contraste texto']:.2f} | {c['contraste borde']:.2f} | "
               f"{o['relleno']} / {o['borde']} | {o['contraste texto']:.2f} | "
               f"{o['contraste borde']:.2f} |")
-    print('\n### Tabla fija propuesta: puertos de destino (solo códigos; Carlos confirma)\n')
+    print('\n### Tabla fija confirmada (10.6): puertos de destino, ranuras 0 a 14\n')
     print('| Código | Ranura | Tono |')
     print('|---|---:|---|')
     for codigo, k in tabla(TABLA_PUERTOS):
         print(f'| {codigo} | {k} | {informe["categorica"][k]["nombre"]} |')
-    print('\n### Tabla fija propuesta: tipos ISO de vacío (solo códigos; Carlos confirma)\n')
+    print(f'\nRanuras {PRIMERA_RANURA_LIBRE_DE_PUERTOS} a 23: libres, las asigna la oficina (T-115).')
+    print('\n### Tabla fija confirmada (10.6): tipos ISO de vacío, ranuras 0 a 12\n')
     print('| Código | Ranura | Tono |')
     print('|---|---:|---|')
     for codigo, k in tabla(TABLA_TIPOS):
@@ -292,6 +333,16 @@ def main() -> int:
         print(f"| {s['rol']} | {s['modo']} | {s['relleno']} | {s['texto']} | {s['borde']} | "
               f"{s['contraste texto']:.2f} | {s['contraste borde']:.2f} | "
               f"{'sí' if s['cumple'] else '**no**'} |")
+    print('\n### Celda atenuada (10.7): relleno al 35 % sobre el papel, código en tinta suave, contorno en línea fuerte\n')
+    print('| Modo | Rellenos probados | Peor texto sobre el relleno compuesto | Con el relleno | Línea fuerte sobre papel | Cumple |')
+    print('|---|---:|---:|---|---:|---|')
+    informe['atenuadas'] = atenuadas(informe)
+    for a in informe['atenuadas']:
+        cumple = a['peor texto'] >= AA_TEXT and a['borde'] >= AA_NON_TEXT
+        if not cumple:
+            fallos += 1
+        print(f"| {a['modo']} | {a['rellenos']} | {a['peor texto']:.2f} | {a['peor relleno']} | "
+              f"{a['borde']:.2f} | {'sí' if cumple else '**no**'} |")
     print('\n### Escala secuencial para Estadísticas (del papel a la marca)\n')
     print(' → '.join(informe['secuencial']))
     print(f'\nPares que no cumplen: {fallos}')

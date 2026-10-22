@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'bs_categorico.dart';
 import 'bs_colores_semanticos.dart';
 import 'bs_medidas.dart';
 import 'bs_paleta.dart';
@@ -12,10 +13,12 @@ import 'bs_tipografia.dart';
 /// extensiones: [BsColoresSemanticos], [BsMedidas] y [BsTextos]. Material 3
 /// sigue siendo la base (RNF-002 lo mide): no hay ninguna biblioteca más.
 abstract final class BayStreamTema {
-  /// El tema claro. Con [muelle], la densidad del muelle.
+  /// El tema claro. Con [muelle], la densidad del muelle; [tablaFija] es la
+  /// tabla de «Colorear por», por omisión la confirmada en 10.6
+  /// ([tablaFijaConfirmada]); T-115 le suma las asignaciones de la oficina.
   static ThemeData claro({
     bool muelle = false,
-    Map<String, int> tablaFija = const {},
+    Map<String, int> tablaFija = tablaFijaConfirmada,
   }) =>
       construir(
         paleta: BsPaleta.claro,
@@ -23,10 +26,11 @@ abstract final class BayStreamTema {
         medidas: muelle ? BsMedidas.muelle : BsMedidas.oficina,
       );
 
-  /// El tema oscuro. Con [muelle], la densidad del muelle.
+  /// El tema oscuro. Con [muelle], la densidad del muelle; [tablaFija] como en
+  /// [claro].
   static ThemeData oscuro({
     bool muelle = false,
-    Map<String, int> tablaFija = const {},
+    Map<String, int> tablaFija = tablaFijaConfirmada,
   }) =>
       construir(
         paleta: BsPaleta.oscuro,

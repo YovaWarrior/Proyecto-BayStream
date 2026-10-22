@@ -82,6 +82,22 @@ void main() {
             resaltada: true,
           ),
           const BsCelda(codigo: '', etiqueta: 'Hueco 002-07-84'),
+          BsCelda(
+            codigo: 'GTSTC',
+            atenuada: true,
+            categoria: semanticos.categorico('GTSTC'),
+            etiqueta: 'MSCU 123457 5, fuera del filtro',
+            onTap: () {},
+          ),
+          BsCelda(
+            codigo: 'USHOU',
+            atenuada: true,
+            insignia: BsInsigniaDeCelda.refrigerado,
+            marca: BsMarcaDeCelda.hecho,
+            categoria: semanticos.categorico('USHOU'),
+            etiqueta: 'MSCU 123457 6, hecho, refrigerado, fuera del filtro',
+            onTap: () {},
+          ),
         ],
       );
     },
@@ -218,8 +234,9 @@ void main() {
       Builder(
         builder: (context) => BsCelda(
           codigo: 'GTSTC',
+          linea2: '28.7',
           categoria: BsColoresSemanticos.de(context).categorico('GTSTC'),
-          etiqueta: 'MSCU 123456 7, 002-01-82, GTSTC',
+          etiqueta: 'MSCU 123456 7, 002-01-82, GTSTC, 28.7 t',
           onTap: () {},
         ),
       ),

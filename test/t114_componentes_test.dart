@@ -26,7 +26,8 @@ void main() {
         ),
       )));
       expect(find.text('GTSTC'), findsOneWidget);
-      expect(find.text('28.7'), findsOneWidget);
+      // En el muelle la segunda línea no se dibuja aunque venga (10.7, H2).
+      expect(find.text('28.7'), findsNothing);
       final tamano = tester.getSize(find.byType(BsCelda));
       expect(tamano.width, greaterThanOrEqualTo(56));
       expect(tamano.height, greaterThanOrEqualTo(48));
@@ -75,6 +76,121 @@ void main() {
       final tamano = tester.getSize(find.byType(BsCelda));
       expect(tamano.height, greaterThanOrEqualTo(48));
       expect(tamano.width, greaterThanOrEqualTo(52));
+    });
+
+    // H2 de la aceptación de Codex (10.7): la segunda línea de 10 sp.
+    for (final oscuro in [false, true]) {
+      final modo = oscuro ? 'oscuro' : 'claro';
+      testWidgets('en el muelle la segunda línea no se dibuja ni con zoom en $modo',
+          (tester) async {
+        for (final zoom in <double>[1.0, 2.0]) {
+          await tester.pumpWidget(_envuelve(
+            BsCelda(
+              codigo: 'GTSTC',
+              linea2: '28.7',
+              zoom: zoom,
+              etiqueta: 'Contenedor de prueba',
+              onTap: () {},
+            ),
+            oscuro: oscuro,
+          ));
+          expect(find.text('GTSTC'), findsOneWidget);
+          expect(find.text('28.7'), findsNothing, reason: 'zoom $zoom');
+        }
+      });
+
+      testWidgets('en la oficina se dibuja con zoom de 100 % o más en $modo',
+          (tester) async {
+        for (final (zoom, visible) in <(double, bool)>[
+          (1.0, true),
+          (1.5, true),
+          (0.99, false),
+          (0.75, false),
+        ]) {
+          await tester.pumpWidget(_envuelve(
+            BsCelda(
+              codigo: 'GTSTC',
+              linea2: '28.7',
+              zoom: zoom,
+              etiqueta: 'Contenedor de prueba',
+              onTap: () {},
+            ),
+            oscuro: oscuro,
+            muelle: false,
+          ));
+          expect(find.text('28.7'), visible ? findsOneWidget : findsNothing,
+              reason: 'zoom $zoom');
+          if (visible) {
+            expect(tester.widget<Text>(find.text('28.7')).style?.fontSize, 10);
+          }
+        }
+        // El zoom por omisión es 100 %.
+        await tester.pumpWidget(_envuelve(
+          BsCelda(codigo: 'GTSTC', linea2: '28.7', etiqueta: 'c', onTap: () {}),
+          oscuro: oscuro,
+          muelle: false,
+        ));
+        expect(find.text('28.7'), findsOneWidget);
+      });
+    }
+    testWidgets('la segunda línea no se dibuja con marca ni cuando no cabe',
+        (tester) async {
+      await tester.pumpWidget(_envuelve(
+        const BsCelda(
+          codigo: 'GTSTC',
+          linea2: '28.7',
+          marca: BsMarcaDeCelda.baja,
+          etiqueta: 'baja',
+        ),
+        muelle: false,
+      ));
+      expect(find.text('28.7'), findsNothing);
+      expect(find.text('Baja'), findsOneWidget);
+      // Con la letra a 1.45 cabe; a 2.0 no cabe y se oculta sin desbordar.
+      for (final (escala, visible) in <(double, bool)>[(1.45, true), (2.0, false)]) {
+        await tester.pumpWidget(_envuelve(
+          MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(escala)),
+            child: const BsCelda(
+              codigo: 'GTSTC',
+              linea2: '28.7',
+              etiqueta: 'Contenedor de prueba',
+            ),
+          ),
+          muelle: false,
+        ));
+        expect(tester.takeException(), isNull, reason: 'letra $escala');
+        expect(find.text('28.7'), visible ? findsOneWidget : findsNothing,
+            reason: 'letra $escala');
+        expect(find.text('GTSTC'), findsOneWidget);
+      }
+    });
+
+    testWidgets('con la letra a 2.0 ninguna marca desborda y el rótulo queda',
+        (tester) async {
+      for (final muelle in [true, false]) {
+        for (final marca in BsMarcaDeCelda.values) {
+          for (final resaltada in [false, true]) {
+            await tester.pumpWidget(_envuelve(
+              MediaQuery(
+                data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+                child: BsCelda(
+                  codigo: 'GTSTC',
+                  linea2: '28.7',
+                  marca: marca,
+                  resaltada: resaltada,
+                  insignia: BsInsigniaDeCelda.peligrosa,
+                  etiqueta: 'marca ${marca.name}',
+                ),
+              ),
+              muelle: muelle,
+            ));
+            expect(tester.takeException(), isNull,
+                reason: '${marca.name}, resaltada $resaltada, muelle $muelle');
+            expect(find.byType(Text), findsOneWidget);
+          }
+        }
+      }
     });
   });
 

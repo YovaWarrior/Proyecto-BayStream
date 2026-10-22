@@ -19,6 +19,13 @@ PreviewThemeData bsTemaDeVistaPrevia() => PreviewThemeData(
       materialDark: BayStreamTema.oscuro(muelle: true),
     );
 
+/// Los mismos temas con la densidad de la oficina (celda de 52 × 48, segunda
+/// línea con zoom de 100 % o más).
+PreviewThemeData bsTemaDeVistaPreviaOficina() => PreviewThemeData(
+      materialLight: BayStreamTema.claro(),
+      materialDark: BayStreamTema.oscuro(),
+    );
+
 /// Un lienzo con el papel del tema y relleno alrededor.
 Widget _lienzo(Widget hijo) => Builder(
       builder: (BuildContext context) => Material(
@@ -27,8 +34,10 @@ Widget _lienzo(Widget hijo) => Builder(
       ),
     );
 
-/// Las celdas del plano en la vista por destino, con insignias y marcas.
-@Preview(name: 'Celdas · claro', group: 'Diseño', theme: bsTemaDeVistaPrevia)
+/// Las celdas del plano en la vista por destino, con insignias y marcas, en
+/// el muelle: la segunda línea que reciben no se dibuja (10.7, H2), y las
+/// atenuadas conservan el código legible (10.7, H1).
+@Preview(name: 'Celdas · muelle, claro', group: 'Diseño', theme: bsTemaDeVistaPrevia)
 Widget vistaPreviaCeldas() => _lienzo(Builder(
       builder: (BuildContext context) {
         final semanticos = BsColoresSemanticos.de(context);
@@ -87,6 +96,23 @@ Widget vistaPreviaCeldas() => _lienzo(Builder(
               atenuada: true,
               categoria: semanticos.categorico('GTSTC'),
               etiqueta: 'MSCU 123457 3, fuera del filtro',
+              onTap: () {},
+            ),
+            BsCelda(
+              codigo: 'USHOU',
+              atenuada: true,
+              insignia: BsInsigniaDeCelda.peligrosa,
+              categoria: semanticos.categorico('USHOU'),
+              etiqueta: 'MSCU 123457 5, peligrosa, fuera del filtro',
+              onTap: () {},
+            ),
+            BsCelda(
+              codigo: 'GTSTC',
+              atenuada: true,
+              marca: BsMarcaDeCelda.hecho,
+              categoria: semanticos.categorico('GTSTC'),
+              etiqueta: 'MSCU 123457 6, hecho, fuera del filtro',
+              onTap: () {},
             ),
             BsCelda(
               codigo: 'GTSTC',
@@ -101,12 +127,54 @@ Widget vistaPreviaCeldas() => _lienzo(Builder(
 
 /// Las mismas celdas en el modo oscuro.
 @Preview(
-  name: 'Celdas · oscuro',
+  name: 'Celdas · muelle, oscuro',
   group: 'Diseño',
   theme: bsTemaDeVistaPrevia,
   brightness: Brightness.dark,
 )
 Widget vistaPreviaCeldasOscuro() => vistaPreviaCeldas();
+
+/// Las celdas en la oficina: la segunda línea (peso o tipo) se dibuja con
+/// zoom de 100 % o más, y desaparece por debajo (10.7, H2).
+@Preview(
+  name: 'Celdas · oficina, zoom 100 % y 75 %',
+  group: 'Diseño',
+  theme: bsTemaDeVistaPreviaOficina,
+)
+Widget vistaPreviaCeldasOficina() => _lienzo(Builder(
+      builder: (BuildContext context) {
+        final semanticos = BsColoresSemanticos.de(context);
+        return Wrap(
+          children: <Widget>[
+            for (final zoom in <double>[1.0, 1.5, 0.75])
+              BsCelda(
+                codigo: 'GTSTC',
+                linea2: '28.7',
+                zoom: zoom,
+                categoria: semanticos.categorico('GTSTC'),
+                etiqueta: 'MSCU 123456 7, 002-01-82, GTSTC, 28.7 t, '
+                    'zoom ${(zoom * 100).round()} %',
+                onTap: () {},
+              ),
+            BsCelda(
+              codigo: '45G1',
+              linea2: 'vacío',
+              categoria: semanticos.categorico('45G1'),
+              etiqueta: 'MSCU 123456 8, 002-03-82, 45G1, vacío',
+              onTap: () {},
+            ),
+            BsCelda(
+              codigo: 'GTSTC',
+              linea2: '28.7',
+              atenuada: true,
+              categoria: semanticos.categorico('GTSTC'),
+              etiqueta: 'MSCU 123457 3, fuera del filtro',
+              onTap: () {},
+            ),
+          ],
+        );
+      },
+    ));
 
 /// La silueta del buque como selector de bahías.
 @Preview(name: 'Tira de bahías', group: 'Diseño', theme: bsTemaDeVistaPrevia)

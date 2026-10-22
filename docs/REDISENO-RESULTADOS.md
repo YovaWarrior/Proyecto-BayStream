@@ -825,7 +825,7 @@ línea base (ninguno nuevo); los 161 avisos nuevos están todos en `lib/core/des
 
 | Regla | Hallazgos | Dónde | Qué es |
 |---|---|---|---|
-| PERF_HARDCODED_COLOR (aviso) | 160 | `bs_colores_semanticos.dart` | Los hexadecimales de los roles y de las 24 ranuras. Es, con `bs_paleta.dart` (32 literales más, que el script no marca), la **única fuente de color** del sistema: la regla del script existe para que no haya hexadecimales fuera del tema, y estos dos archivos son el tema. Fuera de ellos, `lib/core/design/` no tiene ninguno |
+| PERF_HARDCODED_COLOR (aviso) | 160: 128 en `bs_colores_semanticos.dart` y 32 en `bs_paleta.dart` (reparto corregido el 22-oct por la O1 de Codex; la primera versión de esta tabla los atribuía todos al primer archivo) | los dos archivos de tokens | Los hexadecimales de la paleta, de los roles y de las 24 ranuras. Son la **única fuente de color** del sistema: la regla del script existe para que no haya hexadecimales fuera del tema, y estos dos archivos son el tema. Fuera de ellos, `lib/core/design/` no tiene ninguno |
 | ANIM_ZERO_DURATION (aviso) | 1 | `bs_movimiento.dart:36` | `Duration.zero` cuando el sistema pide reducir el movimiento: es el interruptor de accesibilidad, no una animación de cero |
 
 La meta de 0.8 sigue en pie para la Fase 3: cero críticos y cero avisos en
@@ -951,6 +951,193 @@ fuentes Plex en `assets/fonts/plex/` con OFL y `provenance.json` (fontTools: cub
 `pubspec.lock` no. Suite 1126 (1063 + 63, ninguna omitida); `analyze` en cero en lo nuevo,
 y queda un aviso previo en `tool/t100_sintetico.dart:21` (`dart:convert` sin uso, de
 `f7e38a3`; no lo toqué). Auditoría de flutter-ui: los mismos 18 críticos y 19 informativos
-de la línea base; 161 avisos nuevos, 160 son los hexadecimales del archivo de tokens y 1
-el `Duration.zero` del movimiento reducido. Ninguna pantalla cambia y `lib/core/app.dart`
+de la línea base; 161 avisos nuevos, 160 son los hexadecimales de los dos archivos de
+tokens (128 y 32; reparto corregido el 22-oct) y 1 el `Duration.zero` del movimiento
+reducido. Ninguna pantalla cambia y `lib/core/app.dart`
 sigue en v3.0 hasta la primera pantalla de la Fase 3. Me detengo: Codex acepta la Fase 2.
+
+## Fase 2 · Corrección tras la aceptación de Codex (22-oct-2026)
+
+Responde a 10.7 de `SPRINT-4.md` y a `docs/rediseno/fase2/aceptacion-codex.md`
+(dictamen NO PASA sobre `8c591c8`, con H1, H2 y O1). Ninguna pantalla cambia.
+
+### 2c.1 Resultado en tres líneas
+
+- Los dos hallazgos están corregidos en `BsCelda`. **H1:** la celda atenuada conserva el
+  código legible: el relleno baja al 35 % compuesto sobre el papel, el código va en tinta
+  suave y el contorno en línea fuerte, en todos los estados, en claro y oscuro y en las
+  dos densidades; la etiqueta accesible se conserva. **H2:** la segunda línea de 10 sp
+  solo se dibuja en la oficina, con `zoom` de 100 % o más, y nunca en el muelle. Una
+  prueba nueva mide lo que se dibuja, compuesto con `Color.alphaBlend`: 75 estados × tres
+  fondos × dos temas × dos densidades, 900 casos, 4.5:1 al texto y 3:1 a iconos y contorno.
+- Esa prueba encontró **dos defectos más**, que también quedan corregidos: la línea fuerte
+  de la Fase 1 quedaba en 2.9:1 sobre el acero tenue de la bodega (token nuevo
+  `#6D809F` / `#6983A3`) y la insignia de carga especial no llegaba a 3:1 sobre los
+  rellenos intensos en oscuro (ahora toma el primer color que llega a 3:1 entre el
+  contorno de su rol, el texto de su rol y la tinta de la celda).
+- Las tablas de 10.6 están en el tema por omisión (15 puertos sin `XXVSL`, 13 tipos;
+  ranuras 15 a 23 para T-115), el aviso de T-100 está quitado y el reparto de la auditoría
+  corregido. Suite **1143** (1126 + 17, ninguna omitida), `analyze` **en cero absoluto**,
+  contraste 0 pares bajos, auditoría igual a la entrega. Me detengo: Codex vuelve a aceptar.
+
+### 2c.2 Lo hecho, punto por punto (10.7)
+
+1. **H1, la celda atenuada.** `BsRol.atenuado` cambia de firma: ya no pone alfa en los
+   tres colores. El relleno baja al 35 % **compuesto sobre el papel** y queda opaco, para
+   que el contraste no dependa de lo que haya detrás (con el relleno translúcido, el
+   naranja de «en movimiento» sobre la bodega caía a 4.33:1); el texto pasa a tinta suave
+   (`onSurfaceVariant`) y el contorno a línea fuerte (`outline`); el hueco conserva su
+   línea de separación. Vale para normal, atenuada, cancelada, de paso, reservada, en
+   movimiento, el resto de las marcas, las tres insignias, resaltada y hueco. La insignia
+   atenuada va en tinta suave, no en alfa. La etiqueta accesible y el botón no se tocan
+   (`matchesSemantics` lo comprueba). Sin `Opacity`.
+2. **La prueba que mide lo que se dibuja:** `test/t114_celda_contraste_test.dart`, cuatro
+   barridos (claro y oscuro × muelle y oficina) más la reproducción exacta de Codex en los
+   dos temas. Toma el `Container` de la celda y sus `RichText` (texto e iconos), compone
+   con `Color.alphaBlend` el relleno sobre el fondo, el texto y los iconos sobre el relleno
+   compuesto y el contorno sobre el relleno, y exige 4.5:1 al texto y 3:1 a iconos y
+   contorno, con `takeException()` nulo en cada caso. 75 estados sobre papel, cubierta
+   (hoja) y bodega (acero tenue): 225 por barrido, 900 en total. No usa
+   `textContrastGuideline`. Parte del `diagnostico_test.dart` de Codex (la composición
+   sobre `scaffoldBackgroundColor`) y lo generaliza. El hueco queda fuera de la exigencia
+   de 3:1 del contorno: su línea de 1 dp es un separador (`DESIGN.md`, 4.3), no un
+   contorno esencial, y no tiene texto.
+   - **Lo que encontró además, corregido:** (a) la línea fuerte `#7A8DA6` / `#5C7392` daba
+     2.87:1 y 2.77:1 sobre el acero tenue de la bodega, y 2.93 y 2.84 sobre la hoja alta;
+     el token pasa a `#6D809F` / `#6983A3` (3.8 y 4.7 sobre el papel, 3.4 sobre el acero
+     tenue, 3.5 sobre la hoja alta) en `bs_paleta.dart`, en los roles que lo usan como
+     contorno (cancelado, de paso, reservado, cubierta y bodega), en el script y en
+     `DESIGN.md` 4.1 y 5.1; (b) la insignia OOG (`#C9A0DE`) sobre el relleno ámbar oscuro
+     (`#6F5E2A`) daba 2.89:1; ahora `BsCelda` elige para la insignia el primer color que
+     llega a 3:1 sobre el relleno entre el contorno de su rol, el texto de su rol y la
+     tinta de la celda (tres luminancias por celda con carga especial; `DESIGN.md`, 5.1);
+     (c) el naranja atenuado translúcido sobre la bodega daba 4.33:1 con tinta suave: de
+     ahí que el relleno atenuado se componga sobre el papel en el tema (peor caso 4.98:1,
+     el índigo intenso en claro).
+3. **H2, la segunda línea.** `BsCelda` recibe `zoom` (1.0 es 100 %, por omisión). La
+   línea 2 se dibuja solo si no es muelle, `zoom >= 1.0`, no hay marca y las dos líneas
+   caben en el alto interior con la escala de letra del sistema (tamaño × interlínea:
+   a 1.45 cabe, a 2.0 no). Con marca, el icono de 14 dp se dibuja si cabe junto al rótulo;
+   a 2.0 con el contorno resaltado de 3 dp no cabe y se omite, y el rótulo queda. Así nada
+   desborda a 2.0: lo prueba un barrido con las ocho marcas × resaltada × dos densidades.
+   La vista previa nueva «Celdas · oficina, zoom 100 % y 75 %» muestra la regla; la del
+   muelle recibe `linea2` y no la dibuja.
+4. **Las tablas de 10.6, en el tema.** `bs_categorico.dart` trae `tablaFijaDePuertos`
+   (15, ranuras 0 a 14), `tablaFijaDeTipos` (13, 0 a 12), `primeraRanuraLibreDePuertos`
+   (15) y `tablaFijaConfirmada` (las dos juntas, 28 códigos). `BayStreamTema.claro`,
+   `.oscuro` y las fábricas de `BsColoresSemanticos` la usan por omisión; `tablaFija:
+   const {}` la desactiva. Pruebas: orden y ranuras, `XXVSL` fuera y por cálculo, ningún
+   puerto en 15 a 23, el tema la lleva, y `tool/rediseno_contraste.py` lleva las mismas
+   listas (la prueba lee el script). `DESIGN.md` 5.3 reescrito: `XXVSL` fuera, ranuras 15 a
+   23 de la oficina, T-115.
+5. **El aviso de T-100:** borrada la línea `import 'dart:convert';` de
+   `tool/t100_sintetico.dart` (autorizado en 10.5). `flutter analyze`: «No issues found».
+6. **El informe:** la tabla de 2.4 y el mensaje a Yov de la Fase 2 dicen ahora 128 en
+   `bs_colores_semanticos.dart`, 32 en `bs_paleta.dart` y 1 en `bs_movimiento.dart`.
+
+### 2c.3 Validaciones ejecutadas
+
+- `flutter test --no-pub` con los cinco archivos `test/t114_*` → `+80: All tests passed!`
+  (63 + 17 nuevas: 6 de contraste compuesto, 6 de la segunda línea y la letra a 2.0, 4 de
+  las tablas, 1 de la vista previa de oficina).
+- `flutter test --no-pub` completa → `+1143: All tests passed!` (1 min 53 s), 0 fallos,
+  0 omitidas. Piso: 1126 → **1143**.
+- `flutter analyze` → **«No issues found»**: cero absoluto, sin `// ignore:`.
+- `python tool/rediseno_contraste.py` → «Pares que no cumplen: 0». `contraste.md` (197
+  líneas) trae ahora la línea fuerte sobre papel, hoja y acero tenue, las tablas
+  confirmadas con la nota de las ranuras libres y la sección «Celda atenuada» (peor texto
+  4.98:1 en claro y 6.39:1 en oscuro; borde 3.76 y 4.65).
+- Auditoría de `flutter-ui` (`docs/rediseno/fase2/flutter-ui-audit.txt`): 155 archivos,
+  **18 críticos, 235 avisos y 19 informativos**, iguales a la entrega; los 161 avisos
+  nuevos siguen siendo 128, 32 y 1; `bs_celda.dart`, `bs_categorico.dart` y `bs_tema.dart`
+  sin hallazgos.
+- La prueba nueva falló tres veces antes de quedar en verde y cada fallo fue un defecto
+  real (2c.2, punto 2). `analyze` señaló en lo nuevo un `SemanticsFlag` sin importar (se
+  cambió por `matchesSemantics`) y una concatenación de literales; corregidos.
+- No hubo compilaciones ni arranques; no se usaron `flutter-mcp` ni `maestro`.
+
+### 2c.4 Archivos de esta entrega
+
+- Modificados: `DESIGN.md`; `lib/core/design/bs_categorico.dart`,
+  `bs_colores_semanticos.dart`, `bs_paleta.dart`, `bs_tema.dart`,
+  `componentes/bs_celda.dart`, `vistas_previas.dart`; `test/t114_accesibilidad_test.dart`,
+  `t114_componentes_test.dart`, `t114_fundacion_test.dart`; `tool/rediseno_contraste.py`;
+  `tool/t100_sintetico.dart` (una línea menos); `docs/rediseno/fase2/contraste.md`,
+  `docs/rediseno/fase2/flutter-ui-audit.txt`; `docs/REDISENO-RESULTADOS.md` (2.4, el
+  mensaje a Yov de la Fase 2 y esta sección).
+- Nuevo: `test/t114_celda_contraste_test.dart`.
+- Sin cambios: las pantallas, `lib/core/app.dart`, `lib/main.dart`, `domain/`, `data/`,
+  `pubspec.yaml`, `pubspec.lock` y los archivos congelados de H5.
+
+### 2c.5 Lo que no se pudo y lo que queda
+
+- El código de cinco letras con la letra del sistema a 2.0 (24 sp en condensada) no
+  cabe en 52 ni en 56 dp y se corta con elipsis. Es anterior a esta corrección y 10.7 no
+  lo pide; queda escrito en `DESIGN.md`, 12, para la entrega del plano (Fase 3), donde la
+  rejilla decide el tamaño de la celda con el zoom y se comprueba con las capturas a
+  1.45 y 2.0.
+- El aviso de `CupertinoIcons` en la compilación Web que vio Codex: no se compiló en esta
+  corrección (cuenta en el semáforo); se revisa en la Fase 3, como dice 10.7.
+- Las 9 ranuras de puertos de la oficina: T-115, fuera del rediseño.
+
+### 2c.6 Horas
+
+De las 11:05 (aprox.) a las 11:40 del 22-oct-2026: ≈ 0.6 h de reloj, sin cronómetro (la
+hora de inicio es la del mensaje de Yov con el dictamen).
+
+### Git para Carlos (Fase 2, corrección)
+
+```
+git add -- DESIGN.md
+git add -- lib/core/design/bs_categorico.dart
+git add -- lib/core/design/bs_colores_semanticos.dart
+git add -- lib/core/design/bs_paleta.dart
+git add -- lib/core/design/bs_tema.dart
+git add -- lib/core/design/componentes/bs_celda.dart
+git add -- lib/core/design/vistas_previas.dart
+git add -- test/t114_accesibilidad_test.dart
+git add -- test/t114_celda_contraste_test.dart
+git add -- test/t114_componentes_test.dart
+git add -- test/t114_fundacion_test.dart
+git add -- tool/rediseno_contraste.py
+git add -- tool/t100_sintetico.dart
+git add -- docs/rediseno/fase2/contraste.md
+git add -- docs/rediseno/fase2/flutter-ui-audit.txt
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: rediseno, fase 2, correccion de la celda atenuada y la segunda linea, tablas fijas en el tema y analyze en cero"
+git push
+```
+
+### Tres líneas
+
+- H1 y H2 corregidos en `BsCelda`, con una prueba que compone lo que se dibuja (900 casos)
+  y que encontró y corrigió dos defectos más: la línea fuerte sobre la bodega y la
+  insignia sobre los rellenos oscuros.
+- Las tablas de 10.6 en el tema por omisión, el `import` sin uso de T-100 borrado y el
+  reparto de la auditoría corregido.
+- Suite 1143 (1126 + 17), `analyze` en cero absoluto, contraste 0 pares bajos, auditoría
+  igual a la entrega; ninguna pantalla cambia.
+
+### Mensaje para Yov
+
+Yov: corrección de la Fase 2 entregada (10.7). H1: `BsRol.atenuado` ya no pone alfa en
+el texto: el relleno baja al 35 % compuesto sobre el papel (opaco), el código va en tinta
+suave y el contorno en línea fuerte, en todos los estados, claro y oscuro, dos
+densidades; la etiqueta accesible se conserva. La prueba nueva
+`test/t114_celda_contraste_test.dart` mide lo que se dibuja con `Color.alphaBlend` (75
+estados × papel, cubierta y bodega × dos temas × dos densidades, 900 casos; 4.5:1 texto,
+3:1 iconos y contorno; sin `textContrastGuideline`) y encontró dos defectos más, ya
+corregidos: la línea fuerte de la Fase 1 quedaba en 2.9:1 sobre el acero tenue de la
+bodega (token nuevo `#6D809F` / `#6983A3`, en paleta, roles, script y `DESIGN.md`) y la
+insignia OOG daba 2.9:1 sobre el ámbar oscuro (la insignia elige el primer color que
+llega a 3:1 entre el contorno de su rol, el texto de su rol y la tinta de la celda). H2:
+`BsCelda.zoom`; la línea 2 solo en la oficina con zoom ≥ 1.0, sin marca y si cabe con la
+escala de letra (a 2.0 se oculta sin desbordar); en el muelle nunca; vista previa y
+pruebas ajustadas. Tablas de 10.6 en `tablaFijaConfirmada`, por omisión del tema
+(`XXVSL` fuera; ranuras 15 a 23 para T-115; `DESIGN.md` 5.3). `import 'dart:convert'` de
+T-100 borrado: `analyze` «No issues found». Informe 2.4: 128 + 32 + 1. Suite 1143
+(1126 + 17, ninguna omitida), contraste 0 pares bajos (el script trae ahora la celda
+atenuada y la línea fuerte sobre hoja y acero tenue), auditoría 18/235/19 como en la
+entrega. Ninguna pantalla cambia; `pubspec` no cambia. Queda anotado para la Fase 3
+(`DESIGN.md`, 12) que el código de cinco letras se corta con elipsis a escala 2.0 en
+52/56 dp. Me detengo: Codex vuelve a aceptar.

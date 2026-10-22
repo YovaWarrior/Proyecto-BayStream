@@ -7,9 +7,11 @@ T-114. Este archivo manda sobre el código de `lib/features/vessel/presentation/
 estar escrita aquí, y lo que aquí cambia se cambia antes en este archivo.
 
 Estado: la Fase 2 (fundación) implementa las secciones 4, 5 y 6 en `lib/core/design/`
-(sección 13). La tabla fija de la paleta categórica (5.3) espera la confirmación de
-Carlos antes de entrar al código. La evidencia de contraste está en
-`docs/rediseno/fase2/contraste.md`, generada por `tool/rediseno_contraste.py`.
+(sección 12), con la corrección de 10.7: la celda atenuada legible en todos los estados
+y la segunda línea solo en la oficina. Las tablas fijas de 5.3 están confirmadas (10.6)
+y en el código. La evidencia de contraste está en `docs/rediseno/fase2/contraste.md`,
+generada por `tool/rediseno_contraste.py`, y la del contraste compuesto de la celda en
+`test/t114_celda_contraste_test.dart`.
 Material 3 sigue siendo la base: el sistema son tokens, un `ColorScheme` ajustado,
 tres `ThemeExtension` y componentes propios, no otra biblioteca.
 
@@ -46,7 +48,7 @@ alguien que ha leído planos toda la vida reconozca el suyo en la pantalla, y qu
   oscura por defecto (al sol lee mejor el papel claro; el oscuro existe, pero no manda);
   los rótulos en mayúsculas sostenidas.
 
-## 3. Lo decidido (10.2 y 10.4 de `SPRINT-4.md`)
+## 3. Lo decidido (10.2, 10.4, 10.6 y 10.7 de `SPRINT-4.md`)
 
 1. **Ver primero, confirmar después:** abrir la app, «Seleccionar archivo» y elegirlo son
    los tres pasos; el plano abre con el perfil propuesto y un aviso visible con la escala
@@ -71,6 +73,17 @@ alguien que ha leído planos toda la vida reconozca el suyo en la pantalla, y qu
 9. En los documentos, nombres sintéticos de buque (BUQUE MANUAL, BUQUE PRUEBA, T99
    SINTÉTICO), nunca el del caso de campo.
 10. El conductor de T-99 y los instrumentos de T-98 se actualizan antes de medir.
+11. **Las tablas fijas, confirmadas** (10.6): 15 puertos en las ranuras 0 a 14 y 13 tipos
+    de vacío en las 0 a 12; `XXVSL` sale, porque no es un UN/LOCODE. Las ranuras 15 a 23
+    de puertos las asigna la oficina en T-115, fuera del rediseño (sección 5.3).
+12. **Atenuar sin perder la lectura** (10.7): la celda fuera del filtro baja el relleno al
+    35 %, compuesto sobre el papel para que no dependa de lo que haya detrás, y pone el
+    código en tinta suave y el contorno en línea fuerte, que cumplen 4.5:1
+    y 3:1 sobre el color ya compuesto, en todos los estados, en claro y en oscuro y en las
+    dos densidades. Nunca alfa en el texto, y la etiqueta accesible no se toca para que
+    pase una prueba (sección 5.1).
+13. **La segunda línea de la celda, solo en la oficina** (10.7): con zoom de 100 % o más
+    y un parámetro de zoom explícito; en el muelle no se dibuja aunque venga (sección 4.2).
 
 ---
 
@@ -100,8 +113,10 @@ mismo. Es la única fuente de hexadecimales de la capa de presentación
 | Grúa | Lo que se mueve o espera decisión (`tertiary`): texto / relleno | `#C2410C` / `#FF7A1A` | `#FF9A4D` / `#FF7A1A` | El contenedor en movimiento del ícono |
 
 Derivados: tinta suave `#4A5B73` / `#A9B8CC` (texto secundario); línea `#C9D3E0` /
-`#2E4260` (separadores); línea fuerte `#7A8DA6` / `#5C7392` (contornos esenciales,
-3.2:1 y 3.7:1 sobre el papel); marca tenue `#DCE7F8` / `#1E3A66`; acero tenue `#E3EDFB` /
+`#2E4260` (separadores); línea fuerte `#6D809F` / `#6983A3` (contornos esenciales:
+3.8:1 y 4.7:1 sobre el papel y 3.4:1 sobre el acero tenue de la bodega; la prueba
+compuesta de la celda encontró que los valores de la Fase 1, `#7A8DA6` / `#5C7392`,
+quedaban en 2.9:1 y 2.8:1 sobre la bodega); marca tenue `#DCE7F8` / `#1E3A66`; acero tenue `#E3EDFB` /
 `#1C2F4D`. **Regla fija:** sobre el relleno naranja y sobre el acero, el texto es siempre
 tinta oscura (`#10243F` en claro, `#0B1626` en oscuro), porque el texto claro no llega
 a 4.5:1 en ninguno de los dos; y el naranja y el acero nunca van como borde fino sobre
@@ -132,11 +147,12 @@ Escala: base 14, razón 1.2, redondeada a enteros (`BsEscala`, en
 | Rótulo mínimo | 11 / 500 | Sobrelíneas | `labelSmall` |
 | Dato mono | 14 / 400 Mono, tabular | Número de contenedor, posición en listas y detalle | `BsTextos.datoMono` |
 | Celda | 12 / 600 Condensed, tabular | El código de cinco letras en la celda | `BsTextos.celda` |
-| Celda, línea 2 | 10 / 500 Condensed | Peso o tipo en la celda | `BsTextos.celdaLinea2` |
+| Celda, línea 2 | 10 / 500 Condensed | Peso o tipo en la celda, solo en la oficina con zoom ≥ 100 % y si cabe | `BsTextos.celdaLinea2` |
 
-Nada por debajo de 10; en el muelle, nada por debajo de 11 salvo la segunda línea de la
-celda, que solo se muestra en la oficina y con zoom. Las cifras van siempre tabulares;
-Plex ya trae los dígitos de ancho fijo de serie.
+Nada por debajo de 10; en el muelle, nada por debajo de 11: la segunda línea de la celda
+(10) se dibuja solo en la oficina, con zoom de 100 % o más (`BsCelda.zoom`) y si cabe con
+la escala de letra del sistema; en el muelle no se dibuja aunque la celda la reciba
+(10.7). Las cifras van siempre tabulares; Plex ya trae los dígitos de ancho fijo de serie.
 
 ### 4.3 Tokens (`BsMedidas`, en `bs_medidas.dart`)
 
@@ -158,7 +174,7 @@ las tres pautas de accesibilidad de Flutter.
 
 | Componente | Archivo | Qué es |
 |---|---|---|
-| `BsCelda` | `bs_celda.dart` | La celda del plano: relleno por categoría, código de cinco letras en condensada, insignia de carga especial siempre, marca de operación con icono y rótulo, resaltada, atenuada (alfa, no `Opacity`), reservada (solo contorno), hueco |
+| `BsCelda` | `bs_celda.dart` | La celda del plano: relleno por categoría, código de cinco letras en condensada, insignia de carga especial siempre, marca de operación con icono y rótulo, resaltada, atenuada (relleno al 35 % sin `Opacity`, código en tinta suave y contorno en línea fuerte: 5.1), reservada (solo contorno), hueco; la segunda línea solo en la oficina con `zoom` ≥ 1.0; con la letra a 2.0 nada desborda, lo que no cabe no se dibuja |
 | `BsTiraDeBahias` | `bs_tira_de_bahias.dart` | La silueta del buque como selector: una casilla de 48 × 64 por bahía, barra por ocupación o peso, casco pintado detrás |
 | `BsCartela` | `bs_cartela.dart` | El cajetín: título, cifras tabulares, leyenda en `Wrap` (nunca scroll horizontal), nota |
 | `BsBanda` | `bs_banda.dart` | El aviso que se queda: información, aviso, error o confirmación, con icono, texto que crece y acción con el mismo nombre que lo que hace |
@@ -189,19 +205,32 @@ color nunca va solo**: cada rol lleva su icono o su rótulo.
 |---|---|---|---|
 | Pendiente | flecha abajo o arriba, «Baja» / «Sube» | `#DCE7F8` / `#0D47A1` | `#1E3A66` / `#8FB4F2` |
 | Hecho | palomita, «Hecho» | `#D3EFDB` / `#1E6B43` | `#1D4A33` / `#6FCF97` |
-| Cancelado | bloqueo, «Cancelado», texto en tinta suave | `#E4E8EE` / `#7A8DA6` | `#2A3850` / `#8A9DB8` |
+| Cancelado | bloqueo, «Cancelado», texto en tinta suave | `#E4E8EE` / `#6D809F` | `#2A3850` / `#8A9DB8` |
 | Revisar (conflicto, aviso) | aviso, «Revisar» | `#FBE7B5` / `#8A5A00` | `#5C4300` / `#E0B23F` |
 | Error | error y mensaje con causa y acción | `#F9D9D6` / `#B3261E` | `#601410` / `#F2B8B5` |
 | Peligrosa (IMO) | rombo y la clase | `#F9D9D6` / `#B3261E` | `#601410` / `#F2B8B5` |
 | Refrigerado | copo y la temperatura | `#C4E3EE` / `#1F6F8B` | `#1E4A5C` / `#7FC6DD` |
 | OOG | flechas hacia fuera | `#E3C4EE` / `#6B2E8A` | `#4A2A5E` / `#C9A0DE` |
-| De paso | sin relleno, tinta suave, «Paso» | papel / `#7A8DA6` | papel / `#5C7392` |
-| Reservado | solo contorno | hoja / `#7A8DA6` | hoja / `#8A9DB8` |
+| De paso | sin relleno, tinta suave, «Paso» | papel / `#6D809F` | papel / `#6983A3` |
+| Reservado | solo contorno | hoja / `#6D809F` | hoja / `#8A9DB8` |
 | En movimiento, sin confirmar | el naranja de la grúa con icono | `#FF7A1A` / `#C2410C` | `#FF7A1A` / `#FF9A4D` |
 | Cubierta y bodega | rótulo con icono; bodega en acero tenue | hoja / línea fuerte; acero tenue / línea fuerte | ídem |
+| Atenuada (fuera del filtro de «Resaltar») | el código, el rótulo y la insignia se conservan | relleno del rol al 35 % compuesto sobre el papel, opaco (peor caso, el naranja: 4.98:1); texto `#4A5B73`; contorno `#6D809F` | relleno al 35 % sobre el papel; texto `#A9B8CC`; contorno `#6983A3` |
 
 La carga especial (peligrosa, refrigerado, OOG) se señala **siempre** con una insignia
-de icono en la esquina de la celda, en cualquiera de las tres vistas de color.
+de icono en la esquina de la celda, en cualquiera de las tres vistas de color, en el
+color de su rol cuando llega a 3:1 sobre el relleno; sobre los rellenos donde no llega
+(los intensos en oscuro, el naranja) toma el texto del rol o la tinta de la celda; y
+atenuada pasa a tinta suave, no a alfa.
+
+**Lo que se dibuja se verifica compuesto** (10.7, H1): para cada estado de la celda,
+tema, densidad y fondo (papel y bodega), `test/t114_celda_contraste_test.dart` compone con
+`Color.alphaBlend` el relleno sobre el fondo, el texto y los iconos sobre el relleno
+compuesto y el contorno sobre el relleno, y exige 4.5:1 al texto y 3:1 a iconos y
+contorno. La pauta `textContrastGuideline` de Flutter no mide la celda: busca el texto
+por su etiqueta accesible, y la celda expone una etiqueta descriptiva distinta del
+código. El hueco lleva la línea de separación de 1 dp (4.3), que no es un contorno
+esencial, y queda fuera de la exigencia de 3:1.
 
 ### 5.2 La paleta categórica: 24 ranuras
 
@@ -213,24 +242,29 @@ más oscura (21 % en vez de 30 %), porque una sombra más clara deja el texto cl
 debajo de 4.5:1 en los verdes. Los 24 hexadecimales están en `contraste.md` y en
 `bs_colores_semanticos.dart`; el peor contraste de texto es 5.1:1 y el peor de borde 4.0:1.
 
-### 5.3 Las tablas fijas propuestas (pendientes de Carlos)
+### 5.3 Las tablas fijas (confirmadas en 10.6)
 
-Solo códigos, sin cuentas ni viajes, sacados de los archivos del corpus anonimizado.
-Las dos tablas son independientes porque sus vistas nunca coinciden en pantalla.
-Ranura k → tono k mod 12, suave si k < 12, intensa después.
+Solo códigos, sin cuentas ni viajes, sacados de los archivos del corpus anonimizado y
+confirmados por Carlos. Las dos tablas son independientes porque sus vistas nunca
+coinciden en pantalla. Ranura k → tono k mod 12, suave si k < 12, intensa después.
 
-Puertos de destino: JMKIN 0 · USHOU 1 · GTSTC 2 · JMKCT 3 · PAMIT 4 · COSPC 5 · JMKWL 6 ·
-PACCT 7 · GTPBR 8 · USPEF 9 · PAONX 10 · VEPBL 11 · VELAG 12 · COCTG 13 · USMSY 14 · XXVSL 15.
+Puertos de destino (15): JMKIN 0 · USHOU 1 · GTSTC 2 · JMKCT 3 · PAMIT 4 · COSPC 5 ·
+JMKWL 6 · PACCT 7 · GTPBR 8 · USPEF 9 · PAONX 10 · VEPBL 11 · VELAG 12 · COCTG 13 ·
+USMSY 14. `XXVSL` salió: no es un UN/LOCODE. **Las ranuras 15 a 23 de puertos quedan
+libres y las asigna la oficina** (T-115, fuera del rediseño: la asignación tiene que
+viajar al muelle por Firestore y su copia local); los 15 fijos no se reasignan.
 
-Tipos ISO de vacío: 45G1 0 · 22G1 1 · 45G0 2 · L5G1 3 · 45R1 4 · 42G1 5 · 42U1 6 · 42P3 7 ·
-L5G0 8 · 22K2 9 · 22U1 10 · 22T1 11 · 45R8 12.
+Tipos ISO de vacío (13): 45G1 0 · 22G1 1 · 45G0 2 · L5G1 3 · 45R1 4 · 42G1 5 · 42U1 6 ·
+42P3 7 · L5G0 8 · 22K2 9 · 22U1 10 · 22T1 11 · 45R8 12.
 
-Lo que no esté en la tabla usa `ranuraCategorica`: FNV-1a de 32 bits del código en
-mayúsculas, módulo 24 (MXVER → 21, PABLB → 18, 22P1 → 10, los mismos valores en Dart y en
-el script). Si dos códigos de un viaje chocan, el código escrito en la celda y la
-leyenda los separan. Hasta que Carlos confirme, el código lleva la tabla vacía y todo
-sale por cálculo; la tabla entra como un `Map<String, int>` en `BayStreamTema.claro` y
-`.oscuro`.
+Están en `bs_categorico.dart` (`tablaFijaDePuertos`, `tablaFijaDeTipos` y las dos juntas
+en `tablaFijaConfirmada`, que `BayStreamTema.claro` y `.oscuro` usan por omisión), con su
+prueba, y `tool/rediseno_contraste.py` lleva las mismas listas. Lo que no esté en la tabla
+ni en las ranuras de la oficina usa `ranuraCategorica`: FNV-1a de 32 bits del código en
+mayúsculas, módulo 24 (MXVER → 21, PABLB → 18, 22P1 → 10, los mismos valores en Dart y
+en el script). Si dos códigos de un viaje chocan, el código escrito en la celda y la
+leyenda los separan. T-115 junta la tabla fija con las asignaciones de la oficina en un
+provider; la Fase 3 no cambia por eso.
 
 ### 5.4 Las vistas y la vista por omisión
 
@@ -243,7 +277,8 @@ sale por cálculo; la tabla entra como un `Map<String, int>` en `BayStreamTema.c
 El cambio de modo propone la vista; el planificador puede cambiarla y la app recuerda
 la última elección por modo en el dispositivo. **Resaltar** (lleno, vacío, IMO,
 refrigerado, OOG, de paso) son chips debajo de la leyenda que atenúan lo que no
-coincide (alfa en el color) sin cambiar el relleno.
+coincide (relleno al 35 %, código en tinta suave y contorno en línea fuerte: 5.1) sin
+cambiar el tono.
 
 ### 5.5 Estadísticas: monocromo
 
@@ -641,8 +676,16 @@ Plex en `assets/fonts/plex/`; las pruebas `test/t114_*`. **Ninguna pantalla camb
 todavía:** `lib/core/app.dart` sigue con el tema de v3.0 hasta la primera entrega de la
 Fase 3, para que las capturas del antes y el después se comparen pantalla a pantalla.
 
-**Pendiente de Carlos:** confirmar o ampliar las tablas de 5.3; entonces entran como
-`tablaFija` en `BayStreamTema`.
+**Corrección de la Fase 2 (10.7, 22-oct):** la celda atenuada legible en todos los
+estados (5.1), la prueba del contraste compuesto (`test/t114_celda_contraste_test.dart`),
+la segunda línea solo en la oficina con `zoom` (4.2), las tablas fijas de 10.6 en el tema
+(5.3) y el aviso de `tool/t100_sintetico.dart` quitado: `analyze` en cero absoluto.
+
+**Queda para la Fase 3, con el plano:** el código de cinco letras no cabe en 52 ni en
+56 dp con la letra del sistema a 2.0 (24 sp en condensada) y hoy se corta con elipsis;
+lo resuelve la rejilla con el zoom y el tamaño de la celda, y se comprueba con las
+capturas a 1.45 y 2.0 de esa entrega. **Fuera del rediseño:** las 9 ranuras de puertos
+que asigna la oficina (T-115).
 
 **Fase 3, en este orden:** inicio (con el flujo de la sección 7 y el tema aplicado),
 plano por bahía con los modos de carga y descarga, avance en la oficina, estadísticas;

@@ -14,7 +14,9 @@
 | sobre grua / acero | texto oscuro sobre relleno de acero (zona de bodega) | #10243F / #6E9DE6 | 5.67 | 4.5 | sí |
 | grua / papel | texto o icono naranja sobre el fondo | #C2410C / #F5F8FC | 4.86 | 4.5 | sí |
 | sobre grua / grua relleno | texto sobre relleno naranja (marca de celda) | #10243F / #FF7A1A | 5.98 | 4.5 | sí |
-| linea fuerte / papel | borde esencial (celda) sobre el fondo | #7A8DA6 / #F5F8FC | 3.19 | 3.0 | sí |
+| linea fuerte / papel | borde esencial (celda) sobre el fondo | #6D809F / #F5F8FC | 3.76 | 3.0 | sí |
+| linea fuerte / hoja | borde esencial sobre la hoja (cubierta) | #6D809F / #FFFFFF | 4.01 | 3.0 | sí |
+| linea fuerte / acero tenue | borde esencial sobre el acero tenue (bodega) | #6D809F / #E3EDFB | 3.39 | 3.0 | sí |
 | grua / papel | borde naranja (contorno de celda en movimiento) | #C2410C / #F5F8FC | 4.86 | 3.0 | sí |
 | marca / papel | borde o icono de marca sobre el fondo | #0D47A1 / #F5F8FC | 8.10 | 3.0 | sí |
 
@@ -33,7 +35,9 @@
 | sobre grua / acero | texto oscuro sobre relleno de acero (zona de bodega) | #0B1626 / #6E9DE6 | 6.59 | 4.5 | sí |
 | grua / papel | texto o icono naranja sobre el fondo | #FF9A4D / #0B1626 | 8.63 | 4.5 | sí |
 | sobre grua / grua relleno | texto sobre relleno naranja (marca de celda) | #0B1626 / #FF7A1A | 6.96 | 4.5 | sí |
-| linea fuerte / papel | borde esencial (celda) sobre el fondo | #5C7392 / #0B1626 | 3.74 | 3.0 | sí |
+| linea fuerte / papel | borde esencial (celda) sobre el fondo | #6983A3 / #0B1626 | 4.65 | 3.0 | sí |
+| linea fuerte / hoja | borde esencial sobre la hoja (cubierta) | #6983A3 / #13223A | 4.08 | 3.0 | sí |
+| linea fuerte / acero tenue | borde esencial sobre el acero tenue (bodega) | #6983A3 / #1C2F4D | 3.44 | 3.0 | sí |
 | grua / papel | borde naranja (contorno de celda en movimiento) | #FF9A4D / #0B1626 | 8.63 | 3.0 | sí |
 | marca / papel | borde o icono de marca sobre el fondo | #8FB4F2 / #0B1626 | 8.62 | 3.0 | sí |
 
@@ -53,6 +57,8 @@
 | grua / papel | texto o icono naranja sobre el fondo | #B83D00 / #FFFFFF | 5.67 | 4.5 | sí |
 | sobre grua / grua relleno | texto sobre relleno naranja (marca de celda) | #0A1A33 / #FF7A1A | 6.66 | 4.5 | sí |
 | linea fuerte / papel | borde esencial (celda) sobre el fondo | #5F7694 / #FFFFFF | 4.66 | 3.0 | sí |
+| linea fuerte / hoja | borde esencial sobre la hoja (cubierta) | #5F7694 / #EDF2FA | 4.15 | 3.0 | sí |
+| linea fuerte / acero tenue | borde esencial sobre el acero tenue (bodega) | #5F7694 / #DCE6F5 | 3.70 | 3.0 | sí |
 | grua / papel | borde naranja (contorno de celda en movimiento) | #B83D00 / #FFFFFF | 5.67 | 3.0 | sí |
 | marca / papel | borde o icono de marca sobre el fondo | #0D47A1 / #FFFFFF | 8.63 | 3.0 | sí |
 
@@ -72,6 +78,8 @@
 | grua / papel | texto o icono naranja sobre el fondo | #FFA366 / #061120 | 9.63 | 4.5 | sí |
 | sobre grua / grua relleno | texto sobre relleno naranja (marca de celda) | #061120 / #FF7A1A | 7.26 | 4.5 | sí |
 | linea fuerte / papel | borde esencial (celda) sobre el fondo | #6B84A8 / #061120 | 4.95 | 3.0 | sí |
+| linea fuerte / hoja | borde esencial sobre la hoja (cubierta) | #6B84A8 / #0E1B30 | 4.51 | 3.0 | sí |
+| linea fuerte / acero tenue | borde esencial sobre el acero tenue (bodega) | #6B84A8 / #162844 | 3.86 | 3.0 | sí |
 | grua / papel | borde naranja (contorno de celda en movimiento) | #FFA366 / #061120 | 9.63 | 3.0 | sí |
 | marca / papel | borde o icono de marca sobre el fondo | #7FAAF0 / #061120 | 8.04 | 3.0 | sí |
 
@@ -104,7 +112,7 @@
 | 22 | magenta intensa (315°) | #DE9CCD / #6A1B56 | 7.24 | 10.35 | #4E1D42 / #E3A0D3 | 12.26 | 8.85 |
 | 23 | rosa intensa (345°) | #DE9CAC / #6A1B2E | 7.03 | 10.90 | #4E1D2A / #E3A0B1 | 12.62 | 8.58 |
 
-### Tabla fija propuesta: puertos de destino (solo códigos; Carlos confirma)
+### Tabla fija confirmada (10.6): puertos de destino, ranuras 0 a 14
 
 | Código | Ranura | Tono |
 |---|---:|---|
@@ -123,9 +131,10 @@
 | VELAG | 12 | arcilla intensa |
 | COCTG | 13 | ámbar intensa |
 | USMSY | 14 | oliva intensa |
-| XXVSL | 15 | hierba intensa |
 
-### Tabla fija propuesta: tipos ISO de vacío (solo códigos; Carlos confirma)
+Ranuras 15 a 23: libres, las asigna la oficina (T-115).
+
+### Tabla fija confirmada (10.6): tipos ISO de vacío, ranuras 0 a 12
 
 | Código | Ranura | Tono |
 |---|---:|---|
@@ -153,26 +162,33 @@
 
 | Rol | Modo | Relleno | Texto | Contorno | Texto sobre relleno | Contorno sobre papel (peor caso) | Cumple |
 |---|---|---|---|---|---:|---:|---|
-| pendiente (por hacer) | claro | #DCE7F8 | #10243F | #0D47A1 | 12.50 | 8.10 | sí |
-| pendiente (por hacer) | oscuro | #1E3A66 | #E6EEF8 | #8FB4F2 | 9.69 | 8.62 | sí |
-| hecho | claro | #D3EFDB | #10243F | #1E6B43 | 12.73 | 6.09 | sí |
-| hecho | oscuro | #1D4A33 | #E6EEF8 | #6FCF97 | 8.63 | 9.55 | sí |
-| cancelado | claro | #E4E8EE | #4A5B73 | #7A8DA6 | 5.63 | 3.19 | sí |
-| cancelado | oscuro | #2A3850 | #A9B8CC | #8A9DB8 | 5.85 | 6.56 | sí |
-| revisar (conflicto, aviso) | claro | #FBE7B5 | #10243F | #8A5A00 | 12.78 | 5.56 | sí |
-| revisar (conflicto, aviso) | oscuro | #5C4300 | #F2F6FB | #E0B23F | 8.57 | 9.17 | sí |
-| error | claro | #F9D9D6 | #10243F | #B3261E | 11.83 | 6.14 | sí |
-| error | oscuro | #601410 | #F2F6FB | #F2B8B5 | 12.06 | 10.63 | sí |
-| peligrosa (IMO) | claro | #F9D9D6 | #10243F | #B3261E | 11.83 | 6.14 | sí |
-| peligrosa (IMO) | oscuro | #601410 | #F2F6FB | #F2B8B5 | 12.06 | 10.63 | sí |
-| refrigerado | claro | #C4E3EE | #10243F | #1F6F8B | 11.57 | 5.32 | sí |
-| refrigerado | oscuro | #1E4A5C | #F2F6FB | #7FC6DD | 8.84 | 9.53 | sí |
-| OOG | claro | #E3C4EE | #10243F | #6B2E8A | 9.95 | 8.27 | sí |
-| OOG | oscuro | #4A2A5E | #F2F6FB | #C9A0DE | 10.85 | 8.27 | sí |
-| de paso | claro | #F5F8FC | #4A5B73 | #7A8DA6 | 6.50 | 3.19 | sí |
-| de paso | oscuro | #0B1626 | #A9B8CC | #5C7392 | 9.00 | 3.74 | sí |
-| reservado (contorno) | claro | #FFFFFF | #4A5B73 | #7A8DA6 | 6.92 | 3.19 | sí |
-| reservado (contorno) | oscuro | #13223A | #A9B8CC | #8A9DB8 | 7.90 | 6.56 | sí |
+| pendiente (por hacer) | claro | #DCE7F8 | #10243F | #0D47A1 | 12.50 | 7.30 | sí |
+| pendiente (por hacer) | oscuro | #1E3A66 | #E6EEF8 | #8FB4F2 | 9.69 | 6.38 | sí |
+| hecho | claro | #D3EFDB | #10243F | #1E6B43 | 12.73 | 5.49 | sí |
+| hecho | oscuro | #1D4A33 | #E6EEF8 | #6FCF97 | 8.63 | 7.07 | sí |
+| cancelado | claro | #E4E8EE | #4A5B73 | #6D809F | 5.63 | 3.39 | sí |
+| cancelado | oscuro | #2A3850 | #A9B8CC | #8A9DB8 | 5.85 | 4.86 | sí |
+| revisar (conflicto, aviso) | claro | #FBE7B5 | #10243F | #8A5A00 | 12.78 | 5.02 | sí |
+| revisar (conflicto, aviso) | oscuro | #5C4300 | #F2F6FB | #E0B23F | 8.57 | 6.79 | sí |
+| error | claro | #F9D9D6 | #10243F | #B3261E | 11.83 | 5.53 | sí |
+| error | oscuro | #601410 | #F2F6FB | #F2B8B5 | 12.06 | 7.87 | sí |
+| peligrosa (IMO) | claro | #F9D9D6 | #10243F | #B3261E | 11.83 | 5.53 | sí |
+| peligrosa (IMO) | oscuro | #601410 | #F2F6FB | #F2B8B5 | 12.06 | 7.87 | sí |
+| refrigerado | claro | #C4E3EE | #10243F | #1F6F8B | 11.57 | 4.80 | sí |
+| refrigerado | oscuro | #1E4A5C | #F2F6FB | #7FC6DD | 8.84 | 7.05 | sí |
+| OOG | claro | #E3C4EE | #10243F | #6B2E8A | 9.95 | 7.46 | sí |
+| OOG | oscuro | #4A2A5E | #F2F6FB | #C9A0DE | 10.85 | 6.12 | sí |
+| de paso | claro | #F5F8FC | #4A5B73 | #6D809F | 6.50 | 3.39 | sí |
+| de paso | oscuro | #0B1626 | #A9B8CC | #6983A3 | 9.00 | 3.44 | sí |
+| reservado (contorno) | claro | #FFFFFF | #4A5B73 | #6D809F | 6.92 | 3.39 | sí |
+| reservado (contorno) | oscuro | #13223A | #A9B8CC | #8A9DB8 | 7.90 | 4.86 | sí |
+
+### Celda atenuada (10.7): relleno al 35 % sobre el papel, código en tinta suave, contorno en línea fuerte
+
+| Modo | Rellenos probados | Peor texto sobre el relleno compuesto | Con el relleno | Línea fuerte sobre papel | Cumple |
+|---|---:|---:|---|---:|---|
+| claro | 34 | 4.98 | #AC9CDE | 3.76 | sí |
+| oscuro | 34 | 6.39 | #5E6F2A | 4.65 | sí |
 
 ### Escala secuencial para Estadísticas (del papel a la marca)
 

@@ -24,11 +24,23 @@ class BsRol {
   /// El contorno, que también sirve de color de icono sobre el papel.
   final Color contorno;
 
-  /// El mismo rol con alfa en los tres colores: para atenuar sin un [Opacity].
-  BsRol atenuado(double alfa) => BsRol(
-        relleno: relleno.withValues(alpha: alfa),
-        texto: texto.withValues(alpha: alfa),
-        contorno: contorno.withValues(alpha: alfa),
+  /// El rol atenuado, para lo que queda fuera del filtro de «Resaltar»
+  /// (10.7, H1): el relleno baja a [alfa] compuesto sobre el [papel] y queda
+  /// opaco, sin un [Opacity], así el contraste no depende de lo que haya
+  /// detrás; el texto y el contorno no llevan alfa, cambian a [tintaSuave] y
+  /// [lineaFuerte], que cumplen 4.5:1 y 3:1 sobre lo compuesto (el peor caso
+  /// es el naranja: 4.98:1 en claro). Con alfa en el texto, el código quedaba
+  /// en 2.1:1 en claro y 2.9:1 en oscuro.
+  BsRol atenuado({
+    required Color papel,
+    required Color tintaSuave,
+    required Color lineaFuerte,
+    double alfa = 0.35,
+  }) =>
+      BsRol(
+        relleno: Color.alphaBlend(relleno.withValues(alpha: alfa), papel),
+        texto: tintaSuave,
+        contorno: lineaFuerte,
       );
 
   /// Interpola con [otro].
@@ -44,8 +56,9 @@ class BsRol {
 ///
 /// El color nunca va solo: el componente que usa un rol lleva además su
 /// icono o su rótulo. La tabla fija de la paleta categórica ([tablaFija]) es
-/// la que confirma Carlos (10.4); entra vacía hasta entonces y lo que no esté
-/// en ella usa el cálculo de [ranuraCategorica].
+/// la que confirmó Carlos en 10.6 ([tablaFijaConfirmada]), por omisión; lo que
+/// no esté en ella usa el cálculo de [ranuraCategorica]. T-115 le suma las
+/// ranuras que asigne la oficina.
 @immutable
 class BsColoresSemanticos extends ThemeExtension<BsColoresSemanticos> {
   /// Crea el conjunto de roles.
@@ -68,7 +81,9 @@ class BsColoresSemanticos extends ThemeExtension<BsColoresSemanticos> {
   });
 
   /// Los roles del modo claro.
-  factory BsColoresSemanticos.claro({Map<String, int> tablaFija = const {}}) =>
+  factory BsColoresSemanticos.claro({
+    Map<String, int> tablaFija = tablaFijaConfirmada,
+  }) =>
       BsColoresSemanticos(
         pendiente: const BsRol(
             relleno: Color(0xFFDCE7F8),
@@ -81,7 +96,7 @@ class BsColoresSemanticos extends ThemeExtension<BsColoresSemanticos> {
         cancelado: const BsRol(
             relleno: Color(0xFFE4E8EE),
             texto: Color(0xFF4A5B73),
-            contorno: Color(0xFF7A8DA6)),
+            contorno: Color(0xFF6D809F)),
         revisar: const BsRol(
             relleno: Color(0xFFFBE7B5),
             texto: Color(0xFF10243F),
@@ -105,11 +120,11 @@ class BsColoresSemanticos extends ThemeExtension<BsColoresSemanticos> {
         dePaso: const BsRol(
             relleno: Color(0xFFF5F8FC),
             texto: Color(0xFF4A5B73),
-            contorno: Color(0xFF7A8DA6)),
+            contorno: Color(0xFF6D809F)),
         reservado: const BsRol(
             relleno: Color(0xFFFFFFFF),
             texto: Color(0xFF4A5B73),
-            contorno: Color(0xFF7A8DA6)),
+            contorno: Color(0xFF6D809F)),
         enMovimiento: const BsRol(
             relleno: Color(0xFFFF7A1A),
             texto: Color(0xFF10243F),
@@ -117,17 +132,19 @@ class BsColoresSemanticos extends ThemeExtension<BsColoresSemanticos> {
         cubierta: const BsRol(
             relleno: Color(0xFFFFFFFF),
             texto: Color(0xFF10243F),
-            contorno: Color(0xFF7A8DA6)),
+            contorno: Color(0xFF6D809F)),
         bodega: const BsRol(
             relleno: Color(0xFFE3EDFB),
             texto: Color(0xFF10243F),
-            contorno: Color(0xFF7A8DA6)),
+            contorno: Color(0xFF6D809F)),
         categoricos: _categoricosClaro,
         tablaFija: tablaFija,
       );
 
   /// Los roles del modo oscuro.
-  factory BsColoresSemanticos.oscuro({Map<String, int> tablaFija = const {}}) =>
+  factory BsColoresSemanticos.oscuro({
+    Map<String, int> tablaFija = tablaFijaConfirmada,
+  }) =>
       BsColoresSemanticos(
         pendiente: const BsRol(
             relleno: Color(0xFF1E3A66),
@@ -164,7 +181,7 @@ class BsColoresSemanticos extends ThemeExtension<BsColoresSemanticos> {
         dePaso: const BsRol(
             relleno: Color(0xFF0B1626),
             texto: Color(0xFFA9B8CC),
-            contorno: Color(0xFF5C7392)),
+            contorno: Color(0xFF6983A3)),
         reservado: const BsRol(
             relleno: Color(0xFF13223A),
             texto: Color(0xFFA9B8CC),
@@ -176,11 +193,11 @@ class BsColoresSemanticos extends ThemeExtension<BsColoresSemanticos> {
         cubierta: const BsRol(
             relleno: Color(0xFF13223A),
             texto: Color(0xFFE6EEF8),
-            contorno: Color(0xFF5C7392)),
+            contorno: Color(0xFF6983A3)),
         bodega: const BsRol(
             relleno: Color(0xFF1C2F4D),
             texto: Color(0xFFE6EEF8),
-            contorno: Color(0xFF5C7392)),
+            contorno: Color(0xFF6983A3)),
         categoricos: _categoricosOscuro,
         tablaFija: tablaFija,
       );
