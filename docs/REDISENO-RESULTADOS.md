@@ -608,3 +608,107 @@ visualización sin perfil; los colores por puerto de descarga; y la pestaña «P
 confirmar. `flutter-mcp` y `maestro` no conectan en mi sesión. `AGENTS.md`, `CLAUDE.md`
 y la falta de `SPRINT-4.md` son tuyos. Con tu visto bueno arranco la Fase 1
 (`DESIGN.md`, dos direcciones y los wireframes) y me detengo en «ALTO: Carlos elige».
+
+## Fase 1 · Dirección (21-oct-2026)
+
+### 1.1 Resultado en tres líneas
+
+- `DESIGN.md` está en la raíz con dos direcciones completas (A «Plano de a bordo» y
+  B «Consola de muelle»): paleta con nombre en claro y oscuro, tipografía empaquetada con
+  licencia, tokens, movimiento, reglas de texto, los roles semánticos y la paleta
+  categórica de «Colorear por», el flujo «ver primero, confirmar después» con las capas
+  que toca, la navegación adaptable y los wireframes de las cinco pantallas a 360 dp y
+  1920 px.
+- El contraste está verificado con un script propio: todas las parejas de texto cumplen
+  AA 4.5:1 y los bordes esenciales 3:1 en claro y oscuro, en las dos direcciones, en los
+  doce tonos categóricos y en los diez roles semánticos.
+- El flujo nuevo cabe en la capa de presentación: **no hace falta T-115**. Termina en
+  «ALTO: Carlos elige».
+
+### 1.2 Lo hecho
+
+- Leí `SPRINT-4.md` completo y los cambios de `AGENTS.md` y `CLAUDE.md` desde `6f2700f`.
+- Cargué las skills de dirección (`frontend-design`, `interface-design`, `design-system`,
+  `dataviz-color`) y las referencias de `flutter-ui` (`flutter-design-thinking.md`,
+  `flutter-theme-system.md`); consulté la base de `ui-ux-pro-max` (`--design-system`,
+  `--domain color`, `typography`, `style`, `ux` y `--stack flutter`). Lo que sirvió: las
+  paletas de alto contraste navy, la regla de 48 dp y 8 dp de separación, la reducción de
+  movimiento y el estilo «data-dense dashboard»; lo que no: su propuesta automática de
+  sistema (devolvió una boda en rosa: la base no conoce el dominio) y las parejas
+  tipográficas Inter y Fira Code, que no aplican.
+- Analicé el flujo «ver primero» en el código: `VoyageNotifier` (`vessel_providers.dart:98-550`),
+  `sync_providers.dart`, `stack_weight_provider.dart`, `stowage_validation_provider.dart`,
+  `loading_operation_provider.dart`, `discharge_provider.dart` y las entidades
+  `VesselVoyage`, `VesselProfile`, `Bay`. Conclusión y tabla de archivos en `DESIGN.md`, 8.3.
+- Escribí `tool/rediseno_contraste.py` (biblioteca estándar, sin dependencias) y guardé su
+  salida en `docs/rediseno/fase1/contraste.md`.
+- Escribí `DESIGN.md` (secciones 1 a 15 y el ALTO).
+
+### 1.3 Validaciones ejecutadas
+
+- `python tool/rediseno_contraste.py` → «Pares que no cumplen: 0», código de salida 0.
+  Las dos primeras corridas encontraron 8 y 2 pares bajos; los corrigió una regla, no un
+  color: el naranja de marca y el acero son rellenos con tinta oscura encima, nunca texto
+  claro ni bordes finos sobre papel claro, y los contornos categóricos en claro bajan a
+  32 % de luminosidad.
+- Los wireframes se comprobaron a mano contra las medidas de los tokens (23 columnas de
+  52 dp más rótulos caben en 1 432 px, dentro de los 1 480 que dejan el riel y el panel).
+- No se corrió ningún comando de Flutter ni se tocó `lib/`, `test/` ni `pubspec.*`.
+
+### 1.4 Archivos de esta entrega
+
+- `DESIGN.md` (nuevo, raíz; lo pide la fase).
+- `tool/rediseno_contraste.py` (nuevo).
+- `docs/rediseno/fase1/contraste.md` (nuevo, salida del script).
+- `docs/REDISENO-RESULTADOS.md` (esta sección).
+
+### 1.5 Lo que no se pudo y por qué
+
+- La cobertura de glifos de las fuentes (`· ‑ … × •`, sobre todo U+2011) no se comprobó:
+  exige los archivos TTF, que entran en la Fase 2 con la familia que elija Carlos. Queda
+  anotado en `DESIGN.md`, 7.
+- Las maquetas son ASCII, como pide la fase; no hay capturas nuevas.
+- Los MCP: Carlos los dejó conectados en su configuración a las 22:53 (10.3 de
+  `SPRINT-4.md`: `dart mcp-server` y Maestro 2.11.0). En esta sesión siguen en «failed»
+  porque se abrió antes; son servidores de usuario, no conectores, así que no puedo
+  reconectarlos yo: hace falta `/mcp` y «reconectar» en esta sesión, o abrir una nueva
+  para la Fase 2. No hicieron falta en esta fase.
+
+### 1.6 Horas
+
+De las 22:40 (aprox.) a las 23:00 del 21-oct-2026: ≈ 0.3 h de reloj, sin
+cronómetro (la hora de inicio es la del mensaje de Yov con la aceptación de la Fase 0).
+
+### Git para Carlos (Fase 1)
+
+```
+git add -- DESIGN.md
+git add -- tool/rediseno_contraste.py
+git add -- docs/rediseno/fase1/contraste.md
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: rediseno, fase 1, DESIGN.md con dos direcciones, contraste verificado y flujo ver primero"
+git push
+```
+
+### Tres líneas
+
+- `DESIGN.md`: dos direcciones completas, A «Plano de a bordo» (papel, tinta, Plex, cartela
+  y silueta-selector) y B «Consola de muelle» (losas, Fira condensada, barra de operación
+  y chaleco), con wireframes de las cinco pantallas a 360 y 1920.
+- Contraste AA verificado por script en claro y oscuro para las paletas, los doce tonos
+  de «Colorear por» y los diez roles semánticos; la fuente se empaqueta con licencia OFL.
+- «Ver primero, confirmar después» cabe en providers, páginas y widgets (no hace falta
+  T-115); la decisión queda en «ALTO: Carlos elige» con seis puntos.
+
+### Mensaje para Yov
+
+Yov: Fase 1 entregada. `DESIGN.md` está en la raíz con las dos direcciones (A «Plano de a
+bordo», B «Consola de muelle»), lo que comparten (roles semánticos, paleta categórica de
+12 tonos con asignación estable por hash, vistas por omisión de «Colorear por»), el flujo
+«ver primero, confirmar después» con la tabla de capas (cabe en presentación: `_publish`
+sigue siendo la única escritura y los validadores ya devuelven «sin evaluar» sin perfil
+publicado; no hace falta T-115), la navegación adaptable por clases de ventana y los 20
+wireframes. El contraste está verificado con `tool/rediseno_contraste.py`
+(`docs/rediseno/fase1/contraste.md`, 0 pares bajos). Recomiendo A, tomando de B la barra
+de operación del muelle. El ALTO lista seis decisiones para Carlos; la cobertura de
+glifos de la fuente se comprueba con el TTF en la Fase 2. Me detengo aquí.
