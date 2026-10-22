@@ -354,3 +354,28 @@ La siguiente decisión es la **10.14**.
 2. La Fase 3 sigue con el plano por bahía, ya en la dirección C; después, el muelle, el avance, las estadísticas y el inicio, con la ilustración cuando llegue el paquete.
 
 La siguiente decisión es la **10.15**.
+
+### 10.15 · La entrega 1 no pasa la aceptación: «No lo tengo» viene marcado con una plantilla · La corrección va antes de la Fase 2 bis (22-oct, 16:50)
+
+**Codex aceptó la entrega 1 con dictamen NO PASA** (`docs/rediseno/fase3/aceptacion-codex.md`, sobre `16fa15d`, en la copia limpia).
+- **Pasa:**
+  - el alcance, salvo O1;
+  - 1156/1156 sin omitidas, y `analyze` limpio;
+  - el previo no guarda nada, `publishedVoyage` no lo ve, no se exporta ni se opera, y descartar pregunta;
+  - la regla estricta de 7.2 y el hallazgo 5;
+  - RNF-002 en Windows (su corrida: 3 pasos, 2.722 s), en la Web y en el emulador;
+  - las 115 capturas, sin correos, cuentas ni corpus (revisadas a mano y con OCR);
+  - la auditoría, sin críticos reales ni avisos en lo tocado;
+  - los censos (1816 cadenas; M3 259/8/5);
+  - la Web sin conexión (T-92).
+- **H1, que bloquea:** al confirmar el previo con una plantilla sin límite, «No lo tengo» ya viene marcado. Está en `vessel_geometry_page.dart:171–173`, que lo marca si hay geometría inicial, si es solo el perfil o si el origen es una plantilla, siempre que el límite sea nulo. Eso incumple 10.2: «No lo tengo» no se marca por omisión. La condición es anterior al rediseño, pero el recorrido nuevo la deja a la vista.
+  - **La regla:** solo viene marcado si el perfil es del mismo buque, lo declaró el usuario (`declaredByUser`) y no tiene límite. Con una plantilla o con la propuesta del archivo, empieza sin marcar.
+- **O1, la evidencia Web «con perfil» no entró a git.** Los cinco archivos existen, pero en una carpeta llamada `con`, que en Windows es un nombre reservado, como `prn`, `aux` o `nul`. Git y las herramientas de Windows no la ven, y por eso fallaron los cinco `git add`; Codex los dio por ausentes y la causa la encontró Yov. Se renombra a `con-perfil`, el instrumento deja de usar nombres reservados y el informe se corrige.
+- **O2:** en `test/profile_loading_test.dart:142,147,152` se debilitaron tres comparaciones del perfil: ahora miran solo `.key` o `hasLength(1)`. Vuelven a comparar los campos que importan, salvo `updatedAt`.
+- **O3:** los censos se reproducen con la referencia `5406e20`. El informe la declara y se actualiza la ayuda de `tool/t112_censos.py`.
+- **O4:** en la copia limpia faltaba en disco `docs/rediseno/fase2/reaceptacion-codex.md`, porque en la Fase 2 el informe se movió a la rama en vez de copiarse. Carlos lo restaura en `qa-r4`, y de aquí en adelante los informes se copian.
+- **La incidencia de semáforo** que Codex declaró no afectó ninguna medición: empezó a compilar Windows antes de recoger el fin de `analyze`. Queda anotada.
+
+**Yov acepta el dictamen y los cuatro hallazgos.** La corrección la hace Timonel ahora, antes de seguir con la Fase 2 bis, con su propio bloque de git. Después, Codex vuelve a aceptar solo lo que toque la corrección.
+
+La siguiente decisión es la **10.16**.
