@@ -410,3 +410,22 @@ La siguiente decisión es la **10.16**.
 2. En paralelo, Timonel empieza la entrega 2 de la Fase 3: el plano por bahía en la dirección C. Si Codex encuentra algo, eso va primero.
 
 La siguiente decisión es la **10.17**.
+
+### 10.17 · La corrección 10.15, aceptada · La Fase 2 bis no pasa: la celda salta en vez de salir (22-oct, 17:45)
+
+**Codex aceptó en la copia limpia, sobre `c287792`** (`docs/rediseno/fase2bis/aceptacion-codex.md`).
+- **La corrección 10.15 (`3144b64`): ACEPTADA.** Repitió su diagnóstico: la plantilla y la propuesta empiezan sin marcar, y el perfil propio declarado viene marcado. Pasan las cuatro pruebas nuevas, los cinco archivos de `con-perfil` coinciden con la medición, el instrumento rechaza los 22 nombres reservados, `_mismoPerfil` compara los ocho campos y la referencia `5406e20` está declarada.
+- **La Fase 2 bis (`36f5784`): NO PASA por un hallazgo nuevo (H1).** La celda recién movida salta a su sitio final sin recorrer los 150 ms. `AnimatedSlide` se crea ya en `Offset(0, -0.5)` (`bs_celda.dart:369–391`), así que no tiene desde dónde interpolar: a los 0, 75 y 150 ms la posición y los píxeles son iguales. La prueba entregada solo mira el destino. Es justo la firma de la dirección C, el contenedor que sale de su celda.
+- **Pasa todo lo demás:** el alcance (11 + 27 + `SPRINT-4.md`); 1223/1223 sin omitidas; `analyze` en cero; el contraste y su cálculo independiente (seis fichas OKLCH recalculadas por su cuenta); la tabla reordenada (60° en la rueda y 55° en OKLCH); 16 casos propios de inmovilidad con reducción de movimiento; T-90 sigue al sistema y el tema por equipo no está conectado; la Web sin conexión (T-92). Tampoco hay datos inventados: `BsPanelEnVivo` solo acepta el rol del equipo, y la silueta no dibuja superestructura ni grúa.
+- **O1 y O2, de documentación:** `DESIGN.md` 13.6 dice que la silueta tiene alto 112 y botones de 48 dp, y que la cifra va a 40. El código, que es lo correcto, usa 56 dp de ancho por bahía, una altura que se adapta y la cifra a 34. Se corrige el documento, no el código.
+- **O3:** siguen pendientes el naranja de «Más» y la prueba de la licencia, de 10.16.
+- **O4, precisión:** fuera de los tokens queda un aviso automático, el `Duration.zero` del interruptor de accesibilidad. Ya se conocía, está justificado y no se quita.
+
+**Yov acepta el dictamen.** Timonel corrige H1 antes de seguir con la entrega 2, en un bloque aparte:
+- la celda sale de verdad, de 0 a media celda en 150 ms, con `Transform`, y con reducción de movimiento se queda quieta;
+- al volver a «bajado» no se ve regresar;
+- una prueba compara el fotograma inicial, uno intermedio y el final, y falla con la versión de `36f5784`.
+
+En el mismo bloque, `DESIGN.md` 13.6 y 13.3 (O1, O2 y el naranja de «Más»). Después, Codex vuelve a aceptar solo la pieza.
+
+La siguiente decisión es la **10.18**.
