@@ -379,3 +379,34 @@ La siguiente decisión es la **10.15**.
 **Yov acepta el dictamen y los cuatro hallazgos.** La corrección la hace Timonel ahora, antes de seguir con la Fase 2 bis, con su propio bloque de git. Después, Codex vuelve a aceptar solo lo que toque la corrección.
 
 La siguiente decisión es la **10.16**.
+
+### 10.16 · La corrección de la entrega 1 y las Fases 1 bis y 2 bis, entregadas · El tema sigue al sistema (22-oct, 17:30)
+
+**Timonel entregó dos commits:** `3144b64`, con la corrección de 10.15, y `36f5784`, con las Fases 1 bis y 2 bis.
+- **La corrección.**
+  - «No lo tengo» viene marcado solo si el perfil es del mismo buque, lo declaró el usuario y no tiene límite. Con una plantilla o con la propuesta, empieza sin marcar, y sin elegir no se confirma. Cuatro pruebas lo fijan, incluido el caso de BUQUE BETA como plantilla para BUQUE ALFA.
+  - La carpeta `con` pasa a ser `con-perfil`, con los mismos cinco archivos, que ya están en git. El instrumento rechaza los nombres reservados.
+  - Las tres aserciones vuelven a comparar el perfil, salvo `updatedAt`.
+  - La referencia `5406e20` de los censos queda declarada.
+  - El piso sube a 1160.
+- **La Fase 1 bis.** `DESIGN.md` 13 es la dirección C, y la A queda como historia. Timonel tomó dos decisiones que el concepto no fijaba, y Yov las acepta:
+  - de noche, `primary` es la selección `#4F8EF7`, porque la marca como texto no llega (1.6:1); la marca va como superficie;
+  - de noche, la selección de los segmentos y de los chips se invierte.
+- **La Fase 2 bis.**
+  - Lo hecho: la noche, los roles de la vista Estado, las fichas en OKLCH y la tabla a saltos. Las fichas intensas llevan el relleno en L 0.44 C 0.12, y el código y el contorno en L 0.93 C 0.06.
+  - Nueve piezas nuevas: `BsMarca`, `BsSiluetaBuque`, `BsCascoBodega`, los estados y la curva de `BsCelda`, `BsTarjetaCifra`, `BsAnilloAvance`, `BsPanelEnVivo`, `BsBandaMuelle` y `BsFondoDePlano`. Cada una tiene su prueba, su vista previa y las tres pautas, y con `disableAnimations` nada se mueve.
+  - Las cifras: **suite 1223**; `analyze` en cero; el contraste, sin pares bajos; la auditoría, sin críticos ni avisos en `lib/core/design/` fuera de los dos archivos de tokens.
+  - Ninguna pantalla cambia, y no hay cambios en `domain/`, `data/`, `lib/main.dart` ni `pubspec.*`.
+- **Un hallazgo del instrumento.** Con los rellenos de «por bajar», la celda atenuada dejaba el código en 3.5:1 y en 3.1:1. La regla pasa a «tinta suave, y si no llega a 4.5:1, tinta».
+
+**Yov revisó** los dos bloques de git, que cubren los 38 archivos que cambiaron; `DESIGN.md` 13 contra 10.14; y la corrección en el código. Quedan dos observaciones, que se corrigen en la entrega 2:
+- **El contador de «Más» en el color de la grúa** (13.3, punto 6) contradice la regla del naranja. Las alertas van en aviso o en error.
+- **Una prueba frágil.** `t114_fuentes_test` mide `LICENSE-IBMPlex.txt` con fin de línea CRLF, y falla en una copia con LF, como la que saca `git archive`. La prueba no debe depender del fin de línea.
+
+**El tema por omisión: Carlos decide que siga al sistema (17:30).** `bayStreamTemaPorOmision` queda preparado y sin conectar, y `domain/` y `data/` no cambian. Para ver la noche en Windows o en la Web: Parámetros → Oscuro (T-90). `DESIGN.md` 13.5 lo anota.
+
+**Lo que sigue:**
+1. Codex acepta la corrección y la Fase 2 bis en la copia limpia.
+2. En paralelo, Timonel empieza la entrega 2 de la Fase 3: el plano por bahía en la dirección C. Si Codex encuentra algo, eso va primero.
+
+La siguiente decisión es la **10.17**.
