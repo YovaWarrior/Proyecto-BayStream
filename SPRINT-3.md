@@ -6741,3 +6741,65 @@ La siguiente decisión es la **10.110**.
 **Después:** Yov actualiza la sección III.F (Despliegue) del documento del Incremento 3 con el despliegue confirmado.
 
 La siguiente decisión es la **10.111**.
+
+### 10.111 · Las dos verificaciones del despliegue fallan: el MSIX salió con el certificado de prueba y la Web no inicia sesión (21-oct)
+
+**El MSIX de 10.110 no quedó firmado con `CN=BayStream`.** Corrección de 10.110.
+- Windows lo rechaza al instalar: «Publisher: Unknown» y el error `0x800B010A` (la cadena del certificado no se puede verificar).
+- **La causa, comprobada en el paquete:** `AppxManifest.xml` trae `Publisher="CN=Msix Testing, O=Msix Testing Corporation…"` y la firma es de ese certificado. El MSIX 1.0.4.0 de T-88, en cambio, trae `CN=BayStream`.
+- `dart run msix:create` a secas, sin `--signtool-options` con la huella, firma con el certificado de prueba del paquete `msix`. **El error fue de la guía de Yov**, que puso ese comando en vez de `tool/t93_msix.ps1`.
+- **Corrección:** la sección 2.2 de `docs/CIERRE-DESPLIEGUE.md` ahora usa el script de T-93 con la huella, `-Version 3.0.0.0` y `-SinCompilar` sobre la Release de esta noche. El script termina verificando la firma `Valid`.
+- `build/t93/BayStream.msix` no se distribuye. La versión sube a **3.0.0.0**, para que se lea con `v3.0` y para que los arreglos posteriores se instalen encima.
+
+**La Web no inicia sesión.** Con la cuenta de oficina y con la de muelle, en incógnito, sale «el servicio de cuentas respondió con un error que BayStream no reconoce».
+- La consola del navegador muestra el código **`channel-error`**. No es de credenciales: la contraseña equivocada sí tiene su mensaje propio.
+- **Hipótesis de Yov:** falla el puente entre Dart y el SDK de Firebase que sirve el sitio (T-92: `web/vendor/firebase/12.17.0`, con `firebase_auth_web 6.2.6` y `firebase_core_web 3.10.0`).
+- **Siguiente paso:** iniciar sesión en el MSIX bien firmado. Si en Windows entra, el fallo es solo de la Web, y lo diagnostica un programador.
+- **No bloquea la entrega del 24:** la app está publicada y funciona sin cuenta. Sí hay que arreglarlo antes del piloto.
+
+La siguiente decisión es la **10.112**.
+
+### 10.112 · La causa del fallo de la Web: una caché del 2-oct sin Firebase Auth · El AAB necesita otro número de versión (21-oct)
+
+**Windows sí inicia sesión.** El MSIX `BayStream_3.0.0.0.msix`, firmado con `CN=BayStream`, se instaló, y la cuenta de oficina entra y ve las operaciones abiertas en la nube. **El fallo es solo de la Web.**
+
+**La causa, comprobada en la compilación publicada.** Corrige la hipótesis de 10.111: no era el SDK servido.
+- La compilación Web del 21-oct usó la carpeta de caché `.dart_tool/flutter_build/c00f0219…`. Su `web_plugin_registrant.dart` es del **2-oct**, de antes de las cuentas y de la voz. Registra Firestore, `file_picker` y Core, pero **no `FirebaseAuthWeb` ni la voz**. Flutter no lo regeneró: su `web_entrypoint.stamp` sigue siendo del 2-oct.
+- Por eso el `main.dart.js` publicado registra `flutter-fire-core` y `flutter-fire-fst`, pero no tiene `flutter-fire-auth` ni nada de la interop de Auth.
+- Sin el plugin Web, el inicio de sesión cae en la implementación de canal (Pigeon) de las apps nativas, que en el navegador no tiene a quién llamar. De ahí sale el `channel-error`.
+- Las compilaciones de aceptación de T-92 usaron otras carpetas de caché (con `--build-number` y salidas propias), y sus registrantes del 14-oct sí traen Auth. Por eso la Web con sesión pasó entonces.
+- **El error de proceso fue de la guía de Yov:** simplificó el bloque de publicación de T-92 (limpiar `build/web`, número de publicación, `t92_verify`), y además no tenía un control de que Auth estuviera dentro.
+
+**La corrección no toca código; es de compilación.** La sección 2.1 de `docs/CIERRE-DESPLIEGUE.md` ahora:
+1. aparta (renombra) la carpeta de caché vieja;
+2. compila limpio en `build/web` con `--build-name=3.0.0 --build-number=3`, sin `--no-pub`;
+3. no publica si `main.dart.js` no contiene `flutter-fire-auth`, ni si `t92_verify` falla;
+4. publica solo Hosting, con `--project baystream-app`.
+
+Con eso también salen de Hosting los viejos `t54-format.*`, que la publicación del 21-oct volvió a subir.
+
+**El AAB del 21-oct no se sube.** Tiene el `versionCode` 1, que ya usó el AAB del Sprint 2 (T-49), y Play lo rechaza. Se recompila con `--build-name=3.0.0 --build-number=3` (sección 2.3 de la guía).
+
+**Pendiente de Carlos:** republicar la Web con la guía corregida y probar el inicio de sesión en incógnito; recompilar el AAB y subirlo a la prueba interna, y probar ahí el inicio de sesión en el Honor.
+
+**Para el Sprint 4:** la versión de `pubspec.yaml` sigue en `1.0.0+1`. Hay que alinearla con las publicaciones (3.0.0+3), para que no dependa de acordarse de los parámetros.
+
+**La advertencia de Play al subir el AAB 3 (3.0.0):** «ya no admite 20 dispositivos que sí admitía la versión anterior».
+- El `minSdk` (24), el `targetSdk` (36) y las arquitecturas (arm64-v8a, armeabi-v7a, x86_64) no cambian. Lo único nuevo en el manifiesto es `RECORD_AUDIO`, el permiso de la voz (T-94).
+- Para Play, ese permiso implica que el equipo tiene que tener micrófono (`android.hardware.microphone`). Por eso deja fuera a los equipos sin micrófono, como televisores y cajas de TV.
+- **Se publica igual:** el Honor y las tabletas tienen micrófono.
+- **Para el Sprint 4:** como el dictado es opcional, declarar `<uses-feature android:name="android.hardware.microphone" android:required="false" />` en el manifiesto.
+
+La siguiente decisión es la **10.113**.
+
+### 10.113 · El despliegue del Sprint 3, confirmado en los tres clientes (21-oct)
+
+**Lo que quedó publicado, con la guía corregida (10.111 y 10.112):**
+- **Web:** `baystream-app.web.app` sirve la **3.0.0 (compilación 3)**, comprobado en su `version.json`. El `main.dart.js` publicado trae `flutter-fire-auth`, y ya no están los `t54-format.*`.
+- **Windows:** `BayStream_3.0.0.0.msix`, firmado con `CN=BayStream`. Se instaló, y la cuenta de oficina inicia sesión.
+- **Android:** el AAB **3 (3.0.0)** está en la prueba interna de Play. El Honor lo actualizó con el enlace de prueba (las apps en prueba interna no salen en la búsqueda de la tienda), y la cuenta de muelle inicia sesión.
+- **10.111 y 10.112 quedan resueltas.** Los artefactos malos del 21-oct (`build/t93/BayStream.msix` y el AAB con `versionCode` 1) no se distribuyeron.
+
+**El documento del Incremento 3** quedó actualizado. La sección III.F trae el despliegue confirmado, los dos fallos de empaquetado y la advertencia del micrófono; la retrospectiva y las conclusiones, una línea cada una. Son 24 páginas, en `docs/BayStream_Incremento3_Calidad_Seguridad.docx` y `.pdf`.
+
+La siguiente decisión es la **10.114**.
