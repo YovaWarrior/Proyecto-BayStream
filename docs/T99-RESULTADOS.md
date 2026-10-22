@@ -568,8 +568,8 @@ los tiempos de Windows, un «cumple» lleva la advertencia de la ventana más ch
 - **Al cerrar (18:19):** el emulador apagado (17:25); ningún banco abierto en Windows; Chrome sin
   interfaz y el servidor del 8099 cerrados; el Honor con la letra en 1.0 y el banco `.t99` detenido
   (la app sigue instalada, aparte de la real). Quedan copias de `CORPUS_A01.edi` en
-  `Download/t99/` del Honor y del emulador, puestas para el selector. La pantalla de Windows sigue
-  en 1920×1080: la vuelve a 2560×1600 Carlos.
+  `Download/t99/` del Honor y del emulador, puestas para el selector. La pantalla de Windows se
+  queda en 1920×1080 por decisión de Carlos (20-oct): Codex mide Windows esa noche (10.97).
 
 ## Fase A
 
