@@ -6,14 +6,15 @@ import 'bs_medidas.dart';
 import 'bs_paleta.dart';
 import 'bs_tipografia.dart';
 
-/// El tema de BayStream: la dirección A «Plano de a bordo» sobre Material 3.
+/// El tema de BayStream: la dirección C «Puente de mando» sobre Material 3
+/// (`DESIGN.md`, 13.1): el día de la Fase 2 y la noche de 10.14.
 ///
 /// Construye el [ColorScheme] desde la paleta, el [TextTheme] con Plex y los
 /// temas de componente con las medidas de la densidad, y cuelga las tres
 /// extensiones: [BsColoresSemanticos], [BsMedidas] y [BsTextos]. Material 3
 /// sigue siendo la base (RNF-002 lo mide): no hay ninguna biblioteca más.
 abstract final class BayStreamTema {
-  /// El tema claro. Con [muelle], la densidad del muelle; [tablaFija] es la
+  /// El tema del día. Con [muelle], la densidad del muelle; [tablaFija] es la
   /// tabla de «Colorear por», por omisión la confirmada en 10.6
   /// ([tablaFijaConfirmada]); T-115 le suma las asignaciones de la oficina.
   static ThemeData claro({
@@ -26,8 +27,8 @@ abstract final class BayStreamTema {
         medidas: muelle ? BsMedidas.muelle : BsMedidas.oficina,
       );
 
-  /// El tema oscuro. Con [muelle], la densidad del muelle; [tablaFija] como en
-  /// [claro].
+  /// El tema de la noche. Con [muelle], la densidad del muelle; [tablaFija]
+  /// como en [claro].
   static ThemeData oscuro({
     bool muelle = false,
     Map<String, int> tablaFija = tablaFijaConfirmada,
@@ -39,7 +40,7 @@ abstract final class BayStreamTema {
       );
 
   /// El [ColorScheme] de una paleta: la semilla de Material 3 y, encima, los
-  /// roles con los colores con nombre.
+  /// roles con los colores con nombre (la tabla de 13.1).
   static ColorScheme esquema(BsPaleta paleta, BsColoresSemanticos semanticos) {
     final claro = paleta.brillo == Brightness.light;
     final hojaMedia = Color.lerp(paleta.papel, paleta.hojaAlta, 0.5)!;
@@ -85,11 +86,19 @@ abstract final class BayStreamTema {
     required BsColoresSemanticos semanticos,
     required BsMedidas medidas,
   }) {
+    final claro = paleta.brillo == Brightness.light;
     final colores = esquema(paleta, semanticos);
     final textos = bsTextTheme(paleta);
     final propios = BsTextos.de(paleta);
     final radioControl = BorderRadius.circular(medidas.radioControl);
     final formaControl = RoundedRectangleBorder(borderRadius: radioControl);
+    // La selección (13.1): de día, el tinte de marca con tinta encima; de
+    // noche se invierte, tinta con la noche encima, como el segmento
+    // «Descarga» del concepto. El indicador del riel y de la barra usa la marca
+    // como superficie, con texto en tinta de día y blanco de noche.
+    final seleccionFondo = claro ? paleta.marcaTenue : paleta.tinta;
+    final seleccionTexto = claro ? paleta.tinta : paleta.papel;
+    final sobreIndicador = claro ? paleta.tinta : paleta.sobreMarcaSuperficie;
     return ThemeData(
       useMaterial3: true,
       brightness: paleta.brillo,
@@ -120,14 +129,22 @@ abstract final class BayStreamTema {
         surfaceTintColor: paleta.hoja,
         indicatorColor: paleta.marcaTenue,
         labelTextStyle: WidgetStatePropertyAll<TextStyle?>(textos.labelMedium),
-        iconTheme: WidgetStatePropertyAll<IconThemeData>(
-            IconThemeData(color: paleta.tinta, size: 24)),
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+          (Set<WidgetState> estados) => IconThemeData(
+            color: estados.contains(WidgetState.selected)
+                ? sobreIndicador
+                : paleta.tinta,
+            size: 24,
+          ),
+        ),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: paleta.papel,
         indicatorColor: paleta.marcaTenue,
         minWidth: medidas.anchoRiel,
         labelType: NavigationRailLabelType.all,
+        selectedIconTheme: IconThemeData(color: sobreIndicador, size: 24),
+        unselectedIconTheme: IconThemeData(color: paleta.tintaSuave, size: 24),
         selectedLabelTextStyle: textos.labelMedium,
         unselectedLabelTextStyle:
             textos.labelMedium?.copyWith(color: paleta.tintaSuave),
@@ -156,8 +173,8 @@ abstract final class BayStreamTema {
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
-          selectedBackgroundColor: paleta.marcaTenue,
-          selectedForegroundColor: paleta.tinta,
+          selectedBackgroundColor: seleccionFondo,
+          selectedForegroundColor: seleccionTexto,
           minimumSize: Size(medidas.objetivoTactil, medidas.alturaBoton),
           shape: formaControl,
           textStyle: textos.labelLarge,
@@ -167,8 +184,9 @@ abstract final class BayStreamTema {
         shape: formaControl,
         side: BorderSide(color: paleta.linea),
         backgroundColor: paleta.hoja,
-        selectedColor: paleta.marcaTenue,
+        selectedColor: seleccionFondo,
         labelStyle: textos.labelMedium,
+        secondaryLabelStyle: textos.labelMedium?.copyWith(color: seleccionTexto),
         padding: EdgeInsets.symmetric(
           horizontal: medidas.espacioM,
           vertical: (medidas.alturaChip - BsEscala.rotulo * 1.2) / 2,
@@ -242,7 +260,7 @@ abstract final class BayStreamTema {
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: paleta.marca,
-        linearTrackColor: paleta.marcaTenue,
+        linearTrackColor: claro ? paleta.marcaTenue : paleta.linea,
         linearMinHeight: medidas.espacioS,
       ),
       badgeTheme: BadgeThemeData(

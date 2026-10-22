@@ -14,6 +14,28 @@ bool get bayStreamEsMuelle =>
     (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS);
 
+/// El tema por omisión según el equipo (`DESIGN.md` 13.5, decisión 10.14):
+/// claro en el muelle (Android e iOS, al sol) y oscuro en la oficina (Windows
+/// y la Web). Es lo que toca cuando el usuario **nunca eligió** un tema.
+///
+/// Todavía no gobierna [bayStreamThemeMode]: el almacén devuelve `system`
+/// tanto cuando nadie eligió como cuando el usuario eligió «Seguir al
+/// sistema» (`hive_vessel_data_source.dart:117`), y la presentación no puede
+/// distinguirlos sin tocar `data/`; T-90 exige que «Seguir al sistema» siga al
+/// sistema. Queda propuesto en `DESIGN.md` 13.5 y en el informe de la Fase 2
+/// bis; cuando el almacén distinga «no elegido», ese caso resuelve aquí.
+ThemeMode get bayStreamTemaPorOmision =>
+    bayStreamEsMuelle ? ThemeMode.light : ThemeMode.dark;
+
+/// El [ThemeMode] que corresponde a la preferencia de T-90: «Claro» y
+/// «Oscuro» mandan, y «Seguir al sistema» sigue al sistema, como en T-90.
+ThemeMode bayStreamThemeMode(AppThemePreference preference) =>
+    switch (preference) {
+      AppThemePreference.system => ThemeMode.system,
+      AppThemePreference.light => ThemeMode.light,
+      AppThemePreference.dark => ThemeMode.dark,
+    };
+
 class BayStreamApp extends ConsumerWidget {
   final Widget home;
   final TransitionBuilder? builder;
@@ -31,15 +53,13 @@ class BayStreamApp extends ConsumerWidget {
       locale: const Locale('es'),
       supportedLocales: const [Locale('es')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      // T-114 (Fase 3): el tema de la dirección A «Plano de a bordo», en claro
-      // y en oscuro, con la preferencia de tema que ya existía (T-90).
+      // T-114 (Fase 3): el tema de la dirección C «Puente de mando», el día y
+      // la noche, con la preferencia de tema que ya existía (T-90). El tema
+      // por omisión según el equipo (10.14) espera a que el almacén distinga
+      // «no elegido» (Fase 2 bis, 2b.6 del informe).
       theme: BayStreamTema.claro(muelle: muelle),
       darkTheme: BayStreamTema.oscuro(muelle: muelle),
-      themeMode: switch (preference) {
-        AppThemePreference.system => ThemeMode.system,
-        AppThemePreference.light => ThemeMode.light,
-        AppThemePreference.dark => ThemeMode.dark,
-      },
+      themeMode: bayStreamThemeMode(preference),
       builder: builder,
       home: home,
     );

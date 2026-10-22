@@ -58,14 +58,12 @@ class BsBanda extends StatelessWidget {
   Widget build(BuildContext context) {
     final medidas = BsMedidas.de(context);
     final semanticos = BsColoresSemanticos.de(context);
-    final esquema = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
+    // Información: el rol «información» (13.1): de día el tinte de marca; de
+    // noche el panel alto con el icono en selección, para que el icono llegue
+    // a 3:1 (la marca como superficie no lo deja).
     final rol = switch (tono) {
-      BsTonoDeBanda.informacion => BsRol(
-          relleno: esquema.primaryContainer,
-          texto: esquema.onPrimaryContainer,
-          contorno: esquema.primary,
-        ),
+      BsTonoDeBanda.informacion => semanticos.informacion,
       BsTonoDeBanda.aviso => semanticos.revisar,
       BsTonoDeBanda.error => semanticos.error,
       BsTonoDeBanda.confirmacion => semanticos.hecho,

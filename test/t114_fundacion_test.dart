@@ -312,7 +312,7 @@ void main() {
         }
       });
     }
-    test('el tema de las vistas previas es el de la dirección A', () {
+    test('el tema de las vistas previas es el de la dirección C', () {
       final datos = bsTemaDeVistaPrevia();
       expect(datos.materialLight?.colorScheme.primary, BsPaleta.claro.marca);
       expect(datos.materialDark?.brightness, Brightness.dark);

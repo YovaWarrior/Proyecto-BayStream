@@ -3,7 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 
 /// Espacios, radios, alturas de control y medidas de la celda (`DESIGN.md`,
-/// sección 4.3), en dos densidades: la oficina y el muelle.
+/// secciones 4.3 y 13.10), en dos densidades: la oficina y el muelle.
 ///
 /// El muelle sube los objetivos táctiles (56 dp para la acción principal, celda
 /// de 56 × 48) y afloja el espacio; la oficina es más densa. Nada de lo que se
@@ -26,7 +26,10 @@ class BsMedidas extends ThemeExtension<BsMedidas> {
     required this.radioCelda,
     required this.radioControl,
     required this.radioHoja,
+    required this.radioPanel,
     required this.radioDialogo,
+    required this.radioCasco,
+    required this.pasoRejilla,
     required this.alturaBoton,
     required this.alturaBotonPrincipal,
     required this.alturaCampo,
@@ -76,7 +79,8 @@ class BsMedidas extends ThemeExtension<BsMedidas> {
   /// El espacio entre bloques.
   final double entreBloques;
 
-  /// El radio de la celda del plano.
+  /// El radio de la celda del plano: las esquinas del ícono, el 17 % del lado
+  /// (13.2).
   final double radioCelda;
 
   /// El radio de botones, campos y chips.
@@ -85,8 +89,19 @@ class BsMedidas extends ThemeExtension<BsMedidas> {
   /// El radio de hojas, tarjetas y paneles.
   final double radioHoja;
 
+  /// El radio de los paneles del puente de mando: tarjetas de cifra, la
+  /// silueta, «En vivo» (13.10).
+  final double radioPanel;
+
   /// El radio de los diálogos.
   final double radioDialogo;
+
+  /// La curva del casco en la esquina exterior inferior de las celdas de los
+  /// extremos de la bodega (13.2).
+  final double radioCasco;
+
+  /// El paso de la rejilla de plano del fondo de noche (13.1).
+  final double pasoRejilla;
 
   /// La altura de un botón corriente.
   final double alturaBoton;
@@ -151,10 +166,13 @@ class BsMedidas extends ThemeExtension<BsMedidas> {
     espacioXxxl: 40,
     dentroDeBloque: 12,
     entreBloques: 24,
-    radioCelda: 2,
+    radioCelda: 8,
     radioControl: 6,
     radioHoja: 10,
+    radioPanel: 18,
     radioDialogo: 16,
+    radioCasco: 18,
+    pasoRejilla: 32,
     alturaBoton: 40,
     alturaBotonPrincipal: 48,
     alturaCampo: 48,
@@ -186,10 +204,13 @@ class BsMedidas extends ThemeExtension<BsMedidas> {
     espacioXxxl: 40,
     dentroDeBloque: 16,
     entreBloques: 24,
-    radioCelda: 2,
+    radioCelda: 8,
     radioControl: 6,
     radioHoja: 10,
+    radioPanel: 18,
     radioDialogo: 16,
+    radioCasco: 18,
+    pasoRejilla: 32,
     alturaBoton: 48,
     alturaBotonPrincipal: 56,
     alturaCampo: 56,
@@ -237,7 +258,10 @@ class BsMedidas extends ThemeExtension<BsMedidas> {
       radioCelda: entre(radioCelda, other.radioCelda),
       radioControl: entre(radioControl, other.radioControl),
       radioHoja: entre(radioHoja, other.radioHoja),
+      radioPanel: entre(radioPanel, other.radioPanel),
       radioDialogo: entre(radioDialogo, other.radioDialogo),
+      radioCasco: entre(radioCasco, other.radioCasco),
+      pasoRejilla: entre(pasoRejilla, other.pasoRejilla),
       alturaBoton: entre(alturaBoton, other.alturaBoton),
       alturaBotonPrincipal:
           entre(alturaBotonPrincipal, other.alturaBotonPrincipal),

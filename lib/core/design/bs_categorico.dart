@@ -4,6 +4,34 @@ import 'dart:convert';
 /// dos luminosidades (`DESIGN.md`, sección 5.2; decisión 10.4).
 const int ranurasCategoricas = 24;
 
+/// Los doce tonos, en el orden de la rueda, por su nombre.
+const List<String> nombresDeTono = <String>[
+  'arcilla',
+  'ámbar',
+  'oliva',
+  'hierba',
+  'verde mar',
+  'turquesa',
+  'cielo',
+  'cobalto',
+  'índigo',
+  'uva',
+  'magenta',
+  'rosa',
+];
+
+/// Qué tono pinta cada ranura: la tabla reparte los tonos dando saltos
+/// (decisión 10.14; `DESIGN.md`, 13.4). La ranura k pinta el tono
+/// `tonosPorRanura[k mod 12]`, suave hasta la 11 e intensa desde la 12. Así
+/// los cinco primeros puertos quedan a 60° o más en la rueda: JMKIN rosa,
+/// USHOU cielo, GTSTC hierba, JMKCT uva y PAMIT ámbar. Las tablas de códigos
+/// y la ranura de reserva ([fnv1a32]) no cambian; cambia lo que pinta cada
+/// ranura.
+const List<int> tonosPorRanura = <int>[11, 6, 3, 9, 1, 8, 4, 0, 10, 5, 2, 7];
+
+/// El tono (0 a 11, índice de [nombresDeTono]) de la ranura [k].
+int tonoDeRanura(int k) => tonosPorRanura[k % tonosPorRanura.length];
+
 /// Los puertos de destino con ranura fija, confirmados por Carlos (decisión
 /// 10.6 de `SPRINT-4.md`): las ranuras 0 a 14, en este orden.
 ///

@@ -3,17 +3,25 @@ import 'package:flutter/widget_previews.dart';
 
 import 'bs_colores_semanticos.dart';
 import 'bs_tema.dart';
+import 'componentes/bs_anillo_avance.dart';
 import 'componentes/bs_banda.dart';
+import 'componentes/bs_banda_muelle.dart';
 import 'componentes/bs_barra_de_operacion.dart';
 import 'componentes/bs_cartela.dart';
+import 'componentes/bs_casco_bodega.dart';
 import 'componentes/bs_celda.dart';
 import 'componentes/bs_cifra.dart';
+import 'componentes/bs_fondo_de_plano.dart';
 import 'componentes/bs_hoja_de_detalle.dart';
+import 'componentes/bs_marca.dart';
 import 'componentes/bs_numero_de_contenedor.dart';
+import 'componentes/bs_panel_en_vivo.dart';
+import 'componentes/bs_silueta_buque.dart';
+import 'componentes/bs_tarjeta_cifra.dart';
 import 'componentes/bs_tira_de_bahias.dart';
 
 /// Los temas que usa el previsualizador de widgets (`flutter widget-preview
-/// start`): el claro y el oscuro de la dirección A, con la densidad del muelle.
+/// start`): el día y la noche de la dirección C, con la densidad del muelle.
 PreviewThemeData bsTemaDeVistaPrevia() => PreviewThemeData(
       materialLight: BayStreamTema.claro(muelle: true),
       materialDark: BayStreamTema.oscuro(muelle: true),
@@ -125,9 +133,9 @@ Widget vistaPreviaCeldas() => _lienzo(Builder(
       },
     ));
 
-/// Las mismas celdas en el modo oscuro.
+/// Las mismas celdas en la noche: destino y tipo como fichas (13.4).
 @Preview(
-  name: 'Celdas · muelle, oscuro',
+  name: 'Celdas · muelle, noche',
   group: 'Diseño',
   theme: bsTemaDeVistaPrevia,
   brightness: Brightness.dark,
@@ -176,7 +184,308 @@ Widget vistaPreviaCeldasOficina() => _lienzo(Builder(
       },
     ));
 
-/// La silueta del buque como selector de bahías.
+/// La vista Estado (13.2): por bajar en cubierta y en bodega, de paso, bajado
+/// y recién movido, en la oficina de noche: el plano como el ícono.
+@Preview(
+  name: 'Celdas · vista Estado, noche',
+  group: 'Diseño',
+  theme: bsTemaDeVistaPreviaOficina,
+  brightness: Brightness.dark,
+)
+Widget vistaPreviaCeldasEstado() => _lienzo(Builder(
+      builder: (BuildContext context) {
+        final semanticos = BsColoresSemanticos.de(context);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Wrap(
+              children: <Widget>[
+                BsCelda(
+                  codigo: 'GTSTC',
+                  linea2: '24.1',
+                  estado: BsEstadoDeCelda.porBajarCubierta,
+                  categoria: semanticos.categorico('GTSTC'),
+                  etiqueta: 'TSTU 000110 8, 014-02-86, GTSTC, por bajar',
+                  onTap: () {},
+                ),
+                BsCelda(
+                  codigo: 'GTSTC',
+                  linea2: '18.0',
+                  estado: BsEstadoDeCelda.recienMovido,
+                  categoria: semanticos.categorico('GTSTC'),
+                  etiqueta: 'TSTU 004218 0, 014-01-86, GTSTC',
+                  onTap: () {},
+                ),
+                BsCelda(
+                  codigo: 'GTSTC',
+                  estado: BsEstadoDeCelda.bajado,
+                  etiqueta: 'Celda 014-03-86, bajado',
+                  onTap: () {},
+                ),
+                BsCelda(
+                  codigo: 'USHOU',
+                  linea2: '27.5',
+                  estado: BsEstadoDeCelda.dePaso,
+                  categoria: semanticos.categorico('USHOU'),
+                  etiqueta: 'TSTU 012775 5, 014-05-86, USHOU, de paso',
+                  onTap: () {},
+                ),
+                BsCelda(
+                  codigo: 'USHOU',
+                  insignia: BsInsigniaDeCelda.refrigerado,
+                  estado: BsEstadoDeCelda.porBajarCubierta,
+                  atenuada: true,
+                  etiqueta: 'TSTU 020493 3, 014-07-86, fuera del filtro',
+                  onTap: () {},
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            BsCascoBodega(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      BsCelda(
+                        codigo: 'GTSTC',
+                        estado: BsEstadoDeCelda.porBajarBodega,
+                        etiqueta: 'TSTU 031167 5, 014-04-08, GTSTC, por bajar',
+                        onTap: () {},
+                      ),
+                      BsCelda(
+                        codigo: 'PAMIT',
+                        estado: BsEstadoDeCelda.dePaso,
+                        etiqueta: 'TSTU 031168 0, 014-02-08, PAMIT, de paso',
+                        onTap: () {},
+                      ),
+                      BsCelda(
+                        codigo: 'GTSTC',
+                        estado: BsEstadoDeCelda.porBajarBodega,
+                        etiqueta: 'TSTU 031169 6, 014-00-08, GTSTC, por bajar',
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      BsCelda(
+                        codigo: 'GTSTC',
+                        estado: BsEstadoDeCelda.porBajarBodega,
+                        curva: BsCurvaDeCelda.babor,
+                        etiqueta: 'TSTU 031170 2, 014-04-06, GTSTC, por bajar',
+                        onTap: () {},
+                      ),
+                      BsCelda(
+                        codigo: 'GTSTC',
+                        estado: BsEstadoDeCelda.porBajarBodega,
+                        etiqueta: 'TSTU 031171 8, 014-02-06, GTSTC, por bajar',
+                        onTap: () {},
+                      ),
+                      BsCelda(
+                        codigo: 'USHOU',
+                        estado: BsEstadoDeCelda.dePaso,
+                        curva: BsCurvaDeCelda.estribor,
+                        etiqueta: 'TSTU 031172 3, 014-00-06, USHOU, de paso',
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    ));
+
+/// La vista Estado de día, en el muelle: «Baja» en la marca, «Hecho» y
+/// «Paso» con los roles de la Fase 2, y la celda que sale de su sitio.
+@Preview(name: 'Celdas · vista Estado, muelle de día', group: 'Diseño', theme: bsTemaDeVistaPrevia)
+Widget vistaPreviaCeldasEstadoMuelle() => _lienzo(Wrap(
+      children: <Widget>[
+        BsCelda(
+          codigo: 'GTSTC',
+          estado: BsEstadoDeCelda.porBajarCubierta,
+          marca: BsMarcaDeCelda.baja,
+          etiqueta: 'TSTU 000110 8, 014-02-86, por bajar',
+          onTap: () {},
+        ),
+        BsCelda(
+          codigo: 'GTSTC',
+          estado: BsEstadoDeCelda.recienMovido,
+          marca: BsMarcaDeCelda.baja,
+          etiqueta: 'TSTU 004218 0, 014-01-86',
+          onTap: () {},
+        ),
+        BsCelda(
+          codigo: 'GTSTC',
+          estado: BsEstadoDeCelda.bajado,
+          marca: BsMarcaDeCelda.hecho,
+          etiqueta: 'TSTU 012775 5, 014-03-86, hecho',
+          onTap: () {},
+        ),
+        const BsCelda(
+          codigo: 'JMKCT',
+          estado: BsEstadoDeCelda.dePaso,
+          marca: BsMarcaDeCelda.paso,
+          etiqueta: 'TSTU 020493 3, 014-05-86, JMKCT, de paso',
+        ),
+        BsCelda(
+          codigo: 'GTSTC',
+          estado: BsEstadoDeCelda.porBajarBodega,
+          marca: BsMarcaDeCelda.baja,
+          curva: BsCurvaDeCelda.babor,
+          etiqueta: 'TSTU 031167 5, 014-04-10, por bajar',
+          onTap: () {},
+        ),
+      ],
+    ));
+
+/// La marca: con recuadro, sin recuadro, monocroma y en espera.
+@Preview(name: 'Marca', group: 'Diseño', theme: bsTemaDeVistaPrevia)
+Widget vistaPreviaMarca() => _lienzo(const Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: <Widget>[
+        BsMarca(tamano: 44),
+        BsMarca(tamano: 44, variante: BsVarianteDeMarca.sinRecuadro),
+        BsMarca(tamano: 44, variante: BsVarianteDeMarca.monocroma),
+        BsMarca(tamano: 72, espera: true),
+        BsMarca(tamano: 24),
+      ],
+    ));
+
+/// La silueta del buque con una bahía seleccionada, el avance y una recién
+/// movida.
+@Preview(name: 'Silueta del buque', group: 'Diseño', theme: bsTemaDeVistaPrevia)
+Widget vistaPreviaSiluetaBuque() => _lienzo(BsSiluetaBuque(
+      bahias: <BsBahiaDeSilueta>[
+        for (var i = 0; i < 10; i++)
+          BsBahiaDeSilueta(
+            numero: 2 + 4 * i,
+            nivelesCubierta: <int>[2, 3, 4, 3, 4, 4, 4, 4, 4, 3][i],
+            nivelesBodega: <int>[3, 4, 4, 4, 4, 4, 4, 4, 4, 4][i],
+            avance: i < 3 ? 1.0 : (i == 3 ? 0.25 : (i == 4 ? 0.6 : 0.0)),
+            conTrabajo: i >= 3 && i <= 6,
+          ),
+      ],
+      seleccionada: 14,
+      recienMovida: 14,
+      onSeleccion: (int bahia) {},
+      rotuloDeAvance: 'avance de la descarga en GTSTC',
+    ));
+
+/// Las tarjetas de cifra del mosaico, con el anillo de avance.
+@Preview(name: 'Tarjetas de cifra', group: 'Diseño', theme: bsTemaDeVistaPreviaOficina)
+Widget vistaPreviaTarjetasCifra() => _lienzo(Builder(
+      builder: (BuildContext context) => Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: <Widget>[
+          const SizedBox(
+            width: 220,
+            child: BsTarjetaCifra(
+              valor: '80 %',
+              rotulo: 'Descarga',
+              detalle: '120 de 150 bajados en GTSTC',
+              anillo: BsAnilloAvance(fraccion: 0.8),
+            ),
+          ),
+          const SizedBox(
+            width: 160,
+            child: BsTarjetaCifra(
+              valor: '30',
+              rotulo: 'Por bajar',
+              detalle: '18 en la bahía 14',
+            ),
+          ),
+          const SizedBox(
+            width: 160,
+            child: BsTarjetaCifra(
+              valor: '3',
+              rotulo: 'Re‑estibas',
+              detalle: '2 para abrir la tapa de la 14',
+            ),
+          ),
+          SizedBox(
+            width: 200,
+            child: BsTarjetaCifra(
+              valor: '2',
+              rotulo: 'Alertas de estiba',
+              detalle: '1 de peso por pila, 1 de segregación',
+              rol: BsColoresSemanticos.de(context).revisar,
+              onTap: () {},
+            ),
+          ),
+        ],
+      ),
+    ));
+
+/// El panel «En vivo», con el rol del equipo y nunca un nombre.
+@Preview(name: 'Panel En vivo', group: 'Diseño', theme: bsTemaDeVistaPreviaOficina, size: Size(400, 420))
+Widget vistaPreviaPanelEnVivo() => _lienzo(BsPanelEnVivo(
+      resumen: 'Oficina y 2 teléfonos del muelle',
+      eventos: <BsEventoEnVivo>[
+        const BsEventoEnVivo(
+          que: 'Bajando',
+          quien: BsEquipo.muelle,
+          detalle: 'TSTU 000110 8 · 014-02-86',
+          tipo: BsTipoDeEvento.movido,
+          momento: 'ahora',
+        ),
+        const BsEventoEnVivo(
+          que: 'Bajado',
+          quien: BsEquipo.muelle,
+          detalle: 'TSTU 004218 0 · 014-01-86',
+          tipo: BsTipoDeEvento.hecho,
+          momento: 'hace 1 min',
+        ),
+        BsEventoEnVivo(
+          que: 'Cambio pedido',
+          quien: BsEquipo.muelle,
+          detalle: 'TSTU 020493 3 · 014-03-84',
+          tipo: BsTipoDeEvento.aviso,
+          accion: 'Revisar',
+          onAccion: () {},
+        ),
+        const BsEventoEnVivo(
+          que: 'Re‑estiba aprobada',
+          quien: BsEquipo.oficina,
+          detalle: 'TSTU 031167 5 · 018-07-84 → 018-05-86',
+          tipo: BsTipoDeEvento.aprobado,
+          momento: 'hace 9 min',
+        ),
+      ],
+    ));
+
+/// La banda del muelle, con la marca sin recuadro y los modos.
+@Preview(name: 'Banda del muelle', group: 'Diseño', theme: bsTemaDeVistaPrevia, size: Size(390, 160))
+Widget vistaPreviaBandaMuelle() => BsBandaMuelle(
+      buque: 'BUQUE MANUAL',
+      viaje: 'Viaje M100 · GTSTC',
+      nube: BsChipDeNube(texto: 'Al día', onTap: () {}),
+      modo: BsModoDeOperacion.descarga,
+      onModo: (BsModoDeOperacion modo) {},
+    );
+
+/// El fondo de plano: la rejilla al 5 % solo de noche.
+@Preview(
+  name: 'Fondo de plano, noche',
+  group: 'Diseño',
+  theme: bsTemaDeVistaPreviaOficina,
+  brightness: Brightness.dark,
+  size: Size(320, 200),
+)
+Widget vistaPreviaFondoDePlano() => const BsFondoDePlano(
+      child: Center(child: BsMarca(tamano: 64)),
+    );
+
+/// La tira de bahías de la Fase 2, que la silueta evoluciona.
 @Preview(name: 'Tira de bahías', group: 'Diseño', theme: bsTemaDeVistaPrevia)
 Widget vistaPreviaTiraDeBahias() => _lienzo(BsTiraDeBahias(
       bahias: <BsBahiaDeTira>[
@@ -196,7 +505,7 @@ Widget vistaPreviaCartela() => _lienzo(Builder(
           titulo: 'Bahía 02',
           cifras: const <BsCifraDeCartela>[
             BsCifraDeCartela(rotulo: 'Contenedores', valor: '63'),
-            BsCifraDeCartela(rotulo: 'Peso', valor: '416.8 t'),
+            BsCifraDeCartela(rotulo: 'Peso', valor: '416.8 t'),
           ],
           leyenda: <BsEntradaDeLeyenda>[
             BsEntradaDeLeyenda(
@@ -277,8 +586,8 @@ Widget vistaPreviaHojaDeDetalle() => _lienzo(const BsHojaDeDetalle(
       filas: <BsFilaDeDetalle>[
         BsFilaDeDetalle('Posición', 'Bahía 002, Fila 01, Nivel 82'),
         BsFilaDeDetalle('Tipo ISO', '45G1, 40 pies'),
-        BsFilaDeDetalle('Peso', '28.7 t'),
-        BsFilaDeDetalle('VGM', '28 650 kg'),
+        BsFilaDeDetalle('Peso', '28.7 t'),
+        BsFilaDeDetalle('VGM', '28 650 kg'),
         BsFilaDeDetalle('Puerto de carga', 'PAMIT'),
         BsFilaDeDetalle('Puerto de descarga', 'GTSTC'),
       ],

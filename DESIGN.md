@@ -1,17 +1,24 @@
 # DESIGN.md · El sistema de diseño de BayStream
 
-Dirección **A, «Plano de a bordo»**, elegida por Carlos el 21-oct-2026 (10.4 de
-`SPRINT-4.md`), con la barra de operación de la dirección B en el muelle. Timonel,
-T-114. Este archivo manda sobre el código de `lib/features/vessel/presentation/`,
+Dirección **C, «Puente de mando»**, aprobada por Carlos el 22-oct-2026 (10.14 de
+`SPRINT-4.md`): la app es el ícono en grande (sección 13). Sustituye a la dirección A
+«Plano de a bordo» (10.4), que queda en la sección 4 como historia: Carlos vio la entrega
+1 de la Fase 3 y la sintió pobre y sin impacto, y la A se había pensado para leer al sol
+cuando el encargo era impacto. Lo que la A dejó en el código se queda (tokens, tema,
+`ThemeExtension`, componentes, Plex y pruebas); cambian valores y se suman piezas.
+Timonel, T-114. Este archivo manda sobre el código de `lib/features/vessel/presentation/`,
 `lib/core/app.dart` y `lib/core/design/`: ninguna decisión estética entra al código sin
 estar escrita aquí, y lo que aquí cambia se cambia antes en este archivo.
 
-Estado: la Fase 2 (fundación) implementa las secciones 4, 5 y 6 en `lib/core/design/`
-(sección 12), con la corrección de 10.7: la celda atenuada legible en todos los estados
-y la segunda línea solo en la oficina. Las tablas fijas de 5.3 están confirmadas (10.6)
-y en el código. La evidencia de contraste está en `docs/rediseno/fase2/contraste.md`,
-generada por `tool/rediseno_contraste.py`, y la del contraste compuesto de la celda en
-`test/t114_celda_contraste_test.dart`.
+Estado: la Fase 2 (fundación) implementó las secciones 4, 5 y 6 en `lib/core/design/`
+(sección 12), con la corrección de 10.7; la Fase 3, entrega 1, conectó el tema y el
+inicio (7 y 9.1). La Fase 1 bis escribe la dirección C (sección 13) y la Fase 2 bis la
+lleva a `lib/core/design/` y a `lib/core/app.dart`: la noche, los estados de la vista
+Estado, las fichas y la tabla reordenada, el tema por omisión según el equipo y las
+piezas nuevas. Donde la sección 13 y las secciones 4 y 5 digan cosas distintas, manda
+la 13. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
+por `tool/rediseno_contraste.py`, y la del contraste compuesto de la celda en
+`test/t114_celda_contraste_test.dart` y `test/t114_fase2bis_test.dart`.
 Material 3 sigue siendo la base: el sistema son tokens, un `ColorScheme` ajustado,
 tres `ThemeExtension` y componentes propios, no otra biblioteca.
 
@@ -45,10 +52,11 @@ alguien que ha leído planos toda la vida reconozca el suyo en la pantalla, y qu
   contenedor «fuera de celda» del ícono (el naranja) como la marca de lo que se mueve.
 - **Los defaults que se rechazan:** `fromSeed` y tarjetas iguales; el arcoíris de
   Estadísticas; las pestañas superiores y una barra con ocho acciones; la consola
-  oscura por defecto (al sol lee mejor el papel claro; el oscuro existe, pero no manda);
-  los rótulos en mayúsculas sostenidas.
+  oscura en el muelle (al sol lee mejor el papel claro: el muelle abre de día y la
+  oficina de noche, 13.5); los rótulos en mayúsculas sostenidas; los mapas y el
+  arrastrar contenedores (13.9).
 
-## 3. Lo decidido (10.2, 10.4, 10.6 y 10.7 de `SPRINT-4.md`)
+## 3. Lo decidido (10.2, 10.4, 10.6, 10.7 y 10.14 de `SPRINT-4.md`)
 
 1. **Ver primero, confirmar después:** abrir la app, «Seleccionar archivo» y elegirlo son
    los tres pasos; el plano abre con el perfil propuesto y un aviso visible con la escala
@@ -84,10 +92,23 @@ alguien que ha leído planos toda la vida reconozca el suyo en la pantalla, y qu
     pase una prueba (sección 5.1).
 13. **La segunda línea de la celda, solo en la oficina** (10.7): con zoom de 100 % o más
     y un parámetro de zoom explícito; en el muelle no se dibuja aunque venga (sección 4.2).
+14. **La dirección C, «Puente de mando»** (10.14): el tema por omisión según el equipo
+    (oscuro en Windows y la Web, claro en Android); la noche nueva y el día de la Fase 2;
+    el plano dibujado como el ícono en la vista Estado, con el casco de la bodega; el
+    naranja solo para lo que se acaba de mover, 1.5 s, quieto si el sistema reduce el
+    movimiento y anunciado al lector de pantalla; destino y tipo como fichas de noche; la
+    tabla que reparte los tonos a saltos; ninguna dependencia nueva, ningún dato
+    inventado, y los íconos del dominio y las ilustraciones en un paquete aparte
+    (sección 13).
 
 ---
 
-## 4. Dirección A · «Plano de a bordo»
+## 4. Dirección A · «Plano de a bordo» (historia; la activa es la 13)
+
+Elegida en 10.4 y superada el 22-oct por la C (10.14): se sintió pobre y sin impacto, y
+tomaba del ícono los colores pero no la forma. Sus tokens y componentes siguen en el
+código con los valores de la sección 13; lo que sigue es el texto de la Fase 2, que se
+conserva porque 4.2, 4.3 y 4.5 siguen vigentes en lo que la 13 no cambia.
 
 **La idea.** La pantalla es la hoja del plano: papel claro, tinta azul marino, contornos
 finos y una sola tinta de acento, el naranja de la grúa, reservada a lo que se mueve o
@@ -203,7 +224,10 @@ animan `Transform` y `opacity`.
 ### 5.1 Roles semánticos
 
 Cada rol tiene relleno, texto sobre el relleno y contorno, en claro y en oscuro; **el
-color nunca va solo**: cada rol lleva su icono o su rótulo.
+color nunca va solo**: cada rol lleva su icono o su rótulo. Los valores de claro son los
+vigentes; **los de oscuro de esta tabla son los de la dirección A y quedaron sustituidos
+por la noche de 13.1**, que suma además el rol «información» y los cinco estados de la
+vista Estado (13.2).
 
 | Rol | Señal además del color | Claro (relleno / contorno) | Oscuro (relleno / contorno) |
 |---|---|---|---|
@@ -238,7 +262,7 @@ esencial, y queda fuera de la exigencia de 3:1.
 
 ### 5.2 La paleta categórica: 24 ranuras
 
-Doce tonos a 30° (arcilla 15°, ámbar 45°, oliva 75°, hierba 105°, verde mar 135°,
+De día siguen estos valores; de noche las ranuras son fichas en OKLCH (13.4). Doce tonos a 30° (arcilla 15°, ámbar 45°, oliva 75°, hierba 105°, verde mar 135°,
 turquesa 165°, cielo 195°, cobalto 225°, índigo 255°, uva 285°, magenta 315°, rosa 345°)
 en dos luminosidades, **suave** (ranuras 0 a 11) e **intensa** (12 a 23). En claro, la
 intensa es un tinte más oscuro (relleno a 74 % en vez de 85 %); en oscuro es una sombra
@@ -250,7 +274,9 @@ debajo de 4.5:1 en los verdes. Los 24 hexadecimales están en `contraste.md` y e
 
 Solo códigos, sin cuentas ni viajes, sacados de los archivos del corpus anonimizado y
 confirmados por Carlos. Las dos tablas son independientes porque sus vistas nunca
-coinciden en pantalla. Ranura k → tono k mod 12, suave si k < 12, intensa después.
+coinciden en pantalla. Desde 10.14 la ranura k pinta el tono
+`[11, 6, 3, 9, 1, 8, 4, 0, 10, 5, 2, 7][k mod 12]`, suave si k < 12, intensa después
+(13.4); antes era k mod 12, y los cinco primeros puertos quedaban a 30° uno de otro.
 
 Puertos de destino (15): JMKIN 0 · USHOU 1 · GTSTC 2 · JMKCT 3 · PAMIT 4 · COSPC 5 ·
 JMKWL 6 · PACCT 7 · GTPBR 8 · USPEF 9 · PAONX 10 · VEPBL 11 · VELAG 12 · COCTG 13 ·
@@ -466,6 +492,9 @@ listas a la derecha, dentro del ancho máximo de 1440.
 
 ### 9.2 Plano por bahía (vista «Destino», previo sin confirmar)
 
+El lienzo de 1920 px de esta sección quedó sustituido por el de 13.8 (de noche, con la
+silueta, las tarjetas y «En vivo»); el de 360 dp sigue, con los valores de 13.1.
+
 **360 dp**
 ```
 ┌──────────────────────────────────────┐
@@ -528,6 +557,9 @@ condensada de 12). El zoom amplía la rejilla dentro de su lienzo; el chip «100
 en la esquina inferior derecha, nunca sobre el título.
 
 ### 9.3 Muelle: carga y descarga (el plano en modo Operar, viaje publicado)
+
+El lienzo de 360 dp en modo Descarga quedó sustituido por el de 13.8 (la banda de la
+marca, «Baja» en el azul de la marca, la celda que sale de su sitio); el de 1920 px sigue.
 
 **360 dp, modo Descarga**
 ```
@@ -715,6 +747,380 @@ inicio (9.1), el previo con su banda, «sin evaluar» y sin exportar (7), la reg
 de publicación directa (7.2) y el plano como primera pestaña (10.2 a). La navegación
 adaptable (8) no hizo falta para entregar el inicio: va con el plano.
 
-**Fase 3, en este orden:** plano por bahía con los modos de carga y descarga (con la
-navegación adaptable, la cartela y el código íntegro a 2.0), avance en la oficina,
-estadísticas; después, las demás pantallas.
+**Fase 1 bis y Fase 2 bis (22-oct, 10.14):** la dirección C en la sección 13 y su
+fundación en el código: la noche en `bs_paleta.dart` y en `BayStreamTema.oscuro`; los
+estados de la vista Estado, el rol «información», la tinta tenue y las fichas de noche en
+`bs_colores_semanticos.dart`; la tabla reordenada en `bs_categorico.dart` y en el script;
+el tema por omisión según el equipo en `lib/core/app.dart`; y las piezas nuevas de 13.6,
+con sus pruebas y sus vistas previas. Ninguna pantalla cambia todavía.
+
+**Fase 3, en este orden:** plano por bahía con los modos de carga y descarga (ya en la
+dirección C: la silueta, el casco, la vista Estado, la navegación adaptable, la cartela y
+el código íntegro a 2.0); después el muelle, el avance, las estadísticas y el inicio con
+la ilustración cuando llegue el paquete; después, las demás pantallas.
+
+## 13. Dirección C · «Puente de mando» (activa desde el 22-oct, 10.14)
+
+**La idea.** La app es el ícono en grande. Del ícono salen el azul de la marca, el blanco
+de la cubierta, el acero de la bodega, el contenedor naranja que sale de su celda y la
+curva del casco que cierra la bodega. La oficina trabaja de noche: un fondo técnico con la
+rejilla del plano al 5 %, paneles que se apoyan en él y cifras grandes; la bahía
+seleccionada se dibuja como el ícono (blanco arriba, acero abajo) y lo único naranja en
+pantalla es lo que se acaba de mover. El muelle sigue de día, con el papel de la Fase 2 y
+una banda azul de la marca arriba. Lo que había en la A se queda (tokens, tema, extensiones,
+componentes, Plex y pruebas): cambian valores y se suman piezas.
+
+**Por qué cambió (10.14).** Carlos vio la entrega 1 de la Fase 3 y la sintió pobre y sin
+impacto. La A se pensó para leer al sol y el encargo era impacto; además la tabla fija daba
+a los cinco primeros puertos cinco tonos seguidos de la rueda, y del ícono se habían tomado
+los colores, no su forma. Yov dibujó el concepto en un lienzo (las cuatro mesas están en
+`docs/rediseno/concepto/`) y Carlos lo aprobó completo a las 15:51.
+
+### 13.1 La noche y el día
+
+El día es el de la Fase 2 (4.1), sin cambios. La noche es nueva. Los dos son la única
+fuente de hexadecimales de la presentación (`bs_paleta.dart`); cada pareja está verificada
+con `tool/rediseno_contraste.py` (`docs/rediseno/fase2bis/contraste.md`): 4.5:1 el texto y
+3:1 los bordes e iconos. Entre el día y la noche cambia la luminosidad, no el tono, salvo
+en la marca: de noche el azul del ícono deja de ser texto (no llega a 3:1 sobre la noche) y
+pasa a ser **superficie** con texto blanco; el texto y la selección de marca pasan al azul
+de selección.
+
+| Nombre | Rol de M3 | Día | Noche | Qué es |
+|---|---|---|---|---|
+| Papel / noche | `surface`, `scaffoldBackgroundColor` | `#F5F8FC` | `#07111F` | El fondo. De noche lleva la rejilla de plano: líneas cada 32 dp en acero al 5 % (`BsFondoDePlano`), solo en oscuro |
+| Hoja / panel | `surfaceContainerLowest` (día), `surfaceContainerLow` (noche) | `#FFFFFF` | `#0C1A31` | Tarjetas, paneles, hojas, el casco de la silueta |
+| Hoja alta / panel alto | `surfaceContainerHigh` | `#E9EFF7` | `#11223F` | Fila activa, chips de estado («Publicado»), la celda de paso, la banda de información |
+| Tinta | `onSurface` | `#10243F` | `#EAF0F9` | Texto, iconos, cifras |
+| Tinta suave | `onSurfaceVariant` | `#4A5B73` | `#A9B9D2` | Texto secundario, rótulos, el código de la celda atenuada |
+| Tinta tenue | `BsColoresSemanticos.tintaTenue` | `#566986` | `#8DA0BE` | Metadatos terciarios: el momento de un evento, «18 en la bahía 14», los números de bahía no seleccionados |
+| Línea | `outlineVariant` | `#C9D3E0` | `#1E3457` | Separadores y la pista de las barras de avance |
+| Línea fuerte | `outline` | `#6D809F` | `#5272A6` | Contornos esenciales: celda, casco, bordes de campo (3.6:1 sobre el panel) |
+| Marca (texto y selección) | `primary` | `#0D47A1` | `#4F8EF7` | Texto e iconos de marca, foco, el marco de la celda y de la bahía seleccionadas, el avance en curso |
+| Sobre marca | `onPrimary` | `#FFFFFF` | `#07111F` | Texto sobre un botón de marca |
+| Marca tenue / marca como superficie | `primaryContainer` | `#DCE7F8` | `#0D47A1` | De día un tinte (chip seleccionado, indicador del riel); de noche la marca como superficie: el riel activo, el chip seleccionado y el botón tonal, con texto en tinta (7.5:1) |
+| Marca superficie | `BsPaleta.marcaSuperficie` | `#0D47A1` | `#0D47A1` | La banda del muelle y el recuadro de la marca, iguales en los dos modos; texto blanco (8.6:1), frase `#BCD2F7` (5.6:1) y el chip de la nube en marca profunda `#0A3A85` (blanco 10.7:1) |
+| Acero | `secondary` | `#6E9DE6` | `#6E9DE6` | La bodega del ícono: por bajar en bodega, los datos de segundo plano de la silueta |
+| Acero tenue | `secondaryContainer` | `#E3EDFB` | `#11213A` | La zona de bodega de la rejilla; de noche, acero al 5 % sobre el panel |
+| Grúa (texto) | `tertiary` | `#C2410C` | `#FF9A4D` | Texto e iconos naranja; «ahora» en el panel «En vivo» va en `#FFB27A`, el contorno de la celda recién movida |
+| Grúa (relleno) | `tertiaryContainer` | `#FF7A1A` | `#FF7A1A` | Solo lo que se acaba de mover; texto encima siempre en tinta oscura (6.0:1 y 7.3:1) |
+| Hecho | contorno del rol `hecho` | `#1E6B43` | `#3DD68C` | Palomitas, el avance terminado, el punto de «Al día» |
+| Aviso | contorno del rol `revisar` | `#8A5A00` | `#F5B83D` | Alertas de estiba, la tarjeta de alertas, «Revisar» |
+| Crítico | `error`, contorno de `error` y `peligrosa` | `#B3261E` | `#F2777A` | Errores con causa y acción, el rombo de IMDG |
+
+**Los pares de la noche** (los del día están en 4.1 y no cambian): tinta sobre noche
+16.5, sobre panel 15.2, sobre panel alto 13.8; tinta suave 9.5 · 8.7 · 8.0; tinta tenue
+7.1 · 6.5 · 6.0; selección sobre noche 5.9, sobre panel 5.4, sobre panel alto 4.9; noche
+sobre selección 5.9; blanco sobre la marca 8.6; frase sobre la marca 5.6; blanco sobre la
+marca profunda 10.7; tinta sobre acero tenue 14.1; noche sobre acero 6.9; noche sobre
+grúa 7.3; grúa texto sobre noche 9.0; línea fuerte sobre noche 3.9, panel 3.6, panel alto
+3.3 y acero tenue 3.3; hecho sobre noche 10.1; aviso 10.7; crítico 6.9.
+
+**Los roles semánticos de noche** (relleno / texto / contorno; el texto sobre el relleno
+y el contorno sobre el peor fondo del modo): pendiente `#1E3A66` / `#EAF0F9` / `#4F8EF7`
+(9.9 · 4.9); hecho `#1D4A33` / `#EAF0F9` / `#3DD68C` (8.8 · 8.5); cancelado `#2A3850` /
+`#A9B9D2` / `#8A9DB8` (5.9 · 5.7); revisar `#5C4300` / `#F2F6FB` / `#F5B83D` (8.6 · 8.9);
+error y peligrosa `#601410` / `#F2F6FB` / `#F2777A` (12.1 · 5.8); refrigerado `#1E4A5C` /
+`#F2F6FB` / `#7FC6DD` (8.8 · 8.3); OOG `#4A2A5E` / `#F2F6FB` / `#C9A0DE` (10.9 · 7.2); de
+paso `#11223F` / `#A9B9D2` / `#5272A6` (8.0 · 3.3); reservado `#0C1A31` / `#A9B9D2` /
+`#8A9DB8` (8.7 · 5.7); en movimiento `#FF7A1A` / `#07111F` / `#FF9A4D` (7.3 · 7.5);
+cubierta (zona) `#0C1A31` / `#EAF0F9` / `#5272A6` (15.2 · 3.3); bodega (zona) `#11213A` /
+`#EAF0F9` / `#5272A6` (14.1 · 3.3); información (banda) `#11223F` / `#EAF0F9` / `#4F8EF7`
+(13.8 · 4.9). Los de día son los de 5.1, más «información» `#DCE7F8` / `#10243F` /
+`#0D47A1`, que la banda ya usaba desde el esquema.
+
+**La selección de noche se invierte:** el segmento y el chip seleccionados van en tinta
+`#EAF0F9` con texto noche (16.5:1), como el «Descarga» y el «Estado» del concepto, en vez
+del tinte de marca del día. El indicador del riel y de la barra de navegación sí usa la
+marca como superficie.
+
+### 13.2 El plano se dibuja como el ícono
+
+**La celda** tiene las esquinas del ícono: radio 8 (el 17 % del lado, como 1.9 de 11 en el
+SVG); antes 2. En la vista **Estado** los rellenos son los del ícono:
+
+| Estado | Día (el muelle) | Noche (la oficina) | Señal además del color |
+|---|---|---|---|
+| Por bajar en cubierta | marca `#0D47A1`, texto blanco, contorno marca (8.6) | cubierta `#F5F8FC`, texto noche, contorno cubierta (17.8) | Flecha abajo y «Baja» en el muelle; el código y el peso en la oficina |
+| Por bajar en bodega | `#1F5FD6`, texto blanco (5.7; 4.9 sobre el papel) | acero `#6E9DE6`, texto noche (6.9) | Igual |
+| De paso | papel, tinta suave, línea fuerte (la Fase 2) | panel alto `#11223F`, tinta suave `#A9B9D2` (8.0), línea fuerte | «Paso» y el código |
+| Bajado | el rol hecho de la Fase 2: `#D3EFDB`, tinta, `#1E6B43` (12.7) | la celda vacía (relleno noche) con contorno **punteado** en línea fuerte (3.3 sobre el panel) y la palomita en hecho `#3DD68C` (10.1) | Palomita y «Hecho» |
+| Recién movido | grúa `#FF7A1A`, tinta, contorno `#C2410C` (6.0) | grúa `#FF7A1A`, texto noche, contorno `#FFB27A` (7.3) | Sale de su celda (13.3), icono de flecha y «Bajando» o «Subiendo» |
+
+Los demás estados de la celda (categoría, insignias, marcas, resaltada, atenuada,
+reservada, hueco) siguen como en 5.1, con los valores de noche de 13.1. **Atenuada:** el
+código va en tinta suave sobre el relleno al 35 % compuesto sobre el papel; con los
+rellenos de «por bajar» la tinta suave queda en 3.5:1 de día y 3.1:1 de noche, así que la
+regla pasa a ser «tinta suave, y si no llega a 4.5:1 sobre lo compuesto, tinta», decidida
+por el rol en el tema y verificada compuesta (`test/t114_celda_contraste_test.dart` y
+`test/t114_fase2bis_test.dart`). Nunca alfa en el texto.
+
+**La bodega se cierra con la curva del casco.** `BsCascoBodega` pinta detrás de las filas
+de bodega un casco: los costados rectos que bajan desde la tapa y el fondo que se curva
+hacia la quilla, relleno en acero tenue y contorno en línea fuerte de 1.5 dp; de noche el
+relleno es acero al 5 % sobre el panel. Las celdas de los extremos de cada fila de bodega
+llevan esa curva en su esquina exterior inferior (`BsCelda.curva`: babor, estribor o las
+dos en la fila más baja; radio `radioCasco` 18), como los bloques exteriores del ícono. La
+tapa de escotilla sigue siendo la línea de 2 dp entre cubierta y bodega; de día en tinta,
+de noche en cubierta `#DCE5F3`.
+
+### 13.3 La regla del naranja
+
+El naranja de la grúa marca **solo lo que se acaba de mover**:
+
+1. Una celda que otro equipo acaba de bajar o cargar entra en el estado «recién movido»:
+   toma el relleno de grúa, sale de su celda media celda hacia arriba (`Transform.translate`
+   de 150 ms) y deja en su sitio el hueco con contorno punteado en grúa texto, como el
+   contenedor del ícono. En el muelle, el toque en «Baja» hace lo mismo antes del aviso con
+   «Deshacer».
+2. **Dura 1.5 s** (`BsMovimiento.recienMovido`). La pantalla, no la celda, apaga el estado:
+   la celda es un widget sin reloj y el plano decide cuándo vuelve a «bajado» o «hecho».
+3. **La bahía donde pasó destella en la silueta**: un anillo en grúa alrededor de su pila
+   que se apaga en los mismos 1.5 s (`BsSiluetaBuque.recienMovida`).
+4. **Si el sistema pide reducir el movimiento** (`MediaQuery.disableAnimationsOf`), nada se
+   mueve: la celda se dibuja en naranja en su sitio, sin salir ni volver, y el destello es
+   un anillo fijo mientras el estado dure. La prueba de la Fase 2 bis lo exige.
+5. **Siempre se anuncia** para el lector de pantalla: el panel «En vivo» es una región en
+   vivo (`liveRegion`) y su evento más reciente lleva la etiqueta completa («Bajado, Muelle,
+   TSTU 000110 8, 014-01-86, ahora»). La celda recién movida también cambia su etiqueta.
+6. Fuera de esto, el naranja aparece en el contador de «Más» (alertas) y en el contenedor
+   del ícono; nunca como relleno de fondo, y a lo sumo en un elemento por pantalla, además
+   de la marca.
+
+### 13.4 Las fichas en oscuro y la tabla reordenada
+
+**De noche, destino y tipo son fichas:** relleno profundo del tono, y código y contorno
+en el tono vivo, sin tinta clara encima. Se calculan en OKLCH con los tonos del concepto
+(arcilla 35°, ámbar 75°, oliva 110°, hierba 145°, verde mar 170°, turquesa 195°, cielo
+230°, cobalto 262°, índigo 285°, uva 315°, magenta 345°, rosa 10°): las **suaves** con
+relleno L 0.34 C 0.075 y código y contorno L 0.84 C 0.12 (código sobre relleno de 7.1 a
+7.4, contorno sobre los fondos de la noche de 9.2 a 10.2); las **intensas**, separadas de
+las suaves por luminosidad, con relleno L 0.44 C 0.12 y código y contorno L 0.93 C 0.06
+(6.1 a 6.7 y 12.7 a 13.3). Donde un tono se sale de la gama sRGB, el script baja el croma
+hasta que quepa, sin tocar el tono ni la luminosidad: por eso cielo y rosa difieren por
+unas unidades de los valores del lienzo. **De día, los rellenos suaves e intensos de la
+Fase 2** (5.2) no cambian.
+
+**La tabla reparte los tonos dando saltos:** ranura k → tono
+`[11, 6, 3, 9, 1, 8, 4, 0, 10, 5, 2, 7][k mod 12]`, suave hasta la 11 e intensa desde la
+12 (`tonoDeRanura` en `bs_categorico.dart` y `TONO_DE_RANURA` en el script). En la rueda
+de doce tonos a 30°, los cinco primeros puertos quedan a 60° o más (345°, 195°, 105°, 285°
+y 45°; antes a 30°): JMKIN rosa, USHOU cielo, GTSTC hierba, JMKCT uva y PAMIT ámbar. En los
+matices OKLCH de las fichas, que no van a pasos iguales, el par más cercano es uva y rosa,
+a 55°. Las tablas de códigos de 10.6 (5.3) y la ranura de reserva (FNV-1a) no cambian:
+cambia lo que cada ranura pinta.
+
+| Ranura | Tono | Día: relleno / contorno | Noche: relleno / código y contorno |
+|---:|---|---|---|
+| 0 | rosa suave | `#EEC4CE` / `#832139` | `#58252F` / `#FFB2BD` |
+| 1 | cielo suave | `#C4E3EE` / `#216A83` | `#003E55` / `#84D7FE` |
+| 2 | hierba suave | `#CEEEC4` / `#398321` | `#1B421E` / `#98DF9A` |
+| 3 | uva suave | `#E3C4EE` / `#6A2183` | `#462B52` / `#E7B3FF` |
+| 4 | ámbar suave | `#EEE3C4` / `#836A21` | `#4E3100` / `#F8BF6C` |
+| 5 | índigo suave | `#CEC4EE` / `#392183` | `#34315D` / `#C4C4FF` |
+| 6 | verde mar suave | `#C4EECE` / `#218339` | `#004332` / `#6FE4BF` |
+| 7 | arcilla suave | `#EECEC4` / `#833921` | `#58281C` / `#FFB6A3` |
+| 8 | magenta suave | `#EEC4E3` / `#83216A` | `#522641` / `#FEADDB` |
+| 9 | turquesa suave | `#C4EEE3` / `#21836A` | `#004142` / `#55E3E3` |
+| 10 | oliva suave | `#E3EEC4` / `#6A8321` | `#3B3B00` / `#CFD271` |
+| 11 | cobalto suave | `#C4CEEE` / `#213983` | `#22375E` / `#AFCBFE` |
+| 12 | rosa intensa | `#DE9CAC` / `#6A1B2E` | `#873043` / `#FFDFE2` |
+| 13 | cielo intensa | `#9CCDDE` / `#1B566A` | `#005B7A` / `#CCEEFF` |
+| 14 | hierba intensa | `#ACDE9C` / `#2E6A1B` | `#1A6323` / `#D0F3D0` |
+| 15 | uva intensa | `#CD9CDE` / `#561B6A` | `#6B3A7F` / `#F4DFFF` |
+| 16 | ámbar intensa | `#DECD9C` / `#6A561B` | `#704A00` / `#FEE3BF` |
+| 17 | índigo intensa | `#AC9CDE` / `#2E1B6A` | `#4D4691` / `#E5E5FE` |
+| 18 | verde mar intensa | `#9CDEAC` / `#1B6A2E` | `#00624B` / `#C1F6E2` |
+| 19 | arcilla intensa | `#DEAC9C` / `#6A2E1B` | `#88341F` / `#FFE0D8` |
+| 20 | magenta intensa | `#DE9CCD` / `#6A1B56` | `#7E3261` / `#FFDDEF` |
+| 21 | turquesa intensa | `#9CDECD` / `#1B6A56` | `#005F5F` / `#B9F5F4` |
+| 22 | oliva intensa | `#CDDE9C` / `#566A1B` | `#565700` / `#EAECBE` |
+| 23 | cobalto intensa | `#9CACDE` / `#1B2E6A` | `#2C4F94` / `#DCE9FE` |
+
+La leyenda dibuja la muestra con el mismo relleno y contorno que la celda; de noche la
+insignia de carga especial se lee sobre la ficha con la regla de 5.1 (el primer color del
+rol que llega a 3:1, y si ninguno, el código de la ficha).
+
+### 13.5 El tema por omisión según el equipo
+
+Oscuro en Windows y en la Web (la oficina), claro en Android e iOS (el muelle), **cuando el
+usuario nunca eligió un tema**. La preferencia de T-90 (claro, oscuro o seguir al sistema)
+sigue igual. `lib/core/app.dart` tiene `bayStreamTemaPorOmision` (el tema del equipo) y
+`bayStreamThemeMode` (la preferencia → `ThemeMode`).
+
+**Un límite que la presentación no puede resolver sola, y por eso el tema por equipo queda
+preparado y no conectado.** El almacén guarda la preferencia como `system`, `light` o
+`dark`, y devuelve `system` tanto cuando el usuario nunca eligió como cuando eligió «Seguir
+al sistema» (`hive_vessel_data_source.dart:117`). T-90 exige, con su prueba, que «Seguir al
+sistema» siga al sistema operativo; resolver `system` por equipo la rompería y cambiaría la
+preferencia, que 10.14 dice que no cambia. Como la regla del rediseño es no tocar `domain/`
+ni `data/`, la Fase 2 bis deja `system` → `ThemeMode.system` y **propone el cambio mínimo**,
+que decide Carlos y escribe Yov como tarea: que el almacén distinga «no elegido». La forma
+más limpia es un cuarto valor, `AppThemePreference.equipo` («Según el equipo»), que el
+almacén devuelva cuando no hay nada guardado (`_ => equipo` en vez de `_ => system`) y que
+Parámetros ofrezca como opción; con eso `bayStreamThemeMode(equipo)` devuelve
+`bayStreamTemaPorOmision`, quien eligió «Seguir al sistema» conserva su elección y quien
+nunca eligió abre con el tema del equipo. Son dos líneas en `domain/` y `data/`, una en
+`app.dart` y una opción en Parámetros (Fase 3).
+
+### 13.6 Las piezas nuevas y su API
+
+Todas en `lib/core/design/componentes/`, con documentación, vista previa, prueba de
+contraste compuesto y las tres pautas de accesibilidad. Solo se animan `Transform` y
+`opacity`; cada `CustomPainter` va dentro de un `RepaintBoundary`; con
+`disableAnimations` nada se mueve. Las celdas siguen siendo widgets (toque, foco y
+etiqueta); la silueta, el casco, la marca y el anillo se pintan con `CustomPainter`.
+
+| Pieza | API | Qué hace |
+|---|---|---|
+| `BsMarca` | `BsMarca({tamano = 40, variante = conRecuadro \| sinRecuadro \| monocroma, color?, espera = false, etiqueta = 'BayStream'})` | El ícono pintado desde la geometría de `design/icono/baystream.svg` (módulo de 13.8 en un lienzo de 100; recuadro de 126.6 con esquinas de 27). `monocroma` tiñe todo con `color` (por omisión `onSurface`) y el contenedor se reconoce por estar fuera de la cuadrícula. `espera: true` es la espera de la app: el contenedor naranja sube y baja medio módulo (6.9 unidades) en un bucle de 1.2 s con `easeInOut`, solo `Transform`; quieto si se reduce el movimiento. Etiqueta accesible; con `espera`, «BayStream, leyendo» |
+| `BsSiluetaBuque` | `BsSiluetaBuque({bahias: List<BsBahiaDeSilueta>, onSeleccion, seleccionada?, recienMovida?, controlador?, alto = 112, rotuloDeAvance?})` con `BsBahiaDeSilueta({numero, nivelesCubierta = 0, nivelesBodega = 0, avance?, conTrabajo = false})` | Evoluciona `BsTiraDeBahias`: el casco con la proa a la izquierda y la línea de flotación, sin superestructura; cada bahía es una pila (los niveles ocupados de cubierta encima de la línea de la tapa y los de bodega debajo); las bahías con trabajo en esta escala van más claras y las demás apagadas; la seleccionada en cubierta `#F5F8FC` y acero `#6E9DE6` con su marco en marca; bajo cada número, la barra de avance (hecho si llegó a 1, marca si va, línea si no empezó); el destello de la bahía recién movida (13.3). Cada bahía es un botón de 48 dp de ancho con etiqueta («Bahía 14, 4 niveles en cubierta y 4 en bodega, avance 25 %, seleccionada») |
+| `BsCascoBodega` | `BsCascoBodega({child, radio = 48})` | El casco detrás de las filas de bodega (13.2) |
+| `BsCelda` | nuevos: `estado = BsEstadoDeCelda.ninguno \| porBajarCubierta \| porBajarBodega \| dePaso \| bajado \| recienMovido`, `curva = BsCurvaDeCelda.ninguna \| babor \| estribor \| ambas` | Los estados de 13.2 y la curva del casco. `recienMovido` sale de su celda (13.3); `bajado` de noche va punteado (`BsRol.punteado`) |
+| `BsTarjetaCifra` | `BsTarjetaCifra({valor, rotulo, detalle?, rol?, anillo?, onTap?})` | La tarjeta de cifra grande del mosaico: rótulo arriba (tinta suave), la cifra a 40 / 600 tabular, el detalle abajo (tinta tenue); con `rol` (revisar para alertas) la cifra y el rótulo toman el contorno del rol y el borde se tiñe; con `anillo`, un `BsAnilloAvance` a la izquierda de la cifra. Panel con radio 18 y borde en línea. Etiqueta: «Por bajar: 30, 18 en la bahía 14» |
+| `BsAnilloAvance` | `BsAnilloAvance({fraccion, tamano = 52, grosor = 9, color?, etiqueta?})` | El anillo: pista en línea, arco desde las 12 en el color (hecho por omisión), extremos redondeados; sin animación (es un dato, no un movimiento). Etiqueta «80 por ciento» |
+| `BsPanelEnVivo` | `BsPanelEnVivo({eventos: List<BsEventoEnVivo>, resumen?, enLinea = true, titulo = 'En vivo'})` con `BsEventoEnVivo({que, quien: BsEquipo.muelle \| oficina, detalle, tipo: BsTipoDeEvento.movido \| hecho \| aviso \| aprobado, momento?, accion?, onAccion?})` | La actividad en tiempo real: punto verde con pulso de opacidad (2.2 s, quieto si se reduce el movimiento), el resumen (p. ej. «Oficina y 2 teléfonos del muelle»), y una fila por evento: cuadrado de 9 dp del color del tipo (grúa, hecho, aviso, acero), «Bajado · Muelle» (el rol del equipo, nunca un nombre: la API solo admite el enum), el detalle en mono y el momento o la acción («Revisar»). Región en vivo para el lector de pantalla |
+| `BsBandaMuelle` | `BsBandaMuelle({buque, viaje?, nube?, modo?, onModo?, acciones = const []})` | La banda de la marca arriba del muelle: `BsMarca.sinRecuadro` de 44, el nombre del buque (17 / 600 blanco) y el viaje y la escala (`#BCD2F7`), el chip de la nube (marca profunda, punto en hecho) y, debajo, el `SegmentedButton` Descarga / Carga de 48 dp (seleccionado blanco con texto marca). Fondo `marcaSuperficie` en los dos temas |
+| `BsFondoDePlano` | `BsFondoDePlano({child})` | De noche, la rejilla de plano: líneas cada 32 dp (`pasoRejilla`) en acero al 5 % sobre la noche; de día, solo el papel |
+
+`BsTiraDeBahias`, `BsCifra` y los demás componentes de 4.4 se quedan como están; la Fase 3
+cambia la tira por la silueta y las cifras del avance por tarjetas donde el wireframe lo
+pide.
+
+### 13.7 Dónde va la marca
+
+| Dónde | Pieza | Tamaño |
+|---|---|---|
+| Arriba del riel, en la oficina | `BsMarca` con recuadro | 44 |
+| La banda del muelle | `BsMarca` sin recuadro, sobre el azul | 44 |
+| El inicio, junto a «BayStream» | `BsMarca` con recuadro | 40 |
+| La espera («Leyendo A01.edi…», publicar, unirse) | `BsMarca(espera: true)` dentro de un recuadro de 72 con radio 16 | 52 |
+| Las pantallas vacías | Un dibujo de línea del muelle en acero y una frase que dice qué hacer; el dibujo llega en el paquete de íconos (10.14). Mientras, el estado vacío de hoy con el texto nuevo |  |
+| La celda que se mueve | `BsCelda(estado: recienMovido)`: el contenedor fuera de su celda, como en el ícono |  |
+| Íconos temáticos y lanzadores | Los de `design/icono/` (T-88), sin cambios |  |
+
+### 13.8 Los wireframes que cambian
+
+Sustituyen a 9.2 (1920 px) y a 9.3 (360 dp). Los demás de la sección 9 siguen en pie con
+los valores de 13.1. Buques y números sintéticos (TSTU con dígito de control).
+
+**9.2 bis · Plano por bahía a 1920 px, de noche (la oficina)**
+```
+┌─────┬────────────────────────────────────────────────────────────────────────────────┬────────────────────┐
+│ [▣] │ BUQUE MANUAL  (Publicado)   Viaje M100 · Escala GTSTC     ◉ Descarga ○ Carga   │ ● Al día 3 equipos │ 56
+│     │                                                           [ Número, OR o celda 🔍 ] │                    │
+│ ⌂   ├────────────────────────────────────────────────────────────────────────────────┴────────────────────┤
+│ In  │ ┌ Bahías de proa a popa ─ avance de la descarga en GTSTC bajo cada bahía ──────┐ ┌──────┐ ┌──────┐ │
+│ ▦   │ │ ╭─────────────────────────────────────────────────────────────────────╮     │ │ ◔ 80 %│ │Por   │ │
+│ Pl  │ │ │  ▪▪  ▪▪▪ ▪▪▪▪ [████] ▪▪▪▪ ▪▪▪▪ ▪▪▪▪ ▪▪  ▪▪  ▪▪▪                    │     │ │120 de│ │bajar │ │
+│ ═   │ │ ╰──────────────── ▪▪▪  ▪▪▪  ▪▪▪  [████] ▪▪▪ ▪▪▪ ▪▪▪ ▪▪▪ ──────────────╯     │ │150   │ │  30  │ │
+│ ☰   │ │ Proa  02  06  10   14   18   22   26   30   34   38                   Popa │ └──────┘ └──────┘ │
+│ Li  │ │       ━━  ━━  ━━   ▬    ━─   ─    ─    ─    ─    ─      (avance bajo cada n.º)│ ┌──────┐ ┌──────┐ │
+│ ◔   │ └───────────────────────────────────────────────────────────────────────────────┘ │Re‑est.│ │Alertas│ │
+│ Av  │ ┌ ‹  Bahía 14   36 contenedores · 712.4 t · cubierta 18 · bodega 18  ›   Colorear por (Estado)(Destino)(Tipo) ┐
+│ ⫶   │ │        10   08   06   04   02   00   01   03   05   07   09           Babor … Estribor         │
+│ Es  │ │ 88    ┌╌╌┐ ┌╌╌┐ ┌╌╌┐ ┌╌╌┐ ┌╌╌┐ ┌╌╌┐ ┌╌╌┐                    ← bajados: vacías punteadas + ✓ │
+│ ⚠ 2 │ │ 86         ▓GTSTC▓ ▓GTSTC▓ ▓GTSTC▓ ┌─▲─┐ ▓GTSTC▓ ┌╌╌┐ ▓GTSTC▓ ▓GTSTC▓ ░USHOU░                 │
+│ Al  │ │ 84    ░USHOU░ ▓GTSTC▓ ▓GTSTC▓ ▓GTSTC▓ ░JMKCT░ ▓GTSTC▓ ▓GTSTC▓ ▓GTSTC▓ ░USHOU░ ░PAMIT░ ░USHOU░ │
+│ ☁   │ │ 82    ░USHOU░ ░USHOU░ ░PAMIT░ ░PAMIT░ ░JMKCT░ ░JMKCT░ ░USHOU░ ░USHOU░ ░PAMIT░ ░PAMIT░ ░USHOU░ │
+│ Nu  │ │ Tapa  ══════════════════════ tres tapas ═══════════════════════                               │
+│ ⚙   │ │ 10  ╭ ▒GTSTC▒ ▒GTSTC▒ ░USHOU░ ▒GTSTC▒ … ▒GTSTC▒ ░PAMIT░ ╮        ▓ = por bajar en cubierta   │
+│ Pa  │ │ 08  │ ░USHOU░ ░USHOU░ ░JMKCT░ ░JMKCT░ … ░PAMIT░ ░PAMIT░ │         ▒ = por bajar en bodega     │
+│     │ │ 06  │   ░USHOU░ ░USHOU░ ░JMKCT░ … ░PAMIT░ ░PAMIT░      │         ░ = de paso (panel alto)    │
+│     │ │ 04  ╰╮   ░USHOU░ ░JMKCT░ … ░PAMIT░ ░PAMIT░        ╭╯        ┌─▲─┐ = recién movido, fuera   │
+│     │ │ 02   ╰───╮  ░JMKCT░ ░PAMIT░ ░PAMIT░ ░PAMIT░  ╭───╯              de su celda, 1.5 s          │
+│     │ │ Peso por pila en cubierta · límite 90 t  ▂▃▅▆▇▆▅▃▂ (barra por pila, aviso si ≥ 90 %)         │
+│     │ │ (Por bajar 18) (Bajando 1) (Bajados 8) (De paso 9) (❄ Refrigerado) (◆ Peligrosa IMDG)        │
+│     │ └──────────────────────────────────────────────────────────────────────────────────────────────┘
+│     │ ┌ Contenedor ───────────── (Bajando ahora) ┐ ┌ ● En vivo ─── Oficina y 2 teléfonos del muelle ┐
+│     │ │ TSTU 000110 [8]   45G1 · 40′ HC · lleno  │ │ ▪ Bajando · Muelle     TSTU 000110 8 · 014-02-86  ahora │
+│     │ │ Celda 014-02-86   Destino ■ GTSTC        │ │ ▪ Bajado · Muelle      TSTU 004218 0 · 014-01-86  hace 1 min │
+│     │ │ Origen USHOU      Peso 24.1 t            │ │ ▪ Cambio pedido · Muelle  TSTU 020493 3 · 014-03-84 [Revisar] │
+│     │ │ VGM 24 100 kg     Carga especial Ninguna │ │ ▪ Re‑estiba aprobada · Oficina  018-07-84 → 018-05-86 │
+│     │ │ [Pedir cambio]  Historial                │ └───────────────────────────────────────────────────┘
+└─────┴──────────────────────────────────────────┴──────────────────────────────────────────────────────┘
+```
+El riel de 80 lleva la marca con recuadro arriba y el destino activo en la marca como
+superficie con texto blanco; Alertas con su contador en aviso. El fondo es la noche con la
+rejilla al 5 %; cada bloque es un panel (hoja, radio 18, borde en línea). La silueta y las
+cuatro tarjetas van arriba; el plano de la bahía en el centro con «Colorear por» como
+segmentos (el seleccionado en tinta); a la derecha el detalle del contenedor y «En vivo».
+«Grúa 2» del lienzo no existe en la app: el panel dice «Muelle» u «Oficina».
+
+**9.3 bis · Muelle a 360 dp, de día, modo Descarga**
+```
+┌──────────────────────────────────────┐
+│ ▣  BUQUE MANUAL          ● Al día    │ banda de la marca #0D47A1, blanco
+│    Viaje M100 · GTSTC                │ frase #BCD2F7
+│ ┌────────────────┬─────────────────┐ │
+│ │ ⬇ Descarga     │   ⬆ Carga       │ │ SegmentedButton 48; seleccionado blanco
+│ └────────────────┴─────────────────┘ │
+├──────────────────────────────────────┤
+│ ‹  Bahía 14   3 por bajar a la vista │ panel: cabecera + silueta compacta
+│    ▁▂▃[█]▃▃▃▂▂▁                 Popa │ seleccionada en marca con el naranja
+├──────────────────────────────────────┤
+│ Babor · filas 04 a 00   Estribor 01–03│
+│       04    02    00    01    03     │
+│ 88  ┌╌╌╌┐┌╌╌╌┐┌╌╌╌┐┌╌╌╌┐┌╌╌╌┐        │ bajados: vacías con ✓ en hecho
+│ 86  │⬇  ││ ▲ ││⬇  ││ ✓ ││⬇  │        │ Baja = marca con blanco; ▲ = bajando
+│     │Baja││Baj.││Baja││Hecho│Baja│    │
+│ 84  │vac.││PASO││⬇  ││⬇  ││❄  │      │ Paso = papel con el código, tinta suave
+│     │Baja││JMKCT│Baja││Baja││Baja│    │
+│ 82  │PASO││PASO││PASO││PASO││PASO│    │
+│     │PAMIT│JMKCT│JMKCT│USHOU│USHOU│   │
+│ ━━━━━━━━━━━━ tapa ━━━━━━━━━━━━━      │ tinta, 8 dp
+│ 10 ╭│⬇  ││❄  ││⬇  ││⬇  ││⬇  │╮      │ bodega: #1F5FD6 con blanco, casco
+│    ╰│Baja││Baja││Baja││Baja││Baja│╯   │
+├──────────────────────────────────────┤
+│ ✓ Descarga registrada                │ aviso en tinta sobre tinta (BsAviso)
+│   TSTU 004218 0 · 014-01-86 [Deshacer]│ 6 s
+├──────────────────────────────────────┤
+│ ████████░░ Descarga 80 %             │
+│  30          120          3          │ cifras 32/600 tabulares
+│  por bajar   hechas    re‑estibas    │ hechas en hecho
+├──────────────────────────────────────┤
+│ ▦ Plano  ☰ Lista  ◔ Avance  ⫶ Est. ⋯ Más ●2 │ NavigationBar 72–80
+└──────────────────────────────────────┘
+```
+La celda del muelle sigue en 56 × 48 (más alta si la letra lo pide), con el icono y el
+rótulo; «Hecho» y «Paso» con los roles de la Fase 2; «Baja» en la marca con texto blanco y,
+en bodega, en `#1F5FD6`. Un toque sobre «Baja» registra y la celda sale de su sitio en
+naranja antes del aviso con «Deshacer» (13.3).
+
+### 13.9 Lo que no se toma y los datos que no se inventan
+
+- **No se inventan datos.** La app no sabe qué grúa mueve qué contenedor ni dónde está la
+  superestructura del buque, y no conoce nombres ni identificadores de equipos. La silueta
+  no dibuja superestructura ni grúa; el panel «En vivo» dice el rol (Muelle u Oficina) y
+  su API solo admite ese enum; «Grúa 2», «Muelle 1» y «Muelle 2» del lienzo son ilustración.
+  El «Bajando» del lienzo es, en la app, la celda recién movida de 13.3.
+- **De las sugerencias de Google entra** el mosaico de cifras, el oscuro técnico solo en la
+  oficina, `CustomPainter` para la silueta, el casco y la marca (las celdas siguen siendo
+  widgets por el toque, el foco y la etiqueta accesible) y el pulso de lo que llega por
+  Firebase. **No entra:** mapas (no hay geografía en el alcance y los mapas en línea rompen
+  el trabajo sin conexión), arrastrar contenedores (función nueva que toca el dominio),
+  shimmer, hugeicons ni lucide.
+- **Ninguna dependencia nueva.** La marca, la silueta, el casco y el anillo se pintan a mano.
+  Los íconos del dominio y las ilustraciones (la grúa del inicio, el muelle de las pantallas
+  vacías) llegan en un paquete aparte (10.14) y los integra una entrega propia; mientras
+  tanto, Material Symbols, y no se hacen provisionales que luego se tiren.
+- Material 3 sigue de base; `shadcn_flutter` y `go_router` no entran (10.1).
+
+### 13.10 Lo que cambia en los tokens y el movimiento de la Fase 2
+
+| Token | Antes | Ahora | Por qué |
+|---|---|---|---|
+| `BsMedidas.radioCelda` | 2 | 8 | Las esquinas del ícono (13.2) |
+| `BsMedidas.radioPanel` (nuevo) | — | 18 | Los paneles del puente de mando (tarjetas de cifra, silueta, «En vivo») |
+| `BsMedidas.radioCasco` (nuevo) | — | 18 | La esquina exterior de las celdas de los extremos de la bodega |
+| `BsMedidas.pasoRejilla` (nuevo) | — | 32 | La rejilla de plano del fondo de noche |
+| `BsMovimiento.recienMovido` (nuevo) | — | 1 500 ms | Cuánto dura el naranja (13.3) |
+| `BsMovimiento.salida` (nuevo) | — | 150 ms | La celda sale de su sitio |
+| `BsMovimiento.espera` (nuevo) | — | 1 200 ms | El bucle del contenedor en la marca |
+| `BsMovimiento.pulso` (nuevo) | — | 2 200 ms | El pulso de «Al día» y de «En vivo» |
+| `BsRol.punteado` (nuevo) | — | `false` | El contorno punteado de «bajado» de noche |
+| `BsRol.atenuado` | tinta suave | tinta suave, o tinta si no llega a 4.5:1 | 13.2 |
+
+Los radios de control (6), hoja (10) y diálogo (16) no cambian; el radio 18 es solo para
+los paneles nuevos. Las alturas, los espacios, la celda de 56 × 48 y de 52 × 48 y la
+tipografía de 4.2 y 4.3 no cambian.

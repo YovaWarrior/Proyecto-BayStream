@@ -100,7 +100,7 @@ void main() {
   }
 
   group('el tema', () {
-    testWidgets('la dirección A está conectada, en claro y en oscuro, con la preferencia',
+    testWidgets('el tema está conectado, en claro y en oscuro, con la preferencia',
         (tester) async {
       await tester.runAsync(() async {
         await abrir();
