@@ -579,3 +579,24 @@ La siguiente decisión es la **10.23**.
 Timonel corrige H1 y O1 en su chat, en Max, con un bloque aparte, y Codex vuelve a aceptar solo esa pieza.
 
 La siguiente decisión es la **10.24**.
+
+### 10.24 · La travesía del inicio: un buque cruza debajo de los dos bloques (23-oct, 11:40)
+
+**Carlos pide** que en el espacio libre debajo de los dos bloques del inicio («Abre un plano de estiba» y «Recientes») haya una animación: un buque que navega de izquierda a derecha, se desvanece al llegar a la derecha y vuelve a aparecer por la izquierda.
+
+**Yov la define** con lo que ya se tomó de las referencias (10.14): la ilustración de línea, el azul profundo y la silueta del buque como pieza central. Usa el vocabulario del paquete de Nube (10.19), sin dibujo nuevo:
+- **Qué se ve:** el mar como en las ilustraciones (el agua y la línea de flotación de `sin_conexion`) y el buque de perfil de esa misma ilustración: casco, cinco contenedores, caseta y puente, sin la nube. Nada es naranja, porque el naranja es solo para lo que se acaba de mover.
+- **La proa mira a la derecha**, porque el buque navega hacia allá. Es la única excepción a «proa a la izquierda», que sigue valiendo para todo lo que está quieto.
+- **Dónde:** una banda a lo ancho, al pie del inicio, solo en el espacio que sobra debajo de los dos bloques. No empuja ni tapa nada. Si sobran menos de 120 dp, no se pinta (13.11, regla 4).
+- **Cómo se mueve**, solo con `Transform` y opacidad:
+  - El buque cruza a velocidad constante, en 14 a 40 s según el ancho.
+  - Aparece en el primer 10 % del recorrido y se desvanece en el último 12 %. Después quedan 3 s de mar vacío.
+  - Sube y baja 1.5 dp cada 3.2 s, y cabecea 0.8° cada 4.4 s. Detrás deja una estela corta.
+  - Dos líneas de ola corren hacia la izquierda, a distinta velocidad.
+- **Con reducción de movimiento**, el buque queda quieto a un tercio del ancho y las olas no corren.
+- **Se detiene** cuando el inicio no se ve: cuando hay otra pantalla encima o la app está en segundo plano.
+- **Es decorativa:** no tiene semántica, no recibe el foco y no responde al toque.
+
+La hace Timonel en su chat, en Max, como parte D y en un bloque aparte, después de la corrección del paquete (10.23). Después la acepta Codex.
+
+La siguiente decisión es la **10.25**.
