@@ -4494,3 +4494,351 @@ inicio quieto; con completo, 11 avisos. **La Web y Android** encuentran el botó
 estados concretos con límite o leen el fin del video: no tenían el supuesto y no cambian; los de T-98 no
 se tocan. **Cifras:** suite 1312 (1311 + 1), `analyze` 0, auditoría 17/248/20 idéntica, censo 1950 / 0
 inglés. Me detengo: ALTO: Codex acepta la corrección de la travesía.
+
+## Fase 3 · Candidata del piloto (10.28) (23-oct-2026)
+
+Carlos decidió (10.28) que la prueba piloto con COMAR, el 25 o el 26-oct, vaya con el
+rediseño. El encargo de este chat: que lo rediseñado y lo que todavía no se rediseñó
+funcionen de punta a punta en el muelle y en la oficina; sin funciones nuevas ni pantallas
+enteras. Paso 0: la travesía (`f27de53`, `53838d7`), su aceptación (10.27) y la decisión
+10.28 (`25b8cf7`) están en commits; en el árbol solo quedaban los tres generados de
+`windows/flutter/` y `test/t114_fase3_correccion_test.dart` con el fin de línea cambiado,
+que no son de nadie y no se tocan.
+
+### 9.1 Resultado en tres líneas
+
+- **El recorrido del piloto se hizo en los tres clientes con el banco r4 y datos sintéticos**
+  (BUQUE MANUAL, viaje M100, escala GTSTC: `T100_CARGA.edi`, `T100_LISTADO.xlsx` y
+  `T100_LLEGADA.edi`), como una persona y por la interfaz: Windows (26 pasos, la oficina a
+  1920 de noche), la Web (27 pasos, con la descarga del BAPLIE de salida) y el emulador
+  (25 pasos, el muelle a 360 × 640 de día). Nada bloqueó. Lo que necesita
+  Firebase (unirse, publicar, pedir y decidir cambios, sincronizar) no se recorrió: está
+  probado en memoria (T-79, T-80, T-81) y queda en la lista del ensayo de Carlos.
+- **Cinco correcciones, solo en la presentación y con su prueba:** Atrás en Android como
+  dice `DESIGN.md` 8 (un toque por error no saca del plano); el chip seleccionado de noche,
+  que quedaba tinta sobre tinta («Solo con cambios», los filtros por naviera); «Re‑estiba» en
+  la celda, que salía cortada; `loadingOperationProvider`, que usaba `ref` después de que el
+  viaje se cerrara mientras construía; y dos pruebas que fijaban el rótulo viejo. Las
+  pantallas sin rediseñar no lanzan nada a 360 dp (1.0 y 2.0) ni a 1920 en oscuro.
+- Suite **1329** (piso 1312; ninguna omitida), `analyze` **«No issues found»**. Versiones
+  propuestas: Android **3.1.0 (4)**, MSIX **3.1.0.0**, Web **3.1.0 (4)**; `pubspec.yaml` las
+  lleva. La lista de comprobación del ensayo y del piloto está en
+  `docs/piloto/LISTA-PILOTO.md`. **ALTO: Codex acepta la candidata.**
+
+### 9.2 El recorrido del piloto, con sus capturas
+
+Los tres clientes recorren lo mismo, en el orden del piloto, cada uno con su instrumento
+(9.8): Windows con el escenario `piloto` del conductor de T-99 (toques reales por elemento;
+los archivos entran sin el selector del sistema, como en los escenarios anteriores); la Web
+con Playwright sobre la semántica de Flutter (los archivos los asigna el navegador al
+`<input type=file>`, como en RNF-002); el emulador con ADB y uiautomator (los archivos en
+`/sdcard/Download/t114`, elegidos en el selector de AOSP). Las capturas numeradas, con una
+línea de registro por paso, están en `docs/rediseno/fase3/candidata/recorrido/windows/`
+(`pNN_*.png`, `pasos.jsonl` con los textos que no caben y los errores de Flutter por
+captura, `anchos.jsonl`), `recorrido/web/` (`pNN-*.png`, `registro.tsv`) y
+`recorrido/emulador/` (`pNN-*.png`, `registro.tsv`). Ninguna muestra «Nube y cuenta», un
+correo ni el corpus.
+
+| Paso del piloto | Windows (oficina, 1920 oscuro) | Web (oficina, 1920 oscuro) | Emulador (muelle, 360 × 640 claro) | Qué se vio |
+|---|---|---|---|---|
+| El inicio | p01 | p01 | p01 | «Abre un plano de estiba» y «Seleccionar archivo»; en Windows y la Web, la travesía al pie |
+| Abrir el plan de carga: previo | p02 | p02 | p02 | La banda «Plano sin confirmar: perfil propuesto desde el archivo. Escala propuesta GTSTC.» con «Confirmar»; «sin evaluar» debajo; la rejilla a la vista en tres pasos |
+| Confirmar la escala y el perfil | p03, p04, p05 | p03, p04, p05 | p03, p04, p05 | «Parámetros del buque» con «No lo tengo» sin marcar (10.15); al marcarlo y «Confirmar y ver el plano», el Plano con «Publicado» y el segmento «Carga» |
+| El listado de la agencia | p06, p07 | p06, p07 | p06, p07 | «30 filas en 2 agencias · 20 llenos · 10 vacíos», las tres equivalencias propuestas, el cruce 20 de 20; «1 fila sin entender» por la fila TOTAL, como T-100A; «Listado importado.» |
+| Abrir la llegada: publicada sin previo | p08 | p08 | p08 | Con la escala confirmada, `T100_LLEGADA.edi` abre publicada (regla 7.2); «Descarga» y «Carga» en la cabecera; en el muelle, la banda de la marca |
+| Descarga: «Baja» | p09, p10 | p09, p10 | p09, p10 | La celda sale en naranja, queda vacía con la palomita y el aviso «Descargado · <contenedor> · 002-02-82» con «Deshacer»; «Descarga 1 de 30 · 3 %», «Por bajar 29 · 9 en la bahía 02»; «En vivo»: «Bajado · Muelle» |
+| Otra «Baja» y «Deshacer» | p11, p12 | p11, p12 | p11, p12 | «Deshacer» del aviso anula el movimiento: la celda vuelve a «Baja» y «En vivo» dice «Deshecho · Muelle» |
+| «Paso»: la pregunta y la re‑estiba | p13, p14 | p13, p14 | p13, p14 | «<contenedor> no se descarga en GTSTC: va a USMSY…» con «Registrar re‑estiba»; la celda queda «Re‑est.» en naranja; «Re‑estibas 1 · no cuentan entre los que bajan» |
+| Carga: asignar un vacío por OR | p15, p16, p17, p18 | p15, p16, p17, p18 | p15, p16, p17, p18 | «Asignar vacío» → «Vacíos del listado» (OR 16 a 30, con su tara) → el formulario propone 010-01-04; la celda la ocupa uno de llegada sin marcar, así que el botón dice «Marcar su descarga y cargar» → «Descarga y carga registradas · OR 16»; «Carga 1 de 30», «Vacíos 1 de 10» |
+| Otro vacío y «Deshacer» | p19, p20 | p19, p20 | p19, p20 | El OR vuelve a estar pendiente; «En vivo»: «Deshecho · Muelle» |
+| Avance | p21 | p21 | p21 | La tabla por bahía (descarga, llenos, vacíos, cancelados, conflictos, tapas PROVISIONAL, último movimiento) con «Muelle (sin cuenta)» de autor |
+| «En vivo» | p22 | p22 | — | El panel con los ocho movimientos (qué, el rol, el contenedor, la celda, «ahora»); en el teléfono no hay panel: el anuncio lo da el lector de pantalla (10.21, H3) |
+| Alertas de estiba | p23 | p23 | — | Desde el riel |
+| El BAPLIE de salida | p24, p25 | p24, p25, p26 | — | «58 contenedores a bordo en la salida. Pendientes: 29 de carga y 28 de descarga.»; «Comparar con la llegada»: 3 descargados · 1 cargado · 57 permanentes; en la Web, «Guardar BAPLIE de salida» descargó `BayStream_BUQUE MANUAL_M100_salida.edi` (7849 bytes, SMDG22) y avisó «Exportación BAPLIE completada»; en Windows, guardar abre el diálogo del sistema, que el conductor no maneja: queda para el ensayo |
+| Atrás | — | — | p22, p23, p24 | Un toque: el aviso «Toca Atrás otra vez para volver al inicio.» (el instrumento lo leyó en el árbol de accesibilidad; dura 2 s y en p22 ya se había apagado: lo que se ve es que el plano sigue); dos toques seguidos: el inicio con el viaje en los recientes (p23); el reciente reabre publicado con la operación (p24) |
+| «Más» | p26 | p27 | p25 | La hoja con Alertas primero y «Cerrar el plano» al final |
+
+**Lo que necesita Firebase, anotado para el ensayo** (`LISTA-PILOTO.md`, pasos 1.6, 1.7,
+1.11, 1.12, 2.1, 2.2, 2.10, 2.11 y 2.13): iniciar sesión, publicar la operación, unirse
+desde el muelle, pedir un cambio, aprobarlo o rechazarlo y la cola sin red. Sin cuenta, la
+app no ofrece «Solicitudes de cambio» ni «Bandeja de cambios» (su botón solo existe con una
+cuenta autorizada y una operación publicada), así que en los bancos no se recorren; en
+memoria lo prueban `t80_requests_widget_test` (el muelle pide, la oficina decide, sin cuenta
+no ofrece), `t81_office_widget_test` (mover, cancelar, deshacer y el rol en vivo) y
+`t79_sync_engine_test` (la sincronización con el servidor falso), que la suite corre.
+
+**Lo que el recorrido enseñó y se corrigió** está en 9.3; **lo que queda anotado**, en 9.3.
+
+**El emulador** (`t99_api26`, API 26, 360 × 640 dp con `wm density 480`, el muelle de día, la letra a 1.0; el Honor no se tocó) recorre lo mismo hasta el avance y sigue con Atrás y «Más»; no tiene «En vivo» ni alertas en el riel (son de la oficina) y el BAPLIE de salida es de la oficina. Tres cosas que el teléfono bajo enseña y una persona resuelve sin pensar, pero que al conductor le costaron una vuelta cada una: al abrir la llegada desde «Más → Cargar archivo BAPLIE» el destino sigue en la Lista (la banda del muelle con Descarga / Carga se ve igual, y el plano está a un toque en «Plano»); los avisos flotantes de 6 s («Re‑estiba registrada», «Carga registrada») tapan la tira del pie donde están «Acciones» y «OR / últimos dígitos», así que hay que esperar a que se apaguen; y con seis niveles en cubierta, las celdas «Paso» de las filas de abajo quedan bajo el pliegue y se llega a ellas desplazando la rejilla (13.8). Ninguna es un fallo.
+
+### 9.3 Lo que se corrigió y lo que queda anotado
+
+Solo en la capa de presentación (`lib/features/vessel/presentation/**` y
+`lib/core/design/**`), cada cosa con su prueba:
+
+1. **Atrás en Android** (9.4): antes la página del viaje no tenía `PopScope`, así que un
+   toque en Atrás en el plano salía de la app. Ahora cierra primero lo abierto, pregunta con
+   un previo y vuelve al inicio con dos toques.
+2. **El chip seleccionado de noche quedaba tinta sobre tinta.** El tema ponía el texto de
+   la selección en `secondaryLabelStyle`, que solo usa `ChoiceChip`; `FilterChip` e
+   `InputChip` resuelven el color del rótulo por estado. «Solo con cambios» en la
+   comparación (1.00:1, el texto invisible: `pantallas/comparar_1920_oscuro_letra1.0.png`
+   antes, p25 de Windows después) y los filtros por naviera de la Lista tenían el fallo.
+   `bs_tema.dart` resuelve el color del rótulo con `WidgetStateColor`; la prueba mide el
+   contraste del rótulo sobre el relleno en `FilterChip`, `ChoiceChip` e `InputChip` en los
+   cuatro temas, y la página de comparación de noche pasa `textContrastGuideline`.
+3. **«Re‑estiba» en la celda salía cortada** («Re‑esti…»; el conductor lo anotó como texto
+   que no cabe en la primera corrida de Windows). La celda escribe ahora «Re‑est.», como la
+   tabla de pendientes; la etiqueta accesible sigue diciendo «re‑estiba». Dos pruebas que
+   fijaban el rótulo (`t114_componentes_test`, `t75_discharge_test`) se ajustaron sin bajar
+   el conteo.
+4. **`loadingOperationProvider` usaba `ref` después de un `await` con el viaje ya cerrado**
+   (`UnmountedRefException` al salir del plano con dos toques nada más abrirlo). Comprueba
+   `ref.mounted` tras cada espera. La prueba de Atrás «dos toques nada más abrir» lo fija.
+5. **`pubspec.yaml`** (las dos líneas autorizadas): `version: 3.1.0+4` y
+   `msix_version: 3.1.0.0`; `t93_msix_config_test` espera la versión nueva.
+
+**Queda anotado, sin tocar:**
+
+- **El aviso «Archivo … cargado correctamente» (4 s) flota sobre el pie de la página del
+  listado**, donde está «Confirmar e importar», y el de «Carga registrada» (6 s) sobre el
+  pie de la hoja de los vacíos. Una persona espera a que se apaguen; el conductor, que
+  exige que nada tape el control, se detuvo ahí dos veces. No bloquea; la lista del piloto
+  lo dice (1.5).
+- **En Windows, «Guardar BAPLIE de salida» abre el diálogo del sistema**: el conductor no
+  lo maneja, así que se capturó la página y la comparación y el guardado queda para el
+  ensayo (en la Web se descargó).
+- **Los avisos escriben el número de contenedor sin agrupar** («MNLU0000405 · 002-06-04»)
+  mientras la celda, el detalle y «En vivo» lo agrupan («MNLU 000040 5»). Son los textos de
+  T-75 y sus pruebas los fijan; cambiarlos es otra tarea.
+- **La leyenda de la vista Estado escribe «De paso» dos veces** (la ficha del estado, sin
+  cuenta, y «De paso 10» de «Resaltar»). Es el diseño aceptado en la entrega 2.
+- **La pauta de contraste dio dos falsos positivos** (9.5): «Tapas: sin declarar» a 360 y
+  «BUQUE MANUAL · V114» en la bandeja a 360, con un rectángulo de semántica desplazado de
+  lo dibujado; las capturas muestran los dos textos en tinta sobre papel.
+- **El número de contenedor en las capturas de prueba de widget** de la Lista sale como un
+  rectángulo: la prueba no carga la fuente mono y Flutter dibuja cuadros. En los tres
+  clientes se lee (p21 de Windows, la Lista de la Web). No es del producto.
+- **El micrófono** (`uses-feature android.hardware.microphone required=false`, 10.112) sigue
+  sin declararse: es el manifiesto, fuera de la presentación.
+- **TalkBack** no se probó en el Honor; **la letra** del Honor distinta de 1.0 tampoco.
+
+### 9.4 Atrás en Android (`DESIGN.md` 8)
+
+`AtrasDelViaje` (`navegacion_del_viaje.dart`) envuelve la página del viaje, solo en Android
+(`defaultTargetPlatform`; en la Web el navegador manda y en Windows no hay botón):
+
+1. **Lo abierto se cierra primero.** Las hojas («Más», el detalle en el teléfono), los
+   diálogos y la búsqueda son rutas y las cierra el `Navigator` por su cuenta, antes de
+   llegar a la página. El menú del zoom no es una ruta (`MenuAnchor`): mientras está abierto
+   se anota en `cerrablesDeAtrasProvider` (un registro de lo abierto con lo que lo cierra) y
+   Atrás lo cierra antes que nada. Con panel lateral, Atrás cierra el detalle de la celda.
+2. **En la raíz con un previo**, pregunta lo mismo que «Más → Cerrar el plano»: «¿Descartar
+   el plano sin confirmar?», con «Seguir mirando» y «Descartar». Atrás sobre la pregunta la
+   cierra: es seguir mirando. Se reusa el diálogo que ya existía, para que la pregunta sea
+   una sola en toda la app (`DESIGN.md` 8 la llama «¿Cerrar el plano?»; se anota ahí con
+   su texto exacto).
+3. **En la raíz con el viaje publicado**, vuelve al inicio solo con **dos toques seguidos**:
+   el primero avisa «Toca Atrás otra vez para volver al inicio.» (2 s) y el segundo, mientras
+   dura el aviso, deja el viaje (lo mismo que «Cerrar el plano»: sigue guardado y se reabre
+   desde los recientes con un toque). Un toque por error no saca a nadie del plano. En el
+   inicio, Atrás sale de la app como siempre.
+
+**Pruebas** (`test/t114_candidata_atras_test.dart`, 9, con el notifier real y un almacén en
+disco; el botón del sistema es `handlePopRoute`): la hoja «Más» se cierra y el viaje sigue;
+la hoja del detalle en el teléfono se cierra; el menú del zoom se cierra y se olvida (también
+al cerrarlo desde el chip); el detalle del panel lateral se cierra antes que la raíz; con un
+previo pregunta, «Seguir mirando» y Atrás sobre la pregunta lo dejan y «Descartar» vuelve al
+inicio; publicado, un toque avisa y no sale, pasada la ventana otro toque vuelve a avisar, y
+dos seguidos vuelven al inicio con el viaje en los recientes; dos toques nada más abrir el
+plano no rompen nada; en el inicio Atrás no se atiende; en Windows no gobierna nada. En el
+emulador, el recorrido lo muestra (p22: el plano sigue tras un toque; p23: el inicio con el reciente tras dos; p24: el reciente reabierto).
+
+### 9.5 Las pantallas sin rediseñar con el tema nuevo
+
+Las 19 pantallas que no se rediseñaron (Parámetros, Parámetros del buque, Perfiles
+guardados, Viajes recientes, Alertas de estiba, la matriz de segregación, Tapas por bahía,
+Tapas en la operación, Orden de descarga, Listado de la agencia, Comparar, Bandeja de
+cambios, BAPLIE de salida, Avance, Privacidad, Nube y cuenta, la Lista, Estadísticas y la
+búsqueda) se dibujaron con las fuentes del producto, con un plano de llegada sintético con
+refrigerados, carga peligrosa, vacíos y 20 pies, a **360 × 800 con la letra a 1.0 y a 2.0**
+(el muelle, de día) y a **1920 × 1080 de noche** (la oficina): 57 configuraciones.
+
+- **Ninguna lanza al dibujarse** (un desborde es una excepción): 57 de 57. Lo fija
+  `test/t114_candidata_pantallas_test.dart` (3 pruebas, una por configuración).
+- **Contraste** (`textContrastGuideline`, 4.5:1): 54 de 57 pasan. De las tres que no: el
+  chip «Solo con cambios» de noche (1.00:1) era real y se corrigió (9.3, 2); «Tapas: sin
+  declarar» a 360 (3.76) y «BUQUE MANUAL · V114» en la bandeja a 360 (1.36) son falsos
+  positivos de la medición (el rectángulo de semántica no coincide con lo dibujado: las
+  capturas muestran tinta sobre papel). La comparación de noche pasa ahora la pauta en la
+  suite.
+- Las 54 capturas y el registro (`registro.tsv`: pantalla, configuración, excepción,
+  contraste, detalle) están en `docs/rediseno/fase3/candidata/pantallas/`; las escribe
+  `build/t114-candidata/pantallas_test.dart`, fuera de la suite y de Git. «Nube y cuenta» se
+  revisó y no se capturó. Textos en inglés: 0 (la suite y el censo de T-112 lo fijan);
+  íconos que no se ven: ninguno.
+
+### 9.6 Las versiones propuestas
+
+| Cliente | Publicado (10.113) | Candidata | Por qué |
+|---|---|---|---|
+| Android (AAB, prueba interna) | 3.0.0, `versionCode` 3 | **3.1.0, `versionCode` 4** | Play rechaza un número repetido |
+| Windows (MSIX) | 3.0.0.0 | **3.1.0.0** | Windows solo instala encima si sube |
+| Web (Hosting) | 3.0.0 (3) | **3.1.0 (4)** | `version.json` lo deja visible |
+
+Menor y no mayor porque el Sprint 4 no cierra: es una candidata. `pubspec.yaml` dice ya
+`version: 3.1.0+4` y `msix_version: 3.1.0.0` (10.112 pedía alinearlo), y `pubspec.lock` no
+cambia. Los comandos, con la versión repetida en la línea de comandos como en la guía del
+cierre, están en `LISTA-PILOTO.md`, sección 4 (la mezcla, el MSIX con `t93_msix.ps1
+-Version 3.1.0.0`, el AAB sin `--no-pub`, la Web con el bloque de T-92 y `firebase deploy
+--only hosting`, y cómo volver a la v3.0).
+
+### 9.7 La lista del piloto
+
+`docs/piloto/LISTA-PILOTO.md`: antes del ensayo (versiones, cuentas, el Honor, los
+artefactos de la v3.0); el ensayo por rol, la oficina (15 pasos) y el muelle (14 pasos),
+cada uno con qué hay que ver y qué hacer si falla, con los rótulos exactos de la app; el día
+del piloto; la compilación y la publicación con las versiones nuevas, revisadas contra
+`docs/CIERRE-DESPLIEGUE.md` y 10.111 a 10.113 (la configuración de Firebase solo con
+`--dart-define-from-file`, sin abrirla; nunca `firebase deploy` a secas); y lo que la
+candidata no cubre. Yov la revisa; Carlos la corre.
+
+### 9.8 Los instrumentos
+
+- **`tool/t99_conductor.dart`, escenario `piloto`:** prepara la operación como la oficina
+  (el plan de carga por la banda, «Parámetros del buque», «No lo tengo» y «Confirmar y ver
+  el plano»; el listado por su página, con `loadBytes`; la llegada, publicada por 7.2) y
+  recorre descarga, carga, avance, alertas, el BAPLIE de salida con la comparación y «Más»,
+  con toques reales (`_tocar`), trayendo a la vista lo que está en un desplazable
+  (`_tocarALaVista`) y apartando los avisos que flotan sobre el pie (`_sinAvisos`) donde una
+  persona esperaría. `t114_capturas_windows.ps1` admite `-Listado`.
+- **`tool/t114_piloto_web.py`:** el mismo recorrido con Playwright sobre la semántica de
+  Flutter; los destinos del riel llevan «Pestaña n de m» detrás del rótulo, así que el
+  patrón ancla la primera línea; el botón de confirmar la carga puede decir «Marcar su
+  descarga y cargar»; «Guardar BAPLIE de salida» se recoge como descarga del navegador.
+- **`tool/t114_piloto_android.py`:** el mismo recorrido con ADB y uiautomator en el
+  emulador (el Honor solo con el permiso de Carlos), más Atrás.
+- **`tool/t114_primera_windows.py`** (10.27): cada repetición lleva `valida` (`false` con
+  reintentos de clic), el resumen cuenta `corridasValidas` y `corridasNoValidas`, y el
+  instrumento avisa que se repitan. No se volvió a medir RNF-002: nada de esta candidata
+  toca los tres pasos.
+- **`build/t114-candidata/pantallas_test.dart`:** las capturas y la pauta de contraste de
+  9.5, fuera de la suite.
+
+### 9.9 Validaciones ejecutadas
+
+Un comando de Flutter a la vez (luz verde de 10.28); un cliente a la vez para compilar y
+capturar; el Honor no se tocó.
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze --no-pub` | **«No issues found»** |
+| `flutter test --no-pub` | **1329** pruebas en verde, ninguna omitida (piso 1312 → 1329) |
+| `test/t114_candidata_atras_test.dart` | 9 nuevas (9.4) |
+| `test/t114_candidata_pantallas_test.dart` | 8 nuevas: tres configuraciones sin excepciones, la comparación de noche con la pauta de contraste, los chips en cuatro temas |
+| Pantallas sin rediseñar | 57 configuraciones sin excepción; contraste 54/57 (1 real corregido, 2 falsos positivos) |
+| El recorrido | Windows 26 pasos, 0 textos que no caben, 0 errores de Flutter, 0 esperas vencidas; la Web 27 pasos; el emulador 25 pasos |
+| Bancos r4 | `%TEMP%\t99-r4-piloto\copia` (`t99_copia.ps1 -Arbol -Sufijo r4`): Windows, la Web (servida en 127.0.0.1:5901) y el APK (`gt.cmartinez.baystream.r4` en `t99_api26`), compilados del árbol con las correcciones |
+
+### 9.10 Archivos
+
+- **`lib/`:** `core/design/bs_tema.dart` (el rótulo del chip por estado),
+  `core/design/componentes/bs_celda.dart` («Re‑est.»),
+  `features/vessel/presentation/pages/vessel_overview_page.dart` (envuelve con
+  `AtrasDelViaje`), `providers/loading_operation_provider.dart` (`ref.mounted`),
+  `widgets/navegacion_del_viaje.dart` (`CerrablesDeAtras`, `AtrasDelViaje`),
+  `widgets/zoom_del_plano.dart` (se anota al abrirse).
+- **`test/`:** nuevas `t114_candidata_atras_test.dart` y `t114_candidata_pantallas_test.dart`;
+  ajustadas `t114_componentes_test.dart`, `t75_discharge_test.dart`, `t93_msix_config_test.dart`.
+- **`tool/`:** `t99_conductor.dart` (escenario `piloto`), `t114_capturas_windows.ps1`
+  (`-Listado`), `t114_primera_windows.py` (`valida`); nuevos `t114_piloto_web.py` y
+  `t114_piloto_android.py`.
+- **`pubspec.yaml`:** solo `version` y `msix_version`. `pubspec.lock` no cambia.
+- **Documentos:** `DESIGN.md` (8: lo que Atrás hace), `docs/piloto/LISTA-PILOTO.md` (nuevo),
+  `docs/rediseno/fase3/traspaso-entrega2.md`, este informe, y la evidencia en
+  `docs/rediseno/fase3/candidata/` (`pantallas/`, `recorrido/windows/`, `recorrido/web/`,
+  `recorrido/emulador/`).
+- Sin cambios: `domain/`, `data/`, `lib/main.dart`, los congelados, Firebase, las apps
+  instaladas, `C:\Proyectos\baystream-demo17\` y el Honor. Los generados de
+  `windows/flutter/` y `test/t114_fase3_correccion_test.dart` figuran modificados solo por
+  el fin de línea y no se agregan.
+
+### 9.11 Horas
+
+De ≈ 15:12 (el mensaje que abre el encargo) a ≈ 16:30 del 23-oct-2026: **≈ 1.3 h** de reloj, sin cronómetro. Casi todo fueron esperas en segundo plano, solapadas: cuatro compilaciones del banco r4 de Windows, dos de la Web y dos del APK, tres tandas de la suite completa, y los tres recorridos con sus repeticiones (Windows cuatro, la Web siete, el emulador cuatro), cada repetición por un ajuste del conductor y nunca por la app.
+
+### Git para Carlos (Fase 3, candidata del piloto)
+
+Un `git add` por ruta; la evidencia nueva va por carpeta. `pubspec.yaml` cambia solo en
+`version` y `msix_version`; `pubspec.lock`, `domain/`, `data/`, `lib/main.dart` y los
+congelados no cambian. El último comando tiene que mostrar **158 files changed**.
+
+```powershell
+git add -- lib/core/design/bs_tema.dart
+git add -- lib/core/design/componentes/bs_celda.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/providers/loading_operation_provider.dart
+git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/zoom_del_plano.dart
+git add -- pubspec.yaml
+git add -- test/t114_candidata_atras_test.dart
+git add -- test/t114_candidata_pantallas_test.dart
+git add -- test/t114_componentes_test.dart
+git add -- test/t75_discharge_test.dart
+git add -- test/t93_msix_config_test.dart
+git add -- tool/t99_conductor.dart
+git add -- tool/t114_capturas_windows.ps1
+git add -- tool/t114_primera_windows.py
+git add -- tool/t114_piloto_web.py
+git add -- tool/t114_piloto_android.py
+git add -- DESIGN.md
+git add -- docs/piloto/LISTA-PILOTO.md
+git add -- docs/rediseno/fase3/traspaso-entrega2.md
+git add -- docs/rediseno/fase3/candidata/pantallas
+git add -- docs/rediseno/fase3/candidata/recorrido/windows
+git add -- docs/rediseno/fase3/candidata/recorrido/web
+git add -- docs/rediseno/fase3/candidata/recorrido/emulador
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: candidata del piloto (10.28), Atras en Android, chips legibles de noche, Re-est. en la celda, recorrido del piloto en los tres clientes, pantallas sin redisenar revisadas, versiones 3.1.0 y lista del piloto"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+### Tres líneas
+
+- El piloto se recorrió de punta a punta en Windows, la Web y el emulador con datos
+  sintéticos; nada bloqueó, y lo que necesita Firebase queda en la lista del ensayo.
+- Atrás en Android hace lo que dice `DESIGN.md` 8 (un toque por error no saca del plano);
+  el chip de noche, la celda «Re‑est.» y el provider al cerrar el viaje se corrigieron con
+  su prueba; las 19 pantallas sin rediseñar no desbordan a 360 (1.0 y 2.0) ni a 1920 oscuro.
+- Suite 1329, `analyze` 0; versiones 3.1.0 (4) / 3.1.0.0 / 3.1.0 (4) en `pubspec.yaml`;
+  la lista del piloto en `docs/piloto/LISTA-PILOTO.md`. ALTO: Codex acepta la candidata.
+
+### Mensaje para Yov
+
+Yov: la **candidata del piloto (10.28)** está lista para Codex, en un bloque de git de
+158 archivos. **El recorrido:** los tres clientes con el banco r4 y los sintéticos de
+T-100, como una persona: Windows 26 pasos (el conductor de T-99 con el escenario `piloto`),
+la Web 27 (Playwright; descargó el BAPLIE de salida) y el emulador 25 (adb);
+abrir y confirmar, el listado, la llegada publicada por 7.2, Baja / Deshacer / Paso, asignar
+vacíos por OR y deshacer, avance, «En vivo», alertas, BAPLIE de salida y comparación, «Más»
+y Atrás; capturas numeradas con registro en `docs/rediseno/fase3/candidata/recorrido/`.
+Lo que necesita Firebase (sesión, publicar, unirse, pedir y decidir cambios, la cola sin
+red) no se recorrió: lo cubren T-79, T-80 y T-81 en memoria y la lista del ensayo.
+**Corregido** (presentación, con prueba): Atrás en Android como `DESIGN.md` 8
+(`AtrasDelViaje`: cierra lo abierto, pregunta con un previo, dos toques para salir del
+plano publicado; 9 pruebas); el chip seleccionado de noche, que era tinta sobre tinta
+(`FilterChip` no usa `secondaryLabelStyle`: «Solo con cambios», los filtros por naviera);
+«Re‑est.» en la celda (la palabra entera salía cortada); `loadingOperationProvider` con
+`ref.mounted`. **Las pantallas sin rediseñar:** 19 pantallas × 3 configuraciones (360 con
+1.0 y 2.0, 1920 oscuro) sin una sola excepción; contraste 54/57 (1 real, corregido; 2
+falsos positivos de la pauta, explicados). **Versiones:** Android 3.1.0 (4), MSIX 3.1.0.0,
+Web 3.1.0 (4); `pubspec.yaml` lleva `version: 3.1.0+4` y `msix_version: 3.1.0.0`, nada más
+en `pubspec.*`. **La lista:** `docs/piloto/LISTA-PILOTO.md`, por rol, con los comandos de la
+guía del cierre y la versión nueva, y cómo volver a la v3.0. **Cifras:** suite 1329
+(piso 1312), `analyze` 0. **Anotado:** los avisos de 4 y 6 s tapan el pie del listado y de
+la hoja de vacíos (una persona espera); en Windows guardar el BAPLIE de salida abre el
+diálogo del sistema (queda para el ensayo); los avisos escriben el número sin agrupar
+(textos de T-75); el micrófono del manifiesto (10.112) sigue sin declararse. Además,
+`t114_primera_windows.py` marca como no válidas las corridas con reintentos (10.27). Me
+detengo: **ALTO: Codex acepta la candidata.**

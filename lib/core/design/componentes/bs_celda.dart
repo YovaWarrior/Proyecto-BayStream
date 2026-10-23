@@ -455,7 +455,10 @@ class BsCelda extends StatelessWidget {
         BsMarcaDeCelda.paso => 'Paso',
         BsMarcaDeCelda.cancelado => 'Cancelado',
         BsMarcaDeCelda.revisar => 'Revisar',
-        BsMarcaDeCelda.reestiba => 'Re‑estiba',
+        // Abreviado como en la tabla de pendientes («Re‑est.»): «Re‑estiba»
+        // no cabe en la celda de 52 ni de 56 dp y salía cortado (candidata
+        // del piloto, 10.28). La etiqueta accesible dice «re‑estiba» entera.
+        BsMarcaDeCelda.reestiba => 'Re‑est.',
       };
 
   static IconData _iconoDeInsignia(BsInsigniaDeCelda insignia) =>

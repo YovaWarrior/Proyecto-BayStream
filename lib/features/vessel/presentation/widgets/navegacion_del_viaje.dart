@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,6 +55,147 @@ class DestinoDelViajeNotifier extends Notifier<DestinoDelViaje> {
   }
 
   void ir(DestinoDelViaje destino) => state = destino;
+}
+
+/// Lo abierto que no es una ruta y que Atrás cierra antes que nada
+/// (`DESIGN.md` 8): hoy, el menú del zoom. Las hojas, los diálogos y la
+/// búsqueda son rutas y las cierra el `Navigator` por su cuenta. Quien abre
+/// algo que no lo es se anota al abrir y se olvida al cerrar; Atrás cierra lo
+/// último anotado. El estado es cuántas cosas hay abiertas.
+final cerrablesDeAtrasProvider =
+    NotifierProvider<CerrablesDeAtras, int>(CerrablesDeAtras.new);
+
+class CerrablesDeAtras extends Notifier<int> {
+  final List<VoidCallback> _cerrar = <VoidCallback>[];
+
+  @override
+  int build() => 0;
+
+  /// Anota algo abierto con lo que lo cierra.
+  void anotar(VoidCallback cerrar) {
+    _cerrar.add(cerrar);
+    if (ref.mounted) state = _cerrar.length;
+  }
+
+  /// Lo abierto se cerró por su cuenta (también al desmontarse abierto, cuando
+  /// el registro puede estar yéndose con la pantalla).
+  void olvidar(VoidCallback cerrar) {
+    _cerrar.remove(cerrar);
+    if (ref.mounted) state = _cerrar.length;
+  }
+
+  /// Cierra lo último que se abrió. Devuelve si había algo abierto.
+  bool cerrarUltimo() {
+    if (_cerrar.isEmpty) return false;
+    _cerrar.last();
+    return true;
+  }
+}
+
+/// Atrás en Android con un viaje abierto (`DESIGN.md` 8; decisión 10.28).
+///
+/// En orden: (1) cierra lo abierto que no es una ruta (el menú del zoom,
+/// [cerrablesDeAtrasProvider]); las hojas, los diálogos y la búsqueda son
+/// rutas y se cierran solas antes de llegar aquí; (2) en la oficina con panel
+/// lateral, cierra el detalle de la celda; (3) en la raíz del viaje, con un
+/// previo pregunta si descartarlo ([onDescartarPrevio]) y, con el viaje
+/// publicado, vuelve al inicio ([onVolverAlInicio]) **solo con dos toques
+/// seguidos**: el primero avisa «Toca Atrás otra vez para volver al inicio» y
+/// el segundo, dentro de [ventana], vuelve. En el muelle, un toque por error
+/// no saca a nadie del plano. El viaje publicado sigue guardado y se reabre
+/// desde los recientes.
+///
+/// Solo gobierna Atrás donde hay un botón Atrás del sistema, Android; en la
+/// Web el navegador manda y en Windows no existe ([activo]).
+class AtrasDelViaje extends ConsumerStatefulWidget {
+  const AtrasDelViaje({
+    super.key,
+    required this.previo,
+    required this.conPanel,
+    required this.onDescartarPrevio,
+    required this.onVolverAlInicio,
+    required this.child,
+    this.activo,
+  });
+
+  /// El viaje está en previo: Atrás en la raíz pregunta.
+  final bool previo;
+
+  /// Hay panel lateral: el detalle de la celda se cierra antes que la raíz.
+  final bool conPanel;
+
+  /// Pregunta si descartar el previo y lo descarta si se acepta.
+  final Future<void> Function() onDescartarPrevio;
+
+  /// Deja el viaje publicado y vuelve al inicio.
+  final VoidCallback onVolverAlInicio;
+
+  final Widget child;
+
+  /// Si Atrás se gobierna aquí. Sin valor, [porOmision].
+  final bool? activo;
+
+  /// Cuánto dura el aviso y, con él, la ventana para el segundo toque.
+  static const Duration ventana = Duration(seconds: 2);
+
+  /// El aviso del primer toque con el viaje publicado.
+  static const String avisoDeSalida =
+      'Toca Atrás otra vez para volver al inicio.';
+
+  /// Android, el único cliente con un botón Atrás del sistema.
+  static bool get porOmision =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  @override
+  ConsumerState<AtrasDelViaje> createState() => _AtrasDelViajeState();
+}
+
+class _AtrasDelViajeState extends ConsumerState<AtrasDelViaje> {
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _aviso;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!(widget.activo ?? AtrasDelViaje.porOmision)) return widget.child;
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? _) {
+        if (!didPop) _atras();
+      },
+      child: widget.child,
+    );
+  }
+
+  Future<void> _atras() async {
+    if (ref.read(cerrablesDeAtrasProvider.notifier).cerrarUltimo()) return;
+    if (widget.conPanel && ref.read(celdaSeleccionadaProvider) != null) {
+      ref.read(celdaSeleccionadaProvider.notifier).limpiar();
+      return;
+    }
+    if (widget.previo) {
+      await widget.onDescartarPrevio();
+      return;
+    }
+    final pendiente = _aviso;
+    if (pendiente != null) {
+      _aviso = null;
+      pendiente.close();
+      widget.onVolverAlInicio();
+      return;
+    }
+    final aviso = ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      key: ValueKey('aviso-de-atras'),
+      content: Text(AtrasDelViaje.avisoDeSalida),
+      duration: AtrasDelViaje.ventana,
+      behavior: SnackBarBehavior.floating,
+      margin: EdgeInsets.all(16),
+    ));
+    _aviso = aviso;
+    // Al apagarse el aviso se cierra la ventana: el siguiente toque vuelve a
+    // avisar en vez de salir.
+    aviso.closed.then((SnackBarClosedReason _) {
+      if (_aviso == aviso) _aviso = null;
+    });
+  }
 }
 
 /// Los anchos de la navegación adaptable (`DESIGN.md` 8): por debajo de

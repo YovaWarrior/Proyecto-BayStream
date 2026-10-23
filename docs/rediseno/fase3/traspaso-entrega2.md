@@ -240,3 +240,21 @@ quedaba sobre el botón y lo apagaba), aparca el cursor, comprueba el clic y lo 
 (`--detector` sirve para revisar capturas); el conductor de T-99 pide reducción de movimiento
 (`T99_MOVIMIENTO=reducido`) y anota `aviso` cuando `_asentar` vence. RNF-002 en Windows: cinco corridas,
 tres pasos, entre 1.84 y 1.89 s (`docs/rediseno/fase3/travesia/correccion/rnf-002/`).
+
+## La candidata del piloto (23-oct, 10.28)
+
+Carlos decidió que el piloto con COMAR vaya con el rediseño. La candidata está en la sección
+«Fase 3 · Candidata del piloto (10.28)» de `docs/REDISENO-RESULTADOS.md` y la lista de
+comprobación del ensayo y del piloto en `docs/piloto/LISTA-PILOTO.md`. Lo que hay que saber para
+seguir: Atrás en Android lo gobierna `AtrasDelViaje` (`navegacion_del_viaje.dart`), con
+`cerrablesDeAtrasProvider` para lo abierto que no es una ruta (el menú del zoom se anota al abrirse);
+`loadingOperationProvider` comprueba `ref.mounted` tras cada `await`; el tema de los chips resuelve
+el color del rótulo por estado (`FilterChip` no usa `secondaryLabelStyle`); la celda escribe
+«Re‑est.» (la palabra entera no cabe). Los recorridos del piloto son el escenario `piloto` del
+conductor de T-99 (Windows; `tool/t114_capturas_windows.ps1 -Escenario piloto -Listado …`),
+`tool/t114_piloto_web.py` (Playwright) y `tool/t114_piloto_android.py` (adb); las pantallas sin
+rediseñar se revisan con `test/t114_candidata_pantallas_test.dart` y las capturas salen de
+`build/t114-candidata/pantallas_test.dart`. Las versiones propuestas: Android 3.1.0 (4), MSIX
+3.1.0.0, Web 3.1.0 (4); `pubspec.yaml` ya las lleva. El banco r4 del piloto está en
+`%TEMP%\t99-r4-piloto\copia` (Windows, Web en `build/web` servido en 127.0.0.1:5901 con
+`t114/` para las entradas, y el APK instalado en `t99_api26`).

@@ -193,11 +193,21 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       ],
     );
 
+    // Atrás en Android (`DESIGN.md` 8): cierra primero lo abierto; en la raíz
+    // pregunta con un previo y, publicado, vuelve al inicio con dos toques.
+    Widget conAtras(Widget child) => AtrasDelViaje(
+          previo: preview,
+          conPanel: conRiel && conPanel,
+          onDescartarPrevio: () => _discardPreviewIfAny(context),
+          onVolverAlInicio: () => _clear(context, preview: false),
+          child: child,
+        );
+
     if (!conRiel) {
       // El teléfono: la barra inferior y, operando en el muelle, la banda de
       // la marca con Descarga / Carga en vez de la barra superior (13.8).
       final bandaDelMuelle = medidas.esMuelle && enOperacion;
-      return Scaffold(
+      return conAtras(Scaffold(
         appBar: bandaDelMuelle
             ? null
             : AppBar(
@@ -227,11 +237,11 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
           alertas: alertas,
           alertaCritica: critica,
         ),
-      );
+      ));
     }
 
     // La oficina: el riel con la marca, la cabecera y, con sitio, el panel.
-    return Scaffold(
+    return conAtras(Scaffold(
       body: PanelLateralDisponible(
         disponible: conPanel,
         child: Row(
@@ -272,7 +282,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   /// «Más» (`DESIGN.md` 8): la hoja con las alertas primero y, después, lo

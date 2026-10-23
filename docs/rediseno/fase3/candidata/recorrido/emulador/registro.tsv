@@ -1,0 +1,26 @@
+paso	archivo	nota	hora (UTC)
+1	p01-inicio.png	el inicio sin viajes	2026-10-23T22:34:20.373654+00:00
+2	p02-plan-de-carga-en-previo.png	abre en previo con la banda; tres pasos	2026-10-23T22:34:27.483557+00:00
+3	p03-parametros-del-buque.png	la banda abrió «Parámetros del buque»	2026-10-23T22:34:31.880241+00:00
+4	p04-parametros-no-lo-tengo.png	«No lo tengo» marcado a mano	2026-10-23T22:35:08.641966+00:00
+5	p05-plan-de-carga-publicado.png	publicado en GTSTC; la banda del muelle con Carga	2026-10-23T22:35:23.423013+00:00
+6	p06-listado-leido.png	el listado leído, antes de confirmar	2026-10-23T22:35:41.490878+00:00
+7	p07-listado-importado.png	«Listado guardado en la operación de GTSTC: 30 filas.»	2026-10-23T22:36:04.832375+00:00
+8	p08-llegada-publicada.png	la llegada abre publicada sin previo; la banda ofrece Descarga	2026-10-23T22:36:29.108434+00:00
+9	p09-descarga.png	modo Descarga: «Baja» en las celdas por bajar	2026-10-23T22:36:32.353631+00:00
+10	p10-baja-registrada.png	un toque: naranja y el aviso con «Deshacer»	2026-10-23T22:36:35.014574+00:00
+11	p11-segunda-baja.png	otra Baja	2026-10-23T22:36:37.708247+00:00
+12	p12-baja-deshecha.png	«Deshacer»: la celda vuelve a «Baja»	2026-10-23T22:36:40.779712+00:00
+13	p13-paso-pregunta.png	Paso: la pregunta de la re‑estiba	2026-10-23T22:36:49.924115+00:00
+14	p14-reestiba-registrada.png	«Re‑estiba registrada» con «Deshacer»	2026-10-23T22:36:53.004017+00:00
+15	p15-carga.png	modo Carga: el OR en las celdas	2026-10-23T22:36:56.310200+00:00
+16	p16-vacios-del-listado.png	«Vacíos del listado»	2026-10-23T22:37:08.225540+00:00
+17	p17-asignar-vacio.png	el formulario propone la celda	2026-10-23T22:37:12.285156+00:00
+18	p18-vacio-asignado.png	«Carga registrada · OR N» con «Deshacer»	2026-10-23T22:37:16.170852+00:00
+19	p19-segundo-vacio-asignado.png	otro vacío asignado	2026-10-23T22:37:37.282124+00:00
+20	p20-vacio-deshecho.png	«Deshacer»: el OR vuelve a estar pendiente	2026-10-23T22:37:40.571795+00:00
+21	p21-avance.png	«Avance» en el teléfono	2026-10-23T22:37:44.158322+00:00
+22	p22-atras-aviso.png	un toque por error: el aviso, y el plano sigue	2026-10-23T22:37:49.334856+00:00
+23	p23-inicio-con-recientes.png	dos toques seguidos: el inicio con el viaje en los recientes	2026-10-23T22:37:56.777697+00:00
+24	p24-reciente-reabierto.png	el reciente reabre publicado, con la operación	2026-10-23T22:38:02.036069+00:00
+25	p25-mas.png	la hoja «Más»	2026-10-23T22:38:05.316895+00:00

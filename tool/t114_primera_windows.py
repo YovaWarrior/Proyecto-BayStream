@@ -491,16 +491,30 @@ def main():
     resultados = []
     for numero in range(1, args.repeticiones + 1):
         registro = repeticion(args, numero, out)
+        # Una corrida con reintentos de clic no vale (10.27): se repite. Sigue
+        # contando tres pasos del producto, pero el instrumento la marca.
         resultados.append({'repeticion': numero, 'tiempoHastaRejillaS': registro['tiempoHastaRejillaS'],
                            'pasos': registro['pasosDelProducto'], 'cumpleTiempo': registro['cumpleTiempo'],
-                           'reintentosDeClic': registro['reintentosDeClic']})
+                           'reintentosDeClic': registro['reintentosDeClic'],
+                           'valida': registro['reintentosDeClic'] == 0})
+        registro['valida'] = resultados[-1]['valida']
+        (out / f'{args.perfil}{numero:02d}' / 'registro.json').write_text(
+            json.dumps(registro, ensure_ascii=False, indent=1), encoding='utf-8')
         print(json.dumps(resultados[-1]))
+        if not resultados[-1]['valida']:
+            print(f'Repetición {numero}: {registro["reintentosDeClic"]} reintentos de clic; no vale, se repite.')
         time.sleep(2)
+    validas = [r for r in resultados if r['valida']]
     (out / 'resumen.json').write_text(json.dumps({
         'instrumento': 'tool/t114_primera_windows.py', 'perfil': args.perfil,
         'archivo': args.archivo, 'exe': args.exe, 'repeticiones': resultados,
+        'corridasValidas': len(validas),
+        'corridasNoValidas': [r['repeticion'] for r in resultados if not r['valida']],
+        'regla': 'Una corrida con reintentos de clic no vale y se repite (10.27).',
         'incertidumbreS': round(1.0 / CUADROS_POR_SEGUNDO, 3)}, ensure_ascii=False, indent=1),
         encoding='utf-8')
+    if len(validas) < len(resultados):
+        print(f'{len(resultados) - len(validas)} corrida(s) con reintentos: no valen; repítelas.')
 
 
 if __name__ == '__main__':

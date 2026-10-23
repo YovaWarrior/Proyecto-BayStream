@@ -51,6 +51,7 @@ import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/presentation/providers/theme_preference_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/discharge_provider.dart';
+import 'package:baystream/features/vessel/presentation/providers/export_list_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/plano_providers.dart';
 import 'package:baystream/features/vessel/presentation/widgets/loading_plan_controls.dart'
     show BayPlanMode;
@@ -78,6 +79,9 @@ final _archivoPublicado = _definicion(
     'T99_ARCHIVO_PUBLICADO', const String.fromEnvironment('T99_ARCHIVO_PUBLICADO'));
 final _escalaAnterior = _definicion(
     'T99_ESCALA_ANTERIOR', const String.fromEnvironment('T99_ESCALA_ANTERIOR'));
+// El listado de la agencia del escenario `piloto`, como asset de la copia.
+final _listado = _definicion(
+    'T99_LISTADO', const String.fromEnvironment('T99_LISTADO'), 'T100_LISTADO.xlsx');
 final _carga = _definicion('T99_CARGA', const String.fromEnvironment('T99_CARGA'), 'asset');
 final _pasos = _definicion('T99_PASOS', const String.fromEnvironment('T99_PASOS'));
 final _capturas = _definicion('T99_CAPTURAS', const String.fromEnvironment('T99_CAPTURAS'));
@@ -168,6 +172,8 @@ class T99Conductor {
           await _escenarioInicio();
         case 'plano':
           await _escenarioPlano();
+        case 'piloto':
+          await _escenarioPiloto();
         default:
           throw StateError('Escenario desconocido: $escenario');
       }
@@ -403,6 +409,257 @@ class T99Conductor {
     await contenedor
         .read(themePreferenceProvider.notifier)
         .select(AppThemePreference.system);
+    await _asentar();
+  }
+
+  // --- Escenario del piloto (candidata del piloto, 10.28) -----------------
+
+  /// El recorrido del piloto en un cliente de oficina (Windows), con el
+  /// primer tamaño de T99_ANCHOS, la primera letra de T99_LETRAS y el tema
+  /// oscuro. Prepara la operación como la oficina: el plan de carga
+  /// (T99_ARCHIVO_PUBLICADO) se confirma por la interfaz (la banda del
+  /// previo, «Parámetros del buque», «No lo tengo», «Confirmar y ver el
+  /// plano»); el listado de la agencia (T99_LISTADO) entra por su página,
+  /// sin el selector del sistema; la llegada (T99_ARCHIVO) abre publicada por
+  /// la regla de `DESIGN.md` 7.2. Después recorre la descarga (Baja, otra
+  /// Baja y Deshacer, Paso con su pregunta), la carga (asignar un vacío por
+  /// OR, otro y Deshacer), el avance con «En vivo», las alertas, el BAPLIE de
+  /// salida con la comparación y «Más». Lo que necesita cuenta (pedir cambio,
+  /// la bandeja) no se recorre aquí. Cada paso es una captura numerada, con
+  /// los textos que no caben y los errores de Flutter, en `pasos.jsonl`.
+  Future<void> _escenarioPiloto() async {
+    final contenedor = _contenedorRiverpod();
+    final n = contenedor.read(voyageNotifierProvider.notifier);
+    var paso = 0;
+    Future<void> foto(String nombre) async {
+      paso++;
+      await _capturar('p${paso.toString().padLeft(2, '0')}', nombre);
+    }
+
+    Future<String> texto(String nombre) async => String.fromCharCodes(
+        (await rootBundle.load('t99_inputs/$nombre')).buffer.asUint8List());
+    final especificacion = _anchos.split(',').first.trim();
+    final partes = especificacion.split('x');
+    _tamano.value = especificacion == 'real'
+        ? null
+        : Size(double.parse(partes[0]), double.parse(partes[1]));
+    _letra.value = double.parse(_letras.split(',').first.trim());
+    await contenedor
+        .read(themePreferenceProvider.notifier)
+        .select(AppThemePreference.dark);
+    await _asentar();
+    await foto('inicio');
+
+    // 1. El plan de carga: abre en previo y se confirma por la interfaz.
+    final carga = await n.parseBaplieContent(await texto(_archivoPublicado),
+        fileName: _archivoPublicado);
+    if (!carga.success) {
+      throw StateError(carga.errorMessage ?? 'No abrió $_archivoPublicado');
+    }
+    await _asentar();
+    await foto('plan-de-carga-en-previo');
+    await _tocar(_textoEn(
+        'Confirmar', (w) => w.key == const ValueKey('preview-banner')));
+    await _asentar();
+    await foto('parametros-del-buque');
+    await _tocarALaVista(() => _textoVisible('No lo tengo'));
+    await _asentar();
+    await foto('parametros-no-lo-tengo');
+    await _tocarALaVista(() => _conClave('geometry-confirm'));
+    await _asentar();
+    if (n.isPreview) throw StateError('El plan de carga sigue en previo');
+    await foto('plan-de-carga-publicado');
+
+    // 2. El listado de la agencia, por su página.
+    await _tocar(_pestana('Lista'));
+    await _asentar();
+    await _tocarALaVista(() => _conClave('open-export-list'));
+    await _asentar();
+    final listado = await rootBundle.load('t99_inputs/$_listado');
+    await contenedor
+        .read(exportListImportProvider.notifier)
+        .loadBytes(listado.buffer.asUint8List(), fileName: _listado);
+    await _asentar();
+    await foto('listado-leido');
+    // El aviso «cargado correctamente» de hace un momento flota sobre el
+    // botón de confirmar, al pie: una persona esperaría a que se apague.
+    _sinAvisos();
+    await _asentar();
+    await _tocarALaVista(() => _conClave('export-list-confirm'));
+    await _asentar();
+    await foto('listado-importado');
+    await _volver();
+
+    // 3. La llegada: con la escala confirmada abre publicada (7.2).
+    final llegada =
+        await n.parseBaplieContent(await texto(_archivo), fileName: _archivo);
+    if (!llegada.success) {
+      throw StateError(llegada.errorMessage ?? 'No abrió $_archivo');
+    }
+    if (n.isPreview) {
+      throw StateError('La llegada abrió en previo: la escala no coincide');
+    }
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
+    await _asentar();
+    await foto('llegada-publicada');
+
+    // 4. La descarga: Baja, otra Baja y Deshacer, Paso con su pregunta.
+    await _tocar(_textoEn('Descarga', (w) => w is SegmentedButton));
+    await _asentar();
+    await foto('descarga');
+    await _tocar(_conClavePrefijo('discharge-pending'));
+    await _asentar();
+    await foto('baja-registrada');
+    await _tocar(_conClavePrefijo('discharge-pending'));
+    await _asentar();
+    await foto('segunda-baja');
+    await _tocar(_textoEn('Deshacer', (w) => w is SnackBar));
+    await _asentar();
+    await foto('baja-deshecha');
+    await _tocar(_conClavePrefijo('discharge-transit'));
+    await _asentar();
+    await foto('paso-pregunta');
+    await _tocar(_conClave('confirm-restow'));
+    await _asentar();
+    await foto('reestiba-registrada');
+
+    // 5. La carga: un vacío por OR, otro y Deshacer.
+    await _tocar(_textoEn('Carga', (w) => w is SegmentedButton));
+    await _asentar();
+    await foto('carga');
+    await _tocarALaVista(() => _conClave('empty-search'));
+    await _asentar();
+    await foto('vacios-del-listado');
+    await _tocar(_conClavePrefijo('loading-or-'));
+    await _asentar();
+    await foto('asignar-vacio');
+    await _tocarALaVista(() => _conClave('loading-confirm'));
+    await _asentar();
+    await foto('vacio-asignado');
+    // El aviso de la carga flota sobre el pie de la hoja de los vacíos.
+    _sinAvisos();
+    await _asentar();
+    await _tocarALaVista(() => _conClave('empty-search'));
+    await _asentar();
+    // La segunda fila de la hoja: la primera ya se cargó y abriría su detalle;
+    // la última puede quedar recortada por el borde de la hoja.
+    await _tocarALaVista(() => _conClavePrefijo('loading-or-', indice: 1));
+    await _asentar();
+    await _tocarALaVista(() => _conClave('loading-confirm'));
+    await _asentar();
+    await foto('segundo-vacio-asignado');
+    await _tocar(_textoEn('Deshacer', (w) => w is SnackBar));
+    await _asentar();
+    await foto('vacio-deshecho');
+
+    // 6. El avance y «En vivo» (el panel, desde 1200 dp).
+    await _tocar(_pestana('Avance'));
+    await _asentar();
+    await foto('avance');
+    await _tocar(_pestana('Plano'));
+    await _asentar();
+    await foto('plano-con-en-vivo');
+
+    // 7. Las alertas de estiba (en el riel desde 1200 dp).
+    await _tocar(_pestana('Alertas'));
+    await _asentar();
+    await foto('alertas-de-estiba');
+    await _volver();
+
+    // 8. El BAPLIE de salida y la comparación con la llegada.
+    await _tocar(_pestana('Lista'));
+    await _asentar();
+    _sinAvisos();
+    await _asentar();
+    await _tocarALaVista(() => _conClave('departure-baplie-button'));
+    await _asentar();
+    await foto('baplie-de-salida');
+    await _tocarALaVista(() => _conClave('departure-compare-arrival'));
+    await _asentar();
+    await foto('comparar-con-la-llegada');
+    await _volver();
+    await _volver();
+
+    // 9. «Más».
+    await _tocar(_pestana('Más'));
+    await _asentar();
+    await foto('mas');
+    await _volver();
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
+    await _asentar();
+    _letra.value = 1.0;
+    _tamano.value = null;
+    await contenedor
+        .read(themePreferenceProvider.notifier)
+        .select(AppThemePreference.system);
+    await _asentar();
+  }
+
+  /// Un texto a la vista, tal cual.
+  Element _textoVisible(String texto) => _exigir(
+      _buscarElemento(
+          (e) => e.widget is Text && (e.widget as Text).data == texto),
+      'el texto $texto');
+
+  /// Un texto a la vista dentro de un ancestro que cumple [ancestro].
+  Element _textoEn(String texto, bool Function(Widget w) ancestro) => _exigir(
+      _buscarElemento((e) =>
+          e.widget is Text &&
+          (e.widget as Text).data == texto &&
+          _tieneAncestro(e, ancestro)),
+      'el texto $texto');
+
+  bool _tieneAncestro(Element e, bool Function(Widget w) cumple) {
+    var hallado = false;
+    e.visitAncestorElements((a) {
+      if (cumple(a.widget)) {
+        hallado = true;
+        return false;
+      }
+      return true;
+    });
+    return hallado;
+  }
+
+  /// El elemento [indice] (o el último) de los que están a la vista con una
+  /// clave que empieza por [prefijo]: las marcas de descarga
+  /// (`discharge-pending`) y las filas del listado (`loading-or-`).
+  Element _conClavePrefijo(String prefijo, {int indice = 0, bool ultimo = false}) {
+    final hallados = <Element>[];
+    void visitar(Element e) {
+      final k = e.widget.key;
+      if (k is ValueKey<String> && k.value.startsWith(prefijo) && _visible(e)) {
+        hallados.add(e);
+      }
+      e.visitChildren(visitar);
+    }
+
+    WidgetsBinding.instance.rootElement?.visitChildren(visitar);
+    if (hallados.isEmpty) throw StateError('No está a la vista: $prefijo');
+    if (ultimo) return hallados.last;
+    return hallados[indice < hallados.length ? indice : hallados.length - 1];
+  }
+
+  /// Trae el control a la vista si está en un desplazable y lo toca.
+  Future<void> _tocarALaVista(Element Function() buscar) async {
+    await Scrollable.ensureVisible(buscar(),
+        alignment: 0.5, duration: Duration.zero);
+    await _asentar();
+    await _tocar(buscar());
+  }
+
+  /// Aparta los avisos (SnackBar) que floten sobre lo que se va a tocar.
+  void _sinAvisos() {
+    final e = _buscarElemento((e) => e.widget is ScaffoldMessenger);
+    if (e == null) return;
+    ((e as StatefulElement).state as ScaffoldMessengerState).clearSnackBars();
+  }
+
+  /// Vuelve: cierra la ruta de encima (una página, una hoja, un diálogo).
+  Future<void> _volver() async {
+    final e = _exigir(
+        _buscarElemento((e) => e.widget is Navigator), 'el navegador');
+    await ((e as StatefulElement).state as NavigatorState).maybePop();
     await _asentar();
   }
 

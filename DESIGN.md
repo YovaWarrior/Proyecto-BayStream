@@ -426,6 +426,22 @@ Atrás (Android): cierra primero hojas y paneles; en la raíz del viaje pregunta
 el plano?» solo si hay un previo sin confirmar; con el viaje publicado vuelve al inicio.
 GoRouter no hace falta.
 
+**Lo que el código hace (candidata del piloto, 10.28).** `AtrasDelViaje`
+(`navegacion_del_viaje.dart`) envuelve la página del viaje, y solo gobierna Atrás en
+Android, donde hay un botón Atrás del sistema; en la Web el navegador manda y en
+Windows no hay botón. En orden: las hojas («Más», el detalle en el teléfono), los
+diálogos y la búsqueda son rutas y las cierra el `Navigator` por su cuenta; el menú del
+zoom no es una ruta, así que mientras está abierto se anota en
+`cerrablesDeAtrasProvider` y Atrás lo cierra antes que nada; con panel lateral, Atrás
+cierra el detalle de la celda. En la raíz del viaje, con un previo, pregunta lo mismo
+que «Más → Cerrar el plano», «¿Descartar el plano sin confirmar?», con «Seguir mirando»
+y «Descartar» (Atrás sobre la pregunta es seguir mirando); con el viaje publicado,
+vuelve al inicio solo con **dos toques seguidos**: el primero avisa «Toca Atrás otra
+vez para volver al inicio» durante 2 s y el segundo, mientras dura el aviso, vuelve. El
+viaje publicado sigue guardado y se reabre desde los recientes con un toque. En el
+muelle, un toque por error no saca a nadie del plano. En el inicio, Atrás sale de la
+app como siempre.
+
 **Lo que la entrega 2 dejó en el código (22-oct, 10.16):** la barra de ocho acciones y su
 plegado (T-91) se retiran: Buscar va en la barra superior o en la cabecera de la oficina
 (que desde la corrección de 10.21 se reparte o se pliega según el ancho y la letra: el
@@ -438,7 +454,7 @@ plano». «Avance» muestra el avance de la operación embebido, sin barra propi
 con una escala confirmada. En la barra inferior el destino se escribe «Estad.» y los rótulos
 crecen con la letra del sistema hasta 1.3 (cinco destinos en 360 dp dan 72 dp a cada uno;
 más allá se recortarían); el nombre entero va en la descripción emergente y para el lector de
-pantalla. Atrás en Android queda como estaba. La preferencia de T-91
+pantalla. Atrás en Android se resolvió en la candidata del piloto (arriba). La preferencia de T-91
 (`planToolbarCollapsedProvider` y su almacén) queda sin lector; retirarla toca `domain/` y
 `data/` y se propone como tarea.
 

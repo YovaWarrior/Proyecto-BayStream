@@ -185,7 +185,18 @@ abstract final class BayStreamTema {
         side: BorderSide(color: paleta.linea),
         backgroundColor: paleta.hoja,
         selectedColor: seleccionFondo,
-        labelStyle: textos.labelMedium,
+        // El rótulo sigue al estado: seleccionado, el texto de la selección
+        // (de noche, la noche sobre tinta). `secondaryLabelStyle` solo lo usa
+        // `ChoiceChip`; `FilterChip` e `InputChip` resuelven el color del
+        // rótulo por estado, y sin esto de noche el chip seleccionado quedaba
+        // tinta sobre tinta («Solo con cambios», los filtros por naviera; la
+        // candidata del piloto, 10.28).
+        labelStyle: textos.labelMedium?.copyWith(
+          color: WidgetStateColor.resolveWith((Set<WidgetState> estados) =>
+              estados.contains(WidgetState.selected)
+                  ? seleccionTexto
+                  : textos.labelMedium?.color ?? paleta.tinta),
+        ),
         secondaryLabelStyle: textos.labelMedium?.copyWith(color: seleccionTexto),
         padding: EdgeInsets.symmetric(
           horizontal: medidas.espacioM,

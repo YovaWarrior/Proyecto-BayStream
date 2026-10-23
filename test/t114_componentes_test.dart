@@ -51,7 +51,8 @@ void main() {
         marca: BsMarcaDeCelda.reestiba,
         etiqueta: 're-estiba',
       )));
-      expect(find.text('Re‑estiba'), findsOneWidget);
+      // Abreviado: «Re‑estiba» entera no cabe en la celda (10.28).
+      expect(find.text('Re‑est.'), findsOneWidget);
       expect(find.byIcon(BsIconos.reestiba), findsOneWidget);
     });
 

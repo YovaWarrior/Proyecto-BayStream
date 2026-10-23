@@ -22,6 +22,10 @@ param(
     # Fase 3, entrega 2: `plano` publica $Archivo y captura plano, lista y
     # avance por tema, letra y tamano (tool/t99_conductor.dart, _escenarioPlano).
     [string] $Escenario = 'inicio',
+    # Candidata del piloto (10.28): `piloto` recorre la operacion como la oficina
+    # (el plan de carga por la interfaz, el listado de la agencia por su pagina,
+    # la llegada publicada, descarga, carga, avance, alertas, BAPLIE de salida).
+    [string] $Listado = 'T100_LISTADO.xlsx',
     # Desde la consola empaquetada (Claude de escritorio, Codex) un proceso hijo
     # hereda el paquete y Windows le virtualiza AppData: el binario no ve el
     # almacen ni escribe los pasos donde se le pide (AGENTS.md, T-73 10.9).
@@ -47,6 +51,7 @@ $env:T99_ESCENARIO = $Escenario
 $env:T99_ARCHIVO = $Archivo
 $env:T99_ARCHIVO_PUBLICADO = $ArchivoPublicado
 $env:T99_ESCALA_ANTERIOR = $EscalaAnterior
+$env:T99_LISTADO = $Listado
 $env:T99_ANCHOS = $Anchos
 $env:T99_LETRAS = $Letras
 $env:T99_CAPTURAS = $Salida
@@ -61,7 +66,7 @@ if ($PorExplorer) {
     $lineas = @('@echo off')
     foreach ($nombre in @('T99_ESCENARIO', 'T99_ARCHIVO', 'T99_ARCHIVO_PUBLICADO', 'T99_ESCALA_ANTERIOR',
                           'T99_ANCHOS', 'T99_LETRAS', 'T99_CAPTURAS', 'T99_PASOS', 'T99_PAUSA_MS',
-                          'T99_MOVIMIENTO')) {
+                          'T99_MOVIMIENTO', 'T99_LISTADO')) {
         $lineas += "set $nombre=$([Environment]::GetEnvironmentVariable($nombre))"
     }
     $lineas += "start `"`" `"$exeCompleto`""
