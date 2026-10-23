@@ -535,3 +535,22 @@ La siguiente decisión es la **10.21**.
 Después, Codex acepta solo la corrección, y Timonel integra el paquete de íconos (10.19) en el mismo chat. Mientras Codex revisa, Timonel avanza solo en la base del paquete (archivos nuevos y la línea de `pubspec.yaml`), sin tocar las pantallas.
 
 La siguiente decisión es la **10.22**.
+
+### 10.22 · La corrección de la entrega 2, aceptada · En Carga a 360 × 640, la primera fila puede quedar a un gesto (23-oct, 08:40)
+
+**Codex volvió a revisar sobre `74802b6`, contra `52dd1b6`** (`docs/rediseno/fase3/entrega2/reaceptacion-codex.md`):
+- H1 a H3 están corregidos.
+  - Buscar queda al alcance a 360, 600 y 1920 dp, con letra 1.0, 1.45 y 2.0.
+  - La carga real enciende su celda en naranja 1.5 s, también en llenos y en reservas con vacío asignado.
+  - El movimiento se anuncia a 360 y 600 dp con el rol, y a 1920 no se anuncia dos veces.
+- RNF-002 en Android queda acreditado: los cinco cuadros finales muestran celdas, en tres pasos. La primera corrida tras instalar tarda 4.91–4.98 s, y las demás 2.85–3.20 s.
+- El riel ya no usa `IntrinsicHeight` y el chip del zoom quedó fuera de la rejilla.
+- Suite 1260/1260 sin omitidas, `analyze` en cero y ningún aviso nuevo en la auditoría.
+- **Lo único pendiente era de alcance.** 10.21 pedía la primera rejilla sin desplazar a 360 × 640, pero DESIGN.md 13.8 deja Carga «a un gesto»: según Timonel faltan 14 dp. Codex no reprodujo esos 14 dp en sus dos casos de Carga, y pidió acreditar el caso o una decisión de Carlos.
+- Anota un cambio de comportamiento: el zoom se conserva al cambiar de bahía y vuelve a empezar al cambiar de viaje.
+
+**Carlos acepta la excepción:** en Carga, en un teléfono de 640 dp de alto, la primera fila puede quedar a un deslizamiento. En el previo (la medición de RNF-002) y en Descarga se ve sin desplazar, y en el Honor (360 × 800) se ve todo. **Con eso queda aceptada la entrega 2 de la Fase 3.**
+
+Timonel sigue en su chat con el paquete de íconos (partes B y C, 10.19), y después Codex lo acepta.
+
+La siguiente decisión es la **10.23**.
