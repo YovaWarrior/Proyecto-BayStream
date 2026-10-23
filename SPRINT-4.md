@@ -640,3 +640,36 @@ La siguiente decisión es la **10.26**.
 Después, Codex vuelve a aceptar solo la corrección.
 
 La siguiente decisión es la **10.27**.
+
+### 10.27 · La travesía del inicio, aceptada (23-oct, 15:05)
+
+**Codex volvió a revisar la corrección sobre `53838d7`: ACEPTADA con observaciones** (`docs/rediseno/fase3/travesia/reaceptacion-codex.md`).
+- **H1:** la caja del buque quedó fija durante 3305 cuadros y el buque se pintó una sola vez. El cruce, el vaivén y el cabeceo van en el `Transform`.
+- **H2:** el detector de Windows reconoce el botón por el tema, la forma y el rótulo, y ya no pulsa el muelle del dibujo. Timonel encontró la causa del bloqueo: el cursor de la repetición anterior quedaba sobre el botón, que aparecía apagado por el hover. RNF-002 en Windows está acreditado. Las cinco corridas de Timonel dieron entre 1.84 y 1.89 s, y las tres de Codex 1.979, 1.907 y 1.861 s, todas en tres pasos y sin reintentos.
+- **O1:** el conductor de T-99 pide reducción de movimiento por omisión y avisa cuando vence la espera.
+- Suite 1312/1312 sin omitidas y `analyze` en cero.
+- **Observación:** el instrumento sigue contando tres pasos aunque haya reintentos. **Desde ahora, una corrida con reintentos no vale y se repite.** En la siguiente entrega de Timonel, el instrumento la marca él mismo como no válida.
+
+**Con esto queda cerrada la travesía del inicio (10.24 y 10.26).**
+
+La siguiente decisión es la **10.28**.
+
+### 10.28 · La prueba piloto con COMAR va con el rediseño (23-oct, 15:07)
+
+**Carlos decide que la prueba piloto con COMAR, el 25 o el 26-oct, se haga con la versión rediseñada.** `sprint-4` contiene todo `sprint-3` (la v3.0 desplegada) más el rediseño, y `origin/master` está en `063d2ae`, así que el paso a `master` es un avance directo.
+
+Qué está aceptado:
+- el inicio y la primera visualización (entrega 1);
+- el plano por bahía, con la banda del muelle, la barra de la operación, «En vivo» y la navegación adaptable (entrega 2);
+- el paquete de íconos e ilustraciones;
+- la travesía.
+
+Las demás pantallas funcionan con el tema nuevo, pero todavía no se rediseñaron.
+
+**El plan hasta el piloto:**
+1. **Timonel**, en un chat nuevo y en Max, arma la candidata del piloto. No agrega funciones: recorre el piloto en los tres clientes con datos sintéticos y corrige lo que bloquee o confunda. También hace que Atrás en Android funcione como dice DESIGN.md 8, revisa que las pantallas sin rediseñar no tengan nada roto, propone las versiones de Android, MSIX y la Web según la guía de despliegue del Sprint 3, y escribe la lista de comprobación del piloto.
+2. **Codex** acepta la candidata.
+3. **Carlos** pasa `sprint-4` a `master`, publica Android (prueba interna de Play), el MSIX de Windows y la Web, y hace un ensayo con el Honor y la laptop contra Firebase de verdad, con la lista de comprobación.
+4. Si el ensayo falla en algo serio, el piloto se hace con la v3.0, que sigue instalada y probada.
+
+La siguiente decisión es la **10.29**.
