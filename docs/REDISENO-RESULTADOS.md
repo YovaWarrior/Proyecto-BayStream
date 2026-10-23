@@ -3976,3 +3976,268 @@ resto de la semántica); Carlos pidió corregirlo antes de subir, y la celda nom
 («Carga peligrosa», «Refrigerado», «Fuera de medida», «Vacío») después de la marca, en Destino, Tipo de
 vacío y Estado, leída desde el árbol de semántica. El bloque tiene 14 archivos y no toca `domain/`, `data/`, `main.dart`, Firebase,
 `pubspec.yaml` ni `pubspec.lock`. Me detengo: ALTO: Codex acepta la corrección del paquete.
+
+## Fase 3 · La travesía del inicio (10.24) (23-oct-2026)
+
+Carlos pidió (decisión 10.24) que en el espacio libre debajo de los dos bloques del inicio («Abre un
+plano de estiba» y «Recientes») un buque navegue de izquierda a derecha, se desvanezca al llegar a la
+derecha y vuelva a salir por la izquierda. Yov la definió con el vocabulario del paquete de Nube, sin
+dibujo nuevo. Esta sección es la Parte 2 del encargo, en un bloque de git aparte, después de la
+corrección del paquete (10.23, aceptada en 10.25).
+
+### 7.1 Resultado en tres líneas
+
+- `BsTravesia` (`lib/core/design/componentes/bs_travesia.dart`) pinta el buque de `sin_conexion`
+  reflejado, con la proa a la derecha, sobre el agua y la línea de flotación de esa misma ilustración
+  a todo el ancho, y lo mueve solo con `Transform` y opacidad: el dibujo se pinta una vez. Vaivén,
+  cabeceo, estela y dos olas, con los colores por nombre y nada naranja.
+- Vive al pie del inicio, en lo que sobra debajo de los dos bloques, a todo el ancho; si cambian la
+  ventana o la letra, cede ella, y con menos de 120 dp libres no se pinta. Con reducción de movimiento
+  queda quieta sin tickers; con otra pantalla encima o en segundo plano se detiene; es decorativa.
+- 14 pruebas nuevas (suite 1311), `analyze` 0, auditoría 17/248/20 sin hallazgos nuevos, censo 0
+  inglés, y 12 capturas del inicio a 1280 × 720 y 1920 × 1080, en claro y en oscuro, con el buque al
+  entrar, a la mitad y al salir.
+
+### 7.2 La pieza
+
+**Sin arte nuevo.** El buque son las formas de `BsIlustraciones.sinConexion` con grupo `casco_perfil`,
+`perfil_0_0` a `perfil_0_4`, `caseta` y `puente`; quedan fuera la nube y la pausa. Se pintan con
+`pintarFormaDeIlustracion`, la pintura de una forma que `PintorDeIlustracion` hacía por dentro y que
+ahora es una función de `bs_ilustracion.dart` compartida por las dos piezas (el relleno, el trazo con
+puntas y uniones redondas, el punteado, la caché de rutas). El lienzo del buque se mide desde las
+rutas (`Path.getBounds`), no a mano: ocupa de 36 a 284 de ancho y de 84.66 a 180 de alto en el lienzo
+de `sin_conexion`, con la línea de flotación a 152; la caja del buque le suma 52 unidades de estela
+detrás de la popa. El mar es el relleno del grupo `agua` y el trazo del grupo `flotacion`, a todo el
+ancho de la banda; las olas y la estela llevan ese mismo trazo (las olas al 55 %, la estela apagándose
+al 60, 40 y 20 %). Todos los colores van por nombre a `colorDeIlustracion`, como en `BsIlustracion`;
+no hay ningún hex ni nada naranja.
+
+**La proa hacia donde va.** El pintor refleja el lienzo (`scale(-1, 1)`): la caseta y el puente, que en
+la ilustración van a la derecha, quedan a la izquierda, en la popa; la proa curva mira a la derecha,
+hacia donde navega. Es la única excepción a «la proa a la izquierda», que sigue valiendo para la
+silueta, las ilustraciones y los íconos (`DESIGN.md` 13.11, regla 7).
+
+**Dónde y cuánto.** `BsGeometriaDeTravesia(ancho, alto)` fija las medidas de la banda y las pruebas
+las leen sin mirar píxeles:
+
+| Regla | Valor |
+|---|---|
+| Alto mínimo de la banda | 120 dp (`BsIlustracion.altoMinimo`, 13.11 regla 4); por debajo, `SizedBox.shrink` y sin ticker |
+| El agua | el tercio de abajo, mínimo 32 dp |
+| El buque | la mitad del alto de la banda, entre 56 y 120 dp; su ancho sale de la proporción del lienzo |
+| El cruce | el recorrido (el ancho de la banda más el del buque: entra desde fuera y sale del todo) entre 48 dp/s, acotado entre 14 y 40 s |
+| La opacidad | de 0 a 1 en el primer 10 % del recorrido, 1 en medio, de 1 a 0 en el último 12 %; 0 durante los 3 s de mar vacío |
+| El vaivén y el cabeceo | ±1.5 dp cada 3.2 s; ±0.8° cada 4.4 s, alrededor del centro del casco sobre la línea de flotación |
+| Las olas | dos tiras a un tercio y a dos tercios del agua, que corren hacia la izquierda a 8 y a 16 dp/s; cada tira se repite cada 48 dp y mide el ancho más un paso, así que no hay costura |
+| En la banda de 1280 × 720 | banda de 226.0 dp, buque de 113.0 dp, cruce de 34.1 s |
+| En la de 1920 × 1080 | banda de 502.0 dp, buque de 120.0 dp, cruce de 40.0 s |
+
+**El movimiento, solo con `Transform` y opacidad.** Un solo `Ticker` lleva el tiempo de la travesía en
+un `ValueNotifier<Duration>`; por cuadro se reconstruyen solo tres cosas: el `Positioned` del buque
+(su sitio y su vaivén), el `Transform.rotate` del cabeceo y la `Opacity`, y los `Transform.translate`
+de las dos olas. El buque, cada ola y el mar son `CustomPaint` dentro de su `RepaintBoundary`: su
+capa se compone de nuevo en cada cuadro, pero no se vuelve a pintar. `BsTravesia.pintadasDelBuque`
+lo cuenta para las pruebas: una vez en 60 cuadros. El ciclo es el cruce más 3 s de mar vacío; el
+vaivén y el cabeceo siguen el reloj y no saltan en el cambio de ciclo porque el buque está invisible
+cuando el ciclo cambia.
+
+**Cuándo se para.** Con `MediaQuery.disableAnimations` (`BsMovimiento.reducido`) el ticker no arranca:
+el buque queda quieto, con el centro de su caja a un tercio del ancho, y las olas no corren. Con otra
+pantalla encima, `TickerMode` silencia el ticker por sí solo (`SingleTickerProviderStateMixin`) y no se
+programa ningún cuadro. En segundo plano (`AppLifecycleState` distinto de `resumed` e `inactive`) el
+ticker se detiene, guarda lo andado y al volver sigue desde donde iba; con la ventana sin foco pero
+a la vista (`inactive`) sigue navegando. Sin sitio para pintarse, tampoco corre.
+
+**Es decorativa.** `ExcludeSemantics` e `IgnorePointer`; no hay ningún widget con foco. No añade ni
+un nodo al árbol de semántica y el toque pasa de largo.
+
+**La vista previa** `vistaPreviaTravesia` (`vistas_previas.dart`, 720 × 240) muestra la banda en el día
+y en la noche para `flutter widget-preview start`.
+
+### 7.3 Al pie del inicio
+
+`InicioView` pasa de un `SingleChildScrollView` a un `CustomScrollView` con dos slivers: los dos
+bloques de siempre, con su relleno, en un `SliverPadding`; y después un `SliverLayoutBuilder` que
+calcula lo que sobra (`viewportMainAxisExtent - precedingScrollExtent`) y, si llega a 120 dp, pone
+la banda con ese alto exacto; si no, nada. Así la banda nunca empuja los bloques ni los tapa, nunca
+hace que el inicio se desplace, y cede antes que el texto cuando crece la letra o se achica la
+ventana. No se usó el `SliverFillRemaining(hasScrollBody: false)` del ejemplo del encargo con un
+`LayoutBuilder` dentro porque ese sliver pide el alto intrínseco de su hijo y `LayoutBuilder` no lo
+tiene (lanza en depuración); el `SliverLayoutBuilder` da el mismo resultado sin esa trampa.
+
+Con las fuentes reales, la banda aparece en el escritorio (1280 × 720 y 1920 × 1080 con las tres
+escalas de letra) y no aparece en el teléfono (360 × 640) ni en 600 × 960 con la letra a 1.0, donde
+los bloques dejan menos de 120 dp; la prueba de 7.4 recorre los doce casos y comprueba que la banda
+mide exactamente lo que sobra y que nada se desplaza.
+
+### 7.4 Pruebas
+
+`test/t114_travesia_test.dart`, 14 pruebas nuevas. Suite **1311** (1297 + 14), sin omitidas.
+Ninguna usa `pumpAndSettle` con la travesía viva: no se asienta nunca.
+
+| Prueba | Qué comprueba |
+|---|---|
+| La regla · el cruce dura el recorrido entre 48 dp/s, entre 14 y 40 s | `duracionDelCruce`: 960 dp son 20 s; por debajo de 672 dp, 14 s; por encima de 1920 dp, 40 s |
+| La regla · la opacidad sube en el primer 10 %, baja en el último 12 % | `opacidadDelCruce` en 0, 0.05, 0.1, 0.5, 0.88, 0.94, 1 y fuera del cruce |
+| La regla · la banda: el agua en el tercio de abajo, el buque entre 56 y 120 | para alturas de 120 a 900: el agua, el alto del buque, que el buque cabe entero, las olas dentro del agua, el recorrido, el ciclo y el buque quieto a un tercio |
+| La regla · el instante | entra desde fuera por la izquierda, a la mitad está en el centro, al terminar está fuera y con opacidad 0, descansa 3 s y vuelve; el vaivén y el cabeceo acotados; las olas a 8 y 16 dp/s, sin costura a los 6 s |
+| Lo que se para · con reducción de movimiento | `transientCallbackCount` 0, opacidad 1, el centro de la caja a un tercio del ancho, el mismo rectángulo 5 s después, las olas en 0; `pumpAndSettle` se asienta |
+| Lo que se para · con otra ruta encima | a la vista pide cuadros; con una `MaterialPageRoute` encima, 0; al volver, pide otra vez |
+| Lo que se para · en segundo plano | con `paused`, 0 cuadros y el buque quieto; con `resumed`, sigue desde el mismo sitio y avanza lo que toca en 1 s; con `inactive` sigue |
+| Lo que se para · con menos de 120 dp | a 119 dp ni `CustomPaint` ni cuadros; a 120, el mar, las dos olas y el buque, y el ticker |
+| El cruce · la opacidad | 0 al empezar (y el buque fuera por la izquierda), 0.5 al 5 %, 1 a la mitad (y en el centro), 0.5 al 94 %, 0 al terminar y en el mar vacío, 1 otra vez en el ciclo siguiente |
+| El cruce · las olas | −8 y −16 dp a 1 s, 0 y 0 a los 6 s, −4 y −8 a los 6.5 s |
+| El cruce · el buque se pinta una sola vez | `pintadasDelBuque` es 1 tras 60 cuadros de 16 ms en los que el buque se movió |
+| Al pie del inicio · sin desbordes ni empujones | el inicio real a 360 × 640, 600 × 960, 1280 × 720 y 1920 × 1080 con 1.0, 1.45 y 2.0, con las fuentes reales: sin excepciones; la banda existe exactamente cuando sobran 120 dp, mide lo que sobra, va a todo el ancho y al pie, debajo del botón y de «Perfiles guardados», y el desplazable no tiene nada que desplazar |
+| Al pie del inicio · meetsGuideline | a 1280 × 720 con la banda y 4 s de travesía: contraste, objetivos táctiles y objetivos con etiqueta |
+| Al pie del inicio · es decorativa | el recorrido de accesibilidad tiene los mismos nodos con y sin banda; `ExcludeSemantics`, `IgnorePointer`, ningún `Focus`; el toque sobre el buque no toca ningún `RenderCustomPaint` |
+
+**Una prueba existente cambió:** `test/profile_loading_page_test.dart` abre el inicio a 1000 × 2600 y
+usa `pumpAndSettle`; con la travesía viva no se asentaría. Pide reducir el movimiento
+(`FakeAccessibilityFeatures(disableAnimations: true)`), como ya hace `t114_fase3_entrega2_correccion_test`,
+y queda igual en todo lo demás. Las demás pruebas que abren el inicio lo hacen a 360 de ancho o a
+800 × 600, donde los bloques no dejan 120 dp y no hay banda.
+
+### 7.5 Capturas
+
+Doce PNG en `docs/rediseno/fase3/travesia/capturas/`, con su `registro.tsv`. Son **capturas de prueba
+de widget** (`build/t114-travesia/capturas_test.dart`, fuera de la suite y de Git): el inicio entero
+(`VesselOverviewPage` sin viaje, con la barra superior) con las fuentes reales, en claro y en oscuro,
+detenido con el reloj de la prueba al 6 %, al 50 % y al 95 % del cruce. Es lo que permite parar el buque
+en un instante exacto; una captura de cliente no sabría cuándo entra ni cuándo sale. No son capturas
+de un cliente compilado: si Codex quiere verlo en Windows o en la Web, la banda está en el inicio de
+cualquier banco a 1280 de ancho o más.
+
+| Archivo | Ventana | Tema | Momento | Banda | Buque | Cruce |
+|---|---|---|---|---:|---:|---:|
+| `inicio_1280x720_claro_entra.png` | 1280x720 | claro | entra (6 % del cruce) | 226.0 | 113.0 | 34.1 s |
+| `inicio_1280x720_claro_mitad.png` | 1280x720 | claro | mitad (50 % del cruce) | 226.0 | 113.0 | 34.1 s |
+| `inicio_1280x720_claro_sale.png` | 1280x720 | claro | sale (95 % del cruce) | 226.0 | 113.0 | 34.1 s |
+| `inicio_1280x720_oscuro_entra.png` | 1280x720 | oscuro | entra (6 % del cruce) | 226.0 | 113.0 | 34.1 s |
+| `inicio_1280x720_oscuro_mitad.png` | 1280x720 | oscuro | mitad (50 % del cruce) | 226.0 | 113.0 | 34.1 s |
+| `inicio_1280x720_oscuro_sale.png` | 1280x720 | oscuro | sale (95 % del cruce) | 226.0 | 113.0 | 34.1 s |
+| `inicio_1920x1080_claro_entra.png` | 1920x1080 | claro | entra (6 % del cruce) | 502.0 | 120.0 | 40.0 s |
+| `inicio_1920x1080_claro_mitad.png` | 1920x1080 | claro | mitad (50 % del cruce) | 502.0 | 120.0 | 40.0 s |
+| `inicio_1920x1080_claro_sale.png` | 1920x1080 | claro | sale (95 % del cruce) | 502.0 | 120.0 | 40.0 s |
+| `inicio_1920x1080_oscuro_entra.png` | 1920x1080 | oscuro | entra (6 % del cruce) | 502.0 | 120.0 | 40.0 s |
+| `inicio_1920x1080_oscuro_mitad.png` | 1920x1080 | oscuro | mitad (50 % del cruce) | 502.0 | 120.0 | 40.0 s |
+| `inicio_1920x1080_oscuro_sale.png` | 1920x1080 | oscuro | sale (95 % del cruce) | 502.0 | 120.0 | 40.0 s |
+
+### 7.6 Validaciones ejecutadas
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze --no-pub` | 0 incidencias |
+| `flutter test --no-pub` | **1311** pruebas en verde, ninguna omitida (`build/t114-travesia/flutter-test.txt`) |
+| `flutter test build/t114-travesia/capturas_test.dart` | 1 prueba de evidencia; escribe las 12 capturas y `registro.tsv` |
+| Auditoría `flutter-ui` (`--all`) | **17 / 248 / 20**, los mismos de la corrección del paquete; el diff sin números de línea solo cambia «178 archivos» por «179» · `docs/rediseno/fase3/travesia/flutter-ui-audit.txt`. El escáner marca como «animación de duración cero» cualquier `Duration.zero`; el arranque del reloj de la travesía se escribe `const Duration()`, que es lo mismo, para no sumar dos avisos que no son animaciones |
+| Censo T-112 (referencia `5406e20`) | **1950** visibles: 1819 español, 131 sin idioma, **0 inglés**; M3 250 / 7 / 3; 217 / 217 mensajes · `docs/rediseno/fase3/travesia/censos/`. Los nombres de grupo de `bs_travesia.dart` son código (NV-CODIGO) |
+
+Flutter se usó con la luz verde de 10.25, un comando a la vez. No se tocaron el emulador, el Honor,
+Firebase, el paquete de Nube ni Git de escritura.
+
+### 7.7 Archivos
+
+- **Nuevos:** `lib/core/design/componentes/bs_travesia.dart`, `test/t114_travesia_test.dart`,
+  `docs/rediseno/fase3/travesia/` (la auditoría, los censos, las 12 capturas y su registro).
+- **Modificados (`lib/`):** `componentes/bs_ilustracion.dart` (`pintarFormaDeIlustracion` compartida;
+  `PintorDeIlustracion` la usa), `design.dart` (el export), `vistas_previas.dart` (la vista previa),
+  `lib/features/vessel/presentation/widgets/inicio_view.dart` (la banda al pie).
+- **Modificados (documentos, pruebas y herramientas):** `DESIGN.md` (13.7, la fila del pie del inicio;
+  13.11, la regla 7), `test/profile_loading_page_test.dart`, `tool/t112_censos.py`, este informe y
+  `docs/rediseno/fase3/traspaso-entrega2.md`.
+- No cambian `domain/`, `data/`, `lib/main.dart`, los congelados, Firebase, `pubspec.yaml`,
+  `pubspec.lock` ni nada del paquete de Nube (`assets/fonts/bs_iconos`, `design/`). Ninguna dependencia
+  nueva.
+
+### 7.8 Lo que queda anotado y lo que Carlos decide
+
+1. **Las capturas son de prueba de widget**, no de un cliente (7.5). Si la aceptación quiere además
+   una captura de Windows o de la Web, la banda se ve en cualquier banco a 1280 de ancho o más.
+2. **La ventana sin foco sigue navegando.** `AppLifecycleState.inactive` (la ventana de Windows sin
+   foco, pero a la vista) no detiene la travesía; `paused` y `hidden`, sí. Si Carlos prefiere pararla
+   también sin foco, es una condición en `_ajustar`.
+3. **La duración del cruce** se calcula sobre el recorrido completo (el ancho de la banda más el del
+   buque), para que la velocidad sea la misma dentro y fuera de la ventana. A 1280 de ancho da
+   34.1 s; a 1920, 40.0 s.
+4. **La mitad del alto como tamaño del buque.** El encargo fija «entre 56 y 120 dp, según la banda»; se
+   eligió la mitad del alto de la banda, acotada, para que el buque crezca con el sitio sin llenarlo.
+5. **El tono de las olas y la estela** es el trazo de la línea de flotación al 55 % (las olas) y al 60,
+   40 y 20 % (la estela): ningún color nuevo. Si se quieren más marcadas, son dos constantes.
+6. **`profile_loading_page_test` pide reducir el movimiento** para asentarse (7.4). Cualquier prueba
+   futura que abra el inicio a 840 de ancho o más tendrá que hacer lo mismo, o usar `pump`.
+
+### 7.9 Horas
+
+Unas 2 h: leer el encargo y los datos del paquete, la pieza y su geometría, la banda en el inicio,
+las 14 pruebas y los tres fallos propios que encontraron (la compuerta por tamaño del ticker, un
+estado reutilizado entre dos arranques y una medida mal hecha de lo que sobra), las capturas, las
+validaciones y este informe.
+
+### Git para Carlos (Fase 3, la travesía del inicio)
+
+Un `git add` por ruta; la carpeta de las capturas va por carpeta (12 PNG y su registro). Los generados
+de `windows/flutter/` y `test/t114_fase3_correccion_test.dart` figuran modificados solo por el fin de
+línea y no se agregan. El último comando tiene que mostrar **27 files changed**.
+
+```powershell
+git add -- lib/core/design/componentes/bs_travesia.dart
+git add -- lib/core/design/componentes/bs_ilustracion.dart
+git add -- lib/core/design/design.dart
+git add -- lib/core/design/vistas_previas.dart
+git add -- lib/features/vessel/presentation/widgets/inicio_view.dart
+git add -- DESIGN.md
+git add -- tool/t112_censos.py
+git add -- test/t114_travesia_test.dart
+git add -- test/profile_loading_page_test.dart
+git add -- docs/rediseno/fase3/travesia/flutter-ui-audit.txt
+git add -- docs/rediseno/fase3/travesia/censos/resumen.json
+git add -- docs/rediseno/fase3/travesia/censos/tablas.md
+git add -- docs/rediseno/fase3/travesia/capturas
+git add -- docs/rediseno/fase3/traspaso-entrega2.md
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: la travesia del inicio (10.24), BsTravesia con el buque de sin_conexion navegando al pie del inicio, sin arte nuevo, solo Transform y opacidad, quieta con reduccion de movimiento y parada fuera de vista"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+### Tres líneas
+
+- `BsTravesia`: el buque de `sin_conexion`, reflejado con la proa a la derecha, cruza el mar al pie
+  del inicio solo con `Transform` y opacidad, pintado una vez, con vaivén, cabeceo, estela y dos olas,
+  y sin un color ni un trazo nuevos.
+- Ocupa solo lo que sobra debajo de los dos bloques y cede ante la ventana y la letra; quieta con
+  reducción de movimiento, parada con otra pantalla encima o en segundo plano, y decorativa.
+- 14 pruebas (suite 1311), `analyze` 0, auditoría y censo sin cambios, 12 capturas del inicio en
+  dos tamaños, dos temas y tres momentos del cruce.
+
+### Mensaje para Yov
+
+Yov: la **travesía del inicio (10.24)** está escrita, probada y documentada, en un bloque aparte de
+27 archivos. **La pieza:** `BsTravesia` (`lib/core/design/componentes/bs_travesia.dart`) toma
+de `BsIlustraciones.sinConexion` los grupos `casco_perfil`, `perfil_0_0` a `perfil_0_4`, `caseta` y
+`puente` (sin la nube ni la pausa) y los pinta reflejados, con la proa a la derecha; el mar es el
+relleno de `agua` y el trazo de `flotacion` a todo el ancho; las olas y la estela llevan ese mismo
+trazo; todo por nombre con `colorDeIlustracion`, nada naranja. La pintura de una forma salió de
+`PintorDeIlustracion` a `pintarFormaDeIlustracion`, compartida. **La regla** (`BsGeometriaDeTravesia`):
+agua en el tercio de abajo (mínimo 32), buque a la mitad del alto entre 56 y 120, cruce a 48 dp/s sobre
+el recorrido (banda más buque) entre 14 y 40 s, opacidad 0→1 en el primer 10 % y 1→0 en el último
+12 %, 3 s de mar vacío, vaivén ±1.5 dp / 3.2 s, cabeceo ±0.8° / 4.4 s, estela de tres trazos, olas a 8
+y 16 dp/s en tiras de 48 dp sin costura. **El movimiento** va con un solo `Ticker` y por cuadro solo
+cambian `Positioned`, `Transform` y `Opacity`; el buque, las olas y el mar son `CustomPaint` en su
+`RepaintBoundary` y se pintan una vez (`pintadasDelBuque` = 1 en 60 cuadros). **Se para** con
+reducción de movimiento (quieto a un tercio, sin tickers), con otra ruta encima (`TickerMode`) y en
+segundo plano (`AppLifecycleState`), y no corre si no hay sitio. **En el inicio** va en un
+`CustomScrollView`: los bloques en un `SliverPadding` y un `SliverLayoutBuilder` que da a la banda
+exactamente lo que sobra si llega a 120 dp (no se usó `SliverFillRemaining` con `LayoutBuilder`
+dentro, porque pide intrínsecos que `LayoutBuilder` no tiene). **Pruebas:** 14 en
+`test/t114_travesia_test.dart` (la regla; sin tickers con reducción; sin cuadros con otra ruta o en
+segundo plano; nada bajo 120 dp; la opacidad 0/1/0; las olas; pintado una vez en 60 cuadros; el inicio
+sin desbordes ni empujones a 360, 600, 1280 × 720 y 1920 × 1080 con 1.0/1.45/2.0 y la banda igual a lo
+que sobra; `meetsGuideline`; decorativa), suite **1311**, `analyze` 0, auditoría 17/248/20 sin
+hallazgos nuevos, censo 1950 / 0 inglés. `profile_loading_page_test` pide reducir el movimiento para
+poder asentarse (abre el inicio a 1000 × 2600). **Capturas:** 12 PNG en
+`docs/rediseno/fase3/travesia/capturas/` (1280 × 720 y 1920 × 1080, claro y oscuro, al 6 %, 50 % y
+95 % del cruce), de prueba de widget con las fuentes reales y el reloj de la prueba; no son de un
+cliente. `DESIGN.md`: la fila del pie del inicio en 13.7 y la regla 7 de 13.11, con la excepción de la
+proa. Me detengo: ALTO: Codex acepta la travesía.

@@ -1028,6 +1028,7 @@ pide.
 | La espera («Leyendo A01.edi…», publicar, unirse) | `BsMarca(espera: true)` dentro de un recuadro de 72 con radio 16 | 52 |
 | Las pantallas vacías | `BsIlustracion` con el dibujo del paquete (13.11) y la frase de siempre: «todavía no hay viajes» (`vacio_recientes`), «ningún contenedor coincide» (`vacio_busqueda`), «trabajando solo en este equipo» (`sin_conexion`), «descarga completa» (`descarga_completa`) y «sin posibles incumplimientos» (`sin_alertas`); el inicio lleva `inicio` sobre «Abre un plano de estiba» | 320 de ancho (240 en la búsqueda y en las alertas, hasta 480 en el inicio); la proporción es la del lienzo. Cada dibujo ocupa como máximo tres décimas del alto de la ventana entre la escala de la letra, y bajo 120 dp no se pinta (13.11, regla 4) |
 | La celda que se mueve | `BsCelda(estado: recienMovido)`: el contenedor fuera de su celda, como en el ícono |  |
+| El pie del inicio | `BsTravesia` (13.11, regla 7): el buque de `sin_conexion`, con la proa a la derecha, navegando sobre el mar en el espacio que sobra debajo de los dos bloques | A todo el ancho; el alto es lo que sobra, y bajo 120 dp no se pinta |
 | Íconos temáticos y lanzadores | Los de `design/icono/` (T-88), sin cambios |  |
 
 ### 13.8 Los wireframes que cambian
@@ -1283,3 +1284,35 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
 6. El censo de `test/t114_paquete_test.dart` comprueba que ningún concepto de la tabla sigue en
    Material (salvo lo que esta sección deja ahí a propósito), y `meetsGuideline` que las pantallas
    con ilustración conservan el contraste y los objetivos táctiles.
+7. **La travesía del inicio** (`BsTravesia`, decisión 10.24). Un buque navega de izquierda a derecha
+   por una banda de mar al pie del inicio, se desvanece al llegar a la derecha y vuelve a salir por la
+   izquierda.
+   - *Sin arte nuevo.* El buque son los grupos `casco_perfil`, `perfil_0_0` a `perfil_0_4`, `caseta` y
+     `puente` de `sin_conexion`, sin la nube ni la pausa; el mar es el agua y la línea de flotación de
+     esa misma ilustración, a todo el ancho; las olas y la estela llevan el trazo de esa línea. Los
+     colores van por nombre y salen de los tokens del tema, como en `BsIlustracion`. Nada es naranja.
+   - *La proa hacia donde va.* El buque que navega va reflejado, con la proa a la derecha. Es la única
+     excepción a «la proa a la izquierda» (13.6), que sigue valiendo para todo lo que está quieto: la
+     silueta, las ilustraciones y los íconos.
+   - *Dónde y cuánto.* Una banda a todo el ancho, solo en el espacio que sobra debajo de los dos
+     bloques del inicio (un `SliverLayoutBuilder` después de los bloques): no empuja ni tapa nada; si
+     cambian la ventana o la letra, la que cede es la banda, y con menos de 120 dp libres no se pinta
+     (regla 4). El agua ocupa el tercio de abajo, con un mínimo de 32 dp; el buque mide la mitad del
+     alto de la banda, entre 56 y 120 dp.
+   - *El movimiento*, solo con `Transform` y opacidad: el buque y las tiras de las olas se pintan una
+     sola vez, cada uno dentro de su `RepaintBoundary`. El cruce va a velocidad constante: el
+     recorrido (el ancho de la banda más el del buque, que entra desde fuera y sale del todo) entre
+     48 dp/s, acotado entre 14 y 40 s. Aparece en el primer 10 % del recorrido y se desvanece en el
+     último 12 %; después quedan 3 s de mar vacío y vuelve a empezar. Sobre la línea de flotación sube
+     y baja 1.5 dp cada 3.2 s y cabecea ±0.8° cada 4.4 s, alrededor del centro del casco. Detrás de la
+     popa deja una estela corta: tres trazos que se apagan. Dos líneas de ola corren hacia la
+     izquierda, a 8 y a 16 dp/s, en tiras que se repiten cada 48 dp sin costura.
+   - *Cuándo se para.* Con reducción de movimiento el buque queda quieto a un tercio del ancho, las
+     olas no corren y no hay ningún ticker activo. Con otra pantalla encima (`TickerMode`) y con la
+     app en segundo plano (`AppLifecycleState`) se detiene, y al volver sigue desde donde iba.
+   - *Es decorativa.* `ExcludeSemantics`, sin foco y sin toque: no anuncia nada y no estorba a nada.
+   - *Las pruebas* (`test/t114_travesia_test.dart`): sin tickers ni movimiento con reducción de
+     movimiento; sin cuadros con otra ruta encima ni en segundo plano; nada con menos de 120 dp; la
+     opacidad 0 al empezar y al terminar el cruce y 1 a la mitad; el buque pintado una sola vez en 60
+     cuadros; sin desbordes ni empujones a 360, 600, 1280 × 720 y 1920 × 1080 con la letra a 1.0,
+     1.45 y 2.0; y `meetsGuideline` igual que antes.

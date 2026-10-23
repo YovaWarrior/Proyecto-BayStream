@@ -20,6 +20,7 @@ import 'componentes/bs_panel_en_vivo.dart';
 import 'componentes/bs_silueta_buque.dart';
 import 'componentes/bs_tarjeta_cifra.dart';
 import 'componentes/bs_tira_de_bahias.dart';
+import 'componentes/bs_travesia.dart';
 
 /// Los temas que usa el previsualizador de widgets (`flutter widget-preview
 /// start`): el día y la noche de la dirección C, con la densidad del muelle.
@@ -616,5 +617,22 @@ Widget vistaPreviaBarraDeOperacion() => BsBarraDeOperacion(
         onPressed: () {},
         icon: const Icon(Icons.table_chart),
         label: const Text('Pendientes por bahía'),
+      ),
+    );
+
+/// La travesía del inicio (13.11, regla 7): el buque de `sin_conexion`
+/// reflejado, con la proa a la derecha, el mar a todo el ancho, el vaivén, el
+/// cabeceo, la estela y las dos olas. Con reducción de movimiento, quieto a un
+/// tercio del ancho.
+@Preview(
+  name: 'Travesía del inicio',
+  group: 'Diseño',
+  theme: bsTemaDeVistaPrevia,
+  size: Size(720, 240),
+)
+Widget vistaPreviaTravesia() => Builder(
+      builder: (BuildContext context) => Material(
+        color: Theme.of(context).colorScheme.surface,
+        child: const SizedBox(height: 240, child: BsTravesia()),
       ),
     );

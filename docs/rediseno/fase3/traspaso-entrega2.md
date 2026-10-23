@@ -214,3 +214,16 @@ en `test/t114_paquete_correccion_test.dart` (suite 1297) y la evidencia en
 `docs/rediseno/fase3/paquete/correccion/`. A pedido de Carlos, la celda del plano nombra también su
 insignia y el vacío en la etiqueta (`bay_plan_view.dart`, `CondicionDelContenedor.enLaCelda`), en las
 tres vistas de «Colorear por».
+
+## La travesía del inicio (23-oct, 10.24)
+
+`BsTravesia` (`lib/core/design/componentes/bs_travesia.dart`) navega al pie del inicio: el buque de
+`sin_conexion` reflejado, con la proa a la derecha, sobre el agua y la línea de flotación a todo el
+ancho; solo `Transform` y opacidad, pintado una vez. La regla está en `DESIGN.md` 13.11, regla 7, y la
+sección «Fase 3 · La travesía del inicio (10.24)» de `docs/REDISENO-RESULTADOS.md`. Lo que hay que
+saber: `InicioView` es ahora un `CustomScrollView` y la banda ocupa solo lo que sobra
+(`SliverLayoutBuilder`); una prueba que abra el inicio a 840 de ancho o más y use `pumpAndSettle`
+tiene que pedir reducir el movimiento (`FakeAccessibilityFeatures(disableAnimations: true)`), porque
+la travesía no se asienta nunca. Las pruebas son `test/t114_travesia_test.dart` y las capturas,
+`docs/rediseno/fase3/travesia/capturas/` (de prueba de widget, con el reloj parado al 6, 50 y 95 % del
+cruce).

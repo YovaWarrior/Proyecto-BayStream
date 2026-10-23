@@ -217,6 +217,11 @@ T114_DECISIONES = {
                     'medida», «Vacío», «Tanque», «Plataforma», «Techo abierto», «Contenedor de 20, 40 o 45 '
                     'pies»): la descripción emergente y la etiqueta accesible del ícono principal en la Lista, '
                     'la búsqueda y el detalle (DESIGN.md 13.11, regla 3) (T-114, 10.23)'),
+    # La travesía del inicio (10.24, DESIGN.md 13.11, regla 7).
+    ('lib/core/design/componentes/bs_travesia.dart', '*'): NV(
+        'NV-CODIGO', 'los nombres de grupo de las formas de sin_conexion que la travesía toma del paquete '
+                     '(casco_perfil, perfil_0_0 a perfil_0_4, caseta, puente, agua, flotacion); no se leen '
+                     '(T-114, 10.24)'),
 }
 T112_DECISIONES.update(T114_DECISIONES)
 DESCRIPCION_ILUSTRACION = V(
@@ -281,6 +286,7 @@ def preparar(root, antes):
                 'lib/core/design/bs_iconos.dart', 'lib/core/design/bs_iconos_catalogo.dart',
                 'lib/core/design/bs_ilustraciones.dart', 'lib/core/design/vistas_previas_iconos.dart',
                 'lib/core/design/componentes/bs_ilustracion.dart',
+                'lib/core/design/componentes/bs_travesia.dart',
                 'lib/core/design/componentes/bs_banda.dart',
                 'lib/core/design/componentes/bs_barra_de_operacion.dart',
                 'lib/core/design/componentes/bs_cartela.dart',

@@ -1,0 +1,14 @@
+Capturas de la travesía del inicio (10.24), prueba de widget con las fuentes reales y el reloj de la prueba; Dart 3.10.8, Flutter 3.38.9 estable.
+archivo	ventana	tema	momento	progreso	banda (alto)	buque (alto)	duración del cruce
+inicio_1280x720_claro_entra.png	1280x720	claro	entra	0.06	226.0	113.0	34.1 s
+inicio_1280x720_claro_mitad.png	1280x720	claro	mitad	0.5	226.0	113.0	34.1 s
+inicio_1280x720_claro_sale.png	1280x720	claro	sale	0.95	226.0	113.0	34.1 s
+inicio_1280x720_oscuro_entra.png	1280x720	oscuro	entra	0.06	226.0	113.0	34.1 s
+inicio_1280x720_oscuro_mitad.png	1280x720	oscuro	mitad	0.5	226.0	113.0	34.1 s
+inicio_1280x720_oscuro_sale.png	1280x720	oscuro	sale	0.95	226.0	113.0	34.1 s
+inicio_1920x1080_claro_entra.png	1920x1080	claro	entra	0.06	502.0	120.0	40.0 s
+inicio_1920x1080_claro_mitad.png	1920x1080	claro	mitad	0.5	502.0	120.0	40.0 s
+inicio_1920x1080_claro_sale.png	1920x1080	claro	sale	0.95	502.0	120.0	40.0 s
+inicio_1920x1080_oscuro_entra.png	1920x1080	oscuro	entra	0.06	502.0	120.0	40.0 s
+inicio_1920x1080_oscuro_mitad.png	1920x1080	oscuro	mitad	0.5	502.0	120.0	40.0 s
+inicio_1920x1080_oscuro_sale.png	1920x1080	oscuro	sale	0.95	502.0	120.0	40.0 s

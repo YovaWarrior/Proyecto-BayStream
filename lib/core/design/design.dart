@@ -35,3 +35,4 @@ export 'componentes/bs_panel_en_vivo.dart';
 export 'componentes/bs_silueta_buque.dart';
 export 'componentes/bs_tarjeta_cifra.dart';
 export 'componentes/bs_tira_de_bahias.dart';
+export 'componentes/bs_travesia.dart';

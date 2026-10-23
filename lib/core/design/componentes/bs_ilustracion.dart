@@ -152,7 +152,8 @@ Color? colorDeIlustracion(
           nombre, 'nombre', 'No es un color de la paleta de las ilustraciones'),
     };
 
-final RegExp _token = RegExp(r'[A-Za-z]|-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?');
+final RegExp _token =
+    RegExp(r'[A-Za-z]|-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?');
 final RegExp _letra = RegExp(r'^[A-Za-z]$');
 
 /// Lee una ruta SVG con solo `M`, `L`, `C` y `Z` absolutos (lo que el paquete
@@ -168,7 +169,8 @@ Path rutaDeIlustracion(String ruta) {
     }
     final valor = double.tryParse(tokens[i]);
     if (valor == null) {
-      throw FormatException('Se esperaba un número y llegó «${tokens[i]}»', ruta);
+      throw FormatException(
+          'Se esperaba un número y llegó «${tokens[i]}»', ruta);
     }
     i++;
     return valor;
@@ -329,9 +331,54 @@ class BsIlustracion extends StatelessWidget {
   }
 }
 
+final Map<String, Path> _rutas = <String, Path>{};
+
+Path _rutaDe(BsFormaDeIlustracion forma, {required bool punteada}) {
+  final base = _rutas[forma.ruta] ??= rutaDeIlustracion(forma.ruta);
+  if (!punteada) return base;
+  final clave = '${forma.ruta}|${forma.punteado}';
+  return _rutas[clave] ??= rutaPunteada(base, forma.punteado!);
+}
+
+/// Pinta [forma] en [canvas], en las unidades de su lienzo: primero el relleno
+/// y después el trazo, con puntas y uniones redondas y el punteado si lo
+/// lleva, con los colores por nombre resueltos para [paleta]. Las rutas se
+/// leen una vez por texto y se guardan: los datos son constantes. Lo usan
+/// [PintorDeIlustracion] y la travesía del inicio (`BsTravesia`).
+void pintarFormaDeIlustracion(
+  Canvas canvas,
+  BsFormaDeIlustracion forma, {
+  required BsPaleta paleta,
+  required BsColoresSemanticos semanticos,
+}) {
+  final relleno = colorDeIlustracion(forma.relleno?.de(paleta.brillo),
+      paleta: paleta, semanticos: semanticos);
+  if (relleno != null) {
+    canvas.drawPath(
+      _rutaDe(forma, punteada: false),
+      Paint()
+        ..color = relleno
+        ..style = PaintingStyle.fill,
+    );
+  }
+  final trazo = colorDeIlustracion(forma.trazo?.de(paleta.brillo),
+      paleta: paleta, semanticos: semanticos);
+  if (trazo != null && forma.grosor > 0) {
+    canvas.drawPath(
+      _rutaDe(forma, punteada: forma.punteado != null),
+      Paint()
+        ..color = trazo
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = forma.grosor
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+}
+
 /// El pintor de [BsIlustracion]: escala el lienzo al tamaño que le den, sin
-/// deformarlo, y pinta cada forma de atrás hacia adelante. Las rutas se leen
-/// una vez por texto y se guardan: los datos son constantes.
+/// deformarlo, y pinta cada forma de atrás hacia adelante con
+/// [pintarFormaDeIlustracion].
 class PintorDeIlustracion extends CustomPainter {
   /// Crea el pintor.
   const PintorDeIlustracion({
@@ -353,18 +400,6 @@ class PintorDeIlustracion extends CustomPainter {
   /// Si pinta el fondo del lienzo.
   final bool conFondo;
 
-  static final Map<String, Path> _rutas = <String, Path>{};
-
-  static Path _ruta(BsFormaDeIlustracion forma, {required bool punteada}) {
-    final base = _rutas[forma.ruta] ??= rutaDeIlustracion(forma.ruta);
-    if (!punteada) return base;
-    final clave = '${forma.ruta}|${forma.punteado}';
-    return _rutas[clave] ??= rutaPunteada(base, forma.punteado!);
-  }
-
-  Color? _color(String? nombre) =>
-      colorDeIlustracion(nombre, paleta: paleta, semanticos: semanticos);
-
   @override
   void paint(Canvas canvas, Size size) {
     final escala = math.min(size.width / datos.ancho, size.height / datos.alto);
@@ -373,34 +408,16 @@ class PintorDeIlustracion extends CustomPainter {
         (size.height - datos.alto * escala) / 2);
     canvas.scale(escala);
     if (conFondo) {
-      final fondo = _color(datos.fondo);
+      final fondo = colorDeIlustracion(datos.fondo,
+          paleta: paleta, semanticos: semanticos);
       if (fondo != null) {
-        canvas.drawRect(
-            Rect.fromLTWH(0, 0, datos.ancho, datos.alto), Paint()..color = fondo);
+        canvas.drawRect(Rect.fromLTWH(0, 0, datos.ancho, datos.alto),
+            Paint()..color = fondo);
       }
     }
     for (final forma in datos.formas) {
-      final relleno = _color(forma.relleno?.de(paleta.brillo));
-      if (relleno != null) {
-        canvas.drawPath(
-          _ruta(forma, punteada: false),
-          Paint()
-            ..color = relleno
-            ..style = PaintingStyle.fill,
-        );
-      }
-      final trazo = _color(forma.trazo?.de(paleta.brillo));
-      if (trazo != null && forma.grosor > 0) {
-        canvas.drawPath(
-          _ruta(forma, punteada: forma.punteado != null),
-          Paint()
-            ..color = trazo
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = forma.grosor
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round,
-        );
-      }
+      pintarFormaDeIlustracion(canvas, forma,
+          paleta: paleta, semanticos: semanticos);
     }
     canvas.restore();
   }

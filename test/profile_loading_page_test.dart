@@ -59,6 +59,11 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    // La travesía del inicio (DESIGN.md 13.11, regla 7) no se asienta
+    // nunca; con el movimiento reducido queda quieta y pumpAndSettle vuelve.
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
     notifier = _ReplayNotifier();
     await tester.pumpWidget(ProviderScope(overrides: [
       vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),

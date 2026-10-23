@@ -56,27 +56,51 @@ class InicioView extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final dosColumnas = constraints.maxWidth >= anchoDeDosColumnas;
-        return SingleChildScrollView(
-          padding: EdgeInsets.all(medidas.espacioL),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: medidas.anchoMaximo),
-              child: dosColumnas
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: 2, child: cabecera),
-                        SizedBox(width: medidas.espacioXxl),
-                        Expanded(flex: 3, child: listas),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [cabecera, listas],
-                    ),
-            ),
+        final bloques = Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: medidas.anchoMaximo),
+            child: dosColumnas
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 2, child: cabecera),
+                      SizedBox(width: medidas.espacioXxl),
+                      Expanded(flex: 3, child: listas),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [cabecera, listas],
+                  ),
           ),
+        );
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: EdgeInsets.all(medidas.espacioL),
+              sliver: SliverToBoxAdapter(child: bloques),
+            ),
+            // 13.11, regla 7: la travesía ocupa solo lo que sobra debajo de
+            // los dos bloques, a todo el ancho. Si la ventana o la letra
+            // cambian, la que cede es la banda; con menos de 120 dp libres
+            // no se pinta. Nunca empuja los bloques ni los tapa.
+            SliverLayoutBuilder(
+              builder: (context, limites) {
+                final libre = limites.viewportMainAxisExtent -
+                    limites.precedingScrollExtent;
+                return SliverToBoxAdapter(
+                  child: libre < BsTravesia.altoMinimo
+                      ? null
+                      : SizedBox(
+                          height: libre,
+                          child: const BsTravesia(
+                              key: ValueKey('inicio-travesia')),
+                        ),
+                );
+              },
+            ),
+          ],
         );
       },
     );
