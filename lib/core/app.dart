@@ -36,6 +36,22 @@ ThemeMode bayStreamThemeMode(AppThemePreference preference) =>
       AppThemePreference.dark => ThemeMode.dark,
     };
 
+/// Los temas ya construidos, por densidad. [BayStreamApp] pide el tema en
+/// cada `build`, y un `ThemeData` nuevo cada vez hacía correr el
+/// `AnimatedTheme` de `MaterialApp` durante 200 ms aunque nada hubiera
+/// cambiado (10.17): el mismo tema se construye una sola vez y se devuelve la
+/// misma instancia, así `AnimatedTheme` no tiene nada que animar.
+final Map<bool, ThemeData> _temasClaros = <bool, ThemeData>{};
+final Map<bool, ThemeData> _temasOscuros = <bool, ThemeData>{};
+
+/// El tema del día de la app, construido una sola vez por densidad.
+ThemeData bayStreamTemaClaro({bool muelle = false}) =>
+    _temasClaros.putIfAbsent(muelle, () => BayStreamTema.claro(muelle: muelle));
+
+/// El tema de la noche de la app, construido una sola vez por densidad.
+ThemeData bayStreamTemaOscuro({bool muelle = false}) => _temasOscuros
+    .putIfAbsent(muelle, () => BayStreamTema.oscuro(muelle: muelle));
+
 class BayStreamApp extends ConsumerWidget {
   final Widget home;
   final TransitionBuilder? builder;
@@ -57,8 +73,8 @@ class BayStreamApp extends ConsumerWidget {
       // la noche, con la preferencia de tema que ya existía (T-90). El tema
       // por omisión según el equipo (10.14) espera a que el almacén distinga
       // «no elegido» (Fase 2 bis, 2b.6 del informe).
-      theme: BayStreamTema.claro(muelle: muelle),
-      darkTheme: BayStreamTema.oscuro(muelle: muelle),
+      theme: bayStreamTemaClaro(muelle: muelle),
+      darkTheme: bayStreamTemaOscuro(muelle: muelle),
       themeMode: bayStreamThemeMode(preference),
       builder: builder,
       home: home,
