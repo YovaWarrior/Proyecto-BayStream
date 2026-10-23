@@ -429,3 +429,29 @@ La siguiente decisión es la **10.17**.
 En el mismo bloque, `DESIGN.md` 13.6 y 13.3 (O1, O2 y el naranja de «Más»). Después, Codex vuelve a aceptar solo la pieza.
 
 La siguiente decisión es la **10.18**.
+
+### 10.18 · Íconos del dominio: estilo B, sólido (22-oct, 17:55)
+
+**Nube entregó los conceptos del encargo 1** (10.14): ocho íconos de muestra en tres estilos, a 16, 20, 24 y 32 px sobre claro y oscuro, más el boceto de la ilustración de inicio. La página es el artefacto «Puente de mando · íconos», privado de Carlos. Nube recomendó B, y Yov revisó la página y el boceto:
+- **A, trazo:** el más ligero. A 16 px y al sol, la línea queda en 1.2 px: la descarga parece un monitor y la grúa, un par de letras.
+- **B, sólido:** el que mejor se lee a 16 px. Es el más cercano al ícono, que también es de formas llenas (la bahía es el ícono en chico), y es de la familia de los Material que ya usa la app: 186 de sus 224 usos son la variante rellena.
+- **C, trazo con pieza maciza:** tiene jerarquía, pero a 16 px el contenedor 40 y la grúa quedan débiles, y los genéricos tendrían que pasar a contorno.
+
+**Carlos elige B.** En el paquete se corrigen cinco íconos:
+- la grúa parece una mesa; tiene que leerse como grúa pórtico;
+- la re-estiba parece un candado abierto a 16 y 20 px;
+- el refrigerado no dice «frío» (hoy la app usa el copo de nieve, `ac_unit`, en 12 lugares);
+- la peligrosa queda gris a 16 px;
+- la descarga parece «descargar un archivo» y tiene que distinguirse de `baplie_salida`.
+
+**El boceto de inicio se aprueba:** el buque es el ícono ampliado, la grúa pórtico iza el contenedor naranja y su celda queda punteada. Nube lo afina en el paquete, como propuso.
+
+**Además:**
+- La carpeta de conceptos no se versiona y la rama del chat de la nube no se sube: ningún agente escribe en git. Nube la entrega en un zip, y Carlos lo guarda fuera del repo, en `C:\Proyectos\`.
+- El paquete llega en un zip, como se acordó: Timonel lo integra en una entrega y Codex la acepta, como en T-88. Trae la captura de los tres estilos, para que el repo guarde por qué B.
+- Son 31 íconos (10 + 7 + 8 + 6), no los 29 que contó Nube.
+- La espera sale del paquete: `BsMarca` ya la anima en código desde la Fase 2 bis.
+- En las vistas previas, solo los estados que la app tiene. «En grúa» no existe (10.14).
+- El chat de la nube es Nube; Timonel es el agente que integra en el repo.
+
+La siguiente decisión es la **10.19**.
