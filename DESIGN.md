@@ -870,9 +870,10 @@ El naranja de la grúa marca **solo lo que se acaba de mover**:
 
 1. Una celda que otro equipo acaba de bajar o cargar entra en el estado «recién movido»:
    toma el relleno de grúa, sale de su celda media celda hacia arriba (`Transform.translate`
-   de 150 ms) y deja en su sitio el hueco con contorno punteado en grúa texto, como el
-   contenedor del ícono. En el muelle, el toque en «Baja» hace lo mismo antes del aviso con
-   «Deshacer».
+   de 150 ms, **desde donde estaba esa misma celda, de 0 a media celda**; al dejar el estado
+   vuelve a su sitio de golpe, sin que se vea regresar: 10.17, H1) y deja en su sitio el
+   hueco con contorno punteado en grúa texto, como el contenedor del ícono. En el muelle, el
+   toque en «Baja» hace lo mismo antes del aviso con «Deshacer».
 2. **Dura 1.5 s** (`BsMovimiento.recienMovido`). La pantalla, no la celda, apaga el estado:
    la celda es un widget sin reloj y el plano decide cuándo vuelve a «bajado» o «hecho».
 3. **La bahía donde pasó destella en la silueta**: un anillo en grúa alrededor de su pila
@@ -883,9 +884,10 @@ El naranja de la grúa marca **solo lo que se acaba de mover**:
 5. **Siempre se anuncia** para el lector de pantalla: el panel «En vivo» es una región en
    vivo (`liveRegion`) y su evento más reciente lleva la etiqueta completa («Bajado, Muelle,
    TSTU 000110 8, 014-01-86, ahora»). La celda recién movida también cambia su etiqueta.
-6. Fuera de esto, el naranja aparece en el contador de «Más» (alertas) y en el contenedor
-   del ícono; nunca como relleno de fondo, y a lo sumo en un elemento por pantalla, además
-   de la marca.
+6. Fuera de esto, el naranja aparece solo en el contenedor del ícono; nunca como relleno
+   de fondo, y a lo sumo en un elemento por pantalla, además de la marca. **El contador de
+   «Más» (las alertas de estiba) va en aviso, o en error si alguna es crítica, nunca en
+   grúa** (10.16): el naranja es de lo que se mueve, no de lo que hay que revisar.
 
 ### 13.4 Las fichas en oscuro y la tabla reordenada
 
@@ -974,10 +976,10 @@ etiqueta); la silueta, el casco, la marca y el anillo se pintan con `CustomPaint
 | Pieza | API | Qué hace |
 |---|---|---|
 | `BsMarca` | `BsMarca({tamano = 40, variante = conRecuadro \| sinRecuadro \| monocroma, color?, espera = false, etiqueta = 'BayStream'})` | El ícono pintado desde la geometría de `design/icono/baystream.svg` (módulo de 13.8 en un lienzo de 100; recuadro de 126.6 con esquinas de 27). `monocroma` tiñe todo con `color` (por omisión `onSurface`) y el contenedor se reconoce por estar fuera de la cuadrícula. `espera: true` es la espera de la app: el contenedor naranja sube y baja medio módulo (6.9 unidades) en un bucle de 1.2 s con `easeInOut`, solo `Transform`; quieto si se reduce el movimiento. Etiqueta accesible; con `espera`, «BayStream, leyendo» |
-| `BsSiluetaBuque` | `BsSiluetaBuque({bahias: List<BsBahiaDeSilueta>, onSeleccion, seleccionada?, recienMovida?, controlador?, alto = 112, rotuloDeAvance?})` con `BsBahiaDeSilueta({numero, nivelesCubierta = 0, nivelesBodega = 0, avance?, conTrabajo = false})` | Evoluciona `BsTiraDeBahias`: el casco con la proa a la izquierda y la línea de flotación, sin superestructura; cada bahía es una pila (los niveles ocupados de cubierta encima de la línea de la tapa y los de bodega debajo); las bahías con trabajo en esta escala van más claras y las demás apagadas; la seleccionada en cubierta `#F5F8FC` y acero `#6E9DE6` con su marco en marca; bajo cada número, la barra de avance (hecho si llegó a 1, marca si va, línea si no empezó); el destello de la bahía recién movida (13.3). Cada bahía es un botón de 48 dp de ancho con etiqueta («Bahía 14, 4 niveles en cubierta y 4 en bodega, avance 25 %, seleccionada») |
+| `BsSiluetaBuque` | `BsSiluetaBuque({bahias: List<BsBahiaDeSilueta>, onSeleccion, seleccionada?, recienMovida?, controlador?, rotuloDeAvance?})` con `BsBahiaDeSilueta({numero, nivelesCubierta = 0, nivelesBodega = 0, avance?, conTrabajo = false})` | Evoluciona `BsTiraDeBahias`: el casco con la proa a la izquierda y la línea de flotación, sin superestructura; cada bahía es una pila (los niveles ocupados de cubierta encima de la línea de la tapa y los de bodega debajo); las bahías con trabajo en esta escala van más claras y las demás apagadas; la seleccionada en cubierta `#F5F8FC` y acero `#6E9DE6` con su marco en marca; bajo cada número, la barra de avance (hecho si llegó a 1, marca si va, línea si no empezó); el destello de la bahía recién movida (13.3). Cada bahía es un botón de **56 dp de ancho** (`anchoBahia`) con etiqueta («Bahía 14, 4 niveles en cubierta y 4 en bodega, avance 25 %, seleccionada»); **el alto no es un parámetro: sale de los niveles que se pintan (hasta 6 por zona, a 9 dp) y de la escala de letra del número y la barra** (10.17, O1) |
 | `BsCascoBodega` | `BsCascoBodega({child, radio = 48})` | El casco detrás de las filas de bodega (13.2) |
 | `BsCelda` | nuevos: `estado = BsEstadoDeCelda.ninguno \| porBajarCubierta \| porBajarBodega \| dePaso \| bajado \| recienMovido`, `curva = BsCurvaDeCelda.ninguna \| babor \| estribor \| ambas` | Los estados de 13.2 y la curva del casco. `recienMovido` sale de su celda (13.3); `bajado` de noche va punteado (`BsRol.punteado`) |
-| `BsTarjetaCifra` | `BsTarjetaCifra({valor, rotulo, detalle?, rol?, anillo?, onTap?})` | La tarjeta de cifra grande del mosaico: rótulo arriba (tinta suave), la cifra a 40 / 600 tabular, el detalle abajo (tinta tenue); con `rol` (revisar para alertas) la cifra y el rótulo toman el contorno del rol y el borde se tiñe; con `anillo`, un `BsAnilloAvance` a la izquierda de la cifra. Panel con radio 18 y borde en línea. Etiqueta: «Por bajar: 30, 18 en la bahía 14» |
+| `BsTarjetaCifra` | `BsTarjetaCifra({valor, rotulo, detalle?, rol?, anillo?, onTap?})` | La tarjeta de cifra grande del mosaico: rótulo arriba (tinta suave), la cifra a **34 / 600 tabular** (`BsTextos.cifraGrande`, la escala de 4.2, que 13.10 no cambia; el lienzo la dibujaba a 40: 10.17, O2), el detalle abajo (tinta tenue); con `rol` (revisar para alertas) la cifra y el rótulo toman el contorno del rol y el borde se tiñe; con `anillo`, un `BsAnilloAvance` a la izquierda de la cifra. Panel con radio 18 y borde en línea. Etiqueta: «Por bajar: 30, 18 en la bahía 14» |
 | `BsAnilloAvance` | `BsAnilloAvance({fraccion, tamano = 52, grosor = 9, color?, etiqueta?})` | El anillo: pista en línea, arco desde las 12 en el color (hecho por omisión), extremos redondeados; sin animación (es un dato, no un movimiento). Etiqueta «80 por ciento» |
 | `BsPanelEnVivo` | `BsPanelEnVivo({eventos: List<BsEventoEnVivo>, resumen?, enLinea = true, titulo = 'En vivo'})` con `BsEventoEnVivo({que, quien: BsEquipo.muelle \| oficina, detalle, tipo: BsTipoDeEvento.movido \| hecho \| aviso \| aprobado, momento?, accion?, onAccion?})` | La actividad en tiempo real: punto verde con pulso de opacidad (2.2 s, quieto si se reduce el movimiento), el resumen (p. ej. «Oficina y 2 teléfonos del muelle»), y una fila por evento: cuadrado de 9 dp del color del tipo (grúa, hecho, aviso, acero), «Bajado · Muelle» (el rol del equipo, nunca un nombre: la API solo admite el enum), el detalle en mono y el momento o la acción («Revisar»). Región en vivo para el lector de pantalla |
 | `BsBandaMuelle` | `BsBandaMuelle({buque, viaje?, nube?, modo?, onModo?, acciones = const []})` | La banda de la marca arriba del muelle: `BsMarca.sinRecuadro` de 44, el nombre del buque (17 / 600 blanco) y el viaje y la escala (`#BCD2F7`), el chip de la nube (marca profunda, punto en hecho) y, debajo, el `SegmentedButton` Descarga / Carga de 48 dp (seleccionado blanco con texto marca). Fondo `marcaSuperficie` en los dos temas |

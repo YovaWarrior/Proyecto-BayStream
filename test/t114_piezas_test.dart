@@ -7,11 +7,17 @@ import 'package:baystream/core/design/vistas_previas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+// Los temas se construyen una sola vez: un `ThemeData` nuevo en cada `pump`
+// (aunque sea igual) hace que `AnimatedTheme` interpole 200 ms y confunde las
+// comprobaciones de «nada se mueve».
+final Map<bool, ThemeData> _claro = <bool, ThemeData>{};
+final Map<bool, ThemeData> _oscuro = <bool, ThemeData>{};
+
 Widget _envuelve(Widget hijo,
         {bool oscuro = false, bool muelle = true, bool sinMovimiento = false}) =>
     MaterialApp(
-      theme: BayStreamTema.claro(muelle: muelle),
-      darkTheme: BayStreamTema.oscuro(muelle: muelle),
+      theme: _claro.putIfAbsent(muelle, () => BayStreamTema.claro(muelle: muelle)),
+      darkTheme: _oscuro.putIfAbsent(muelle, () => BayStreamTema.oscuro(muelle: muelle)),
       themeMode: oscuro ? ThemeMode.dark : ThemeMode.light,
       builder: (BuildContext context, Widget? child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(disableAnimations: sinMovimiento),
@@ -215,9 +221,6 @@ void main() {
         onTap: () {},
       )));
       expect(find.text('Bajando'), findsOneWidget);
-      expect(find.byType(AnimatedSlide), findsOneWidget);
-      expect(tester.widget<AnimatedSlide>(find.byType(AnimatedSlide)).offset,
-          BsCelda.salida);
       expect(
           tester
               .widgetList<CustomPaint>(find.byType(CustomPaint))
@@ -228,9 +231,75 @@ void main() {
           'TSTU 004218 0, 014-01-86, se acaba de mover');
       await tester.pumpAndSettle();
       expect(tester.hasRunningAnimations, isFalse);
-      // La celda sigue midiendo lo mismo: la salida es `Transform`, no layout.
-      expect(tester.getSize(find.byType(BsCelda)).height, 48 + 4);
+      // Terminada la salida, el cuerpo está media celda más arriba que su
+      // caja, con `Transform`: la celda sigue midiendo lo mismo.
+      final cuerpo = find.descendant(of: find.byType(BsCelda), matching: find.byType(Container));
+      final celda = tester.getRect(find.byType(BsCelda));
+      expect(tester.getTopLeft(cuerpo.first).dy, closeTo(celda.top + 2 - 24, 0.01));
+      expect(celda.height, 48 + 4);
       semantica.dispose();
+    });
+
+    testWidgets(
+        'la celda sale de verdad: de 0 a media celda en 150 ms desde su estado anterior, '
+        'y vuelve de golpe', (tester) async {
+      // 10.17, H1: la misma celda (misma clave, misma posición en el árbol)
+      // cambia de estado; el fotograma inicial está en su sitio, el de 75 ms
+      // a medio camino y el de 150 ms media celda arriba.
+      Widget celda(BsEstadoDeCelda estado) => _envuelve(SizedBox(
+            width: 200,
+            height: 200,
+            child: Center(
+              child: BsCelda(
+                key: const ValueKey('misma-celda'),
+                codigo: 'GTSTC',
+                estado: estado,
+                marca: BsMarcaDeCelda.baja,
+                etiqueta: 'TSTU 004218 0, 014-01-86',
+              ),
+            ),
+          ));
+      double arriba() => tester
+          .getTopLeft(find.descendant(
+              of: find.byType(BsCelda), matching: find.byType(Container)).first)
+          .dy;
+      await tester.pumpWidget(celda(BsEstadoDeCelda.porBajarCubierta));
+      await tester.pumpAndSettle();
+      final enSuSitio = arriba();
+      final media = BsMedidas.muelle.altoCelda / 2;
+
+      await tester.pumpWidget(celda(BsEstadoDeCelda.recienMovido));
+      await tester.pump();
+      expect(arriba(), closeTo(enSuSitio, 0.01),
+          reason: 'el primer fotograma sale desde donde estaba');
+      expect(tester.hasRunningAnimations, isTrue);
+      await tester.pump(const Duration(milliseconds: 75));
+      final aMedias = arriba();
+      expect(aMedias, lessThan(enSuSitio - 1), reason: 'a los 75 ms ya subió');
+      expect(aMedias, greaterThan(enSuSitio - media + 1),
+          reason: 'a los 75 ms todavía no llegó');
+      await tester.pump(const Duration(milliseconds: 75));
+      expect(arriba(), closeTo(enSuSitio - media, 0.01),
+          reason: 'a los 150 ms está media celda arriba');
+      // Un fotograma más para que el reloj de la animación se detenga.
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(tester.hasRunningAnimations, isFalse,
+          reason: 'terminada la salida no queda nada en marcha');
+
+      // Al volver a «bajado» no se ve regresar: en el primer fotograma ya está
+      // en su sitio, y a los 75 ms sigue ahí.
+      await tester.pumpWidget(celda(BsEstadoDeCelda.bajado));
+      await tester.pump();
+      expect(arriba(), closeTo(enSuSitio, 0.01));
+      expect(tester.hasRunningAnimations, isFalse);
+      await tester.pump(const Duration(milliseconds: 75));
+      expect(arriba(), closeTo(enSuSitio, 0.01));
+      expect(
+          tester
+              .widgetList<CustomPaint>(find.byType(CustomPaint))
+              .where((p) => p.painter is BsContornoPunteado),
+          isEmpty,
+          reason: 'sin hueco al volver');
     });
 
     testWidgets('con reducción de movimiento, recién movido se queda quieta y naranja',
@@ -245,14 +314,18 @@ void main() {
         sinMovimiento: true,
       ));
       expect(find.text('Subiendo'), findsOneWidget);
-      expect(find.byType(AnimatedSlide), findsNothing);
       expect(find.descendant(of: find.byType(BsCelda), matching: find.byType(CustomPaint)),
           findsNothing, reason: 'sin hueco punteado: no sale de su sitio');
       final contenedor = tester.widget<Container>(find.byType(Container).first);
       expect((contenedor.decoration! as BoxDecoration).color,
           BsColoresSemanticos.claro().recienMovido.relleno);
+      final cuerpo = find.descendant(of: find.byType(BsCelda), matching: find.byType(Container));
+      final arriba = tester.getTopLeft(cuerpo.first).dy;
+      expect(arriba, closeTo(tester.getRect(find.byType(BsCelda)).top + 2, 0.01),
+          reason: 'en su sitio: el desplazamiento es cero');
       await tester.pump(const Duration(seconds: 1));
       expect(tester.hasRunningAnimations, isFalse);
+      expect(tester.getTopLeft(cuerpo.first).dy, closeTo(arriba, 0.01));
     });
 
     testWidgets('la curva del casco va en la esquina exterior y el radio es el del ícono',

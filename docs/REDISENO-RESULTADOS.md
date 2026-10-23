@@ -2218,3 +2218,160 @@ git push
 ### Mensaje para Yov
 
 Yov: la corrección 10.15 y las Fases 1 bis y 2 bis quedan listas para Codex, en dos bloques de git (primero la corrección). **Corrección:** «No lo tengo» viene marcado solo si el perfil es del mismo buque, declarado por el usuario y sin límite (`vessel_geometry_page.dart`, `initState`); plantilla y propuesta empiezan sin marcar y sin elegir no se confirma; 4 pruebas nuevas, incluido BUQUE BETA para BUQUE ALFA. La carpeta `con` es `con-perfil` con los mismos cinco archivos; `t114_primera_web.py` escribe por condición y rechaza nombres reservados; las tres aserciones de `profile_loading_test` comparan identidad, geometría, tapas, tomas y orígenes salvo `updatedAt`; la referencia `5406e20` está en 3.4 y en la ayuda de `t112_censos.py`. Validada en una copia limpia de `16fa15d` con solo la corrección: analyze 0 y 1159 de 1160 (el único fallo es la licencia en LF de `git archive` contra los 4456 bytes CRLF del árbol; en el árbol pasa). Piso 1160. **Fase 1 bis:** `DESIGN.md` 13 es la dirección C (noche y día con los roles de M3 y los semánticos y el contraste de cada pareja, el plano como el ícono, la regla del naranja, las fichas OKLCH con la tabla a saltos y sus 24 valores, el tema por equipo, nueve piezas con API, dónde va la marca, 9.2 y 9.3 bis, lo que no se toma); la A queda como historia con su porqué. Dos decisiones que el concepto no fijaba y quedan escritas: de noche la marca `#0D47A1` no sirve como texto (1.6:1), así que `primary` es la selección `#4F8EF7` y la marca va como superficie; y la selección de segmentos y chips se invierte de noche. **Fase 2 bis:** la noche en paleta y tema, los roles nuevos (información, por bajar en cubierta y en bodega, de paso apagado, bajado punteado, recién movido, tinta tenue), las fichas y la permutación en Dart y en el script (las fichas se recalculan en la prueba con la receta OKLCH), el tema por equipo en `app.dart`, y `BsMarca`, `BsSiluetaBuque`, `BsCascoBodega`, `BsCelda` con `estado` y `curva`, `BsTarjetaCifra`, `BsAnilloAvance`, `BsPanelEnVivo` (solo el rol del equipo, por enum), `BsBandaMuelle` y `BsFondoDePlano`, cada una con vista previa, prueba y las tres pautas, y con `disableAnimations` nada se mueve. Suite 1223 (63 nuevas, ninguna omitida), analyze 0, contraste 0 pares bajos, auditoría con cero críticos y cero avisos en `lib/core/design/` y `app.dart` fuera de los dos archivos de tokens (201 hexadecimales, antes 160). Un hallazgo del instrumento: con los rellenos de «por bajar» la celda atenuada dejaba el código en 3.5:1 y 3.1:1; la regla pasa a «tinta suave, y si no llega, tinta» (13.2, script y `BsRol.atenuado`). **Para Carlos:** (1) el tema por omisión según el equipo queda preparado (`bayStreamTemaPorOmision`) pero no conectado: el almacén devuelve el mismo `system` para quien nunca eligió y para quien eligió «Seguir al sistema», y la prueba de T-90 exige que este siga al sistema; propongo en 13.5 un cuarto valor `AppThemePreference.equipo` que el almacén devuelva cuando no hay nada guardado (dos líneas en domain/ y data/, una en app.dart y la opción en Parámetros), para que lo decidas y lo escribas como tarea; (2) cielo y rosa difieren del lienzo por el recorte de gama de sRGB. Ninguna pantalla cambia. Me detengo: ALTO: Codex acepta la Fase 2 bis.
+
+---
+
+## Fase 2 bis · Corrección tras la aceptación de Codex (22-oct-2026, 10.17)
+
+Codex aceptó la corrección 10.15 y dictaminó NO PASA la Fase 2 bis: H1 bloquea (la celda
+recién movida salta en vez de salir), O1 y O2 son dos cifras de `DESIGN.md` 13.6 que no
+coincidían con el código, y 10.16 pedía además enmendar 13.3, punto 6. Esta corrección va
+en su propio bloque de git, antes de la entrega 2 del plano, que sigue después en este
+informe. El único archivo de la entrega 2 que ya estaba en el árbol al llegar el mensaje
+(`lib/features/vessel/presentation/providers/plano_providers.dart`, nuevo y sin seguimiento)
+no entra en este bloque.
+
+### 2c.1 Resultado en tres líneas
+
+- **H1, la celda recién movida sale de verdad.** `BsCelda` lleva ahora un widget con estado
+  propio (`_Salida`) que vive en el árbol en todos los estados; al entrar en «recién movido»
+  arranca un `AnimationController` de 150 ms (`BsMovimiento.salida`, curva
+  `BsMovimiento.entrada`) y un `Transform.translate` lleva el cuerpo de 0 a media celda hacia
+  arriba **desde donde estaba esa misma celda**; al volver a «bajado» el controlador se
+  detiene en 0 y no se ve regresar; con reducción de movimiento se queda quieta, naranja y
+  sin hueco.
+- **La prueba que Codex pedía existe y discrimina las dos versiones:** cambia el estado de
+  la misma celda y compara el fotograma inicial, el de 75 ms y el final. Con la celda de
+  `36f5784` (la que sigue en `HEAD`) falla en el primer fotograma («Expected 92.0, Actual
+  68.0»: nace 24 dp arriba, el salto que Codex vio); con la de ahora pasa.
+- **`DESIGN.md`:** 13.6 dice lo que el código hace (silueta con botones de **56 dp** por
+  bahía y alto que sale de los niveles, sin parámetro `alto`; cifra a **34**, no a 40) y
+  13.3, punto 6, manda el contador de «Más» a aviso o error, nunca a grúa. Suite
+  **1224 en verde de 1224, 0 omitidas (piso 1223 → 1224)**, `analyze` en cero.
+
+### 2c.2 Lo hecho
+
+- **H1, antes (`36f5784`).** El cuerpo de la celda se envolvía en un `AnimatedSlide` solo
+  cuando el estado era «recién movido», con `offset: Offset(0, -0.5)` desde el primer
+  fotograma. Como el widget nacía ya desplazado, no había nada que animar: la celda
+  aparecía media celda arriba de golpe, y al dejar el estado desaparecía el `AnimatedSlide`
+  y volvía abajo también de golpe. Con la pantalla en reposo parecía un salto; es
+  exactamente lo que la reproducción de Codex mide (leída en
+  `C:\Proyectos\baystream-qa-r4\build\t114-fase2bis-aceptacion\salida_celda_test.dart`, sin
+  tocarla).
+- **H1, ahora (`lib/core/design/componentes/bs_celda.dart`, `_Salida` y `_SalidaState`).**
+  `_Salida` envuelve el cuerpo en todos los estados, así que al cambiar `estado` es el mismo
+  elemento el que recibe `didUpdateWidget` y la transición parte del valor que tenía. Recibe
+  `sale` (`esRecienMovido && !BsMovimiento.reducido(context)`), el ancho y alto de la celda
+  (`BsMedidas`), el radio, el color del hueco (`tertiary`), el grosor del contorno y el color
+  del halo (`surface`). Al nacer con `sale`, o al pasar a `sale`, `forward(from: 0)`; al dejar
+  de salir, `stop()` y `value = 0`, sin animación de vuelta. El `build` es un `Stack` sin
+  recorte: debajo, solo mientras sale, el hueco (`CustomPaint` con `BsContornoPunteado`
+  del tamaño de la celda); encima, un `AnimatedBuilder` sobre la curva que aplica
+  `Transform.translate(Offset(0, BsCelda.salida.dy * alto * valor))` al cuerpo, con el halo
+  (`BoxShadow` en `surface`, `spreadRadius: 3`) también solo mientras sale. `BsCelda.salida`
+  sigue siendo `Offset(0, -0.5)`; la etiqueta «se acaba de mover» y el relleno de grúa no
+  cambian. Con reducción de movimiento, `sale` es falso: el controlador no arranca, el
+  `Transform` queda en 0, el relleno sigue siendo grúa y no hay hueco ni halo.
+- **Pruebas (`test/t114_piezas_test.dart`).** Nueva: «la celda sale de verdad: de 0 a
+  media celda en 150 ms desde su estado anterior, y vuelve de golpe». Monta la celda en
+  «bajado» con `ValueKey('misma-celda')`, toma la posición del cuerpo (`getTopLeft` del
+  `Container`) como «en su sitio», cambia a «recién movido» con la misma clave y comprueba:
+  fotograma inicial en su sitio y una animación corriendo; a los 75 ms, más de 1 dp arriba
+  y a más de 1 dp de media celda (estrictamente entre); a los 150 ms, exactamente media
+  celda arriba (24 dp de los 48 de `altoCelda`); 16 ms después, ninguna animación corriendo;
+  al volver a «bajado», en su sitio en el primer fotograma y a los 75 ms, y sin el pintor
+  del hueco. La prueba «recién movido sale de su celda, dice «Bajando» y cambia su etiqueta»
+  ya no busca un `AnimatedSlide`: comprueba el pintor del hueco y, tras asentarse, que el
+  cuerpo está media celda arriba. La de reducción de movimiento exige la posición en su
+  sitio y ningún `CustomPaint`. Un detalle del arnés que salió al medir fotogramas:
+  `_envuelve` construía un `ThemeData` nuevo en cada `pump`, y el `AnimatedTheme` de
+  `MaterialApp` arrancaba una transición de 200 ms que dejaba una animación viva después
+  de los 150 ms; ahora los cuatro temas (claro y oscuro, oficina y muelle) se crean una vez
+  por archivo. (La app hace lo mismo en `BayStreamApp.build`; no se toca aquí, queda
+  anotado abajo.)
+- **Que la prueba falla con la versión vieja.** Copia limpia de `HEAD` (`73ba7b0`, cuyo
+  `bs_celda.dart` es el de `36f5784`, con el `AnimatedSlide`) con solo el
+  `t114_piezas_test.dart` nuevo encima: `+39 -1`, y el fallo es la prueba nueva en su
+  primera aserción, línea 273, «Expected: a numeric value within <0.01> of <92.0>, Actual:
+  <68.0>»: la celda nace 24 dp arriba. Las otras 39, incluidas las dos reescritas, pasan en
+  las dos versiones.
+- **`DESIGN.md` 13.6 (O1, O2).** La fila de `BsSiluetaBuque` quita `alto` de la API y dice
+  que cada bahía es un botón de 56 dp de ancho (`anchoBahia`) y que el alto no es un
+  parámetro: sale de los niveles que se pintan (hasta 6 por zona, a 9 dp) y de la escala de
+  letra del número y la barra. La fila de `BsTarjetaCifra` dice 34 / 600 tabular
+  (`BsTextos.cifraGrande`, la escala de 4.2, que 13.10 no cambia; el lienzo la dibujaba a
+  40). El código no cambia: ya hacía esto.
+- **`DESIGN.md` 13.3 (10.16 y H1).** Punto 6: fuera de lo recién movido, el naranja aparece
+  solo en el contenedor del ícono; el contador de «Más» (las alertas de estiba) va en aviso,
+  o en error si alguna es crítica, nunca en grúa. Punto 1: la salida es «desde donde estaba
+  esa misma celda, de 0 a media celda», y al dejar el estado vuelve de golpe, sin que se
+  vea regresar. El contador de «Más» todavía no existe en el código (es de la entrega 2);
+  la regla queda escrita para cuando llegue.
+
+### 2c.3 Validaciones ejecutadas
+
+Un comando de Flutter a la vez; la suite completa en segundo plano.
+
+- `flutter analyze --no-pub` → **«No issues found»** (con `plano_providers.dart` en el
+  árbol, que también compila limpio).
+- `flutter test --no-pub test/t114_piezas_test.dart test/t114_fase2bis_test.dart` →
+  `+64: All tests passed!` (40 + 24).
+- `flutter test --no-pub` (la suite completa, en el árbol) → **`+1224: All tests passed!`, 0 omitidas, en 1 min 28 s; piso 1223 → **1224** (una prueba nueva)**.
+- Copia limpia de `HEAD` más el `t114_piezas_test.dart` nuevo → `+39 -1`, con el fallo
+  esperado en la prueba nueva (arriba).
+
+### 2c.4 Archivos de esta corrección
+
+- `lib/core/design/componentes/bs_celda.dart` (`_Salida`, `_SalidaState` y el comentario
+  del cuerpo).
+- `test/t114_piezas_test.dart` (una prueba nueva, dos reescritas, los temas en caché).
+- `DESIGN.md` (13.3, puntos 1 y 6; 13.6, filas de `BsSiluetaBuque` y `BsTarjetaCifra`).
+- `docs/REDISENO-RESULTADOS.md` (esta sección).
+- Fuera del bloque: `lib/features/vessel/presentation/providers/plano_providers.dart`
+  (entrega 2, nuevo, sin seguimiento; va en el bloque de la entrega 2). Los tres archivos
+  generados de `windows/flutter/` (`generated_plugin_registrant.cc`, `.h` y
+  `generated_plugins.cmake`) figuran como modificados solo por el fin de línea, sin cambio
+  de contenido en `git diff`; no son de esta corrección ni se agregan.
+- Sin cambios: `domain/`, `data/`, `lib/main.dart`, `pubspec.*`, los congelados y el resto
+  de `lib/core/design/`.
+
+### 2c.5 Lo que queda anotado
+
+- `BayStreamApp.build` (`lib/core/app.dart`) construye `BayStreamTema.claro(...)` y
+  `oscuro(...)` en cada `build`, así que cada rebuild de la raíz le da a `MaterialApp` un
+  `ThemeData` nuevo y el `AnimatedTheme` corre 200 ms aunque nada haya cambiado de color.
+  No se nota a la vista, pero es trabajo de más en la raíz; se puede guardar en caché por
+  equipo y brillo. No es de esta corrección ni de la entrega 2; lo decide Carlos.
+
+### 2c.6 Horas
+
+De las ≈ 17:45 (el mensaje de Carlos con 10.17, con la entrega 2 recién empezada) a las
+17:58 del 22-oct-2026: ≈ 0.25 h, con la suite y la copia limpia en segundo plano.
+
+### Git para Carlos (Fase 2 bis, corrección)
+
+Antes del bloque de la entrega 2. `DESIGN.md` solo trae estas cuatro enmiendas (13.3 y
+13.6); `pubspec.yaml` y `pubspec.lock` no cambian.
+
+```
+git add -- lib/core/design/componentes/bs_celda.dart
+git add -- test/t114_piezas_test.dart
+git add -- DESIGN.md
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: correccion de la fase 2 bis, la celda recien movida sale desde su sitio, silueta de 56 dp y cifra a 34 en DESIGN"
+git push
+```
+
+### Tres líneas
+
+- La celda recién movida sale desde donde estaba, de 0 a media celda en 150 ms con
+  `Transform`, no se ve regresar y con reducción de movimiento se queda quieta y naranja.
+- Una prueba de tres fotogramas (0, 75 y 150 ms) lo fija y falla con la celda de `36f5784`
+  (nacía 24 dp arriba).
+- `DESIGN.md` 13.6 dice 56 dp por bahía con alto adaptable y cifra a 34; 13.3 manda el
+  contador de «Más» a aviso o error. Suite 1224 en verde de 1224, 0 omitidas (piso 1223 → 1224), `analyze` en cero.
+
+### Mensaje para Yov
+
+Yov: la corrección de la Fase 2 bis queda lista para que Codex la vuelva a mirar, en su propio bloque de git. **H1:** `BsCelda` lleva un widget con estado (`_Salida`) que vive en el árbol en todos los estados; al entrar en «recién movido» un `AnimationController` de 150 ms y un `Transform.translate` llevan el cuerpo de 0 a media celda desde donde estaba esa misma celda, el hueco punteado y el halo solo existen mientras sale, al volver a «bajado» el controlador se para en 0 sin vuelta visible y con reducción de movimiento se queda quieta, naranja y sin hueco. Antes el `AnimatedSlide` nacía ya en `Offset(0, -0.5)`, por eso saltaba. La prueba nueva cambia el estado de la misma celda y compara el fotograma 0 (en su sitio), el de 75 ms (estrictamente entre) y el de 150 ms (24 dp arriba), más la vuelta de golpe; en una copia limpia de `HEAD` con la celda de `36f5784` falla en el primer fotograma («Expected 92.0, Actual 68.0») y con la de ahora pasa. **O1 y O2:** 13.6 dice 56 dp por bahía (`anchoBahia`) con el alto que sale de los niveles, sin `alto` en la API, y la cifra a 34 / 600 tabular (`BsTextos.cifraGrande`); el código no cambia. **13.3, punto 6:** el contador de «Más» va en aviso, o en error si alguna alerta es crítica, nunca en grúa; y el punto 1 describe la salida desde 0. Suite 1224 en verde de 1224, 0 omitidas (piso 1223 → 1224), `analyze` 0. Un hallazgo del arnés, anotado y sin tocar: `BayStreamApp.build` crea un `ThemeData` nuevo en cada build y el `AnimatedTheme` de `MaterialApp` corre 200 ms de más; lo decide Carlos. Sigo con la entrega 2 del plano.

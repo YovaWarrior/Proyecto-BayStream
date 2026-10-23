@@ -113,10 +113,12 @@ enum BsCurvaDeCelda {
 /// letra del sistema; en el muelle nunca (`DESIGN.md`, 4.2; 10.7, H2).
 ///
 /// [BsEstadoDeCelda.recienMovido] sale de su celda media celda hacia arriba
-/// con `Transform` en `BsMovimiento.salida` y deja el hueco punteado en su
-/// sitio, como el contenedor del ícono; si el sistema pide reducir el
-/// movimiento, se dibuja en naranja en su sitio, quieta (13.3). La pantalla
-/// apaga el estado al cumplirse `BsMovimiento.recienMovido`.
+/// con `Transform` en `BsMovimiento.salida`, desde donde estaba (la misma
+/// celda, de 0 a media celda en 150 ms), y deja el hueco punteado en su sitio,
+/// como el contenedor del ícono; si el sistema pide reducir el movimiento, se
+/// dibuja en naranja en su sitio, quieta (13.3). Al volver a otro estado no se
+/// ve regresar. La pantalla apaga el estado al cumplirse
+/// `BsMovimiento.recienMovido`.
 class BsCelda extends StatelessWidget {
   /// Crea una celda.
   const BsCelda({
@@ -364,41 +366,19 @@ class BsCelda extends StatelessWidget {
         : caja;
 
     // La celda recién movida sale de su sitio (13.3): el hueco punteado queda
-    // debajo y el cuerpo sube media celda con `Transform`; quieta si el
-    // sistema pide reducir el movimiento.
-    final sale = esRecienMovido && !BsMovimiento.reducido(context);
-    final dibujo = sale
-        ? Stack(
-            clipBehavior: Clip.none,
-            children: <Widget>[
-              CustomPaint(
-                painter: BsContornoPunteado(
-                  color: esquema.tertiary,
-                  grosor: medidas.grosorContornoCelda,
-                  radio: radio,
-                ),
-                child: SizedBox(
-                  width: medidas.anchoCelda,
-                  height: medidas.altoCelda,
-                ),
-              ),
-              AnimatedSlide(
-                offset: salida,
-                duration: BsMovimiento.salida,
-                curve: BsMovimiento.entrada,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: radio,
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(color: esquema.surface, spreadRadius: 3),
-                    ],
-                  ),
-                  child: cuerpo,
-                ),
-              ),
-            ],
-          )
-        : cuerpo;
+    // debajo y el cuerpo sube media celda con `Transform`, de 0 a media celda
+    // en 150 ms desde el estado anterior de esta misma celda; quieta si el
+    // sistema pide reducir el movimiento, y sin vuelta visible al apagarse.
+    final dibujo = _Salida(
+      sale: esRecienMovido && !BsMovimiento.reducido(context),
+      ancho: medidas.anchoCelda,
+      alto: medidas.altoCelda,
+      radio: radio,
+      hueco: esquema.tertiary,
+      grosorDelHueco: medidas.grosorContornoCelda,
+      halo: esquema.surface,
+      child: cuerpo,
+    );
 
     final conHueco = Padding(
       padding: EdgeInsets.all(medidas.huecoCelda / 2),
@@ -482,6 +462,104 @@ class BsCelda extends StatelessWidget {
         BsInsigniaDeCelda.refrigerado => Icons.ac_unit,
         BsInsigniaDeCelda.oog => Icons.open_in_full,
       };
+}
+
+/// La salida de la celda recién movida (13.3): el mismo widget en todos los
+/// estados, para que al pasar a «recién movido» la traslación arranque en
+/// cero y recorra media celda en `BsMovimiento.salida`; al dejar de serlo
+/// vuelve a cero de golpe, sin animación de regreso. Solo `Transform` y la
+/// opacidad del halo; con [sale] falso no hay hueco ni desplazamiento.
+class _Salida extends StatefulWidget {
+  const _Salida({
+    required this.sale,
+    required this.ancho,
+    required this.alto,
+    required this.radio,
+    required this.hueco,
+    required this.grosorDelHueco,
+    required this.halo,
+    required this.child,
+  });
+
+  final bool sale;
+  final double ancho;
+  final double alto;
+  final BorderRadius radio;
+  final Color hueco;
+  final double grosorDelHueco;
+  final Color halo;
+  final Widget child;
+
+  @override
+  State<_Salida> createState() => _SalidaState();
+}
+
+class _SalidaState extends State<_Salida> with SingleTickerProviderStateMixin {
+  late final AnimationController _controlador = AnimationController(
+    vsync: this,
+    duration: BsMovimiento.salida,
+  );
+  late final Animation<double> _curva =
+      CurvedAnimation(parent: _controlador, curve: BsMovimiento.entrada);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.sale) _controlador.forward(from: 0);
+  }
+
+  @override
+  void didUpdateWidget(_Salida anterior) {
+    super.didUpdateWidget(anterior);
+    if (widget.sale && !anterior.sale) {
+      // Sale desde donde estaba: de 0 a media celda.
+      _controlador.forward(from: 0);
+    } else if (!widget.sale && anterior.sale) {
+      // No se ve regresar: vuelve a su sitio de golpe.
+      _controlador.stop();
+      _controlador.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controlador.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          if (widget.sale)
+            CustomPaint(
+              painter: BsContornoPunteado(
+                color: widget.hueco,
+                grosor: widget.grosorDelHueco,
+                radio: widget.radio,
+              ),
+              child: SizedBox(width: widget.ancho, height: widget.alto),
+            ),
+          AnimatedBuilder(
+            animation: _curva,
+            child: widget.child,
+            builder: (BuildContext context, Widget? child) => Transform.translate(
+              offset: Offset(0, BsCelda.salida.dy * widget.alto * _curva.value),
+              child: widget.sale
+                  ? DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: widget.radio,
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(color: widget.halo, spreadRadius: 3),
+                        ],
+                      ),
+                      child: child,
+                    )
+                  : child!,
+            ),
+          ),
+        ],
+      );
 }
 
 /// El contorno punteado de la celda: la celda bajada de noche y el hueco que
