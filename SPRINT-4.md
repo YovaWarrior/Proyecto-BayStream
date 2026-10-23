@@ -506,3 +506,32 @@ La siguiente decisión es la **10.20**.
 Codex acepta la entrega 2 con GPT-6 Astra en xhigh. Después, en un chat nuevo de Timonel, van la corrección y la integración del paquete de íconos (10.19).
 
 La siguiente decisión es la **10.21**.
+
+### 10.21 · La entrega 2 no pasa: cuatro hallazgos · Timonel corrige en un chat nuevo (23-oct, 06:30)
+
+**Codex revisó la copia limpia en `9522794`, contra `ccc8c2f`: NO PASA** (`docs/rediseno/fase3/entrega2/aceptacion-codex.md`).
+- **H1 · Buscar queda fuera de la pantalla a 600 dp con letra 2.0.** La cabecera de la oficina pone en una sola fila el título, el estado, Descarga/Carga, Buscar y Nube. A 600 × 960 con letra 2.0, Buscar queda entre 624.9 y 672.9 dp y la fila se desborda 137 px; con 1.45, 31 px. No hay otra entrada a Buscar en «Más» (`_CabeceraDeOficina`, en `vessel_overview_page.dart`).
+- **H2 · Una carga real no enciende su celda en naranja.** El proveedor registra el contenedor como recién movido, pero `LoadingCell` no recibe ese estado (`bay_plan_view.dart` y `loading_controls.dart`). La prueba entregada inyecta el proveedor y pasa por otra ruta, así que no detecta el fallo.
+- **H3 · A 360 y 600 dp falta el anuncio accesible del movimiento.** La región en vivo solo existe dentro del panel lateral, que aparece desde 1200 dp.
+- **H4 · En Android, RNF-002 termina antes de que se vea la rejilla.** Los cinco cuadros finales muestran el previo, los avisos, los controles, la silueta y la leyenda, pero ninguna celda. Las cotas están bien calculadas, pero no miden el hito, y tener que desplazar contaría como un paso más.
+- **Pasa lo demás:**
+  - 1242/1242 sin omitidas, y `analyze` en cero;
+  - el tema en caché;
+  - Windows, repetido en 1.929 s y 3 pasos;
+  - la Web sin conexión (T-92);
+  - las cuatro pruebas del almacén de T-91, idénticas;
+  - las 182 imágenes, sin datos personales ni corpus;
+  - la RAM y los censos coinciden.
+- **Observación:** la auditoría trae un aviso nuevo de `IntrinsicHeight`, en el riel corto de las ventanas bajas. No hay críticos nuevos.
+
+**Yov acepta el dictamen.** Los cuatro hallazgos son reales. Además, H4 muestra que en un teléfono de 360 × 640 el plano no se ve al abrirlo, y eso importa en el muelle. Timonel corrige en un chat nuevo, en Max:
+- H1: la cabecera se reparte o se pliega según el ancho y la letra, y Buscar queda siempre al alcance. Se prueba en 600 dp exactos.
+- H2: la celda de carga recibe el movimiento real, también en llenos y reservas asignadas. Una prueba lo sigue desde la bitácora hasta la celda. Se mantienen los 1.5 s, y la celda queda quieta con reducción de movimiento.
+- H3: el movimiento se anuncia también sin panel lateral, solo con el rol.
+- H4: a 360 × 640 la primera rejilla se ve sin desplazar, dentro de los tres pasos. Se repiten las cinco corridas de Android, con cuadros que muestren celdas.
+- El aviso de `IntrinsicHeight` se resuelve sin `IntrinsicHeight`.
+- El chip del zoom sale de la rejilla (10.20).
+
+Después, Codex acepta solo la corrección, y Timonel integra el paquete de íconos (10.19) en el mismo chat. Mientras Codex revisa, Timonel avanza solo en la base del paquete (archivos nuevos y la línea de `pubspec.yaml`), sin tocar las pantallas.
+
+La siguiente decisión es la **10.22**.
