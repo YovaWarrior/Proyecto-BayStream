@@ -673,3 +673,32 @@ Las demás pantallas funcionan con el tema nuevo, pero todavía no se rediseñar
 4. Si el ensayo falla en algo serio, el piloto se hace con la v3.0, que sigue instalada y probada.
 
 La siguiente decisión es la **10.29**.
+
+### 10.29 · La candidata del piloto no pasa: Atrás con avisos en cola y avisos que tapan el muelle (23-oct, 17:19)
+
+**Codex revisó la candidata en `e78035d`, contra `25b8cf7`: NO PASA** (`docs/rediseno/fase3/candidata/aceptacion-codex.md`).
+- **H1 · Atrás usa la cola de avisos como reloj** (`navegacion_del_viaje.dart`). El primer toque guarda el aviso de «toca otra vez para salir», aunque esté formado detrás de otro, y la ventana de 2 s depende de cuándo cierra ese aviso, no del tiempo desde el toque. La prueba: con un aviso de movimiento de 6 s en pantalla, Atrás, 3 s de espera y Atrás otra vez. En modo de prueba, Flutter falla (`_snackBars.first == controller`), dos veces de dos. En Release, por lo que dice el SDK, esa rama puede sacar del viaje con dos toques separados por más de 2 s y ocultar el aviso de movimiento con su «Deshacer».
+- **H2 · Los avisos tapan los controles del muelle.**
+  - El de 6 s tapa «Acciones», «OR / últimos dígitos» y el pie de la hoja de vacíos. Sale con cada registro, así que obliga a esperar antes del siguiente contenedor.
+  - El de 4 s tapa «Confirmar e importar».
+  - El conductor de Windows esperaba a que se fueran, por eso el recorrido automático no lo mostró.
+- **Observación de la lista del piloto:** el regreso de la Web a la v3.0 (4.5) no llevaba `--project baystream-app`.
+- **También:** el informe de Timonel cuenta 57 capturas de pantallas sin rediseñar, pero hay 54. Tres muestran el indicador de carga y una es de antes de corregir el contraste.
+- **Pasa lo demás:**
+  - 1329/1329 y `analyze` en cero;
+  - el alcance de 158 archivos;
+  - el núcleo del recorrido, repetido en Windows y en la Web;
+  - el BAPLIE de salida, releído con 58 contenedores;
+  - la Web de producción 3.1.0 (4), con Auth, T-92 y uso sin red;
+  - la mezcla corregida de 4.1;
+  - los censos y la auditoría, sin nada nuevo.
+
+**Yov acepta el dictamen:**
+- Corrige 4.5 en `docs/piloto/LISTA-PILOTO.md`: la Web vuelve con el bloque completo de 4.4, con la versión 3.0.0 (3), y con `--project baystream-app`.
+- Timonel corrige esta noche, en su chat y en Max:
+  - H1: la ventana de 2 s se cuenta desde el primer toque. El aviso de salir se ve aunque haya otro, y nunca se cierra un aviso que no sea el primero de la cola.
+  - H2: los avisos salen fuera de la franja de operación y del pie de las hojas, y «Deshacer» sigue a mano durante su plazo.
+  - Con pruebas de los casos combinados, y con el informe y las capturas al día.
+- Después, Codex vuelve a aceptar el muelle, y el sábado se publica (10.28).
+
+La siguiente decisión es la **10.30**.

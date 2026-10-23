@@ -185,8 +185,11 @@ sitio puede ver una vez la versión anterior por el *service worker*: recargar.
 
 - **Windows:** desinstalar BayStream y volver a instalar `build\t93\BayStream_3.0.0.0.msix`
   (Windows no instala una versión menor encima).
-- **Web:** desde `C:\Proyectos\proyecto-baystream` en `sprint-3` (o `v3.0`), el bloque de
-  4.4 con `--build-name=3.0.0 --build-number=3`, y `firebase deploy --only hosting`.
+- **Web:** desde `C:\Proyectos\proyecto-baystream`, con `git checkout sprint-3` (o `v3.0`),
+  el bloque completo de 4.4, sin quitarle ninguna comprobación y cambiando solo
+  `--build-name=3.0.0 --build-number=3`. Termina igual que 4.4, con
+  `firebase deploy --only hosting --project baystream-app`, y se publica una sola vez.
+  Después, `git checkout master` (Yov, 23-oct).
 - **Android:** Play no admite bajar de versión: o se compila desde `sprint-3` un AAB con
   `--build-name=3.0.1 --build-number=5` y se sube a la prueba interna, o en el Honor se
   desinstala la app y se instala a mano el APK 3.0 (se pierde el almacén local del
