@@ -142,7 +142,10 @@ List<_Estado> _estados() {
       find.descendant(of: celda, matching: find.byType(RichText)))) {
     final tramo = rico.text as TextSpan;
     final estilo = tramo.style!;
-    final esIcono = estilo.fontFamily == 'MaterialIcons';
+    // Los íconos: los de Material y los del dominio (BayStreamIconos, 13.11),
+    // a 3:1 como todo icono.
+    final esIcono = estilo.fontFamily == 'MaterialIcons' ||
+        estilo.fontFamily == BsIconos.familia;
     if (!esIcono && tramo.toPlainText().isEmpty) continue;
     final compuesto = Color.alphaBlend(estilo.color!, fondoCompuesto);
     expect(

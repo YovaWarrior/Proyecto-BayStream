@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../bs_iconos.dart';
 
 import '../bs_colores_semanticos.dart';
 import '../bs_medidas.dart';
@@ -431,15 +432,17 @@ class BsCelda extends StatelessWidget {
     return mejor;
   }
 
+  // Los íconos del dominio del paquete (13.11); los genéricos (hecho,
+  // cancelado, revisar) van en su variante rellena, como la familia.
   static IconData _iconoDeMarca(BsMarcaDeCelda marca) => switch (marca) {
         BsMarcaDeCelda.ninguna => Icons.circle_outlined,
-        BsMarcaDeCelda.baja => Icons.south,
-        BsMarcaDeCelda.sube => Icons.north,
-        BsMarcaDeCelda.hecho => Icons.check_circle_outline,
-        BsMarcaDeCelda.paso => Icons.directions_boat_outlined,
+        BsMarcaDeCelda.baja => BsIconos.descarga,
+        BsMarcaDeCelda.sube => BsIconos.carga,
+        BsMarcaDeCelda.hecho => Icons.check_circle,
+        BsMarcaDeCelda.paso => BsIconos.buque,
         BsMarcaDeCelda.cancelado => Icons.block,
-        BsMarcaDeCelda.revisar => Icons.error_outline,
-        BsMarcaDeCelda.reestiba => Icons.swap_vert,
+        BsMarcaDeCelda.revisar => Icons.error,
+        BsMarcaDeCelda.reestiba => BsIconos.reestiba,
       };
 
   static String _rotuloDeMarca(BsMarcaDeCelda marca,
@@ -458,9 +461,9 @@ class BsCelda extends StatelessWidget {
   static IconData _iconoDeInsignia(BsInsigniaDeCelda insignia) =>
       switch (insignia) {
         BsInsigniaDeCelda.ninguna => Icons.circle_outlined,
-        BsInsigniaDeCelda.peligrosa => Icons.warning_amber_rounded,
-        BsInsigniaDeCelda.refrigerado => Icons.ac_unit,
-        BsInsigniaDeCelda.oog => Icons.open_in_full,
+        BsInsigniaDeCelda.peligrosa => BsIconos.insigniaPeligrosa,
+        BsInsigniaDeCelda.refrigerado => BsIconos.insigniaRefrigerado,
+        BsInsigniaDeCelda.oog => BsIconos.insigniaFueraDeMedida,
       };
 }
 

@@ -125,7 +125,7 @@ class LoadingControls extends ConsumerWidget {
                               ? null
                               : () => chooseLoadingRow(context, ref, voyage,
                                   selectedBay: selectedBay, empties: true),
-                          icon: const Icon(Icons.add_box_outlined),
+                          icon: const Icon(BsIconos.vacio),
                           label: const Text('Asignar vacío')),
                     ]),
                   ]);
@@ -790,18 +790,18 @@ class _LoadCheckPanel extends StatelessWidget {
       if (check.dischargeFirst != null)
         line(
             const ValueKey('load-discharge-first'),
-            Icons.south,
+            BsIconos.descarga,
             scheme.primary,
             'La celda la ocupa ${check.dischargeFirst!.container?.containerId}, '
             'que baja en ${portOfCall ?? 'esta escala'} y no se ha marcado. '
             '«Marcar su descarga y cargar» registra las dos cosas.'),
       if (stack != null && stack.status != StackWeightStatus.exceeded)
-        line(const ValueKey('load-stack'), Icons.scale_outlined,
+        line(const ValueKey('load-stack'), BsIconos.pesoPila,
             scheme.onSurfaceVariant, stack.message),
       if (check.issues.isEmpty && check.dischargeFirst == null)
         line(
             const ValueKey('load-clean'),
-            Icons.check_circle_outline,
+            Icons.check_circle,
             scheme.onSurfaceVariant,
             'Revisado: tipo, celda y grupo coinciden con el plan.'),
     ]);

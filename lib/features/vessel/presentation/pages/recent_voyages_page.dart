@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
@@ -100,8 +101,12 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
                           child: const Text('Reintentar')),
                     ])),
                     data: (voyages) => voyages.isEmpty
-                        ? EmptyStateWidget(
-                            onPickFile: () => Navigator.pop(context, true))
+                        // Con la ilustración (13.11) el estado vacío se
+                        // desplaza en una pantalla baja.
+                        ? SingleChildScrollView(
+                            child: EmptyStateWidget(
+                                onPickFile: () => Navigator.pop(context, true),
+                                ilustracion: BsIlustraciones.vacioRecientes))
                         : ListView(children: [
                             for (final voyage in voyages)
                               ListTile(
@@ -110,8 +115,7 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
                                       '${voyage.vessel.name} · ${voyageNumberLabel(voyage.voyageNumber)}'),
                                   subtitle: Text(
                                       '${operationCount(voyage.totalContainers, 'contenedor', 'contenedores')} · ${operationCount(voyage.bays.length, 'bahía', 'bahías')}'),
-                                  leading: const Icon(
-                                      Icons.directions_boat_outlined),
+                                  leading: const Icon(BsIconos.buque),
                                   onTap: _working ? null : () => _open(voyage),
                                   trailing: IconButton(
                                       key: ValueKey('delete-${voyage.id}'),

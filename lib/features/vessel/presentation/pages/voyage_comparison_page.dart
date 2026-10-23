@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
@@ -214,8 +215,8 @@ class _VoyageComparisonPageState extends State<VoyageComparisonPage> {
       ];
 
   static IconData _icon(_Section s) => switch (s) {
-        _Section.discharged => Icons.south,
-        _Section.loaded => Icons.north,
+        _Section.discharged => BsIconos.descarga,
+        _Section.loaded => BsIconos.carga,
         _Section.permanent => Icons.sync_alt,
       };
 

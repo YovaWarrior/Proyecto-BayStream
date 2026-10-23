@@ -64,6 +64,25 @@ class StowageAlertsPage extends ConsumerWidget {
                     '${results.where((r) => r.status == ValidationStatus.nonConforming).length} posibles incumplimientos · '
                     '${results.where((r) => r.status == ValidationStatus.notEvaluated).length} no evaluados · '
                     '${results.where((r) => r.status == ValidationStatus.conforming).length} conformes en las reglas evaluadas'),
+                // 13.11: sin posibles incumplimientos, con su ilustración:
+                // solo con reglas evaluadas y ninguna incumplida; lo no
+                // evaluado o la lista vacía no declaran nada.
+                if (!previo &&
+                    results.any(
+                        (r) => r.status == ValidationStatus.conforming) &&
+                    results.every(
+                        (r) => r.status != ValidationStatus.nonConforming)) ...[
+                  const SizedBox(height: 12),
+                  const Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: BsIlustracion(
+                      key: ValueKey('alertas-sin-incumplimientos'),
+                      datos: BsIlustraciones.sinAlertas,
+                      ancho: 240,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 const Text(
                     'Orden: error, aviso, información. Se evalúa todo el viaje. '
                     'Sin límite de peso en el perfil no se emiten alertas de peso. '

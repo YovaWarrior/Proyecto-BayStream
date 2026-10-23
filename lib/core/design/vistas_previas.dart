@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
 import 'bs_colores_semanticos.dart';
+import 'bs_iconos.dart';
 import 'bs_tema.dart';
 import 'componentes/bs_anillo_avance.dart';
 import 'componentes/bs_banda.dart';
@@ -525,9 +526,9 @@ Widget vistaPreviaCartela() => _lienzo(Builder(
                 rol: semanticos.categorico('PAMIT'),
                 onTap: () {}),
             const BsEntradaDeLeyenda(
-                rotulo: 'Refrigerado', cuenta: 12, icono: Icons.ac_unit),
+                rotulo: 'Refrigerado', cuenta: 12, icono: BsIconos.refrigerado),
             const BsEntradaDeLeyenda(
-                rotulo: 'IMO', cuenta: 3, icono: Icons.warning_amber_rounded),
+                rotulo: 'IMO', cuenta: 3, icono: BsIconos.peligrosa),
           ],
           nota: 'Peso por pila: sin evaluar hasta confirmar el perfil.',
         );
@@ -613,7 +614,7 @@ Widget vistaPreviaBarraDeOperacion() => BsBarraDeOperacion(
       ),
       accion: OutlinedButton.icon(
         onPressed: () {},
-        icon: const Icon(Icons.table_chart_outlined),
+        icon: const Icon(Icons.table_chart),
         label: const Text('Pendientes por bahía'),
       ),
     );

@@ -190,7 +190,7 @@ void main() {
         etiqueta: 'Celda 014-03-86, hecho',
       )));
       expect(find.text('Hecho'), findsOneWidget);
-      expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
 
     testWidgets('de noche, bajado va punteado y de día va lleno', (tester) async {

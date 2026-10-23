@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <title>sin_alertas · oscuro</title>
+  <rect width="320" height="200" fill="#07111F"/>
+  <path d="M49 35H271A13 13 0 0 1 284 48V48A13 13 0 0 1 271 61H49A13 13 0 0 1 36 48V48A13 13 0 0 1 49 35Z" fill="#F5F8FC" data-grupo="tapa"/>
+  <path d="M204 121A44 44 0 1 1 116 121A44 44 0 1 1 204 121Z" fill="#11223F" stroke="#3DD68C" stroke-width="9.68" stroke-linecap="round" stroke-linejoin="round" data-grupo="check_fondo"/>
+  <path d="M138 121.88L153.84 137.72L183.76 106.04" fill="none" stroke="#3DD68C" stroke-width="9.68" stroke-linecap="round" stroke-linejoin="round" data-grupo="check"/>
+</svg>

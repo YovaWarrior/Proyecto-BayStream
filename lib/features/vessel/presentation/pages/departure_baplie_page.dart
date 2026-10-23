@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/departure_export_repository_impl.dart';
@@ -31,7 +32,7 @@ class DepartureBaplieButton extends ConsumerWidget {
     if (!_allowed(ref.watch(operatorProvider))) return const SizedBox.shrink();
     return TextButton.icon(
         key: const ValueKey('departure-baplie-button'),
-        icon: const Icon(Icons.save_alt),
+        icon: const Icon(BsIconos.baplieSalida),
         label: const Text('Generar BAPLIE de salida'),
         onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (_) => DepartureBapliePage(voyage: voyage))));
@@ -139,7 +140,7 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
       FilledButton.icon(
           key: const ValueKey('departure-save'),
           onPressed: _saving ? null : _save,
-          icon: const Icon(Icons.save_alt),
+          icon: const Icon(BsIconos.baplieSalida),
           label: Text(_saving ? 'Guardando…' : 'Guardar BAPLIE de salida')),
       const SizedBox(height: 12),
       // T-96: la salida generada, releída en memoria, contra la llegada.
@@ -148,7 +149,7 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
         OutlinedButton.icon(
             key: const ValueKey('departure-compare-arrival'),
             onPressed: () => _compareWithArrival(operation, output),
-            icon: const Icon(Icons.compare_arrows),
+            icon: const Icon(BsIconos.compararBaplie),
             label: const Text('Comparar con la llegada'))
       else
         const Text('La operación no tiene un plano de llegada para comparar.',

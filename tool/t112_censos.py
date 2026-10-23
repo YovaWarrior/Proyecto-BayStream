@@ -196,8 +196,26 @@ T114_DECISIONES = {
     (_P + 'widgets/zoom_del_plano.dart', '*'): V(
         'pantalla', 'el chip y el menú del zoom del plano: el porcentaje, «Alejar plano», «Restablecer» y '
                     '«Acercar plano», antes en plan_drag_confirmation.dart (T-114, Fase 3, entrega 2, 10.20)'),
+    # El paquete de íconos e ilustraciones (10.19, DESIGN.md 13.11).
+    ('lib/core/design/bs_iconos.dart', '*'): NV(
+        'NV-CODIGO', 'nombre de la familia tipográfica de los íconos del dominio (fontFamily BayStreamIconos): '
+                     'no se lee (T-114, 10.19)'),
+    ('lib/core/design/bs_ilustraciones.dart', '*'): NV(
+        'NV-CODIGO', 'datos que genera tool/bs_ilustraciones_generar.py desde design/ilustraciones/*.json: el '
+                     'nombre del dibujo, el grupo del SVG y los nombres de color de la paleta (13.11); no se '
+                     'leen. La descripción de cada dibujo se decide aparte, en preparar() (T-114, 10.19)'),
+    ('lib/core/design/componentes/bs_ilustracion.dart', '*'): NV(
+        'NV-CODIGO', 'nombres de color de las ilustraciones que BsIlustracion resuelve a tokens del tema, y el '
+                     'comando L de la ruta (13.11); no se leen (T-114, 10.19)'),
+    **{('lib/core/design/componentes/bs_ilustracion.dart', linea): NV(
+        'NV-EXCEPCION-INTERNA', 'ArgumentError o FormatException ante un color o una ruta mal formados: los '
+                                'datos son constantes y la prueba los recorre todos, así que la app no la '
+                                'alcanza (T-114, 10.19)') for linea in (152, 167, 171, 207, 210)},
 }
 T112_DECISIONES.update(T114_DECISIONES)
+DESCRIPCION_ILUSTRACION = V(
+    'accesibilidad', 'la descripción del dibujo: etiqueta accesible por omisión de BsIlustracion (Semantics, '
+                     'imagen) (T-114, 10.19)')
 
 # Palabras nuevas sin tilde de las cadenas visibles que no son españolas.
 T112_VOCABULARIO = {
@@ -227,6 +245,13 @@ def preparar(root, antes):
     I.POR_ARCHIVO = {rel: trasladar_tabla(tabla, maps.get(rel, {})) for rel, tabla in I.POR_ARCHIVO.items()}
     for (rel, clave), decision in T112_DECISIONES.items():
         I.POR_ARCHIVO.setdefault(rel, {})[clave] = decision
+    # T-114 (10.19): en el archivo generado de las ilustraciones solo se lee la
+    # descripción de cada dibujo. Se localiza por su rótulo, no por su línea,
+    # porque el archivo lo regenera tool/bs_ilustraciones_generar.py.
+    rel = 'lib/core/design/bs_ilustraciones.dart'
+    for n, linea in enumerate(L.leer(root / rel).splitlines(), 1):
+        if linea.lstrip().startswith("descripcion: '"):
+            I.POR_ARCHIVO[rel][n] = DESCRIPCION_ILUSTRACION
     I.CORRECCIONES = trasladar_claves(I.CORRECCIONES, maps)
     # T-112 quitó de la pantalla los cuatro valores interpolados en inglés.
     I.INTERPOLA_INGLES = {}
@@ -247,6 +272,9 @@ def preparar(root, antes):
                 'providers/plano_providers.dart', 'widgets/zoom_del_plano.dart'):
         M3.PANTALLA_DE[_P + rel] = {'*': 'S02'}
     for rel in ('lib/core/design/bs_tema.dart', 'lib/core/design/vistas_previas.dart',
+                'lib/core/design/bs_iconos.dart', 'lib/core/design/bs_iconos_catalogo.dart',
+                'lib/core/design/bs_ilustraciones.dart', 'lib/core/design/vistas_previas_iconos.dart',
+                'lib/core/design/componentes/bs_ilustracion.dart',
                 'lib/core/design/componentes/bs_banda.dart',
                 'lib/core/design/componentes/bs_barra_de_operacion.dart',
                 'lib/core/design/componentes/bs_cartela.dart',

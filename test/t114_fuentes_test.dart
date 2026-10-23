@@ -36,7 +36,9 @@ void main() {
         .allMatches(pubspec)
         .map((m) => m.group(1)!)
         .toList();
-    expect(rutas, hasLength(9));
+    // Los siete TTF de Plex, los dos de Roboto y, desde 10.19, la fuente de
+    // los íconos del dominio (BayStreamIconos).
+    expect(rutas, hasLength(10));
     for (final ruta in rutas) {
       expect(File(ruta).existsSync(), isTrue, reason: ruta);
     }

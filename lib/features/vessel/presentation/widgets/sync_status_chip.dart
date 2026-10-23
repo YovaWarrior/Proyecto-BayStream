@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/repositories/operation_sync_repository.dart';
@@ -51,15 +52,15 @@ String syncStatusText(SyncStatus status) {
 }
 
 IconData syncStatusIcon(SyncStatus status) => switch (status.state) {
-      SyncState.localOnly => Icons.phone_android,
-      SyncState.connecting => Icons.cloud_sync_outlined,
+      SyncState.localOnly => BsIconos.soloAqui,
+      SyncState.connecting => Icons.cloud_sync,
       SyncState.upToDate =>
-        status.rejected > 0 ? Icons.cloud_sync_outlined : Icons.cloud_done_outlined,
-      SyncState.sending => Icons.cloud_upload_outlined,
-      SyncState.offline => Icons.cloud_off_outlined,
-      SyncState.sessionExpired => Icons.lock_clock_outlined,
+        status.rejected > 0 ? Icons.cloud_sync : BsIconos.alDia,
+      SyncState.sending => Icons.cloud_upload,
+      SyncState.offline => BsIconos.soloAqui,
+      SyncState.sessionExpired => Icons.lock_clock,
       SyncState.notAuthorized => Icons.block,
-      SyncState.unconfirmed => Icons.warning_amber_outlined,
+      SyncState.unconfirmed => Icons.warning_amber,
     };
 
 /// Un problema que pide algo al usuario.
@@ -111,7 +112,7 @@ class SyncAppBarButton extends ConsumerWidget {
       key: const ValueKey('cloud-page'),
       icon: Icon(
           status.state == SyncState.localOnly
-              ? Icons.cloud_outlined
+              ? Icons.cloud
               : syncStatusIcon(status),
           color: alert ? Theme.of(context).colorScheme.error : null),
       tooltip: 'Nube y cuenta · ${syncStatusText(status)}',

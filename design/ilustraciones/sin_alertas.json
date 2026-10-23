@@ -1,0 +1,54 @@
+{
+ "nombre": "sin_alertas",
+ "ancho": 320,
+ "alto": 200,
+ "paleta": {
+  "claro": {
+   "cubierta": "#F5F8FC",
+   "fondo": "#F5F8FC",
+   "hecho": "#1E6B43",
+   "hoja": "#FFFFFF",
+   "tinta": "#10243F"
+  },
+  "oscuro": {
+   "cubierta": "#F5F8FC",
+   "fondo": "#07111F",
+   "hecho": "#3DD68C",
+   "panel_alto": "#11223F",
+   "tinta": "#EAF0F9"
+  }
+ },
+ "fondo": "fondo",
+ "formas": [
+  {
+   "grupo": "tapa",
+   "ruta": "M49 35L271 35C278.18 35 284 40.82 284 48L284 48C284 55.18 278.18 61 271 61L49 61C41.82 61 36 55.18 36 48L36 48C36 40.82 41.82 35 49 35Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "cubierta"
+   },
+   "trazo": {
+    "claro": "tinta",
+    "oscuro": null
+   },
+   "grosor": 1.75
+  },
+  {
+   "grupo": "check_fondo",
+   "ruta": "M204 121C204 145.301 184.301 165 160 165C135.699 165 116 145.301 116 121C116 96.699 135.699 77 160 77C184.301 77 204 96.699 204 121Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "hecho",
+   "grosor": 9.68
+  },
+  {
+   "grupo": "check",
+   "ruta": "M138 121.88L153.84 137.72L183.76 106.04",
+   "relleno": null,
+   "trazo": "hecho",
+   "grosor": 9.68
+  }
+ ]
+}

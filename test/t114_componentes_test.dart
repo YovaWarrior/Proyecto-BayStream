@@ -44,7 +44,7 @@ void main() {
         etiqueta: 'baja',
       )));
       expect(find.text('Baja'), findsOneWidget);
-      expect(find.byIcon(Icons.south), findsOneWidget);
+      expect(find.byIcon(BsIconos.descarga), findsOneWidget);
       expect(find.text('GTSTC'), findsNothing);
       await tester.pumpWidget(_envuelve(const BsCelda(
         codigo: 'GTSTC',
@@ -52,7 +52,7 @@ void main() {
         etiqueta: 're-estiba',
       )));
       expect(find.text('Re‑estiba'), findsOneWidget);
-      expect(find.byIcon(Icons.swap_vert), findsOneWidget);
+      expect(find.byIcon(BsIconos.reestiba), findsOneWidget);
     });
 
     testWidgets('la insignia de carga especial va siempre, y atenuar no usa Opacity',
@@ -63,7 +63,7 @@ void main() {
         atenuada: true,
         etiqueta: 'peligrosa, fuera del filtro',
       )));
-      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+      expect(find.byIcon(BsIconos.insigniaPeligrosa), findsOneWidget);
       expect(find.byType(Opacity), findsNothing);
     });
 

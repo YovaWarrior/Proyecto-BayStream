@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
@@ -59,7 +60,7 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
             FilledButton.icon(
               key: const ValueKey('export-list-pick'),
               onPressed: state.busy ? null : notifier.pickFile,
-              icon: const Icon(Icons.table_view),
+              icon: const Icon(BsIconos.listadoAgencia),
               label: Text(state.saved == null
                   ? 'Elegir listado (.xlsx)'
                   : 'Importar otro listado (.xlsx)'),

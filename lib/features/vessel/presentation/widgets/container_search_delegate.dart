@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'iconos_del_dominio.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
@@ -285,10 +287,11 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off,
-            size: 64,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          // 13.11: «ningún contenedor coincide», con la ilustración del paquete.
+          const BsIlustracion(
+            key: ValueKey('busqueda-sin-resultados'),
+            datos: BsIlustraciones.vacioBusqueda,
+            ancho: 240,
           ),
           const SizedBox(height: 16),
           Text(
@@ -298,10 +301,11 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
                 ),
           ),
           const SizedBox(height: 8),
+          // Tinta suave entera: con el 70 % de opacidad quedaba en 3.3:1.
           Text(
             'Intenta con otro término de búsqueda',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
         ],
@@ -419,26 +423,22 @@ class _ContainerSearchResultTile extends StatelessWidget {
   }
 
   Widget _buildLeadingIcon(ColorScheme colorScheme) {
-    IconData icon;
+    final icon = iconoDeContenedor(container);
     Color background;
     Color foreground;
 
     // T-112: los mismos colores del esquema que las celdas y la leyenda del
     // plano (bay_plan_view.dart), en vez de colores fijos.
     if (container.isDangerous) {
-      icon = Icons.warning_amber;
       background = colorScheme.errorContainer;
       foreground = colorScheme.onErrorContainer;
     } else if (container.isReefer) {
-      icon = Icons.ac_unit;
       background = colorScheme.primaryContainer;
       foreground = colorScheme.onPrimaryContainer;
     } else if (container.status == ContainerStatus.full) {
-      icon = Icons.inventory_2;
       background = colorScheme.secondaryContainer;
       foreground = colorScheme.onSecondaryContainer;
     } else {
-      icon = Icons.inventory_2_outlined;
       background = colorScheme.surfaceContainerHighest;
       foreground = colorScheme.onSurfaceVariant;
     }

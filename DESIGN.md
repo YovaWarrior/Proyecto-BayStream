@@ -1026,7 +1026,7 @@ pide.
 | La banda del muelle | `BsMarca` sin recuadro, sobre el azul | 44 |
 | El inicio, junto a «BayStream» | `BsMarca` con recuadro | 40 |
 | La espera («Leyendo A01.edi…», publicar, unirse) | `BsMarca(espera: true)` dentro de un recuadro de 72 con radio 16 | 52 |
-| Las pantallas vacías | Un dibujo de línea del muelle en acero y una frase que dice qué hacer; el dibujo llega en el paquete de íconos (10.14). Mientras, el estado vacío de hoy con el texto nuevo |  |
+| Las pantallas vacías | `BsIlustracion` con el dibujo del paquete (13.11) y la frase de siempre: «todavía no hay viajes» (`vacio_recientes`), «ningún contenedor coincide» (`vacio_busqueda`), «trabajando solo en este equipo» (`sin_conexion`), «descarga completa» (`descarga_completa`) y «sin posibles incumplimientos» (`sin_alertas`); el inicio lleva `inicio` sobre «Abre un plano de estiba» | 320 de ancho (240 en la búsqueda y en las alertas, hasta 480 en el inicio); la proporción es la del lienzo. Cada dibujo ocupa como máximo tres décimas del alto de la ventana entre la escala de la letra, y bajo 120 dp no se pinta (13.11, regla 4) |
 | La celda que se mueve | `BsCelda(estado: recienMovido)`: el contenedor fuera de su celda, como en el ícono |  |
 | Íconos temáticos y lanzadores | Los de `design/icono/` (T-88), sin cambios |  |
 
@@ -1178,9 +1178,9 @@ trae sus dos avisos encima) el plano se arma así:
   el trabajo sin conexión), arrastrar contenedores (función nueva que toca el dominio),
   shimmer, hugeicons ni lucide.
 - **Ninguna dependencia nueva.** La marca, la silueta, el casco y el anillo se pintan a mano.
-  Los íconos del dominio y las ilustraciones (la grúa del inicio, el muelle de las pantallas
-  vacías) llegan en un paquete aparte (10.14) y los integra una entrega propia; mientras
-  tanto, Material Symbols, y no se hacen provisionales que luego se tiren.
+  Los íconos del dominio y las ilustraciones llegaron en el paquete de Nube (10.14, 10.18 y
+  10.19) y están integrados (13.11): la fuente `BayStreamIconos` es un asset y las
+  ilustraciones son datos que la app pinta sola. Lo genérico sigue en Material Symbols.
 - Material 3 sigue de base; `shadcn_flutter` y `go_router` no entran (10.1).
 
 ### 13.10 Lo que cambia en los tokens y el movimiento de la Fase 2
@@ -1201,3 +1201,74 @@ trae sus dos avisos encima) el plano se arma así:
 Los radios de control (6), hoja (10) y diálogo (16) no cambian; el radio 18 es solo para
 los paneles nuevos. Las alturas, los espacios, la celda de 56 × 48 y de 52 × 48 y la
 tipografía de 4.2 y 4.3 no cambian.
+
+### 13.11 Los íconos del dominio, las insignias y las ilustraciones (10.18, 10.19)
+
+El paquete de Nube (`design/iconos/LEEME.md`, v2, 84 archivos con su SHA-256) trae **31 íconos
+del dominio** en el estilo **B · Sólido** que eligió Carlos (10.18), **4 insignias** de 12 px y
+**6 ilustraciones**, todo dibujado para BayStream desde la geometría del ícono (la celda, la tapa,
+el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y lo acepta Codex.
+
+**Cómo llega a la app.**
+- La fuente `assets/fonts/bs_iconos/BayStreamIconos.ttf` (área de uso privado U+E000 a U+E022,
+  em 1024, ascendente 1024, descendente 0, avance 1024: cada glifo ocupa el cuadrado del em,
+  como Material Icons) se declara en `pubspec.yaml` como la familia `BayStreamIconos`. Es un
+  asset, no una dependencia.
+- `BsIconos` (`bs_iconos.dart`, copiado tal cual del LEEME) da una constante por glifo;
+  `BsIconosCatalogo` los recorre por su nombre del paquete (31 íconos y 4 insignias) para las
+  pruebas, los censos y las vistas previas. Los SVG quedan en `design/iconos/` para documentos.
+- Las ilustraciones viajan como datos (`BsIlustraciones`, generado por
+  `tool/bs_ilustraciones_generar.py` desde `design/ilustraciones/*.json`) y las pinta
+  `BsIlustracion`: `CustomPainter` dentro de un `RepaintBoundary`, rutas de solo `M`, `L`, `C` y
+  `Z`, trazos con puntas y uniones redondas, punteado como `stroke-dasharray`, y una etiqueta
+  accesible como imagen (la descripción de cada dibujo, o la que dé la pantalla). Los colores van
+  **por nombre** (los de 13.1) y se resuelven con los tokens del tema, nunca con los hex del JSON:
+  `marca` es la marca como superficie en los dos temas; `cubierta` es el blanco del ícono (el
+  papel de día, el relleno de «por bajar en cubierta» de noche); `bodega` es el acero; `grua` el
+  relleno de grúa; `hecho`, el contorno del rol; `frase`, `fondo`, `hoja`, `panel`, `panel_alto`,
+  `tinta`, `tinta_suave` y `linea`, sus tokens. La prueba comprueba que cada nombre da el mismo
+  hex que el bloque `paleta` del paquete, en claro y en oscuro, y que los trazos quedan a 3:1 o
+  más sobre el fondo.
+
+**Dónde va cada ícono (la tabla del LEEME, con las colisiones resueltas por Carlos).**
+
+| Concepto | Ícono | Dónde | Lo que sigue en Material |
+|---|---|---|---|
+| Contenedor | `contenedor20`, `contenedor40`, `contenedor45` según `sizeInFeet`; `refrigerado`, `tanque`, `plataforma`, `techoAbierto` según el tipo ISO; `vacio` para el vacío; `peligrosa` y `fueraDeMedida` mandan sobre el tipo (`iconoDeContenedor`, `iconoDeTipo`) | la tarjeta de la Lista, el resultado de la búsqueda, el detalle, los chips de carga especial, las tarjetas de Estadísticas, «Asignar vacío», «Vacío» en la leyenda | `inventory_2` para el total de contenedores y para «Lleno»; `check_box` para «Llenos» |
+| Peligrosa (IMDG) | `peligrosa` | la insignia (como `insigniaPeligrosa`), los chips IMO / IMDG, el detalle, «Carga especial» | el aviso genérico sigue en `warning_amber` |
+| Buque | `buque` | «Paso» / sigue a bordo en la celda y en la marca de descarga, los recientes, «Perfiles guardados», el resumen del viaje, «Perfil longitudinal» | |
+| Bahía | `bahia` | el destino «Plano» (en reposo y activo), «Posición», «Bahías», «Contenedores por bahía», «Ocupación», «Ir a» | |
+| Tapa de escotilla | `tapaEscotilla` | «Tapas en la operación», «Editar tapas por bahía», los pasos de quitar / reponer y abrir / cerrar de la secuencia | |
+| Descarga y carga | `descarga` («Baja», flecha hacia abajo) y `carga` («Sube», hacia arriba) | los segmentos de la banda del muelle, las marcas de la celda, la secuencia de descarga («Re‑estiba: sale» es `descarga` y «vuelve» es `carga`), la comparación, el panel de la carga | el hecho sigue en `check_circle` |
+| Re‑estiba y pedir cambio | `reestiba`; `pedirCambio` | la marca de la celda y la marca de descarga; «Pedir cambio», «Bandeja de cambios», «Solicitudes de cambio» y la solicitud pendiente sobre la celda | |
+| Peso | `pesoPila` en la línea del peso por pila del panel de carga; `vgm` en «Peso (VGM)» de la tarjeta | | `scale` es el peso genérico |
+| Archivos | `baplie` («Seleccionar archivo», «Cargar archivo BAPLIE»), `compararBaplie`, `baplieSalida`, `listadoAgencia` («Listado de la agencia», «Elegir listado») | | el CSV de exportar sigue en `table_view`; PDF y JSON, en los suyos |
+| Nube | `alDia` (al día) y `soloAqui` (solo este dispositivo, sin conexión) | el chip de estado y la barra superior | `cloud` para «Nube y cuenta» sin cuenta; `cloud_sync`, `cloud_upload`, `lock_clock`, `block` y `warning_amber` para los demás estados |
+| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `orden`, `grua`, `muelle`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
+
+**Reglas de uso.**
+1. Los íconos del dominio se dibujaron en la rejilla de 24 y se usan a **16, 20 o 24 px**; las
+   insignias, en la rejilla de 12, **a 12 px** en la esquina de la celda (`BsCelda.tamanoInsignia`).
+   A otro tamaño se escalan enteros, nunca se recortan.
+2. **Los genéricos siguen siendo Material** (buscar, cerrar, micrófono, parámetros, historia,
+   descargar, más). Junto a los íconos nuevos, los genéricos que iban en `_outlined` pasan a su
+   variante rellena (hecho, revisar, alertas, nube, tabla, avance, paleta, ocupado por 40 pies),
+   porque la familia es sólida y a 16 px un contorno al lado de un macizo se lee más débil. La
+   barra inferior y el riel llevan el mismo glifo relleno en reposo y activo: la selección la dice
+   el indicador de Material 3.
+3. Un mismo concepto lleva el mismo glifo en todas las pantallas (la regla que `iconoDeContenedor`
+   fija para los contenedores), y el aviso genérico no se confunde con la carga peligrosa.
+4. Las ilustraciones van en los estados que la tabla de 13.7 nombra, con la frase de siempre al
+   lado: no reemplazan el texto, lo acompañan. Se apoyan en el fondo de la pantalla (sin pintar su
+   propio fondo), a 320 de ancho (240 en la búsqueda y en las alertas, hasta 480 en el inicio).
+   El dibujo acompaña a la frase y cede ante la letra: ocupa como máximo **tres décimas del alto
+   de la ventana divididas por la escala de la letra** (`BsIlustracion.parteDelAlto`), y si con
+   eso no llega a 120 dp de alto no se pinta (`altoMinimo`). Así, en el teléfono bajo (360 × 640)
+   el inicio lleva su dibujo a 192 dp con la letra a 1.0 y a 132 dp con 1.45, y con 2.0 va sin
+   dibujo, para que «Abre un plano de estiba» y «Seleccionar archivo» sigan en la primera
+   pantalla. Lo encontró la captura de Android con la letra a 2.0 (Parte C).
+   El naranja aparece solo en el contenedor izado de `inicio` (13.3).
+5. Nada se inventa: ni grúas con nombre, ni buques reales, ni personas, ni cifras en los dibujos.
+6. El censo de `test/t114_paquete_test.dart` comprueba que ningún concepto de la tabla sigue en
+   Material (salvo lo que esta sección deja ahí a propósito), y `meetsGuideline` que las pantallas
+   con ilustración conservan el contraste y los objetivos táctiles.

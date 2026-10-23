@@ -9,10 +9,10 @@ import '../providers/voyage_ui_state.dart';
 /// Plano · Lista · Avance · Estadísticas · Más. «Avance» solo existe con una
 /// escala confirmada; «Más» abre la hoja con lo demás.
 enum DestinoDelViaje {
-  plano('Plano', Icons.grid_view_outlined, Icons.grid_view),
-  lista('Lista', Icons.list_alt_outlined, Icons.list_alt),
-  avance('Avance', Icons.data_usage_outlined, Icons.data_usage),
-  estadisticas('Estadísticas', Icons.bar_chart_outlined, Icons.bar_chart,
+  plano('Plano', BsIconos.bahia, BsIconos.bahia),
+  lista('Lista', Icons.list_alt, Icons.list_alt),
+  avance('Avance', Icons.data_usage, Icons.data_usage),
+  estadisticas('Estadísticas', Icons.bar_chart, Icons.bar_chart,
       corto: 'Estad.'),
   mas('Más', Icons.more_horiz, Icons.more_horiz);
 
@@ -28,7 +28,8 @@ enum DestinoDelViaje {
   /// descripción emergente y para el lector de pantalla.
   final String rotuloCorto;
 
-  /// El icono en reposo.
+  /// El icono en reposo. El Plano lleva la bahía del paquete (13.11), que
+  /// no tiene variante de contorno, y los genéricos van rellenos junto a él.
   final IconData icono;
 
   /// El icono del destino activo.
@@ -261,7 +262,7 @@ class RielDelViaje extends StatelessWidget {
             icon: ContadorDeAlertas(
                 cuenta: alertas,
                 critica: alertaCritica,
-                child: const Icon(Icons.fact_check_outlined)),
+                child: const Icon(Icons.fact_check)),
             label: const Text('Alertas'),
           ),
       ],

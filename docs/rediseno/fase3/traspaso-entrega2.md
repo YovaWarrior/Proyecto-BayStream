@@ -186,3 +186,18 @@ con la fuente; el zoom vive en `planZoomProvider` y su chip (`ZoomDelPlano`) en 
 controles. Las pruebas de la corrección están en `test/t114_fase3_entrega2_correccion_test.dart`
 (18); `test/t114_fase3_correccion_test.dart` sigue siendo la de la corrección de la entrega 1 (10.15).
 La evidencia nueva va en `docs/rediseno/fase3/entrega2/correccion/`.
+
+## El paquete de íconos e ilustraciones (23-oct, 10.19)
+
+Con la entrega 2 aceptada (10.22), el paquete de Nube quedó integrado en un chat nuevo: la sección
+«Fase 3 · Paquete de íconos e ilustraciones (10.19)» de `docs/REDISENO-RESULTADOS.md` es el
+informe, con su único bloque de git para la Parte B y la Parte C. Dónde está cada cosa: la fuente
+en `assets/fonts/bs_iconos/` y sus constantes en `lib/core/design/bs_iconos.dart` (el catálogo por
+nombre, en `bs_iconos_catalogo.dart`); las ilustraciones como datos en `bs_ilustraciones.dart`,
+que escribe `tool/bs_ilustraciones_generar.py` desde `design/ilustraciones/*.json` (no se edita a
+mano), y la pieza que las pinta en `componentes/bs_ilustracion.dart`; la regla de qué ícono lleva
+cada contenedor en `presentation/widgets/iconos_del_dominio.dart`; la tabla de sitios y
+colisiones, en `DESIGN.md` 13.11. Las pruebas son `test/t114_iconos_test.dart`,
+`test/t114_ilustraciones_test.dart` y `test/t114_paquete_test.dart` (este último censa `lib/`:
+si un ícono de la tabla vuelve a Material, falla). La ilustración cede ante la letra grande
+(`BsIlustracion.anchoQueCabe`, 13.11 regla 4). La evidencia va en `docs/rediseno/fase3/paquete/`.

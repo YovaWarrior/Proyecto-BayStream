@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../bs_iconos.dart';
 
 import '../bs_colores_semanticos.dart';
 import '../bs_medidas.dart';
@@ -9,10 +10,10 @@ import 'bs_panel_en_vivo.dart';
 /// El modo de operación que la banda ofrece.
 enum BsModoDeOperacion {
   /// Descarga.
-  descarga('Descarga', Icons.south),
+  descarga('Descarga', BsIconos.descarga),
 
   /// Carga.
-  carga('Carga', Icons.north);
+  carga('Carga', BsIconos.carga);
 
   const BsModoDeOperacion(this.rotulo, this.icono);
 

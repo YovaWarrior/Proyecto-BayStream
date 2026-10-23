@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
@@ -141,20 +142,20 @@ class LoadingPlanControls extends ConsumerWidget {
                     TextButton.icon(
                       key: const ValueKey('discharge-table-button'),
                       onPressed: pendingTable,
-                      icon: const Icon(Icons.table_chart_outlined),
+                      icon: const Icon(Icons.table_chart),
                       label: const Text('Pendientes de descarga'),
                     )
                   else
                     TextButton.icon(
                       onPressed: pendingTable,
-                      icon: const Icon(Icons.table_chart_outlined),
+                      icon: const Icon(Icons.table_chart),
                       label: const Text('Pendientes por bahía'),
                     ),
                   if (voyage.portOfCall != null)
                     TextButton.icon(
                       key: const ValueKey('operation-progress-button'),
                       onPressed: openProgress,
-                      icon: const Icon(Icons.assignment_outlined),
+                      icon: const Icon(Icons.assignment),
                       label: const Text('Avance de la operación'),
                     ),
                   if (voyage.portOfCall != null) const SyncStatusChip(),
@@ -427,7 +428,7 @@ class _CompactPlanBar extends ConsumerWidget {
             enabled: onPendingTable != null,
             value: onPendingTable,
             child: entry(
-                Icons.table_chart_outlined,
+                Icons.table_chart,
                 dischargeMode
                     ? 'Pendientes de descarga'
                     : 'Pendientes por bahía')),
@@ -435,14 +436,14 @@ class _CompactPlanBar extends ConsumerWidget {
           PopupMenuItem(
               key: const ValueKey('operation-progress-button'),
               value: () => onProgress!(),
-              child: entry(Icons.assignment_outlined, 'Avance de la operación')),
+              child: entry(Icons.assignment, 'Avance de la operación')),
         if (requests)
           PopupMenuItem(
               key: const ValueKey('change-requests-button'),
               value: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => ChangeRequestsPage(voyage: voyage))),
               child: entry(
-                  office ? Icons.inbox_outlined : Icons.swap_vert,
+                  BsIconos.pedirCambio,
                   '${office ? 'Bandeja de cambios' : 'Solicitudes de cambio'} ($pending)')),
         if (loadingMode)
           PopupMenuItem(
@@ -450,7 +451,7 @@ class _CompactPlanBar extends ConsumerWidget {
               enabled: data?.list != null,
               value: () => chooseLoadingRow(context, ref, voyage,
                   selectedBay: selectedBay, empties: true),
-              child: entry(Icons.add_box_outlined, 'Asignar vacío')),
+              child: entry(BsIconos.vacio, 'Asignar vacío')),
       ],
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: tira ? 12 : 8, vertical: 12),

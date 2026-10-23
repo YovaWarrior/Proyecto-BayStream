@@ -3394,3 +3394,333 @@ pasos, y los cuadros finales muestran la primera fila de celdas (evidencia en
 sobrescribió `test/t114_fase3_correccion_test.dart` (la de 10.15) y se restauró desde `HEAD` byte a
 byte; y `DESIGN.md` 8, 9.2, 13.3, 13.6 y 13.8 anotan las reglas nuevas. Me detengo: ALTO: Codex
 acepta la corrección.
+
+## Fase 3 · Paquete de íconos e ilustraciones (10.19): Parte B y Parte C (23-oct-2026)
+
+Carlos cerró la entrega 2 con la excepción de Carga a 360 × 640 (10.22) y dio luz verde para
+Flutter. Las dos partes van juntas, en un solo bloque de git: la **Parte B** (la base del paquete:
+la fuente, las constantes, el catálogo, las ilustraciones como datos y `BsIlustracion`) se escribió
+con Codex todavía en la aceptación, sin un solo comando de Flutter, y se probó al recibir la luz
+verde; la **Parte C** (los íconos del dominio en las pantallas, las insignias de 12 px y las seis
+ilustraciones en sus estados vacíos) siguió sin detenerse. Codex acepta el paquete al final.
+
+### 5.1 Resultado en tres líneas
+
+- El paquete de Nube (v2, 84 archivos con su SHA-256 más el LEEME) está en el repositorio en sus
+  tres carpetas, comprobado archivo por archivo, y la fuente `BayStreamIconos` (35 glifos,
+  U+E000 a U+E022) es la única línea nueva de `pubspec.yaml`; `pubspec.lock` no cambia y no hay
+  dependencia nueva.
+- Los 28 íconos con sitio y las 4 insignias reemplazan a Material donde la tabla del LEEME lo
+  pide, con las colisiones resueltas como fijó Carlos; las seis ilustraciones se pintan con
+  `CustomPainter` desde datos const, con los colores resueltos por nombre con los tokens del
+  tema, y van en el inicio y en los cinco estados vacíos.
+- Suite 1290 (piso 1242; 1260 tras la corrección + 30 del paquete), `analyze` 0, auditoría
+  17/248/20 sin hallazgos en lo nuevo, censos 1940 visibles / 0 inglés, M3 250/7/3, 217
+  mensajes. Las capturas de Android muestran los glifos y encontraron una regla que faltaba: la
+  ilustración cede ante la letra grande. ALTO: Codex acepta el paquete.
+
+### 5.2 Parte B: la base del paquete
+
+**El paquete, comprobado.** `C:/Proyectos/baystream-iconos-paquete-v2.zip` trae 85 archivos: el
+LEEME y los 84 de su tabla de SHA-256. Se calculó la huella de cada archivo del zip, se contrastó
+con la tabla (84 de 84 coinciden) y se copiaron a sus rutas del repositorio:
+`assets/fonts/bs_iconos/BayStreamIconos.ttf` (1), `design/iconos/` (56: LEEME, `codigos.json`,
+31 SVG, 4 SVG de insignias, 13 fuentes `.py`, las vistas previas y la comprobación de Skia) y
+`design/ilustraciones/` (28: 6 JSON, 12 SVG, 9 fuentes y la vista previa). Antes del bloque de git
+se volvió a correr la comprobación sobre el árbol: 85 de 85 `OK`, sin `__pycache__`, `.pyc` ni
+otros restos (`docs/rediseno/fase3/paquete/sha256-paquete-v2.txt` es la lista; se repite con
+`sha256sum -c` desde la raíz).
+
+**La fuente.** `pubspec.yaml` declara la familia `BayStreamIconos` junto a las Plex, con un
+comentario de tres líneas que dice de dónde viene; es la única línea nueva. La fuente tiene em
+1024, ascendente 1024, descendente 0 y avance 1024: cada glifo ocupa el cuadrado del em, como
+Material Icons, así que `Icon(BsIconos.x, size: 24)` mide lo mismo que un ícono de Material.
+
+**Las constantes.** `lib/core/design/bs_iconos.dart` es el bloque del LEEME tal cual (los 31
+íconos y las 4 insignias, `familia = 'BayStreamIconos'`), con `library;` y una nota de que los
+códigos no se tocan a mano: vienen de `design/iconos/codigos.json`.
+`lib/core/design/bs_iconos_catalogo.dart` los recorre por su nombre del paquete
+(`BsIconosCatalogo.iconos`, `insignias`, `todos`, `rejillaDe`) para las pruebas, el censo y las
+vistas previas, sin que ninguna pantalla pase por ahí.
+
+**Las ilustraciones como datos.** La app no declara los JSON como assets ni suma `flutter_svg`:
+`tool/bs_ilustraciones_generar.py` lee `design/ilustraciones/*.json` y escribe
+`lib/core/design/bs_ilustraciones.dart`, seis constantes `BsDatosDeIlustracion` (`inicio`,
+`vacioRecientes`, `vacioBusqueda`, `sinConexion`, `descargaCompleta`, `sinAlertas`; 115 formas)
+con el lienzo, la descripción del LEEME y, por forma, el grupo, la ruta, el relleno, el trazo, el
+grosor y el punteado. Copia solo las rutas (M, L, C y Z absolutos) y los **nombres** de color (uno,
+o uno por tema); los hex del bloque `paleta` no se copian. `--verificar` compara el `.dart` con
+los JSON y es lo que corre la prueba.
+
+**`BsIlustracion`** (`lib/core/design/componentes/bs_ilustracion.dart`): `colorDeIlustracion`
+resuelve cada nombre con los tokens (`fondo`/`papel` → papel, `hoja`/`panel` → hoja,
+`panel_alto` → hoja alta, `tinta`, `tinta_suave`, `linea`, `marca` → la marca como superficie,
+`frase` → sobre la marca suave, `bodega` → acero, `grua` → el relleno de grúa, `hecho` → el
+contorno del rol, `cubierta` → el papel de día y el relleno de «por bajar en cubierta» de noche;
+otro nombre es `ArgumentError`); `rutaDeIlustracion` lee la ruta con un `Path` (M, L, C, Z;
+cualquier otro comando es `FormatException`); `rutaPunteada` reparte el trazo con `PathMetrics`
+como `stroke-dasharray`. El widget es `Semantics(label, image)` → `SizedBox(width)` →
+`AspectRatio` → `RepaintBoundary` → `CustomPaint`; el pintor escala uniforme, guarda las rutas ya
+leídas y pinta con puntas y uniones redondas. Dos decisiones que el LEEME dejaba abiertas: `marca`
+es la marca como superficie en los dos temas (no el azul de selección de la noche), y `cubierta` es
+el blanco del ícono, que de noche es el relleno de «por bajar en cubierta».
+
+**Vistas previas.** `lib/core/design/vistas_previas_iconos.dart`: los 31 íconos a 24 en claro y
+en oscuro, las 4 insignias a 12 y las 6 ilustraciones en los dos temas (`@Preview`).
+
+### 5.3 Parte C: los íconos del dominio en las pantallas
+
+La tabla de `DESIGN.md` 13.11 dice dónde va cada uno; aquí, lo que cambió y las colisiones:
+
+- **Contenedor.** `iconoDeContenedor(ContainerUnit)` (en
+  `widgets/iconos_del_dominio.dart`) fija la regla: peligrosa manda, luego refrigerado, fuera de
+  medida, vacío, y si no, el tipo ISO (`refrigerado`, `tanque`, `plataforma`, `techoAbierto`) o
+  el tamaño (`contenedor20`, `contenedor40`, `contenedor45` por `sizeInFeet`). La usan la
+  tarjeta de la Lista, el resultado de la búsqueda, el detalle, los chips de carga especial, las
+  tarjetas de Estadísticas, «Asignar vacío» y «Vacío» en la leyenda. `inventory_2` sigue para el
+  total y para «Lleno», y `check_box` para «Llenos».
+- **Peligrosa.** `peligrosa` en la insignia, los chips IMO / IMDG, el detalle y «Carga especial»;
+  el aviso genérico sigue en `warning_amber`.
+- **Buque y bahía.** `buque` donde la celda y la marca de descarga dicen «Paso» / sigue a bordo
+  (`BsCelda` y `dischargeMarkIcon`), en los recientes, «Perfiles guardados», el resumen del viaje
+  y «Perfil longitudinal»; `bahia` en el destino «Plano» (en reposo y activo), «Posición»,
+  «Bahías», «Contenedores por bahía», «Ocupación» e «Ir a».
+- **Descarga y carga.** `descarga` («Baja») y `carga` («Sube») en los segmentos de la banda del
+  muelle, las marcas de la celda, la comparación y el panel de la carga; en la secuencia de
+  descarga «Re‑estiba: sale» es `descarga` y «vuelve» es `carga`; `tapaEscotilla` en los pasos
+  de tapas, en «Tapas en la operación» y en «Editar tapas por bahía». El hecho sigue en
+  `check_circle`.
+- **Re‑estiba y pedir cambio.** `reestiba` en la marca de la celda y en la de descarga;
+  `pedirCambio` en «Pedir cambio», «Bandeja de cambios», «Solicitudes de cambio» y la solicitud
+  pendiente sobre la celda (antes `schedule`).
+- **Peso.** `pesoPila` en la línea del peso por pila del panel de carga y `vgm` en «Peso (VGM)»
+  de la tarjeta; `scale` sigue para el peso genérico.
+- **Archivos.** `baplie` en «Seleccionar archivo» y «Cargar archivo BAPLIE», `compararBaplie`,
+  `baplieSalida` y `listadoAgencia` («Listado de la agencia», «Elegir listado»); el CSV sigue en
+  `table_view`, como pidió Carlos.
+- **Nube.** `alDia` y `soloAqui` en el chip de estado y en la barra superior; los demás estados
+  (`cloud_sync`, `cloud_upload`, `lock_clock`, `block`, `warning_amber`) y «Nube y cuenta» sin
+  cuenta (`cloud`) siguen en Material.
+- **Los genéricos que iban en contorno pasan a relleno** junto a los íconos nuevos (hecho,
+  revisar, alertas, nube, tabla, avance, paleta, ocupado por 40 pies, lista, estadísticas),
+  porque la familia es sólida y a 16 px un contorno al lado de un macizo se lee más débil. La
+  barra inferior y el riel llevan el mismo glifo relleno en reposo y activo: la selección la dice
+  el indicador de Material 3. Buscar, cerrar, micrófono, parámetros, historia, descargar y más
+  siguen siendo Material.
+- **Las insignias.** `BsCelda` dibuja `insigniaPeligrosa`, `insigniaRefrigerado` e
+  `insigniaFueraDeMedida` a 12 px (`tamanoInsignia`) en la esquina de la celda.
+- **Sin sitio todavía** (la tabla los da como «ninguno hoy»): `limiteApilamiento`,
+  `segregacion`, `orden`, `grua`, `muelle`, `escala` e `insigniaVacio` quedan en la fuente sin
+  usarse; la prueba comprueba que ninguno se cuele y que los 28 con sitio están todos en uso.
+
+Dos cosas que se arreglaron de paso porque la prueba de pautas las encontró al poner la
+ilustración: la pista de la búsqueda iba con `onSurfaceVariant` al 70 % (3.29:1) y ahora va con
+el color entero; y «Viajes recientes» vacío desbordaba 24 px con el dibujo, así que su estado
+vacío va en un `SingleChildScrollView`.
+
+### 5.4 Las ilustraciones en sus pantallas, y la regla del alto
+
+- `inicio` sobre «Abre un plano de estiba» (`EmptyStateWidget`, hasta 480 de ancho);
+  `vacio_recientes` en «Todavía no hay viajes guardados» del inicio (320); `vacio_busqueda` en
+  «Sin resultados» de la búsqueda (240); `sin_conexion` en «Nube y cuenta» cuando la app trabaja
+  solo en este equipo (320); `descarga_completa` en el avance, solo cuando la escala tiene
+  llegada, algo se bajó y no queda nada por bajar, con la frase «Descarga completa en {puerto}.»
+  (320); `sin_alertas` en Alertas de estiba cuando hay al menos un resultado conforme y ninguno
+  incumple, nunca en previo (240). Cada una lleva su descripción como etiqueta accesible de
+  imagen, y las pantallas conservan contraste y objetivos táctiles (`meetsGuideline`).
+- **La regla del alto (13.11, regla 4), encontrada mirando la pantalla.** La primera ronda de
+  capturas en el emulador (360 × 640, API 26) pasó con la letra a 1.0 y 1.45 y se detuvo en 2.0:
+  «No apareció: Seleccionar archivo». El volcado de accesibilidad lo explica: con la letra a 2.0
+  la ilustración ocupaba 288–903 px (205 dp), el título 951–1281 y los dos párrafos llegaban al
+  borde de la ventana (1776 px); el botón ni siquiera estaba en el árbol. Antes del paquete, en la
+  misma corrida de la entrega 2, el botón se veía sin desplazar. Así que el dibujo acompaña a la
+  frase y cede ante la letra, no al revés: `BsIlustracion` mide `anchoQueCabe`, que da a cada
+  ilustración como máximo **tres décimas del alto de la ventana divididas por la escala de la
+  letra** (`parteDelAlto = 0.3`) y, si con eso no llega a 120 dp de alto (`altoMinimo`), no la
+  pinta. En la ventana del emulador (360 × 592 bajo la barra de estado) el inicio lleva el dibujo
+  a 178 dp con 1.0 y a 123 dp con 1.45, y con 2.0 va sin dibujo; en 1920 × 1080 cabe entero a 480
+  × 300. `EmptyStateWidget` y el estado vacío de los recientes consultan la misma función para no
+  dejar la separación cuando no hay dibujo. Lo prueban `test/t114_ilustraciones_test.dart` (la
+  pieza a 360 × 640 con 1.0, 1.45 y 2.0, y en el escritorio) y `test/t114_paquete_test.dart` (el
+  inicio completo con las fuentes reales: el botón queda dentro de la ventana en los tres
+  tamaños de letra, con y sin barra de estado).
+
+### 5.5 Pruebas
+
+Treinta pruebas nuevas en tres archivos; la suite pasa de 1260 a **1290** (piso 1242), sin
+omitidas:
+
+- `test/t114_iconos_test.dart` (7): `pubspec.yaml` declara `BayStreamIconos` con su único asset y
+  nada más; el TTF es el del LEEME (SHA-256); `codigos.json` y `BsIconos` coinciden (35 glifos de
+  U+E000 a U+E022); el `cmap` de la fuente (formatos 4 y 12, leído del TTF) trae un glifo para
+  cada código y ninguno más en el área privada; con la fuente cargada cada constante pinta su
+  glifo y los 35 son distintos (al menos 8 px cambian entre cualquier par a 24 px); y una muestra
+  de 13 glifos pintada como texto a 16 y a 24 px coincide con su SVG rasterizado con `Canvas`
+  (tolerancia de borde: hasta un 12 % de píxeles cambian de estado y la diferencia media de
+  alfa queda bajo 16). Medido: a 16 px cambian de estado entre 0 (`descarga`, `carga`) y 8 de 256 píxeles (`peligrosa`, `insignia_peligrosa`), con una diferencia media de alfa de 0.9 a 10.8; a 24 px, entre 0 (`contenedor_20`, `contenedor_40`, `vacio`) y 63 de 576 (`buque`, 10.9 %), con una diferencia media de 0.7 a 6.6.
+- `test/t114_ilustraciones_test.dart` (10): las seis están con su descripción; los datos
+  coinciden con los JSON forma por forma (115); cada ruta se lee con M, L, C y Z y cae dentro de
+  su lienzo (y `Q`, `l` o `A` se rechazan); el punteado reparte la ruta como `stroke-dasharray`;
+  los nombres de color dan el mismo hex que el bloque `paleta` del paquete en claro y en oscuro;
+  los trazos quedan a 3:1 o más sobre el fondo (`BsRol.contrasteEntre`); las seis pintan en los
+  dos temas dentro de un `RepaintBoundary` con su etiqueta, y el color dominante es un token;
+  `conFondo` pinta el papel; y la regla del alto.
+- `test/t114_paquete_test.dart` (13): el censo de `lib/` (ninguno de los íconos de Material que la
+  tabla reemplaza sigue en uso fuera de los congelados; `table_view` solo en el CSV; los
+  contornos que se van no quedan salvo donde 13.11 los deja; los 28 con sitio se usan y los 7 sin
+  sitio no); la regla del contenedor; las marcas, la nube, la banda y el destino; las insignias
+  a 12 px y «Paso» con `buque`; y las seis ilustraciones en sus pantallas con `meetsGuideline`
+  (inicio, recientes vacíos, búsqueda sin resultados, Nube y cuenta en local, descarga completa
+  solo cuando corresponde, alertas solo con resultados conformes y sin incumplimientos), más el
+  inicio en el teléfono bajo con la letra grande.
+- Cinco pruebas existentes se ajustaron a los glifos nuevos: `t114_componentes_test`
+  (`descarga`, `reestiba`, `insigniaPeligrosa`), `t114_piezas_test` (`check_circle`),
+  `t96_comparison_page_test` (`descarga` / `carga`), `t114_fuentes_test` (diez assets de fuente)
+  y `t114_celda_contraste_test` (un glifo de `BayStreamIconos` es ícono, 3:1, no texto).
+
+### 5.6 Validaciones ejecutadas
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze --no-pub` | 0 incidencias, sin `// ignore:` |
+| `flutter test --no-pub` | **1290** pruebas, todas en verde, ninguna omitida (1260 + 30) |
+| Auditoría flutter-ui (`--all`) | 17 críticos / 248 avisos / 20 info: los mismos de la corrección; ningún hallazgo en los archivos nuevos ni en los tocados (`docs/rediseno/fase3/paquete/flutter-ui-audit.txt`) |
+| Censos T-112 (`tool/t112_censos.py`) | 1940 visibles: 1809 español, 131 sin idioma, **0 en inglés**; accesibilidad 63 (las seis descripciones son etiquetas de imagen); M3 250 incluidos / 7 excluidos / 3 excepciones; 217 mensajes con causa y acción (`docs/rediseno/fase3/paquete/censos/`) |
+| SHA-256 del paquete | 85 de 85 `OK` contra el zip, antes de copiar y antes del bloque de git; sin `__pycache__` |
+| Capturas en el emulador | 31 capturas en `docs/rediseno/fase3/paquete/capturas/android/` (banco `r4` recompilado con el árbol final, emulador `t99_api26`, 360 × 640): el plano en Carga y en Descarga, con y sin la rejilla, la Lista, el Avance y «Más», con la letra a 1.0, 1.45 y 2.0 en claro y a 1.0 en oscuro (`tool/t114_capturas_android_plano.py --reiniciar-datos`), más el inicio a 1.0, 1.45 y 2.0 a mano. Se ven `descarga` y `carga` en los segmentos, `buque` en «Paso», `bahia` en «Plano», `soloAqui` en el chip, `tapaEscotilla` y `compararBaplie` en «Más», la grúa del inicio a 178 dp (1.0) y a 123 dp (1.45), y el inicio sin dibujo a 2.0 con «Seleccionar archivo» a la vista. La primera ronda, antes de la regla del alto, se había detenido en 2.0 |
+
+Del censo: `tool/t112_censos.py` suma las decisiones de los archivos nuevos (el nombre de la
+fuente, los nombres de color y de grupo del archivo generado, los mensajes de `ArgumentError` /
+`FormatException` como excepción interna) y toma la descripción de cada dibujo por su rótulo,
+no por su línea, porque el archivo lo regenera el generador. Los ocho visibles de más respecto a
+la corrección (1932 → 1940) son las seis descripciones, el texto «Descarga completa en …» y su
+etiqueta.
+
+### 5.7 Archivos del paquete
+
+- **Nuevos, por carpeta:** `assets/fonts/bs_iconos/` (1), `design/iconos/` (56),
+  `design/ilustraciones/` (28).
+- **Nuevos en `lib/`:** `core/design/bs_iconos.dart`, `core/design/bs_iconos_catalogo.dart`,
+  `core/design/bs_ilustraciones.dart` (generado), `core/design/componentes/bs_ilustracion.dart`,
+  `core/design/vistas_previas_iconos.dart`,
+  `features/vessel/presentation/widgets/iconos_del_dominio.dart`.
+- **Modificados en `lib/`:** `core/design/design.dart`, `componentes/bs_banda_muelle.dart`,
+  `componentes/bs_celda.dart`, `vistas_previas.dart`; las páginas `change_requests`, `cloud`,
+  `departure_baplie`, `discharge_sequence`, `export_list_import`, `operation_progress`,
+  `recent_voyages`, `stowage_alerts`, `vessel_geometry`, `vessel_overview`,
+  `voyage_comparison`; los widgets `bay_plan_view`, `container_search_delegate`,
+  `containers_list_view`, `detalle_contenedor`, `discharge_controls`, `empty_state_widget`,
+  `inicio_view`, `loading_controls`, `loading_plan_controls`, `navegacion_del_viaje`,
+  `plan_drag_confirmation`, `sync_status_chip`, `vessel_profile_view`, `voyage_stats_view`,
+  `voyage_summary_card`.
+- **`pubspec.yaml`:** la familia `BayStreamIconos`. `pubspec.lock` no cambia.
+- **Pruebas:** nuevas `t114_iconos_test.dart`, `t114_ilustraciones_test.dart`,
+  `t114_paquete_test.dart`; ajustadas `t114_celda_contraste_test.dart`,
+  `t114_componentes_test.dart`, `t114_fuentes_test.dart`, `t114_piezas_test.dart`,
+  `t96_comparison_page_test.dart`.
+- **Herramientas:** `tool/bs_ilustraciones_generar.py` (nuevo), `tool/t112_censos.py`.
+- **Documentos:** `DESIGN.md` (13.7, 13.9 y la sección nueva 13.11),
+  `docs/rediseno/fase3/traspaso-entrega2.md`, esta sección, y la evidencia en
+  `docs/rediseno/fase3/paquete/`.
+- No cambian `domain/`, `data/`, `lib/main.dart`, las opciones de Firebase ni los congelados.
+
+### 5.8 Lo que queda anotado y lo que Carlos decide
+
+- La tolerancia de la comparación glifo–SVG es del 12 % de píxeles porque el rasterizado de la
+  fuente (FreeType con hinting, en Skia) y el del `Path` difieren en el borde; Nube midió lo
+  mismo en Chromium (10.4 %). Es una comparación de forma, no de píxel exacto.
+- `marca` y `cubierta` se resolvieron como dice 5.2; si Carlos prefiere el azul de selección de
+  noche para la marca de los dibujos, es una línea de `colorDeIlustracion`.
+- `orden`, `grua`, `muelle`, `escala`, `limiteApilamiento`, `segregacion` e `insigniaVacio`
+  quedan en la fuente sin sitio, como dice la tabla; darles uno es una decisión de pantalla.
+- El emulador `t99_api26` sigue abierto con el banco `r4`; la letra volvió a 1.0 y el tema a
+  «Seguir al sistema».
+
+### 5.9 Horas
+
+Unas 2 h 20 min en total, aproximadas por las horas de los archivos: cerca de 1 h la Parte B (el zip y sus huellas, la fuente, las constantes, el generador, `BsIlustracion` y sus pruebas, escritas sin Flutter mientras Codex aceptaba la corrección), unos 35 min la Parte C (33 archivos de pantalla, las pruebas y los ajustes que encontraron) y unos 45 min las validaciones, el censo con sus decisiones nuevas, el emulador, la regla del alto y este informe.
+
+### Git para Carlos (Fase 3, paquete de íconos e ilustraciones)
+
+Un solo bloque para la Parte B y la Parte C. Las tres carpetas nuevas del paquete van por carpeta,
+con sus SHA-256 comprobados y sin `__pycache__`; el resto, un `git add` por ruta. Las capturas de
+Android van por carpeta por ser solo archivos nuevos de evidencia (la regla de las 60 rutas).
+`pubspec.lock`, `domain/`, `data/`, `lib/main.dart` y los congelados no cambian; los generados de
+`windows/flutter/` figuran modificados solo por el fin de línea y no se agregan.
+
+```
+git add -- assets/fonts/bs_iconos
+git add -- design/iconos
+git add -- design/ilustraciones
+git add -- pubspec.yaml
+git add -- DESIGN.md
+git add -- lib/core/design/bs_iconos.dart
+git add -- lib/core/design/bs_iconos_catalogo.dart
+git add -- lib/core/design/bs_ilustraciones.dart
+git add -- lib/core/design/componentes/bs_ilustracion.dart
+git add -- lib/core/design/vistas_previas_iconos.dart
+git add -- lib/core/design/design.dart
+git add -- lib/core/design/componentes/bs_banda_muelle.dart
+git add -- lib/core/design/componentes/bs_celda.dart
+git add -- lib/core/design/vistas_previas.dart
+git add -- lib/features/vessel/presentation/widgets/iconos_del_dominio.dart
+git add -- lib/features/vessel/presentation/pages/change_requests_page.dart
+git add -- lib/features/vessel/presentation/pages/cloud_page.dart
+git add -- lib/features/vessel/presentation/pages/departure_baplie_page.dart
+git add -- lib/features/vessel/presentation/pages/discharge_sequence_page.dart
+git add -- lib/features/vessel/presentation/pages/export_list_import_page.dart
+git add -- lib/features/vessel/presentation/pages/operation_progress_page.dart
+git add -- lib/features/vessel/presentation/pages/recent_voyages_page.dart
+git add -- lib/features/vessel/presentation/pages/stowage_alerts_page.dart
+git add -- lib/features/vessel/presentation/pages/vessel_geometry_page.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/pages/voyage_comparison_page.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/widgets/container_search_delegate.dart
+git add -- lib/features/vessel/presentation/widgets/containers_list_view.dart
+git add -- lib/features/vessel/presentation/widgets/detalle_contenedor.dart
+git add -- lib/features/vessel/presentation/widgets/discharge_controls.dart
+git add -- lib/features/vessel/presentation/widgets/empty_state_widget.dart
+git add -- lib/features/vessel/presentation/widgets/inicio_view.dart
+git add -- lib/features/vessel/presentation/widgets/loading_controls.dart
+git add -- lib/features/vessel/presentation/widgets/loading_plan_controls.dart
+git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart
+git add -- lib/features/vessel/presentation/widgets/sync_status_chip.dart
+git add -- lib/features/vessel/presentation/widgets/vessel_profile_view.dart
+git add -- lib/features/vessel/presentation/widgets/voyage_stats_view.dart
+git add -- lib/features/vessel/presentation/widgets/voyage_summary_card.dart
+git add -- test/t114_iconos_test.dart
+git add -- test/t114_ilustraciones_test.dart
+git add -- test/t114_paquete_test.dart
+git add -- test/t114_celda_contraste_test.dart
+git add -- test/t114_componentes_test.dart
+git add -- test/t114_fuentes_test.dart
+git add -- test/t114_piezas_test.dart
+git add -- test/t96_comparison_page_test.dart
+git add -- tool/bs_ilustraciones_generar.py
+git add -- tool/t112_censos.py
+git add -- docs/rediseno/fase3/traspaso-entrega2.md
+git add -- docs/rediseno/fase3/paquete/sha256-paquete-v2.txt
+git add -- docs/rediseno/fase3/paquete/flutter-ui-audit.txt
+git add -- docs/rediseno/fase3/paquete/censos/resumen.json
+git add -- docs/rediseno/fase3/paquete/censos/tablas.md
+git add -- docs/rediseno/fase3/paquete/capturas/android
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: paquete de iconos e ilustraciones (10.19), fuente BayStreamIconos, BsIlustracion con CustomPainter, iconos del dominio e insignias en las pantallas y las seis ilustraciones en sus estados vacios"
+git push
+```
+
+### Tres líneas
+
+- El paquete de Nube está en el repositorio comprobado archivo por archivo; la fuente es un asset
+  y las ilustraciones, datos que la app pinta sola: ninguna dependencia nueva, `pubspec.lock`
+  igual.
+- Los íconos del dominio y las insignias están en todas sus pantallas con las colisiones que
+  fijó Carlos, y las seis ilustraciones en sus estados, con una regla nueva: el dibujo cede ante
+  la letra grande.
+- Suite 1290 (piso 1242), `analyze` 0, auditoría sin hallazgos nuevos, censos 0 inglés, SHA-256
+  85/85. ALTO: Codex acepta el paquete.
+
+### Mensaje para Yov
+Yov: el **paquete de íconos e ilustraciones (10.19)** queda integrado, Parte B y Parte C juntas en un solo bloque de git. **Parte B:** el zip v2 de Nube comprobado archivo por archivo (84 de 84 huellas de la tabla, 85 de 85 sobre el árbol antes del bloque, sin `__pycache__`) en `assets/fonts/bs_iconos/`, `design/iconos/` y `design/ilustraciones/`; `pubspec.yaml` solo suma la familia `BayStreamIconos` (`pubspec.lock` igual, ninguna dependencia); `BsIconos` textual del LEEME más un catálogo por nombre; las seis ilustraciones viajan como datos const que genera `tool/bs_ilustraciones_generar.py` desde los JSON y las pinta `BsIlustracion` (`CustomPainter` en `RepaintBoundary`, M/L/C/Z, puntas redondas, punteado, colores por nombre resueltos con los tokens: `marca` es la marca como superficie y `cubierta` el blanco del ícono). **Parte C:** la tabla del LEEME aplicada con las colisiones que fijó Carlos (`peligrosa` solo para la carga peligrosa y `warning_amber` para el aviso; `reestiba` y `pedirCambio`; «Paso» con `buque`; en la secuencia «sale» es `descarga` y «vuelve» es `carga`; `listadoAgencia` para el listado y `table_view` para el CSV; el contenedor por `iconoDeContenedor`: peligrosa > refrigerado > fuera de medida > vacío > tipo ISO > tamaño), las insignias a 12 px en la celda, los genéricos que iban en contorno pasan a relleno junto a los nuevos, y las ilustraciones en el inicio y en los cinco estados vacíos con `meetsGuideline`. **Una regla nueva, encontrada mirando la pantalla:** la primera ronda de capturas se detuvo con la letra a 2.0 porque el dibujo del inicio empujaba «Seleccionar archivo» fuera del árbol; ahora cada ilustración ocupa como máximo tres décimas del alto de la ventana entre la escala de la letra y bajo 120 dp no se pinta (`DESIGN.md` 13.11, regla 4): en el emulador el inicio lleva la grúa a 178 dp con 1.0, a 123 con 1.45 y va sin dibujo con 2.0, con el botón a la vista. **Cifras:** suite 1290 (piso 1242; 1260 + 30 en `t114_iconos_test`, `t114_ilustraciones_test` y `t114_paquete_test`, que censa `lib/` para que ningún concepto de la tabla vuelva a Material), `analyze` 0, auditoría 17/248/20 sin hallazgos en lo nuevo, censos 1940 visibles / 0 inglés (los ocho de más son las seis descripciones, etiquetas de imagen, y «Descarga completa en …»), M3 250/7/3, 217 mensajes; 31 capturas de Android en `docs/rediseno/fase3/paquete/capturas/android/`. **Dos arreglos de paso** que la prueba de pautas encontró: la pista de la búsqueda (3.29:1 → color entero) y el desbordamiento de «Viajes recientes» vacío. `DESIGN.md` 13.7, 13.9 y la sección nueva 13.11 anotan dónde va cada ícono y las reglas de uso. Me detengo: ALTO: Codex acepta el paquete.

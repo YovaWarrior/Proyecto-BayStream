@@ -289,7 +289,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final entradas = <_EntradaDeMas>[
       _EntradaDeMas(
         clave: 'mas-alertas',
-        icono: Icons.fact_check_outlined,
+        icono: Icons.fact_check,
         titulo: 'Alertas de estiba',
         cuenta: alertas,
         onTap: () => _openAlerts(voyage),
@@ -297,7 +297,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       if (voyage.portOfCall != null)
         _EntradaDeMas(
           clave: 'mas-tapas',
-          icono: Icons.layers_outlined,
+          icono: BsIconos.tapaEscotilla,
           titulo: 'Tapas en la operación',
           onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
               builder: (_) => HatchOperationPage(voyage: voyage))),
@@ -313,14 +313,14 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       if (loadedAtCall > 0)
         _EntradaDeMas(
           clave: 'mas-listado',
-          icono: Icons.table_view,
+          icono: BsIconos.listadoAgencia,
           titulo: 'Listado de la agencia',
           onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
               builder: (_) => const ExportListImportPage())),
         ),
       _EntradaDeMas(
         clave: 'mas-comparar',
-        icono: Icons.compare_arrows,
+        icono: BsIconos.compararBaplie,
         titulo: 'Comparar con otro BAPLIE…',
         onTap: () => compareWithAnotherBaplie(context, ref, voyage),
       ),
@@ -349,7 +349,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       if (!conRiel) ...[
         _EntradaDeMas(
           clave: 'mas-nube',
-          icono: Icons.cloud_outlined,
+          icono: Icons.cloud,
           titulo: 'Nube y cuenta',
           onTap: () => openCloudPage(context),
         ),
@@ -364,7 +364,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       ],
       _EntradaDeMas(
         clave: 'mas-cargar',
-        icono: Icons.upload_file,
+        icono: BsIconos.baplie,
         titulo: 'Cargar archivo BAPLIE',
         onTap: () => _loadBaplieFile(context),
       ),
@@ -376,7 +376,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       ),
       _EntradaDeMas(
         clave: 'saved-profiles',
-        icono: Icons.directions_boat_outlined,
+        icono: BsIconos.buque,
         titulo: 'Perfiles guardados',
         onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const VesselProfilesPage())),
@@ -932,14 +932,14 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
               if (voyage.portOfCall != null)
                 DepartureBaplieButton(voyage: voyage),
               TextButton.icon(
-                icon: const Icon(Icons.fact_check_outlined),
+                icon: const Icon(Icons.fact_check),
                 label: const Text('Alertas de estiba'),
                 onPressed: () => _openAlerts(voyage),
               ),
               // T-96: el segundo archivo se lee sin el flujo de carga.
               TextButton.icon(
                 key: const ValueKey('compare-baplie'),
-                icon: const Icon(Icons.compare_arrows),
+                icon: const Icon(BsIconos.compararBaplie),
                 label: const Text('Comparar con otro BAPLIE…'),
                 onPressed: () => compareWithAnotherBaplie(context, ref, voyage),
               ),
@@ -959,7 +959,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
                       0)
                 TextButton.icon(
                   key: const ValueKey('open-export-list'),
-                  icon: const Icon(Icons.table_view),
+                  icon: const Icon(BsIconos.listadoAgencia),
                   label: const Text('Listado de la agencia'),
                   onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(

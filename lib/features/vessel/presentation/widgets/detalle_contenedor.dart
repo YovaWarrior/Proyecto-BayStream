@@ -77,7 +77,7 @@ class DetalleContenedor extends ConsumerWidget {
     final secciones = <Widget>[
       if (container.isDangerous)
         _Senal(
-          icono: Icons.warning_amber_rounded,
+          icono: BsIconos.peligrosa,
           color: semanticos.peligrosa.contorno,
           titulo:
               'Carga peligrosa · IMO ${container.imdgClass ?? 'sin clase'}',
@@ -85,7 +85,7 @@ class DetalleContenedor extends ConsumerWidget {
         ),
       if (container.isReefer)
         _Senal(
-          icono: Icons.ac_unit,
+          icono: BsIconos.refrigerado,
           color: semanticos.refrigerado.contorno,
           titulo: 'Refrigerado',
           detalle: container.temperature == null
@@ -95,7 +95,7 @@ class DetalleContenedor extends ConsumerWidget {
         ),
       if (container.isOverDimension)
         _Senal(
-          icono: Icons.open_in_full,
+          icono: BsIconos.fueraDeMedida,
           color: semanticos.oog.contorno,
           titulo: 'Sobredimensionado',
         ),

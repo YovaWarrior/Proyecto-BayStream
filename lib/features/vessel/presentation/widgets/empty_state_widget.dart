@@ -12,9 +12,14 @@ class EmptyStateWidget extends StatelessWidget {
   /// Callback cuando el usuario presiona el botón de cargar archivo
   final VoidCallback onPickFile;
 
+  /// La ilustración de arriba (`DESIGN.md` 13.11): la del inicio, o la de
+  /// «todavía no hay viajes» cuando es el estado vacío de los recientes.
+  final BsDatosDeIlustracion? ilustracion;
+
   const EmptyStateWidget({
     super.key,
     required this.onPickFile,
+    this.ilustracion,
   });
 
   @override
@@ -22,10 +27,20 @@ class EmptyStateWidget extends StatelessWidget {
     final medidas = BsMedidas.de(context);
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    // 13.11, regla 4: el dibujo cede ante la letra grande en el teléfono bajo.
+    final conDibujo = ilustracion != null &&
+        BsIlustracion.anchoQueCabe(context, ilustracion!, ancho: 480) != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (conDibujo) ...[
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: BsIlustracion(datos: ilustracion!),
+          ),
+          SizedBox(height: medidas.espacioL),
+        ],
         Text('Abre un plano de estiba', style: textTheme.titleLarge),
         SizedBox(height: medidas.espacioS),
         // La versión se valida por la cabecera, no por el nombre del archivo
@@ -44,7 +59,7 @@ class EmptyStateWidget extends StatelessWidget {
         FilledButton.icon(
           key: const ValueKey('select-file'),
           onPressed: onPickFile,
-          icon: const Icon(Icons.folder_open),
+          icon: const Icon(BsIconos.baplie),
           label: const Text('Seleccionar archivo'),
           style: FilledButton.styleFrom(
             minimumSize: Size.fromHeight(medidas.alturaBotonPrincipal),

@@ -262,7 +262,7 @@ class PlanDragCell extends ConsumerWidget {
                         color: scheme.surface,
                         child: Icon(
                             preview == null
-                                ? Icons.schedule
+                                ? BsIconos.pedirCambio
                                 : !preview.valid
                                     ? Icons.block
                                     : preview.isSwap

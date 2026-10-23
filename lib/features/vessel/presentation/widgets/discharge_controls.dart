@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
@@ -432,12 +433,12 @@ String dischargeMarkLabel(DischargeMark mark) => switch (mark) {
     };
 
 IconData dischargeMarkIcon(DischargeMark mark) => switch (mark) {
-      DischargeMark.pending => Icons.south,
+      DischargeMark.pending => BsIconos.descarga,
       DischargeMark.discharged => Icons.check_circle,
-      DischargeMark.transit => Icons.directions_boat_outlined,
-      DischargeMark.restowed => Icons.swap_vert,
+      DischargeMark.transit => BsIconos.buque,
+      DischargeMark.restowed => BsIconos.reestiba,
       DischargeMark.cancelled => Icons.block,
-      DischargeMark.conflict => Icons.error_outline,
+      DischargeMark.conflict => Icons.error,
     };
 
 /// Hora local del dispositivo, como la columna HORA del listado.

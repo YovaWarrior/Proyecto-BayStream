@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <title>sin_conexion · oscuro</title>
+  <rect width="320" height="200" fill="#07111F"/>
+  <path d="M0 152H320V200H0Z" fill="#11223F" data-grupo="agua"/>
+  <path d="M0 152L320 152" fill="none" stroke="#6E9DE6" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="flotacion"/>
+  <path d="M36.00 132.00 H277.80 L284.00 156.00 L271.60 180.00 H102.96 C65.76 180.00 42.20 160.80 36.00 132.00 Z" fill="#0D47A1" stroke="#A9B9D2" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="casco_perfil"/>
+  <path d="M78.53 108.96H93.61A3.98 3.98 0 0 1 97.59 112.94V128.02A3.98 3.98 0 0 1 93.61 132H78.53A3.98 3.98 0 0 1 74.55 128.02V112.94A3.98 3.98 0 0 1 78.53 108.96Z" fill="#F5F8FC" data-grupo="perfil_0_0"/>
+  <path d="M107.43 108.96H122.52A3.98 3.98 0 0 1 126.5 112.94V128.02A3.98 3.98 0 0 1 122.52 132H107.43A3.98 3.98 0 0 1 103.46 128.02V112.94A3.98 3.98 0 0 1 107.43 108.96Z" fill="#F5F8FC" data-grupo="perfil_0_1"/>
+  <path d="M136.34 108.96H151.42A3.98 3.98 0 0 1 155.4 112.94V128.02A3.98 3.98 0 0 1 151.42 132H136.34A3.98 3.98 0 0 1 132.36 128.02V112.94A3.98 3.98 0 0 1 136.34 108.96Z" fill="#F5F8FC" data-grupo="perfil_0_2"/>
+  <path d="M165.24 108.96H180.33A3.98 3.98 0 0 1 184.3 112.94V128.02A3.98 3.98 0 0 1 180.33 132H165.24A3.98 3.98 0 0 1 161.26 128.02V112.94A3.98 3.98 0 0 1 165.24 108.96Z" fill="#F5F8FC" data-grupo="perfil_0_3"/>
+  <path d="M194.15 108.96H209.23A3.98 3.98 0 0 1 213.21 112.94V128.02A3.98 3.98 0 0 1 209.23 132H194.15A3.98 3.98 0 0 1 190.17 128.02V112.94A3.98 3.98 0 0 1 194.15 108.96Z" fill="#F5F8FC" data-grupo="perfil_0_4"/>
+  <path d="M234.4 96.18H269.12V132H234.4Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="caseta"/>
+  <path d="M237.18 84.66H266.34V96.18H237.18Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="puente"/>
+  <path d="M116.20 98.30 A24.70 24.70 0 0 1 107.83 50.36 A40.30 40.30 0 0 1 185.13 43.83 A27.30 27.30 0 0 1 182.50 98.30 Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="nube"/>
+  <path d="M134.9 43.7H141.7A1.8 1.8 0 0 1 143.5 45.5V75.7A1.8 1.8 0 0 1 141.7 77.5H134.9A1.8 1.8 0 0 1 133.1 75.7V45.5A1.8 1.8 0 0 1 134.9 43.7Z" fill="#EAF0F9" data-grupo="pausa"/>
+  <path d="M158.3 43.7H165.1A1.8 1.8 0 0 1 166.9 45.5V75.7A1.8 1.8 0 0 1 165.1 77.5H158.3A1.8 1.8 0 0 1 156.5 75.7V45.5A1.8 1.8 0 0 1 158.3 43.7Z" fill="#EAF0F9" data-grupo="pausa"/>
+</svg>

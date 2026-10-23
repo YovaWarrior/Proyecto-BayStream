@@ -358,7 +358,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         : IconButton(
             key: const ValueKey('hatch-operation-button'),
             tooltip: 'Tapas en la operación',
-            icon: const Icon(Icons.layers_outlined),
+            icon: const Icon(BsIconos.tapaEscotilla),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
                 builder: (_) => HatchOperationPage(
                     voyage: widget.voyage, initialBay: _selectedBayNumber))));
@@ -517,10 +517,10 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         );
     final resaltares = <BsEntradaDeLeyenda>[
       resaltar('Lleno', LegendFilterType.full,
-          icono: Icons.inventory_2_outlined,
+          icono: Icons.inventory_2,
           cuenta: cuenta((c) => c.status == ContainerStatus.full)),
       resaltar('Vacío', LegendFilterType.empty,
-          icono: Icons.check_box_outline_blank,
+          icono: BsIconos.vacio,
           cuenta: cuenta((c) => c.status == ContainerStatus.empty)),
       resaltar('IMO', LegendFilterType.imo,
           rol: semanticos.peligrosa, cuenta: cuenta((c) => c.isDangerous)),
@@ -536,11 +536,11 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     final huecos = <BsEntradaDeLeyenda>[
       // C-5b: el hueco tomado por un 40 de la par vecina se declara siempre.
       const BsEntradaDeLeyenda(
-          rotulo: 'Ocupado por 40 pies', icono: Icons.view_week_outlined),
+          rotulo: 'Ocupado por 40 pies', icono: Icons.view_week),
       // T-106: la sombra de los 20 vecinos solo aparece en una par.
       if (twenties)
         const BsEntradaDeLeyenda(
-            rotulo: 'Ocupado por 20 pies', icono: Icons.view_week_outlined),
+            rotulo: 'Ocupado por 20 pies', icono: Icons.view_week),
       if (displayedVoyage.totalReservedSlots > 0)
         BsEntradaDeLeyenda(
             rotulo: 'Celda reservada', rol: semanticos.reservado),
@@ -550,7 +550,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       titulo: 'Leyenda · ${vista.rotulo}',
       leyenda: [
         // La vista va de primera, como ficha sin tocar.
-        BsEntradaDeLeyenda(rotulo: vista.rotulo, icono: Icons.palette_outlined),
+        BsEntradaDeLeyenda(rotulo: vista.rotulo, icono: Icons.palette),
         ...porVista,
         ...resaltares,
         ...huecos,
@@ -597,7 +597,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       accion = TextButton.icon(
         key: const ValueKey('barra-pendientes'),
         onPressed: () => showDischargeTable(context, widget.voyage),
-        icon: const Icon(Icons.table_chart_outlined),
+        icon: const Icon(Icons.table_chart),
         label: const Text('Pendientes de descarga'),
       );
     } else if (loading != null) {
@@ -610,7 +610,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         key: const ValueKey('barra-avance'),
         onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (_) => OperationProgressPage(voyage: widget.voyage))),
-        icon: const Icon(Icons.assignment_outlined),
+        icon: const Icon(Icons.assignment),
         label: const Text('Avance de la operación'),
       );
     }

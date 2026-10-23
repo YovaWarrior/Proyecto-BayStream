@@ -40,7 +40,8 @@ class InicioView extends ConsumerWidget {
     final medidas = BsMedidas.de(context);
     final cabecera = Padding(
       padding: EdgeInsets.only(bottom: medidas.entreBloques),
-      child: EmptyStateWidget(onPickFile: onPickFile),
+      child: EmptyStateWidget(
+          onPickFile: onPickFile, ilustracion: BsIlustraciones.inicio),
     );
     final listas = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,11 +136,32 @@ class _Recientes extends ConsumerWidget {
       cuerpo = viajes.isEmpty
           ? Padding(
               padding: EdgeInsets.symmetric(vertical: medidas.espacioS),
-              child: Text(
-                'Todavía no hay viajes guardados en este dispositivo. '
-                'El primero se guarda al confirmar su perfil.',
-                style: textTheme.bodyMedium
-                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 13.11: «todavía no hay viajes», con su ilustración si
+                  // cabe en su parte del alto (regla 4).
+                  if (BsIlustracion.anchoQueCabe(
+                          context, BsIlustraciones.vacioRecientes,
+                          ancho: 320) !=
+                      null) ...[
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      child: const BsIlustracion(
+                        key: ValueKey('inicio-sin-recientes'),
+                        datos: BsIlustraciones.vacioRecientes,
+                      ),
+                    ),
+                    SizedBox(height: medidas.espacioS),
+                  ],
+                  Text(
+                    'Todavía no hay viajes guardados en este dispositivo. '
+                    'El primero se guarda al confirmar su perfil.',
+                    style: textTheme.bodyMedium
+                        ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
+                ],
               ),
             )
           : Card(
@@ -195,7 +217,7 @@ class _FilaDeReciente extends StatelessWidget {
         : 'Escala ${viaje.portOfCall}';
     return ListTile(
       key: ValueKey('inicio-reciente-${viaje.id}'),
-      leading: const Icon(Icons.directions_boat_outlined),
+      leading: const Icon(BsIconos.buque),
       title: Text(
         '${viaje.vessel.name} · ${voyageNumberLabel(viaje.voyageNumber)}',
         style: textTheme.titleMedium,
@@ -246,7 +268,7 @@ class _Nube extends ConsumerWidget {
     return ListTile(
       key: const ValueKey('cloud-operations'),
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.cloud_outlined),
+      leading: const Icon(Icons.cloud),
       title: Text('Operaciones abiertas en la nube$cuenta'),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => Navigator.of(context).push(

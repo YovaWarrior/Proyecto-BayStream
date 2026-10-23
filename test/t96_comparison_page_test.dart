@@ -11,6 +11,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:baystream/core/design/design.dart';
 
 import 'support/local_profile_test_support.dart';
 import 'support/t82_fixture.dart';
@@ -130,8 +131,8 @@ void main() {
         findsOneWidget);
     // Las secciones llevan ícono y rótulo, no solo color.
     for (final (key, icon, label) in [
-      ('discharged', Icons.south, 'Descargados (1)'),
-      ('loaded', Icons.north, 'Cargados (1)'),
+      ('discharged', BsIconos.descarga, 'Descargados (1)'),
+      ('loaded', BsIconos.carga, 'Cargados (1)'),
       ('permanent', Icons.sync_alt, 'Permanentes (1)'),
     ]) {
       final tab = find.byKey(ValueKey('comparison-tab-$key'));

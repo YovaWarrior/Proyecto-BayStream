@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/utils/iso_coordinate_parser.dart';
@@ -402,7 +403,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               Text(_hatches.isEmpty ? 'Tapas: sin declarar' : 'Tapas: ${_hatches.length} bahías declaradas'),
               if (_hatchError(candidate) != null) Text(_hatchError(candidate)!, style: TextStyle(color: colorScheme.error)),
               OutlinedButton.icon(key: const ValueKey('profile-hatches'),
-                icon: const Icon(Icons.view_column_outlined), label: const Text('Editar tapas por bahía'),
+                icon: const Icon(BsIconos.tapaEscotilla), label: const Text('Editar tapas por bahía'),
                 onPressed: () async {
                   final result = await Navigator.of(context).push<Map<int, HatchCoverDeclaration>>(
                     MaterialPageRoute(builder: (_) => HatchCoversPage(geometry: candidate,

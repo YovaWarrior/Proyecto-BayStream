@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
@@ -56,7 +57,7 @@ class VoyageStatsView extends ConsumerWidget {
 
           // Carga especial
           if (specialCargo.reeferCount > 0 || specialCargo.dangerousCount > 0 || specialCargo.oogCount > 0) ...[
-            const _SectionTitle(title: 'Carga Especial', icon: Icons.warning_amber),
+            const _SectionTitle(title: 'Carga Especial', icon: BsIconos.peligrosa),
             const SizedBox(height: 12),
             _SpecialCargoCards(specialCargo: specialCargo),
             const SizedBox(height: 24),
@@ -92,7 +93,7 @@ class VoyageStatsView extends ConsumerWidget {
           if (voyage.bays.isNotEmpty) ...[
             const _SectionTitle(
               title: 'Perfil longitudinal',
-              icon: Icons.directions_boat,
+              icon: BsIconos.buque,
             ),
             const SizedBox(height: 12),
             if (_compactStats(context))
@@ -118,7 +119,7 @@ class VoyageStatsView extends ConsumerWidget {
 
           // Ocupación por bahía
           if (bayStats.isNotEmpty) ...[
-            const _SectionTitle(title: 'Contenedores por Bahía', icon: Icons.view_column),
+            const _SectionTitle(title: 'Contenedores por Bahía', icon: BsIconos.bahia),
             const SizedBox(height: 12),
             _BayOccupancyChart(bayStats: bayStats),
             const SizedBox(height: 24),
@@ -210,7 +211,7 @@ class _SummaryGrid extends StatelessWidget {
             _MetricCard(
               label: 'Bahías Ocupadas',
               value: stats.totalBays.toString(),
-              icon: Icons.view_module,
+              icon: BsIconos.bahia,
               color: Colors.deepPurple,
             ),
             _MetricCard(
@@ -228,13 +229,13 @@ class _SummaryGrid extends StatelessWidget {
             _MetricCard(
               label: 'Vacíos',
               value: stats.emptyContainers.toString(),
-              icon: Icons.check_box_outline_blank,
+              icon: BsIconos.vacio,
               color: Colors.amber,
             ),
             _MetricCard(
               label: 'Refrigerados',
               value: specialCargo.reeferCount.toString(),
-              icon: Icons.ac_unit,
+              icon: BsIconos.refrigerado,
               color: Colors.cyan,
             ),
           ],
@@ -593,21 +594,21 @@ class _SpecialCargoCards extends StatelessWidget {
       final cards = [
         if (specialCargo.reeferCount > 0)
           _SpecialCard(
-            icon: Icons.ac_unit,
+            icon: BsIconos.refrigerado,
             label: 'Refrigerado',
             count: specialCargo.reeferCount,
             color: Colors.cyan,
           ),
         if (specialCargo.dangerousCount > 0)
           _SpecialCard(
-            icon: Icons.warning_amber,
+            icon: BsIconos.peligrosa,
             label: 'IMO / DG',
             count: specialCargo.dangerousCount,
             color: Colors.red,
           ),
         if (specialCargo.oogCount > 0)
           _SpecialCard(
-            icon: Icons.open_in_full,
+            icon: BsIconos.fueraDeMedida,
             label: 'OOG',
             count: specialCargo.oogCount,
             color: Colors.deepOrange,
@@ -627,7 +628,7 @@ class _SpecialCargoCards extends StatelessWidget {
         if (specialCargo.reeferCount > 0)
           Expanded(
             child: _SpecialCard(
-              icon: Icons.ac_unit,
+              icon: BsIconos.refrigerado,
               label: 'Refrigerado',
               count: specialCargo.reeferCount,
               color: Colors.cyan,
@@ -638,7 +639,7 @@ class _SpecialCargoCards extends StatelessWidget {
         if (specialCargo.dangerousCount > 0)
           Expanded(
             child: _SpecialCard(
-              icon: Icons.warning_amber,
+              icon: BsIconos.peligrosa,
               label: 'IMO / DG',
               count: specialCargo.dangerousCount,
               color: Colors.red,
@@ -650,7 +651,7 @@ class _SpecialCargoCards extends StatelessWidget {
         if (specialCargo.oogCount > 0)
           Expanded(
             child: _SpecialCard(
-              icon: Icons.open_in_full,
+              icon: BsIconos.fueraDeMedida,
               label: 'OOG',
               count: specialCargo.oogCount,
               color: Colors.deepOrange,
