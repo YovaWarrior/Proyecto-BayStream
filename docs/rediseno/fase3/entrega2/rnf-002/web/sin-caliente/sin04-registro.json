@@ -1,0 +1,73 @@
+{
+  "instrumento": "tool/t114_primera_web.py + tool/t114_primera_web.js",
+  "perfil": "sin",
+  "repeticion": 4,
+  "url": "http://127.0.0.1:5899/",
+  "archivo": "/t114/T99_SINTETICO_977.edi",
+  "navegador": "Chrome 155.0.8059.85 (Playwright, perfil temporal)",
+  "ventana": {
+    "ancho": 1280,
+    "alto": 800,
+    "vista": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "tema": "oscuro",
+  "cache": "caliente (calentamiento previo; almacén borrado por repetición)",
+  "inicioUtc": "2026-10-23T06:06:56.319205+00:00",
+  "finUtc": "2026-10-23T06:06:56.661865+00:00",
+  "pasosDelProducto": 3,
+  "primerCuadroDesdeNavegacionS": 0.16,
+  "origenDelPrimerCuadro": "first-contentful-paint",
+  "semanticaS": {
+    "primerCuadroS": 0.141,
+    "semanticos": 15
+  },
+  "tiempoDesdeElClicS": 0.174,
+  "tiempoHastaRejillaS": 0.334,
+  "incertidumbreS": 0.058,
+  "previo": true,
+  "parametrosAbiertos": false,
+  "cumplePasos": true,
+  "cumpleTiempo": true,
+  "marcas": [
+    {
+      "evento": "primer cuadro del motor (lienzo observado)",
+      "t": 141.10000002384186,
+      "desdeNavegacionMs": 141.10000002384186
+    },
+    {
+      "evento": "semantica activada (acción del instrumento, no del producto)",
+      "t": 141.70000004768372,
+      "intento": 1
+    },
+    {
+      "evento": "1 app abierta: navegación",
+      "t": 162.20000004768372,
+      "desdeOrigenMs": 162.20000004768372
+    },
+    {
+      "evento": "2 pulsar «Seleccionar archivo»",
+      "t": 162.20000004768372
+    },
+    {
+      "evento": "3 selector abierto (interceptado por el navegador)",
+      "t": 163.60000002384186
+    },
+    {
+      "evento": "3 archivo elegido",
+      "t": 163.80000001192093,
+      "archivo": "T99_SINTETICO_977.edi",
+      "bytes": 164312
+    },
+    {
+      "evento": "fin: rejilla en la semántica",
+      "t": 337.7000000476837,
+      "cuadrosMuestreados": 3,
+      "texto": "Plano\nPestaña 1 de 5Lista\nPestaña 2 de 5",
+      "previo": true,
+      "parametrosAbiertos": false
+    }
+  ]
+}

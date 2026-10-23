@@ -1,0 +1,162 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "sin",
+ "repeticion": 2,
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-e2\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "inicioUtc": "2026-10-23T06:06:02.046229+00:00",
+ "acciones": [
+  {
+   "paso": 1,
+   "accion": "abrir el binario (icono)",
+   "t": 0.0
+  },
+  {
+   "paso": 2,
+   "accion": "pulsar «Seleccionar archivo»",
+   "t": 0.6951,
+   "punto": [
+    411,
+    266
+   ]
+  },
+  {
+   "paso": 3,
+   "accion": "elegir el archivo en el selector y confirmar",
+   "t": 1.5929
+  }
+ ],
+ "cuadros": [
+  {
+   "t": 0.4727,
+   "dif": null
+  },
+  {
+   "t": 0.6991,
+   "dif": 0.219
+  },
+  {
+   "t": 0.7778,
+   "dif": 0.153
+  },
+  {
+   "t": 0.8374,
+   "dif": 0.079
+  },
+  {
+   "t": 0.8935,
+   "dif": 0.04
+  },
+  {
+   "t": 0.9439,
+   "dif": 0.012
+  },
+  {
+   "t": 1.0036,
+   "dif": 0.082
+  },
+  {
+   "t": 1.5932,
+   "dif": 10.013
+  },
+  {
+   "t": 1.659,
+   "dif": 10.352
+  },
+  {
+   "t": 1.7229,
+   "dif": 0.218
+  },
+  {
+   "t": 1.7778,
+   "dif": 0.0
+  },
+  {
+   "t": 1.8282,
+   "dif": 0.0
+  },
+  {
+   "t": 1.8832,
+   "dif": 11.737
+  },
+  {
+   "t": 1.942,
+   "dif": 0.0
+  },
+  {
+   "t": 1.9925,
+   "dif": 0.0
+  },
+  {
+   "t": 2.0427,
+   "dif": 0.0
+  },
+  {
+   "t": 2.1066,
+   "dif": 0.0
+  },
+  {
+   "t": 2.1581,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2085,
+   "dif": 0.0
+  },
+  {
+   "t": 2.259,
+   "dif": 0.0
+  },
+  {
+   "t": 2.3091,
+   "dif": 0.0
+  },
+  {
+   "t": 2.3593,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4097,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4601,
+   "dif": 0.0
+  },
+  {
+   "t": 2.5102,
+   "dif": 0.0
+  },
+  {
+   "t": 2.5605,
+   "dif": 0.0
+  }
+ ],
+ "hitos": {
+  "ventana": 0.44787440000800416,
+  "confirmado": 1.5929,
+  "rejillaQuieta": 1.942,
+  "incertidumbreS": 0.05
+ },
+ "almacenApartado": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114-e2\\primera\\windows-3\\almacen-apartado-sin02",
+ "ventana": {
+  "pid": 19156,
+  "rect": [
+   -9,
+   -9,
+   1929,
+   1029
+  ],
+  "maximizada": true
+ },
+ "tema": "oscuro",
+ "pasosDelProducto": 3,
+ "tiempoHastaRejillaS": 1.942,
+ "cumpleTiempo": true,
+ "pngs": {
+  "inicio": "inicio.png",
+  "rejilla": "rejilla.png",
+  "final": "final.png"
+ },
+ "finUtc": "2026-10-23T06:06:04.705106+00:00"
+}

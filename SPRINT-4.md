@@ -482,3 +482,27 @@ La siguiente decisión es la **10.19**.
 - La integración la hace Timonel después de la entrega 2, con el paquete corregido, y la acepta Codex.
 
 La siguiente decisión es la **10.20**.
+
+### 10.20 · La entrega 2 de la Fase 3, entregada · Lo que decide Carlos (23-oct, 00:23)
+
+**Timonel entregó la entrega 2 de la Fase 3** (`d1ce1db`) y, aparte, el tema en caché (`f62f709`), en ≈ 9.5 h.
+- Es el plano por bahía en la dirección C en los tres clientes: navegación adaptable, la silueta como selector, las tarjetas con la operación real, las celdas del ícono con «Colorear por», el detalle en una sola hoja, «En vivo», la banda del muelle con Descarga y Carga, la barra de la operación y el naranja de 1.5 s con datos reales.
+- Antes de cerrar corrigió lo que mostraron las capturas: el título de la bahía, que se cortaba a 360 dp, y la rejilla bajo el pliegue a 360 × 640. Con menos de 560 dp de alto útil, la cabecera se va al desplazar (DESIGN.md 13.8).
+- Suite 1242 (piso 1224), `analyze` en cero, censos con 1931 textos visibles y 0 en inglés, M3 251/7/3 y la auditoría igual.
+- RNF-002 en tres pasos: Windows 1.84–2.19 s; la Web 0.30–0.48 s, y 1.28–1.60 s en la primera visita; el emulador 3.06–3.88 s. La RAM del plano no cambió (≈ 156 MB); la Lista se queda en ≈ 510 MB (RNF-001/007, pendiente).
+- El tema en caché cierra la observación 1 de 10.19: se construye una vez por densidad, y un rebuild idéntico ya no anima.
+
+**Yov revisó los commits:**
+- `d1ce1db` trae 53 archivos, y ninguno de `domain/`, `data/`, `lib/main.dart`, `pubspec.*` ni los congelados.
+- **Faltaban 216 archivos de evidencia del bloque de Timonel:** 147 png, 35 jpg, 28 json, 4 csv y 2 md, con las capturas de los tres clientes, la RAM y RNF-002. Están completos en disco y suben en un commit aparte, por carpeta: cada carpeta tiene exactamente los archivos del bloque, ni uno más.
+- En los cuadros de RNF-002 en Android, el selector de archivos aparece a medias y no se lee el nombre de ningún archivo del corpus. Codex los revisa todos.
+
+**Carlos decide:**
+- Se retiran la barra de ocho acciones y su plegado (T-91), como pide DESIGN.md 8. Buscar va arriba; Nube y Parámetros, al pie del riel o en «Más»; lo demás, en «Más». Lo que pidió la prueba de campo del 5-oct queda cubierto: en el teléfono, las acciones ya no van junto al título. La preferencia de T-91 queda sin lector. Retirarla toca `domain/` y `data/`, así que va como tarea de limpieza después del rediseño.
+- El chip del zoom sale de la rejilla, porque a 360 dp con letra 1.45 y 2.0 tapaba la última columna. Se corrige después de la aceptación, junto con lo que encuentre Codex.
+- Se quedan como están: «re-estibas» partida con letra 2.0, «Estad.» en la barra inferior y «BUQUE MAN…» con elipsis en la banda del muelle (DESIGN.md 10).
+- La leyenda en el panel lateral a 1920 y Atrás en Android quedan para la siguiente entrega.
+
+Codex acepta la entrega 2 con GPT-6 Astra en xhigh. Después, en un chat nuevo de Timonel, van la corrección y la integración del paquete de íconos (10.19).
+
+La siguiente decisión es la **10.21**.

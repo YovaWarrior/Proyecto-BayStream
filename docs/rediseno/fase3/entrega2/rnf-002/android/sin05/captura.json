@@ -1,0 +1,133 @@
+{
+  "instrumento": "tool/t114_primera_android.py",
+  "serial": "emulator-5554",
+  "paquete": "gt.cmartinez.baystream.r4",
+  "archivo": "T99_SINTETICO_977.edi",
+  "perfil": "sin",
+  "reinicioExclusivo": true,
+  "errorInstrumento": null,
+  "accionesHostNoSonMedicion": [
+    {
+      "accion": "1 abrir gt.cmartinez.baystream.r4 con am start (icono no visible en el lanzador)",
+      "utcHostSoloTrazabilidad": "2026-10-23T06:08:22.720515+00:00"
+    },
+    {
+      "accion": "2 Seleccionar archivo (inicio)",
+      "utcHostSoloTrazabilidad": "2026-10-23T06:08:24.413472+00:00"
+    },
+    {
+      "accion": "3 seleccionar T99_SINTETICO_977.edi (el selector cuenta una vez)",
+      "utcHostSoloTrazabilidad": "2026-10-23T06:08:25.822032+00:00"
+    }
+  ],
+  "observaciones": [
+    {
+      "etapa": "tras_seleccionar",
+      "rejillaEnElArbol": true,
+      "nodos": [
+        "T99 SINTETICO 977 | Viaje T99S977",
+        "Buscar contenedor",
+        "Nube y cuenta · Solo este dispositivo",
+        "Plano sin confirmar: perfil propuesto desde el archivo. Escala propuesta GTPBR.",
+        "Confirmar",
+        "Peso por pila y tomas de refrigerado: sin evaluar hasta confirmar el perfil.",
+        "Contenido",
+        "Acciones | Acciones",
+        "Confirma la escala para ver el plan de carga.",
+        "Silueta del buque, 72 bahías de proa a popa",
+        "Bahía 01, 0 niveles en cubierta y 2 en bodega, sin operación",
+        "Bahía 02, 0 niveles en cubierta y 2 en bodega, sin operación",
+        "Bahía 03, 0 niveles en cubierta y 2 en bodega, sin operación",
+        "Bahía 05, 0 niveles en cubierta y 2 en bodega, sin operación",
+        "Bahía 06, 0 niveles en cubierta y 2 en bodega, sin operación",
+        "Bahía 07, 0 niveles en cubierta y 2 en bodega, sin operación",
+        "Zoom del plano",
+        "100 %",
+        "Leyenda · Destino | Destino | USHOU, 1 | XXVSL, 1 | Ocupado por 40 pies",
+        "Lleno, 1",
+        "Plano | Pestaña 1 de 4",
+        "Lista | Pestaña 2 de 4",
+        "Estad. | Pestaña 3 de 4",
+        "Más | Pestaña 4 de 4"
+      ]
+    },
+    {
+      "etapa": "estado",
+      "previo": true,
+      "parametrosAbiertos": false
+    }
+  ],
+  "pasosDelProducto": 3,
+  "pts": [
+    "0.000000",
+    "4.131211",
+    "4.243756",
+    "4.271378",
+    "4.347111",
+    "4.375100",
+    "4.405678",
+    "4.479522",
+    "4.511311",
+    "4.545322",
+    "4.595144",
+    "4.623111",
+    "4.657444",
+    "4.684311",
+    "4.717744",
+    "4.750067",
+    "4.777756",
+    "4.806489",
+    "4.837689",
+    "4.864856",
+    "4.895511",
+    "4.920156",
+    "5.633144",
+    "5.815922",
+    "5.849700",
+    "5.884333",
+    "5.913889",
+    "5.979122",
+    "6.007667",
+    "6.035989",
+    "6.061622",
+    "6.090433",
+    "6.115478",
+    "6.139722",
+    "6.214833",
+    "6.239189",
+    "7.205111",
+    "7.247700",
+    "7.283822",
+    "7.338122",
+    "7.377278",
+    "7.406811",
+    "7.437900",
+    "7.475544",
+    "7.501989",
+    "7.528578",
+    "7.556122",
+    "7.580556",
+    "7.602089",
+    "7.625744",
+    "7.646989",
+    "7.667756",
+    "7.842322",
+    "8.870178",
+    "8.921344",
+    "9.917744"
+  ],
+  "ptsOrigenIgualesYMonotonicos": true,
+  "streams": [
+    {
+      "width": 1080,
+      "height": 1840,
+      "r_frame_rate": "180000/1",
+      "avg_frame_rate": "4000000/1007881",
+      "time_base": "1/1000000",
+      "nb_read_frames": "56"
+    }
+  ],
+  "punteroAntes": "null",
+  "sha256": "4d8786bb400240f679adae2d7b4788f7b23713e65608bfe297bdc2851d7b5336",
+  "dictamen": "Pendiente: primer cuadro con rejilla (t114_primera_cuadros.py)."
+}

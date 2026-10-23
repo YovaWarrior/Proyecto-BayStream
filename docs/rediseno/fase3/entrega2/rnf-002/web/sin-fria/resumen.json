@@ -1,0 +1,47 @@
+{
+  "instrumento": "tool/t114_primera_web.py",
+  "perfil": "sin",
+  "cache": "fría (contexto nuevo por repetición: primera visita, sin caché ni almacén)",
+  "archivo": "/t114/T99_SINTETICO_977.edi",
+  "tema": "oscuro",
+  "navegador": "Chrome 155.0.8059.85 (Playwright, perfil temporal)",
+  "repeticiones": 5,
+  "pasosDelProducto": 3,
+  "tiemposHastaRejillaS": [
+    1.598,
+    1.489,
+    1.28,
+    1.35,
+    1.362
+  ],
+  "minS": 1.28,
+  "maxS": 1.598,
+  "mediaS": 1.416,
+  "primerCuadroS": [
+    1.336,
+    1.248,
+    1.08,
+    1.132,
+    1.12
+  ],
+  "clicARejillaS": [
+    0.262,
+    0.241,
+    0.2,
+    0.218,
+    0.242
+  ],
+  "previos": [
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "umbral": {
+    "pasos": 3,
+    "segundos": 30.0
+  },
+  "cumplePasos": true,
+  "cumpleTiempo": true
+}
