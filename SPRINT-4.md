@@ -554,3 +554,28 @@ La siguiente decisión es la **10.22**.
 Timonel sigue en su chat con el paquete de íconos (partes B y C, 10.19), y después Codex lo acepta.
 
 La siguiente decisión es la **10.23**.
+
+### 10.23 · El paquete de íconos no pasa por la búsqueda · La Lista sigue la regla única · Los PNG se verifican por píxeles (23-oct, 11:35)
+
+**Codex aceptó en la copia limpia sobre `ac18025`, contra `77f7d1b`: NO PASA** (`docs/rediseno/fase3/paquete/aceptacion-codex.md`).
+- **H1 · En la búsqueda, los íconos pierden su significado accesible.** `_buildLeadingIcon` (`container_search_delegate.dart`) dibuja el ícono sin etiqueta ni descripción emergente. Cuatro contenedores que solo difieren en su condición (peligrosa, refrigerado, fuera de medida y vacío) tienen exactamente la misma etiqueta accesible.
+- **O1 · La Lista no aplica la regla única.** `iconos_del_dominio.dart` y DESIGN.md 13.11 dicen que la Lista, la búsqueda y el detalle eligen el ícono con la misma prioridad: peligrosa, refrigerado, fuera de medida, vacío, tipo y tamaño. Pero la tarjeta de la Lista llama directamente a `iconoDeTipo` (`containers_list_view.dart`) y dibuja el del 20′ en los cuatro casos. Los chips de la carga especial sí siguen ahí.
+- **Salvedad · `generar.py --verificar` da 80 de 84 en Windows.** La fuente, los SVG, los JSON y los códigos se reproducen byte a byte. Las tres imágenes PNG salen con los mismos píxeles, pero comprimidas de otra forma, y el LEEME cambia solo en las filas de sus huellas. Nube ya lo había advertido para otras versiones de las librerías.
+- **Pasa lo demás:**
+  - 1290/1290 sin omitidas y `analyze` en cero;
+  - el alcance (170 archivos, solo la fuente en `pubspec.yaml`, `pubspec.lock` igual);
+  - los 84 SHA-256 del paquete;
+  - la regla del alto de las ilustraciones;
+  - las insignias y los contrastes;
+  - Windows y la Web, con la fuente visible en los dos;
+  - T-92 sin conexión;
+  - las capturas, sin datos personales ni corpus.
+
+**Yov acepta el dictamen y resuelve:**
+- H1: cada resultado de la búsqueda dice su condición al lector de pantalla, ya sea en la etiqueta del ícono o en el texto del resultado. Las pruebas leen el árbol de semántica en los cuatro casos.
+- O1: la Lista aplica la regla única (`iconoDeContenedor`), como prometen el código y DESIGN.md 13.11, con una prueba de que Lista, búsqueda y detalle dibujan el mismo glifo.
+- La salvedad del verificador no bloquea. Para los PNG del paquete vale la igualdad de píxeles, que Codex ya comprobó; los demás archivos se siguen verificando byte a byte.
+
+Timonel corrige H1 y O1 en su chat, en Max, con un bloque aparte, y Codex vuelve a aceptar solo esa pieza.
+
+La siguiente decisión es la **10.24**.
