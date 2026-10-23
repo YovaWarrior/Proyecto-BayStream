@@ -21,6 +21,7 @@ import 'detalle_contenedor.dart';
 import 'discharge_controls.dart';
 import 'hatch_cover_diagram.dart';
 import 'hatch_operation_controls.dart';
+import 'iconos_del_dominio.dart';
 import 'loading_controls.dart';
 import 'loading_plan_controls.dart';
 import 'navegacion_del_viaje.dart';
@@ -1601,10 +1602,16 @@ class _Rejilla extends StatelessWidget {
         !_containerMatchesFilter(container, grid.activeTypeFilter!,
             isInTransit: isInTransit);
 
+    // 10.23: la celda nombra lo que su insignia y su color señalan y el
+    // lector no ve: la carga peligrosa, el refrigerado, el fuera de medida y
+    // el vacío, con los nombres del ícono principal (`CondicionDelContenedor`),
+    // en las tres vistas de «Colorear por». `BsCelda` excluye el resto.
+    final condicion = condicionDelContenedor(container);
     final etiqueta = <String>[
       formatearContenedor(container.containerId),
       if (posicion != null) formatearPosicion(posicion),
       if (mark != null) dischargeMarkText(mark),
+      if (condicion.enLaCelda) condicion.nombre,
       if (orderLabel != null) orderLabel.replaceAll('\n', ' '),
       if (isInTransit && mark == null) 'de paso',
     ].join(', ');

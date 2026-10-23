@@ -1,0 +1,219 @@
+Árbol de semántica tras la corrección del paquete (10.23).
+Dart 3.10.8, Flutter 3.38.9 estable; tema claro, muelle; fuente de pruebas.
+Cada caso: el mismo número (TSTU0000011) y tipo ISO (22G1); solo cambia la condición.
+
+== Caso: peligrosa · Carga peligrosa ==
+-- Búsqueda: glifo U+E005 (BayStreamIconos), semanticLabel: Carga peligrosa, descripciones emergentes: [Carga peligrosa]
+SemanticsNode#5
+   Rect.fromLTRB(0.0, 0.0, 800.0, 64.0)
+   tags: RenderViewport.twoPane
+   actions: focus, tap
+   flags: isButton, hasEnabledState, isEnabled, isFocusable,
+     hasSelectedState
+   label:
+     "Carga peligrosa
+     TSTU0000011
+     22G1"
+   textDirection: ltr
+   indexInParent: 0
+
+-- Lista: glifo principal U+E005, semanticLabel: Carga peligrosa
+SemanticsNode#9
+   Rect.fromLTRB(0.0, 0.0, 800.0, 176.0)
+   actions: focus, tap
+   flags: isFocusable
+   label:
+     "Carga peligrosa
+     TSTU0000011
+     Tipo: 22G1 (20ft)
+     IMO
+     LLENO
+     Posición
+     Sin asignar
+     Peso
+     Sin peso
+     IMDG"
+   textDirection: ltr
+
+-- Detalle: glifo principal U+E005, semanticLabel: Carga peligrosa
+SemanticsNode#12
+   Rect.fromLTRB(24.0, 8.0, 48.0, 32.0)
+   label: "Carga peligrosa"
+   textDirection: ltr
+
+
+== Caso: refrigerado · Refrigerado ==
+-- Búsqueda: glifo U+E004 (BayStreamIconos), semanticLabel: Refrigerado, descripciones emergentes: [Refrigerado]
+SemanticsNode#24
+   Rect.fromLTRB(0.0, 0.0, 800.0, 64.0)
+   tags: RenderViewport.twoPane
+   actions: focus, tap
+   flags: isButton, hasEnabledState, isEnabled, isFocusable,
+     hasSelectedState
+   label:
+     "Refrigerado
+     TSTU0000011
+     22G1"
+   textDirection: ltr
+   indexInParent: 0
+
+-- Lista: glifo principal U+E004, semanticLabel: Refrigerado
+SemanticsNode#28
+   Rect.fromLTRB(0.0, 0.0, 800.0, 176.0)
+   actions: focus, tap
+   flags: isFocusable
+   label:
+     "Refrigerado
+     TSTU0000011
+     Tipo: 22G1 (20ft)
+     ?°C
+     LLENO
+     Posición
+     Sin asignar
+     Peso
+     Sin peso
+     Refrigerado"
+   textDirection: ltr
+
+-- Detalle: glifo principal U+E004, semanticLabel: Refrigerado
+SemanticsNode#31
+   Rect.fromLTRB(24.0, 8.0, 48.0, 32.0)
+   label: "Refrigerado"
+   textDirection: ltr
+
+
+== Caso: fueraDeMedida · Fuera de medida ==
+-- Búsqueda: glifo U+E006 (BayStreamIconos), semanticLabel: Fuera de medida, descripciones emergentes: [Fuera de medida]
+SemanticsNode#44
+   Rect.fromLTRB(0.0, 0.0, 800.0, 64.0)
+   tags: RenderViewport.twoPane
+   actions: focus, tap
+   flags: isButton, hasEnabledState, isEnabled, isFocusable,
+     hasSelectedState
+   label:
+     "Fuera de medida
+     TSTU0000011
+     22G1"
+   textDirection: ltr
+   indexInParent: 0
+
+-- Lista: glifo principal U+E006, semanticLabel: Fuera de medida
+SemanticsNode#48
+   Rect.fromLTRB(0.0, 0.0, 800.0, 176.0)
+   actions: focus, tap
+   flags: isFocusable
+   label:
+     "Fuera de medida
+     TSTU0000011
+     Tipo: 22G1 (20ft)
+     LLENO
+     Posición
+     Sin asignar
+     Peso
+     Sin peso
+     OOG"
+   textDirection: ltr
+
+-- Detalle: glifo principal U+E006, semanticLabel: Fuera de medida
+SemanticsNode#51
+   Rect.fromLTRB(24.0, 8.0, 48.0, 32.0)
+   label: "Fuera de medida"
+   textDirection: ltr
+
+
+== Caso: vacio · Vacío ==
+-- Búsqueda: glifo U+E003 (BayStreamIconos), semanticLabel: Vacío, descripciones emergentes: [Vacío]
+SemanticsNode#63
+   Rect.fromLTRB(0.0, 0.0, 800.0, 64.0)
+   tags: RenderViewport.twoPane
+   actions: focus, tap
+   flags: isButton, hasEnabledState, isEnabled, isFocusable,
+     hasSelectedState
+   label:
+     "Vacío
+     TSTU0000011
+     22G1"
+   textDirection: ltr
+   indexInParent: 0
+
+-- Lista: glifo principal U+E003, semanticLabel: Vacío
+SemanticsNode#67
+   Rect.fromLTRB(0.0, 0.0, 800.0, 137.0)
+   actions: focus, tap
+   flags: isFocusable
+   label:
+     "Vacío
+     TSTU0000011
+     Tipo: 22G1 (20ft)
+     VACÍO
+     Posición
+     Sin asignar
+     Peso
+     Sin peso"
+   textDirection: ltr
+
+-- Detalle: glifo principal U+E003, semanticLabel: Vacío
+SemanticsNode#70
+   Rect.fromLTRB(24.0, 8.0, 48.0, 32.0)
+   label: "Vacío"
+   textDirection: ltr
+
+
+== Caso: corriente 22G1 · Contenedor de 20 pies ==
+-- Búsqueda: glifo U+E000 (BayStreamIconos), semanticLabel: Contenedor de 20 pies, descripciones emergentes: [Contenedor de 20 pies]
+SemanticsNode#81
+   Rect.fromLTRB(0.0, 0.0, 800.0, 64.0)
+   tags: RenderViewport.twoPane
+   actions: focus, tap
+   flags: isButton, hasEnabledState, isEnabled, isFocusable,
+     hasSelectedState
+   label:
+     "Contenedor de 20 pies
+     TSTU0000011
+     22G1"
+   textDirection: ltr
+   indexInParent: 0
+
+-- Lista: glifo principal U+E000, semanticLabel: Contenedor de 20 pies
+SemanticsNode#85
+   Rect.fromLTRB(0.0, 0.0, 800.0, 137.0)
+   actions: focus, tap
+   flags: isFocusable
+   label:
+     "Contenedor de 20 pies
+     TSTU0000011
+     Tipo: 22G1 (20ft)
+     LLENO
+     Posición
+     Sin asignar
+     Peso
+     Sin peso"
+   textDirection: ltr
+
+-- Detalle: glifo principal U+E000, semanticLabel: Contenedor de 20 pies
+SemanticsNode#88
+   Rect.fromLTRB(24.0, 8.0, 48.0, 32.0)
+   label: "Contenedor de 20 pies"
+   textDirection: ltr
+
+
+== La celda del plano: bahía 003, cubierta, viaje sintético (BUQUE PRUEBA, VTEST); la etiqueta de BsCelda por vista ==
+-- Colorear por: Estado
+   cell-1-82 (TSTU0000011, Carga peligrosa; insignia peligrosa, código «PAMIT»): "TSTU 000001 1, 003-01-82, Carga peligrosa"
+   cell-2-82 (TSTU0000022, Refrigerado; insignia refrigerado, código «PAMIT»): "TSTU 000002 2, 003-02-82, Refrigerado"
+   cell-3-82 (TSTU0000033, Fuera de medida; insignia oog, código «PAMIT»): "TSTU 000003 3, 003-03-82, Fuera de medida"
+   cell-4-82 (TSTU0000044, Vacío; insignia ninguna, código «PAMIT»): "TSTU 000004 4, 003-04-82, Vacío"
+   cell-5-82 (TSTU0000055, corriente; insignia ninguna, código «PAMIT»): "TSTU 000005 5, 003-05-82"
+-- Colorear por: Destino
+   cell-1-82 (TSTU0000011, Carga peligrosa; insignia peligrosa, código «PAMIT»): "TSTU 000001 1, 003-01-82, Carga peligrosa"
+   cell-2-82 (TSTU0000022, Refrigerado; insignia refrigerado, código «PAMIT»): "TSTU 000002 2, 003-02-82, Refrigerado"
+   cell-3-82 (TSTU0000033, Fuera de medida; insignia oog, código «PAMIT»): "TSTU 000003 3, 003-03-82, Fuera de medida"
+   cell-4-82 (TSTU0000044, Vacío; insignia ninguna, código «PAMIT»): "TSTU 000004 4, 003-04-82, Vacío"
+   cell-5-82 (TSTU0000055, corriente; insignia ninguna, código «PAMIT»): "TSTU 000005 5, 003-05-82"
+-- Colorear por: Tipo de vacío
+   cell-1-82 (TSTU0000011, Carga peligrosa; insignia peligrosa, código «22G1»): "TSTU 000001 1, 003-01-82, Carga peligrosa"
+   cell-2-82 (TSTU0000022, Refrigerado; insignia refrigerado, código «22G1»): "TSTU 000002 2, 003-02-82, Refrigerado"
+   cell-3-82 (TSTU0000033, Fuera de medida; insignia oog, código «22G1»): "TSTU 000003 3, 003-03-82, Fuera de medida"
+   cell-4-82 (TSTU0000044, Vacío; insignia ninguna, código «22G1»): "TSTU 000004 4, 003-04-82, Vacío"
+   cell-5-82 (TSTU0000055, corriente; insignia ninguna, código «22G1»): "TSTU 000005 5, 003-05-82"
+

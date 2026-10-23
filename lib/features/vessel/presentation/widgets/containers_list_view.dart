@@ -47,7 +47,7 @@ class _ContainerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final statusColor = _getStatusColor(container.status, colorScheme);
-    final typeColor = _getTypeColor(container.containerType, colorScheme);
+    final iconColor = _getIconColor(container, colorScheme);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -72,17 +72,20 @@ class _ContainerCard extends StatelessWidget {
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  // Icono de tipo de contenedor
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: typeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      iconoDeTipo(container.containerType, pies: container.sizeInFeet),
-                      color: typeColor,
-                      size: 20,
+                  // El ícono principal del contenedor: la regla única de
+                  // `condicionDelContenedor` (DESIGN.md 13.11; O1 de 10.23),
+                  // con su nombre como etiqueta y descripción emergente (H1).
+                  IconoDelContenedor(
+                    container,
+                    tamano: 20,
+                    color: iconColor,
+                    marco: (Widget icono) => Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: icono,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -388,6 +391,16 @@ class _ContainerCard extends StatelessWidget {
       default:
         return scheme.onSurfaceVariant;
     }
+  }
+
+  /// El color del ícono principal: el de la condición que manda, como los
+  /// chips de la tarjeta (IMDG, refrigerado, OOG, vacío); si no, el del tipo.
+  Color _getIconColor(ContainerUnit container, ColorScheme scheme) {
+    if (container.isDangerous) return scheme.error;
+    if (container.isReefer) return scheme.primary;
+    if (container.isOverDimension) return scheme.tertiary;
+    if (container.status == ContainerStatus.empty) return scheme.secondary;
+    return _getTypeColor(container.containerType, scheme);
   }
 
   /// Muestra el diálogo con detalles completos del contenedor

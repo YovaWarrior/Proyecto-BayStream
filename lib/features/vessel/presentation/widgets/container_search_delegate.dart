@@ -423,7 +423,6 @@ class _ContainerSearchResultTile extends StatelessWidget {
   }
 
   Widget _buildLeadingIcon(ColorScheme colorScheme) {
-    final icon = iconoDeContenedor(container);
     Color background;
     Color foreground;
 
@@ -443,9 +442,16 @@ class _ContainerSearchResultTile extends StatelessWidget {
       foreground = colorScheme.onSurfaceVariant;
     }
 
-    return CircleAvatar(
-      backgroundColor: background,
-      child: Icon(icon, color: foreground, size: 20),
+    // 10.23 (H1): el glifo lleva el nombre de su condición como etiqueta
+    // accesible y como descripción emergente, que cubre el círculo entero.
+    return IconoDelContenedor(
+      container,
+      tamano: 20,
+      color: foreground,
+      marco: (Widget icono) => CircleAvatar(
+        backgroundColor: background,
+        child: icono,
+      ),
     );
   }
 

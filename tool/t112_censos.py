@@ -211,6 +211,12 @@ T114_DECISIONES = {
         'NV-EXCEPCION-INTERNA', 'ArgumentError o FormatException ante un color o una ruta mal formados: los '
                                 'datos son constantes y la prueba los recorre todos, así que la app no la '
                                 'alcanza (T-114, 10.19)') for linea in (152, 167, 171, 207, 210)},
+    # La corrección del paquete (10.23, H1 y O1): el ícono principal del contenedor dice su condición.
+    (_P + 'widgets/iconos_del_dominio.dart', '*'): V(
+        'pantalla', 'los nombres de la condición del contenedor («Carga peligrosa», «Refrigerado», «Fuera de '
+                    'medida», «Vacío», «Tanque», «Plataforma», «Techo abierto», «Contenedor de 20, 40 o 45 '
+                    'pies»): la descripción emergente y la etiqueta accesible del ícono principal en la Lista, '
+                    'la búsqueda y el detalle (DESIGN.md 13.11, regla 3) (T-114, 10.23)'),
 }
 T112_DECISIONES.update(T114_DECISIONES)
 DESCRIPCION_ILUSTRACION = V(

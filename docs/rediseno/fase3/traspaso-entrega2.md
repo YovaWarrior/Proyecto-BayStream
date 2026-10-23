@@ -201,3 +201,16 @@ colisiones, en `DESIGN.md` 13.11. Las pruebas son `test/t114_iconos_test.dart`,
 `test/t114_ilustraciones_test.dart` y `test/t114_paquete_test.dart` (este último censa `lib/`:
 si un ícono de la tabla vuelve a Material, falla). La ilustración cede ante la letra grande
 (`BsIlustracion.anchoQueCabe`, 13.11 regla 4). La evidencia va en `docs/rediseno/fase3/paquete/`.
+
+## La corrección del paquete (23-oct, 10.23)
+
+Codex no aceptó el paquete por H1 (la búsqueda dibujaba el glifo de la condición sin etiqueta) y O1 (la
+Lista no aplicaba la regla única). La corrección está en la sección «Fase 3 · Paquete · Corrección tras la
+aceptación de Codex» de `docs/REDISENO-RESULTADOS.md`. Lo que hay que saber para seguir: la regla del ícono
+del contenedor es `CondicionDelContenedor` (glifo y nombre) en `iconos_del_dominio.dart`, y el ícono
+principal se dibuja con `IconoDelContenedor` (etiqueta accesible y descripción emergente fuera de la
+semántica) en la tarjeta de la Lista, el resultado de la búsqueda y el título del detalle. Las pruebas están
+en `test/t114_paquete_correccion_test.dart` (suite 1297) y la evidencia en
+`docs/rediseno/fase3/paquete/correccion/`. A pedido de Carlos, la celda del plano nombra también su
+insignia y el vacío en la etiqueta (`bay_plan_view.dart`, `CondicionDelContenedor.enLaCelda`), en las
+tres vistas de «Colorear por».

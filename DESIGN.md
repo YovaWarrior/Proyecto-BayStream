@@ -1234,7 +1234,7 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
 
 | Concepto | Ícono | Dónde | Lo que sigue en Material |
 |---|---|---|---|
-| Contenedor | `contenedor20`, `contenedor40`, `contenedor45` según `sizeInFeet`; `refrigerado`, `tanque`, `plataforma`, `techoAbierto` según el tipo ISO; `vacio` para el vacío; `peligrosa` y `fueraDeMedida` mandan sobre el tipo (`iconoDeContenedor`, `iconoDeTipo`) | la tarjeta de la Lista, el resultado de la búsqueda, el detalle, los chips de carga especial, las tarjetas de Estadísticas, «Asignar vacío», «Vacío» en la leyenda | `inventory_2` para el total de contenedores y para «Lleno»; `check_box` para «Llenos» |
+| Contenedor | `contenedor20`, `contenedor40`, `contenedor45` según `sizeInFeet`; `refrigerado`, `tanque`, `plataforma`, `techoAbierto` según el tipo ISO; `vacio` para el vacío; `peligrosa` y `fueraDeMedida` mandan sobre el tipo (`condicionDelContenedor`, que da el glifo y su nombre) | la tarjeta de la Lista, el resultado de la búsqueda, el detalle, los chips de carga especial, las tarjetas de Estadísticas, «Asignar vacío», «Vacío» en la leyenda | `inventory_2` para el total de contenedores y para «Lleno»; `check_box` para «Llenos» |
 | Peligrosa (IMDG) | `peligrosa` | la insignia (como `insigniaPeligrosa`), los chips IMO / IMDG, el detalle, «Carga especial» | el aviso genérico sigue en `warning_amber` |
 | Buque | `buque` | «Paso» / sigue a bordo en la celda y en la marca de descarga, los recientes, «Perfiles guardados», el resumen del viaje, «Perfil longitudinal» | |
 | Bahía | `bahia` | el destino «Plano» (en reposo y activo), «Posición», «Bahías», «Contenedores por bahía», «Ocupación», «Ir a» | |
@@ -1256,8 +1256,19 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
    porque la familia es sólida y a 16 px un contorno al lado de un macizo se lee más débil. La
    barra inferior y el riel llevan el mismo glifo relleno en reposo y activo: la selección la dice
    el indicador de Material 3.
-3. Un mismo concepto lleva el mismo glifo en todas las pantallas (la regla que `iconoDeContenedor`
-   fija para los contenedores), y el aviso genérico no se confunde con la carga peligrosa.
+3. Un mismo concepto lleva el mismo glifo en todas las pantallas (la regla que `condicionDelContenedor`
+   fija para los contenedores), y el aviso genérico no se confunde con la carga peligrosa. El ícono
+   principal del contenedor (`IconoDelContenedor`: la tarjeta de la Lista, el resultado de la
+   búsqueda y el título del detalle) lleva el nombre de su condición como etiqueta accesible y como
+   descripción emergente: «Carga peligrosa», «Refrigerado», «Fuera de medida», «Vacío», «Tanque»,
+   «Plataforma», «Techo abierto» o «Contenedor de 20, 40 o 45 pies». La descripción emergente queda
+   fuera de la semántica, para que el lector de pantalla no diga el nombre dos veces. Un ícono que
+   va junto a su texto, o dentro de un botón con rótulo o con descripción emergente, no lleva
+   etiqueta propia. La celda del plano nombra en su etiqueta lo que su insignia señala y lo que su
+   color dice, «Carga peligrosa», «Refrigerado», «Fuera de medida» o «Vacío», con esos mismos nombres
+   y en las tres vistas de «Colorear por» (`CondicionDelContenedor.enLaCelda`). Lo fijó la
+   aceptación del paquete (10.23): la búsqueda dibujaba el glifo sin nombre, la Lista no aplicaba la
+   regla y la celda no nombraba su insignia.
 4. Las ilustraciones van en los estados que la tabla de 13.7 nombra, con la frase de siempre al
    lado: no reemplazan el texto, lo acompañan. Se apoyan en el fondo de la pantalla (sin pintar su
    propio fondo), a 320 de ancho (240 en la búsqueda y en las alertas, hasta 480 en el inicio).

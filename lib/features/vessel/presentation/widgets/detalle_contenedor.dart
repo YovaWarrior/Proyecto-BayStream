@@ -5,6 +5,7 @@ import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/discharge_provider.dart';
 import 'discharge_controls.dart';
+import 'iconos_del_dominio.dart';
 import 'office_plan_controls.dart';
 
 /// El detalle de un contenedor (`DESIGN.md` 8 y 13.8): **una sola hoja** para
@@ -111,6 +112,13 @@ class DetalleContenedor extends ConsumerWidget {
       key: const ValueKey('detalle-contenedor'),
       titulo: Row(
         children: <Widget>[
+          // El ícono principal, con la misma regla y el mismo nombre que la
+          // Lista y la búsqueda (DESIGN.md 13.11; O1 y H1 de 10.23).
+          IconoDelContenedor(
+            container,
+            color: tema.colorScheme.onSurfaceVariant,
+          ),
+          SizedBox(width: medidas.espacioS),
           Expanded(
             child: BsNumeroDeContenedor(
               container.containerId,

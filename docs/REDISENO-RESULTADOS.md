@@ -3724,3 +3724,255 @@ git push
 
 ### Mensaje para Yov
 Yov: el **paquete de íconos e ilustraciones (10.19)** queda integrado, Parte B y Parte C juntas en un solo bloque de git. **Parte B:** el zip v2 de Nube comprobado archivo por archivo (84 de 84 huellas de la tabla, 85 de 85 sobre el árbol antes del bloque, sin `__pycache__`) en `assets/fonts/bs_iconos/`, `design/iconos/` y `design/ilustraciones/`; `pubspec.yaml` solo suma la familia `BayStreamIconos` (`pubspec.lock` igual, ninguna dependencia); `BsIconos` textual del LEEME más un catálogo por nombre; las seis ilustraciones viajan como datos const que genera `tool/bs_ilustraciones_generar.py` desde los JSON y las pinta `BsIlustracion` (`CustomPainter` en `RepaintBoundary`, M/L/C/Z, puntas redondas, punteado, colores por nombre resueltos con los tokens: `marca` es la marca como superficie y `cubierta` el blanco del ícono). **Parte C:** la tabla del LEEME aplicada con las colisiones que fijó Carlos (`peligrosa` solo para la carga peligrosa y `warning_amber` para el aviso; `reestiba` y `pedirCambio`; «Paso» con `buque`; en la secuencia «sale» es `descarga` y «vuelve» es `carga`; `listadoAgencia` para el listado y `table_view` para el CSV; el contenedor por `iconoDeContenedor`: peligrosa > refrigerado > fuera de medida > vacío > tipo ISO > tamaño), las insignias a 12 px en la celda, los genéricos que iban en contorno pasan a relleno junto a los nuevos, y las ilustraciones en el inicio y en los cinco estados vacíos con `meetsGuideline`. **Una regla nueva, encontrada mirando la pantalla:** la primera ronda de capturas se detuvo con la letra a 2.0 porque el dibujo del inicio empujaba «Seleccionar archivo» fuera del árbol; ahora cada ilustración ocupa como máximo tres décimas del alto de la ventana entre la escala de la letra y bajo 120 dp no se pinta (`DESIGN.md` 13.11, regla 4): en el emulador el inicio lleva la grúa a 178 dp con 1.0, a 123 con 1.45 y va sin dibujo con 2.0, con el botón a la vista. **Cifras:** suite 1290 (piso 1242; 1260 + 30 en `t114_iconos_test`, `t114_ilustraciones_test` y `t114_paquete_test`, que censa `lib/` para que ningún concepto de la tabla vuelva a Material), `analyze` 0, auditoría 17/248/20 sin hallazgos en lo nuevo, censos 1940 visibles / 0 inglés (los ocho de más son las seis descripciones, etiquetas de imagen, y «Descarga completa en …»), M3 250/7/3, 217 mensajes; 31 capturas de Android en `docs/rediseno/fase3/paquete/capturas/android/`. **Dos arreglos de paso** que la prueba de pautas encontró: la pista de la búsqueda (3.29:1 → color entero) y el desbordamiento de «Viajes recientes» vacío. `DESIGN.md` 13.7, 13.9 y la sección nueva 13.11 anotan dónde va cada ícono y las reglas de uso. Me detengo: ALTO: Codex acepta el paquete.
+
+## Fase 3 · Paquete · Corrección tras la aceptación de Codex (23-oct-2026)
+
+Codex no aceptó el paquete (`docs/rediseno/fase3/paquete/aceptacion-codex.md`; decisión 10.23) por un
+hallazgo y una observación. **H1:** en la búsqueda, `_buildLeadingIcon` dibujaba el glifo de la condición
+del contenedor sin etiqueta ni descripción emergente, así que la carga peligrosa, el refrigerado, el fuera
+de medida y el vacío sonaban igual en el lector de pantalla («TSTU0000011 / 22G1» en los cuatro casos).
+**O1:** la tarjeta de la Lista elegía su ícono con `iconoDeTipo` en vez de la regla única que prometen
+`iconos_del_dominio.dart` y `DESIGN.md` 13.11, y dibujaba el 20 pies en los cuatro casos. Esta sección
+corrige las dos cosas en un bloque de git aparte, como fija 10.23, y, a pedido de Carlos antes de subirla,
+la insignia de la celda del plano, que la revisión de 6.4 encontró sin nombre. La salvedad de los PNG del
+verificador quedó resuelta en esa misma decisión y no se toca.
+
+### 6.1 Resultado en tres líneas
+
+- La búsqueda, la Lista y el detalle dicen la condición del contenedor al lector de pantalla con la
+  etiqueta del glifo («Carga peligrosa», «Refrigerado», «Fuera de medida», «Vacío», el tipo ISO o el
+  tamaño) y la muestran como descripción emergente. Los cuatro casos de Codex tienen ahora cuatro
+  etiquetas distintas, leídas desde el árbol de semántica.
+- La regla del ícono vive en un solo sitio, `CondicionDelContenedor`, que da el glifo y su nombre. La
+  tarjeta de la Lista la aplica, y una prueba comprueba que Lista, búsqueda y detalle dibujan el mismo
+  glifo con el mismo nombre para once contenedores.
+- Suite 1297 (1290 + 7), `analyze` 0, auditoría 17/248/20 sin cambios, censo 1950 visibles y 0 inglés.
+  La revisión de los demás íconos del dominio encontró uno más sin nombre, la insignia de la celda del
+  plano; Carlos pidió corregirlo aquí, y la celda nombra ahora su condición en las tres vistas de
+  «Colorear por».
+
+### 6.2 H1 · La búsqueda dice la condición
+
+**Qué pasaba.** El resultado de la búsqueda es un `ListTile` con `onTap`: Flutter funde en un solo nodo
+de semántica las etiquetas de sus hijos (título, subtítulo, cola). El ícono principal iba sin
+`semanticLabel` y sin `Tooltip`, así que no aportaba nada a ese nodo. Codex lo reprodujo con cuatro
+contenedores sintéticos que solo difieren en su condición: cuatro glifos distintos, una sola etiqueta.
+
+**Qué se hizo.** El ícono principal del contenedor es ahora una pieza, `IconoDelContenedor`
+(`lib/features/vessel/presentation/widgets/iconos_del_dominio.dart`): el glifo de la condición con el
+nombre de esa condición como `semanticLabel` y como `Tooltip`. Un parámetro `marco` envuelve al glifo con
+lo que cada pantalla le pone alrededor (el círculo de color del resultado, el recuadro de la tarjeta),
+para que la descripción emergente cubra el marco entero y no solo los 20 px del glifo. La búsqueda usa
+esa pieza en `_buildLeadingIcon`; los colores del círculo (T-112) no cambian.
+
+**Lo que dice cada condición.** La prioridad es la de 13.11 y los nombres son los de la app:
+
+| Condición | Glifo | Nombre (etiqueta y descripción emergente) |
+|---|---|---|
+| Carga peligrosa (IMDG) | `peligrosa` (U+E005) | «Carga peligrosa» |
+| Refrigerado, por marca o por tipo ISO | `refrigerado` (U+E004) | «Refrigerado» |
+| Fuera de medida (OOG) | `fueraDeMedida` (U+E006) | «Fuera de medida» |
+| Vacío | `vacio` (U+E003) | «Vacío» |
+| Tanque (ISO T) | `tanque` (U+E007) | «Tanque» |
+| Plataforma (ISO P) | `plataforma` (U+E008) | «Plataforma» |
+| Techo abierto (ISO U) | `techoAbierto` (U+E009) | «Techo abierto» |
+| 20, 40 o 45 pies; sin tamaño, 40 | `contenedor20`, `contenedor40`, `contenedor45` | «Contenedor de 20 pies», «… de 40 pies», «… de 45 pies» |
+
+**La descripción emergente va fuera de la semántica** (`excludeFromSemantics: true`). La etiqueta del
+glifo y la descripción llevan el mismo texto; si las dos entraran en el árbol, iOS añadiría la
+descripción a la etiqueta y el lector diría el nombre dos veces. La descripción queda para el ratón y la
+pulsación larga; la etiqueta, para el lector. La prueba comprueba las dos cosas por separado: la
+etiqueta en el nodo del resultado y la descripción en el `Tooltip` con su texto.
+
+**Después.** El nodo del resultado, con el mismo contenedor de Codex (`TSTU0000011`, `22G1`):
+
+```text
+label: "Carga peligrosa / TSTU0000011 / 22G1"      (antes: "TSTU0000011 / 22G1")
+label: "Refrigerado / TSTU0000011 / 22G1"
+label: "Fuera de medida / TSTU0000011 / 22G1"
+label: "Vacío / TSTU0000011 / 22G1"
+```
+
+El árbol completo de los cuatro casos, más un 22G1 corriente, en la búsqueda, en la tarjeta de la Lista
+y en el detalle, y las etiquetas de las cinco celdas del plano en las tres vistas (6.4), están en
+`docs/rediseno/fase3/paquete/correccion/semantica-busqueda.txt` (lo escriben dos pruebas de evidencia que
+no forman parte de la suite, `build/t114-paquete-correccion/semantica_test.dart`, fuera de Git por
+`/build/`).
+
+### 6.3 O1 · La regla única, en la Lista, en la búsqueda y en el detalle
+
+- **Una sola regla.** `condicionDelContenedor` devuelve la `CondicionDelContenedor` (glifo y nombre) con
+  la prioridad de 13.11: peligrosa, refrigerado, fuera de medida, vacío, tipo ISO, tamaño. Las funciones
+  de siempre, `iconoDeContenedor`, `iconoDeTipo` e `iconoDeTamano`, se derivan de ella y conservan su
+  firma: las pruebas del paquete que las usan no cambian. Así el nombre no puede separarse del glifo.
+- **La Lista.** La tarjeta dibuja su ícono principal con `IconoDelContenedor`, no con `iconoDeTipo`. El
+  color del ícono sigue ahora a la condición que manda, con los mismos colores que los chips de la propia
+  tarjeta (error para IMDG, primario para refrigerado, terciario para OOG, secundario para vacío) y, si
+  no hay condición, el color del tipo de antes. Los chips y los textos de carga especial siguen ahí.
+- **El detalle.** El detalle no tenía ícono principal: solo las señales de carga especial (`_Senal`), con
+  su texto, para peligrosa, refrigerado y fuera de medida. Para un vacío, un tanque o un 40 pies no
+  dibujaba nada, y la tabla de 13.11 lo nombra como uno de los sitios del ícono del contenedor. Ahora el
+  título de la hoja lleva el ícono delante del número, en tinta suave, con el mismo nombre. Las señales
+  siguen igual.
+- **`DESIGN.md` 13.11.** La fila «Contenedor» de la tabla nombra a `condicionDelContenedor`, y la regla 3
+  dice cómo se etiqueta el ícono principal y cuándo un ícono no necesita etiqueta propia.
+
+### 6.4 Los demás íconos del dominio, revisados
+
+Se revisaron los 90 usos de `BsIconos.` en `lib/` fuera de `bs_iconos.dart`, el catálogo y las vistas
+previas, mirando qué hay al lado de cada glifo y qué llega al árbol de semántica.
+
+| Cómo se dibuja | Dónde | Qué lo etiqueta |
+|---|---|---|
+| Botón con rótulo (`FilledButton.icon`, `TextButton.icon`, `OutlinedButton.icon`, `ButtonSegment`, `Tab`) | «Pedir cambio» y «Bandeja / Solicitudes de cambio», «Generar / Guardar BAPLIE de salida», «Comparar con la llegada» y «Comparar con otro BAPLIE…», «Elegir listado» y «Listado de la agencia», «Ir a …», «Editar tapas por bahía», «Seleccionar archivo», «Asignar vacío», «Ocupación», los segmentos Descarga / Carga de la banda del muelle, las pestañas de la comparación | el rótulo del botón |
+| `IconButton` con `tooltip` | «Tapas en la operación» (avance y plano), la nube en la barra y en los controles («Nube y cuenta · estado») | la descripción emergente |
+| Ícono junto a su texto, en la misma fila o entrada | las entradas de «Más», el menú de los controles de carga, las líneas de la comprobación de carga (descarga, peso por pila), la tarjeta de la Lista (posición, VGM, los chips IMO, refrigerado, IMDG y OOG), las señales y la sección de descarga del detalle («En GTSTC: …»), los pasos de la secuencia, los títulos y las tarjetas de Estadísticas, la leyenda («Vacío»), el chip de la nube, «Bahías» en el resumen del viaje, el destino «Plano» de la navegación | el texto de al lado dice lo mismo |
+| Con etiqueta propia | las filas de la comparación (`semanticLabel`), la solicitud pendiente sobre la celda (`Semantics(label: 'Solicitud pendiente en …')`), la marca de la celda (`dischargeMarkText` en la etiqueta de `BsCelda`) y, desde hoy, el ícono principal del contenedor | su `semanticLabel` o su `Semantics` |
+| Decorativo junto al nombre que ya se lee | `buque` delante del nombre del buque en el resumen del viaje y en los recientes (inicio y «Viajes recientes») | no comunica nada que el texto no diga |
+| **Comunicaba algo y no estaba en la etiqueta** | **la insignia de la celda del plano** | **nada; corregido en esta misma entrega, a pedido de Carlos: la etiqueta de la celda nombra la condición** |
+
+**El hallazgo, corregido.** `BsCelda` excluye su contenido de la semántica y expone solo `etiqueta`; en
+`bay_plan_view.dart` esa etiqueta se armaba con el número, la posición, la marca de descarga, el orden y
+«de paso», pero no con la insignia. En el plano, la carga peligrosa, el refrigerado y el fuera de medida
+se veían en la esquina de la celda y no se oían. (Las celdas que Codex revisó traían la insignia en la
+etiqueta porque eran las de las pruebas de `BsCelda`, que la escriben a mano.) Carlos pidió corregirlo
+dentro de esta parte, antes de subirla: la etiqueta lleva ahora, después de la marca de descarga, el
+nombre de la condición cuando la celda la señala (`CondicionDelContenedor.enLaCelda`: las tres insignias
+y el vacío), con los mismos nombres que el ícono principal y en las tres vistas de «Colorear por».
+«Vacío» entra también aunque solo la vista Tipo de vacío lo colorea: es lo que el contenedor es, y lo
+que el ícono principal diría. El tipo y el tamaño no se señalan en la celda y no van en su etiqueta. Las
+cinco celdas de la prueba, en la bahía 003 del viaje sintético, se leen así en las tres vistas:
+
+```text
+TSTU 000001 1, 003-01-82, Carga peligrosa
+TSTU 000002 2, 003-02-82, Refrigerado
+TSTU 000003 3, 003-03-82, Fuera de medida
+TSTU 000004 4, 003-04-82, Vacío
+TSTU 000005 5, 003-05-82
+```
+
+### 6.5 Pruebas
+
+`test/t114_paquete_correccion_test.dart`, 7 pruebas nuevas. Suite **1297** (1290 + 7), sin omitidas.
+
+| Prueba | Qué comprueba |
+|---|---|
+| H1 · los cuatro casos, leídos desde el árbol de semántica | con el mismo número y tipo ISO, el nodo del resultado contiene «Carga peligrosa», «Refrigerado», «Fuera de medida» o «Vacío» además del número y el ISO; el glifo es el de `iconoDeContenedor` y lleva ese `semanticLabel`; hay un `Tooltip` con el mismo texto, fuera de la semántica; las cuatro etiquetas son distintas |
+| H1 · sin carga especial, dice el tipo ISO o el tamaño | 22G1, 42G1, L5G1, 22T1, 42P1 y 22U1 dicen «Contenedor de 20 / 40 / 45 pies», «Tanque», «Plataforma» y «Techo abierto» |
+| H1 · la búsqueda y la Lista siguen las pautas con los cuatro casos | `meetsGuideline` de contraste, objetivos táctiles y objetivos con etiqueta, con los cuatro resultados y las cuatro tarjetas |
+| O1 · la condición da el glifo y el nombre, con la prioridad de 13.11 | la prioridad con condiciones combinadas (una peligrosa, refrigerada, fuera de medida y vacía dice «Carga peligrosa»; un tanque vacío dice «Vacío»), los diez nombres, glifos del paquete y distintos entre sí, y que `iconoDeContenedor`, `iconoDeTipo` e `iconoDeTamano` dan el glifo de la misma condición |
+| O1 · la Lista, la búsqueda y el detalle dibujan el mismo glifo con el mismo nombre | once contenedores (los cuatro casos y siete corrientes): el ícono principal de las tres pantallas tiene el mismo código, la familia `BayStreamIconos` y el mismo `semanticLabel` |
+| O1 · la tarjeta de la Lista y el detalle también dicen la condición | el nodo de la tarjeta contiene la condición y el número; en el detalle hay un nodo con la condición y el `Tooltip` lleva su texto |
+| La celda del plano dice su insignia · en Destino, Tipo de vacío y Estado | el plano real (`VesselOverviewPage`) con cinco celdas en la bahía 003, los cuatro casos y una corriente: en las tres vistas de «Colorear por», la etiqueta de `BsCelda` leída del árbol de semántica contiene el número y el nombre de su condición, y solo el suyo; la corriente no contiene ninguno; la insignia dibujada es la que el nombre dice; `enLaCelda` marca exactamente las cuatro |
+
+### 6.6 Validaciones ejecutadas
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze --no-pub` | 0 incidencias |
+| `flutter test --no-pub` | **1297** pruebas en verde, ninguna omitida (`build/t114-paquete-correccion/flutter-test.txt`) |
+| `flutter test build/t114-paquete-correccion/semantica_test.dart` | 2 pruebas de evidencia; escriben `semantica-busqueda.txt` (la búsqueda, la Lista y el detalle; las celdas del plano en las tres vistas) |
+| Auditoría `flutter-ui` (`--all`) | **17 / 248 / 20**, los mismos del paquete; el diff con la auditoría del paquete sin números de línea es vacío (solo se corren las líneas de `containers_list_view.dart`) · `docs/rediseno/fase3/paquete/correccion/flutter-ui-audit.txt` |
+| Censo T-112 (referencia `5406e20`) | **1950** visibles (1940 + los diez nombres): 1819 español, 131 sin idioma, **0 inglés**; M3 250 / 7 / 3; 217 / 217 mensajes · `docs/rediseno/fase3/paquete/correccion/censos/` |
+
+Flutter se usó con la luz verde vigente desde 10.22, un comando a la vez y después de que Codex entregó
+su dictamen. No se tocaron el emulador, el Honor, Firebase ni Git de escritura.
+
+### 6.7 Archivos
+
+- **Modificados (`lib/`):** `lib/features/vessel/presentation/widgets/iconos_del_dominio.dart`
+  (`CondicionDelContenedor`, `condicionDelContenedor`, `condicionDelTipo`, `condicionDelTamano`,
+  `IconoDelContenedor`; `iconoDeContenedor`, `iconoDeTipo` e `iconoDeTamano` derivadas),
+  `container_search_delegate.dart` (`_buildLeadingIcon`), `containers_list_view.dart` (el ícono principal
+  y `_getIconColor`), `detalle_contenedor.dart` (el ícono en el título) y `bay_plan_view.dart` (la
+  etiqueta de la celda nombra la condición; `CondicionDelContenedor.enLaCelda`).
+- **Modificados (documentos y herramientas):** `DESIGN.md` (13.11: la fila «Contenedor» y la regla 3),
+  `tool/t112_censos.py` (la decisión del censo para los diez nombres), este informe y
+  `docs/rediseno/fase3/traspaso-entrega2.md`.
+- **Nuevos:** `test/t114_paquete_correccion_test.dart`;
+  `docs/rediseno/fase3/paquete/correccion/semantica-busqueda.txt`, `flutter-ui-audit.txt`,
+  `censos/resumen.json` y `censos/tablas.md`.
+- No cambian `domain/`, `data/`, `lib/main.dart`, los congelados, Firebase, `pubspec.yaml` ni
+  `pubspec.lock`. Ninguna dependencia nueva.
+
+### 6.8 Lo que queda anotado y lo que Carlos decide
+
+1. **La insignia de la celda del plano**, que la revisión encontró sin nombre, se corrigió aquí a pedido
+   de Carlos (6.4). La celda dice también «Vacío» cuando el contenedor está vacío, en las tres vistas,
+   aunque solo Tipo de vacío lo colorea. Si Carlos prefiere «Vacío» solo en esa vista, es una condición
+   en `enLaCelda` y una línea en `bay_plan_view.dart`.
+2. **El ícono en el título del detalle** es nuevo: la tabla de 13.11 nombraba el detalle como sitio del
+   ícono y la hoja no lo tenía. Si Carlos lo prefiere en otro lugar de la hoja, o no lo quiere, es un
+   widget.
+3. **El color del ícono de la Lista** sigue ahora a la condición, como los chips; antes seguía solo al
+   tipo ISO. Si se prefiere el color del tipo en todos los casos, es una función (`_getIconColor`).
+4. **La descripción emergente fuera de la semántica** es una decisión explicada en 6.2 y en 13.11,
+   regla 3. Si Codex o Carlos prefieren que entre en el árbol, es un parámetro.
+
+### 6.9 Horas
+
+Unos 50 min: leer el dictamen y las decisiones, revisar los 90 usos, la pieza y los cuatro parches, las
+siete pruebas, las validaciones y este informe, con la vuelta de la insignia de la celda.
+
+### Git para Carlos (Fase 3, paquete, corrección)
+
+Un `git add` por ruta. Los generados de `windows/flutter/` y `test/t114_fase3_correccion_test.dart`
+figuran modificados solo por el fin de línea y no se agregan. El último comando tiene que mostrar
+**14 files changed**.
+
+```powershell
+git add -- lib/features/vessel/presentation/widgets/iconos_del_dominio.dart
+git add -- lib/features/vessel/presentation/widgets/container_search_delegate.dart
+git add -- lib/features/vessel/presentation/widgets/containers_list_view.dart
+git add -- lib/features/vessel/presentation/widgets/detalle_contenedor.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- DESIGN.md
+git add -- tool/t112_censos.py
+git add -- test/t114_paquete_correccion_test.dart
+git add -- docs/rediseno/fase3/paquete/correccion/semantica-busqueda.txt
+git add -- docs/rediseno/fase3/paquete/correccion/flutter-ui-audit.txt
+git add -- docs/rediseno/fase3/paquete/correccion/censos/resumen.json
+git add -- docs/rediseno/fase3/paquete/correccion/censos/tablas.md
+git add -- docs/rediseno/fase3/traspaso-entrega2.md
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: correccion del paquete de iconos (10.23), la busqueda, la lista, el detalle y la celda del plano dicen la condicion del contenedor con una sola regla"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+### Tres líneas
+
+- H1: el ícono principal del contenedor dice su condición al lector de pantalla y la muestra como
+  descripción emergente; los cuatro casos de Codex tienen cuatro etiquetas distintas.
+- O1: una sola regla, `CondicionDelContenedor`, da el glifo y el nombre; la Lista, la búsqueda y el
+  detalle dibujan lo mismo, y una prueba lo comprueba para once contenedores.
+- Suite 1297, `analyze` 0, auditoría sin cambios, censo 0 inglés; la insignia de la celda del plano, que
+  tampoco estaba en su etiqueta, entra también, a pedido de Carlos, en las tres vistas.
+
+### Mensaje para Yov
+
+Yov: la **corrección del paquete (10.23)** está escrita y probada, en un bloque aparte. **H1:** el ícono
+principal del contenedor es ahora una pieza, `IconoDelContenedor`, que dibuja el glifo de la condición con
+su nombre como `semanticLabel` y como `Tooltip` («Carga peligrosa», «Refrigerado», «Fuera de medida»,
+«Vacío», «Tanque», «Plataforma», «Techo abierto», «Contenedor de 20 / 40 / 45 pies»); la descripción
+emergente queda fuera de la semántica para que el lector no diga el nombre dos veces (iOS la añadiría a la
+etiqueta). El nodo del resultado pasa de «TSTU0000011 / 22G1» en los cuatro casos a «Carga peligrosa /
+TSTU0000011 / 22G1», etc.; el árbol de los cuatro casos está en
+`docs/rediseno/fase3/paquete/correccion/semantica-busqueda.txt`. **O1:** `CondicionDelContenedor`
+(glifo y nombre, prioridad de 13.11) es la única regla; `iconoDeContenedor`, `iconoDeTipo` e
+`iconoDeTamano` se derivan de ella y conservan su firma; la tarjeta de la Lista la usa (y su color sigue a
+la condición, como los chips) y el título del detalle lleva el ícono delante del número, porque la tabla de
+13.11 nombraba el detalle y la hoja no lo tenía. `DESIGN.md` 13.11: la fila «Contenedor» y la regla 3 (cómo
+se etiqueta el ícono principal y cuándo un ícono no necesita etiqueta). **Pruebas:** 7 nuevas en
+`test/t114_paquete_correccion_test.dart` (los cuatro casos desde el árbol de semántica; el tipo y el tamaño;
+pautas; la prioridad y los diez nombres; Lista, búsqueda y detalle con el mismo glifo y nombre para once
+contenedores; la tarjeta y el detalle también dicen la condición; la celda del plano en las tres vistas de «Colorear
+por»), suite **1297**, `analyze` 0, auditoría
+17/248/20 idéntica, censo 1950 visibles / 0 inglés (los diez de más son los nombres), M3 250/7/3. **De la
+revisión de los otros usos de íconos** (botones con rótulo, `IconButton` con tooltip, íconos junto a su
+texto, los que ya tienen etiqueta y los decorativos junto al nombre) salió **uno más sin nombre: la
+insignia de la celda del plano** (`bay_plan_view.dart` armaba la etiqueta sin ella y `BsCelda` excluye el
+resto de la semántica); Carlos pidió corregirlo antes de subir, y la celda nombra ahora su condición
+(«Carga peligrosa», «Refrigerado», «Fuera de medida», «Vacío») después de la marca, en Destino, Tipo de
+vacío y Estado, leída desde el árbol de semántica. El bloque tiene 14 archivos y no toca `domain/`, `data/`, `main.dart`, Firebase,
+`pubspec.yaml` ni `pubspec.lock`. Me detengo: ALTO: Codex acepta la corrección del paquete.
