@@ -600,3 +600,15 @@ La siguiente decisión es la **10.24**.
 La hace Timonel en su chat, en Max, como parte D y en un bloque aparte, después de la corrección del paquete (10.23). Después la acepta Codex.
 
 La siguiente decisión es la **10.25**.
+
+### 10.25 · El paquete de íconos, aceptado (23-oct, 13:01)
+
+**Codex revisó la corrección del paquete sobre `05dde52` y la aceptó** (`docs/rediseno/fase3/paquete/reaceptacion-codex.md`).
+- **H1:** cada resultado de la búsqueda dice su condición, una sola vez, desde el árbol de semántica.
+- **O1:** la Lista, la búsqueda y el detalle dibujan el mismo glifo y dicen el mismo nombre. La regla única es `CondicionDelContenedor`.
+- **La insignia de la celda del plano:** Timonel encontró que la etiqueta de la celda no la decía, y Carlos pidió corregirlo dentro de la misma corrección. Ahora la celda dice su condición en las tres vistas de «Colorear por». «Vacío» se lee en las tres vistas, porque es lo que el contenedor es, y no solo un color.
+- Suite 1297/1297 sin omitidas y `analyze` en cero.
+
+**Con esto queda cerrado el paquete de íconos e ilustraciones (10.18, 10.19 y 10.23).** Timonel sigue con la travesía del inicio (10.24).
+
+La siguiente decisión es la **10.26**.
