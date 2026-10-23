@@ -612,3 +612,31 @@ La siguiente decisión es la **10.25**.
 **Con esto queda cerrado el paquete de íconos e ilustraciones (10.18, 10.19 y 10.23).** Timonel sigue con la travesía del inicio (10.24).
 
 La siguiente decisión es la **10.26**.
+
+### 10.26 · La travesía no pasa: el cruce mueve el layout y RNF-002 en Windows no quedó acreditado (23-oct, 14:00)
+
+**Codex revisó la travesía sobre `f27de53`: NO PASA** (`docs/rediseno/fase3/travesia/aceptacion-codex.md`).
+- **H1 · El cruce y el vaivén cambian `Positioned.left` y `top` en cada cuadro** (`bs_travesia.dart`). Solo el cabeceo y las olas usan `Transform`. Eso contradice «solo `Transform` y opacidad» (10.24 y DESIGN.md 13.11, regla 7). En un segundo, `left` avanzó 48 dp.
+- **H2 · RNF-002 en Windows no quedó acreditado.** El detector de `tool/t114_primera_windows.py` busca primero el azul `#0D47A1`, y ese azul ya está en la ilustración del inicio, incluso de noche. Por eso pulsó el muelle del dibujo y no «Seleccionar archivo», y terminó con «Más de 120 s sin rejilla». Con el detector limitado al azul del botón, el clic acertó, pero la corrida volvió a quedarse sin el paso 3, por una causa que no se demostró. Codex no se lo atribuye a la animación: el problema del detector puede venir desde el paquete de íconos.
+- **O1 · El conductor de T-99 espera a que el inicio se quede quieto.** `_asentar` (`tool/t99_conductor.dart`) espera mientras haya cuadros programados, hasta 20 s, y después sigue sin avisar. Con la travesía, el inicio nunca se queda quieto. Los scripts de capturas de Windows heredan esa espera.
+- **Pasa lo demás:**
+  - 1311/1311 sin omitidas y `analyze` en cero;
+  - la pintura compartida no altera las seis ilustraciones;
+  - el dibujo y los tiempos que pide 10.24;
+  - la reducción de movimiento;
+  - la travesía se detiene al abrir un plano y vuelve al regresar;
+  - no tapa ni empuja nada;
+  - los censos.
+- **Rendimiento, medido en clientes reales durante 60 s:**
+  - Windows: build p99 0.55 ms y raster p99 2.18 ms;
+  - la Web: build p99 1.0 ms;
+  - el buque no se repintó en todo ese tiempo.
+
+**Yov acepta el dictamen.** Timonel corrige en su chat, en Max, en un bloque aparte:
+- H1: el cruce y el vaivén van con `Transform.translate` sobre una caja fija. El buque sigue pintándose una sola vez, y su layout no cambia en cada cuadro.
+- H2: los detectores de los instrumentos validan que lo que pulsan es el botón, y no un color que también aparece en un dibujo. Hay que encontrar la causa del segundo bloqueo y repetir RNF-002 en Windows con los tres pasos y la captura de la rejilla. Hay que revisar también los instrumentos de la Web y Android, por si tienen el mismo supuesto, y repetir lo que cambie.
+- O1: los instrumentos que necesitan reposo piden reducción de movimiento, o esperan un estado concreto con un tiempo límite que avisa al vencer. Los que miden la animación usan una ventana de cuadros acotada.
+
+Después, Codex vuelve a aceptar solo la corrección.
+
+La siguiente decisión es la **10.27**.
