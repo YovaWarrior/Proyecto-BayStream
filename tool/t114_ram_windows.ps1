@@ -6,9 +6,11 @@
 # El banco se abre con explorer.exe, fuera del paquete de la consola, desde un
 # .cmd que lleva las variables del conductor (el proceso de explorer.exe no
 # hereda las de esta consola), como hace tool/t114_capturas_windows.ps1
-# -PorExplorer. Por corrida: un pasos-N.jsonl, el PID, `seguir` (que mide cinco
-# lecturas tras 5 s de reposo en cada paso) y `cerrar`. La primera corrida es en
-# frío y se descarta en el análisis, como en T-99 (B.3).
+# -PorExplorer. El conductor pide reducción de movimiento (10.26): el inicio
+# con la travesía se asienta antes de cada lectura. Por corrida: un
+# pasos-N.jsonl, el PID, `seguir` (que mide cinco lecturas tras 5 s de reposo en
+# cada paso) y `cerrar`. La primera corrida es en frío y se descarta en el
+# análisis, como en T-99 (B.3).
 #
 #   ./tool/t114_ram_windows.ps1 -Exe "$env:TEMP\t99-r4-e2\copia\build\windows\x64\runner\Release\baystream.exe" `
 #       -Salida "$env:TEMP\t114-e2\ram-despues" -Archivo T99_SINTETICO_977.edi -Corridas 6
@@ -44,6 +46,7 @@ for ($n = 1; $n -le $Corridas; $n++) {
         "set T99_ARCHIVO=$Archivo",
         "set T99_PASOS=$pasos",
         "set T99_PAUSA_MS=$PausaMs",
+        "set T99_MOVIMIENTO=reducido",
         "start `"`" `"$exeCompleto`""
     )
     [IO.File]::WriteAllLines($cmd, $lineas, (New-Object Text.ASCIIEncoding))
@@ -62,6 +65,9 @@ for ($n = 1; $n -le $Corridas; $n++) {
     Write-Output "Corrida $n · PID $($p.Id) · $(if ($n -eq 1) { 'en frío' } else { 'medida' })"
     & $ram -Accion seguir -AppPid $p.Id -Pasos $pasos -Salida $csv -Archivo ([IO.Path]::GetFileNameWithoutExtension($Archivo)) -Corrida $n
     & $ram -Accion cerrar -AppPid $p.Id
+    # 10.26 (O1): cada espera de reposo que venció queda como paso `aviso`.
+    $avisos = if (Test-Path $pasos) { @(Select-String -Path $pasos -Pattern '"paso":\s*"aviso"').Count } else { 0 }
+    Write-Output "Corrida $n · esperas de reposo vencidas (aviso): $avisos"
     Start-Sleep -Seconds 3
 }
 Write-Output "Lecturas en $csv"

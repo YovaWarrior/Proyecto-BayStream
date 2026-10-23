@@ -4241,3 +4241,256 @@ poder asentarse (abre el inicio a 1000 × 2600). **Capturas:** 12 PNG en
 95 % del cruce), de prueba de widget con las fuentes reales y el reloj de la prueba; no son de un
 cliente. `DESIGN.md`: la fila del pie del inicio en 13.7 y la regla 7 de 13.11, con la excepción de la
 proa. Me detengo: ALTO: Codex acepta la travesía.
+
+## Fase 3 · La travesía · Corrección tras la aceptación de Codex (23-oct-2026)
+
+Codex no aceptó la travesía (`docs/rediseno/fase3/travesia/aceptacion-codex.md`; decisión 10.26). El
+rendimiento salió bien en los dos clientes (Windows: build p99 0.55 ms, raster p99 2.18 ms; la Web: build
+p99 1.0 ms; el buque no se repintó en 60 s), pero quedaron tres cosas: **H1**, el cruce y el vaivén
+cambiaban `Positioned.left` y `top` en cada cuadro; **H2**, RNF-002 en Windows no quedó acreditado porque
+el detector de `tool/t114_primera_windows.py` pulsó el muelle de la ilustración y, cuando el clic acertó,
+la corrida se quedó sin el paso 3; y **O1**, `_asentar` del conductor de T-99 esperaba un reposo que el
+inicio ya no tiene. Esta sección corrige las tres cosas en un bloque aparte.
+
+### 8.1 Resultado en tres líneas
+
+- H1: la caja del buque queda fija (`left: 0`, el alto de siempre) y el cruce, el vaivén y el cabeceo
+  son un solo `Transform` sobre ella; el buque sigue pintándose una vez y una prueba nueva lee la
+  posición de layout en dos instantes y comprueba que es la misma.
+- H2: el detector lee el tema del papel, acepta solo un rectángulo con la forma y el rótulo del botón,
+  conoce la capa de hover y aparca el cursor antes de buscar, y el clic se comprueba y se repite con
+  diagnóstico; RNF-002 en Windows volvió a correr entero: cinco
+  repeticiones con los tres pasos y la captura de la rejilla, entre 1.84 y 1.89 s.
+- O1: el conductor pide reducción de movimiento y `_asentar` avisa al vencer; los scripts de capturas y
+  RAM de Windows cuentan esos avisos. La Web y Android no suponían reposo ni color: no cambian. Suite
+  1312, `analyze` 0, auditoría y censo iguales.
+
+### 8.2 H1 · La caja fija y el `Transform`
+
+`BsGeometriaDeTravesia` tiene ahora `arribaDeLaCaja` (dónde va el borde de arriba de la caja, sin
+vaivén), `ejeDelCabeceoEnLaCaja` (el eje del cabeceo en dp) y `transformacion(instante)`: una matriz que
+traslada lo que el cruce y el vaivén piden y gira el cabeceo alrededor de su eje. El `Positioned` del
+buque es fijo (`left: 0`, `top: arribaDeLaCaja`, el ancho y el alto de la caja) y dentro van el
+`ValueListenableBuilder`, la `Opacity` y un único `Transform` con esa matriz; el `RepaintBoundary` con el
+`CustomPaint` es el hijo que no se reconstruye. Así, por cuadro cambian solo la opacidad y la
+transformación, y el layout de la caja no cambia nunca; las olas ya iban así. `DESIGN.md` 13.11, regla 7,
+lo dice ahora con esas palabras.
+
+La prueba nueva (`Solo Transform y opacidad (10.26, H1)`) monta la banda, deja pasar 3 s, lee el
+`StackParentData.offset` del buque, su `Positioned` y su tamaño, deja pasar 2 s más y comprueba que los
+tres siguen iguales, que hay un solo `Transform` bajo la `Opacity`, que el dibujo (la esquina del
+`RepaintBoundary`, ya transformada) se corrió lo que tocan 2 s de cruce, y que el contador de pintadas no
+subió. Las pruebas que medían dónde está el buque leen ahora el dibujo dentro del `Transform`, no la
+caja; una tolerancia de 3 dp absorbe lo que el cabeceo corre la esquina.
+
+### 8.3 H2 · El detector, el clic y RNF-002
+
+**El detector.** `boton_de_marca` ya no prueba azules por turno. Lee el tema por el papel de la ventana
+(el color que más píxeles ocupa: `#F5F8FC` de día, `#07111F` de noche), busca rectángulos del color del
+botón de ese tema (`#0D47A1` de día, `#4F8EF7` de noche) y acepta solo el que tiene la forma del botón
+(de 40 a 120 px de alto, al menos tres veces más ancho que alto, al menos 120 px de ancho y relleno en un
+75 % o más) y lleva un rótulo dentro: píxeles que no son del color del botón, concentrados en la franja
+central de filas, centrados a lo ancho y con una extensión de entre el 8 y el 60 % del ancho. El muelle de
+la ilustración comparte el azul de día, pero no esa forma ni esa firma. Antes de pulsar, el botón tiene
+que verse en el mismo sitio en dos cuadros seguidos. `--detector <png>…` corre solo el detector sobre
+capturas guardadas; sobre las de Codex y las de la entrega 2 da esto (`detector.txt`):
+
+```text
+{"imagen": "<aceptación de Codex>/rnf-windows/sin01/inicio.png", "tamano": [1938, 1038], "tema": "oscuro", "boton": {"punto": [420, 592], "tema": "oscuro", "caja": [69, 772, 563, 621], "ancho": 704, "alto": 59, "relleno": 0.971, "rotulo": 0.263, "rotuloDesvio": 0.006, "otros": 0.029, "color": "normal"}}
+{"imagen": "<aceptación de Codex>/rnf-tema/sin01/inicio.png", "tamano": [1938, 1038], "tema": "oscuro", "boton": {"punto": [420, 592], "tema": "oscuro", "caja": [69, 772, 563, 621], "ancho": 704, "alto": 59, "relleno": 0.971, "rotulo": 0.263, "rotuloDesvio": 0.006, "otros": 0.029, "color": "normal"}}
+{"imagen": "docs/rediseno/fase3/entrega2/rnf-002/windows/sin01/inicio.png", "tamano": [1938, 1038], "tema": "oscuro", "boton": {"punto": [420, 275], "tema": "oscuro", "caja": [69, 772, 246, 304], "ancho": 704, "alto": 59, "relleno": 0.973, "rotulo": 0.266, "rotuloDesvio": 0.007, "otros": 0.027, "color": "normal"}}
+{"imagen": "docs/rediseno/fase3/entrega2/rnf-002/windows/sin01/rejilla.png", "tamano": [1938, 1038], "tema": "oscuro", "boton": null}
+{"imagen": "docs/rediseno/fase3/travesia/correccion/rnf-002/windows-intento-hover/sin04/ultimo.png", "tamano": [1938, 1038], "tema": "oscuro", "boton": {"punto": [420, 592], "tema": "oscuro", "caja": [69, 772, 563, 621], "ancho": 704, "alto": 59, "relleno": 0.971, "rotulo": 0.263, "rotuloDesvio": 0.006, "otros": 0.029, "color": "hover"}}
+{"imagen": "docs/rediseno/fase3/travesia/correccion/rnf-002/windows/sin01/inicio.png", "tamano": [1938, 1038], "tema": "oscuro", "boton": {"punto": [420, 592], "tema": "oscuro", "caja": [69, 772, 563, 621], "ancho": 704, "alto": 59, "relleno": 0.971, "rotulo": 0.263, "rotuloDesvio": 0.006, "otros": 0.029, "color": "normal"}}
+{"imagen": "docs/rediseno/fase3/travesia/correccion/rnf-002/windows/sin01/rejilla.png", "tamano": [1938, 1038], "tema": "oscuro", "boton": null}
+```
+
+**Lo que encontró la primera corrida: el botón bajo el cursor.** La primera corrida con el detector nuevo
+dio 3.08 s, 67.7 s (con el clic a los 66.6 s), 2.13 s y un «Más de 120 s sin rejilla» sin clic, con el
+inicio a la vista todo el tiempo. El histograma de esos cuadros lo explica
+(`rnf-002/windows-intento-hover/histograma.txt`): al repetir, el cursor queda donde pulsó la repetición
+anterior, justo sobre el botón, y el botón nace con la capa de hover de Material 3 (`onPrimary` al 8 %):
+(74, 132, 230) en vez de (79, 142, 247), 17 unidades de distancia, fuera de la tolerancia de 12. El
+detector se corrige por los dos lados: antes de buscar, el cursor se aparca en la barra de título de la
+ventana (`cursorAparcado` en el registro), y `MARCAS` trae por tema la variante `normal` y la `hover`
+(de día, (32, 86, 169)); `--detector` dice cuál vio (`color`). Sobre `sin04/ultimo.png` de ese intento da
+ahora el botón con `color: hover`. Los registros de las cuatro repeticiones quedan como evidencia; no se
+cuentan como medición.
+
+**El clic se comprueba.** Tras pulsar, si en 4 s no asoma el selector, el instrumento anota qué ventana
+estaba en primer plano y cuál había bajo el cursor (`WindowFromPoint`, `GetForegroundWindow`,
+`GetCursorPos`), guarda el cuadro, vuelve a traer el banco al frente y repite el clic, hasta tres veces;
+después falla con ese diagnóstico, en vez de esperar 120 s en silencio. Cada intento queda en
+`registro.json` (`clics`, con `selectorEnS` y `diagnostico`) y en `reintentosDeClic`.
+
+**La causa del segundo bloqueo.** En la corrida de Codex con el clic en el botón (`rnf-tema/sin01`), el
+clic salió a los 0.56 s, 0.14 s después de aparecer la ventana, al punto correcto; y en los cuadros
+siguientes la diferencia entre cuadros se quedó en 0.02 a 0.06 (solo el buque entrando): ni la onda del
+botón, que mueve 40 000 píxeles, ni el selector. Es decir, el puntero nunca llegó al botón, no que el
+selector tardara. El instrumento de entonces no podía decir por qué: esperaba el selector en silencio.
+Las dos diferencias con las corridas de la entrega 2, que sí abrieron el selector en 1.5 s, son el momento
+(allí el clic salió 0.22 a 0.25 s después de la ventana) y la consola que lo lanzó. Esta corrección quita
+las dos dudas: el botón tiene que estar quieto dos cuadros antes del clic, y si el clic no abre el
+selector queda escrito a qué ventana fue y se repite. En las cinco repeticiones de aquí, el primer clic
+abrió el selector en todas (0 reintentos); el diagnóstico queda listo para la reaceptación de
+Codex, por si en su consola vuelve a pasar.
+
+**RNF-002 en Windows, repetido** (`rnf-002/windows/`, tema del sistema oscuro, sin perfil, banco r4
+del árbol corregido compilado en `%TEMP%\t99-r4-travesia`, almacén en `%TEMP%`, el sintético de 977):
+
+| Repetición | Ventana (s) | Clic (s) | Selector confirmado (s) | Rejilla quieta (s) | Reintentos | El botón que vio | ≤ 30 s |
+|---:|---:|---:|---:|---:|---:|---|---|
+| 1 | 0.397 | 0.796 | 1.619 | 1.877 | 0 | 704 × 59, relleno 0.97, rótulo 0.26 | sí |
+| 2 | 0.459 | 0.863 | 1.639 | 1.893 | 0 | 704 × 59, relleno 0.97, rótulo 0.26 | sí |
+| 3 | 0.437 | 0.815 | 1.585 | 1.841 | 0 | 704 × 59, relleno 0.97, rótulo 0.26 | sí |
+| 4 | 0.457 | 0.825 | 1.600 | 1.851 | 0 | 704 × 59, relleno 0.97, rótulo 0.26 | sí |
+| 5 | 0.436 | 0.805 | 1.621 | 1.873 | 0 | 704 × 59, relleno 0.97, rótulo 0.26 | sí |
+
+Tres pasos del producto en las cinco; mediana 1.87 s, incertidumbre 0.05 s. Cada carpeta
+`sinNN/` trae `inicio.png` (lo que vio el detector), `rejilla.png` (el primer cuadro quieto con el plano)
+y `final.png`.
+
+### 8.4 O1 · El conductor y los scripts que heredan su espera
+
+`tool/t99_conductor.dart` pide reducción de movimiento en su `MediaQuery` (`disableAnimations: true`)
+salvo que `T99_MOVIMIENTO=completo`: es lo que pide el sistema cuando alguien activa esa opción, y con
+ello el inicio con la travesía se asienta (el buque quieto a un tercio del ancho, las olas quietas, sin
+tickers). `_asentar` espera hasta `T99_ASENTAR_MS` (20 000 por omisión), devuelve si hubo reposo y, si
+el límite vence, lo anota como paso `aviso` (`asentar: vencido`, los ms) y sigue: quien lee los pasos sabe
+que lo que siguió se tomó sin reposo. `t114_capturas_windows.ps1` pasa `T99_MOVIMIENTO` (parámetro
+`-Movimiento`, `reducido` por omisión) y, al terminar, dice cuántas esperas vencieron; `t114_ram_windows.ps1`
+fija `reducido` y lo dice por corrida. Con el escenario `inicio` a 1920 × 1080 y letra 1.0:
+
+| Corrida | `T99_MOVIMIENTO` | PNG | Esperas vencidas (`aviso`) | Último paso |
+|---|---|---:|---:|---|
+| `capturas-reposo/` | reducido | 4 | 0 | fin |
+| `capturas-completo/` | completo | 1 | 11 (de 20002 a 20054 ms) | fin |
+
+### 8.5 La Web y Android, revisados
+
+| Instrumento | Cómo encuentra el botón | Cómo espera | Veredicto |
+|---|---|---|---|
+| `t114_primera_web.js` / `.py` (RNF-002 Web) | por el texto «Seleccionar archivo» en la semántica, no por color | `esperarCuadros` con límite y error explícito («espera agotada», «Sin rejilla en el límite»); el fin es una bahía en la semántica, no un cuadro quieto | sin el supuesto; no cambia |
+| `t114_primera_android.py` + `t114_primera_cuadros.py` | por el texto en `uiautomator` | el fin lo da el video: el primer cuadro desde el que todo se parece al cuadro final (el plano quieto); a 360 × 640 la banda no existe | sin el supuesto; no cambia |
+| `t114_capturas_web.py` / `_plano.py` | por el texto (`esperar(page, patrón)` con límite) | pausas fijas y `wait_for_function` con `timeout` | sin el supuesto; no cambia |
+| `t114_capturas_android.py` / `_plano.py` | por el texto en `uiautomator` | `esperar` por intentos y `screencap` | sin el supuesto; no cambia |
+| `t114_capturas_windows.ps1`, `t114_ram_windows.ps1` (conductor) | no pulsan: el conductor toca por elemento | heredaban `_asentar` | corregidos (8.4) |
+| `t114_primera_windows.py` | por color, forma y rótulo | selector con límite y diagnóstico; rejilla por cuadro quieto (el plano no se anima) | corregido (8.3) |
+
+Los instrumentos de T-98 no se tocan.
+
+### 8.6 Pruebas
+
+`test/t114_travesia_test.dart` pasa de 14 a 15 pruebas: la nueva de H1 (8.2) y las cinco que leían la
+posición del buque, ahora sobre el dibujo dentro del `Transform`; «es decorativa» toca el buque a la
+mitad del cruce y el agua, y comprueba que ningún objeto de la banda entra en el `HitTestResult` (la
+versión anterior tocaba un punto fuera de la ventana). Suite **1312** (1311 + 1), sin omitidas.
+
+### 8.7 Validaciones ejecutadas
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze --no-pub` | 0 incidencias |
+| `flutter test --no-pub` | **1312** pruebas en verde, ninguna omitida (`build/t114-travesia/flutter-test.txt`) |
+| `tool/t114_primera_windows.py --perfil sin --repeticiones 5` | 5 de 5 con tres pasos y rejilla; 8.3 |
+| `tool/t114_primera_windows.py --detector` | el botón en las capturas de Codex y de la entrega 2; nada en la rejilla |
+| `tool/t114_capturas_windows.ps1 -Escenario inicio -Anchos 1920x1080 -Letras 1.0 -PorExplorer` | reducido: 0 avisos; completo: 11 avisos (8.4) |
+| Auditoría `flutter-ui` (`--all`) | **17 / 248 / 20**, idéntica a la travesía · `flutter-ui-audit.txt` |
+| Censo T-112 (referencia `5406e20`) | **1950** visibles, **0 inglés**; M3 250 / 7 / 3; 217 / 217 · `censos/` |
+
+Flutter se usó con la luz verde de 10.26, un comando a la vez; las mediciones se hicieron sin compilar ni
+correr pruebas a la vez. El banco se abrió con `explorer.exe` y el almacén fue el de `%TEMP%`. No se tocó
+el emulador, el Honor, Firebase ni Git de escritura.
+
+### 8.8 Archivos
+
+- **Modificados (`lib/` y `test/`):** `lib/core/design/componentes/bs_travesia.dart` (H1),
+  `test/t114_travesia_test.dart` (15 pruebas).
+- **Modificados (instrumentos):** `tool/t114_primera_windows.py` (H2), `tool/t99_conductor.dart`,
+  `tool/t114_capturas_windows.ps1` y `tool/t114_ram_windows.ps1` (O1).
+- **Modificados (documentos):** `DESIGN.md` (13.11, regla 7), este informe y
+  `docs/rediseno/fase3/traspaso-entrega2.md`.
+- **Nuevos:** `docs/rediseno/fase3/travesia/correccion/` (la corrida RNF-002 con sus registros y PNG, las
+  dos corridas del conductor, el detector, la auditoría y los censos).
+- No cambian `domain/`, `data/`, `lib/main.dart`, los congelados, Firebase, `pubspec.yaml`,
+  `pubspec.lock`, el paquete de Nube ni los instrumentos de T-98.
+
+### 8.9 Lo que queda anotado y lo que Carlos decide
+
+1. **La causa del segundo bloqueo de Codex** se acota, no se reproduce (8.3): el puntero no llegó al
+   botón. El instrumento ahora lo diría; si en la consola de Codex vuelve a pasar, el `diagnostico` de
+   `registro.json` dirá a qué ventana fue el clic.
+2. **La condición «con perfil» no se repitió**: es informativa y el almacén de la copia nueva no tiene
+   un perfil confirmado. Si Codex la quiere, es una corrida más con `--perfil con`.
+3. **Con `T99_MOVIMIENTO=completo` las capturas del inicio salen con el buque en un instante cualquiera**
+   y las esperas vencen: es el modo para medir la animación, no para capturar.
+4. **El clic sigue siendo `mouse_event` de `t98acc_sonda_windows.py`**, que no se toca; la
+   comprobación y el reintento están en el instrumento de T-114.
+5. **La capa de hover** son dos ternas por tema en `MARCAS`, calculadas como `onPrimary` al 8 % sobre
+   `primary`; si el tema cambia esos tokens, cambian ahí.
+
+### 8.10 Horas
+
+Unas 2 h 15 min: leer el dictamen y los instrumentos, H1 y su prueba, el detector y el clic con sus
+reintentos, el conductor y los scripts, el banco de Windows, las corridas de RNF-002 y del conductor,
+las validaciones y este informe.
+
+### Git para Carlos (Fase 3, la travesía, corrección)
+
+Un `git add` por ruta; la evidencia de la corrección va por carpeta. Los generados de `windows/flutter/`
+y `test/t114_fase3_correccion_test.dart` figuran modificados solo por el fin de línea y no se agregan. El
+último comando tiene que mostrar **48 files changed**.
+
+```powershell
+git add -- lib/core/design/componentes/bs_travesia.dart
+git add -- test/t114_travesia_test.dart
+git add -- tool/t114_primera_windows.py
+git add -- tool/t99_conductor.dart
+git add -- tool/t114_capturas_windows.ps1
+git add -- tool/t114_ram_windows.ps1
+git add -- DESIGN.md
+git add -- docs/rediseno/fase3/travesia/correccion
+git add -- docs/rediseno/fase3/traspaso-entrega2.md
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: correccion de la travesia (10.26), caja fija con Transform, el detector de Windows valida el boton y comprueba el clic, RNF-002 repetido, y el conductor de T-99 pide reduccion de movimiento y avisa al vencer la espera"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+### Tres líneas
+
+- H1: la caja del buque no cambia de sitio ni de tamaño en ningún cuadro; el cruce, el vaivén y el
+  cabeceo son un solo `Transform`, y una prueba lo lee del layout.
+- H2: el detector reconoce el botón por el tema, la forma y el rótulo, el clic se comprueba y se
+  repite con diagnóstico, y RNF-002 en Windows está acreditado: cinco corridas con tres pasos y
+  rejilla, entre 1.84 y 1.89 s.
+- O1: el conductor pide reducción de movimiento y avisa al vencer la espera; la Web y Android no tenían
+  el supuesto. Suite 1312, analyze 0, auditoría y censo iguales.
+
+### Mensaje para Yov
+
+Yov: la **corrección de la travesía (10.26)** está escrita, probada y medida, en un bloque aparte de
+48 archivos. **H1:** la caja del buque queda fija (`Positioned` con `left: 0` y el alto de siempre)
+y el cruce, el vaivén y el cabeceo van en un solo `Transform` (`BsGeometriaDeTravesia.transformacion`,
+que traslada y gira alrededor del eje del casco); por cuadro cambian solo la opacidad y esa matriz, el
+buque se pinta una vez y la prueba nueva lee `StackParentData.offset`, el `Positioned` y el tamaño en dos
+instantes. **H2:** `t114_primera_windows.py` lee el tema por el papel, busca el botón del color de ese
+tema y acepta solo el rectángulo con su forma (40–120 px de alto, ≥ 3:1, ≥ 120 px, relleno ≥ 75 %) y su
+rótulo centrado; `--detector` lo corre sobre capturas (en las de Codex da el botón, [420, 592], no el
+muelle); el botón tiene que estar quieto dos cuadros, el cursor se aparca en la barra de título y el
+detector acepta la capa de hover (la primera corrida perdió dos de cuatro repeticiones porque el botón
+nacía bajo el cursor de la repetición anterior, apagado; evidencia en `windows-intento-hover/`); y tras
+el clic, si en 4 s no asoma el selector,
+anota qué ventana estaba en primer plano y cuál bajo el cursor, trae el banco al frente y repite hasta
+tres veces, y después falla con ese diagnóstico. La causa del segundo bloqueo de Codex se acota: el clic
+salió al punto correcto a los 0.56 s y los cuadros siguientes no muestran ni la onda del botón, así que el
+puntero no llegó al banco; el instrumento ahora lo diría y lo reintenta. **RNF-002 en Windows, repetido:**
+cinco repeticiones sin perfil con los tres pasos y la rejilla, entre 1.84 y 1.89 s
+(mediana 1.87), 0 reintentos, con `inicio`, `rejilla` y `final` por repetición. **O1:** el
+conductor pide `disableAnimations` (`T99_MOVIMIENTO=reducido` por omisión; `completo` para medir la
+animación con cuadros acotados), `_asentar` devuelve si hubo reposo y anota `aviso` al vencer
+`T99_ASENTAR_MS`, y los scripts de capturas y RAM de Windows lo cuentan: con reducido, 0 avisos y el
+inicio quieto; con completo, 11 avisos. **La Web y Android** encuentran el botón por texto y esperan
+estados concretos con límite o leen el fin del video: no tenían el supuesto y no cambian; los de T-98 no
+se tocan. **Cifras:** suite 1312 (1311 + 1), `analyze` 0, auditoría 17/248/20 idéntica, censo 1950 / 0
+inglés. Me detengo: ALTO: Codex acepta la corrección de la travesía.

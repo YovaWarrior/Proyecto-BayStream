@@ -1,0 +1,44 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "sin",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-travesia\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "repeticiones": [
+  {
+   "repeticion": 1,
+   "tiempoHastaRejillaS": 1.877,
+   "pasos": 3,
+   "cumpleTiempo": true,
+   "reintentosDeClic": 0
+  },
+  {
+   "repeticion": 2,
+   "tiempoHastaRejillaS": 1.893,
+   "pasos": 3,
+   "cumpleTiempo": true,
+   "reintentosDeClic": 0
+  },
+  {
+   "repeticion": 3,
+   "tiempoHastaRejillaS": 1.841,
+   "pasos": 3,
+   "cumpleTiempo": true,
+   "reintentosDeClic": 0
+  },
+  {
+   "repeticion": 4,
+   "tiempoHastaRejillaS": 1.851,
+   "pasos": 3,
+   "cumpleTiempo": true,
+   "reintentosDeClic": 0
+  },
+  {
+   "repeticion": 5,
+   "tiempoHastaRejillaS": 1.873,
+   "pasos": 3,
+   "cumpleTiempo": true,
+   "reintentosDeClic": 0
+  }
+ ],
+ "incertidumbreS": 0.05
+}

@@ -1,0 +1,6 @@
+{"paso":"inicio","ts":"2026-10-23T20:37:19.031983Z","escenario":"inicio","archivo":"T100_LLEGADA.edi"}
+{"paso":"captura","ts":"2026-10-23T20:37:20.551460Z","tamano":"1920x1080_claro_letra1.0","pantalla":"inicio","archivo":"1920x1080_claro_letra1.0_inicio.png","logico":"1920x1080","textos_que_no_caben":[],"desplazables_horizontales":[],"errores_de_flutter":[]}
+{"paso":"captura","ts":"2026-10-23T20:37:20.731103Z","tamano":"1920x1080_claro_letra1.0","pantalla":"previo","archivo":"1920x1080_claro_letra1.0_previo.png","logico":"1920x1080","textos_que_no_caben":[],"desplazables_horizontales":[],"errores_de_flutter":[]}
+{"paso":"captura","ts":"2026-10-23T20:37:21.428505Z","tamano":"1920x1080_oscuro_letra1.0","pantalla":"inicio","archivo":"1920x1080_oscuro_letra1.0_inicio.png","logico":"1920x1080","textos_que_no_caben":[],"desplazables_horizontales":[],"errores_de_flutter":[]}
+{"paso":"captura","ts":"2026-10-23T20:37:21.588545Z","tamano":"1920x1080_oscuro_letra1.0","pantalla":"previo","archivo":"1920x1080_oscuro_letra1.0_previo.png","logico":"1920x1080","textos_que_no_caben":[],"desplazables_horizontales":[],"errores_de_flutter":[]}
+{"paso":"fin","ts":"2026-10-23T20:37:21.675382Z"}

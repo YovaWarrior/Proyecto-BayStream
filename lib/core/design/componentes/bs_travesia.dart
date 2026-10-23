@@ -37,8 +37,10 @@ typedef BsInstanteDeTravesia = ({
 /// [aguaMinima]) y el buque mide la mitad del alto de la banda, entre
 /// [buqueMinimo] y [buqueMaximo]. Por debajo de [altoMinimo] no se pinta nada
 /// (13.11, regla 4). El buque y las tiras de las olas se pintan una sola vez,
-/// cada uno dentro de su `RepaintBoundary`; lo que cambia por cuadro es solo un
-/// `Transform` y una opacidad. Con reducción de movimiento el buque queda
+/// cada uno dentro de su `RepaintBoundary`, en cajas que no cambian de sitio
+/// ni de tamaño en ningún cuadro; lo que cambia por cuadro es solo un
+/// `Transform` (el cruce, el vaivén y el cabeceo del buque; el corrimiento de
+/// cada ola) y una opacidad. Con reducción de movimiento el buque queda
 /// quieto a un tercio del ancho, las olas no corren y no hay ningún ticker
 /// activo; con otra pantalla encima (`TickerMode`) o con la app en segundo
 /// plano (`AppLifecycleState`) se detiene. Es decorativa: sin semántica, sin
@@ -207,6 +209,30 @@ class BsGeometriaDeTravesia {
       x / _Lienzo.anchoDelBuque * 2 - 1,
       y / _Lienzo.altoDelBuque * 2 - 1,
     );
+  }
+
+  /// El eje del cabeceo dentro de la caja del buque, en dp.
+  Offset get ejeDelCabeceoEnLaCaja {
+    final eje = ejeDelCabeceo;
+    return Offset(
+        (eje.x + 1) / 2 * anchoDelBuque, (eje.y + 1) / 2 * altoDelBuque);
+  }
+
+  /// Dónde va el borde de arriba de la caja fija del buque, desde arriba
+  /// de la banda: la caja no se mueve; el vaivén va en la transformación.
+  double get arribaDeLaCaja => lineaDeFlotacion - altoDelBuqueSobreElAgua;
+
+  /// La transformación de la caja fija del buque en un [instante]: la
+  /// traslación del cruce y del vaivén, y el giro del cabeceo alrededor de
+  /// su eje. Es lo único que cambia por cuadro; el layout de la caja no
+  /// cambia nunca (10.26, H1).
+  Matrix4 transformacion(BsInstanteDeTravesia instante) {
+    final eje = ejeDelCabeceoEnLaCaja;
+    return Matrix4.identity()
+      ..translateByDouble(instante.x, instante.vaiven, 0, 1)
+      ..translateByDouble(eje.dx, eje.dy, 0, 1)
+      ..rotateZ(instante.cabeceo)
+      ..translateByDouble(-eje.dx, -eje.dy, 0, 1);
   }
 
   /// Dónde están las dos olas, desde arriba de la banda: a un tercio y a dos
@@ -446,36 +472,35 @@ class _BsTravesiaState extends State<BsTravesia>
                       ),
                     ),
                   ),
-                // El buque: se pinta una vez; por cuadro cambian su sitio, su
-                // vaivén, su cabeceo y su opacidad.
-                ValueListenableBuilder<Duration>(
-                  valueListenable: _tiempo,
-                  builder: (BuildContext context, Duration t, Widget? buque) {
-                    final instante =
-                        _reducido ? geometria.quieto : geometria.instante(t);
-                    return Positioned(
-                      left: instante.x,
-                      top: geometria.lineaDeFlotacion -
-                          geometria.altoDelBuqueSobreElAgua +
-                          instante.vaiven,
-                      width: geometria.anchoDelBuque,
-                      height: geometria.altoDelBuque,
-                      child: Opacity(
+                // El buque: se pinta una vez, y su caja no cambia de sitio ni
+                // de tamaño en ningún cuadro (10.26, H1). Por cuadro cambian
+                // solo la opacidad y un Transform: la traslación del cruce y
+                // del vaivén, y el giro del cabeceo.
+                Positioned(
+                  left: 0,
+                  top: geometria.arribaDeLaCaja,
+                  width: geometria.anchoDelBuque,
+                  height: geometria.altoDelBuque,
+                  child: ValueListenableBuilder<Duration>(
+                    valueListenable: _tiempo,
+                    builder: (BuildContext context, Duration t, Widget? buque) {
+                      final instante =
+                          _reducido ? geometria.quieto : geometria.instante(t);
+                      return Opacity(
                         opacity: instante.opacidad,
-                        child: Transform.rotate(
-                          angle: instante.cabeceo,
-                          alignment: geometria.ejeDelCabeceo,
+                        child: Transform(
+                          transform: geometria.transformacion(instante),
                           child: buque,
                         ),
-                      ),
-                    );
-                  },
-                  child: RepaintBoundary(
-                    child: CustomPaint(
-                      painter: _PintorDelBuque(
-                        escala: geometria.escala,
-                        paleta: paleta,
-                        semanticos: semanticos,
+                      );
+                    },
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: _PintorDelBuque(
+                          escala: geometria.escala,
+                          paleta: paleta,
+                          semanticos: semanticos,
+                        ),
                       ),
                     ),
                   ),

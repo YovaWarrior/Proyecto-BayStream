@@ -24,6 +24,16 @@
 // entorno del proceso al arrancar (Windows y Android): el mismo binario sirve
 // para medir a mano y para los escenarios.
 //
+// Reposo (10.26, O1): los escenarios capturan o miden con la interfaz quieta,
+// y desde la travesía del inicio (10.24) el inicio no se queda quieto nunca.
+// Por eso el conductor pide reducción de movimiento (`MediaQuery.
+// disableAnimations`, lo mismo que pide el sistema) salvo que
+// `T99_MOVIMIENTO=completo`, que es para quien mida la animación con una
+// ventana de cuadros acotada. `_asentar` espera a que no quede ningún cuadro
+// programado hasta `T99_ASENTAR_MS` (20 000 por omisión) y, si el límite
+// vence, lo anota como paso `aviso` y sigue: el que lee los pasos sabe que esa
+// captura o medida se tomó sin reposo.
+//
 // Carga (`T99_CARGA`): `asset` lee t99_inputs/<T99_ARCHIVO> de la copia de
 // compilación (nunca del repositorio) y la publica como t99Publicar;
 // `selector` toca «Seleccionar archivo» en el inicio y espera a que una
@@ -78,6 +88,11 @@ final _anchos = _definicion('T99_ANCHOS', const String.fromEnvironment('T99_ANCH
     '360x800,600x960,840x1200,1200x800,2560x1440,real');
 final _letras = _definicion(
     'T99_LETRAS', const String.fromEnvironment('T99_LETRAS'), '1.0,1.45,2.0');
+final _reducirMovimiento = _definicion('T99_MOVIMIENTO',
+        const String.fromEnvironment('T99_MOVIMIENTO'), 'reducido') !=
+    'completo';
+final _asentarMs = int.parse(
+    _definicion('T99_ASENTAR_MS', const String.fromEnvironment('T99_ASENTAR_MS'), '20000'));
 
 // Textos y claves de la interfaz que el conductor toca. T-112 (10.94) cambió
 // «Bay Plan» por «Plano»; la Fase 3 del rediseño (entrega 2) cambió las
@@ -110,11 +125,15 @@ class T99Conductor {
               valueListenable: _letra,
               builder: (context, letra, _) {
                 final lienzo = RepaintBoundary(key: _lienzo, child: child);
+                // Con reducción de movimiento, lo que anima queda quieto en su
+                // estado final (BsMovimiento.reducido): el inicio con la travesía
+                // se asienta y las capturas salen iguales cada vez.
                 final datos = MediaQuery.of(context).copyWith(
                     size: tamano,
-                    textScaler: letra == 1.0 ? null : TextScaler.linear(letra));
+                    textScaler: letra == 1.0 ? null : TextScaler.linear(letra),
+                    disableAnimations: _reducirMovimiento ? true : null);
                 if (tamano == null) {
-                  return letra == 1.0
+                  return letra == 1.0 && !_reducirMovimiento
                       ? lienzo
                       : MediaQuery(data: datos, child: lienzo);
                 }
@@ -587,13 +606,25 @@ class T99Conductor {
         PointerUpEvent(pointer: puntero, position: centro, viewId: vista));
   }
 
-  /// Espera a que no quede ningún cuadro pendiente (animaciones incluidas).
-  Future<void> _asentar() async {
+  /// Espera a que no quede ningún cuadro pendiente (animaciones incluidas)
+  /// hasta `T99_ASENTAR_MS`. Devuelve si hubo reposo; si el límite vence,
+  /// lo anota como paso `aviso` y sigue, para que quien lea los pasos sepa
+  /// que lo que siguió se tomó sin reposo (10.26, O1). Con la reducción de
+  /// movimiento por omisión, el inicio con la travesía se asienta.
+  Future<bool> _asentar() async {
     final limite = Stopwatch()..start();
+    final tope = Duration(milliseconds: _asentarMs);
     do {
       await _cuadro();
-    } while (SchedulerBinding.instance.hasScheduledFrame &&
-        limite.elapsed < const Duration(seconds: 20));
+    } while (SchedulerBinding.instance.hasScheduledFrame && limite.elapsed < tope);
+    if (!SchedulerBinding.instance.hasScheduledFrame) return true;
+    await _registrar('aviso', {
+      'asentar': 'vencido',
+      'ms': limite.elapsedMilliseconds,
+      'detalle': 'Siguen cuadros programados: lo que sigue se toma sin reposo. '
+          'Con T99_MOVIMIENTO=completo es lo esperado en el inicio (travesía).',
+    });
+    return false;
   }
 
   Future<void> _cuadro() {

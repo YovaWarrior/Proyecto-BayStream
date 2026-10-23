@@ -1,0 +1,210 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "sin",
+ "repeticion": 1,
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-travesia\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "inicioUtc": "2026-10-23T20:29:53.941821+00:00",
+ "acciones": [
+  {
+   "paso": 1,
+   "accion": "abrir el binario (icono)",
+   "t": 0.0
+  },
+  {
+   "paso": 2,
+   "accion": "pulsar «Seleccionar archivo»",
+   "t": 1.7987,
+   "punto": [
+    411,
+    583
+   ],
+   "intento": 1
+  },
+  {
+   "paso": 3,
+   "accion": "elegir el archivo en el selector y confirmar",
+   "t": 2.7675
+  }
+ ],
+ "clics": [
+  {
+   "intento": 1,
+   "t": 1.8035,
+   "punto": [
+    411,
+    583
+   ],
+   "botonEnLaCaptura": [
+    420,
+    592
+   ],
+   "selectorEnS": 0.611,
+   "diagnostico": null
+  }
+ ],
+ "cuadros": [
+  {
+   "t": 1.4056,
+   "dif": null
+  },
+  {
+   "t": 1.601,
+   "dif": 0.101
+  },
+  {
+   "t": 1.8037,
+   "dif": 0.104
+  },
+  {
+   "t": 1.8596,
+   "dif": 0.267
+  },
+  {
+   "t": 1.9099,
+   "dif": 0.241
+  },
+  {
+   "t": 1.9602,
+   "dif": 0.079
+  },
+  {
+   "t": 2.0107,
+   "dif": 0.032
+  },
+  {
+   "t": 2.0609,
+   "dif": 0.08
+  },
+  {
+   "t": 2.1112,
+   "dif": 0.061
+  },
+  {
+   "t": 2.1617,
+   "dif": 0.163
+  },
+  {
+   "t": 2.2122,
+   "dif": 0.096
+  },
+  {
+   "t": 2.7677,
+   "dif": 11.345
+  },
+  {
+   "t": 2.8181,
+   "dif": 11.285
+  },
+  {
+   "t": 2.8685,
+   "dif": 0.158
+  },
+  {
+   "t": 2.9188,
+   "dif": 0.133
+  },
+  {
+   "t": 2.969,
+   "dif": 0.0
+  },
+  {
+   "t": 3.0195,
+   "dif": 16.376
+  },
+  {
+   "t": 3.075,
+   "dif": 0.0
+  },
+  {
+   "t": 3.1252,
+   "dif": 0.0
+  },
+  {
+   "t": 3.1903,
+   "dif": 0.0
+  },
+  {
+   "t": 3.2404,
+   "dif": 0.0
+  },
+  {
+   "t": 3.2905,
+   "dif": 0.0
+  },
+  {
+   "t": 3.3417,
+   "dif": 0.0
+  },
+  {
+   "t": 3.3919,
+   "dif": 0.0
+  },
+  {
+   "t": 3.442,
+   "dif": 0.0
+  },
+  {
+   "t": 3.4924,
+   "dif": 0.0
+  },
+  {
+   "t": 3.5424,
+   "dif": 0.0
+  },
+  {
+   "t": 3.6071,
+   "dif": 0.0
+  },
+  {
+   "t": 3.6571,
+   "dif": 0.0
+  },
+  {
+   "t": 3.7072,
+   "dif": 0.0
+  }
+ ],
+ "hitos": {
+  "ventana": 1.3865054000052623,
+  "pulsado": 1.7987,
+  "confirmado": 2.7675,
+  "rejillaQuieta": 3.075,
+  "incertidumbreS": 0.05
+ },
+ "ventana": {
+  "pid": 23704,
+  "rect": [
+   -9,
+   -9,
+   1929,
+   1029
+  ],
+  "maximizada": true
+ },
+ "tema": "oscuro",
+ "boton": {
+  "caja": [
+   69,
+   772,
+   563,
+   621
+  ],
+  "ancho": 704,
+  "alto": 59,
+  "relleno": 0.971,
+  "rotulo": 0.263,
+  "rotuloDesvio": 0.006,
+  "otros": 0.029
+ },
+ "pasosDelProducto": 3,
+ "reintentosDeClic": 0,
+ "tiempoHastaRejillaS": 3.075,
+ "cumpleTiempo": true,
+ "pngs": {
+  "inicio": "inicio.png",
+  "rejilla": "rejilla.png",
+  "final": "final.png"
+ },
+ "finUtc": "2026-10-23T20:29:57.743811+00:00"
+}

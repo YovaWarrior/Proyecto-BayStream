@@ -11,6 +11,7 @@ import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/presentation/providers/sync_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/widgets/inicio_view.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -71,6 +72,11 @@ Future<void> _arrancar(WidgetTester tester, Widget widget) async {
 
 final _travesia = find.byType(BsTravesia);
 final _buque = find.descendant(of: _travesia, matching: find.byType(Opacity));
+
+/// El dibujo del buque, dentro del Transform: dónde se ve, no la caja fija
+/// (10.26, H1: la caja no cambia de sitio; lo que se mueve es el Transform).
+final _dibujo =
+    find.descendant(of: _buque, matching: find.byType(RepaintBoundary));
 final _bandaDelInicio = find.byKey(const ValueKey('inicio-travesia'));
 
 var _fuentesCargadas = false;
@@ -208,18 +214,24 @@ void main() {
         (tester) async {
       await _arrancar(tester, _banda(reducido: true));
       expect(tester.binding.transientCallbackCount, 0);
-      final antes = tester.getRect(_buque);
+      final antes = tester.getRect(_dibujo);
       expect(tester.widget<Opacity>(_buque).opacity, 1);
       // Quieto a un tercio del ancho.
       expect(antes.center.dx, closeTo(800 / 3, 0.01));
       await tester.pump(const Duration(seconds: 5));
-      expect(tester.getRect(_buque), antes);
+      expect(tester.getRect(_dibujo), antes);
       expect(tester.binding.transientCallbackCount, 0);
-      // Las olas tampoco corren.
-      for (final t in tester.widgetList<Transform>(
-          find.descendant(of: _travesia, matching: find.byType(Transform)))) {
-        expect(t.transform.getTranslation().x, 0);
+      // Las olas tampoco corren, y el buque está donde dice `quieto`.
+      final transformaciones = tester
+          .widgetList<Transform>(
+              find.descendant(of: _travesia, matching: find.byType(Transform)))
+          .toList();
+      expect(transformaciones, hasLength(3));
+      for (final ola in transformaciones.take(2)) {
+        expect(ola.transform.getTranslation().x, 0);
       }
+      final g = BsGeometriaDeTravesia(800, 240);
+      expect(transformaciones.last.transform, g.transformacion(g.quieto));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
@@ -248,22 +260,24 @@ void main() {
       final g = BsGeometriaDeTravesia(800, 240);
       await _arrancar(tester, _banda());
       await tester.pump(const Duration(seconds: 2));
-      final antes = tester.getRect(_buque).left;
+      final antes = tester.getRect(_dibujo).left;
       addTearDown(() => tester.binding
           .handleAppLifecycleStateChanged(AppLifecycleState.resumed));
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
       await tester.pump();
       expect(tester.binding.transientCallbackCount, 0);
       await tester.pump(const Duration(seconds: 2));
-      expect(tester.getRect(_buque).left, antes, reason: 'quieto detrás');
+      expect(tester.getRect(_dibujo).left, antes, reason: 'quieto detrás');
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
       expect(tester.binding.transientCallbackCount, greaterThan(0));
-      expect(tester.getRect(_buque).left, closeTo(antes, 1e-6),
+      expect(tester.getRect(_dibujo).left, closeTo(antes, 1e-6),
           reason: 'sigue desde donde iba');
       await tester.pump(const Duration(seconds: 1));
       final porSegundo = g.recorrido / (g.duracion.inMilliseconds / 1000);
-      expect(tester.getRect(_buque).left - antes, closeTo(porSegundo, 0.01));
+      // Hasta 3 dp de más o de menos: el cabeceo gira el dibujo alrededor
+      // del casco y corre su esquina un par de píxeles.
+      expect(tester.getRect(_dibujo).left - antes, closeTo(porSegundo, 3));
       // Sin foco pero a la vista, sigue.
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       await tester.pump();
@@ -290,13 +304,13 @@ void main() {
       final g = BsGeometriaDeTravesia(800, 240);
       await _arrancar(tester, _banda());
       expect(tester.widget<Opacity>(_buque).opacity, 0);
-      expect(tester.getRect(_buque).right, closeTo(0, 1e-6),
+      expect(tester.getRect(_dibujo).right, closeTo(0, 1e-6),
           reason: 'empieza fuera, por la izquierda');
       await tester.pump(g.duracion * 0.05);
       expect(tester.widget<Opacity>(_buque).opacity, closeTo(0.5, 0.01));
       await tester.pump(g.duracion * 0.45);
       expect(tester.widget<Opacity>(_buque).opacity, 1);
-      expect(tester.getRect(_buque).center.dx, closeTo(400, 0.5));
+      expect(tester.getRect(_dibujo).center.dx, closeTo(400, 2));
       await tester.pump(g.duracion * 0.44);
       expect(tester.widget<Opacity>(_buque).opacity, closeTo(0.5, 0.01));
       await tester.pump(g.duracion * 0.06);
@@ -333,13 +347,57 @@ void main() {
       await _arrancar(tester, _banda());
       // Hasta que aparece, no se pinta; desde ahí, una vez.
       await tester.pump(const Duration(seconds: 3));
-      final desde = tester.getRect(_buque).left;
+      final desde = tester.getRect(_dibujo).left;
       for (var cuadro = 0; cuadro < 60; cuadro++) {
         await tester.pump(const Duration(milliseconds: 16));
       }
-      expect(tester.getRect(_buque).left, greaterThan(desde),
+      expect(tester.getRect(_dibujo).left, greaterThan(desde),
           reason: 'se movió durante los 60 cuadros');
       expect(BsTravesia.pintadasDelBuque, 1);
+    });
+  });
+
+  group('Solo Transform y opacidad (10.26, H1)', () {
+    testWidgets(
+        'el cruce y el vaivén no cambian el layout del buque: la caja queda fija y lo mueve un Transform',
+        (tester) async {
+      final g = BsGeometriaDeTravesia(800, 240);
+      BsTravesia.pintadasDelBuque = 0;
+      await _arrancar(tester, _banda());
+      await tester.pump(const Duration(seconds: 3));
+      // La posición de layout: lo que el Stack le dio a la caja del buque.
+      Offset colocacion() =>
+          (tester.renderObject(_buque).parentData! as StackParentData).offset;
+      Positioned caja() => tester.widget<Positioned>(
+          find.ancestor(of: _buque, matching: find.byType(Positioned)).first);
+      Size tamano() => tester.getSize(_buque);
+      final dibujo =
+          find.descendant(of: _buque, matching: find.byType(RepaintBoundary));
+      final colocacion1 = colocacion();
+      final caja1 = caja();
+      final tamano1 = tamano();
+      final pintado1 = tester.getTopLeft(dibujo);
+      final pintadas = BsTravesia.pintadasDelBuque;
+      await tester.pump(const Duration(seconds: 2));
+      // Dos segundos después, el layout es el mismo: ni el sitio ni el tamaño.
+      expect(colocacion(), colocacion1);
+      expect(caja().left, caja1.left);
+      expect(caja().top, caja1.top);
+      expect(caja().left, 0, reason: 'la caja fija, al borde izquierdo');
+      expect(tamano(), tamano1);
+      // Y lo que se ve sí se movió: lo que toca en 2 s, por el Transform.
+      final pintado2 = tester.getTopLeft(dibujo);
+      final porSegundo = g.recorrido / (g.duracion.inMilliseconds / 1000);
+      // Hasta 3 dp de más o de menos por el cabeceo, que gira la esquina.
+      expect(pintado2.dx - pintado1.dx, closeTo(2 * porSegundo, 3));
+      // En vertical, el vaivén y lo que el cabeceo corre la esquina.
+      expect((pintado2.dy - pintado1.dy).abs(),
+          lessThanOrEqualTo(2 * BsTravesia.vaivenDp + 5));
+      expect(find.descendant(of: _buque, matching: find.byType(Transform)),
+          findsOneWidget,
+          reason: 'un solo Transform mueve, cabecea y gira la caja');
+      expect(BsTravesia.pintadasDelBuque, pintadas,
+          reason: 'moverse no vuelve a pintar el buque');
     });
   });
 
@@ -451,9 +509,30 @@ void main() {
           findsOneWidget);
       expect(find.descendant(of: _travesia, matching: find.byType(Focus)),
           findsNothing);
-      final toque = tester.hitTestOnBinding(tester.getRect(_buque).center);
-      expect(toque.path.any((e) => e.target is RenderCustomPaint), isFalse,
-          reason: 'el toque pasa de largo');
+      // Con el buque a la vista, a la mitad del cruce, el toque sobre él y
+      // sobre el agua no llega a nada de la banda: pasa de largo.
+      final g = BsGeometriaDeTravesia(800, 240);
+      await tester.pump(g.duracion * 0.5 - const Duration(seconds: 3));
+      final banda = tester.renderObject(_travesia);
+      bool dentroDeLaBanda(HitTestTarget objetivo) {
+        RenderObject? r = objetivo is RenderObject ? objetivo : null;
+        while (r != null) {
+          if (identical(r, banda)) return true;
+          r = r.parent;
+        }
+        return false;
+      }
+
+      for (final punto in [
+        tester.getRect(_dibujo).center,
+        Offset(400, g.lineaDeFlotacion + g.alturaDelAgua / 2),
+      ]) {
+        expect(tester.getRect(_travesia).contains(punto), isTrue,
+            reason: '$punto está dentro de la banda');
+        final toque = tester.hitTestOnBinding(punto);
+        expect(toque.path.any((e) => dentroDeLaBanda(e.target)), isFalse,
+            reason: 'el toque en $punto pasa de largo');
+      }
       semantica.dispose();
     });
   });

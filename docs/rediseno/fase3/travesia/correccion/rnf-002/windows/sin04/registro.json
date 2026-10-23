@@ -1,0 +1,196 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "sin",
+ "repeticion": 4,
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-travesia\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "inicioUtc": "2026-10-23T20:36:29.973850+00:00",
+ "acciones": [
+  {
+   "paso": 1,
+   "accion": "abrir el binario (icono)",
+   "t": 0.0
+  },
+  {
+   "paso": 2,
+   "accion": "pulsar «Seleccionar archivo»",
+   "t": 0.8252,
+   "punto": [
+    411,
+    583
+   ],
+   "intento": 1
+  },
+  {
+   "paso": 3,
+   "accion": "elegir el archivo en el selector y confirmar",
+   "t": 1.5997
+  }
+ ],
+ "clics": [
+  {
+   "intento": 1,
+   "t": 0.8342,
+   "punto": [
+    411,
+    583
+   ],
+   "botonEnLaCaptura": [
+    420,
+    592
+   ],
+   "selectorEnS": 0.402,
+   "diagnostico": null
+  }
+ ],
+ "cuadros": [
+  {
+   "t": 0.481,
+   "dif": null
+  },
+  {
+   "t": 0.6405,
+   "dif": 0.135
+  },
+  {
+   "t": 0.8343,
+   "dif": 0.135
+  },
+  {
+   "t": 0.8901,
+   "dif": 0.335
+  },
+  {
+   "t": 0.9403,
+   "dif": 0.167
+  },
+  {
+   "t": 0.9908,
+   "dif": 0.069
+  },
+  {
+   "t": 1.0427,
+   "dif": 0.05
+  },
+  {
+   "t": 1.5999,
+   "dif": 11.092
+  },
+  {
+   "t": 1.65,
+   "dif": 11.263
+  },
+  {
+   "t": 1.7005,
+   "dif": 0.254
+  },
+  {
+   "t": 1.7508,
+   "dif": 0.0
+  },
+  {
+   "t": 1.8008,
+   "dif": 16.316
+  },
+  {
+   "t": 1.8512,
+   "dif": 0.0
+  },
+  {
+   "t": 1.9012,
+   "dif": 0.0
+  },
+  {
+   "t": 1.9512,
+   "dif": 0.0
+  },
+  {
+   "t": 2.0014,
+   "dif": 0.0
+  },
+  {
+   "t": 2.0515,
+   "dif": 0.0
+  },
+  {
+   "t": 2.102,
+   "dif": 0.0
+  },
+  {
+   "t": 2.1695,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2199,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2703,
+   "dif": 0.0
+  },
+  {
+   "t": 2.321,
+   "dif": 0.0
+  },
+  {
+   "t": 2.3712,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4214,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4718,
+   "dif": 0.0
+  }
+ ],
+ "hitos": {
+  "ventana": 0.4566285000182688,
+  "pulsado": 0.8252,
+  "confirmado": 1.5997,
+  "rejillaQuieta": 1.8512,
+  "incertidumbreS": 0.05
+ },
+ "almacenApartado": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114-travesia-corr\\rnf-windows-2\\almacen-apartado-sin04",
+ "cursorAparcado": [
+  812,
+  24
+ ],
+ "ventana": {
+  "pid": 32600,
+  "rect": [
+   -9,
+   -9,
+   1929,
+   1029
+  ],
+  "maximizada": true
+ },
+ "tema": "oscuro",
+ "boton": {
+  "caja": [
+   69,
+   772,
+   563,
+   621
+  ],
+  "ancho": 704,
+  "alto": 59,
+  "relleno": 0.971,
+  "rotulo": 0.263,
+  "rotuloDesvio": 0.006,
+  "otros": 0.029,
+  "color": "normal"
+ },
+ "pasosDelProducto": 3,
+ "reintentosDeClic": 0,
+ "tiempoHastaRejillaS": 1.851,
+ "cumpleTiempo": true,
+ "pngs": {
+  "inicio": "inicio.png",
+  "rejilla": "rejilla.png",
+  "final": "final.png"
+ },
+ "finUtc": "2026-10-23T20:36:32.539075+00:00"
+}

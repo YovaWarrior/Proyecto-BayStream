@@ -1300,7 +1300,9 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
      (regla 4). El agua ocupa el tercio de abajo, con un mínimo de 32 dp; el buque mide la mitad del
      alto de la banda, entre 56 y 120 dp.
    - *El movimiento*, solo con `Transform` y opacidad: el buque y las tiras de las olas se pintan una
-     sola vez, cada uno dentro de su `RepaintBoundary`. El cruce va a velocidad constante: el
+     sola vez, cada uno dentro de su `RepaintBoundary`, en cajas que no cambian de sitio ni de tamaño
+     en ningún cuadro; el cruce, el vaivén y el cabeceo son un solo `Transform` sobre la caja fija del
+     buque (lo fijó la aceptación 10.26, H1). El cruce va a velocidad constante: el
      recorrido (el ancho de la banda más el del buque, que entra desde fuera y sale del todo) entre
      48 dp/s, acotado entre 14 y 40 s. Aparece en el primer 10 % del recorrido y se desvanece en el
      último 12 %; después quedan 3 s de mar vacío y vuelve a empezar. Sobre la línea de flotación sube

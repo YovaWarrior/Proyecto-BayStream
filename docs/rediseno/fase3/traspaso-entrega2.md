@@ -227,3 +227,16 @@ tiene que pedir reducir el movimiento (`FakeAccessibilityFeatures(disableAnimati
 la travesía no se asienta nunca. Las pruebas son `test/t114_travesia_test.dart` y las capturas,
 `docs/rediseno/fase3/travesia/capturas/` (de prueba de widget, con el reloj parado al 6, 50 y 95 % del
 cruce).
+
+## La corrección de la travesía (23-oct, 10.26)
+
+Codex no aceptó la travesía por H1 (el cruce movía `Positioned.left/top`), H2 (el detector de
+`t114_primera_windows.py` pulsaba el muelle de la ilustración y RNF-002 no quedó acreditado) y O1
+(`_asentar` del conductor esperaba un reposo que el inicio ya no tiene). La corrección está en la sección
+«Fase 3 · La travesía · Corrección tras la aceptación de Codex» de `docs/REDISENO-RESULTADOS.md`. Lo que
+hay que saber: la caja del buque es fija y lo mueve `BsGeometriaDeTravesia.transformacion`; el instrumento
+de Windows valida el botón por tema, forma y rótulo (también con la capa de hover: al repetir, el cursor
+quedaba sobre el botón y lo apagaba), aparca el cursor, comprueba el clic y lo reintenta con diagnóstico
+(`--detector` sirve para revisar capturas); el conductor de T-99 pide reducción de movimiento
+(`T99_MOVIMIENTO=reducido`) y anota `aviso` cuando `_asentar` vence. RNF-002 en Windows: cinco corridas,
+tres pasos, entre 1.84 y 1.89 s (`docs/rediseno/fase3/travesia/correccion/rnf-002/`).

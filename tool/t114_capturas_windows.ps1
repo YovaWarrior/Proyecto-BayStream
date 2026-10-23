@@ -27,7 +27,12 @@ param(
     # almacen ni escribe los pasos donde se le pide (AGENTS.md, T-73 10.9).
     # Con -PorExplorer el binario lo abre explorer.exe desde un .cmd que lleva
     # las variables, fuera del paquete; el proceso se busca y se cierra por su ruta.
-    [switch] $PorExplorer
+    [switch] $PorExplorer,
+    # El conductor pide reducción de movimiento (T99_MOVIMIENTO=reducido, 10.26):
+    # el inicio con la travesía se captura quieto, con el buque a un tercio del
+    # ancho. Con 'completo' la animación corre, y entonces las esperas de reposo
+    # del inicio vencen y quedan anotadas como `aviso` en pasos.jsonl.
+    [string] $Movimiento = 'reducido'
 )
 $ErrorActionPreference = 'Stop'
 $temp = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
@@ -47,6 +52,7 @@ $env:T99_LETRAS = $Letras
 $env:T99_CAPTURAS = $Salida
 $env:T99_PASOS = Join-Path $Salida 'pasos.jsonl'
 $env:T99_PAUSA_MS = '300'
+$env:T99_MOVIMIENTO = $Movimiento
 # El proceso hereda el entorno; el almacén es el de la compilación (T99_ALMACEN).
 $pasos = $env:T99_PASOS
 $exeCompleto = [IO.Path]::GetFullPath($Exe)
@@ -54,7 +60,8 @@ if ($PorExplorer) {
     $cmd = Join-Path $Salida 'lanzar.cmd'
     $lineas = @('@echo off')
     foreach ($nombre in @('T99_ESCENARIO', 'T99_ARCHIVO', 'T99_ARCHIVO_PUBLICADO', 'T99_ESCALA_ANTERIOR',
-                          'T99_ANCHOS', 'T99_LETRAS', 'T99_CAPTURAS', 'T99_PASOS', 'T99_PAUSA_MS')) {
+                          'T99_ANCHOS', 'T99_LETRAS', 'T99_CAPTURAS', 'T99_PASOS', 'T99_PAUSA_MS',
+                          'T99_MOVIMIENTO')) {
         $lineas += "set $nombre=$([Environment]::GetEnvironmentVariable($nombre))"
     }
     $lineas += "start `"`" `"$exeCompleto`""
@@ -79,5 +86,8 @@ Start-Sleep -Seconds 1
 if (-not $proceso.HasExited) { $proceso.CloseMainWindow() | Out-Null; Start-Sleep -Seconds 2 }
 if (-not $proceso.HasExited) { Stop-Process -Id $proceso.Id }
 $ultimo = if (Test-Path $pasos) { (Get-Content $pasos | Select-Object -Last 1) } else { '(sin pasos)' }
+# 10.26 (O1): el conductor anota como `aviso` cada espera de reposo que venció.
+$avisos = if (Test-Path $pasos) { @(Select-String -Path $pasos -Pattern '"paso":\s*"aviso"').Count } else { 0 }
 Write-Output "Capturas: $(@(Get-ChildItem $Salida -Filter *.png).Count) PNG en $Salida"
+Write-Output "Esperas de reposo vencidas (aviso): $avisos"
 Write-Output "Último paso: $ultimo"
