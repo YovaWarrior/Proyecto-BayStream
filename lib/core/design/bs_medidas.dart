@@ -234,10 +234,57 @@ class BsMedidas extends ThemeExtension<BsMedidas> {
   static BsMedidas de(BuildContext context) =>
       Theme.of(context).extension<BsMedidas>() ?? oficina;
 
+  /// Con [esMuelle] cambia de densidad. [anchoCelda] y [altoCelda] los
+  /// usa el plano para ensanchar la celda con la escala de letra del sistema
+  /// (el código de cinco letras entero a 2.0, 10.8); lo demás no cambia.
   @override
-  BsMedidas copyWith({bool? esMuelle}) {
-    if (esMuelle == null || esMuelle == this.esMuelle) return this;
-    return esMuelle ? muelle : oficina;
+  BsMedidas copyWith(
+      {bool? esMuelle, double? anchoCelda, double? altoCelda}) {
+    final base = esMuelle == null || esMuelle == this.esMuelle
+        ? this
+        : esMuelle
+            ? muelle
+            : oficina;
+    if ((anchoCelda == null || anchoCelda == base.anchoCelda) &&
+        (altoCelda == null || altoCelda == base.altoCelda)) {
+      return base;
+    }
+    return BsMedidas(
+      esMuelle: base.esMuelle,
+      espacioXs: base.espacioXs,
+      espacioS: base.espacioS,
+      espacioM: base.espacioM,
+      espacioL: base.espacioL,
+      espacioXl: base.espacioXl,
+      espacioXxl: base.espacioXxl,
+      espacioXxxl: base.espacioXxxl,
+      dentroDeBloque: base.dentroDeBloque,
+      entreBloques: base.entreBloques,
+      radioCelda: base.radioCelda,
+      radioControl: base.radioControl,
+      radioHoja: base.radioHoja,
+      radioPanel: base.radioPanel,
+      radioDialogo: base.radioDialogo,
+      radioCasco: base.radioCasco,
+      pasoRejilla: base.pasoRejilla,
+      alturaBoton: base.alturaBoton,
+      alturaBotonPrincipal: base.alturaBotonPrincipal,
+      alturaCampo: base.alturaCampo,
+      alturaFila: base.alturaFila,
+      alturaChip: base.alturaChip,
+      objetivoTactil: base.objetivoTactil,
+      alturaBarraSuperior: base.alturaBarraSuperior,
+      alturaBarraNavegacion: base.alturaBarraNavegacion,
+      anchoRiel: base.anchoRiel,
+      anchoPanelLateral: base.anchoPanelLateral,
+      anchoMaximo: base.anchoMaximo,
+      anchoCelda: anchoCelda ?? base.anchoCelda,
+      altoCelda: altoCelda ?? base.altoCelda,
+      huecoCelda: base.huecoCelda,
+      grosorContornoCelda: base.grosorContornoCelda,
+      anchoEtiquetaNivel: base.anchoEtiquetaNivel,
+      anchoColumnaPesos: base.anchoColumnaPesos,
+    );
   }
 
   @override

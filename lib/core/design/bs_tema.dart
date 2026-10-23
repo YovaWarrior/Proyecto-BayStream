@@ -263,9 +263,12 @@ abstract final class BayStreamTema {
         linearTrackColor: claro ? paleta.marcaTenue : paleta.linea,
         linearMinHeight: medidas.espacioS,
       ),
+      // Los contadores (alertas, solicitudes) van en aviso: el naranja es
+      // solo de lo que se acaba de mover (13.3, punto 6). El que cuenta algo
+      // crítico pasa a error por su cuenta.
       badgeTheme: BadgeThemeData(
-        backgroundColor: paleta.grua,
-        textColor: paleta.sobreMarca,
+        backgroundColor: semanticos.revisar.contorno,
+        textColor: semanticos.revisar.relleno,
       ),
       tooltipTheme: TooltipThemeData(
         textStyle: textos.bodySmall?.copyWith(color: paleta.papel),

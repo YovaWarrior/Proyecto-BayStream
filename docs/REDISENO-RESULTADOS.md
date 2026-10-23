@@ -2375,3 +2375,672 @@ git push
 ### Mensaje para Yov
 
 Yov: la corrección de la Fase 2 bis queda lista para que Codex la vuelva a mirar, en su propio bloque de git. **H1:** `BsCelda` lleva un widget con estado (`_Salida`) que vive en el árbol en todos los estados; al entrar en «recién movido» un `AnimationController` de 150 ms y un `Transform.translate` llevan el cuerpo de 0 a media celda desde donde estaba esa misma celda, el hueco punteado y el halo solo existen mientras sale, al volver a «bajado» el controlador se para en 0 sin vuelta visible y con reducción de movimiento se queda quieta, naranja y sin hueco. Antes el `AnimatedSlide` nacía ya en `Offset(0, -0.5)`, por eso saltaba. La prueba nueva cambia el estado de la misma celda y compara el fotograma 0 (en su sitio), el de 75 ms (estrictamente entre) y el de 150 ms (24 dp arriba), más la vuelta de golpe; en una copia limpia de `HEAD` con la celda de `36f5784` falla en el primer fotograma («Expected 92.0, Actual 68.0») y con la de ahora pasa. **O1 y O2:** 13.6 dice 56 dp por bahía (`anchoBahia`) con el alto que sale de los niveles, sin `alto` en la API, y la cifra a 34 / 600 tabular (`BsTextos.cifraGrande`); el código no cambia. **13.3, punto 6:** el contador de «Más» va en aviso, o en error si alguna alerta es crítica, nunca en grúa; y el punto 1 describe la salida desde 0. Suite 1224 en verde de 1224, 0 omitidas (piso 1223 → 1224), `analyze` 0. Un hallazgo del arnés, anotado y sin tocar: `BayStreamApp.build` crea un `ThemeData` nuevo en cada build y el `AnimatedTheme` de `MaterialApp` corre 200 ms de más; lo decide Carlos. Sigo con la entrega 2 del plano.
+
+
+---
+
+## Fase 3 · Entrega 2: el plano por bahía en la dirección C (22 y 23-oct-2026)
+
+El brief es 10.16 de `SPRINT-4.md` (con el agregado de 10.17 sobre el `Badge` global y «Acciones»);
+la dirección, `DESIGN.md` 8, 9 y 13. Codex aceptó antes la corrección de la Fase 2 bis (H1 cerrado,
+`docs/rediseno/fase2bis/reaceptacion-codex.md`). El traspaso de trabajo está en
+`docs/rediseno/fase3/traspaso-entrega2.md`.
+
+### 4.1 Resultado en tres líneas
+
+- **El plano por bahía es el de «Puente de mando»** en los tres clientes: la navegación adaptable
+  (barra inferior, riel con la marca, riel con panel de 360), la silueta como selector, las
+  tarjetas de cifra con la operación real, la rejilla dibujada como el ícono (celdas `BsCelda`
+  con las fichas de «Colorear por», la tapa, el casco de la bodega), el detalle en una sola hoja
+  (panel o hoja inferior), «En vivo» con la bitácora, la banda del muelle con Descarga / Carga, la
+  barra de la operación y la regla del naranja con datos de verdad.
+- **Lo que 10.8 y 10.16 dejaron pendiente está resuelto:** «Contenido» y «Número de orden» enteros
+  a 1.45 y 2.0, el código de cinco letras entero a 2.0 (la celda se ensancha con la letra, no más
+  que ella), la acción de la banda que baja de línea, el conductor de T-99 que ya no busca pestañas
+  ni chips, el contador de «Más» en aviso o error (y el `Badge` global y el de «Acciones», 10.17),
+  `t114_fuentes_test` sin depender del fin de línea, `DESIGN.md` 13.5 con la decisión del tema.
+- Suite **1242 en verde** (piso 1224 → **1242**: 18 más, 22 archivos actualizados sin bajar el
+  conteo, ninguna omitida); `analyze` **«No issues found»**; censos de T-112 con `5406e20`:
+  **1931 cadenas visibles, 1800 en español y 131 sin idioma, 0 en inglés**; Material 3
+  **251 / 7 / 3**; mensajes **217** (uno retirado con la barra de T-91); auditoría de
+  `flutter-ui` con cero críticos y un aviso declarado en lo nuevo. RNF-002 sigue en tres pasos
+  (Windows 1.84–2.19 s, la Web 0.30–0.48 s y 1.28–1.60 s en la primera visita, el emulador con cotas de 3.06–3.88 s). La RAM en Windows, antes y después, en 4.7. **ALTO: Codex acepta la entrega 2.**
+
+### 4.2 Lo hecho
+
+- **La navegación** (`pages/vessel_overview_page.dart`, `widgets/navegacion_del_viaje.dart`,
+  nuevo). Sin `TabBar` ni la barra de ocho acciones de T-91 (`DESIGN.md` 8). Con viaje, los
+  destinos Plano · Lista · Avance (solo con escala) · Estadísticas · Más viven en
+  `destinoDelViajeProvider`; la búsqueda, las estadísticas, las alertas y «Avance» llevan al Plano
+  por él. Por debajo de 600 dp, `NavigationBar` (`BarraDelViaje`: claves `destino-<nombre>`,
+  «Estad.» como rótulo corto, la letra escala hasta 1.3 porque cinco destinos en 360 dp dan 72 a
+  cada uno) y la barra superior con el buque, «Viaje M100 · Escala GTSTC», Buscar y la nube; en el
+  muelle con una escala publicada, la barra superior es `BsBandaMuelle` (13.8 bis) con el chip de
+  la nube y los segmentos Descarga / Carga, que comparten `bayPlanModeProvider` con el selector de
+  modo; Descarga solo si el plano de llegada lo ofrece (`offersDischarge`). Desde 600 dp,
+  `NavigationRail` con `BsMarca` arriba y la nube y Parámetros al pie (`RielDelViaje`; en
+  ventanas bajas se desplaza en vez de desbordarse) y la cabecera de la oficina
+  (`_CabeceraDeOficina`: el buque, «Publicado» o «Sin confirmar», Descarga / Carga, Buscar, la
+  nube). Desde 1200 dp, además, el panel de 360 (`_PanelLateral`: el detalle de la celda elegida
+  y «En vivo») y Alertas en el riel. «Más» es una hoja (`_HojaMas`) con Alertas de estiba primero
+  (su contador), Tapas, Orden de descarga, Listado, Comparar, Exportar PDF / CSV / JSON (en previo,
+  `export-preview` avisa como antes), Nube y Parámetros solo sin riel, Cargar archivo, Viajes
+  recientes, Perfiles guardados y «Cerrar el plano». `PanelLateralDisponible` (InheritedWidget) le
+  dice al plano si el detalle va al panel. El `RelojDelNaranja` de 13.3 vive aquí (abajo).
+- **El plano** (`widgets/bay_plan_view.dart`, reescrito; `widgets/silueta_del_viaje.dart`,
+  `cifras_del_viaje.dart`, `detalle_contenedor.dart`, `en_vivo_del_viaje.dart`, nuevos).
+  - *El selector es la silueta* (`BsSiluetaBuque`): cada bahía con los niveles ocupados de
+    cubierta y bodega, su avance de descarga (o de carga en ese modo) debajo del número, las
+    bahías sin trabajo apagadas, el destello de la bahía donde se acaba de mover algo; cada botón
+    con la clave `silueta-bahia-N`. La bahía inicial es la primera con carga propia: una impar que
+    solo trae la sombra de los 40 de sus pares (T-110) no es por donde se empieza a mirar.
+  - *Las tarjetas* (`BsTarjetaCifra`) salen de la operación: Descarga con su anillo, Por bajar
+    («18 en la bahía 14»), Re‑estibas y, en Carga y Número de orden, Carga, Llenos, Vacíos y
+    Conflictos; Alertas en aviso cuando hay. Van a la derecha de la silueta cuando caben (una fila
+    de cuatro desde 1400 dp de ancho útil, dos por fila desde 1040); con menos ancho no aparecen,
+    para no quitarle el alto a la rejilla (las cifras están en «Avance»). Sin operación no hay
+    tarjetas.
+  - *«Colorear por»* (`ColorearPor` en `providers/plano_providers.dart`: Estado, Destino, Tipo de
+    vacío; por omisión según el modo, 10.4) decide el código y la ficha de cada celda: Destino con
+    las fichas OKLCH del puerto, Tipo con las de los vacíos (los llenos en papel), Estado sin
+    ficha. La carga de paso va como «de paso» en todas las vistas (C-5a).
+  - *La rejilla como el ícono* (13.2): `BsCelda` en cada celda (las claves `cell-r-t`,
+    `discharge-<marca>`, `pending-discharge-*`, `reserved-*`, `reserved-shadow-*`,
+    `neighbor-twenty`, `plan-cell-*` y `loading-*` se conservan; la clave de la marca de T-75 va
+    como `KeyedSubtree` dentro de la de la celda, porque dos hermanas con la misma clave no se
+    permiten), la tapa (`linea-de-tapa`), `BsCascoBodega` detrás de la bodega y la curva en las
+    celdas de los extremos, sin rótulos de zona (la zona la dicen la tapa y el casco). En la vista
+    Estado, por bajar en cubierta / bodega, de paso, bajado (la palomita) y recién movido; la
+    marca de T-75 («Baja», «Hecho», «Paso», «Re‑estiba», «Revisar») se escribe en el muelle y en
+    las vistas Destino y Tipo; en la oficina, la vista Estado deja el código y el peso (13.2). En
+    Número de orden, el número como código y «OR» como segunda línea. El peso de la celda y de las
+    pilas sigue como el plano impreso («28.7», sin unidad); el total de la bahía, con
+    `formatearToneladas`. La celda se ensancha con la letra del sistema para que el código de
+    cinco letras quepa (`BsMedidas.copyWith(anchoCelda:)` en un `Theme` local): lo que mide el
+    código con la fuente y nunca más que lo que creció la letra. El chip del zoom pasa a la
+    esquina inferior derecha (9.2): ya no tapa el título. La copia que se arrastra (T-106) se
+    centra con las medidas de la celda, no con los 27 px de antes.
+  - *La leyenda* es `BsCartela` compacta (nueva opción `compacta`: sin título ni aire, para que la
+    rejilla se quede con el alto) en una línea que se desplaza: la vista, las fichas con su cuenta
+    (destinos o tipos de vacío; en Estado, por bajar, bajado, de paso, re‑estiba), «Resaltar» de
+    RF-011 (Lleno, Vacío, IMO, Refrigerado, OOG, De paso) y los huecos (40 pies, 20 pies, reserva).
+  - *En el muelle operando*, abajo va `BsBarraDeOperacion` (por bajar / hechas / re‑estibas, o
+    pendientes / llenos / vacíos) con «Pendientes de descarga» o «Avance de la operación». El
+    aviso con «Deshacer» sigue siendo el de T-75.
+  - *El detalle* es `DetalleContenedor`, una sola hoja (`BsHojaDeDetalle`): las filas de antes
+    (Celda, Tipo ISO, Estado, VGM, Peso bruto, puertos, Naviera), las señales de IMDG, refrigerado y
+    OOG, `DischargeDetailSection` y `OfficePlanActions`. Con panel va al panel
+    (`celdaSeleccionadaProvider`); sin él, hoja inferior.
+  - *«En vivo»* (`EnVivoDelViaje`): los últimos movimientos de la bitácora (`eventosEnVivo`: qué,
+    el rol del equipo, el dato en mono, cuándo), el estado de la nube como resumen y el punto que
+    pulsa solo en línea.
+- **La regla del naranja con datos de verdad** (`recienMovidoProvider`): aprende la bitácora al
+  abrir y marca lo que llega después, propio o por la nube (`observar`, alimentado por
+  `loadingOperationProvider` con `ref.listen` más una lectura inicial: este Riverpod no tiene
+  `fireImmediately`); el toque en Descarga saca la celda antes de registrar (`_tocarEnDescarga`); la
+  silueta destella la bahía. El reloj de 1.5 s no es un `Timer` del notifier sino
+  `RelojDelNaranja`, un `TweenAnimationBuilder` de la página que llama a `apagar` al terminar:
+  corre con los cuadros de Flutter, como el destello, y no deja temporizadores colgados (la
+  primera versión con `Timer` tumbaba `t76_loading_widget_test` con `!timersPending`).
+- **La celda de carga** (`loading_controls.dart`, `LoadingCell`): `BsCelda` con el OR como código,
+  `pendiente` / `hecho` como rol, «Sube» / «Cargado» como segunda línea, conflicto y cancelación
+  como marca («Revisar», «Cancelado»). La etiqueta accesible de T-107 no cambia.
+- **El avance** (`pages/operation_progress_page.dart`): `OperationProgressBody` es el cuerpo sin
+  barra, con `onCelda` para que «Ir a» de un conflicto lleve al plano sin cerrar nada; la página lo
+  envuelve como antes.
+- **10.16 y 10.17.** El contador de «Más» va en aviso, o en error si alguna alerta es crítica
+  (`alertaCriticaProvider`, `ContadorDeAlertas`); el `BadgeThemeData` global pasa de grúa a aviso
+  (`bs_tema.dart`) y el `Badge` de «Acciones» lo hereda: el naranja es solo de lo que se mueve.
+  `t114_fuentes_test` acepta la licencia en LF o CRLF. `DESIGN.md` 13.5 anota la decisión del
+  tema; 8 y 13.8, lo que el código hace distinto del lienzo (abajo, 4.8).
+- **Piezas del sistema de diseño** (`lib/core/design/`): `BsMedidas.copyWith` admite
+  `anchoCelda` y `altoCelda`; `BsSiluetaBuque` pone clave a cada bahía; `BsBanda` baja la acción
+  a su línea cuando no cabe; `BsBandaMuelle` admite `mostrarModos` y `modos` (un plan de carga sin
+  descarga no ofrece el segmento); `BsCartela` admite `compacta`. `bs_celda.dart` no cambia.
+- **Instrumentos** (`tool/`): el conductor de T-99 busca los destinos dentro de
+  `NavigationBar` / `NavigationRail`, las bahías por `silueta-bahia-N` y tiene el escenario
+  `plano` (publica el archivo, pone la escala anterior y captura plano, Descarga, Lista y Avance por
+  tema, letra y tamaño); `t114_capturas_windows.ps1` admite `-Escenario` y `-PorExplorer` (desde
+  la consola empaquetada el proceso hijo hereda el paquete y el binario no escribe donde se le
+  pide: lo abre explorer.exe desde un .cmd con las variables); `t114_capturas_web_plano.py` y
+  `t114_capturas_android_plano.py` toman las capturas del plano; `t114_ram_windows.ps1` repite la
+  RAM de T-99 con el escenario `ram`; `t114_primera_windows.py` busca «Seleccionar archivo» por
+  la marca de la dirección C de noche (`#4F8EF7`, el `primary` desde la Fase 2 bis; antes
+  `#8FB4F2`, y sin eso no pulsaba el botón); `t112_censos.py` conoce los archivos nuevos (idioma
+  y pantalla) y retira el mensaje de la barra de T-91.
+- **Lo que enseñaron las capturas, corregido antes de cerrar.** A 360 dp el título «Bahía 02 ·
+  tapas sin declarar» salía cortado: iba centrado sobre la rejilla, más ancha que la pantalla;
+  ahora el título y el resumen van al ancho de la vista (y se parten en dos líneas a 1.45 y
+  2.0). En el emulador (360 × 640 dp) la rejilla quedaba entera bajo el pliegue: con la banda,
+  la silueta y la leyenda solo asomaba la fila de pesos. En el teléfono bajo (menos de 560 dp de
+  alto útil para el plano; 360 × 800, el Honor y el arnés de Windows, no lo es) los controles
+  del modo y la silueta se van hacia arriba al desplazar la rejilla y vuelven al desplazarla
+  hacia abajo (`NestedScrollView`); la banda, la barra de la operación o la leyenda y la barra
+  inferior no se mueven (`DESIGN.md` 13.8). Y en el muelle a 360 el modo Descarga se elige desde
+  el desplegable del modo, así que los scripts de la Web y de Android lo abren cuando el
+  segmento no está a la vista.
+
+### 4.3 Pruebas
+
+- Nueva: `test/t114_fase3_plano_test.dart` (16): la navegación por ancho (1300: riel, cabecera y
+  panel; 800: solo el riel; 360: la barra con «Estad.» y su descripción emergente), «Avance» solo
+  con escala y embebido, «Más» con las alertas primero y el contador en error o en aviso, ningún
+  contador en grúa (el tema y un `Badge` suelto), la silueta elige la bahía y la rejilla la titula,
+  las tarjetas con y sin operación, «Colorear por» en las tres vistas, lo recién movido 1.5 s con el
+  destello de la silueta, el detalle en el panel y en la hoja, la banda del muelle con Descarga /
+  Carga, el selector de modo entero a 2.0, el código entero a 2.0, la banda apilada, y la
+  cabecera del plano que a 360 × 640 se va al desplazar la rejilla (que gana su alto) y vuelve,
+  y a 360 × 800 se queda. Carga las fuentes del producto (Plex y Roboto) para que las medidas
+  de 360 dp sean las reales.
+- Nueva: `test/t114_tema_cache_test.dart` (2, bloque aparte, 4.9).
+- Actualizadas sin bajar el conteo: `t91_toolbar_support` y `t91_plan_toolbar_test` (abrir y
+  cerrar «Más» en vez de plegar; Buscar y la nube arriba, lo demás en «Más», el riel con Nube y
+  Parámetros), `t97_text_test` (el título es el buque; `destino-estadisticas`; el detalle nuevo; la
+  silueta en vez de chips), `t104_text_test` (los rótulos de la barra), `t107_tabs_test`
+  (reescrito con `destinoDelViajeProvider`), `t110_bays_test` y `vessel_profile_view_test` (la
+  silueta por clave y la selección por su bandera de semántica), `t106_plan_widget_test` (título
+  «Bahía 03», «Baja», «2×20′», y a 300 % la celda se trae a la vista antes de arrastrarla),
+  `t75_discharge_test` (claves `discharge-<marca>`),
+  `recent_voyages_test`, `profile_loading_page_test`, `t114_fase3_inicio_test` («Más»),
+  `t102_weight_display_test`, `effective_weight_test`, `t90_theme_test` y `bay_plan_grid_test`
+  (el peso como `linea2` de `BsCelda`; las pilas por `peso-pila-*`; la marca de exceso con radio 6;
+  «de paso» es el rol del sistema de diseño), `t69_reserved_slots_view_test` («40′», relleno
+  papel), `t81_office_widget_test` («Cancelado»), `t114_fuentes_test`.
+
+### 4.4 Validaciones ejecutadas
+
+Un comando de Flutter a la vez; los largos en segundo plano. El Honor no se tocó.
+
+- `flutter analyze --no-pub` → **«No issues found»**.
+- `flutter test --no-pub` → ****1242 pruebas en verde, ninguna fallida ni omitida** (1 min 19 s; piso 1224 de la corrección de la Fase 2 bis → 1242). `flutter analyze` después de la última corrección: **«No issues found»**.**.
+- Censos de T-112 (`tool/t112_censos.py`, referencia `5406e20`, salida en
+  `docs/rediseno/fase3/entrega2/censos/`): idioma, **1931 cadenas visibles: 1800 en español y 131
+  sin idioma, 0 en inglés o mixtas** (entrega 1: 1816, 1677 y 139); Material 3: **251 controles
+  incluidos, 7 exclusiones y 3 excepciones** (entrega 1: 259 / 8 / 5: la rejilla ya no lleva el
+  `GestureDetector` de cada celda ni el `Opacity`, y los controles nuevos son Material con el color
+  del tema); mensajes: **217** (los 218 de T-112 menos «No se pudo guardar la preferencia de la
+  barra», que se retira con la barra de T-91). Las 101 cadenas nuevas sin decisión (los destinos,
+  las tarjetas, el detalle, los eventos de «En vivo», las etiquetas de la silueta, los segmentos de
+  la banda, los nombres de los tonos) se decidieron por archivo en `T114_DECISIONES`.
+- Auditoría de `flutter-ui` (`docs/rediseno/fase3/entrega2/flutter-ui-audit.txt`): **17 críticos,
+  249 avisos y 20 informativos** (entrega 1: 17, 231 y 19). Comparados hallazgo a hallazgo por
+  código y archivo: los avisos nuevos son **41 hexadecimales en los dos archivos de tokens**
+  (`bs_colores_semanticos.dart` +31, `bs_paleta.dart` +10, la noche de la Fase 2 bis, la única
+  fuente de color declarada), **un `IntrinsicHeight` en `navegacion_del_viaje.dart`** (el riel
+  dentro de un desplazable para ventanas bajas: el patrón que la documentación de `NavigationRail`
+  da, y se declara), y un informativo `NAV_NO_POP_SCOPE` más en `vessel_overview_page.dart`; se
+  van **24 tamaños de letra escritos a mano** de `bay_plan_view.dart` y `loading_controls.dart`.
+  En lo nuevo (`navegacion_del_viaje`, `detalle_contenedor`, `cifras_del_viaje`,
+  `en_vivo_del_viaje`, `silueta_del_viaje`, `plano_providers`, `bay_plan_view`) no hay críticos ni
+  otros avisos; en `vessel_overview_page.dart` siguen los dos falsos positivos de `ListView(`.
+- `python -X utf8 -I -c "import ast…"` sobre los tres scripts nuevos de `tool/` → compilan; las
+  corridas de capturas y de RAM son su ejecución.
+
+### 4.5 RNF-002 (y T-99) otra vez
+
+La navegación cambió (la Lista y el plano son destinos de la barra o del riel, y el tablero de
+pestañas ya no existe), así que la primera visualización se repitió con los **mismos tres
+instrumentos de la entrega 1, sin tocar su recorrido**: `tool/t114_primera_windows.py`,
+`tool/t114_primera_web.py` (+ `.js`) y `tool/t114_primera_android.py` con
+`tool/t114_primera_cuadros.py` (descritos en 3.5). El único cambio es el color por el que el de
+Windows localiza «Seleccionar archivo» de noche (4.2). Los tres pasos del producto siguen siendo
+(1) abrir la app, (2) «Seleccionar archivo» y (3) elegir el archivo; el fin es la rejilla del
+previo a la vista. Umbral: **≤ 3 pasos y ≤ 30 s**, en la condición «sin perfil». Banco r4 de esta
+entrega, `T99_SINTETICO_977.edi`, máquina en reposo, cinco repeticiones por condición.
+
+| Cliente | Condición | Rep. | Pasos | Hasta la rejilla (s) | ≤ 3 pasos y ≤ 30 s |
+|---|---|---|---|---|---|
+| Windows (1920×1080, oscuro, por explorer.exe) | sin perfil | 5 | 3 | 2.188, 1.942, 1.844, 1.869, 1.859 (± 0.05) | cumple |
+| Web (Chrome 155 por Playwright, 1280×800, oscuro) | sin perfil, caché caliente | 5 | 3 | 0.478, 0.354, 0.367, 0.334, 0.302 | cumple |
+| | sin perfil, primera visita (caché fría) | 5 | 3 | 1.598, 1.489, 1.280, 1.350, 1.362 | cumple |
+| Emulador Android (API 26, 360×640 dp, claro) | sin perfil | 5 | 3 | cotas 3.837–3.879, 3.364–3.419, 3.061–3.138, 3.139–3.193, 3.057–3.114 | cumple |
+
+- **Windows:** hitos por repetición (s desde el arranque): la ventana a la vista 0.448, 0.448,
+  0.443, 0.443, 0.444; el archivo confirmado 1.766, 1.593, 1.548, 1.585, 1.522; la rejilla quieta
+  2.188, 1.942, 1.844, 1.869, 1.859. Frente a la entrega 1 (1.83–1.90 s) la primera repetición
+  tarda 0.3 s más y las otras cuatro quedan iguales (1.84–1.94): el inicio nuevo no añade tiempo.
+  Registros en `docs/rediseno/fase3/entrega2/rnf-002/windows/` (`sinNN/registro.json`,
+  `resumen-sin.json`, y el inicio, la rejilla y el cuadro final de `sin01` en PNG).
+- **Web:** el primer cuadro con el plano (desde la navegación) llega a 0.15–0.22 s con caché
+  caliente y a 1.08–1.34 s en la primera visita; la rejilla quieta, en la tabla. Igual que en la
+  entrega 1 (0.30–0.42 y 1.28–1.51 s). Registros en `rnf-002/web/sin-caliente/` y `sin-fria/`
+  (`sinNN-registro.json`, `resumen.json`, y el inicio y la rejilla de `sin01`).
+- **Emulador:** el paso 1 sigue siendo `am start` del paquete r4 (el icono no está a la vista en
+  el lanzador del emulador, anotado); el tiempo sale del video (PTS del primer cuadro que difiere
+  del lanzador y del primer cuadro quieto con el plano, propuestos por `t114_primera_cuadros.py`
+  y mirados a ojo: en la primera repetición el cuadro 72 es el primero sin el selector y con la
+  rejilla; en la tercera, el 53). La cota incluye las lecturas de uiautomator del instrumento, así
+  que es un límite superior, como en T-98 y en la entrega 1 (2.98–3.25 s): la primera repetición
+  de hoy (3.84–3.88 s) es la que sigue al `pm clear` y a la primera apertura del selector; las
+  otras cuatro quedan en 3.06–3.42 s. Registros en `rnf-002/android/sinNN/` (`captura.json`,
+  `cuadros.json` y los JPEG candidatos); los MP4 quedan en `%TEMP%` con su SHA-256 en el registro.
+- La condición «con perfil» (informativa) no se repitió: nada de esta entrega la toca y la de la
+  entrega 1 sigue valiendo.
+
+### 4.6 Capturas
+
+Las de «después» son del banco r4 de esta entrega (`-t tool/t99_main.dart`, la última compilación,
+con todo lo de 4.2), con el plan de carga `T100_CARGA.edi` publicado primero (deja GTSTC como
+escala confirmada) y el plano de llegada `T100_LLEGADA.edi` abierto después, que por 7.2 abre
+publicado en GTSTC y ofrece Descarga. Todas en `docs/rediseno/fase3/entrega2/`:
+
+| Cliente | Carpeta | Cuántas | Qué hay |
+|---|---|---:|---|
+| Windows (arnés, `t114_capturas_windows.ps1 -Escenario plano -EscalaAnterior GTSTC -PorExplorer`) | `despues-windows/` | 72 | 1920×1080, 600×960 y 360×800 × claro y oscuro × letra 1.0, 1.45 y 2.0 × plano, Descarga, Lista y Avance |
+| Web (Chrome por Playwright, `t114_capturas_web_plano.py`, banco servido en 127.0.0.1) | `despues-web/` | 40 | 360×800, 600×960, 1280×800 y 1920×1080 × claro y oscuro × plano, Descarga (a 360 desde el desplegable), Lista, Avance y «Más» |
+| Emulador Android (API 26, 360×640 dp a densidad 480, `t114_capturas_android_plano.py --reiniciar-datos`) | `despues-emulador/` | 28 | letra 1.0, 1.45 y 2.0 en claro y 1.0 en oscuro × plano, Descarga, Lista, Avance y «Más», más `*_rejilla`: el plano y Descarga tras desplazar la rejilla, con la cabecera recogida (13.8) |
+
+El «antes» del plano son las capturas del manual de T-100 (`docs/manual/w05-*`, `w08-plano-modo-*`,
+`h05-*`, `h08-*`) y los previos de la entrega 1 (`docs/rediseno/fase3/despues/`): el conductor
+de la entrega 1 no tiene el escenario `plano`. Lo que se mira en ellas y se corrigió está en 4.2
+(el título cortado a 360, la rejilla bajo el pliegue a 360 × 640); lo que queda a la vista, en 4.8.
+Ninguna captura muestra «Nube y cuenta» abierta, el corpus real ni correos: el buque es BUQUE
+MANUAL, viaje M100, y los números de contenedor son sintéticos.
+
+### 4.7 La RAM en Windows, antes y después (T-99, RNF-001)
+
+Con el instrumento de T-99 sin tocar (`tool/t99_ram_windows.ps1`, acción `seguir`: cinco lecturas de
+`WorkingSet64` tras 5 s de reposo en cada paso del escenario `ram`: cargar, el plano, las 72 bahías,
+Estadísticas, buscar y volver a la Lista) y `tool/t99_ram_resumen.dart`, orquestado por
+`tool/t114_ram_windows.ps1` (el banco abierto por explorer.exe, fuera del paquete de la consola).
+Seis corridas por banco con `T99_SINTETICO_977.edi`; la primera, en frío, se descarta. MB del SI.
+«Antes» es un banco compilado de `HEAD` (`ccc8c2f`, el plano anterior) y «después» el de esta
+entrega, los dos con `-t tool/t99_main.dart` y la misma máquina en reposo (sin otro Flutter ni
+capturas a la vez). Lecturas y resúmenes en `docs/rediseno/fase3/entrega2/ram/`.
+
+| Paso del escenario | Antes, mediana de 5 corridas (mín–máx) | Después, mediana de 5 corridas (mín–máx) |
+|---|---:|---:|
+| inicio | 133.6 MB (117.1–137.8) | 128.8 MB (113.2–141.6) |
+| cargar | 154.2 MB (127.9–156.8) | 150.1 MB (138.5–170.9) |
+| plano (bay_plan) | 156.2 MB (129.7–159.3) | 155.7 MB (141.5–177.5) |
+| las 72 bahías | 161.3 MB (147.2–174.6) | 155.0 MB (150.2–178.6) |
+| Estadísticas | 182.7 MB (162.5–185.9) | 171.9 MB (155.8–185.5) |
+| buscar | 189.5 MB (170.9–190.2) | 189.7 MB (164.5–194.9) |
+| Lista (estable de T-99) | 510.5 MB (495.4–524.9) | 513.6 MB (484.1–519.7) |
+
+Lectura: **el plano nuevo no cambia la memoria.** En los pasos que son del plano (abrirlo y recorrer
+las 72 bahías con la silueta) la mediana queda igual o un poco por debajo (156.2 → 155.7 y 161.3 →
+155.0 MB), dentro del ruido entre corridas (± 15 MB). El «estable» de T-99 sigue en ≈ 510 MB en los
+dos bancos y sigue sin cumplir el umbral de 200 MB: el salto de 190 a 510 MB ocurre al volver a la
+Lista, igual antes y después, y es lo que RNF-001 y RNF-007 piden resolver con la construcción
+perezosa de la Lista (`SPRINT-4.md`, sección 2), que no es de esta entrega. Pico y estable coinciden
+porque el máximo se alcanza en el último paso. Esta medición es de memoria, no de tiempos: no
+reemplaza a T-99 ni a sus bancos, solo responde «¿el plano nuevo gasta más?»: no.
+
+### 4.8 Lo que no se pudo, lo que queda y lo que Carlos decide
+
+- **La barra de T-91 se retira** (es lo que `DESIGN.md` 8 pide). `planToolbarCollapsedProvider` y
+  su almacén (`getPlanToolbarCollapsed` / `setPlanToolbarCollapsed`) quedan sin lector; retirarlos
+  toca `domain/` y `data/`, así que se propone como tarea (`t91_plan_toolbar_test` conserva la
+  prueba del almacén).
+- **`BsCelda` no dibuja icono y código a la vez**: por eso la celda de carga lleva el OR como
+  código y el estado como rol y segunda línea, y en el muelle «Sube» / «Cargado» se distinguen por
+  el rol y la etiqueta accesible. Si se quiere el icono junto al OR es un cambio de la pieza
+  (`bs_celda.dart`), que acaba de aceptarse.
+- **En la barra inferior los rótulos escalan hasta 1.3** y «Estadísticas» se escribe «Estad.»:
+  cinco destinos en 360 dp dan 72 dp a cada uno. El nombre entero va en la descripción emergente y
+  para el lector de pantalla. Si Carlos prefiere cuatro destinos o rótulos solo en el activo
+  (`onlyShowSelected`), es una línea.
+- **Atrás en Android** (cerrar hojas y paneles primero, preguntar con un previo) no se tocó.
+- **La leyenda en el panel lateral** (9.2 a 1920) queda para después: hoy va compacta bajo la
+  rejilla en todos los anchos.
+- **El «antes» del plano** son las capturas del manual de T-100 (`docs/manual/w05-*`,
+  `w08-plano-modo-*`, `h05-*`, `h08-*`) y los previos de la entrega 1
+  (`docs/rediseno/fase3/despues/`): el conductor de la entrega 1 no tiene el escenario `plano`.
+  La RAM «antes» sí se midió con un banco compilado de `HEAD` (ccc8c2f, el código del plano
+  anterior) en `%TEMP%\t99-r4-antes\copia`; su primer `flutter build windows` falló con el
+  SDK de C++ de Firebase a medio extraer y bastó borrar `build/windows` y compilar de nuevo (el
+  binario que «no arrancaba su conductor» era ese, a medio compilar).
+- **Lo que las capturas dejan a la vista y no se tocó:** a 360 dp con letra 1.45 y 2.0 el chip del
+  zoom («100 %») se superpone a la última columna de la rejilla, porque el área del plano es
+  corta y 9.2 lo fija en la esquina inferior derecha; en el emulador la banda del muelle escribe
+  «BUQUE MAN…» con elipsis (es el recurso que la sección 10 de `DESIGN.md` prevé para RNF-003 en 360 dp, «título con elipsis»; el nombre entero
+  va en la Lista y en «Avance»). En el emulador a 2.0, el contador «re-estibas» de la barra de la
+  operación parte la palabra («re-estiba / s»): tres contadores en 360 dp a esa letra no caben en una
+  línea. Si Carlos prefiere el chip del zoom fuera del lienzo, el nombre en dos líneas o «re-est.» a
+  2.0, es una línea en cada sitio.
+
+### 4.9 El tema en caché (bloque aparte, 10.17)
+
+`BayStreamApp.build` construía un `ThemeData` nuevo en cada build y el `AnimatedTheme` de
+`MaterialApp` corría 200 ms aunque nada hubiera cambiado. Ahora `bayStreamTemaClaro` y
+`bayStreamTemaOscuro` (`lib/core/app.dart`) construyen el tema una vez por densidad y devuelven la
+misma instancia; `BayStreamTema` sigue construyendo uno nuevo cada vez que se le pide (T-115 le
+pasa otra tabla de «Colorear por»). `test/t114_tema_cache_test.dart` (2) comprueba la identidad por
+densidad y brillo y que un rebuild de `BayStreamApp` deje el mismo `ThemeData` sin animaciones
+corriendo. Es su propio bloque de git.
+
+### 4.10 Horas
+
+De ≈ 17:30 del 22-oct-2026 (después de entregar la corrección de la Fase 2 bis) a ≈ 03:00 del
+23-oct: **≈ 9.5 h**, de las que más de la mitad son esperas en segundo plano (ocho tandas de la
+suite, cinco compilaciones del banco en tres clientes, diez tandas de capturas, la RAM antes y
+después y RNF-002 en tres clientes), con una pausa por el límite de uso.
+
+### Git para Carlos (Fase 3, entrega 2)
+
+Después del bloque de la corrección de la Fase 2 bis (ya subido). Un `git add` por ruta;
+`pubspec.yaml` y `pubspec.lock` no cambian; `domain/`, `data/`, `lib/main.dart` y los congelados no
+cambian. Los tres generados de `windows/flutter/` figuran modificados solo por el fin de línea y no
+se agregan.
+
+```
+git add -- DESIGN.md
+git add -- lib/core/design/bs_medidas.dart
+git add -- lib/core/design/bs_tema.dart
+git add -- lib/core/design/componentes/bs_banda.dart
+git add -- lib/core/design/componentes/bs_banda_muelle.dart
+git add -- lib/core/design/componentes/bs_cartela.dart
+git add -- lib/core/design/componentes/bs_silueta_buque.dart
+git add -- lib/core/design/componentes/bs_tarjeta_cifra.dart
+git add -- lib/features/vessel/presentation/pages/operation_progress_page.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/widgets/container_search_delegate.dart
+git add -- lib/features/vessel/presentation/widgets/loading_controls.dart
+git add -- lib/features/vessel/presentation/widgets/loading_plan_controls.dart
+git add -- lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart
+git add -- lib/features/vessel/presentation/providers/plano_providers.dart
+git add -- lib/features/vessel/presentation/widgets/cifras_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/detalle_contenedor.dart
+git add -- lib/features/vessel/presentation/widgets/en_vivo_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/silueta_del_viaje.dart
+git add -- test/bay_plan_grid_test.dart
+git add -- test/effective_weight_test.dart
+git add -- test/profile_loading_page_test.dart
+git add -- test/recent_voyages_test.dart
+git add -- test/support/t91_toolbar_support.dart
+git add -- test/t102_weight_display_test.dart
+git add -- test/t104_text_test.dart
+git add -- test/t106_plan_widget_test.dart
+git add -- test/t107_tabs_test.dart
+git add -- test/t110_bays_test.dart
+git add -- test/t114_fase3_inicio_test.dart
+git add -- test/t114_fase3_plano_test.dart
+git add -- test/t114_fuentes_test.dart
+git add -- test/t69_reserved_slots_view_test.dart
+git add -- test/t75_discharge_test.dart
+git add -- test/t81_office_widget_test.dart
+git add -- test/t90_theme_test.dart
+git add -- test/t91_plan_toolbar_test.dart
+git add -- test/t97_text_test.dart
+git add -- test/vessel_profile_view_test.dart
+git add -- tool/t112_censos.py
+git add -- tool/t114_capturas_android_plano.py
+git add -- tool/t114_capturas_web_plano.py
+git add -- tool/t114_capturas_windows.ps1
+git add -- tool/t114_primera_windows.py
+git add -- tool/t114_ram_windows.ps1
+git add -- tool/t99_conductor.dart
+git add -- docs/rediseno/fase3/traspaso-entrega2.md
+git add -- docs/rediseno/fase3/entrega2/flutter-ui-audit.txt
+git add -- docs/rediseno/fase3/entrega2/censos/resumen.json
+git add -- docs/rediseno/fase3/entrega2/censos/tablas.md
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra1.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra1.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra1.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra1.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra1.45_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra1.45_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra1.45_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra1.45_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra2.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra2.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra2.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_claro_letra2.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra1.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra1.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra1.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra1.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra1.45_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra1.45_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra1.45_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra1.45_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra2.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra2.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra2.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/1920x1080_oscuro_letra2.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra1.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra1.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra1.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra1.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra1.45_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra1.45_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra1.45_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra1.45_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra2.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra2.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra2.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_claro_letra2.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra1.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra1.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra1.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra1.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra1.45_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra1.45_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra1.45_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra1.45_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra2.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra2.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra2.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/360x800_oscuro_letra2.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra1.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra1.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra1.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra1.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra1.45_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra1.45_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra1.45_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra1.45_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra2.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra2.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra2.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_claro_letra2.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra1.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra1.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra1.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra1.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra1.45_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra1.45_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra1.45_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra1.45_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra2.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra2.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra2.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-windows/600x960_oscuro_letra2.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_claro_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_claro_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_claro_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_claro_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_claro_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_oscuro_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_oscuro_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_oscuro_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_oscuro_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1280_oscuro_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_claro_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_claro_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_claro_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_claro_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_claro_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_oscuro_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_oscuro_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_oscuro_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_oscuro_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_1920_oscuro_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_claro_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_claro_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_claro_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_claro_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_claro_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_oscuro_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_oscuro_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_oscuro_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_oscuro_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_360_oscuro_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_claro_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_claro_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_claro_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_claro_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_claro_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_oscuro_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_oscuro_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_oscuro_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_oscuro_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-web/web_600_oscuro_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.0_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.0_plano_descarga_rejilla.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.0_plano_rejilla.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.45_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.45_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.45_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.45_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.45_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.45_plano_descarga_rejilla.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra1.45_plano_rejilla.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra2.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra2.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra2.0_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra2.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra2.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra2.0_plano_descarga_rejilla.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_claro_letra2.0_plano_rejilla.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_oscuro_letra1.0_avance.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_oscuro_letra1.0_lista.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_oscuro_letra1.0_mas.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_oscuro_letra1.0_plano.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_oscuro_letra1.0_plano_descarga.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_oscuro_letra1.0_plano_descarga_rejilla.png
+git add -- docs/rediseno/fase3/entrega2/despues-emulador/emulador_360_oscuro_letra1.0_plano_rejilla.png
+git add -- docs/rediseno/fase3/entrega2/ram/ram-antes-corridas.csv
+git add -- docs/rediseno/fase3/entrega2/ram/ram-antes-resumen.md
+git add -- docs/rediseno/fase3/entrega2/ram/ram-antes-windows.csv
+git add -- docs/rediseno/fase3/entrega2/ram/ram-despues-corridas.csv
+git add -- docs/rediseno/fase3/entrega2/ram/ram-despues-resumen.md
+git add -- docs/rediseno/fase3/entrega2/ram/ram-despues-windows.csv
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/captura.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/cuadro-00016.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/cuadro-00017.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/cuadro-00018.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/cuadro-00070.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/cuadro-00071.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/cuadro-00072.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/cuadro-00073.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin01/cuadros.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/captura.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/cuadro-00008.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/cuadro-00009.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/cuadro-00056.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/cuadro-00057.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/cuadro-00058.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/cuadro-00059.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin02/cuadros.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/captura.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/cuadro-00008.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/cuadro-00009.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/cuadro-00051.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/cuadro-00052.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/cuadro-00053.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/cuadro-00054.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin03/cuadros.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/captura.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/cuadro-00008.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/cuadro-00009.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/cuadro-00053.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/cuadro-00054.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/cuadro-00055.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/cuadro-00056.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin04/cuadros.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/captura.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/cuadro-00008.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/cuadro-00009.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/cuadro-00010.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/cuadro-00046.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/cuadro-00047.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/cuadro-00048.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/cuadro-00049.jpg
+git add -- docs/rediseno/fase3/entrega2/rnf-002/android/sin05/cuadros.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-caliente/resumen.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-caliente/sin01-inicio.png
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-caliente/sin01-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-caliente/sin01-rejilla.png
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-caliente/sin02-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-caliente/sin03-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-caliente/sin04-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-caliente/sin05-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-fria/resumen.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-fria/sin01-inicio.png
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-fria/sin01-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-fria/sin01-rejilla.png
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-fria/sin02-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-fria/sin03-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-fria/sin04-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/web/sin-fria/sin05-registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/resumen-sin.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/sin01/final.png
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/sin01/inicio.png
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/sin01/registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/sin01/rejilla.png
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/sin02/registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/sin03/registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/sin04/registro.json
+git add -- docs/rediseno/fase3/entrega2/rnf-002/windows/sin05/registro.json
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: fase 3, entrega 2, el plano por bahia en la direccion C con navegacion adaptable, silueta, celdas del icono y banda del muelle"
+git push
+```
+
+### Git para Carlos (el tema en caché, bloque aparte)
+
+```
+git add -- lib/core/app.dart
+git add -- test/t114_tema_cache_test.dart
+git commit -m "Sprint 4: el tema se construye una vez por densidad, sin AnimatedTheme de mas"
+git push
+```
+
+### Tres líneas
+
+- El plano por bahía es el de la dirección C en Windows, la Web y Android: navegación adaptable,
+  silueta, tarjetas, celdas como el ícono, detalle único, «En vivo», banda del muelle y el naranja
+  con la bitácora.
+- Suite 1242 en verde, `analyze` 0, censos sin inglés, auditoría sin críticos ni avisos nuevos fuera de
+  los tokens; RNF-002 sigue en tres pasos y la RAM queda medida antes y después.
+- La barra de T-91 se retira como pide `DESIGN.md` 8; su preferencia queda sin lector (tarea
+  propuesta). ALTO: Codex acepta la entrega 2.
+
+### Mensaje para Yov
+
+Yov: la **Fase 3, entrega 2** (10.16 + 10.17) queda lista para Codex, en dos bloques de git: el de la
+entrega y, aparte, el del tema en caché (`lib/core/app.dart` + `test/t114_tema_cache_test.dart`).
+**Qué hay:** el plano por bahía en la dirección C en los tres clientes: navegación adaptable
+(`NavigationBar` < 600, riel con la marca desde 600, riel + panel de 360 desde 1200), la silueta
+como selector, tarjetas de cifra con la operación real (solo con escala), la rejilla como el ícono
+(`BsCelda` con «Colorear por» en tres vistas, tapa, casco), el detalle en una sola hoja (panel o
+hoja inferior), «En vivo» con la bitácora, la banda del muelle con Descarga / Carga, la barra de la
+operación y el naranja 1.5 s con datos de verdad; lo pendiente de 10.8/10.16 resuelto («Contenido»
+y «Número de orden» enteros, el código de cinco letras a 2.0, la acción de la banda que baja de
+línea, el conductor sin pestañas, los contadores en aviso/error y el `Badge` global sin grúa,
+`t114_fuentes_test` sin depender del fin de línea, 13.5 con la decisión). **Lo que enseñaron las
+capturas y se corrigió antes de cerrar:** el título de la bahía cortado a 360 (ahora al ancho de la
+vista) y, en el emulador de 360 × 640, la rejilla bajo el pliegue: con menos de 560 dp de alto útil
+la cabecera (controles y silueta) se va al desplazar la rejilla y vuelve (`NestedScrollView`,
+13.8); a 360 × 800 (Honor, arnés) no cambia nada. **Números:** suite 1242 (piso 1224), `analyze` 0,
+censos 1931 visibles / 0 en inglés, M3 251/7/3, auditoría sin críticos nuevos; RNF-002 sigue en
+tres pasos (Windows 1.84–2.19 s, Web 0.30–0.48 y 1.28–1.60 en primera visita, emulador cotas
+3.06–3.88 s); la RAM antes/después en Windows es igual en los pasos del plano (≈ 156 MB) y el
+estable de T-99 sigue en ≈ 510 MB por la Lista, que es lo de RNF-001/007 pendiente. **Evidencia:**
+72 + 40 + 28 capturas, RAM y RNF-002 en `docs/rediseno/fase3/entrega2/`. **Para Carlos:** (1) la
+barra de T-91 se retira como pide `DESIGN.md` 8 y su preferencia queda sin lector (tocarla es
+`domain/`+`data/`: tarea); (2) la leyenda en el panel lateral a 1920 queda para después; (3) a
+360 × 2.0 el chip del zoom pisa la última columna y «re-estibas» se parte, y en el emulador la
+banda escribe «BUQUE MAN…»: tres líneas si las quieres distintas. Me detengo: ALTO: Codex acepta la
+entrega 2.

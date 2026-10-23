@@ -27,15 +27,35 @@ class OperationProgressPage extends ConsumerWidget {
               onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
                   builder: (_) => HatchOperationPage(voyage: voyage)))),
         ]),
-        body: ref.watch(loadingOperationProvider(voyage)).when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) =>
-                  Center(
-                      child: Text(vesselErrorMessage(
-                          error, stack, 'calcular el avance de la operación'))),
-              data: (operation) => _content(context, operation),
-            ),
+        body: OperationProgressBody(voyage: voyage),
       );
+}
+
+/// El avance de la operación sin barra: lo usa la página y el destino
+/// «Avance» de la navegación (`DESIGN.md` 8). Con [onCelda], «Ir a» de un
+/// conflicto lo llama en vez de cerrar la página.
+class OperationProgressBody extends ConsumerWidget {
+  final VesselVoyage voyage;
+  final ValueChanged<OperationCellLink>? onCelda;
+  const OperationProgressBody({super.key, required this.voyage, this.onCelda});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) =>
+      ref.watch(loadingOperationProvider(voyage)).when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => Center(
+                child: Text(vesselErrorMessage(
+                    error, stack, 'calcular el avance de la operación'))),
+            data: (operation) => _content(context, operation),
+          );
+
+  void _irA(BuildContext context, OperationCellLink cell) {
+    if (onCelda != null) {
+      onCelda!(cell);
+      return;
+    }
+    Navigator.pop(context, cell);
+  }
 
   Widget _content(BuildContext context, LoadingOperation operation) {
     final data = OperationProgress.build(operation);
@@ -170,7 +190,7 @@ class OperationProgressPage extends ConsumerWidget {
                                     icon: const Icon(Icons.grid_view),
                                     label: Text(
                                         'Ir a ${loadingPosition(item.position!)}'),
-                                    onPressed: () => Navigator.pop(
+                                    onPressed: () => _irA(
                                         context,
                                         OperationCellLink(
                                             item.conflict.key,

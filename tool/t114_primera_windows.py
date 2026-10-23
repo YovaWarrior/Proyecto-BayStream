@@ -60,9 +60,10 @@ kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
 TITULO_APP = 'BayStream'
 SW_MAXIMIZE = 3
 WM_CLOSE = 0x0010
-# El botón «Seleccionar archivo» lleva la marca: #0D47A1 en claro y #8FB4F2 en
-# oscuro (la app sigue al tema del sistema, DESIGN.md 4.1).
-MARCAS = {'claro': np.array([13, 71, 161]), 'oscuro': np.array([143, 180, 242])}
+# El botón «Seleccionar archivo» lleva la marca (la app sigue al tema del sistema,
+# DESIGN.md 4.1): #0D47A1 de día y, desde la Fase 2 bis (13.1), #4F8EF7 de noche, la
+# selección, que es el `primary` de noche; antes era #8FB4F2.
+MARCAS = {'claro': np.array([13, 71, 161]), 'oscuro': np.array([79, 142, 247])}
 CUADROS_POR_SEGUNDO = 20
 QUIETO_S = 0.6           # cuadros iguales durante este tiempo = pantalla quieta
 UMBRAL_IGUALES = 0.35    # diferencia media por canal (0-255) para «igual»

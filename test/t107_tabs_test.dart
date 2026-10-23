@@ -1,5 +1,6 @@
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
+import 'package:baystream/features/vessel/presentation/widgets/navegacion_del_viaje.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,7 +9,9 @@ import 'support/t91_toolbar_support.dart';
 
 /// T-107, parte B · La observación del 17-oct: en la Web a 360 dp, tocar
 /// «Estadísticas» desde «Lista» llevó a «Bay Plan». Se reproduce con la
-/// página de las pestañas a 360×780 dp, con toque y con ratón.
+/// página a 360×780 dp, con toque y con ratón. Desde la Fase 3 la navegación
+/// es la barra inferior (`DESIGN.md` 8): el destino vive en
+/// `destinoDelViajeProvider` y cada destino tiene su clave.
 
 /// El plano de llegada sintético de T-75: dos bahías, la 03 y la 14.
 const _arrivalText = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
@@ -31,39 +34,43 @@ final _arrival = () {
       portOfCall: 'GTSTC');
 }();
 
-int _index(WidgetTester tester) =>
-    tester.widget<TabBar>(find.byType(TabBar)).controller!.index;
-
-Future<void> _tab(WidgetTester tester, String text, PointerDeviceKind kind) async {
-  await tester.tap(find.widgetWithText(Tab, text), kind: kind);
+Future<void> _destino(
+    WidgetTester tester, DestinoDelViaje destino, PointerDeviceKind kind) async {
+  await tester.tap(find.byKey(ValueKey('destino-${destino.name}')), kind: kind);
   await tester.pumpAndSettle();
 }
 
 void main() {
   for (final kind in [PointerDeviceKind.touch, PointerDeviceKind.mouse]) {
     for (final from in [
-      ['Lista'],
-      ['Plano', 'Lista'],
+      [DestinoDelViaje.lista],
+      [DestinoDelViaje.plano, DestinoDelViaje.lista],
     ]) {
       testWidgets(
-          'T-107 a 360×780 dp, ${kind.name}: ${from.join(' → ')} → '
+          'T-107 a 360×780 dp, ${kind.name}: ${from.map((d) => d.rotulo).join(' → ')} → '
           'Estadísticas abre Estadísticas', (tester) async {
-        await pumpT91Plan(
+        final scope = await pumpT91Plan(
             tester, _arrival, T91MemorySettings(), Brightness.light);
         tester.view.physicalSize = const Size(360, 780);
         await tester.pumpAndSettle();
-        final visited = <int>[];
-        tester
-            .widget<TabBar>(find.byType(TabBar))
-            .controller!
-            .addListener(() => visited.add(_index(tester)));
-        for (final text in from) {
-          await _tab(tester, text, kind);
+        expect(find.byKey(const ValueKey('barra-del-viaje')), findsOneWidget);
+        final visited = <DestinoDelViaje>[];
+        scope.listen(destinoDelViajeProvider, (previo, actual) => visited.add(actual));
+        for (final destino in from) {
+          await _destino(tester, destino, kind);
         }
-        expect(_index(tester), 0);
-        await _tab(tester, 'Estadísticas', kind);
-        expect(_index(tester), 2, reason: 'índices vistos: $visited');
+        expect(scope.read(destinoDelViajeProvider), DestinoDelViaje.lista);
+        await _destino(tester, DestinoDelViaje.estadisticas, kind);
+        expect(scope.read(destinoDelViajeProvider), DestinoDelViaje.estadisticas,
+            reason: 'destinos vistos: $visited');
         expect(find.text('Total Contenedores').hitTestable(), findsOneWidget);
+        // «Más» no cambia de destino: abre la hoja y la deja cerrar.
+        await _destino(tester, DestinoDelViaje.mas, kind);
+        expect(find.byKey(const ValueKey('hoja-mas')), findsOneWidget);
+        expect(scope.read(destinoDelViajeProvider), DestinoDelViaje.estadisticas);
+        await tester.tapAt(const Offset(8, 8));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('hoja-mas')), findsNothing);
         expect(tester.takeException(), isNull);
       });
     }

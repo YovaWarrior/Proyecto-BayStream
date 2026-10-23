@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/change_requests.dart';
 import '../formatters/vessel_error_message.dart';
@@ -102,8 +103,10 @@ class _PlanZoomViewportState extends State<PlanZoomViewport> {
                                   child: PlanZoomScope(
                                       scale: scale, child: widget.child)))))));
         })),
+        // DESIGN.md 9.2: el chip del zoom vive en la esquina inferior derecha,
+        // nunca sobre el título de la bahía.
         Positioned(
-            top: 0,
+            bottom: 0,
             right: 0,
             child: Material(
                 color: Theme.of(context).colorScheme.surfaceContainerLow,
@@ -211,6 +214,12 @@ class PlanDragCell extends ConsumerWidget {
         operation?.id == data.operationId;
     // T-106: la copia vive en el Overlay, fuera del zoom; se dibuja a su escala.
     final zoom = PlanZoomScope.of(context);
+    // La copia va centrada sobre el dedo y por encima de él: media columna a
+    // la izquierda y una fila más 16 dp arriba, con las medidas de la celda
+    // (Fase 3: BsCelda, 52 o 56 de ancho más su hueco).
+    final medidas = BsMedidas.de(context);
+    final columna = medidas.anchoCelda + medidas.huecoCelda;
+    final fila = medidas.altoCelda + medidas.huecoCelda;
     Widget cell = child;
     if (enableDrag && pending && actor?.authorized != true) {
       cell = GestureDetector(
@@ -224,7 +233,7 @@ class PlanDragCell extends ConsumerWidget {
         maxSimultaneousDrags: 1,
         dragAnchorStrategy: pointerDragAnchorStrategy,
         feedback: Transform.translate(
-            offset: Offset(-27 * zoom, -60 * zoom),
+            offset: Offset(-columna / 2 * zoom, -(fila + 16) * zoom),
             child: Transform.scale(
                 key: const ValueKey('plan-drag-feedback'),
                 scale: zoom,

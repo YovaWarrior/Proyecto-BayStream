@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/design/design.dart';
+import 'plan_drag_confirmation.dart' show PlanZoomScope;
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
@@ -935,81 +938,50 @@ String loadingCellSemantics(LoadingOperation operation, String itemKey) {
   return '$name, $mark';
 }
 
-/// OR y estado con icono: la marca sigue siendo legible sin depender del color.
+/// La celda de carga en la dirección C (`DESIGN.md` 13): el OR como código,
+/// el estado como rol (pendiente, hecho) y, en la oficina, como segunda
+/// línea («Sube», «Cargado»); el conflicto y la cancelación van como marca,
+/// con icono y rótulo. La etiqueta accesible sigue siendo la de T-107.
 class LoadingCell extends StatelessWidget {
   final String itemKey;
   final LoadingOperation operation;
   final VoidCallback onTap;
   final bool highlighted;
+
+  /// La curva del casco en las celdas de los extremos de la bodega (13.2).
+  final BsCurvaDeCelda curva;
   const LoadingCell(
       {super.key,
       required this.itemKey,
       required this.operation,
       required this.onTap,
-      this.highlighted = false});
+      this.highlighted = false,
+      this.curva = BsCurvaDeCelda.ninguna});
   @override
   Widget build(BuildContext context) {
     final status = operation.state[itemKey];
     final loaded = status?.state == ItemState.moved;
     final conflict = status?.inConflict == true;
-    final scheme = Theme.of(context).colorScheme;
+    final cancelled = status?.state == ItemState.cancelled;
+    final semanticos = BsColoresSemanticos.de(context);
     final label = status?.order == null
         ? operation.progress.label(itemKey)
         : 'OR ${status!.order}';
-    final mark = conflict
-        ? 'REVISAR'
-        : status?.state == ItemState.cancelled
-            ? 'CANC.'
-            : loaded
-                ? 'CARG.'
-                : 'SUBE';
-    final foreground =
-        loaded ? scheme.onSurfaceVariant : scheme.onPrimaryContainer;
-    // T-107: se lee solo la etiqueta, sin repetir el OR y la marca de la
-    // celda; el toque sigue disponible para el lector de pantalla.
-    return Semantics(
-        button: true,
-        label: loadingCellSemantics(operation, itemKey),
-        excludeSemantics: true,
-        onTap: onTap,
-        child: InkWell(
-            onTap: onTap,
-            child: Container(
-              width: 50,
-              height: 40,
-              margin: const EdgeInsets.all(2),
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                  color: loaded
-                      ? scheme.surfaceContainerHighest
-                      : scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                      width: highlighted ? 3 : 1,
-                      color: highlighted ? scheme.onSurface : scheme.primary)),
-              child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(
-                        conflict
-                            ? Icons.warning_amber
-                            : status?.state == ItemState.cancelled
-                                ? Icons.block
-                                : loaded
-                                    ? Icons.check_circle_outline
-                                    : Icons.arrow_upward,
-                        size: 12,
-                        color: foreground),
-                    Text(label,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 10,
-                            height: 1.1,
-                            fontWeight: FontWeight.bold,
-                            color: foreground)),
-                    Text(mark,
-                        style: TextStyle(fontSize: 8, color: foreground)),
-                  ])),
-            )));
+    final marca = conflict
+        ? BsMarcaDeCelda.revisar
+        : cancelled
+            ? BsMarcaDeCelda.cancelado
+            : BsMarcaDeCelda.ninguna;
+    return BsCelda(
+      codigo: label.replaceAll('\n', ' '),
+      etiqueta: loadingCellSemantics(operation, itemKey),
+      categoria: loaded ? semanticos.hecho : semanticos.pendiente,
+      linea2: loaded ? 'Cargado' : 'Sube',
+      marca: marca,
+      curva: curva,
+      resaltada: highlighted,
+      zoom: PlanZoomScope.of(context),
+      onTap: onTap,
+    );
   }
 }

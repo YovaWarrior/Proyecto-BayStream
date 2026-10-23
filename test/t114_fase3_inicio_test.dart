@@ -209,6 +209,9 @@ void main() {
           await tester.tap(find.text('Lista'));
           await tester.pumpAndSettle();
           expect(find.byKey(const ValueKey('open-export-list')), findsNothing);
+          // Exportar vive en «Más» (DESIGN.md 8); en previo avisa.
+          await tester.tap(find.text('Más'));
+          await tester.pumpAndSettle();
           await tester.tap(find.byKey(const ValueKey('export-preview')));
           await tester.pumpAndSettle();
           expect(find.text(exportarSinConfirmar), findsOneWidget);
@@ -306,17 +309,18 @@ void main() {
               reason: 'cancelar deja el plano a la vista, sin operar');
           expect(find.byKey(const ValueKey('preview-banner')), findsOneWidget);
 
-          await tester.tap(find.text('Lista'));
+          // «Cerrar el plano» está en «Más» (DESIGN.md 8).
+          await tester.tap(find.text('Más'));
           await tester.pumpAndSettle();
-          await tester.ensureVisible(find.byTooltip('Limpiar datos'));
-          await tester.tap(find.byTooltip('Limpiar datos'));
+          await tester.tap(find.byKey(const ValueKey('mas-cerrar')));
           await tester.pumpAndSettle();
           expect(find.text('¿Descartar el plano sin confirmar?'), findsOneWidget);
           await tester.tap(find.byKey(const ValueKey('preview-keep')));
           await tester.pumpAndSettle();
           expect(container.read(voyageUiStateProvider), isA<Previo>());
-          await tester.ensureVisible(find.byTooltip('Limpiar datos'));
-          await tester.tap(find.byTooltip('Limpiar datos'));
+          await tester.tap(find.text('Más'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(const ValueKey('mas-cerrar')));
           await tester.pumpAndSettle();
           await tester.tap(find.byKey(const ValueKey('preview-discard')));
           await tester.pumpAndSettle();

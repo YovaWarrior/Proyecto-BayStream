@@ -7,12 +7,13 @@ import '../providers/vessel_providers.dart';
 class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
   final List<ContainerUnit> containers;
   final WidgetRef ref;
-  final TabController? tabController;
+  /// Cómo ir al Plano al elegir un resultado; sin esto, solo selecciona.
+  final VoidCallback? onIrAlPlano;
 
   ContainerSearchDelegate({
     required this.containers,
     required this.ref,
-    this.tabController,
+    this.onIrAlPlano,
   }) : super(
           searchFieldLabel: 'Buscar contenedor o puerto...',
           searchFieldStyle: const TextStyle(fontSize: 16),
@@ -317,10 +318,8 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
       ref.read(selectedBayProvider.notifier).select(bayNumber);
       ref.read(highlightedContainerProvider.notifier).highlight(container.containerId);
       
-      // Cambiar a la pestaña Bay Plan si hay TabController
-      if (tabController != null) {
-        tabController!.animateTo(1); // Índice 1 = Bay Plan
-      }
+      // Ir al Plano, si quien abrió la búsqueda dijo cómo.
+      onIrAlPlano?.call();
     }
     
     // Cerrar la búsqueda

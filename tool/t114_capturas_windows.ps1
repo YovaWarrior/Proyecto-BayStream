@@ -18,7 +18,16 @@ param(
     [string] $ArchivoPublicado = 'T100_CARGA.edi',
     [string] $EscalaAnterior = 'USHOU',
     [string] $Anchos = '360x800,600x960,1920x1080',
-    [string] $Letras = '1.0,1.45,2.0'
+    [string] $Letras = '1.0,1.45,2.0',
+    # Fase 3, entrega 2: `plano` publica $Archivo y captura plano, lista y
+    # avance por tema, letra y tamano (tool/t99_conductor.dart, _escenarioPlano).
+    [string] $Escenario = 'inicio',
+    # Desde la consola empaquetada (Claude de escritorio, Codex) un proceso hijo
+    # hereda el paquete y Windows le virtualiza AppData: el binario no ve el
+    # almacen ni escribe los pasos donde se le pide (AGENTS.md, T-73 10.9).
+    # Con -PorExplorer el binario lo abre explorer.exe desde un .cmd que lleva
+    # las variables, fuera del paquete; el proceso se busca y se cierra por su ruta.
+    [switch] $PorExplorer
 )
 $ErrorActionPreference = 'Stop'
 $temp = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
@@ -29,7 +38,7 @@ foreach ($ruta in @($Exe, $Salida)) {
 }
 if ((Test-Path $Salida) -and @(Get-ChildItem $Salida -Force).Count -gt 0) { throw "La salida ya tiene una corrida: $Salida" }
 New-Item -ItemType Directory -Force -Path $Salida | Out-Null
-$env:T99_ESCENARIO = 'inicio'
+$env:T99_ESCENARIO = $Escenario
 $env:T99_ARCHIVO = $Archivo
 $env:T99_ARCHIVO_PUBLICADO = $ArchivoPublicado
 $env:T99_ESCALA_ANTERIOR = $EscalaAnterior
@@ -39,9 +48,29 @@ $env:T99_CAPTURAS = $Salida
 $env:T99_PASOS = Join-Path $Salida 'pasos.jsonl'
 $env:T99_PAUSA_MS = '300'
 # El proceso hereda el entorno; el almacén es el de la compilación (T99_ALMACEN).
-$proceso = Start-Process -FilePath $Exe -PassThru
-$limite = (Get-Date).AddMinutes(10)
 $pasos = $env:T99_PASOS
+$exeCompleto = [IO.Path]::GetFullPath($Exe)
+if ($PorExplorer) {
+    $cmd = Join-Path $Salida 'lanzar.cmd'
+    $lineas = @('@echo off')
+    foreach ($nombre in @('T99_ESCENARIO', 'T99_ARCHIVO', 'T99_ARCHIVO_PUBLICADO', 'T99_ESCALA_ANTERIOR',
+                          'T99_ANCHOS', 'T99_LETRAS', 'T99_CAPTURAS', 'T99_PASOS', 'T99_PAUSA_MS')) {
+        $lineas += "set $nombre=$([Environment]::GetEnvironmentVariable($nombre))"
+    }
+    $lineas += "start `"`" `"$exeCompleto`""
+    [IO.File]::WriteAllLines($cmd, $lineas, (New-Object Text.ASCIIEncoding))
+    Start-Process explorer.exe -ArgumentList "`"$cmd`""
+    $proceso = $null
+    $limite = (Get-Date).AddSeconds(60)
+    while ($null -eq $proceso -and (Get-Date) -lt $limite) {
+        Start-Sleep -Seconds 1
+        $proceso = Get-Process baystream -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exeCompleto } | Select-Object -First 1
+    }
+    if ($null -eq $proceso) { throw "explorer.exe no abrio $exeCompleto" }
+} else {
+    $proceso = Start-Process -FilePath $Exe -PassThru
+}
+$limite = (Get-Date).AddMinutes(10)
 while (-not $proceso.HasExited -and (Get-Date) -lt $limite) {
     Start-Sleep -Seconds 2
     if ((Test-Path $pasos) -and (Select-String -Path $pasos -Pattern '"paso":\s*"(fin|error)"' -Quiet)) { break }

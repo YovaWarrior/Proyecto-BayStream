@@ -84,31 +84,55 @@ class BsBanda extends StatelessWidget {
             horizontal: medidas.espacioL,
             vertical: medidas.espacioS,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Icon(icono ?? iconoDelTono, color: rol.contorno),
-              SizedBox(width: medidas.espacioM),
-              Expanded(
-                child: Text(
-                  texto,
-                  style: textos.bodyMedium?.copyWith(color: rol.texto),
-                ),
-              ),
-              if (accion != null) ...<Widget>[
-                SizedBox(width: medidas.espacioM),
-                FilledButton(
-                  onPressed: onAccion,
-                  child: Text(accion!),
-                ),
-              ],
-              if (onCerrar != null)
-                IconButton(
-                  onPressed: onCerrar,
-                  tooltip: 'Cerrar el aviso',
-                  icon: Icon(Icons.close, color: rol.contorno),
-                ),
-            ],
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints restricciones) {
+              // La acción va a la derecha del texto mientras quepa; en
+              // pantallas angostas, y antes con la letra grande, baja a su
+              // propia línea para que el texto no quede en una columna
+              // (10.8 y 10.16: «Confirmar» a 360 dp con la letra a 2.0).
+              final escala = MediaQuery.textScalerOf(context).scale(10) / 10;
+              final apilada = accion != null &&
+                  restricciones.maxWidth < (escala > 1.2 ? 520 : 400);
+              final boton = accion == null
+                  ? null
+                  : FilledButton(
+                      onPressed: onAccion,
+                      child: Text(accion!),
+                    );
+              final cabecera = Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Icon(icono ?? iconoDelTono, color: rol.contorno),
+                  SizedBox(width: medidas.espacioM),
+                  Expanded(
+                    child: Text(
+                      texto,
+                      style: textos.bodyMedium?.copyWith(color: rol.texto),
+                    ),
+                  ),
+                  if (boton != null && !apilada) ...<Widget>[
+                    SizedBox(width: medidas.espacioM),
+                    boton,
+                  ],
+                  if (onCerrar != null)
+                    IconButton(
+                      onPressed: onCerrar,
+                      tooltip: 'Cerrar el aviso',
+                      icon: Icon(Icons.close, color: rol.contorno),
+                    ),
+                ],
+              );
+              if (!apilada) return cabecera;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  cabecera,
+                  SizedBox(height: medidas.espacioS),
+                  Align(alignment: Alignment.centerRight, child: boton),
+                ],
+              );
+            },
           ),
         ),
       ),

@@ -118,9 +118,17 @@ Future<void> checkT91Toggle(WidgetTester tester, ProviderContainer scope,
   }
   await tester.pumpAndSettle();
   final offsets = positions.map((p) => p.pixels).toList();
+  // Fase 3 (DESIGN.md 8): la barra plegable de T-91 ya no existe. Lo que
+  // antes era plegar y desplegar es abrir y cerrar «Más», y tiene que dejar
+  // el plano como estaba: el mismo estado, la bahía, el modo y el
+  // desplazamiento.
   for (var i = 0; i < 2; i++) {
-    await tester.tap(find.byKey(const ValueKey('toggle-plan-toolbar')));
+    await tester.tap(find.text('Más'));
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('hoja-mas')), findsOneWidget);
+    await tester.tapAt(const Offset(8, 8));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('hoja-mas')), findsNothing);
     expect(tester.state(plan), same(planState));
     expect(scope.read(voyageNotifierProvider), same(before));
     expect(scope.read(selectedBayProvider), bays.last);

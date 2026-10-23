@@ -426,6 +426,18 @@ Atrás (Android): cierra primero hojas y paneles; en la raíz del viaje pregunta
 el plano?» solo si hay un previo sin confirmar; con el viaje publicado vuelve al inicio.
 GoRouter no hace falta.
 
+**Lo que la entrega 2 dejó en el código (22-oct, 10.16):** la barra de ocho acciones y su
+plegado (T-91) se retiran: Buscar va en la barra superior o en la cabecera de la oficina;
+Nube y Parámetros, al pie del riel desde 600 dp y en «Más» en el teléfono; y lo demás en
+«Más», que lleva también Cargar archivo, Viajes recientes, Perfiles guardados y «Cerrar el
+plano». «Avance» muestra el avance de la operación embebido, sin barra propia, y solo existe
+con una escala confirmada. En la barra inferior el destino se escribe «Estad.» y los rótulos
+crecen con la letra del sistema hasta 1.3 (cinco destinos en 360 dp dan 72 dp a cada uno;
+más allá se recortarían); el nombre entero va en la descripción emergente y para el lector de
+pantalla. Atrás en Android queda como estaba. La preferencia de T-91
+(`planToolbarCollapsedProvider` y su almacén) queda sin lector; retirarla toca `domain/` y
+`data/` y se propone como tarea.
+
 ## 9. Wireframes de las cinco pantallas clave
 
 Lienzos: 360 dp (un carácter ≈ 9 dp) y 1920 px (un carácter ≈ 17 px). Las celdas
@@ -965,6 +977,11 @@ Parámetros ofrezca como opción; con eso `bayStreamThemeMode(equipo)` devuelve
 nunca eligió abre con el tema del equipo. Son dos líneas en `domain/` y `data/`, una en
 `app.dart` y una opción en Parámetros (Fase 3).
 
+**Decisión 10.16 (22-oct):** Carlos decidió que el tema **siga al sistema**:
+`bayStreamTemaPorOmision` queda preparado y sin conectar, y `domain/` y `data/` no cambian.
+Para ver la noche en Windows o en la Web: Parámetros → Oscuro (T-90). La propuesta del cuarto
+valor queda escrita por si se retoma.
+
 ### 13.6 Las piezas nuevas y su API
 
 Todas en `lib/core/design/componentes/`, con documentación, vista previa, prueba de
@@ -1088,6 +1105,26 @@ La celda del muelle sigue en 56 × 48 (más alta si la letra lo pide), con el ic
 rótulo; «Hecho» y «Paso» con los roles de la Fase 2; «Baja» en la marca con texto blanco y,
 en bodega, en `#1F5FD6`. Un toque sobre «Baja» registra y la celda sale de su sitio en
 naranja antes del aviso con «Deshacer» (13.3).
+
+**Lo que la entrega 2 hizo distinto del lienzo (22-oct):** en la oficina, la vista Estado deja
+el código y el peso en las celdas por bajar, como dice 13.2; la marca con rótulo («Baja»,
+«Hecho», «Paso») va en el muelle y en las vistas Destino y Tipo. La leyenda es `BsCartela`
+con las fichas de la vista y su cuenta más «Resaltar» (RF-011), debajo de la rejilla; en el
+muelle operando, en su lugar va `BsBarraDeOperacion`. Las tarjetas de cifra van a la derecha
+de la silueta desde 1040 dp de ancho útil y debajo con menos; sin operación no hay tarjetas.
+La celda de carga lleva el OR como código y el estado como rol y segunda línea, porque
+`BsCelda` no dibuja icono y código a la vez. El peso de la celda y de las pilas se escribe
+como el plano impreso («28.7», sin unidad); el total de la bahía, con `formatearToneladas`.
+La celda se ensancha con la letra del sistema para que el código de cinco letras quepa
+entero a 2.0 (`BsMedidas.copyWith(anchoCelda:)`). El detalle es una sola hoja
+(`DetalleContenedor`) en el panel lateral o en una hoja inferior. El título y el resumen de
+la bahía van al ancho de la vista, no al de la rejilla (a 360 dp, centrados sobre una
+rejilla más ancha que la pantalla, salían cortados). En el teléfono bajo (menos de 560 dp
+de alto útil para el plano: 360 × 640 dp sí, 360 × 800 no), los controles del modo y la
+silueta se van hacia arriba al desplazar la rejilla y vuelven al desplazarla hacia abajo
+(`NestedScrollView`); la banda, la barra de la operación o la leyenda y la barra inferior no
+se mueven: en 360 × 640 dp la rejilla no cabía debajo de la banda, la silueta y la leyenda,
+y así se ve entera con un gesto.
 
 ### 13.9 Lo que no se toma y los datos que no se inventan
 

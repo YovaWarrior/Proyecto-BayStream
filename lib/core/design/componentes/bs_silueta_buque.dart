@@ -225,6 +225,7 @@ class BsSiluetaBuque extends StatelessWidget {
                     children: <Widget>[
                       for (final bahia in bahias)
                         _BotonDeBahia(
+                          key: ValueKey<String>('silueta-bahia-${bahia.numero}'),
                           bahia: bahia,
                           seleccionada: bahia.numero == seleccionada,
                           onTap: () => onSeleccion(bahia.numero),
@@ -263,6 +264,7 @@ class BsSiluetaBuque extends StatelessWidget {
 
 class _BotonDeBahia extends StatelessWidget {
   const _BotonDeBahia({
+    super.key,
     required this.bahia,
     required this.seleccionada,
     required this.onTap,

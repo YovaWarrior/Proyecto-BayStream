@@ -8,6 +8,13 @@ import 'package:baystream/core/design/design.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// El mismo texto tal cual, con LF y con CRLF.
+List<List<int>> _finesDeLinea(List<int> bytes) {
+  final texto = utf8.decode(bytes);
+  final lf = texto.replaceAll('\r\n', '\n');
+  return <List<int>>[bytes, utf8.encode(lf), utf8.encode(lf.replaceAll('\n', '\r\n'))];
+}
+
 void main() {
   // La laptop escribe CRLF: se normaliza para buscar líneas enteras.
   final pubspec = File('pubspec.yaml').readAsStringSync().replaceAll('\r\n', '\n');
@@ -47,8 +54,17 @@ void main() {
       final archivo = File('${carpeta.path}/${entrada['file']}');
       expect(archivo.existsSync(), isTrue, reason: entrada['file'] as String);
       final bytes = archivo.readAsBytesSync();
-      expect(bytes.length, entrada['bytes'], reason: entrada['file'] as String);
-      expect(sha256.convert(bytes).toString().toUpperCase(), entrada['sha256'],
+      // La licencia es texto y git la escribe con el fin de línea del equipo
+      // (CRLF en la laptop, LF en una copia de `git archive`): vale cualquiera
+      // de las dos formas (10.16). Los TTF son binarios y se comparan tal cual.
+      final variantes = (entrada['file'] as String).endsWith('.txt')
+          ? _finesDeLinea(bytes)
+          : <List<int>>[bytes];
+      expect(variantes.map((b) => b.length), contains(entrada['bytes']),
+          reason: entrada['file'] as String);
+      expect(
+          variantes.map((b) => sha256.convert(b).toString().toUpperCase()),
+          contains(entrada['sha256']),
           reason: entrada['file'] as String);
       expect(entrada['url'] as String, startsWith('https://raw.githubusercontent.com/IBM/plex/'));
       expect(entrada['commit'], isNotEmpty);

@@ -1,3 +1,4 @@
+import 'package:baystream/core/design/design.dart';
 import 'dart:io';
 
 import 'package:baystream/features/vessel/data/services/pdf_report_service.dart';
@@ -72,7 +73,12 @@ void main() {
       (tester) async {
     await pump(tester, scale: 1.3);
     expect(label(tester, 'cub.', 2), '28.7+?');
-    expect(find.byKey(const ValueKey('peso-celda')), findsNWidgets(4));
+    // Fase 3: el peso es la segunda línea de BsCelda.
+    expect(
+        tester
+            .widgetList<BsCelda>(find.byType(BsCelda))
+            .where((c) => c.linea2 != null),
+        hasLength(4));
     expect(tester.takeException(), isNull);
   });
   test('T-102 PDF sintetico con VGM, bruto, ambos, cero y faltantes', () async {

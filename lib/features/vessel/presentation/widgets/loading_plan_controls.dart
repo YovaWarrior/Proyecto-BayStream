@@ -114,13 +114,17 @@ class LoadingPlanControls extends ConsumerWidget {
   }
 
   Widget _modeSelector(bool discharge, {bool compact = false}) {
-    // En la línea angosta el nombre del modo se recorta antes que desbordar.
-    Text label(String text) => compact
-        ? Text(text, maxLines: 1, overflow: TextOverflow.ellipsis)
-        : Text(text);
+    // El nombre del modo se lee entero: en la línea angosta se parte en dos
+    // líneas antes que recortarse (10.8, 10.16), y los elementos del menú
+    // crecen con la letra del sistema.
+    // La elipsis es solo una red: con la letra del sistema el nombre cabe
+    // (a 2.0 el selector pasa a su propia línea).
+    Text label(String text) => Text(text,
+        maxLines: compact ? 2 : 1, overflow: TextOverflow.ellipsis);
     return DropdownButton<BayPlanMode>(
       key: const ValueKey('bay-plan-display-mode'),
       isExpanded: compact,
+      itemHeight: null,
       value: (!discharge && mode == BayPlanMode.discharge) ||
               (voyage.portOfCall == null && mode == BayPlanMode.loading)
           ? BayPlanMode.content
@@ -380,6 +384,29 @@ class _CompactPlanBar extends ConsumerWidget {
         ]),
       ),
     );
+    final nube = status == null
+        ? null
+        : IconButton(
+            key: const ValueKey('sync-status-chip'),
+            icon: Icon(syncStatusIcon(status),
+                color: syncStatusNeedsAction(status)
+                    ? colors.error
+                    : colors.primary),
+            tooltip: 'Nube y cuenta · ${syncStatusText(status)}',
+            onPressed: () => openCloudPage(context),
+          );
+    // Con la letra del sistema muy grande (10.8: a 2.0 «Contenido» no cabe
+    // junto a «Acciones» en 360 dp), el selector va en su propia línea.
+    final escala = MediaQuery.textScalerOf(context).scale(10) / 10;
+    if (escala > 1.5) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        modeSelector,
+        Row(children: [
+          Expanded(child: Align(alignment: Alignment.centerLeft, child: actions)),
+          if (nube != null) nube,
+        ]),
+      ]);
+    }
     return Row(children: [
       Expanded(
           child: Row(children: [
@@ -387,16 +414,7 @@ class _CompactPlanBar extends ConsumerWidget {
         const SizedBox(width: 8),
         actions,
       ])),
-      if (status != null)
-        IconButton(
-          key: const ValueKey('sync-status-chip'),
-          icon: Icon(syncStatusIcon(status),
-              color: syncStatusNeedsAction(status)
-                  ? colors.error
-                  : colors.primary),
-          tooltip: 'Nube y cuenta · ${syncStatusText(status)}',
-          onPressed: () => openCloudPage(context),
-        ),
+      if (nube != null) nube,
     ]);
   }
 }

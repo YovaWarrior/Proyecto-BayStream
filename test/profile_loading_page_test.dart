@@ -77,9 +77,10 @@ void main() {
       await tester.pumpAndSettle();
       return;
     }
-    await tester.tap(find.text('Lista'));
+    // Fase 3 (DESIGN.md 8): con un viaje, cargar otro archivo está en «Más».
+    await tester.tap(find.text('Más'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Cargar archivo BAPLIE'));
+    await tester.tap(find.byKey(const ValueKey('mas-cargar')));
     await tester.pumpAndSettle();
     final discard = find.byKey(const ValueKey('preview-discard'));
     if (discard.evaluate().isNotEmpty) {

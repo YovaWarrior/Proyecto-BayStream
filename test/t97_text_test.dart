@@ -6,7 +6,6 @@ import 'package:baystream/features/vessel/presentation/pages/operation_progress_
 import 'package:baystream/features/vessel/presentation/pages/vessel_overview_page.dart';
 import 'package:baystream/features/vessel/presentation/providers/loading_operation_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/sync_providers.dart';
-import 'package:baystream/features/vessel/presentation/widgets/detail_text_row.dart';
 import 'package:baystream/features/vessel/presentation/widgets/sync_status_chip.dart';
 import 'package:baystream/features/vessel/domain/repositories/operation_sync_repository.dart';
 import 'package:flutter/material.dart';
@@ -46,11 +45,9 @@ Future<void> checkT97Plan(
   tester.platformDispatcher.textScaleFactorTestValue = 2;
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
   await tester.pumpAndSettle();
-  completeText(tester, find.text('BayStream'));
+  // Fase 3: la barra superior dice el buque y la silueta es el selector.
+  completeText(tester, find.text(voyage.vessel.name));
   expect(tester.takeException(), isNull);
-  await tester.tap(find.byTooltip('Desplegar acciones'));
-  await tester.pumpAndSettle();
-  completeText(tester, find.text('BayStream'));
   final selector = tester.getRect(find.byKey(const ValueKey('bay-selector')));
   for (final element in find
       .descendant(
@@ -62,8 +59,6 @@ Future<void> checkT97Plan(
     expect(rect.bottom, lessThanOrEqualTo(selector.bottom));
   }
   expect(tester.takeException(), isNull);
-  await tester.tap(find.byTooltip('Plegar acciones'));
-  await tester.pumpAndSettle();
   final unit = voyage
       .bays[voyage.bays.keys.reduce((a, b) => a < b ? a : b)]!.containers.first;
   final pos = unit.stowagePosition!;
@@ -71,16 +66,18 @@ Future<void> checkT97Plan(
   await tester.ensureVisible(cell);
   await tester.tap(cell);
   await tester.pumpAndSettle();
-  final row = find.byWidgetPredicate(
-      (w) => w is DetailTextRow && w.label == 'Puerto Descarga');
-  await tester.ensureVisible(row);
+  // Fase 3: una sola hoja de detalle (DetalleContenedor) con sus filas.
+  final detalle = find.byKey(const ValueKey('detalle-contenedor'));
+  final etiqueta =
+      find.descendant(of: detalle, matching: find.text('Puerto de descarga'));
+  await tester.ensureVisible(etiqueta);
   await tester.pumpAndSettle();
-  completeText(
-      tester, find.descendant(of: row, matching: find.text('Puerto Descarga')));
+  completeText(tester, etiqueta);
   completeText(
       tester,
       find.descendant(
-          of: row, matching: find.text(unit.portOfDischarge ?? 'N/A')));
+          of: detalle,
+          matching: find.text(unit.portOfDischarge ?? 'Sin declarar')));
   expect(tester.takeException(), isNull);
   await tester.pumpWidget(const SizedBox());
   tester.platformDispatcher.clearTextScaleFactorTestValue();
@@ -147,16 +144,15 @@ void main() {
       await tester.pumpAndSettle();
       final selector = find.byKey(const ValueKey('bay-selector'));
       final rect = tester.getRect(selector);
-      final chip = find
-          .descendant(of: selector, matching: find.byType(FilterChip))
-          .first;
-      expect(tester.getRect(chip).right, lessThanOrEqualTo(312));
-      for (final element in find
-          .descendant(of: chip, matching: find.byType(Text))
-          .evaluate()) {
+      // Fase 3: la silueta es el selector. Sus textos (los números de bahía y
+      // «Proa» / «Popa») caben en su alto y no se parten; en horizontal se
+      // desplaza, así que el borde derecho no se mide.
+      final textos = find.descendant(of: selector, matching: find.byType(Text));
+      expect(textos, findsAtLeastNWidgets(2));
+      for (final element in textos.evaluate()) {
         final bounds = tester.getRect(find.byWidget(element.widget));
-        expect(bounds.bottom, lessThanOrEqualTo(rect.bottom));
-        expect(bounds.right, lessThanOrEqualTo(tester.getRect(chip).right));
+        expect(bounds.bottom, lessThanOrEqualTo(rect.bottom + 0.5));
+        expect(bounds.top, greaterThanOrEqualTo(rect.top - 0.5));
         expect(
             tester
                 .renderObject<RenderParagraph>(find.byWidget(element.widget))
@@ -174,7 +170,9 @@ void main() {
         (tester) async {
       await pumpT91Plan(tester, t97Voyage, T91MemorySettings(), brightness);
       tester.view.physicalSize = const Size(360, 800);
-      await tester.tap(find.text('Estadísticas'));
+      await tester.pumpAndSettle();
+      // En la barra inferior el destino se escribe «Estad.» (DESIGN.md 9.2).
+      await tester.tap(find.byKey(const ValueKey('destino-estadisticas')));
       await tester.pumpAndSettle();
       completeText(tester, find.text('Total Contenedores'));
       expect(tester.takeException(), isNull);

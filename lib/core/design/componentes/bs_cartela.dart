@@ -63,6 +63,7 @@ class BsCartela extends StatelessWidget {
     this.cifras = const <BsCifraDeCartela>[],
     this.leyenda = const <BsEntradaDeLeyenda>[],
     this.nota,
+    this.compacta = false,
   });
 
   /// El título («Bahía 02»).
@@ -77,11 +78,39 @@ class BsCartela extends StatelessWidget {
   /// Una nota corta debajo de la leyenda.
   final String? nota;
 
+  /// En una línea bajo la rejilla: sin el título ni las cifras, con el aire
+  /// justo, para que la rejilla se quede con el alto (13.8). El título sigue
+  /// en la etiqueta accesible del bloque.
+  final bool compacta;
+
   @override
   Widget build(BuildContext context) {
     final medidas = BsMedidas.de(context);
     final esquema = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
+    if (compacta) {
+      return Semantics(
+        container: true,
+        label: titulo,
+        child: Container(
+          padding: EdgeInsets.all(medidas.espacioS),
+          decoration: BoxDecoration(
+            color: esquema.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(medidas.radioHoja),
+            border: Border.all(color: esquema.outlineVariant),
+          ),
+          child: Wrap(
+            spacing: medidas.espacioS,
+            runSpacing: medidas.espacioXs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              for (final entrada in leyenda) _ChipDeLeyenda(entrada: entrada),
+              if (nota != null) Text(nota!, style: textos.bodySmall),
+            ],
+          ),
+        ),
+      );
+    }
     return Container(
       padding: EdgeInsets.all(medidas.dentroDeBloque),
       decoration: BoxDecoration(

@@ -162,6 +162,36 @@ T114_DECISIONES = {
         'pantalla', 'textos del previo: la banda, «sin evaluar», exportar y la operación del error (T-114, Fase 3)'),
     (_P + 'widgets/inicio_view.dart', '*'): V(
         'pantalla', 'textos del inicio: recientes, perfiles, nube y la operación del error (T-114, Fase 3)'),
+    # Fase 2 bis y Fase 3, entrega 2 (la dirección C).
+    ('lib/core/design/bs_categorico.dart', '*'): NV(
+        'NV-CODIGO', 'nombres de los doce tonos de la rueda de «Colorear por» (DESIGN.md 13.4): nombres '
+                     'de código y de documentación, no se leen en pantalla (T-114, Fase 2 bis)'),
+    ('lib/core/design/componentes/bs_banda_muelle.dart', '*'): V(
+        'pantalla', 'los segmentos Descarga / Carga de la banda del muelle (T-114, Fase 2 bis)'),
+    ('lib/core/design/componentes/bs_marca.dart', '*'): V(
+        'accesibilidad', 'etiqueta accesible de la marca («BayStream», «BayStream, leyendo») (T-114, Fase 2 bis)'),
+    ('lib/core/design/componentes/bs_silueta_buque.dart', '*'): V(
+        'accesibilidad', 'etiquetas accesibles de la silueta y de cada bahía, y «Proa» / «Popa» (T-114, Fase 2 bis)'),
+    ('lib/core/design/componentes/bs_panel_en_vivo.dart', '*'): V(
+        'pantalla', 'el panel «En vivo»: título, los roles Muelle / Oficina, en línea / sin conexión y el '
+                    'texto sin movimientos (T-114, Fase 2 bis)'),
+    (_P + 'providers/plano_providers.dart', '*'): V(
+        'pantalla', 'las vistas de «Colorear por» (Estado, Destino, Tipo de vacío) y los eventos de «En vivo» '
+                    '(Bajado, Cargado, hace N min…) (T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/cifras_del_viaje.dart', '*'): V(
+        'pantalla', 'las tarjetas de cifra del plano: Descarga, Por bajar, Re‑estibas, Carga, Llenos, Vacíos, '
+                    'Conflictos, Alertas y sus detalles (T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/detalle_contenedor.dart', '*'): V(
+        'pantalla', 'el detalle del contenedor: filas (Celda, Tipo ISO, Estado, VGM, Peso bruto, puertos, '
+                    'Naviera), las señales de carga especial y «Sin declarar»; la clave C: no se lee '
+                    '(T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/en_vivo_del_viaje.dart', '*'): V(
+        'pantalla', 'el resumen de «En vivo» mientras se lee la operación (T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/navegacion_del_viaje.dart', '*'): V(
+        'pantalla', 'los destinos de la navegación (Plano, Lista, Avance, Estadísticas / Estad., Más) '
+                    '(T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/silueta_del_viaje.dart', '*'): V(
+        'accesibilidad', 'el rótulo accesible del avance bajo cada bahía de la silueta (T-114, Fase 3, entrega 2)'),
 }
 T112_DECISIONES.update(T114_DECISIONES)
 
@@ -205,6 +235,13 @@ def preparar(root, antes):
     M3.PANTALLAS['T114'] = 'Sistema de diseño de T-114: componentes, tema y vistas previas (sin pantalla aún)'
     M3.PANTALLA_DE[_P + 'widgets/inicio_view.dart'] = {'*': 'S01'}
     M3.PANTALLA_DE[_P + 'providers/voyage_ui_state.dart'] = {'*': 'S01'}
+    # Fase 3, entrega 2: la navegación con la barra superior es S01; lo que
+    # vive dentro del plano por bahía es S02.
+    M3.PANTALLA_DE[_P + 'widgets/navegacion_del_viaje.dart'] = {'*': 'S01'}
+    for rel in ('widgets/detalle_contenedor.dart', 'widgets/cifras_del_viaje.dart',
+                'widgets/en_vivo_del_viaje.dart', 'widgets/silueta_del_viaje.dart',
+                'providers/plano_providers.dart'):
+        M3.PANTALLA_DE[_P + rel] = {'*': 'S02'}
     for rel in ('lib/core/design/bs_tema.dart', 'lib/core/design/vistas_previas.dart',
                 'lib/core/design/componentes/bs_banda.dart',
                 'lib/core/design/componentes/bs_barra_de_operacion.dart',
@@ -213,7 +250,15 @@ def preparar(root, antes):
                 'lib/core/design/componentes/bs_cifra.dart',
                 'lib/core/design/componentes/bs_hoja_de_detalle.dart',
                 'lib/core/design/componentes/bs_numero_de_contenedor.dart',
-                'lib/core/design/componentes/bs_tira_de_bahias.dart'):
+                'lib/core/design/componentes/bs_tira_de_bahias.dart',
+                'lib/core/design/componentes/bs_anillo_avance.dart',
+                'lib/core/design/componentes/bs_banda_muelle.dart',
+                'lib/core/design/componentes/bs_casco_bodega.dart',
+                'lib/core/design/componentes/bs_fondo_de_plano.dart',
+                'lib/core/design/componentes/bs_marca.dart',
+                'lib/core/design/componentes/bs_panel_en_vivo.dart',
+                'lib/core/design/componentes/bs_silueta_buque.dart',
+                'lib/core/design/componentes/bs_tarjeta_cifra.dart'):
         M3.PANTALLA_DE[rel] = {'*': 'T114'}
     for nombre in ('REJILLA', 'NO_INTERACTIVOS', 'OBSERVACIONES', 'RESUELTOS'):
         setattr(M3, nombre, trasladar_claves(getattr(M3, nombre), maps))
@@ -243,7 +288,11 @@ def preparar(root, antes):
         implicitos.append((pantalla, control, ' y '.join(partes)))
     M3.IMPLICITOS = implicitos
 
-    MSG.M = N.M
+    # Fase 3, entrega 2 (10.16): la barra plegable de T-91 se retira con la
+    # navegacion adaptable (DESIGN.md 8), y con ella el aviso de no poder
+    # guardar su preferencia: 218 mensajes pasan a 217.
+    RETIRADOS = {(N.F_OVR, "'guardar la preferencia de la barra'")}
+    MSG.M = [x for x in N.M if (x['archivo'], x['fragmento']) not in RETIRADOS]
     MSG.ENVOLTURAS = N.ENVOLTURAS
     return maps
 

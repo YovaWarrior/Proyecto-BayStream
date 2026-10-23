@@ -80,8 +80,14 @@ class BsTarjetaCifra extends StatelessWidget {
                 anillo!,
                 SizedBox(width: medidas.espacioM),
               ],
+              // La cifra se encoge antes que cortarse: con la letra del
+              // sistema a 2.0, «120 de 150» no cabe junto al anillo.
               Flexible(
-                child: Text(valor, style: estiloCifra, maxLines: 1),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(valor, style: estiloCifra, maxLines: 1),
+                ),
               ),
             ],
           ),

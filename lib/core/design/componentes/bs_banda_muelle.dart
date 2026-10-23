@@ -38,6 +38,11 @@ class BsBandaMuelle extends StatelessWidget {
     this.nube,
     this.modo,
     this.onModo,
+    this.mostrarModos = false,
+    this.modos = const <BsModoDeOperacion>{
+      BsModoDeOperacion.descarga,
+      BsModoDeOperacion.carga,
+    },
     this.acciones = const <Widget>[],
   });
 
@@ -55,6 +60,14 @@ class BsBandaMuelle extends StatelessWidget {
 
   /// Qué pasa al cambiar de modo.
   final ValueChanged<BsModoDeOperacion>? onModo;
+
+  /// Dibuja los segmentos aunque [modo] sea nulo (el plano está en otra
+  /// vista, como «Contenido»): ninguno queda seleccionado hasta tocar uno.
+  final bool mostrarModos;
+
+  /// Qué modos ofrece esta escala: un plan de carga sin nada que baje no
+  /// tiene Descarga. Con uno solo, el segmento va solo.
+  final Set<BsModoDeOperacion> modos;
 
   /// Acciones a la derecha del chip de la nube (iconos de 48 dp).
   final List<Widget> acciones;
@@ -122,22 +135,27 @@ class BsBandaMuelle extends StatelessWidget {
                   ],
                 ],
               ),
-              if (modo != null) ...<Widget>[
+              if ((modo != null || mostrarModos) && modos.isNotEmpty) ...<Widget>[
                 SizedBox(height: medidas.espacioM),
                 SegmentedButton<BsModoDeOperacion>(
+                  emptySelectionAllowed: true,
                   segments: <ButtonSegment<BsModoDeOperacion>>[
                     for (final valor in BsModoDeOperacion.values)
-                      ButtonSegment<BsModoDeOperacion>(
+                      if (modos.contains(valor))
+                        ButtonSegment<BsModoDeOperacion>(
                         value: valor,
                         label: Text(valor.rotulo),
                         icon: Icon(valor.icono),
                       ),
                   ],
-                  selected: <BsModoDeOperacion>{modo!},
+                  selected: <BsModoDeOperacion>{
+                    if (modo != null && modos.contains(modo)) modo!,
+                  },
                   onSelectionChanged: onModo == null
                       ? null
-                      : (Set<BsModoDeOperacion> valores) =>
-                          onModo!(valores.first),
+                      : (Set<BsModoDeOperacion> valores) {
+                          if (valores.isNotEmpty) onModo!(valores.first);
+                        },
                   showSelectedIcon: false,
                   style: SegmentedButton.styleFrom(
                     minimumSize: Size(medidas.objetivoTactil, medidas.alturaBoton),

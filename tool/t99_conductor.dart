@@ -40,6 +40,11 @@ import 'package:baystream/features/vessel/domain/entities/app_theme_preference.d
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/presentation/providers/theme_preference_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
+import 'package:baystream/features/vessel/presentation/providers/discharge_provider.dart';
+import 'package:baystream/features/vessel/presentation/providers/plano_providers.dart';
+import 'package:baystream/features/vessel/presentation/widgets/loading_plan_controls.dart'
+    show BayPlanMode;
+import 'package:baystream/features/vessel/presentation/widgets/navegacion_del_viaje.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -74,10 +79,13 @@ final _anchos = _definicion('T99_ANCHOS', const String.fromEnvironment('T99_ANCH
 final _letras = _definicion(
     'T99_LETRAS', const String.fromEnvironment('T99_LETRAS'), '1.0,1.45,2.0');
 
-// Textos de la interfaz que el conductor toca. T-112 (10.94) cambió «Bay Plan»
-// por «Plano» y «BAY nn (» por «BAHÍA nn (»; si vuelven a cambiar, es aquí.
+// Textos y claves de la interfaz que el conductor toca. T-112 (10.94) cambió
+// «Bay Plan» por «Plano»; la Fase 3 del rediseño (entrega 2) cambió las
+// pestañas por los destinos de la navegación (barra inferior o riel, con el
+// mismo texto) y los chips «BAHÍA nn (» por la silueta, donde cada bahía es
+// un botón con la clave `silueta-bahia-N`. Si vuelven a cambiar, es aquí.
 const _pestanaPlano = 'Plano';
-String _rotuloDeBahia(int bahia) => 'BAHÍA ${bahia.toString().padLeft(2, '0')} (';
+String _claveDeBahia(int bahia) => 'silueta-bahia-$bahia';
 
 /// El conductor, o `null` si la compilación no pide un escenario.
 T99Conductor? conductorDesdeDefiniciones() =>
@@ -139,6 +147,8 @@ class T99Conductor {
           await _escenarioAnchos();
         case 'inicio':
           await _escenarioInicio();
+        case 'plano':
+          await _escenarioPlano();
         default:
           throw StateError('Escenario desconocido: $escenario');
       }
@@ -311,6 +321,72 @@ class T99Conductor {
     await _asentar();
   }
 
+  // --- Escenario del plano (Fase 3, entrega 2 de T-114) --------------------
+
+  /// Publica el plan como lo haría la oficina y captura, por tema, letra y
+  /// tamaño, el plano con la bahía con más carga, la lista y el avance.
+  Future<void> _escenarioPlano() async {
+    final contenedor = _contenedorRiverpod();
+    final n = contenedor.read(voyageNotifierProvider.notifier);
+    // La última escala confirmada del dispositivo: con la misma escala del
+    // plano, un plano de llegada propone esa escala y la descarga existe.
+    if (_escalaAnterior.isNotEmpty) {
+      final local = await contenedor.read(localVesselRepositoryProvider.future);
+      await local.setLastConfirmedPortOfCall(_escalaAnterior);
+    }
+    final datos = await rootBundle.load('t99_inputs/$_archivo');
+    final error = await t99Publicar(
+        n, String.fromCharCodes(datos.buffer.asUint8List()), _archivo);
+    if (error != null) throw StateError(error);
+    await _asentar();
+    final viaje = _viaje();
+    final bahias = viaje.bays.values.toList()
+      ..sort((a, b) => b.containers.length.compareTo(a.containers.length));
+    final bahia = bahias.first.bayNumber;
+    for (final tema in [AppThemePreference.light, AppThemePreference.dark]) {
+      await contenedor.read(themePreferenceProvider.notifier).select(tema);
+      await _asentar();
+      final nombreTema = tema == AppThemePreference.light ? 'claro' : 'oscuro';
+      for (final letra in _letras.split(',').map((s) => double.parse(s.trim()))) {
+        _letra.value = letra;
+        for (final especificacion in _anchos.split(',').map((s) => s.trim())) {
+          final partes = especificacion.split('x');
+          _tamano.value = especificacion == 'real'
+              ? null
+              : Size(double.parse(partes[0]), double.parse(partes[1]));
+          await _asentar();
+          final sufijo = '${especificacion}_${nombreTema}_letra$letra';
+          contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
+          contenedor.read(selectedBayProvider.notifier).select(bahia);
+          await _asentar();
+          await _capturar(sufijo, 'plano');
+          if (offersDischarge(viaje)) {
+            contenedor.read(bayPlanModeProvider.notifier).elegir(BayPlanMode.discharge);
+            await _asentar();
+            await _capturar(sufijo, 'plano_descarga');
+            contenedor.read(bayPlanModeProvider.notifier).elegir(BayPlanMode.content);
+            await _asentar();
+          }
+          contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.lista);
+          await _asentar();
+          await _capturar(sufijo, 'lista');
+          if (viaje.portOfCall != null) {
+            contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.avance);
+            await _asentar();
+            await _capturar(sufijo, 'avance');
+          }
+        }
+      }
+    }
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
+    _letra.value = 1.0;
+    _tamano.value = null;
+    await contenedor
+        .read(themePreferenceProvider.notifier)
+        .select(AppThemePreference.system);
+    await _asentar();
+  }
+
   Future<void> _capturar(String tamano, String pantalla) async {
     await _asentar();
     final caja = _lienzo.currentContext!.findRenderObject()! as RenderRepaintBoundary;
@@ -381,7 +457,8 @@ class T99Conductor {
       if (k is ValueKey<String>) {
         if (k.value.startsWith('plan-zoom-')) clave = 'rejilla de la bahía';
         if (k.value == 'bay-selector') clave = 'selector de bahías';
-        if (k.value == 'plan-toolbar-actions') clave = 'acciones de la barra';
+        if (k.value == 'silueta-del-viaje') clave = 'silueta del buque';
+        if (k.value == 'leyenda-del-plano') clave = 'leyenda del plano';
       }
       return clave == null;
     });
@@ -427,9 +504,27 @@ class T99Conductor {
 
   Element _exigir(Element? e, String que) => e ?? (throw StateError('No está a la vista: $que'));
 
+  /// Un destino de la navegación (la barra inferior o el riel), por el texto
+  /// de su rótulo. Antes era una pestaña.
   Element _pestana(String texto) => _exigir(
-      _buscarElemento((e) => e.widget is Tab && (e.widget as Tab).text == texto),
-      'la pestaña $texto');
+      _buscarElemento((e) =>
+          e.widget is Text &&
+          (e.widget as Text).data == texto &&
+          _dentroDeNavegacion(e)),
+      'el destino $texto');
+
+  bool _dentroDeNavegacion(Element e) {
+    var dentro = false;
+    e.visitAncestorElements((a) {
+      final w = a.widget;
+      if (w is NavigationBar || w is NavigationRail || w is TabBar) {
+        dentro = true;
+        return false;
+      }
+      return true;
+    });
+    return dentro;
+  }
 
   Element _conTooltip(String mensaje) => _exigir(
       _buscarElemento((e) => e.widget is Tooltip && (e.widget as Tooltip).message == mensaje),
@@ -439,16 +534,15 @@ class T99Conductor {
       _buscarElemento((e) => e.widget.key == ValueKey(clave)), 'el control $clave');
 
   Element? _chipSiHay(int bahia) {
-    final rotulo = _rotuloDeBahia(bahia);
-    return _buscarElemento((e) =>
-        e.widget is Text && ((e.widget as Text).data?.startsWith(rotulo) ?? false));
+    final clave = ValueKey<String>(_claveDeBahia(bahia));
+    return _buscarElemento((e) => e.widget.key == clave);
   }
 
   Element _chip(int bahia) => _exigir(_chipSiHay(bahia), 'la bahía $bahia');
 
-  /// La lista de chips es perezosa y elegir una bahía la desplaza: si el chip
-  /// no está construido, se recorre la lista desde el inicio hasta hallarlo.
-  /// Devuelve `null` si la bahía no tiene chip.
+  /// La silueta se desplaza en horizontal: si el botón de la bahía no está a
+  /// la vista, se recorre desde el inicio hasta hallarlo. Devuelve `null` si
+  /// la bahía no tiene botón.
   Future<Element?> _chipALaVista(int bahia) async {
     var chip = _chipSiHay(bahia);
     if (chip != null) return chip;
