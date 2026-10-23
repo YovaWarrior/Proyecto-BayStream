@@ -192,6 +192,10 @@ T114_DECISIONES = {
                     '(T-114, Fase 3, entrega 2)'),
     (_P + 'widgets/silueta_del_viaje.dart', '*'): V(
         'accesibilidad', 'el rótulo accesible del avance bajo cada bahía de la silueta (T-114, Fase 3, entrega 2)'),
+    # Corrección de la entrega 2 (10.21): el chip del zoom sale de la rejilla.
+    (_P + 'widgets/zoom_del_plano.dart', '*'): V(
+        'pantalla', 'el chip y el menú del zoom del plano: el porcentaje, «Alejar plano», «Restablecer» y '
+                    '«Acercar plano», antes en plan_drag_confirmation.dart (T-114, Fase 3, entrega 2, 10.20)'),
 }
 T112_DECISIONES.update(T114_DECISIONES)
 
@@ -240,7 +244,7 @@ def preparar(root, antes):
     M3.PANTALLA_DE[_P + 'widgets/navegacion_del_viaje.dart'] = {'*': 'S01'}
     for rel in ('widgets/detalle_contenedor.dart', 'widgets/cifras_del_viaje.dart',
                 'widgets/en_vivo_del_viaje.dart', 'widgets/silueta_del_viaje.dart',
-                'providers/plano_providers.dart'):
+                'providers/plano_providers.dart', 'widgets/zoom_del_plano.dart'):
         M3.PANTALLA_DE[_P + rel] = {'*': 'S02'}
     for rel in ('lib/core/design/bs_tema.dart', 'lib/core/design/vistas_previas.dart',
                 'lib/core/design/componentes/bs_banda.dart',

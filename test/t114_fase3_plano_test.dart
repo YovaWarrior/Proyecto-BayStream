@@ -478,13 +478,15 @@ void main() {
       final altoAntes = tester.getRect(zoom).height;
       expect(selectorArriba.top,
           greaterThanOrEqualTo(tester.getRect(anidado).top));
+      final altoDeLaCabecera = selectorArriba.height;
       await tester.drag(zoom, const Offset(0, -400));
       await tester.pumpAndSettle();
-      // La cabecera queda por encima del área del plano y la rejilla se
-      // queda con su alto; la banda y la barra inferior no se mueven.
+      // La cabecera (la silueta compacta) queda por encima del área del plano
+      // y la rejilla gana su alto; la banda y la barra inferior no se mueven.
       expect(tester.getRect(selector).bottom,
           lessThanOrEqualTo(tester.getRect(anidado).top + 1));
-      expect(tester.getRect(zoom).height, greaterThan(altoAntes + 100));
+      expect(tester.getRect(zoom).height,
+          greaterThan(altoAntes + altoDeLaCabecera - 1));
       expect(find.byKey(const ValueKey('banda-del-muelle')), findsOneWidget);
       expect(find.byKey(const ValueKey('barra-del-viaje')), findsOneWidget);
       await tester.drag(zoom, const Offset(0, 400));

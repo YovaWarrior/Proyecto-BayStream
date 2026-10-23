@@ -3044,3 +3044,353 @@ barra de T-91 se retira como pide `DESIGN.md` 8 y su preferencia queda sin lecto
 360 × 2.0 el chip del zoom pisa la última columna y «re-estibas» se parte, y en el emulador la
 banda escribe «BUQUE MAN…»: tres líneas si las quieres distintas. Me detengo: ALTO: Codex acepta la
 entrega 2.
+
+
+## Fase 3 · Entrega 2 · Corrección tras la aceptación de Codex (23-oct-2026, 10.21)
+
+El brief es 10.21 de `SPRINT-4.md`: los cuatro hallazgos del dictamen NO PASA de Codex
+(`docs/rediseno/fase3/entrega2/aceptacion-codex.md`), el aviso de `IntrinsicHeight` y el chip del
+zoom fuera de la rejilla (10.20). La dirección sigue siendo `DESIGN.md` 8, 13.3, 13.6 y 13.8, que
+se corrigen donde el código cambia. Es un chat nuevo de Timonel; el punto de partida fue el paso 0:
+los cuatro commits de la entrega 2 (`d1ce1db`), el tema en caché (`f62f709`), la evidencia
+(`9522794`) y el dictamen con la decisión 10.21 (`52dd1b6`) están en la historia, y en el árbol
+solo quedaban los tres generados de `windows/flutter/` con el fin de línea cambiado, que no son de
+nadie y no se tocan.
+
+### 4c.1 Resultado en tres líneas
+
+- **Los cuatro hallazgos están corregidos y cada uno tiene su prueba:** la cabecera de la oficina
+  se reparte o se pliega según el ancho y la letra y Buscar queda siempre al alcance (H1, probado
+  en 600 dp exactos con 1.0, 1.45 y 2.0, y en 360 y 1920); la celda de carga recibe el movimiento
+  real, también el lleno del listado y la reserva con su vacío asignado, 1.5 s y quieta con
+  reducción de movimiento (H2, una prueba que va de la bitácora a la celda sin inyectar el
+  proveedor del naranja); sin panel lateral el movimiento se anuncia en una región en vivo con el
+  rol y nada más (H3, 360 y 600 dp); y en el teléfono bajo la primera rejilla se ve sin desplazar
+  (H4, 360 × 640 dp con la barra de estado, en el previo y en Descarga).
+- **El riel ya no usa `IntrinsicHeight`** (`CustomScrollView` + `SliverFillRemaining` con su ancho
+  medido con la fuente) y **el chip del zoom salió de la rejilla**: vive en la línea de los
+  controles del plano con un menú anclado, y la escala en `planZoomProvider`.
+- Suite **1260 en verde** (piso 1242 → **1260**: 18 pruebas nuevas en
+  `test/t114_fase3_entrega2_correccion_test.dart`, una actualizada, ninguna omitida);
+  `analyze` **«No issues found»**; auditoría de `flutter-ui` **17 críticos, 248 avisos y 20
+  informativos** (la entrega 2 traía 249 avisos: el que se va es el `IntrinsicHeight`, y en los
+  archivos tocados no hay ningún hallazgo nuevo). RNF-002 en Android, repetido con el mismo
+  instrumento, en 4c.5. **ALTO: Codex acepta la corrección.**
+
+### 4c.2 Lo hecho, hallazgo por hallazgo
+
+- **H1 · La cabecera de la oficina** (`_CabeceraDeOficina`, `pages/vessel_overview_page.dart`).
+  Era una sola `Row` con el título estirable, el estado, Descarga / Carga, Buscar y la nube; a
+  600 dp con la letra a 2.0 los anchos fijos sumaban más que la pantalla y Buscar quedaba fuera
+  (624.9–672.9 dp, desborde de 137 px). Ahora Buscar y la nube quedan anclados al borde derecho,
+  fuera del reparto, y lo demás va en un `Wrap` con `spaceBetween`: el título a la izquierda y
+  los controles (el estado y los segmentos, en su propio `Wrap`) a la derecha mientras caben en
+  una línea; si el ancho o la letra no lo permiten, los controles bajan a una segunda línea y nada
+  se desborda. No hay umbral escrito a mano: lo decide la medida real de cada cosa con la fuente
+  del sistema, así que vale igual para un nombre de buque largo. A 600 dp con 1.0 cabe en una
+  línea; con 1.45 y 2.0 se pliega. La prueba mide en 600 dp exactos que Buscar y los segmentos
+  reciben el toque y terminan dentro de la pantalla, que no hay desbordamiento, y que con la
+  letra grande los controles quedan debajo del título; a 1920 comprueba la línea única y a 360,
+  la barra superior del teléfono. `DESIGN.md` 8 anota la regla.
+- **H2 · La celda de carga** (`LoadingCell` en `widgets/loading_controls.dart`; `_BayGridWidget`
+  en `widgets/bay_plan_view.dart`; `providers/plano_providers.dart`). `LoadingCell` solo conocía la
+  categoría pendiente / hecho; ahora recibe `recienMovida` y la rejilla se la enciende cuando lo
+  recién movido es su embarque: el lleno del listado (`C:<contenedor>`) o la reserva cuyo
+  `assignedContainer` es el vacío que acaba de asignarse. Además, el proveedor del naranja
+  descartaba los vacíos asignados sin decirlo: `Movement.position` solo lee `payload['position']`,
+  y un vacío asignado trae su celda en el `target` (`R:0030482`); `_posicionDe` la toma de ahí,
+  tanto para encender la celda como para escribir la celda en «En vivo» («Vacío asignado · Muelle ·
+  EMPTY 000001 2 · 003-04-82»). La prueba arma la operación de T-76 sobre la bitácora en memoria de
+  T-75, como `t76_loading_widget_test`, con los dos ocupantes de llegada ya bajados; anexa a la
+  bitácora un lleno (`FULL0001234` en 003-02-82) y después un vacío asignado a la reserva
+  003-04-82, y sigue cada uno hasta la celda: el proveedor del naranja no se toca (lo alimenta el
+  plano desde la operación), la única celda en naranja es la de ese embarque, su etiqueta dice «se
+  acaba de mover», a los 1480 ms sigue y a los 1500 se apaga; a 360, 600 y 1920 dp. Una prueba
+  aparte, con la reducción de movimiento del sistema, comprueba que el cuerpo de la celda no se
+  mueve ni a los 75 ni a los 150 ms.
+- **H3 · El anuncio sin panel** (`AnuncioDelMovimiento`, nuevo, en `widgets/en_vivo_del_viaje.dart`;
+  montado en `vessel_overview_page.dart` solo cuando no hay panel lateral). Es una región en vivo
+  sin dibujo (`Semantics(liveRegion: true)` sobre una caja de tamaño cero) cuya etiqueta es la
+  misma de la fila más reciente de «En vivo» («Cargado, Muelle, FULL 000123 4 · 003-02-82,
+  ahora»): qué pasó, el rol del equipo, el contenedor, la celda y «ahora»; nunca un nombre. Aparece
+  cuando el movimiento ya está en la bitácora y se va cuando el naranja se apaga; con el panel
+  (desde 1200 dp) no se monta, para que no haya dos anuncios. El panel de la oficina no se lleva
+  al teléfono: solo el anuncio. La prueba de H2 comprueba a 360 y 600 que hay exactamente una
+  región en vivo con ese texto, que el nodo de semántica tiene la bandera de región en vivo, que
+  no contiene el nombre sintético del autor y que «En vivo» no está; a 1920, que el anuncio lo da
+  «En vivo» y la región sin dibujo no se monta. `DESIGN.md` 13.3, punto 5, lo anota.
+- **H4 · El teléfono bajo** (`DESIGN.md` 13.8, nuevo párrafo). Primero se midió, con una prueba
+  de diagnóstico a 360 × 640 dp con la barra de estado de 24 dp del emulador, la densidad del
+  muelle, las fuentes del producto y un plano sintético con seis niveles en bodega y seis en
+  cubierta (288 contenedores, 12 bahías en la silueta): el área del plano medía 234 dp (de la
+  banda de «sin evaluar» a la leyenda) y la cabecera anidada sumaba 251 (la fila de controles 77
+  y la silueta 173), así que la rejilla ni se construía; en el muelle operando, con la banda de
+  136 dp y la barra de la operación de 132, el área era de 268 y la cabecera de 250: la primera
+  fila quedaba en 540 dp, bajo el pliegue. Como ningún recorte parcial alcanzaba (la silueta sola
+  deja 71 dp y la primera fila necesita unos 180 desde el borde de la rejilla), el teléfono bajo
+  (menos de 560 dp de alto útil para el plano: el emulador de 360 × 640 y también el previo a
+  360 × 800, que trae sus dos avisos encima) arma el plano así:
+  - la silueta va **compacta** (`BsSiluetaBuque(compacta: true)`, `SiluetaDelViaje(compacta:)`):
+    los mismos niveles, números, barras de avance, botones de 56 dp y etiquetas, a 4 dp por nivel
+    (3 pintados) y con menos aire; con seis y seis niveles mide 90 dp en vez de 161. Es lo único que
+    queda arriba de la rejilla, y sigue yéndose al desplazarla y volviendo;
+  - los **controles del plano bajan al pie** (`ParteDeLosControles.barra` en
+    `LoadingPlanControls`): el modo, el chip del zoom, «Acciones» solo con su icono (su nombre va
+    en la descripción emergente) y, en Carga, «OR / últimos dígitos», uno tras otro a su ancho, al
+    principio de la línea que ya se desplaza: la leyenda o, en el muelle operando, la línea de la
+    acción de la barra de la operación. La nube no se repite: ya está en la barra superior o en la
+    banda. Las claves de T-107 (`bay-plan-display-mode`, `bay-plan-actions`, `empty-search`,
+    `load-search`) no cambian;
+  - el **resumen del modo** de T-107 va justo encima del pie (`ParteDeLosControles.resumen`); sin
+    escala no se escribe «Confirma la escala para ver el plan de carga», porque la banda del previo
+    ya dice qué falta;
+  - en la **rejilla** el margen de arriba baja a 8 dp y los dos renglones del peso por pila (C-7)
+    van debajo de la bodega, como los dibuja 9.2 bis, en vez de encima de la cubierta
+    (`_BayGridWidget.compacta`).
+  Con eso, a 360 × 640 dp con la barra de estado, en el previo la primera fila de la cubierta
+  queda en 422–474 dp dentro de un área que termina en 486, y en Descarga en 338–390 dentro de
+  160–403: **la primera rejilla se ve sin desplazar, en los tres pasos de RNF-002**. En Carga, con la
+  línea del resumen, falta 14 dp y queda a un gesto, como antes. A 360 × 800 publicado (el Honor)
+  nada cambia: los controles siguen sobre la silueta normal. Las pruebas fijan las cuatro
+  situaciones (previo a 640, Descarga a 640, publicado a 800 y previo a 800) y la silueta compacta
+  como pieza (mide 60 dp menos que la normal con las mismas bahías, etiquetas y botones de 48 dp o
+  más). La prueba de la entrega 2 que desplazaba la cabecera a 360 × 640 sigue, con la ganancia de
+  alto medida sobre la silueta que ahora es la cabecera.
+- **El aviso de `IntrinsicHeight`** (`RielDelViaje`, `widgets/navegacion_del_viaje.dart`). El riel
+  va en `CustomScrollView` con `SliverFillRemaining(hasScrollBody: false)`: llena la ventana y, si
+  el riel pide más, crece y se desplaza. Un viewport dentro de una `Row` no tiene ancho, así que
+  el riel se lo da: los 80 dp de `DESIGN.md` 8 o, si la letra del sistema lo pide, el del rótulo
+  más largo con su aire, medido con la fuente (`TextPainter`), que también va como `minWidth` del
+  `NavigationRail`. El pie (la nube y Parámetros) deja de ir en un `Expanded`: el grupo de destinos
+  ya se queda con el alto sobrante, y aquel `Expanded` duplicaba el alto que el riel pedía en una
+  ventana baja. La prueba lo monta en 800 × 560, comprueba que no hay `IntrinsicHeight` sobre el
+  riel, que está dentro de un `CustomScrollView`, que la nube del pie se alcanza desplazando y que
+  no hay desbordamiento.
+- **El chip del zoom fuera de la rejilla** (10.20; `ZoomDelPlano`, nuevo, en
+  `widgets/zoom_del_plano.dart`; `planZoomProvider` en `plano_providers.dart`;
+  `PlanZoomViewport` en `widgets/plan_drag_confirmation.dart`). La escala del zoom de T-106 vive
+  ahora en un proveedor: la rejilla la lee (y la pellizca) y el chip «100 %» la muestra en la línea
+  de los controles del plano (al final de la fila ancha; en el teléfono, antes de la nube; en la
+  tira del teléfono bajo, tras el modo). Un toque abre un menú anclado (`MenuAnchor`, Material 3)
+  con alejar, «Restablecer» y acercar, que no tapa ninguna celda ni se desborda en 360 dp, y otro
+  toque lo cierra. Las claves de T-105 y T-106 (`plan-zoom-toggle`, `plan-zoom-in`,
+  `plan-zoom-out`, `plan-zoom-reset`, `plan-zoom-gesture`) se conservan y sus pruebas pasan sin
+  cambios. Como la escala ya no vive en el `State` del lienzo de cada bahía, el zoom se conserva
+  al cambiar de bahía y vuelve a 100 % al cerrar o cambiar el viaje (antes volvía a 100 % en cada
+  bahía: se declara en 4c.7). La prueba, a 360 dp con la letra a 1.45 y 2.0, comprueba que el chip
+  está en la línea de los controles y no pisa el lienzo de la rejilla, y que el menú acerca,
+  restablece y se cierra. `DESIGN.md` 9.2 anota dónde vive ahora el chip.
+
+### 4c.3 Pruebas
+
+- Nueva: `test/t114_fase3_entrega2_correccion_test.dart` (**18**): H1 (600 dp × 1.0, 1.45 y
+  2.0; 1920; 360 × 1.0 y 2.0), H2 y H3 (360, 600 y 1920 dp, más la reducción de movimiento), el
+  riel sin `IntrinsicHeight`, el chip del zoom (1.45 y 2.0), y el teléfono bajo (previo a
+  360 × 640, Descarga a 360 × 640, publicado a 360 × 800, previo a 360 × 800, y la silueta compacta
+  como pieza). Carga las fuentes del producto para que las medidas sean las reales; la operación
+  de H2 sale de la bitácora en memoria de T-75 y del fixture de T-76.
+- Actualizada sin bajar el conteo: `test/t114_fase3_plano_test.dart` (la prueba de 360 × 640 mide
+  la ganancia de alto contra la cabecera que queda, la silueta compacta, en vez de un número
+  fijo).
+- `test/t114_fase3_correccion_test.dart` **es la de la corrección de la entrega 1 (10.15) y no
+  cambia**; ver 4c.7.
+
+### 4c.4 Validaciones ejecutadas
+
+Un comando de Flutter a la vez; la suite y el APK, en segundo plano. El Honor no se tocó.
+
+- `flutter analyze --no-pub` → **«No issues found»** (después de cada tanda de cambios y al final).
+- `flutter test --no-pub` → **1260 pruebas en verde, ninguna fallida ni omitida** (51 s; piso
+  1242 → 1260).
+- Auditoría de `flutter-ui` (`docs/rediseno/fase3/entrega2/correccion/flutter-ui-audit.txt`):
+  **17 críticos, 248 avisos y 20 informativos** (entrega 2: 17, 249 y 20). Comparados hallazgo a
+  hallazgo por código y archivo, la única diferencia es el `PERF_INTRINSIC_SIZE` de
+  `navegacion_del_viaje.dart`, que se va. En los archivos tocados quedan los que ya estaban y se
+  declaran: los dos «críticos» de `vessel_overview_page.dart` (los falsos positivos de
+  `ReservedSlotsListView` y `ContainersListView` que el escáner toma por `ListView(children:)`), el
+  `IntrinsicWidth` de la barra compacta de T-107 en `loading_plan_controls.dart` y el informativo
+  `NAV_NO_POP_SCOPE`. Ninguno es nuevo. El escáner también cuenta la palabra dentro de un
+  comentario, así que el comentario del riel no la escribe.
+- Censos de T-112 (`tool/t112_censos.py`, referencia `5406e20`, salida en
+  `docs/rediseno/fase3/entrega2/correccion/censos/`): idioma, **1932 cadenas visibles: 1801 en
+  español y 131 sin idioma, 0 en inglés o mixtas** (entrega 2: 1931, 1800 y 131; la cadena nueva
+  es «Restablecer», del menú del zoom); Material 3: **250 controles incluidos, 7 exclusiones y 3
+  excepciones** (entrega 2: 251 / 7 / 3, sin excepción nueva: el chip del zoom deja de ser un
+  `Material` propio sobre la rejilla y pasa a un `MenuAnchor`); mensajes: **217, los 217 con causa
+  y acción y los 12 EDIFACT con su segmento**, como en la entrega 2. El instrumento solo aprende el
+  archivo nuevo (`zoom_del_plano.dart`: canal pantalla, pantalla S02); sin eso no escribía las
+  tablas.
+### 4c.5 RNF-002 en Android, repetido (H4)
+
+El mismo instrumento de la entrega 2 y el mismo recorrido de tres pasos: `tool/t114_primera_android.py`
+(`am start` del banco r4, «Seleccionar archivo», el archivo en el selector de AOSP) y
+`tool/t114_primera_cuadros.py` (el primer cuadro que difiere del lanzador y el primer cuadro quieto
+con el plano, por los PTS del video). Emulador `t99_api26` (API 26, 360 × 640 dp con `wm density
+480`, claro, letra 1.0), condición «sin perfil» (`pm clear` del paquete r4 antes de cada video),
+`T99_SINTETICO_977.edi`, cinco repeticiones, el banco r4 recompilado desde el árbol corregido e
+instalado encima del anterior. Umbral: **≤ 3 pasos y ≤ 30 s hasta la rejilla a la vista.**
+
+| Rep. | Pasos | Cuadro inicio → fin (PTS, s) | Hasta la rejilla (s, cota) | Previo | ≤ 3 pasos y ≤ 30 s |
+|---|---|---|---|---|---|
+| sin01 | 3 | 9 (5.698) → 66 (10.610) | 4.911–4.984 | sí | cumple |
+| sin02 | 3 | 9 (4.807) → 53 (7.760) | 2.954–3.202 | sí | cumple |
+| sin03 | 3 | 11 (4.473) → 61 (7.395) | 2.922–2.959 | sí | cumple |
+| sin04 | 3 | 11 (4.489) → 65 (7.445) | 2.956–2.997 | sí | cumple |
+| sin05 | 3 | 11 (4.546) → 59 (7.390) | 2.845–2.894 | sí | cumple |
+
+- **Los cuadros finales muestran celdas.** Se revisaron a ojo los cuadros que el instrumento
+  propone como fin (66, 53, 61, 65 y 59) y sus vecinos: en los cinco se ven la barra superior, la
+  banda del previo, «sin evaluar», la silueta compacta (bahías 01 a 06 a la vista), el título
+  «Bahía 01 · tapas sin declarar», «2 contenedores · 23.2 t», la cabecera de columnas (22, 20, 18,
+  16, 14) y **la primera fila de celdas** (nivel 04: cuatro huecos ocupados por 40 pies y el
+  contenedor XXVS en la 14), y debajo la tira de los controles («Contenido», «100 %», «⋮» y la
+  leyenda) y la barra inferior. Nada se desplazó: el instrumento no toca la pantalla después de
+  elegir el archivo. En sin02 el cuadro 53 todavía tiene el selector desvaneciéndose encima (una
+  transición semitransparente, como las que Codex describió); el 54 ya está limpio y se guarda.
+- **Tiempos.** La primera repetición (4.91–4.98 s) es la que sigue a la instalación del APK nuevo,
+  al `pm clear` y a la primera apertura del selector (que abre en «Recent» vacío y hay que
+  llevarlo a Descargas y a `t114`): es la misma condición de la primera repetición de la entrega 2
+  (3.84–3.88 s), con el coste añadido del primer arranque del paquete recién instalado. Las otras
+  cuatro quedan en **2.85–3.20 s**, por debajo de las de la entrega 2 (3.06–3.42 s): la cabecera
+  que se construye ahora es más corta. La cota incluye las lecturas de uiautomator del
+  instrumento, así que sigue siendo un límite superior, como en T-98 y en las dos entregas.
+- Registros en `docs/rediseno/fase3/entrega2/correccion/rnf-002/android/` (`sinNN/captura.json`
+  con las acciones del host, los PTS y el SHA-256 del video; `sinNN/cuadros.json` con los cuadros
+  propuestos, las diferencias por cuadro y las dos cotas; los siete JPEG candidatos de cada
+  corrida, inicio y fin con sus vecinos; y `resumen.json` con la tabla). Los MP4 quedan en
+  `%TEMP%/claude-corr/primera/android/`, fuera del repositorio.
+- Windows y la Web no se repitieron: nada de esta corrección toca su recorrido de tres pasos
+  (Codex repitió Windows en su aceptación: 1.929 s), y la cabecera de la oficina que cambia no
+  está en ese recorrido. El Honor no se tocó.
+
+### 4c.6 Archivos de esta corrección
+
+Ninguno de `domain/`, `data/`, `lib/main.dart`, `pubspec.*` ni los congelados; `pubspec.yaml` y
+`pubspec.lock` no cambian.
+
+- **Nuevos en `lib/`:** `features/vessel/presentation/widgets/zoom_del_plano.dart`.
+- **Modificados en `lib/`:** `features/vessel/presentation/pages/vessel_overview_page.dart`,
+  `providers/plano_providers.dart`, `widgets/bay_plan_view.dart`, `widgets/en_vivo_del_viaje.dart`,
+  `widgets/loading_controls.dart`, `widgets/loading_plan_controls.dart`,
+  `widgets/navegacion_del_viaje.dart`, `widgets/plan_drag_confirmation.dart`,
+  `widgets/silueta_del_viaje.dart`; `core/design/componentes/bs_silueta_buque.dart`.
+- **Pruebas:** nueva `test/t114_fase3_entrega2_correccion_test.dart`; actualizada
+  `test/t114_fase3_plano_test.dart`.
+- **Instrumentos:** `tool/t112_censos.py` (aprende `zoom_del_plano.dart`).
+- **Documentos y evidencia:** `DESIGN.md` (8, 9.2, 13.3, 13.6 y 13.8),
+  `docs/rediseno/fase3/traspaso-entrega2.md` (la nota de la corrección),
+  `docs/rediseno/fase3/entrega2/correccion/` (la auditoría, los censos y RNF-002 de Android) y esta
+  sección.
+- **Fuera del bloque:** los tres generados de `windows/flutter/`, que solo cambian el fin de línea.
+
+### 4c.7 Lo que queda anotado y lo que Carlos decide
+
+- **El teléfono bajo en Carga** (360 × 640, operando) queda a un gesto: con la línea del resumen
+  encima de la barra de la operación faltan 14 dp para la primera fila. La medición de RNF-002 es
+  el previo, que sí la muestra. Si Carlos prefiere que en Carga el resumen también se pliegue, es
+  una línea.
+- **El zoom se conserva al cambiar de bahía.** Antes la escala vivía en el lienzo de cada bahía y
+  volvía a 100 % al cambiarla; con el proveedor, el planificador que acerca a 150 % recorre las
+  bahías a 150 % y el zoom vuelve a 100 % al cerrar o cambiar el viaje. Las pruebas de T-105 y
+  T-106 no dependían de aquello. Si Carlos prefiere el reinicio por bahía, es una línea en el
+  proveedor.
+- **Los pesos por pila debajo de la bodega solo en el teléfono bajo.** En los demás tamaños siguen
+  arriba, donde C-7 los puso; 9.2 bis los dibuja abajo. Si Carlos quiere la misma posición en
+  todos los tamaños, es un cambio de una condición.
+- **«Confirma la escala para ver el plan de carga»** no se escribe en el teléfono bajo (la banda
+  del previo ya dice qué falta); en los demás tamaños sigue.
+- **Un archivo de prueba se sobrescribió y se restauró.** El primer borrador de las pruebas de esta
+  corrección se guardó con el nombre `test/t114_fase3_correccion_test.dart`, que ya era el de las
+  cuatro pruebas de la corrección de la entrega 1 (10.15): la suite bajó a 1256 y lo delató. El
+  archivo se restauró desde `HEAD` con `git show` (una lectura), byte a byte (`git diff --stat` no
+  lo lista), y las pruebas nuevas viven en `test/t114_fase3_entrega2_correccion_test.dart`. Se
+  deja escrito para que Codex no tenga que deducirlo del árbol.
+- **La región en vivo sin dibujo** es una caja de tamaño cero con `Semantics(liveRegion: true)`:
+  el árbol de semántica la conserva (la prueba lee su nodo con la bandera), y es el mecanismo que
+  Flutter recomienda frente a `SemanticsService.announce`, que Android desaconseja. No se probó con
+  TalkBack en el Honor (fuera de esta corrección); si en la prueba de campo no se oyera, el
+  recurso es darle 1 dp de alto.
+- **La prueba de diagnóstico** del presupuesto de alto (la que dio las cifras de 4c.2) fue
+  temporal y no se versiona; las cifras quedan aquí y las pruebas de H4 fijan el resultado.
+- **Las corridas de Android y el emulador**: el instrumento y el emulador son los de la entrega 2
+  (`t99_api26`, API 26, 360 × 640 dp con `wm density 480`); el banco r4 se compiló desde una copia
+  del árbol corregido (`tool/t99_copia.ps1 -Arbol -Sufijo r4`, `flutter pub get` en la copia y
+  `flutter build apk --release -t tool/t99_main.dart`) y se instaló encima del anterior con el mismo
+  identificador.
+
+### 4c.8 Horas
+De ≈ 06:15 a ≈ 08:00 del 23-oct-2026: **≈ 1.8 h**, con la lectura del paso 0, el diagnóstico del
+presupuesto de alto, las seis correcciones con sus pruebas, tres tandas de la suite completa, la
+auditoría, los censos, la compilación del banco r4 y las cinco corridas de Android.
+
+### Git para Carlos (Fase 3, entrega 2, corrección)
+
+Un `git add` por ruta; `pubspec.yaml` y `pubspec.lock` no cambian; `domain/`, `data/`,
+`lib/main.dart` y los congelados no cambian. Los tres generados de `windows/flutter/` figuran
+modificados solo por el fin de línea y no se agregan. La evidencia nueva va por carpeta porque son
+solo archivos nuevos de evidencia (la regla de las 60 rutas).
+
+```
+git add -- DESIGN.md
+git add -- lib/core/design/componentes/bs_silueta_buque.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/providers/plano_providers.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/widgets/en_vivo_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/loading_controls.dart
+git add -- lib/features/vessel/presentation/widgets/loading_plan_controls.dart
+git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart
+git add -- lib/features/vessel/presentation/widgets/silueta_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/zoom_del_plano.dart
+git add -- test/t114_fase3_entrega2_correccion_test.dart
+git add -- test/t114_fase3_plano_test.dart
+git add -- tool/t112_censos.py
+git add -- docs/rediseno/fase3/traspaso-entrega2.md
+git add -- docs/rediseno/fase3/entrega2/correccion/flutter-ui-audit.txt
+git add -- docs/rediseno/fase3/entrega2/correccion/censos
+git add -- docs/rediseno/fase3/entrega2/correccion/rnf-002
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: correccion de la entrega 2 de la fase 3, cabecera que se pliega, naranja en la celda de carga, anuncio sin panel, rejilla a la vista en el telefono bajo, riel sin IntrinsicHeight y zoom fuera de la rejilla"
+git push
+```
+
+### Tres líneas
+
+- H1 a H4 corregidos con prueba propia: la cabecera se pliega y Buscar queda al alcance; la celda
+  de carga (lleno o reserva) se enciende desde la bitácora; el anuncio accesible existe sin panel;
+  a 360 × 640 la primera rejilla se ve sin desplazar.
+- El riel va sin `IntrinsicHeight` y el chip del zoom salió de la rejilla a la línea de los
+  controles; suite 1260 (piso 1242), `analyze` 0, auditoría con un aviso menos y ninguno nuevo.
+- RNF-002 en Android repetido con el mismo instrumento, con los cuadros que muestran celdas.
+  ALTO: Codex acepta la corrección.
+
+### Mensaje para Yov
+Yov: la **corrección de la entrega 2** (10.21) queda lista para Codex, en un solo bloque de git.
+**H1:** la cabecera de la oficina se reparte o se pliega según el ancho y la letra (`Wrap` con
+`spaceBetween`; Buscar y la nube ancladas a la derecha); probado en 600 dp exactos con 1.0, 1.45 y
+2.0, y en 360 y 1920, sin desbordamiento. **H2:** `LoadingCell` recibe `recienMovida` y el plano
+se la enciende por el contenedor (`C:`) o por la reserva con su `assignedContainer`; además el
+proveedor descartaba los vacíos asignados porque su celda viene en el `target` (`R:…`) y no en
+`payload['position']` (`_posicionDe`); la prueba va de la bitácora en memoria de T-75 a la celda
+sin inyectar `recienMovidoProvider`, con un lleno y una reserva, 1480/1500 ms, a 360, 600 y 1920, y
+quieta con reducción de movimiento. **H3:** `AnuncioDelMovimiento`, una región en vivo sin dibujo
+con el mismo texto que la fila de «En vivo» (rol, contenedor, celda, «ahora»), solo donde no hay
+panel. **H4:** a 360 × 640 con barra de estado la cabecera (controles 77 + silueta 173) se comía
+los 234 dp del área; ahora, con menos de 560 dp útiles, la silueta va compacta (90 dp), los
+controles del plano bajan a la tira del pie (leyenda o barra de la operación, con «Acciones» solo
+icono y en Carga el OR), el resumen encima del pie y los pesos por pila debajo de la bodega: la
+primera fila queda en 422–474 de un área que termina en 486 (previo) y 338–390 de 160–403
+(Descarga); Carga queda a un gesto (14 dp). **Además:** el riel va en `CustomScrollView` +
+`SliverFillRemaining` con su ancho medido con la fuente (sin `IntrinsicHeight`), y el chip del zoom
+vive en la línea de los controles con un menú anclado (`planZoomProvider`; el zoom ya no se
+reinicia por bahía). **Cifras:** suite 1260 (piso 1242 + 18 en
+`test/t114_fase3_entrega2_correccion_test.dart`), `analyze` 0, auditoría 17/248/20 (solo se va el
+`IntrinsicHeight`; ningún hallazgo nuevo en lo tocado), censos 1932 visibles / 0 inglés, M3
+250/7/3, 217 mensajes. **RNF-002 Android**, cinco corridas con el mismo instrumento y el banco
+recompilado: 4.91–4.98 s la primera (tras instalar y `pm clear`) y 2.85–3.20 s las otras cuatro, tres
+pasos, y los cuadros finales muestran la primera fila de celdas (evidencia en
+`docs/rediseno/fase3/entrega2/correccion/`). **Dos avisos:** el primer borrador de las pruebas
+sobrescribió `test/t114_fase3_correccion_test.dart` (la de 10.15) y se restauró desde `HEAD` byte a
+byte; y `DESIGN.md` 8, 9.2, 13.3, 13.6 y 13.8 anotan las reglas nuevas. Me detengo: ALTO: Codex
+acepta la corrección.

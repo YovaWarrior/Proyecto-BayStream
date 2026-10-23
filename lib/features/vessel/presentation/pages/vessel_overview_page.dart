@@ -161,6 +161,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final contenido = Column(
       children: [
         const RelojDelNaranja(),
+        // Sin panel lateral, el movimiento se anuncia igual al lector de
+        // pantalla (13.3, punto 5; 10.21, H3): solo el anuncio, sin el panel.
+        if (!conPanel) AnuncioDelMovimiento(voyage: voyage),
         if (ui is Previo) ...[
           BsBanda(
             key: const ValueKey('preview-banner'),
@@ -1135,49 +1138,75 @@ class _CabeceraDeOficina extends StatelessWidget {
     final medidas = BsMedidas.de(context);
     final esquema = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
+    final estado = Container(
+      padding: EdgeInsets.symmetric(
+          horizontal: medidas.espacioS, vertical: medidas.espacioXs),
+      decoration: BoxDecoration(
+        color: esquema.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(medidas.radioControl),
+      ),
+      child: Text(publicado ? 'Publicado' : 'Sin confirmar',
+          style: textos.labelMedium),
+    );
+    // El estado y Descarga / Carga; si la letra no deja sitio para los dos
+    // en una línea, también se reparten en dos.
+    final controles = Wrap(
+      key: const ValueKey('cabecera-controles'),
+      spacing: medidas.espacioM,
+      runSpacing: medidas.espacioXs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        estado,
+        if (enOperacion)
+          SegmentedButton<BsModoDeOperacion>(
+            key: const ValueKey('operar-segmentos'),
+            segments: [
+              for (final valor in BsModoDeOperacion.values)
+                if (modos.contains(valor))
+                  ButtonSegment<BsModoDeOperacion>(
+                    value: valor,
+                    label: Text(valor.rotulo),
+                    icon: Icon(valor.icono),
+                  ),
+            ],
+            selected: <BsModoDeOperacion>{
+              if (modo != null && modos.contains(modo)) modo!,
+            },
+            emptySelectionAllowed: true,
+            showSelectedIcon: false,
+            onSelectionChanged: (valores) {
+              if (valores.isNotEmpty) onModo(valores.first);
+            },
+          ),
+      ],
+    );
     return Container(
       key: const ValueKey('cabecera-de-oficina'),
       constraints: BoxConstraints(minHeight: medidas.alturaBarraSuperior),
       padding: EdgeInsets.symmetric(
           horizontal: medidas.espacioL, vertical: medidas.espacioS),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: _TituloDelViaje(voyage: voyage)),
-          SizedBox(width: medidas.espacioM),
-          Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: medidas.espacioS, vertical: medidas.espacioXs),
-            decoration: BoxDecoration(
-              color: esquema.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(medidas.radioControl),
-            ),
-            child: Text(publicado ? 'Publicado' : 'Sin confirmar',
-                style: textos.labelMedium),
-          ),
-          if (enOperacion) ...[
-            SizedBox(width: medidas.espacioM),
-            SegmentedButton<BsModoDeOperacion>(
-              key: const ValueKey('operar-segmentos'),
-              segments: [
-                for (final valor in BsModoDeOperacion.values)
-                  if (modos.contains(valor))
-                    ButtonSegment<BsModoDeOperacion>(
-                      value: valor,
-                      label: Text(valor.rotulo),
-                      icon: Icon(valor.icono),
-                    ),
+          // La cabecera se reparte o se pliega según el ancho y la letra
+          // (10.21, H1): el título a la izquierda y los controles a la
+          // derecha mientras caben en una línea; si no caben, los controles
+          // bajan a una segunda línea y nada se desborda. A 600 dp con la
+          // letra a 2.0, la fila única dejaba Buscar fuera de la pantalla.
+          Expanded(
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: medidas.espacioM,
+              runSpacing: medidas.espacioXs,
+              children: [
+                _TituloDelViaje(voyage: voyage),
+                controles,
               ],
-              selected: <BsModoDeOperacion>{
-                if (modo != null && modos.contains(modo)) modo!,
-              },
-              emptySelectionAllowed: true,
-              showSelectedIcon: false,
-              onSelectionChanged: (valores) {
-                if (valores.isNotEmpty) onModo(valores.first);
-              },
             ),
-          ],
+          ),
           SizedBox(width: medidas.espacioS),
+          // Buscar y la nube quedan siempre en el borde derecho, al alcance.
           buscar,
           const SyncAppBarButton(),
         ],

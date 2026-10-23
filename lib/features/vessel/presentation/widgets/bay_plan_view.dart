@@ -27,6 +27,7 @@ import 'navegacion_del_viaje.dart';
 import 'plan_drag_confirmation.dart';
 import 'reserved_slot_details.dart';
 import 'silueta_del_viaje.dart';
+import 'zoom_del_plano.dart';
 
 /// El plano por bahía en la dirección C «Puente de mando» (`DESIGN.md` 13):
 /// la silueta del buque como selector, las tarjetas de cifra con la
@@ -168,10 +169,18 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       // banda, la silueta y la leyenda; en 360 × 800 sí.
       final anidar = !ancha && constraints.maxHeight < alturaParaAnidar;
       // Los relojes del naranja (13.3) viven en la página, no aquí.
-      final controles = LoadingPlanControls(
+      // En el teléfono bajo (13.8, 10.21 H4) lo primero es la rejilla: los
+      // controles del plano no van sobre la silueta sino al pie, en la línea
+      // de la leyenda o de la barra de la operación, y el resumen del modo
+      // justo encima del pie; así la primera fila se ve sin desplazar.
+      LoadingPlanControls controlesDelPlano(ParteDeLosControles parte) =>
+          LoadingPlanControls(
               voyage: widget.voyage,
               selectedBay: _selectedBayNumber,
               mode: mode,
+              parte: parte,
+              // El chip del zoom va aquí y no sobre la rejilla (10.20).
+              zoom: const ZoomDelPlano(),
               onOperationCell: (cell) {
                 final bayNumber = IsoCoordinateParser.parse(cell.position).bay;
                 ref.read(bayPlanModeProvider.notifier).elegir(
@@ -188,13 +197,18 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               },
               onModeChanged: (value) =>
                   ref.read(bayPlanModeProvider.notifier).elegir(value));
+      final controles = controlesDelPlano(
+          anidar ? ParteDeLosControles.barra : ParteDeLosControles.todo);
+      final resumen =
+          anidar ? controlesDelPlano(ParteDeLosControles.resumen) : null;
       final selector = _buildBaySelector(displayedVoyage, mode,
-          porCarga: porCarga, ancha: ancha);
+          porCarga: porCarga, ancha: ancha, compacta: anidar);
 
       // La bahía elegida, con zoom y desplazamiento.
       final rejilla = _selectedBayNumber != null
                 ? _BayGridWidget(
                     desplazamientoPrimario: anidar,
+                    compacta: anidar,
                     hatchCovers: hatches?[_selectedBayNumber],
                     bay: bay,
                     vista: vista,
@@ -250,16 +264,21 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                   )
                 : const Center(child: Text('Selecciona una bahía'));
       // Abajo: en el muelle, operando, la barra de la operación; si no,
-      // la leyenda de la vista.
+      // la leyenda de la vista. En el teléfono bajo, con los controles del
+      // plano al principio de esa línea.
       final pie = medidas.esMuelle && enOperacion
-          ? _barraDeOperacion(dischargeMode, loading, discharge)
+          ? _barraDeOperacion(dischargeMode, loading, discharge,
+              tira: anidar ? controles : null)
           : _buildLegend(displayedVoyage, bay, vista,
-              discharge: discharge, twenties: twenties.isNotEmpty);
+              discharge: discharge,
+              twenties: twenties.isNotEmpty,
+              tira: anidar ? controles : null);
       if (anidar) {
-        // Teléfono bajo: los controles y la silueta se van hacia arriba al
-        // desplazar la rejilla y vuelven al desplazarla hacia abajo, así la
-        // rejilla se ve entera con un gesto; la banda, la barra de la
-        // operación (o la leyenda) y la barra inferior no se mueven.
+        // Teléfono bajo (13.8): arriba solo la silueta compacta, que se va
+        // hacia arriba al desplazar la rejilla y vuelve al desplazarla hacia
+        // abajo; la primera fila de la rejilla ya se ve sin desplazar. La
+        // banda, el resumen, el pie con los controles y la barra inferior no
+        // se mueven.
         return Column(children: [
           Expanded(
             child: NestedScrollView(
@@ -267,7 +286,6 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               headerSliverBuilder: (context, _) => [
                 SliverToBoxAdapter(
                   child: Column(children: [
-                    controles,
                     selector,
                     const Divider(height: 1),
                   ]),
@@ -276,6 +294,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               body: rejilla,
             ),
           ),
+          if (resumen != null) resumen,
           pie,
         ]);
       }
@@ -320,7 +339,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   /// La silueta del buque como selector y, en la oficina ancha, las tarjetas
   /// de cifra a su derecha (`DESIGN.md` 13.8).
   Widget _buildBaySelector(VesselVoyage displayedVoyage, BayPlanMode mode,
-      {required bool porCarga, required bool ancha}) {
+      {required bool porCarga, required bool ancha, bool compacta = false}) {
     final medidas = BsMedidas.de(context);
     final esquema = Theme.of(context).colorScheme;
     final paleta = BsPaleta.de(Theme.of(context).brightness);
@@ -330,6 +349,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       seleccionada: _selectedBayNumber,
       porCarga: porCarga,
       controlador: _bayScrollController,
+      compacta: compacta,
       onSeleccion: (bayNumber) =>
           ref.read(selectedBayProvider.notifier).select(bayNumber),
     );
@@ -365,8 +385,8 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         : const <Widget>[];
     return Container(
       key: const ValueKey('bay-selector'),
-      padding: EdgeInsets.fromLTRB(
-          medidas.espacioM, medidas.espacioXs, medidas.espacioM, medidas.espacioS),
+      padding: EdgeInsets.fromLTRB(medidas.espacioM, medidas.espacioXs,
+          medidas.espacioM, compacta ? medidas.espacioXs : medidas.espacioS),
       child: LayoutBuilder(builder: (context, constraints) {
         // Las tarjetas van a la derecha de la silueta cuando caben dos de
         // 200 junto a ella (13.8); con menos ancho no se apilan debajo, que
@@ -423,7 +443,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   /// contorno que la celda. En pantallas angostas va en una línea que se
   /// desplaza.
   Widget _buildLegend(VesselVoyage displayedVoyage, Bay bay, ColorearPor vista,
-      {DischargeProgress? discharge, bool twenties = false}) {
+      {DischargeProgress? discharge, bool twenties = false, Widget? tira}) {
     final activeFilter = ref.watch(selectedTypeFilterProvider);
     final semanticos = BsColoresSemanticos.de(context);
     final medidas = BsMedidas.de(context);
@@ -538,13 +558,20 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       compacta: true,
     );
     // En una línea que se desplaza, ancha o angosta: la rejilla se queda con
-    // el alto.
+    // el alto. En el teléfono bajo, los controles del plano van delante de
+    // la leyenda, en la misma línea, con el aire justo (13.8).
+    final vertical = tira == null ? medidas.espacioS : medidas.espacioXs;
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          medidas.espacioM, medidas.espacioS, medidas.espacioM, medidas.espacioS),
+          medidas.espacioM, vertical, medidas.espacioM, vertical),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: cartela,
+        child: tira == null
+            ? cartela
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [tira, SizedBox(width: medidas.espacioS), cartela],
+              ),
       ),
     );
   }
@@ -552,8 +579,10 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   /// La barra de la operación del muelle (`DESIGN.md` 9.3 y 13.8): las cifras
   /// del modo y la acción; el aviso con «Deshacer» sigue siendo el de T-75.
   Widget _barraDeOperacion(bool dischargeMode, LoadingOperation? loading,
-      DischargeProgress? discharge) {
+      DischargeProgress? discharge,
+      {Widget? tira}) {
     final semanticos = BsColoresSemanticos.de(context);
+    final medidas = BsMedidas.de(context);
     final contadores = <BsContador>[];
     Widget? accion;
     if (dischargeMode && discharge != null) {
@@ -586,10 +615,26 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       );
     }
     if (contadores.isEmpty) return const SizedBox.shrink();
+    // En el teléfono bajo, los controles del plano van en la línea de la
+    // acción, que se desplaza (13.8).
     return BsBarraDeOperacion(
       key: const ValueKey('barra-de-operacion'),
       contadores: contadores,
-      accion: accion,
+      accion: tira == null
+          ? accion
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  tira,
+                  if (accion != null) ...[
+                    SizedBox(width: medidas.espacioS),
+                    accion,
+                  ],
+                ],
+              ),
+            ),
     );
   }
 
@@ -672,10 +717,15 @@ class _BayGridWidget extends StatelessWidget {
   /// Solo abre los detalles: lo que baja no se opera desde el modo Carga.
   final void Function(ContainerUnit)? onDetailsTap;
   /// En el teléfono la rejilla es el desplazamiento primario del
-  /// `NestedScrollView` del plano: al bajar por ella se van los controles y
-  /// la silueta (la cabecera) y vuelven al subir. Se declara en vez de
-  /// heredarlo, para que Windows y la Web hagan lo mismo que Android.
+  /// `NestedScrollView` del plano: al bajar por ella se va la silueta (la
+  /// cabecera) y vuelve al subir. Se declara en vez de heredarlo, para que
+  /// Windows y la Web hagan lo mismo que Android.
   final bool desplazamientoPrimario;
+
+  /// El teléfono bajo (13.8): menos aire sobre el título y los pesos por
+  /// pila debajo de la bodega, como en 9.2 bis, para que la primera fila se
+  /// vea sin desplazar.
+  final bool compacta;
 
   const _BayGridWidget({
     required this.bay,
@@ -689,6 +739,7 @@ class _BayGridWidget extends StatelessWidget {
     required this.isInTransit,
     this.orderMode = false,
     this.desplazamientoPrimario = false,
+    this.compacta = false,
     this.progress,
     this.loading,
     this.dragVoyage,
@@ -941,9 +992,34 @@ class _Rejilla extends StatelessWidget {
           final inner = constraints.maxWidth > 2 * margin
               ? constraints.maxWidth - 2 * margin
               : 0.0;
+          // C-7 · Peso de cada pila, como el plano impreso: dos líneas
+          // alineadas con las columnas. Van arriba, donde el límite de
+          // apilamiento aplica de verdad; en el teléfono bajo, debajo de la
+          // bodega (9.2 bis), para que la primera fila se vea sin desplazar.
+          final pesosPorPila = <Widget>[
+            _buildStackWeights(
+              context,
+              rows: rows,
+              weights: bay.deckWeightByRow,
+              missingRows: missingDeckRows,
+              zona: 'cub.',
+              limitKg: geometry.stackWeightLimitKg,
+            ),
+            _buildStackWeights(
+              context,
+              rows: rows,
+              weights: bay.holdWeightByRow,
+              missingRows: missingHoldRows,
+              zona: 'bod.',
+              limitKg: geometry.stackWeightLimitKg,
+            ),
+            SizedBox(height: medidas.espacioXs),
+          ];
           return SingleChildScrollView(
             primary: grid.desplazamientoPrimario ? true : null,
-            padding: EdgeInsets.all(margin),
+            padding: grid.compacta
+                ? EdgeInsets.fromLTRB(margin, margin / 2, margin, margin)
+                : EdgeInsets.all(margin),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               if (grid.hatchCovers != null && outer.maxWidth < 600) ...[
                 SizedBox(
@@ -985,7 +1061,8 @@ class _Rejilla extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: medidas.espacioS),
+              SizedBox(
+                  height: grid.compacta ? medidas.espacioXs : medidas.espacioS),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
@@ -1003,26 +1080,7 @@ class _Rejilla extends StatelessWidget {
                         SizedBox(height: medidas.espacioL),
                       ],
 
-                      // C-7 · Peso de cada pila, como el plano impreso: dos líneas
-                      // arriba, alineadas con las columnas. Es donde el límite de
-                      // apilamiento aplica de verdad.
-                      _buildStackWeights(
-                        context,
-                        rows: rows,
-                        weights: bay.deckWeightByRow,
-                        missingRows: missingDeckRows,
-                        zona: 'cub.',
-                        limitKg: geometry.stackWeightLimitKg,
-                      ),
-                      _buildStackWeights(
-                        context,
-                        rows: rows,
-                        weights: bay.holdWeightByRow,
-                        missingRows: missingHoldRows,
-                        zona: 'bod.',
-                        limitKg: geometry.stackWeightLimitKg,
-                      ),
-                      SizedBox(height: medidas.espacioXs),
+                      if (!grid.compacta) ...pesosPorPila,
 
                       // Header de rows
                       _buildRowHeader(context, rows),
@@ -1067,6 +1125,7 @@ class _Rejilla extends StatelessWidget {
                       // Bodega: dentro del casco (13.2)
                       if (holdTiers.isNotEmpty) bloque(holdTiers, bodega: true),
                       SizedBox(height: medidas.espacioS),
+                      if (grid.compacta) ...pesosPorPila,
                     ],
                   ),
                 ),
@@ -1331,12 +1390,19 @@ class _Rejilla extends StatelessWidget {
           loading.plan.loading[loadKey]?.role == PlanRole.load) {
         final loadHighlighted =
             isHighlighted || grid.highlightedContainerId == loadKey;
+        // 13.3: lo recién movido también enciende la celda de carga, sea el
+        // lleno del listado (C:) o la reserva con el vacío que se le asignó.
+        final recien = grid.recienMovidoId;
+        final recienMovida = recien != null &&
+            (loadKey == 'C:$recien' ||
+                loading.state[loadKey]?.assignedContainer == recien);
         final cell = LoadingCell(
             key: ValueKey('loading-$loadKey'),
             itemKey: loadKey,
             operation: loading,
             highlighted: loadHighlighted,
             curva: curva,
+            recienMovida: recienMovida,
             onTap: container == null
                 ? () => grid.onReservedSlotTap(loadSlot!)
                 : () => grid.onContainerTap(container));

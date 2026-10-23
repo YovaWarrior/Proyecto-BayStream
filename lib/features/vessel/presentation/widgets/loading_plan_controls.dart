@@ -22,19 +22,44 @@ import '../../../../core/utils/voyage_number.dart';
 /// llegada; fuera de ese modo, tocar una celda abre el detalle, como siempre.
 enum BayPlanMode { content, order, discharge, loading }
 
+/// Qué parte de los controles del plano se dibuja (`DESIGN.md` 13.8). En el
+/// teléfono bajo la barra (el modo, «Acciones», el zoom) va al pie, en la
+/// línea de la leyenda o de la barra de la operación, y el resumen del modo
+/// justo encima del pie; en los demás tamaños, todo junto sobre la silueta.
+enum ParteDeLosControles {
+  /// La barra y el resumen, sobre la silueta (T-107).
+  todo,
+
+  /// Solo la barra, en una tira que se desplaza: sin aire propio ni la nube,
+  /// que en el teléfono ya está en la banda o en la barra superior.
+  barra,
+
+  /// Solo el resumen del modo, en su línea de T-107.
+  resumen,
+}
+
 class LoadingPlanControls extends ConsumerWidget {
   final VesselVoyage voyage;
   final int? selectedBay;
   final BayPlanMode mode;
   final ValueChanged<BayPlanMode> onModeChanged;
   final ValueChanged<OperationCellLink>? onOperationCell;
+
+  /// El chip del zoom del plano, que desde 10.20 va en esta línea y no sobre
+  /// la rejilla (`ZoomDelPlano`); al final de la fila, antes de la nube.
+  final Widget? zoom;
+
+  /// Qué se dibuja: todo, o solo la barra o el resumen (el teléfono bajo).
+  final ParteDeLosControles parte;
   const LoadingPlanControls(
       {super.key,
       required this.voyage,
       required this.selectedBay,
       required this.mode,
       required this.onModeChanged,
-      this.onOperationCell});
+      this.onOperationCell,
+      this.zoom,
+      this.parte = ParteDeLosControles.todo});
 
   bool get orderMode => mode == BayPlanMode.order;
 
@@ -62,6 +87,35 @@ class LoadingPlanControls extends ConsumerWidget {
       if (cell != null) onOperationCell?.call(cell);
     }
 
+    final loadingMode = mode == BayPlanMode.loading && voyage.portOfCall != null;
+    switch (parte) {
+      case ParteDeLosControles.barra:
+        // La tira del pie del teléfono bajo (13.8): el modo, «Acciones» y el
+        // zoom, sin aire propio, en una línea que se desplaza.
+        return _CompactPlanBar(
+            voyage: voyage,
+            selectedBay: selectedBay,
+            modeSelector: _modeSelector(discharge),
+            dischargeMode: dischargeMode,
+            loadingMode: loadingMode,
+            onPendingTable: pendingTable,
+            onProgress: voyage.portOfCall == null ? null : openProgress,
+            zoom: zoom,
+            tira: true);
+      case ParteDeLosControles.resumen:
+        // El resumen del modo encima del pie. Sin escala no hay resumen: la
+        // banda del previo ya dice qué falta por confirmar.
+        if (voyage.portOfCall == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _summaryArea(context, dischargeMode, progress, true)),
+        );
+      case ParteDeLosControles.todo:
+        break;
+    }
+
     return LayoutBuilder(builder: (context, constraints) {
       final compact = constraints.maxWidth < compactWidth;
       return Padding(
@@ -73,10 +127,10 @@ class LoadingPlanControls extends ConsumerWidget {
                 selectedBay: selectedBay,
                 modeSelector: _modeSelector(discharge, compact: true),
                 dischargeMode: dischargeMode,
-                loadingMode:
-                    mode == BayPlanMode.loading && voyage.portOfCall != null,
+                loadingMode: loadingMode,
                 onPendingTable: pendingTable,
-                onProgress: voyage.portOfCall == null ? null : openProgress)
+                onProgress: voyage.portOfCall == null ? null : openProgress,
+                zoom: zoom)
           else
             Wrap(
                 spacing: 12,
@@ -106,6 +160,7 @@ class LoadingPlanControls extends ConsumerWidget {
                   if (voyage.portOfCall != null) const SyncStatusChip(),
                   if (voyage.portOfCall != null)
                     ChangeRequestsButton(voyage: voyage),
+                  if (zoom != null) zoom!,
                 ]),
           ..._summaryArea(context, dischargeMode, progress, compact),
         ]),
@@ -152,7 +207,10 @@ class LoadingPlanControls extends ConsumerWidget {
     if (mode == BayPlanMode.loading && voyage.portOfCall != null) {
       return [
         LoadingControls(
-            voyage: voyage, selectedBay: selectedBay, compact: compact)
+            voyage: voyage,
+            selectedBay: selectedBay,
+            compact: compact,
+            busquedaEnLaTira: parte == ParteDeLosControles.resumen)
       ];
     }
     if (dischargeMode) {
@@ -299,6 +357,14 @@ class _CompactPlanBar extends ConsumerWidget {
   final bool loadingMode;
   final VoidCallback? onPendingTable;
   final Future<void> Function()? onProgress;
+
+  /// El chip del zoom (10.20), al final de la línea.
+  final Widget? zoom;
+
+  /// La tira del pie del teléfono bajo (13.8): el modo, «Acciones» y el zoom
+  /// uno tras otro, a su ancho, sin la nube (ya está en la banda o en la
+  /// barra superior) y sin repartir el ancho: la línea se desplaza.
+  final bool tira;
   const _CompactPlanBar(
       {required this.voyage,
       required this.selectedBay,
@@ -306,7 +372,9 @@ class _CompactPlanBar extends ConsumerWidget {
       required this.dischargeMode,
       required this.loadingMode,
       required this.onPendingTable,
-      required this.onProgress});
+      required this.onProgress,
+      this.zoom,
+      this.tira = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -334,6 +402,18 @@ class _CompactPlanBar extends ConsumerWidget {
           const SizedBox(width: 12),
           Flexible(child: Text(text)),
         ]);
+    // En la tira del pie, «Acciones» va solo con su icono y su descripción
+    // emergente, para que la leyenda asome a la derecha en 360 dp.
+    final rotuloDeAcciones = Row(mainAxisSize: MainAxisSize.min, children: [
+      Badge(
+          isLabelVisible: pending > 0,
+          label: Text('$pending'),
+          child: Icon(Icons.more_vert, color: colors.primary)),
+      if (!tira) ...[
+        const SizedBox(width: 4),
+        Text('Acciones', style: TextStyle(color: colors.primary)),
+      ],
+    ]);
     final actions = PopupMenuButton<VoidCallback>(
       key: const ValueKey('bay-plan-actions'),
       tooltip: 'Acciones',
@@ -373,15 +453,8 @@ class _CompactPlanBar extends ConsumerWidget {
               child: entry(Icons.add_box_outlined, 'Asignar vacío')),
       ],
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Badge(
-              isLabelVisible: pending > 0,
-              label: Text('$pending'),
-              child: Icon(Icons.more_vert, color: colors.primary)),
-          const SizedBox(width: 4),
-          Text('Acciones', style: TextStyle(color: colors.primary)),
-        ]),
+        padding: EdgeInsets.symmetric(horizontal: tira ? 12 : 8, vertical: 12),
+        child: rotuloDeAcciones,
       ),
     );
     final nube = status == null
@@ -395,6 +468,19 @@ class _CompactPlanBar extends ConsumerWidget {
             tooltip: 'Nube y cuenta · ${syncStatusText(status)}',
             onPressed: () => openCloudPage(context),
           );
+    if (tira) {
+      // El modo, el zoom, «Acciones» y, en Carga, la búsqueda por OR, que
+      // así queda al alcance del pulgar (13.8).
+      return Row(mainAxisSize: MainAxisSize.min, children: [
+        modeSelector,
+        const SizedBox(width: 4),
+        if (zoom != null) zoom!,
+        actions,
+        if (loadingMode)
+          LoadingControls.busquedaDeCarga(context, ref, voyage, selectedBay,
+              conListado: data?.list != null),
+      ]);
+    }
     // Con la letra del sistema muy grande (10.8: a 2.0 «Contenido» no cabe
     // junto a «Acciones» en 360 dp), el selector va en su propia línea.
     final escala = MediaQuery.textScalerOf(context).scale(10) / 10;
@@ -403,6 +489,7 @@ class _CompactPlanBar extends ConsumerWidget {
         modeSelector,
         Row(children: [
           Expanded(child: Align(alignment: Alignment.centerLeft, child: actions)),
+          if (zoom != null) zoom!,
           if (nube != null) nube,
         ]),
       ]);
@@ -414,6 +501,7 @@ class _CompactPlanBar extends ConsumerWidget {
         const SizedBox(width: 8),
         actions,
       ])),
+      if (zoom != null) zoom!,
       if (nube != null) nube,
     ]);
   }

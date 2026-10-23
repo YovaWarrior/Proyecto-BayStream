@@ -23,7 +23,12 @@ class SiluetaDelViaje extends ConsumerWidget {
     required this.onSeleccion,
     this.porCarga = false,
     this.controlador,
+    this.compacta = false,
   });
+
+  /// La silueta baja del teléfono corto (13.8): la misma información, los
+  /// niveles a 4 dp, para que la rejilla se vea sin desplazar a 360 × 640.
+  final bool compacta;
 
   /// El viaje publicado o en previo.
   final VesselVoyage voyage;
@@ -73,6 +78,7 @@ class SiluetaDelViaje extends ConsumerWidget {
       recienMovida: recien?.bahia,
       controlador: controlador,
       onSeleccion: onSeleccion,
+      compacta: compacta,
       rotuloDeAvance: descarga != null
           ? 'avance de la descarga en ${voyage.portOfCall} bajo cada bahía'
           : porBahia.isNotEmpty

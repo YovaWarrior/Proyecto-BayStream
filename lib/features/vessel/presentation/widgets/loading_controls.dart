@@ -53,8 +53,31 @@ class LoadingControls extends ConsumerWidget {
   /// T-107 · En pantallas angostas el resumen va en una línea, junto a
   /// «OR / últimos dígitos»; «Asignar vacío» pasa a «Acciones».
   final bool compact;
+
+  /// En el teléfono bajo (13.8) «OR / últimos dígitos» va en la tira del pie
+  /// con los demás controles ([busquedaDeCarga]); aquí queda solo la línea
+  /// del resumen.
+  final bool busquedaEnLaTira;
   const LoadingControls(
-      {super.key, required this.voyage, this.selectedBay, this.compact = false});
+      {super.key,
+      required this.voyage,
+      this.selectedBay,
+      this.compact = false,
+      this.busquedaEnLaTira = false});
+
+  /// El botón de buscar por OR, el mismo de la línea del resumen, para la
+  /// tira del pie del teléfono bajo.
+  static Widget busquedaDeCarga(BuildContext context, WidgetRef ref,
+          VesselVoyage voyage, int? selectedBay,
+          {required bool conListado}) =>
+      TextButton.icon(
+          key: const ValueKey('load-search'),
+          onPressed: !conListado
+              ? null
+              : () => chooseLoadingRow(context, ref, voyage,
+                  selectedBay: selectedBay),
+          icon: const Icon(Icons.search),
+          label: const Text('OR / últimos dígitos'));
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
       ref.watch(loadingOperationProvider(voyage)).when(
@@ -81,17 +104,11 @@ class LoadingControls extends ConsumerWidget {
                   const Text(
                       'Importa el listado de agencia para operar por OR.'),
               ];
-              final search = TextButton.icon(
-                  key: const ValueKey('load-search'),
-                  onPressed: data.list == null
-                      ? null
-                      : () => chooseLoadingRow(context, ref, voyage,
-                          selectedBay: selectedBay),
-                  icon: const Icon(Icons.search),
-                  label: const Text('OR / últimos dígitos'));
+              final search = busquedaDeCarga(context, ref, voyage, selectedBay,
+                  conListado: data.list != null);
               if (compact) {
                 return PlanSummaryLine(
-                    trailing: search,
+                    trailing: busquedaEnLaTira ? null : search,
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: summary));
@@ -950,13 +967,19 @@ class LoadingCell extends StatelessWidget {
 
   /// La curva del casco en las celdas de los extremos de la bodega (13.2).
   final BsCurvaDeCelda curva;
+
+  /// Verdadero cuando este embarque es lo que se acaba de mover (13.3): la
+  /// celda sale en naranja 1.5 s, sea un lleno o una reserva con su vacío
+  /// asignado. Lo decide el plano con `recienMovidoProvider` (10.21, H2).
+  final bool recienMovida;
   const LoadingCell(
       {super.key,
       required this.itemKey,
       required this.operation,
       required this.onTap,
       this.highlighted = false,
-      this.curva = BsCurvaDeCelda.ninguna});
+      this.curva = BsCurvaDeCelda.ninguna,
+      this.recienMovida = false});
   @override
   Widget build(BuildContext context) {
     final status = operation.state[itemKey];
@@ -976,6 +999,9 @@ class LoadingCell extends StatelessWidget {
       codigo: label.replaceAll('\n', ' '),
       etiqueta: loadingCellSemantics(operation, itemKey),
       categoria: loaded ? semanticos.hecho : semanticos.pendiente,
+      estado: recienMovida
+          ? BsEstadoDeCelda.recienMovido
+          : BsEstadoDeCelda.ninguno,
       linea2: loaded ? 'Cargado' : 'Sube',
       marca: marca,
       curva: curva,

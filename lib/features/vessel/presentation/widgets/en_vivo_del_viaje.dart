@@ -43,3 +43,43 @@ class EnVivoDelViaje extends ConsumerWidget {
     );
   }
 }
+
+/// El anuncio accesible del movimiento cuando no hay panel lateral
+/// (`DESIGN.md` 13.3, punto 5; 10.21, H3): una región en vivo sin dibujo que
+/// dice lo mismo que la fila más reciente de «En vivo» (qué pasó, el rol del
+/// equipo, el contenedor y la celda, «ahora»), para quien tiene el foco en
+/// otro control. No lleva el panel de la oficina al teléfono: solo el
+/// anuncio. Mientras el toque local todavía no está en la bitácora no hay
+/// nada que anunciar; el anuncio llega con el movimiento registrado.
+class AnuncioDelMovimiento extends ConsumerWidget {
+  const AnuncioDelMovimiento({super.key, required this.voyage});
+
+  /// El viaje publicado con escala.
+  final VesselVoyage voyage;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (voyage.portOfCall == null) return const SizedBox.shrink();
+    final recien = ref.watch(recienMovidoProvider);
+    final movimientos =
+        ref.watch(loadingOperationProvider(voyage)).value?.movements;
+    if (recien == null || movimientos == null) return const SizedBox.shrink();
+    Movement? movimiento;
+    for (final m in movimientos) {
+      if (m.id == recien.movimientoId) {
+        movimiento = m;
+        break;
+      }
+    }
+    if (movimiento == null) return const SizedBox.shrink();
+    final evento =
+        eventoEnVivo(movimiento, DateTime.now(), recienMovidoId: movimiento.id);
+    return Semantics(
+      key: const ValueKey('anuncio-del-movimiento'),
+      container: true,
+      liveRegion: true,
+      label: evento.etiqueta,
+      child: const SizedBox.shrink(),
+    );
+  }
+}

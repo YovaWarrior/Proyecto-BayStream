@@ -170,3 +170,19 @@ de `docs/REDISENO-RESULTADOS.md`. En resumen:
 - En la barra inferior el destino es «Estad.» y los rótulos escalan hasta 1.3: cinco
   destinos en 360 dp dan 72 dp a cada uno. El nombre entero va en la descripción emergente.
 - Atrás en Android (cerrar hojas y paneles primero, preguntar si hay un previo) no se tocó.
+
+## Corrección tras la aceptación de Codex (23-oct, 10.21)
+
+Codex devolvió la entrega 2 con cuatro hallazgos (`docs/rediseno/fase3/entrega2/aceptacion-codex.md`)
+y la corrección está hecha en un chat nuevo: la sección «Fase 3 · Entrega 2 · Corrección tras la
+aceptación de Codex» de `docs/REDISENO-RESULTADOS.md` es el informe, con su bloque de git. En
+resumen: la cabecera de la oficina se reparte o se pliega (H1); la celda de carga recibe el
+movimiento real, también la reserva con su vacío (H2, `_posicionDe` en `plano_providers.dart`);
+el anuncio accesible sin panel es `AnuncioDelMovimiento` (H3, en `en_vivo_del_viaje.dart`); el
+teléfono bajo arma el plano con la silueta compacta y los controles al pie (H4,
+`ParteDeLosControles` en `loading_plan_controls.dart`, `compacta` en `BsSiluetaBuque` y en
+`_BayGridWidget`); el riel va en `CustomScrollView` + `SliverFillRemaining` con su ancho medido
+con la fuente; el zoom vive en `planZoomProvider` y su chip (`ZoomDelPlano`) en la línea de los
+controles. Las pruebas de la corrección están en `test/t114_fase3_entrega2_correccion_test.dart`
+(18); `test/t114_fase3_correccion_test.dart` sigue siendo la de la corrección de la entrega 1 (10.15).
+La evidencia nueva va en `docs/rediseno/fase3/entrega2/correccion/`.

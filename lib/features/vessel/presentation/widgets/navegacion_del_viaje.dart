@@ -177,22 +177,50 @@ class RielDelViaje extends StatelessWidget {
     final medidas = BsMedidas.de(context);
     final indice = destinos.indexOf(activo);
     final conAlertas = onAlertas != null;
-    // En una ventana baja el riel se desplaza en vez de desbordarse.
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints restricciones) =>
-          SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: restricciones.maxHeight),
-          child: IntrinsicHeight(child: _riel(context, medidas, indice, conAlertas)),
-        ),
+    // El ancho del riel: los 80 dp de `DESIGN.md` 8 o, si la letra del
+    // sistema lo pide, el del rótulo más largo con su aire, para que ningún
+    // rótulo se corte (RNF-003). Se mide con la fuente porque el desplazable
+    // de abajo necesita un ancho cierto.
+    final tema = Theme.of(context);
+    final estilo = tema.navigationRailTheme.selectedLabelTextStyle ??
+        tema.textTheme.labelMedium;
+    final escalador = MediaQuery.textScalerOf(context);
+    var anchoDeRotulo = 0.0;
+    for (final rotulo in <String>[
+      for (final destino in destinos) destino.rotulo,
+      if (conAlertas) 'Alertas',
+    ]) {
+      final pintor = TextPainter(
+        text: TextSpan(text: rotulo, style: estilo),
+        textDirection: TextDirection.ltr,
+        textScaler: escalador,
+      )..layout();
+      if (pintor.width > anchoDeRotulo) anchoDeRotulo = pintor.width;
+      pintor.dispose();
+    }
+    final conAire = anchoDeRotulo + 2 * medidas.espacioL;
+    final ancho = conAire > medidas.anchoRiel ? conAire : medidas.anchoRiel;
+    // En una ventana baja el riel se desplaza en vez de desbordarse: el
+    // sliver llena el alto de la ventana y, si el riel pide más, crece y se
+    // desplaza (10.21: sin el widget de alto intrínseco de la entrega 2).
+    return SizedBox(
+      width: ancho,
+      child: CustomScrollView(
+        slivers: <Widget>[
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: _riel(context, medidas, indice, conAlertas, ancho),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _riel(
-      BuildContext context, BsMedidas medidas, int indice, bool conAlertas) {
+  Widget _riel(BuildContext context, BsMedidas medidas, int indice,
+      bool conAlertas, double ancho) {
     return NavigationRail(
       key: const ValueKey('riel-del-viaje'),
+      minWidth: ancho,
       selectedIndex: indice < 0 ? 0 : indice,
       onDestinationSelected: (int i) {
         if (conAlertas && i == destinos.length) {
@@ -207,16 +235,14 @@ class RielDelViaje extends StatelessWidget {
             top: medidas.espacioS, bottom: medidas.espacioM),
         child: const BsMarca(tamano: 44),
       ),
+      // El pie va después del grupo de destinos, que ya se queda con todo el
+      // alto sobrante: queda abajo sin otro `Expanded` (que duplicaba el alto
+      // que el riel pedía en una ventana baja).
       trailing: pie.isEmpty
           ? null
-          : Expanded(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: medidas.espacioM),
-                  child: Column(mainAxisSize: MainAxisSize.min, children: pie),
-                ),
-              ),
+          : Padding(
+              padding: EdgeInsets.only(bottom: medidas.espacioM),
+              child: Column(mainAxisSize: MainAxisSize.min, children: pie),
             ),
       destinations: <NavigationRailDestination>[
         for (final destino in destinos)

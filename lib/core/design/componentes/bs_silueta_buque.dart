@@ -62,6 +62,12 @@ class BsBahiaDeSilueta {
 /// El casco y las pilas se pintan con `CustomPainter`; cada bahía es un botón
 /// de 56 dp de ancho con su etiqueta. Con `disableAnimations` el destello es
 /// un anillo fijo. Evoluciona `BsTiraDeBahias`, que se conserva.
+///
+/// Con [compacta], la silueta del teléfono bajo (13.8): los mismos niveles,
+/// el mismo número, la misma barra de avance y el mismo botón de 56 dp de
+/// ancho, pero cada nivel a 4 dp en vez de 9 y menos aire arriba y abajo,
+/// para que a 360 × 640 dp la primera fila de la rejilla se vea sin
+/// desplazar (10.21, H4). Nada se recorta: solo cambia la escala de las pilas.
 class BsSiluetaBuque extends StatelessWidget {
   /// Crea la silueta.
   const BsSiluetaBuque({
@@ -72,7 +78,11 @@ class BsSiluetaBuque extends StatelessWidget {
     this.recienMovida,
     this.controlador,
     this.rotuloDeAvance,
+    this.compacta = false,
   });
+
+  /// La silueta baja del teléfono corto: niveles a [pasoNivelCompacto].
+  final bool compacta;
 
   /// Las bahías, de proa a popa.
   final List<BsBahiaDeSilueta> bahias;
@@ -102,6 +112,10 @@ class BsSiluetaBuque extends StatelessWidget {
   /// El paso entre niveles.
   static const double pasoNivel = 9;
 
+  /// El alto de un nivel y el paso en la silueta compacta.
+  static const double altoNivelCompacto = 3;
+  static const double pasoNivelCompacto = 4;
+
   /// Cuántos niveles se pintan como máximo por zona.
   static const int nivelesMaximos = 6;
 
@@ -123,13 +137,17 @@ class BsSiluetaBuque extends StatelessWidget {
         0, (m, b) => b.nivelesCubierta > m ? b.nivelesCubierta : m);
     final maxBodega =
         bahias.fold<int>(0, (m, b) => b.nivelesBodega > m ? b.nivelesBodega : m);
+    // El pie: el número, su hueco, la barra de avance y el aire de abajo
+    // (menos en la compacta).
+    final pieInferior = compacta ? medidas.espacioXs : medidas.espacioS;
     final geometria = _Geometria(
       cubierta: maxCubierta.clamp(1, nivelesMaximos),
       bodega: maxBodega.clamp(1, nivelesMaximos),
+      compacta: compacta,
       altoDelPie: escala.scale(BsEscala.rotuloMinimo) * 1.2 +
           medidas.espacioXs * 2 +
           medidas.espacioXs +
-          medidas.espacioS,
+          pieInferior,
     );
     final ancho = margen * 2 + anchoBahia * bahias.length;
     final cuenta = formatearCuenta(bahias.length, 'bahía', 'bahías');
@@ -249,6 +267,7 @@ class BsSiluetaBuque extends StatelessWidget {
                                       : esquema.primary,
                           pista: esquema.outlineVariant,
                           altoDelPie: geometria.altoDelPie,
+                          pieInferior: pieInferior,
                         ),
                     ],
                   ),
@@ -272,6 +291,7 @@ class _BotonDeBahia extends StatelessWidget {
     required this.colorDeAvance,
     required this.pista,
     required this.altoDelPie,
+    required this.pieInferior,
   });
 
   final BsBahiaDeSilueta bahia;
@@ -281,6 +301,9 @@ class _BotonDeBahia extends StatelessWidget {
   final Color? colorDeAvance;
   final Color pista;
   final double altoDelPie;
+
+  /// El aire bajo la barra de avance.
+  final double pieInferior;
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +341,7 @@ class _BotonDeBahia extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: medidas.espacioS),
+              SizedBox(height: pieInferior),
             ],
           ),
         ),
@@ -327,27 +350,38 @@ class _BotonDeBahia extends StatelessWidget {
   }
 }
 
-/// Dónde cae cada cosa, en dp, para un alto dado por los niveles.
+/// Dónde cae cada cosa, en dp, para un alto dado por los niveles; con
+/// [compacta], las medidas de la silueta del teléfono bajo.
 class _Geometria {
   _Geometria({
     required this.cubierta,
     required this.bodega,
     required this.altoDelPie,
+    this.compacta = false,
   });
 
   final int cubierta;
   final int bodega;
   final double altoDelPie;
+  final bool compacta;
 
-  static const double arriba = 6;
-  static const double holgura = 4;
-  static const double fondo = 10;
+  /// El paso entre niveles y el alto de cada nivel pintado.
+  double get paso =>
+      compacta ? BsSiluetaBuque.pasoNivelCompacto : BsSiluetaBuque.pasoNivel;
+  double get altoNivel =>
+      compacta ? BsSiluetaBuque.altoNivelCompacto : BsSiluetaBuque.altoNivel;
+
+  /// El aire sobre la pila más alta, entre la tapa y las pilas, y bajo el
+  /// casco.
+  double get arriba => compacta ? 4 : 6;
+  double get holgura => compacta ? 3 : 4;
+  double get fondo => compacta ? 6 : 10;
 
   /// La línea de la tapa: donde la cubierta se apoya en el casco.
-  double get yTapa => arriba + cubierta * BsSiluetaBuque.pasoNivel + holgura;
+  double get yTapa => arriba + cubierta * paso + holgura;
 
   /// El fondo del casco.
-  double get yFondo => yTapa + bodega * BsSiluetaBuque.pasoNivel + fondo;
+  double get yFondo => yTapa + bodega * paso + fondo;
 
   /// El alto total.
   double get alto => yFondo + altoDelPie;
@@ -464,8 +498,8 @@ class _SiluetaPainter extends CustomPainter {
     // Las pilas.
     const ancho = BsSiluetaBuque.anchoBahia;
     const anchoPila = ancho - 12;
-    const alto = BsSiluetaBuque.altoNivel;
-    const paso = BsSiluetaBuque.pasoNivel;
+    final alto = geometria.altoNivel;
+    final paso = geometria.paso;
     const radio = Radius.circular(1.5);
     for (var i = 0; i < bahias.length; i++) {
       final bahia = bahias[i];
@@ -488,7 +522,7 @@ class _SiluetaPainter extends CustomPainter {
       final pintaCubierta = Paint()..color = cubierta;
       final pintaBodega = Paint()..color = bodega;
       for (var t = 0; t < nivelesCubierta; t++) {
-        final y = yTapa - _Geometria.holgura - (t + 1) * paso + (paso - alto);
+        final y = yTapa - geometria.holgura - (t + 1) * paso + (paso - alto);
         canvas.drawRRect(
           RRect.fromRectAndRadius(Rect.fromLTWH(x, y, anchoPila, alto), radio),
           pintaCubierta,
@@ -501,7 +535,7 @@ class _SiluetaPainter extends CustomPainter {
           ..color = esSeleccionada ? colores.cubiertaSeleccionada : colores.tapa,
       );
       for (var t = 0; t < nivelesBodega; t++) {
-        final y = yTapa + _Geometria.holgura + t * paso;
+        final y = yTapa + geometria.holgura + t * paso;
         canvas.drawRRect(
           RRect.fromRectAndRadius(Rect.fromLTWH(x, y, anchoPila, alto), radio),
           pintaBodega,
@@ -510,9 +544,9 @@ class _SiluetaPainter extends CustomPainter {
       final marcoRect = RRect.fromRectAndRadius(
         Rect.fromLTWH(
           x - 4,
-          _Geometria.arriba - 2,
+          geometria.arriba - 2,
           anchoPila + 8,
-          yFondo - _Geometria.arriba - 2,
+          yFondo - geometria.arriba - 2,
         ),
         const Radius.circular(6),
       );
@@ -548,5 +582,6 @@ class _SiluetaPainter extends CustomPainter {
       anterior.recienMovida != recienMovida ||
       anterior.destello != destello ||
       anterior.geometria.alto != geometria.alto ||
+      anterior.geometria.compacta != geometria.compacta ||
       anterior.colores != colores;
 }

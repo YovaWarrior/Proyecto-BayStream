@@ -71,6 +71,38 @@ class BayPlanModeNotifier extends Notifier<BayPlanMode> {
   void elegir(BayPlanMode modo) => state = modo;
 }
 
+/// La escala del zoom del plano (T-106): la rejilla se amplía dentro de su
+/// lienzo (`PlanZoomViewport`) y el chip que la muestra vive fuera de la
+/// rejilla, en la línea de los controles (`ZoomDelPlano`, 10.20). Vuelve a
+/// 100 % al cerrar o cambiar el viaje.
+final planZoomProvider =
+    NotifierProvider<PlanZoomNotifier, double>(PlanZoomNotifier.new);
+
+class PlanZoomNotifier extends Notifier<double> {
+  /// Lo más lejos y lo más cerca que se ve el plano, y cuánto cambia cada
+  /// toque en el menú del zoom.
+  static const double minimo = 0.75;
+  static const double maximo = 3;
+  static const double paso = 0.25;
+
+  @override
+  double build() {
+    ref.listen(voyageUiStateProvider, (previo, actual) {
+      if (actual is SinViaje || actual is Leyendo) state = 1;
+    });
+    return 1;
+  }
+
+  /// Fija la escala, acotada entre [minimo] y [maximo].
+  void fijar(double escala) => state = escala.clamp(minimo, maximo).toDouble();
+
+  void acercar() => fijar(state + paso);
+
+  void alejar() => fijar(state - paso);
+
+  void restablecer() => fijar(1);
+}
+
 /// El contenedor cuyo detalle se ve en el panel lateral de la oficina
 /// (`DESIGN.md` 8 y 13.8). En pantallas angostas el detalle abre como hoja y
 /// este provider no se usa.
@@ -153,7 +185,7 @@ class RecienMovidoNotifier extends Notifier<RecienMovido?> {
       orElse: () => nuevos.last,
     );
     final contenedor = _contenedorDe(ultimo);
-    final posicion = ultimo.position;
+    final posicion = _posicionDe(ultimo);
     if (contenedor == null || posicion == null) return;
     final coordenada = IsoCoordinateParser.tryParse(posicion);
     if (coordenada == null) return;
@@ -196,6 +228,18 @@ String? _contenedorDe(Movement m) {
   return container is String && container.isNotEmpty ? container : null;
 }
 
+/// La celda del movimiento: la que trae la carga de un lleno o una descarga
+/// o, en un vacío asignado, la reserva que es su destino (`R:0030482`), que
+/// el borrador no repite en la carga (10.21, H2: la reserva también
+/// enciende su celda).
+String? _posicionDe(Movement m) {
+  final posicion = m.position;
+  if (posicion != null) return posicion;
+  final target = m.target;
+  if (target != null && target.startsWith('R:')) return target.substring(2);
+  return null;
+}
+
 /// Cuántas alertas de estiba incumplen, para el contador de «Más» y la
 /// tarjeta de alertas. En previo no se evalúan (sin perfil confirmado el peso
 /// por pila y las tomas dicen «sin evaluar»), así que es cero.
@@ -225,7 +269,7 @@ final alertaCriticaProvider = Provider<bool>((ref) {
 BsEventoEnVivo eventoEnVivo(Movement m, DateTime ahora,
     {String? recienMovidoId}) {
   final contenedor = _contenedorDe(m);
-  final posicion = m.position;
+  final posicion = _posicionDe(m);
   final detalle = <String>[
     if (contenedor != null) formatearContenedor(contenedor),
     if (posicion != null) formatearPosicion(posicion),
