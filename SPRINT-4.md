@@ -455,3 +455,30 @@ La siguiente decisión es la **10.18**.
 - El chat de la nube es Nube; Timonel es el agente que integra en el repo.
 
 La siguiente decisión es la **10.19**.
+
+### 10.19 · H1 cerrado · El paquete de íconos, revisado · Cómo se reparten modelos y esfuerzo (22-oct, 21:33)
+
+**Codex volvió a aceptar la corrección de la Fase 2 bis, en `8543cd2`: ACEPTADA con observaciones; H1 queda cerrado** (`docs/rediseno/fase2bis/reaceptacion-codex.md`).
+- La celda sale desde su sitio: 0 dp a los 0 ms, −21 dp a los 75 ms y −24 dp a los 150 ms. Con reducción de movimiento se queda quieta, y vuelve a «bajado» sin animación de regreso.
+- La prueba nueva falla con la celda de `36f5784` y pasa con la de ahora. Las dos pruebas reescritas conservan sus contratos.
+- En un plano de 960 celdas no hay controladores activos en reposo, y todos se liberan.
+- Suite 1224/1224 sin omitidas; `analyze` en cero.
+- **Observación 1:** el `AnimatedTheme` corre 200 ms de más cada vez que se reconstruye la raíz. Carlos decide corregirlo: Timonel lo hace al cerrar la entrega 2, en un bloque aparte.
+- **Observación 2:** el `BadgeThemeData` global usa grúa (`bs_tema.dart`) y el contador de «Acciones» lo hereda (`loading_plan_controls.dart`). Va contra 13.3, punto 6: los contadores van en aviso, o en error si alguna alerta es crítica. Se corrige dentro de la entrega 2.
+
+**El límite de Fable.** A las 20:40 se acabaron el límite semanal de Fable y los créditos. Carlos amplió el plan y los límites volvieron a cero. Desde ahora:
+- Timonel: Fable 5.1 en Ultracode para construir la entrega 2; las correcciones, la integración del paquete y los documentos, en Max.
+- Nube: Fable 5.1 en Extra o Max.
+- Codex: GPT-6 Astra en xhigh para aceptar la entrega 2; GPT-6.1 Sol en high para lo demás.
+- Yov: Opus 5.5.
+- Al cerrar la entrega 2, Timonel pasa a un chat nuevo con su traspaso. Si la barra semanal de Fable pasa de 75 % antes del lunes, todo baja a Max; si llega a 90 %, Timonel pasa a Opus 5.5 en Alto y Nube espera al miércoles.
+
+**Nube entregó el paquete 1, y Yov lo revisó.**
+- Trae 31 íconos y 4 insignias en SVG y en `BayStreamIconos.ttf` (U+E000 a U+E022), seis ilustraciones en SVG claro y oscuro y en JSON de trazos, el generador y un LEEME con la tabla de Material que reemplaza cada ícono.
+- Yov comprobó los 84 SHA-256; las métricas de la fuente (em 1024, ascendente 1024, descendente 0 y avance 1024, iguales en hhea, typo y win); que los SVG son de un solo color, sin trazos; y que los JSON solo usan M, L, C y Z, con colores por nombre.
+- Las cinco correcciones de 10.18 están hechas.
+- **Carlos decide que la descarga y la carga digan lo mismo que los botones:** la descarga con la flecha hacia abajo («Baja», «BAJÓ») y la carga hacia arriba («Sube»). Nube las había dibujado desde el buque: la descarga subía porque sale del casco. Nube las vuelve a dibujar con el buque o el muelle en el dibujo, para que no parezcan «descargar un archivo», y corrige en el LEEME la fecha (22-oct) y la decisión (10.18).
+- **Carlos autoriza tocar `pubspec.yaml` solo para declarar la familia `BayStreamIconos`.** No hay dependencias nuevas, y `pubspec.lock` no cambia.
+- La integración la hace Timonel después de la entrega 2, con el paquete corregido, y la acepta Codex.
+
+La siguiente decisión es la **10.20**.
