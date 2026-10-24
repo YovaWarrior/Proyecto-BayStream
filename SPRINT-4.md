@@ -953,3 +953,13 @@ La siguiente decisión es la **10.38**.
 **Lo que sigue:** el 27-oct, después del piloto, Timonel arranca la entrega 1 con Claude Opus 5.5. Codex acepta cada entrega antes de la siguiente.
 
 La siguiente decisión es la **10.39**.
+
+### 10.39 · La entrega 1 de T-117 y T-118 empieza hoy, con pausas (24-oct, 11:04)
+
+**Carlos adelanta el arranque, del 27-oct a hoy.** El tiempo hasta la presentación final es corto (47 a 57 h de las tres entregas). Yov había propuesto el 27 solo para no estorbar la exposición, el ensayo y el piloto; con estas condiciones, no los estorba:
+- **Timonel no corre Flutter sin la luz verde de Carlos.** No hay luz verde durante la exposición de hoy y el rato antes, ni durante el ensayo, ni en las horas del piloto del 25 y el 26. Mientras tanto escribe `DESIGN.md` y código; las pruebas esperan.
+- **Antes de salir con la laptop**, Carlos pausa el chat de Timonel, para que no corra nada en clase ni en el muelle.
+- **Nada se publica hasta después del piloto:** la 3.1.0 es la del piloto (10.35). Si el piloto exige arreglar la 3.1.0, se hace aparte, desde `master` y `v3.1`, no desde `sprint-4`.
+- **Si COMAR pide algo que cambie esta entrega**, Carlos se lo dice a Timonel y Timonel ajusta.
+
+La siguiente decisión es la **10.40**.
