@@ -748,3 +748,39 @@ La siguiente decisión es la **10.31**.
 **Lo que sigue:** Codex acepta solo esta segunda corrección: H2 con las tres letras y los dos teléfonos, O1 y O2 si entraron, la suite y `analyze`. Si pasa, el sábado se publica (10.28).
 
 La siguiente decisión es la **10.32**.
+
+### 10.32 · La segunda corrección, entregada: el aviso elige qué decir y no pasa del borde de arriba de la franja (23-oct, 21:36)
+
+**Timonel corrigió en un chat nuevo, con Claude Opus 5.5 en Extra, en ≈ 1.3 h** (sección «Fase 3 · Candidata del piloto · Segunda corrección (letra 2.0)» de `docs/REDISENO-RESULTADOS.md`, 11.1 a 11.9).
+- **La falla era mayor que la que midió Codex.** Con la regla de la 10.29, a 412 × 915 y en el Honor (360 × 800) el aviso ya pisaba celdas con la letra a 1.45. El aviso de T-61 (10 s) subía sobre la rejilla con cualquier letra. Con la letra a 2.0, las cifras dejan 117 dp a 412 × 915, y el aviso de una Baja no cabe ahí con ningún relleno.
+- **H2, la regla nueva:**
+  - la página mide la barra entera, además de su fila de controles, y le dice al aviso cuánto alto tiene;
+  - todos los avisos de la página se hacen con `avisoDelViaje`: compactos, con «Deshacer» al lado y dos textos, el entero y uno corto que sigue diciendo qué pasó («Descargado · MNLU0000107»);
+  - se muestra el primero que cabe; los errores y los avisos largos dicen lo esencial y llevan «Ver», que abre el texto entero;
+  - si ni el corto cabe (letra mayor que 2.0 o menos de 360 dp, fuera de lo probado), se recorta a su lugar: el tope no se pasa nunca;
+  - una prueba-guarda falla si aparece un `SnackBar(` hecho a mano en los cuatro archivos de la página.
+- **La 10.30 queda intacta:** letra del sistema, sin sitio reservado y el aviso abajo.
+- **O1:** abrir o cerrar otra cosa en medio (el zoom, el detalle, una hoja, un diálogo) cancela la ventana de Atrás. Dos toques seguidos en la raíz siguen saliendo.
+- **O2:** tras cada Atrás, el instrumento exige en un mismo volcado, dentro de los 2 s, la advertencia, el plano y «Deshacer».
+- **Cifras:** suite 1359 (piso 1338), sin omitidas ni reintentos, y `analyze` en cero. La matriz de 12 casos pasa con el aviso como lo hace la página. La prueba de Codex tal cual sigue fallando, porque pone un `SnackBar` hecho a mano.
+- **Emulador:**
+  - con la letra a 1.0, 27 pasos sin fallos, en el cuarto intento; los tres primeros los paró O2, porque un volcado de uiautomator tarda 3 s justo después de una Baja;
+  - con la letra a 2.0, el instrumento se detiene en el paso 4 («No lo tengo», en «Parámetros del buque», no llega entero a la vista), así que no hay capturas del aviso a 2.0 en el emulador.
+- **Queda anotado:**
+  - a 360 dp con letra grande, el número del contenedor parte en dos líneas;
+  - un aviso de otra página que sigue en pantalla al volver al plano no sabe su lugar;
+  - el plano sin operación sigue sin tope arriba;
+  - O3 sigue para COMAR.
+- **Yov revisó el bloque contra el disco:** 12 archivos cambiados y 59 nuevos, 71 en total, todos en el bloque. Nada en `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.*` ni la lista del piloto.
+
+**Yov acepta el enfoque.** Los textos cortos y «Ver» caben en la 10.30: el aviso sigue diciendo qué pasó, y el porqué está a un toque.
+
+**Lo que sigue:** Codex acepta solo esta segunda corrección:
+- H2 a 360 × 640, 360 × 800 (el Honor) y 412 × 915, con la letra a 1.0, 1.45 y 2.0, en Descarga y en Carga, con los avisos de verdad;
+- los anotados: el plano sin operación, los avisos de otras páginas y «No lo tengo» con la letra a 2.0;
+- O1, O2 y el muelle en el emulador;
+- la suite y `analyze`.
+
+Si pasa, el sábado se publica (10.28).
+
+La siguiente decisión es la **10.33**.
