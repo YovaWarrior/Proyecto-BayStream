@@ -702,3 +702,21 @@ La siguiente decisión es la **10.29**.
 - Después, Codex vuelve a aceptar el muelle, y el sábado se publica (10.28).
 
 La siguiente decisión es la **10.30**.
+
+### 10.30 · La corrección de la candidata, entregada; el aviso tapa las cifras de la franja y la advertencia de Atrás va arriba (23-oct, 18:52)
+
+**Timonel corrigió H1 y H2 en un chat nuevo, en Extra** (el de la candidata llegó al 94 % del contexto; Extra cuida la semana de Fable). Lo cuenta la sección «Fase 3 · Candidata del piloto · Corrección tras la aceptación de Codex» de `docs/REDISENO-RESULTADOS.md`.
+- **H1:** la ventana de Atrás es un `Timer` de 2 s desde el primer toque. La advertencia es una tarjeta propia, arriba y fuera de la cola de avisos: se ve con el aviso de movimiento delante, no cierra ningún aviso ajeno y «Deshacer» sigue. Hay cuatro pruebas nuevas con avisos de 4 y 6 s en cola, entre ellas el caso de Codex.
+- **H2:** los avisos de la página del viaje flotan por encima de la fila de controles de la franja, sobre sus cifras, y nunca sobre la rejilla. La fila mide su alto y la página lo pone en el tema de `SnackBar`. En el listado de la agencia, «Descartar» y «Confirmar e importar» van al pie fijo. Hay cinco pruebas nuevas, con las fuentes reales.
+- **El primer anclaje no sirvió.** Con el aviso sobre la franja entera, en el teléfono bajo tapaba la única fila de celdas y la segunda «Baja» cayó sobre «Deshacer». El emulador lo mostró y Timonel lo cambió; las capturas quedan en `correccion/emulador-intento-1/`.
+- **Capturas:** las 54 se rehicieron y cambian cinco. Ninguna trae el indicador de carga, y el contraste da 55 de 57 (los dos falsos positivos de 9.5). Las 57 configuraciones incluyen las tres de «Nube y cuenta», que no se capturan.
+- **Cifras:** suite 1338 (piso 1329), sin omitidas, y `analyze` en cero. El muelle se repitió en el emulador: 27 pasos sin fallos, en el cuarto intento (el primero se detuvo por el anclaje y dos por el instrumento; están anotados).
+- **Yov revisó el bloque contra el disco:** 16 archivos cambiados y 43 nuevos, todos en el bloque. Nada en `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.*` ni la lista del piloto.
+
+**Carlos decide:**
+- **Para el piloto, el aviso tapa las cifras de la franja durante su plazo** (4 o 6 s). Las celdas y los controles quedan libres, y el aviso dice qué pasó. No se reserva sitio fijo: le quitaría 56 dp a la rejilla en el teléfono bajo. Se revisa con lo que diga COMAR.
+- **La advertencia de Atrás va arriba**, sobre la cabecera, porque abajo están la franja y los avisos.
+
+**Lo que sigue:** Codex vuelve a aceptar solo esta corrección: H1; H2 en el teléfono bajo con la letra a 1.0, 1.45 y 2.0; los avisos de la oficina en Windows sin los `_sinAvisos()` del conductor; y las capturas. Si pasa, el sábado se publica (10.28).
+
+La siguiente decisión es la **10.31**.
