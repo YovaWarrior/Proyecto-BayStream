@@ -813,3 +813,37 @@ La siguiente decisión es la **10.33**.
 **Lo que sigue:** Carlos corre `analyze` y la suite en Windows y sube el bloque. Codex acepta solo esta tercera corrección. Si pasa, el sábado se publica (10.28).
 
 La siguiente decisión es la **10.34**.
+
+### 10.34 · La tercera reaceptación pasa: la candidata del piloto queda aceptada (24-oct, 05:07)
+
+**Codex volvió a aceptar `cc24766`: PASA** (`docs/rediseno/fase3/candidata/reaceptacion3-codex.md`).
+- **H2-A y H2-B, cerrados.** Con su propia prueba, no con la de Yov, las tres rutas pasan a 360 × 640, 360 × 800 y 412 × 915 con la letra a 2.0: Comparar desde el plano, Parámetros al volver y la tapa con «Deshacer», que anota la anulación en la bitácora. Ningún aviso pisa celdas, resumen ni controles, y el texto elegido sale entero. A 360 × 640, con la franja desde y=346, Comparar y Parámetros van de y=392 a 492, y la tapa, de 350 a 492.
+- **Los demás avisos:** en todo `lib/` queda un solo `SnackBar(`, el de la fábrica. Los de las otras páginas caben al volver al plano: 36 de 36 medidas (doce textos en tres tamaños). Para dejarlos en pantalla, Codex usó una ruta auxiliar; no provocó cada fallo real, y lo dice.
+- **El aviso con fondo de error se lee:** 4,96:1 en el tema claro y 4,79:1 en el oscuro.
+- **O2:** con el reloj simulado, el sondeo acepta a 1,2 s y rechaza a 3,1 s. Sigue dependiendo de lo que tarda uiautomator, pero ahora un volcado tardío hace fallar la corrida en vez de pasarla.
+- **Cifras:** la suite de Windows da 1371 aprobadas (1359 + 12), ninguna omitida, en una sola corrida, y `analyze` da cero. Las 7 que fallan en Linux pasan en Windows. **El piso sube a 1371.**
+- **Emulador:** 27 pasos en una sola corrida, desde `pm clear`, a 360 × 640 y letra 1.0, con `-s emulator-5554` en cada llamada. O2 ve la advertencia y el plano a 1,2 s en los dos pasos de Atrás.
+- **Dos tropiezos del arnés, antes de medir:** un generador de Codex paró en una aserción, y una compilación apuntó a un archivo sin `main`. Ninguno llegó a correr la suite ni el recorrido, así que no son reintentos (10.27).
+- **Siguen como P3, fuera de esta corrección:** T-61 en el plano sin operación (10 s y 18 celdas, una vez al reabrir) y O3 en la oficina, para COMAR.
+
+**Yov revisó contra el disco:**
+- `cc24766` trae los 13 archivos de Yov tal como se entregaron;
+- contra `6b9d80e` cambian 15 archivos (806 líneas más y 44 menos), y nada en `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.*` ni la lista del piloto;
+- la carpeta del rediseño es `cc24766` sin cambios, y la de Codex solo añade su informe: Codex no tocó el producto;
+- **`cc24766` no está en GitHub:** `origin/sprint-4` sigue en `6b9d80e`. Se sube antes que nada.
+
+**La candidata del piloto queda aceptada (10.28):** `sprint-4` hasta `cc24766`, con este registro encima.
+
+**La lista del piloto, al día** (`docs/piloto/LISTA-PILOTO.md`):
+- 1.5: «Confirmar e importar» va en el pie fijo de la página; ya no hay que esperar a que se apague el aviso;
+- 2.3: el aviso de la descarga tapa las cifras de la franja, no las celdas, y con la letra grande dice su texto corto; la carga de paso es 2.5, no 2.4;
+- 2.12: la advertencia de Atrás sale arriba y dura 2 s;
+- 4.1: la mezcla se cierra con `git commit` y las dos líneas de autoría, como los demás commits;
+- 5: la letra grande en los avisos y los dos P3, para no anotarlos como fallos nuevos.
+
+**Lo que sigue, hoy sábado:**
+- Carlos sube `cc24766` y el bloque de esta decisión.
+- Después de la exposición, publica con la sección 4 de la lista: la mezcla, el MSIX 3.1.0.0, el AAB 3.1.0 (4) y la Web.
+- Después, el ensayo, secciones 0 a 2. Si falla en algo serio, el piloto del 25 y el 26 se hace con la v3.0.
+
+La siguiente decisión es la **10.35**.

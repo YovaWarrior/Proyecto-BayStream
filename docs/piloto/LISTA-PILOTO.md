@@ -7,9 +7,10 @@ comillas son los rótulos exactos de la app.
 
 **Qué se prueba.** La candidata del piloto es `sprint-4` con el rediseño (el inicio, el
 plano por bahía, la banda del muelle, «En vivo», el paquete de íconos y la travesía) y
-las demás pantallas con el tema nuevo. Lo que no cambió sigue siendo la v3.0 que ya se
-probó en campo. La regla de 10.28: **si el ensayo falla en algo serio, el piloto se
-hace con la v3.0**, que sigue instalada y probada.
+las demás pantallas con el tema nuevo. Codex la aceptó en `cc24766`, con los avisos
+corregidos (10.34). Lo que no cambió sigue siendo la v3.0 que ya se probó en campo. La
+regla de 10.28: **si el ensayo falla en algo serio, el piloto se hace con la v3.0**, que
+sigue instalada y probada.
 
 **Datos.** En el ensayo, los sintéticos de T-100 (`T100_CARGA.edi`, `T100_LISTADO.xlsx`
 y `T100_LLEGADA.edi`: BUQUE MANUAL, viaje M100, escala GTSTC; se generan con
@@ -41,7 +42,7 @@ cuenta», un correo ni un nombre de cuenta.
 | 1.2 | «Confirmar» en la banda | Se abre «Parámetros del buque»: filas y niveles propuestos, la escala (la propuesta, con «elige tu puerto» si el archivo sale de otro), el límite de apilamiento. **«No lo tengo» no viene marcado**: hay que escribir el límite del manual de estabilidad o marcarlo a mano | Si la escala propuesta es el puerto de salida (hallazgo 5), elegir la escala correcta en la segunda ficha antes de confirmar |
 | 1.3 | «Confirmar y ver el plano» | Vuelve al **Plano** (no a la Lista), el chip dice «Publicado», en la cabecera aparece el segmento «Carga» (el plan de carga no ofrece Descarga) | Si vuelve a «Parámetros», algo no cuadra (un mensaje en rojo dice qué): corregir y confirmar otra vez |
 | 1.4 | «Lista» → «Listado de la agencia» → «Elegir listado (.xlsx)» → el listado | La página muestra el archivo, «N filas en M agencias · llenos · vacíos», las equivalencias propuestas (40ST → 42G1…) y el cruce «X de X llenos cruzan con el plan». La fila «TOTAL» sale como «1 fila sin entender»: es normal | Si una equivalencia queda «pendiente», elegirla con el lápiz. Si «llenos del plan no están en el listado» es alto, revisar el listado con la agencia antes de importar |
-| 1.5 | Esperar a que se apague el aviso «Archivo … cargado correctamente» y pulsar «Confirmar e importar» | «Listado guardado en la operación de <escala>: N filas.» En el Plano, «Contenido → Carga» muestra el OR en cada celda | Si el botón no responde, el aviso de abajo lo tapa: esperar 4 s. Si dice «Fila N: …», corregir el Excel y volver a importar |
+| 1.5 | «Confirmar e importar», en el pie fijo de la página. No hace falta esperar a que se apague el aviso «Archivo … cargado correctamente»: flota por encima del pie | «Listado guardado en la operación de <escala>: N filas.» y el aviso «Listado importado.» En el Plano, «Contenido → Carga» muestra el OR en cada celda | Si el botón está apagado, queda una equivalencia «pendiente»: ver 1.4. Si dice «Fila N: …», corregir el Excel y volver a importar |
 | 1.6 | Icono de la nube → **«Nube y cuenta»** → iniciar sesión con la cuenta de oficina | Nombre, rol «Oficina» y «Cuenta autorizada». «Operación de la escala abierta» con buque, viaje y puerto, estado «Solo en este dispositivo» | «Sesión vencida» o «Tu cuenta no está autorizada»: ver 0.3. Sin red: «Sin conexión», esperar la red |
 | 1.7 | «Publicar operación» | El estado pasa a «Publicada»; el chip del plano, a «Al día». Desde aquí todo lo registrado antes se queda local y lo nuevo sube | Si «Publicar» falla con «permission-denied», las reglas o la cuenta: consola. **No publicar reglas con `firebase deploy` a secas** (guía del cierre) |
 | 1.8 | «Más» → «Cargar archivo BAPLIE» → el **plano de llegada** | Con la misma escala confirmada, **abre publicado sin previo** (regla 7.2 de `DESIGN.md`): «Publicado», y la cabecera ofrece «Descarga» y «Carga». La Lista resume «N se descargan · M se cargan · K de paso» | Si abre en previo con «El archivo sale de X rumbo a Y: confirma la escala», la escala propuesta no es la confirmada: «Confirmar» y elegir la escala de la operación |
@@ -61,7 +62,7 @@ cuenta», un correo ni un nombre de cuenta.
 |---|---|---|---|
 | 2.1 | Icono de la nube → «Nube y cuenta» → iniciar sesión con la cuenta de muelle | Rol «Muelle», «Cuenta autorizada». En el inicio, «Operaciones abiertas en la nube (1)» | Ver 0.3. Sin red: «Sin conexión con la nube: unirse requiere red. Conéctate e inténtalo de nuevo.» |
 | 2.2 | «Operaciones abiertas en la nube» → «Unirse» → «Abrir plano de llegada» | El plano **sin elegir ningún archivo**: la banda azul de la marca arriba con el buque, «Viaje <n> · <escala>», el chip «Al día» y los segmentos «Descarga / Carga»; abajo la barra Plano · Lista · Avance · Estad. · Más | Si no aparece la operación, la oficina no publicó (1.7). Si el plano abre en previo, la operación trae un perfil distinto: anotar y usar «Confirmar» |
-| 2.3 | «Descarga» → tocar una celda que dice **«Baja»** | La celda sale de su sitio en **naranja** y abajo el aviso «Descargado · <contenedor> · <celda>» con «Deshacer» durante 6 s; después la celda queda «Hecho» con la palomita. En la laptop, «Avance» y «En vivo» lo muestran en segundos | Si no registra: «No se registró: …» dice la causa (operación cerrada, sesión). Si la celda no es «Baja» sino «Paso», es carga de paso: ver 2.4 |
+| 2.3 | «Descarga» → tocar una celda que dice **«Baja»** | La celda sale de su sitio en **naranja** y abajo, sobre las cifras de la franja, el aviso «Descargado · <contenedor> · <celda>» con «Deshacer» durante 6 s (con la letra grande, «Descargado · <contenedor>»); después la celda queda «Hecho» con la palomita. En la laptop, «Avance» y «En vivo» lo muestran en segundos | Si no registra: «No se registró: …» dice la causa (operación cerrada, sesión); con la letra grande sale «No se registró.» y «Ver» la muestra. Si el aviso pisa una celda o un control, anotarlo como fallo (que tape las cifras es lo esperado, 10.30). Si la celda no es «Baja» sino «Paso», es carga de paso: ver 2.5 |
 | 2.4 | Tocar «Deshacer» en el aviso | La celda vuelve a «Baja»; el movimiento queda anulado «Marcado por error» (no se borra). Pasado el aviso: tocar la celda → «Deshacer la descarga» en el detalle | |
 | 2.5 | Tocar una celda **«Paso»** | La pregunta «Re‑estiba»: «<contenedor> no se descarga en <escala>: va a <puerto>…» con «Registrar re‑estiba». Al confirmar, la celda queda «Re‑estiba» y el aviso «Re‑estiba registrada · …» | Si fue un toque por error: «Cancelar» |
 | 2.6 | «Carga» → «Acciones» (⋮) → «Asignar vacío» | «Vacíos del listado»: «OR N · <contenedor>» con tipo, destino, línea y tara. Al tocar uno, el formulario propone la celda (primero las de su grupo en la bahía) y pide tara real, hora y marchamo opcionales | «Importa el listado de agencia para operar por OR»: falta 1.5 en la oficina (viaja con la operación publicada) |
@@ -70,7 +71,7 @@ cuenta», un correo ni un nombre de cuenta.
 | 2.9 | «Deshacer» en el aviso de una carga | El OR vuelve a estar pendiente y la celda, vacía con su contorno | |
 | 2.10 | «Acciones» (⋮) → «Solicitudes de cambio (0)» → «Pedir cambio» | El formulario: «Objeto 1: OR, contenedor o reserva», «Intercambiar dos contenedores» (viene activado) o «Destino BBB-RR-TT», y «Motivo obligatorio» → «Enviar solicitud». La solicitud queda «Pendiente» y la celda destino lleva un borde punteado con un reloj («Solicitud pendiente en <celda>») | «Se necesita una cuenta autorizada y una operación publicada»: la sesión del teléfono o la publicación (1.7). El objeto sigue en su celda hasta que la oficina apruebe |
 | 2.11 | Cuando la oficina decida (1.12) | La solicitud pasa a «Aprobada» o «Rechazada» sin recargar; si se aprobó, el OR cambia de celda en «Carga» | |
-| 2.12 | Atrás (el botón del sistema) en el plano | **Un toque**: el aviso «Toca Atrás otra vez para volver al inicio.» y el plano sigue. **Dos toques seguidos**: el inicio, con el viaje en los recientes. Tocar el reciente lo reabre publicado, con la operación | Un toque nunca saca del plano: si sale, anotarlo como fallo. Con una hoja abierta («Más», el detalle), Atrás solo la cierra |
+| 2.12 | Atrás (el botón del sistema) en el plano | **Un toque**: arriba, sobre el plano, la advertencia «Toca Atrás otra vez para volver al inicio.» durante 2 s, aunque abajo siga el aviso de un movimiento; el plano sigue. **Dos toques seguidos**, dentro de esos 2 s: el inicio, con el viaje en los recientes. Tocar el reciente lo reabre publicado, con la operación | Un toque nunca saca del plano: si sale, anotarlo como fallo. Con una hoja abierta («Más», el detalle), Atrás solo la cierra, y el siguiente Atrás vuelve a advertir |
 | 2.13 | Sin red: modo avión **con el Wi-Fi apagado** (10.39) → registrar una descarga | El chip pasa a «Sin conexión · 1 por enviar» y la app sigue registrando. Al volver la red, «Enviando 1» y después «Al día»; la oficina lo recibe | Si al volver la red queda «Sesión vencida…», iniciar sesión otra vez: la cola se envía sola |
 | 2.14 | «Más» | Alertas de estiba (con su cuenta), Tapas en la operación, Orden de descarga, Listado de la agencia, Comparar, Exportar, Nube y cuenta, Parámetros, Cargar archivo BAPLIE, Viajes recientes, Perfiles guardados y «Cerrar el plano» | «Cerrar el plano» con el viaje publicado limpia este dispositivo; se vuelve a entrar desde los recientes o uniéndose |
 
@@ -112,17 +113,19 @@ alinearlo); los comandos lo repiten en la línea de comandos para no depender de
 
 ### 4.1 La mezcla (desde `C:\Proyectos\proyecto-baystream`, la carpeta de siempre)
 
-Solo después de que Codex acepte la candidata. El `master` local de esa carpeta está
-atrasado (sigue en el cierre del Sprint 2), así que primero se mueve a `origin/master`, que
-es el mismo commit que `sprint-3`. Así `git checkout master` no cambia ningún archivo, y
-los documentos modificados de la carpeta se quedan como están (Yov, 23-oct).
+Codex aceptó la candidata en `cc24766` (10.34); `sprint-4` se sube antes, con el bloque de
+esa decisión. El `master` local de esa carpeta está atrasado (sigue en el cierre del
+Sprint 2), así que primero se mueve a `origin/master`, que es el mismo commit que
+`sprint-3`. Así `git checkout master` no cambia ningún archivo, y los documentos
+modificados de la carpeta se quedan como están (Yov, 23-oct; comprobado otra vez el 24).
 
 ```powershell
 Set-Location -LiteralPath C:\Proyectos\proyecto-baystream
 git fetch origin
 git branch -f master origin/master
 git checkout master
-git merge --no-ff sprint-4 -m "Sprint 4: candidata del piloto, mezcla a master"
+git merge --no-ff --no-commit sprint-4
+git commit -m "Sprint 4: candidata del piloto, mezcla a master" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" --trailer "Claude-Session: https://claude.ai/code/session_019U7Cj6wx9Yu57ybB9qzdcL"
 git tag -a v3.1 -m "BayStream 3.1.0, candidata del piloto (Sprint 4)"
 git push origin master
 git push origin v3.1
@@ -130,7 +133,9 @@ git log --oneline -1
 ```
 
 `sprint-3` está contenido en `sprint-4`, así que la mezcla no puede tener conflictos; si
-Git marca alguno, parar y avisar antes de resolver. La última línea tiene que mostrar
+Git marca alguno, parar y avisar antes de resolver. La mezcla se detiene antes del commit
+(«stopped before committing as requested»): es lo esperado, y el `git commit` la cierra
+con su mensaje y las dos líneas de autoría (10.34). La última línea tiene que mostrar
 «Sprint 4: candidata del piloto, mezcla a master». Después, la carpeta queda en `master`
 con el código del piloto, y `sprint-3` sigue en Git por si hay que volver. El rediseño
 sigue en `C:\Proyectos\baystream-rediseno`, en `sprint-4`.
@@ -207,8 +212,17 @@ sitio puede ver una vez la versión anterior por el *service worker*: recargar.
 - **TalkBack** no se probó en el Honor: el anuncio del movimiento sin panel es una
   región en vivo sin dibujo (10.21, H3). Si en el muelle no se oye, anotar.
 - **La letra del Honor** distinta de 1.0: las capturas de la candidata son a 1.0; a 1.45
-  y 2.0 el plano y la banda están probados en el emulador de 360 × 640, no en el Honor
-  (360 × 800).
+  y 2.0, el plano y la banda están probados en el emulador de 360 × 640, y los avisos, con
+  pruebas de widgets a 360 × 640, 360 × 800 (el tamaño del Honor) y 412 × 915 (10.32 a
+  10.34); nada de eso en el Honor mismo. Con la letra grande, el aviso dice su texto corto
+  y los errores llevan «Ver», que abre el texto entero.
+- **Dos observaciones conocidas (P3, 10.34)**, que no se anotan como fallos nuevos:
+  - al reabrir un viaje cuyo perfil vigente dejaría contenedores fuera, el aviso «No se
+    aplicó del perfil vigente: …» dura 10 s y, en el plano sin operación, tapa parte de la
+    rejilla una vez: esperar a que se apague (T-61);
+  - en la laptop a 1920 × 1080, el aviso de un registro cruza el pie del riel y una parte
+    de «En vivo», sin tapar la leyenda, las celdas ni los controles (O3): preguntar a COMAR
+    si le estorba.
 - **El micrófono** (`uses-feature android.hardware.microphone required=false`, 10.112)
   sigue sin declararse en el manifiesto: Play deja fuera equipos sin micrófono. No afecta
   al Honor.
