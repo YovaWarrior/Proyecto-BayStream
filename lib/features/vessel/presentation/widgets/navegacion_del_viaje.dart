@@ -353,6 +353,13 @@ class PanelLateralDisponible extends InheritedWidget {
           ?.disponible ??
       false;
 
+  /// Si la página va en la oficina (con panel lateral, fijo o flotante,
+  /// `DESIGN.md` 14.3) o en el teléfono; sin el widget, no se sabe (el plano
+  /// suelto mide su ancho).
+  static bool? enLaOficina(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<PanelLateralDisponible>()
+      ?.disponible;
+
   @override
   bool updateShouldNotify(PanelLateralDisponible oldWidget) =>
       oldWidget.disponible != disponible;

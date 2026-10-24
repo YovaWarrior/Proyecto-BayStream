@@ -5,6 +5,7 @@ import 'package:baystream/features/vessel/presentation/pages/operation_progress_
 import 'package:baystream/features/vessel/presentation/providers/loading_operation_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/loading_plan_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
+import 'package:baystream/features/vessel/presentation/providers/plano_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/sync_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/widgets/bay_plan_view.dart';
@@ -62,8 +63,19 @@ Widget _app(double scale, Widget body) => MaterialApp(
         child: child!),
     home: Scaffold(body: body));
 
+/// T-118 (DESIGN.md 14.6): en el teléfono, el selector del plano; en la
+/// oficina el selector va en la cabecera de la página, que esta prueba no
+/// monta, y el modo se elige en el mismo provider que usa la cabecera.
 Future<void> _mode(WidgetTester tester, String mode) async {
-  await tester.tap(find.byKey(const ValueKey('bay-plan-display-mode')));
+  final selector = find.byKey(const ValueKey('bay-plan-display-mode'));
+  if (selector.evaluate().isEmpty) {
+    ProviderScope.containerOf(tester.element(find.byType(BayPlanView)))
+        .read(bayPlanModeProvider.notifier)
+        .elegir(mode == 'Descarga' ? BayPlanMode.discharge : BayPlanMode.loading);
+    await tester.pumpAndSettle();
+    return;
+  }
+  await tester.tap(selector);
   await tester.pumpAndSettle();
   await tester.tap(find.text(mode).last);
   await tester.pumpAndSettle();
@@ -303,32 +315,46 @@ void main() {
     });
   }
 
-  testWidgets('T-107 a 1280 dp el encabezado de Carga es el de antes',
-      (tester) async {
+  // T-117 y T-118 (DESIGN.md 14.7 y 14.8): en la oficina, «OR / últimos
+  // dígitos» y «Acciones» van en la franja de la bahía, el resumen en fichas
+  // en la franja de cifras, y la nube en la cabecera de la página. Antes, a
+  // 1280 dp, el encabezado llevaba los botones en línea y las frases.
+  final franjaDeLaBahia = find.byKey(const ValueKey('franja-de-la-bahia'));
+  final franjaDeCifras = find.byKey(const ValueKey('franja-de-cifras'));
+
+  testWidgets('T-107 a 1280 dp, Carga: los controles en la franja de la '
+      'bahía y el resumen en la de cifras', (tester) async {
     await _loading(tester, _desk, 1);
-    expect(find.byKey(const ValueKey('bay-plan-actions')), findsNothing);
+    expect(find.descendant(
+            of: franjaDeLaBahia,
+            matching: find.byKey(const ValueKey('load-search'))),
+        findsOneWidget);
     expect(find.byKey(const ValueKey('plan-summary-line')), findsNothing);
+    expect(find.descendant(
+            of: franjaDeCifras,
+            matching: find.byKey(const ValueKey('loading-operation-totals'))),
+        findsOneWidget);
+    expect(find.textContaining('Descarga: 0 pendientes'), findsOneWidget);
+    expect(_unbroken(tester), greaterThan(0));
+    await _openActions(tester);
     expect(find.text('Pendientes por bahía'), findsOneWidget);
     expect(find.byKey(const ValueKey('operation-progress-button')),
         findsOneWidget);
-    expect(tester.widget(find.byKey(const ValueKey('sync-status-chip'))),
-        isA<ActionChip>());
     expect(find.text('Bandeja de cambios (0)'), findsOneWidget);
-    expect(find.byKey(const ValueKey('load-search')), findsOneWidget);
     expect(find.byKey(const ValueKey('empty-search')), findsOneWidget);
-    expect(find.textContaining('Descarga: 0 pendientes'), findsOneWidget);
-    expect(_unbroken(tester), greaterThan(0));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('T-107 a 1280 dp el encabezado de Descarga es el de antes',
-      (tester) async {
+  testWidgets('T-107 a 1280 dp, Descarga: «Acciones» en la franja de la '
+      'bahía y el resumen en la de cifras', (tester) async {
     await _discharge(tester, _desk, 1);
-    expect(find.byKey(const ValueKey('bay-plan-actions')), findsNothing);
     expect(find.byKey(const ValueKey('plan-summary-line')), findsNothing);
-    expect(find.text('Pendientes de descarga'), findsOneWidget);
-    expect(find.byKey(const ValueKey('operation-discharge-totals')),
+    expect(find.descendant(
+            of: franjaDeCifras,
+            matching: find.byKey(const ValueKey('operation-discharge-totals'))),
         findsOneWidget);
+    await _openActions(tester);
+    expect(find.text('Pendientes de descarga'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

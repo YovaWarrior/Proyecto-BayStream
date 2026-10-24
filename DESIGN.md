@@ -16,7 +16,8 @@ inicio (7 y 9.1). La Fase 1 bis escribe la dirección C (sección 13) y la Fase 
 lleva a `lib/core/design/` y a `lib/core/app.dart`: la noche, los estados de la vista
 Estado, las fichas y la tabla reordenada, el tema por omisión según el equipo y las
 piezas nuevas. Donde la sección 13 y las secciones 4 y 5 digan cosas distintas, manda
-la 13. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
+la 13. T-117 y T-118 (10.36 a 10.39) suman la sección 14: la oficina con más plano, el
+panel lateral que se oculta y el selector de modo único. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
 por `tool/rediseno_contraste.py`, y la del contraste compuesto de la celda en
 `test/t114_celda_contraste_test.dart` y `test/t114_fase2bis_test.dart`.
 Material 3 sigue siendo la base: el sistema son tokens, un `ColorScheme` ajustado,
@@ -467,6 +468,10 @@ más allá se recortarían); el nombre entero va en la descripción emergente y 
 pantalla. Atrás en Android se resolvió en la candidata del piloto (arriba). La preferencia de T-91
 (`planToolbarCollapsedProvider` y su almacén) queda sin lector; retirarla toca `domain/` y
 `data/` y se propone como tarea.
+
+**T-117 (24-oct, sección 14):** desde 1200 dp el panel lateral se puede ocultar con un botón de
+la cabecera y sale flotante por el borde derecho o al tocar una celda; de 600 a 1199 dp, donde no
+hay panel fijo, el detalle también sale en el panel flotante y no en la hoja de abajo (14.3).
 
 ## 9. Wireframes de las cinco pantallas clave
 
@@ -1319,7 +1324,7 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
 
 | Concepto | Ícono | Dónde | Lo que sigue en Material |
 |---|---|---|---|
-| Contenedor | `contenedor20`, `contenedor40`, `contenedor45` según `sizeInFeet`; `refrigerado`, `tanque`, `plataforma`, `techoAbierto` según el tipo ISO; `vacio` para el vacío; `peligrosa` y `fueraDeMedida` mandan sobre el tipo (`condicionDelContenedor`, que da el glifo y su nombre) | la tarjeta de la Lista, el resultado de la búsqueda, el detalle, los chips de carga especial, las tarjetas de Estadísticas, «Asignar vacío», «Vacío» en la leyenda | `inventory_2` para el total de contenedores y para «Lleno»; `check_box` para «Llenos» |
+| Contenedor | `contenedor20`, `contenedor40`, `contenedor45` según `sizeInFeet`; `refrigerado`, `tanque`, `plataforma`, `techoAbierto` según el tipo ISO; `vacio` para el vacío; `peligrosa` y `fueraDeMedida` mandan sobre el tipo (`condicionDelContenedor`, que da el glifo y su nombre) | la tarjeta de la Lista, el resultado de la búsqueda, el detalle, los chips de carga especial, las tarjetas de Estadísticas, «Asignar vacío», «Vacío» en la leyenda; el modo Contenido del selector lleva `contenedor40` (14.6) | `inventory_2` para el total de contenedores y para «Lleno»; `check_box` para «Llenos» |
 | Peligrosa (IMDG) | `peligrosa` | la insignia (como `insigniaPeligrosa`), los chips IMO / IMDG, el detalle, «Carga especial» | el aviso genérico sigue en `warning_amber` |
 | Buque | `buque` | «Paso» / sigue a bordo en la celda y en la marca de descarga, los recientes, «Perfiles guardados», el resumen del viaje, «Perfil longitudinal» | |
 | Bahía | `bahia` | el destino «Plano» (en reposo y activo), «Posición», «Bahías», «Contenedores por bahía», «Ocupación», «Ir a» | |
@@ -1329,7 +1334,8 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
 | Peso | `pesoPila` en la línea del peso por pila del panel de carga; `vgm` en «Peso (VGM)» de la tarjeta | | `scale` es el peso genérico |
 | Archivos | `baplie` («Seleccionar archivo», «Cargar archivo BAPLIE»), `compararBaplie`, `baplieSalida`, `listadoAgencia` («Listado de la agencia», «Elegir listado») | | el CSV de exportar sigue en `table_view`; PDF y JSON, en los suyos |
 | Nube | `alDia` (al día) y `soloAqui` (solo este dispositivo, sin conexión) | el chip de estado y la barra superior | `cloud` para «Nube y cuenta» sin cuenta; `cloud_sync`, `cloud_upload`, `lock_clock`, `block` y `warning_amber` para los demás estados |
-| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `orden`, `grua`, `muelle`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
+| Número de orden | `orden` | el modo Número de orden del selector (14.6); hasta T-118 no tenía sitio | |
+| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `grua`, `muelle`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
 
 **Reglas de uso.**
 1. Los íconos del dominio se dibujaron en la rejilla de 24 y se usan a **16, 20 o 24 px**; las
@@ -1402,3 +1408,300 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
      opacidad 0 al empezar y al terminar el cruce y 1 a la mitad; el buque pintado una sola vez en 60
      cuadros; sin desbordes ni empujones a 360, 600, 1280 × 720 y 1920 × 1080 con la letra a 1.0,
      1.45 y 2.0; y `meetsGuideline` igual que antes.
+
+## 14. La oficina con más plano (T-117) y el selector de modo (T-118)
+
+Decisiones 10.36 a 10.39 de `SPRINT-4.md`. La propuesta, con sus medidas y sus wireframes, está
+en `docs/T117-T121-RESULTADOS.md` (0.5, 0.6 y 0.5.9) y Carlos la aceptó con las recomendaciones
+de Yov (10.38). Esta sección manda sobre la propuesta donde dicen cosas distintas; 14.10 dice qué
+cambió y por qué. La regla: **el plano manda; lo demás cede y nunca se corta.**
+
+### 14.1 La columna central de la oficina
+
+Desde 600 dp (Windows, la Web y, con la densidad del muelle, una tableta Android), la columna
+central se arma así, de arriba abajo:
+
+| Pieza | Se queda o se desplaza | Alto con la letra a 1.0 | Clave |
+|---|---|---:|---|
+| La cabecera (14.8) | fija | 64 | `cabecera-de-oficina` |
+| El puente: la silueta y las tarjetas cortas (14.2) | se desplaza | 173, 98 o 0 | `puente-del-plano` |
+| El borde del puente | se desplaza con el puente | 12 | `borde-del-puente` |
+| La franja de la bahía (14.8) | fijada arriba al desplazar, si cabe | 56 | `franja-de-la-bahia` |
+| La rejilla, a su alto natural por el zoom | se desplaza | el de la bahía | `plan-zoom-NN` |
+| La leyenda, que envuelve | se desplaza | el que pida | `leyenda-del-plano` |
+| La franja de cifras (14.7), donde viven los avisos (14.5) | fija abajo | de 64 a un cuarto de la ventana | `franja-de-cifras` |
+
+- La columna es un `CustomScrollView` (`columna-del-plano`) y la franja de la bahía se fija arriba
+  (`FranjaFijadaSiCabe`, que hace lo de un `PinnedHeaderSliver`) **solo si mide un tercio de la
+  columna o menos**; si no (la letra a 2.0 en una ventana baja), se va con el panel del buque,
+  porque fijada taparía la rejilla entera: a 800 × 600 con la letra a 2.0 mide 224 dp y a la
+  columna le quedan 306. La rueda sobre cualquier parte de la columna la desplaza: la silueta y la
+  rejilla solo se desplazan en horizontal y no se la roban (la rueda en la silueta es T-119).
+- **La rejilla ya no tiene desplazamiento vertical propio:** `PlanZoomViewport(alturaNatural:
+  true)` la amplía y le dice a la columna su alto ampliado. Conserva el horizontal por dentro (su
+  barra es T-119) y el pellizco de dos dedos.
+- El título y el resumen de la bahía salen de la rejilla y van a la franja de la bahía.
+- Desplazar no cambia la altura elegida del puente: se va de la vista y vuelve al subir. Cambiar
+  de bahía no mueve la columna; si la bahía nueva es más baja, la columna se acomoda a su largo.
+- En el muelle operando (una tableta Android), el pie sigue siendo la barra de la operación con
+  las reglas de 13.8; la franja de cifras es de la oficina.
+- **El teléfono no cambia** (13.8): el `NestedScrollView` del teléfono bajo, la banda y la barra
+  de la operación. Solo cambian el selector de modo (14.6) y el resumen (14.7).
+- **Oficina o teléfono lo decide la página**, por el ancho de la ventana (600 dp): con la ventana
+  entre 600 y unos 720 dp el plano mide menos de 600, y si lo decidiera él se armaría como
+  teléfono dentro de la oficina, con un segundo selector de modo. El plano suelto (sin la
+  página) mide su ancho.
+
+### 14.2 El puente en tres alturas
+
+| Altura | Qué muestra | Alto (letra 1.0, 6 y 6 niveles) |
+|---|---|---:|
+| **Completo** (por omisión) | La silueta normal y, a su derecha, las tarjetas cortas en una fila o en dos (2 × 72 + 12 = 156, menos que la silueta) | 4 + 161 + 8 = 173 |
+| **Compacto** | La silueta compacta (`compacta: true`, 13.6) y las tarjetas cortas que quepan en una fila | 4 + 90 + 4 = 98 |
+| **Plegado** | Nada: quedan el borde y la franja de la bahía, y las cifras siguen en la franja de cifras | 0 |
+
+- **La tarjeta corta** es `BsTarjetaCifra(corta: true)`: 12 dp de aire, el anillo de 40 (grosor
+  7), el rótulo (`labelMedium`) y la cifra a **28 / 600 tabular**, el tamaño del titular de 4.2
+  (no hay tamaño nuevo). El detalle no se dibuja: va en su etiqueta y en su descripción
+  emergente. Mide 72 dp de alto (12 + 48 + 12: el rótulo y la cifra, más altos que el anillo) y
+  **224 dp de ancho por la escala de la letra**, lo que pide «120 de 150» junto al anillo.
+- **Cuántas caben:** junto a una silueta de al menos 400 dp. Caben por fila las que entren en el
+  ancho que queda; van en una fila si caben todas y, si no, en dos, repartidas. Más de dos filas
+  no: las que no caben se quedan en la franja de cifras, y si no caben dos por fila no va
+  ninguna. A 1920 × 1000 con el panel fijo van en una fila; en la laptop de Carlos (1707 × 996),
+  a 1536 × 793, a 1366 × 690 y a 960 × 1000, en dos; a 1280 × 720 y a 800 × 600, ninguna.
+- **El alto no se fija: se mide.** Cada altura mide lo que mide su contenido con la letra del
+  sistema, así que nada se recorta ni se estira. Por eso son tres alturas y no un alto libre (P1).
+- **El borde** (12 dp, debajo del puente): una línea en `outlineVariant` y una agarradera de 32 × 4
+  en línea fuerte, con el cursor de redimensionar fila.
+  - *Arrastrar:* el borde sigue al puntero entre 0 y el alto de «completo». Mientras dura, el
+    puente muestra **la altura más grande que cabe** en el alto arrastrado, arriba y entera
+    (nunca recortada ni encogida), con el hueco debajo. Al soltar, se queda en la altura más
+    cercana. El cambio no se anima: 4.5 solo anima `Transform` y opacidad.
+  - *Doble clic:* pliega, o devuelve la última altura abierta.
+  - *Teclado:* el borde recibe el foco, con el anillo de foco en marca; ↑ baja una altura, ↓ sube
+    una, Intro o Espacio pliega o despliega.
+  - *Lector de pantalla:* un control ajustable, «Alto del panel del buque», con su valor
+    («completo», «compacto» o «plegado») y las acciones de subir y bajar.
+- **El botón** de la franja de la bahía (`boton-del-puente`): «Plegar el panel del buque» (⌃) o
+  «Desplegar el panel del buque» (⌄), que devuelve la última altura abierta (completo si no hubo
+  otra).
+- La app recuerda la altura (14.4).
+
+### 14.3 El panel lateral: fijo, oculto o flotante
+
+- **Fijo** (por omisión desde 1200 dp): 360 dp a la derecha, como hasta ahora.
+- **El botón de la cabecera** (`boton-del-panel`, junto a Buscar y la nube): desde 1200 dp oculta
+  o muestra el panel fijo, y la app lo recuerda (14.4); de 600 a 1199 dp, donde no hay panel fijo,
+  abre o cierra el flotante.
+- **El borde del panel guardado.** Con el panel oculto, y siempre de 600 a 1199 dp, queda en el
+  borde derecho de la ventana una franja de 12 dp (`borde-del-panel`) con una línea y una
+  agarradera. **Va fuera de la columna**, para no tapar la barra de desplazamiento de la columna,
+  que vive en su borde. Si el mouse se queda 250 ms en ella, el panel sale **flotante**; un clic o
+  un toque también lo abre. Lo del mouse viene encendido y se apaga en Parámetros con «Mostrar el
+  panel lateral al pasar el mouse por el borde» (P6); apagado, la franja no está y queda el botón.
+  Solo el mouse abre por el paso; un dedo, solo con el toque.
+- **El panel flotante** (`panel-flotante`): por encima de la rejilla, sin moverla, pegado a la
+  franja del borde; desde debajo de la cabecera hasta encima de la franja de cifras (así ni tapa
+  la franja ni lo tapa un aviso); 360 dp, o menos en una ventana angosta (la columna conserva 48).
+  Panel alto, borde en línea y radio de panel a la izquierda. En su cabecera, «Fijar» (desde 1200
+  dp: lo deja fijo y lo recuerda) y «Cerrar».
+  - Abierto por el mouse, se va 400 ms después de que el mouse sale de él y de la franja.
+  - Abierto por el botón, por la franja o por una celda, se va con «Cerrar», con Esc, con un clic
+    fuera o con Atrás en Android (lo anota en `cerrablesDeAtrasProvider`, 8).
+- **El detalle con el panel oculto** (P5): al tocar una celda, el panel sale flotante con el
+  detalle (`DetalleContenedor`, la única hoja de detalle, 3.6); al cerrarlo, la selección se
+  limpia. De 600 a 1199 dp pasa lo mismo: la hoja de abajo queda para el teléfono.
+- **«En vivo» no se corta:** el panel reparte su alto. Con una celda elegida, el detalle se queda
+  con lo que sobra y «En vivo» con hasta la mitad; sin celda, la frase «Toca una celda…» y «En
+  vivo» con el resto. «En vivo» se desplaza por dentro.
+- **Fuera del Plano** (Lista, Avance, Estadísticas) el panel lleva solo «En vivo», sin la frase de
+  la celda; sin escala no hay «En vivo» y el panel dice la frase.
+
+### 14.4 Las preferencias del equipo (0.5.7; 10.38, P2 y P3)
+
+| Preferencia | Clave en el almacén | Valores | Sin valor |
+|---|---|---|---|
+| El alto del puente | `ui.bridgeHeight` | `completo`, `compacto`, `plegado` | completo |
+| El panel lateral | `ui.sidePanel` | `visible`, `oculto` | visible |
+| Mostrar el panel al pasar el mouse | `ui.sidePanelOnHover` | `si`, `no` | sí |
+
+- Se guardan **por equipo**, en la caja de ajustes del almacén local: en Windows vive en el
+  `%LOCALAPPDATA%` de la cuenta y en la Web en el perfil del navegador. No viajan a la nube.
+- **Es la única excepción a «`domain/` y `data/` no se tocan»** (10.38): en `LocalVesselRepository`,
+  `enum UiPreference { bridgeHeight, sidePanel, sidePanelOnHover }` con
+  `getUiPreference(UiPreference key)` → `Either<Failure, String?>` y
+  `setUiPreference(UiPreference key, String? value)` (null la borra); en `HiveVesselDataSource`, la
+  clave `ui.<nombre>` en la caja de ajustes, por la misma cola de escrituras que el tema; en
+  `LocalVesselRepositoryImpl`, dos `_guard`. Sin migración: sin valor, la presentación usa el de
+  omisión. Tiene sus pruebas propias del almacén y del repositorio.
+- La presentación (`preferenciasDeLaOficinaProvider`) lee las tres al abrir la oficina; un fallo
+  de lectura cuenta como «sin valor». Un fallo al guardar deja la elección en memoria hasta cerrar
+  la app; en Parámetros, además, lo dice un aviso.
+
+### 14.5 Los avisos en la oficina (10.30 a 10.33; cierra O3)
+
+- **La franja de cifras se mide como la franja del muelle** (`MideLaFranja`), y la columna central
+  dice su ancho (`MideLosLados`); la página dice lo que tiene a la derecha (el panel fijo o el borde
+  del panel guardado). `AvisosSobreElPie` pone el aire de los avisos para que vivan **dentro de la
+  franja**: no pasan de su borde de arriba (`LugarDelAviso`) y a los lados no salen de la columna,
+  así que no cruzan el riel ni el panel. Se mide un ancho y no una posición: una transición de
+  página que escala la vista deja posiciones negativas, y el aire de un aviso no puede serlo. Pueden tapar sus cifras durante su plazo
+  (10.30); la rejilla, la franja de la bahía, la leyenda y los controles, nunca, y **por
+  construcción**, con el texto corto de `avisoDelViaje`.
+- La franja de cifras **no lleva controles**: el aviso no tapa nada que se toque, y debajo del
+  aviso queda solo el aire de 13.8 (8 dp).
+- **Mide al menos 64 dp:** el aviso compacto pide 48 + 4 + 4, más esos 8 de aire. Con la letra
+  grande crece con sus fichas, hasta **un cuarto del alto de la ventana**; si las fichas no caben,
+  se desplazan por dentro. El aviso elige el texto que cabe en lo que mida.
+- Fuera del Plano (Lista, Avance, Estadísticas) no hay franja: el aviso va al pie, como antes, pero
+  a lo ancho de la columna central.
+- El panel flotante termina encima de la franja: el aviso no lo tapa.
+- En el muelle y en el teléfono no cambia nada (13.8). La matriz de 18 casos del teléfono se
+  repite, la de avisos se extiende a la oficina y la guarda de `SnackBar(` sigue en todo `lib/`.
+
+### 14.6 El selector de modo, `BsSelectorDeModo`
+
+`BsSelectorDeModo<T>({required List<BsEntradaDeModo<T>> entradas, required T? elegido, required
+ValueChanged<T> onElegir, BsFormaDelSelector forma = BsFormaDelSelector.segunElAncho, String nombre
+= 'Modo del plano'})`, con `BsEntradaDeModo<T>({required valor, required rotulo, rotuloCorto,
+icono, cuenta, cuentaCorta, ayuda})`, en `lib/core/design/componentes/bs_selector_de_modo.dart`.
+**Un solo selector:** sustituye al `DropdownButton` de Material 2 del plano y al `SegmentedButton`
+Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear por» (14.8).
+
+- **Segmentos:** un `SegmentedButton` con el icono, el rótulo corto («Orden») y, con operación,
+  la cuenta corta en tinta suave y cifras tabulares («Descarga 28»); el elegido va invertido
+  (13.1: tinta con texto noche de noche, marca tenue de día). Mide 40 dp en la oficina y 48 en el
+  muelle. El nombre entero y la ayuda van en la descripción emergente.
+- **Menú:** un botón con el icono, el nombre del elegido y ⌄, que abre un `MenuAnchor` de Material
+  3 con la superficie de panel, el borde en línea y el radio de hoja (10). Cada entrada mide 56 dp
+  o más: el icono, el nombre, una línea con su cuenta o su ayuda en tinta suave y, en la elegida,
+  la palomita en marca. Con flechas, Intro y Esc, y para el lector de pantalla, como todo
+  `MenuAnchor`; con la letra a 2.0 cada entrada crece con su texto y el menú se desplaza dentro de
+  la pantalla.
+- **La forma la elige el ancho medido** (`segunElAncho`): los segmentos si caben enteros en el
+  ancho que hay; si no, el menú. Lo mide `BsPrimeraQueCabe` (14.11).
+- **Los modos:**
+
+| Modo | Icono | Cuenta en el menú | Ayuda |
+|---|---|---|---|
+| Contenido | `contenedor40` | — | El destino de cada contenedor |
+| Número de orden («Orden» en segmentos) | `orden` | «30 OR del listado» | Los OR del listado de la agencia |
+| Descarga | `descarga` | «28 por bajar en GTSTC» | Toca un contenedor para marcarlo como descargado |
+| Carga | `carga` | «29 pendientes: 20 llenos, 9 vacíos» | Toca un contenedor o busca su OR para cargarlo |
+
+  En segmentos, la cuenta corta es solo el número de pendientes.
+- **Dónde va:**
+  - en la oficina, en la cabecera (14.8), con el Plano a la vista: en la Lista, el Avance y las
+    estadísticas el modo no cambia nada;
+  - en el teléfono, como menú, en la línea de los controles del plano (o en la tira del pie del
+    teléfono bajo, 13.8). Con la banda del muelle (operando) el menú ofrece Contenido, Número de
+    orden y el modo vigente: Descarga y Carga ya están en la banda (0.6.2). En esa línea
+    «Acciones» va solo con su icono (⋮, como en la tira y en el wireframe de 0.6.2), y el nombre
+    del modo envuelve en dos líneas si no cabe: el menú con su icono es más ancho que el
+    desplegable de antes.
+- **Conserva** la clave `bay-plan-display-mode` (en el selector entero) y los textos «Contenido»,
+  «Número de orden», «Descarga» y «Carga».
+
+### 14.7 El resumen del modo en fichas
+
+- **La ficha** (`BsFichaDeCifra({required rotulo, required valor, rol})`): el rótulo en tinta suave
+  y el dato en tinta con cifras tabulares, en una línea que envuelve si no cabe, nunca con elipsis;
+  con `rol` (revisar), en el contorno del rol.
+- **En la oficina, en la franja de cifras,** tres fichas a lo sumo, en este orden: la bahía (lo que
+  las tarjetas no dicen), el modo y el otro modo:
+
+| Modo | La bahía | El modo | El otro modo |
+|---|---|---|---|
+| Carga | «Bahía 10: cub. 2, bod. 7» | «Carga: 29 pendientes, 20 llenos, 9 vacíos» (`loading-operation-totals`) | «Descarga: 28 pendientes, 1 re‑estiba» |
+| Descarga | «Bahía 14: 3 por bajar en cub., 5 en bod., 2 bajados» (`bay-discharge-pending`) | «GTSTC: 30 por bajar, 120 bajados, 3 re‑estibas» (`operation-discharge-totals`) | «Carga: 29 pendientes» |
+| Contenido o Número de orden, con escala | «Bahía 10, carga: cub. 2 (1 lleno, 1 vacío), bod. 7 (5 llenos, 2 vacíos)» (`bay-loading-pending`) | En Número de orden, «Listado: 3 celdas de carga sin cruce» o «Sin listado de la agencia» | — |
+| Sin escala | «Viaje: 977 contenedores, 27 bahías, 7 419.5 t» | — | — |
+
+- Lo que el resumen avisaba sigue, como ficha en revisar: «Importa el listado de agencia para
+  operar por OR.» y «Esta escala todavía no tiene operación guardada: …». También «Leyendo el estado
+  de la operación…» y los errores con su causa.
+- **Las fichas envuelven:** lo que no cabe en la línea pasa a la siguiente y la franja crece, hasta
+  el tope de 14.5. No hay «⌄ más» (14.10).
+- **La instrucción** «Toca un contenedor para marcarlo como descargado» deja de estar fija: es la
+  ayuda de Descarga en el selector.
+- **Los botones del resumen** van a la franja de la bahía: «OR / últimos dígitos» a la vista en
+  Carga, y «Asignar vacío», «Pendientes…», «Avance de la operación», las solicitudes de cambio e
+  «Importar listado» en «Acciones». El chip de la nube del resumen sale: está en la cabecera.
+- **En el teléfono**, la misma línea de T-107 (`PlanSummaryLine`), con las mismas fichas una debajo
+  de otra; con la barra de la operación del muelle (13.8), solo la bahía y los avisos de arriba,
+  porque la barra ya cuenta el modo. Recogida sigue midiendo una línea: las medidas de los avisos
+  del teléfono no cambian.
+
+### 14.8 La cabecera y la franja de la bahía, medidas
+
+- **La cabecera** (`cabecera-de-oficina`): el buque y el viaje, el estado («Publicado» o «Sin
+  confirmar») y el selector de modo; siempre en el borde derecho, Buscar, la nube y el botón del
+  panel. Con `BsPrimeraQueCabe`: en una línea con los segmentos; si no caben, en una línea con el
+  menú; si tampoco, en dos líneas, el título arriba y el estado con el menú abajo (la regla de la
+  corrección de 10.21).
+- **La franja de la bahía** (`franja-de-la-bahia`): ‹ y › (la bahía anterior y la siguiente,
+  `bahia-anterior` y `bahia-siguiente`); el título «Bahía 10», que abre la lista de bahías
+  (`bahia-elegir`), y sus cifras («20 contenedores, 3 celdas reservadas, 231.9 t, tapas sin
+  declarar»); a la derecha «Colorear por» (`colorear-por`), el zoom (`ZoomDelPlano`), «OR / últimos
+  dígitos» en Carga, «Acciones» (`bay-plan-actions`) y el botón del puente. En una línea con
+  «Colorear por» en segmentos; si no cabe, con el menú; si tampoco, envuelve en las líneas que
+  pida: nada se corta.
+- **«Colorear por»** usa el mismo selector, sin iconos: Destino y Tipo de vacío siempre, y Estado
+  solo en Descarga, la única vista que lo pinta. La elección sigue en memoria por modo (5.4).
+- La franja de la bahía lleva el papel de fondo y una línea abajo: la rejilla pasa por debajo sin
+  verse a través.
+
+### 14.9 Con cualquier tamaño de ventana
+
+- La leyenda envuelve dentro de la columna y nunca va en un desplazamiento horizontal: a 1920 con
+  el panel abierto ya no se corta «Celda reservada».
+- El puente solo cambia con el ancho en cuántas tarjetas lleva, y nunca se corta por el alto: si la
+  ventana es más baja que lo que se ve a la vez, la columna se desplaza.
+- **La matriz de pruebas** (`test/t117_oficina_test.dart`): 1920 × 1000, 1707 × 996, 1536 × 793,
+  1366 × 690, 1280 × 720, 960 × 1000 y 800 × 600; letra 1.0, 1.45 y 2.0; panel fijo, flotante y
+  oculto; Contenido, Descarga y Carga. Sin desbordes, con la leyenda, las franjas y las tarjetas
+  enteras y la rejilla a la vista.
+- **En la ventana real:** maximizar, ajustar con Win + ← y →, redimensionar con el borde y, si hay
+  un segundo monitor, arrastrar de uno al otro.
+
+### 14.10 Lo que cambió respecto de la propuesta
+
+1. **Sin «⌄ más» en la franja de cifras** (0.6.2): la franja no lleva controles (0.5.6), porque el
+   aviso la tapa durante su plazo. Las fichas envuelven.
+2. **La franja de cifras mide al menos 64 dp, no 56** (0.5.6): el aviso compacto (56) más los 8 dp
+   de aire de abajo de 13.8.
+3. **La franja del borde del panel va fuera de la columna** (0.5.4): dentro tapaba la barra de
+   desplazamiento de la columna, que vive en su borde derecho.
+4. **El detalle de 600 a 1199 dp va al panel flotante** (0.5.4 lo decía del panel oculto, y ese
+   tamaño no tiene panel fijo): una sola forma del detalle en la oficina.
+5. **Sin escala, la franja de cifras dice el viaje** («977 contenedores, 27 bahías, 7 419.5 t»):
+   así siempre hay franja y los avisos tienen su lugar.
+6. **«Colorear por» usa el mismo selector**, sin iconos, con Estado solo en Descarga.
+7. **El cambio de altura del puente no se anima** (la propuesta decía 150 ms): 4.5 solo anima
+   `Transform` y opacidad, y animar un alto mueve el layout cuadro a cuadro.
+8. **El selector de modo de la cabecera solo va con el Plano a la vista:** en las demás pestañas el
+   modo no cambia nada de lo que se ve.
+9. **En el teléfono, «Acciones» va solo con su icono** en la línea de los controles (14.6).
+10. **Oficina o teléfono lo decide la página** y no el ancho del plano (14.1).
+11. **Las variantes de una línea no llevan `Wrap`** (14.11): el ancho intrínseco de un `Wrap` no
+    suma su `spacing`, y la cabecera medida así se desbordaba 7.4 dp a 1366 × 690.
+12. **La franja de la bahía se fija solo si cabe y la de cifras tiene tope** (14.1 y 14.5): con la
+    letra a 2.0, a 800 × 600 y a 1280 × 720, la franja fijada era más alta que el hueco de la
+    columna y la rejilla no llegaba a verse; la de cifras llegaba a 239 dp.
+
+### 14.11 Las piezas nuevas y su API
+
+Las de `lib/core/design/componentes/`, con documentación, vista previa y prueba, como las de 13.6.
+
+| Pieza | API | Qué hace |
+|---|---|---|
+| `BsSelectorDeModo` | 14.6 | El selector de modo, en segmentos o en menú |
+| `BsPrimeraQueCabe` | `BsPrimeraQueCabe({required List<Widget> variantes})` | Mide cada variante a su ancho natural y pone la primera que cabe en el ancho que hay; si ninguna cabe, la última, con el ancho que hay (se espera que envuelva). Solo la elegida se dibuja, se toca y se anuncia, como en un `IndexedStack` |
+| `BsFichaDeCifra` | 14.7 | La ficha del resumen |
+| `BsTarjetaCifra` | nuevo `corta = false` | La tarjeta corta del puente (14.2) |
+
+Y en la presentación: `PuenteDelPlano` y su borde (`puente_del_plano.dart`), la columna de la
+oficina (`bay_plan_view.dart`), la franja de la bahía y la de cifras (`franjas_del_plano.dart`), el
+panel lateral y el flotante (`panel_lateral_del_viaje.dart`) y las preferencias
+(`providers/oficina_providers.dart`).

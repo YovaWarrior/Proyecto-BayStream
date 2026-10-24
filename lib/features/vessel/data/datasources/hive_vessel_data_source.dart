@@ -125,6 +125,18 @@ class HiveVesselDataSource {
     await _settings.flush();
   });
 
+  /// T-117 · Preferencias de la interfaz, en la misma caja de ajustes.
+  String? getUiPreference(UiPreference key) => _settings.get('ui.${key.name}');
+
+  Future<void> setUiPreference(UiPreference key, String? value) => _writeVoyages(() async {
+    if (value == null) {
+      await _settings.delete('ui.${key.name}');
+    } else {
+      await _settings.put('ui.${key.name}', value);
+    }
+    await _settings.flush();
+  });
+
   Future<void> setLastConfirmedPortOfCall(String? port) => _writeVoyages(() async {
     if (port == null) {
       await _settings.delete('lastConfirmedPortOfCall');

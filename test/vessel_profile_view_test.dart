@@ -128,7 +128,12 @@ void main() {
         Tristate.isTrue;
     expect(seleccionada(3), isTrue);
     expect(seleccionada(5), isFalse);
-    expect(find.textContaining(RegExp(r'^Bahía 03')), findsOneWidget);
+    // T-118 (DESIGN.md 14.7): las fichas del resumen también empiezan por
+    // «Bahía 03», pero son `Text.rich`; el título es un texto simple.
+    expect(
+        find.byWidgetPredicate((w) =>
+            w is Text && w.data != null && w.data!.startsWith('Bahía 03')),
+        findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('silueta-bahia-5')));
     await tester.pumpAndSettle();

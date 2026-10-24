@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
@@ -13,6 +18,7 @@ import '../../domain/services/operation_progress.dart';
 import '../../domain/services/operation_sources.dart';
 import '../providers/vessel_providers.dart';
 import '../providers/discharge_provider.dart' show offersDischarge;
+import '../providers/oficina_providers.dart';
 import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
 import '../providers/voyage_ui_state.dart';
@@ -26,7 +32,8 @@ import '../widgets/container_search_delegate.dart';
 import '../widgets/detalle_contenedor.dart';
 import '../widgets/en_vivo_del_viaje.dart';
 import '../widgets/hatch_operation_controls.dart';
-import '../widgets/loading_plan_controls.dart' show BayPlanMode;
+import '../widgets/loading_plan_controls.dart'
+    show BayPlanMode, SelectorDelModo;
 import '../widgets/avisos_del_viaje.dart';
 import '../widgets/navegacion_del_viaje.dart';
 import '../widgets/voyage_stats_view.dart';
@@ -63,7 +70,79 @@ class VesselOverviewPage extends ConsumerStatefulWidget {
   ConsumerState<VesselOverviewPage> createState() => _VesselOverviewPageState();
 }
 
+/// Por qué sale el panel flotante de la oficina (`DESIGN.md` 14.3): por el
+/// mouse en el borde, que lo cierra al irse; o por el botón, por un toque en
+/// el borde o por una celda, que lo dejan abierto hasta cerrarlo.
+enum _PorQueFlota { mouse, boton, celda }
+
 class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
+  /// El panel flotante de la oficina: sin valor, guardado.
+  _PorQueFlota? _flota;
+  Timer? _abrirPorElMouse;
+  Timer? _cerrarPorElMouse;
+
+  /// Si el panel lateral está fijo a la vista (desde 1200 dp y sin ocultar),
+  /// según el último `build`.
+  bool _panelFijo = false;
+
+  /// El registro de Atrás donde se anotó el flotante abierto (`DESIGN.md` 8).
+  CerrablesDeAtras? _registro;
+  late final VoidCallback _cerrarAlVolver = _cerrarFlotante;
+
+  /// Cuánto espera el mouse en el borde y cuánto tarda en irse (14.3).
+  static const Duration esperaDelBorde = Duration(milliseconds: 250);
+  static const Duration esperaAlSalir = Duration(milliseconds: 400);
+
+  @override
+  void dispose() {
+    _abrirPorElMouse?.cancel();
+    _cerrarPorElMouse?.cancel();
+    _registro?.olvidar(_cerrarAlVolver);
+    super.dispose();
+  }
+
+  void _abrirFlotante(_PorQueFlota por) {
+    _abrirPorElMouse?.cancel();
+    _cerrarPorElMouse?.cancel();
+    if (_flota == null) {
+      final registro = ref.read(cerrablesDeAtrasProvider.notifier);
+      _registro = registro;
+      registro.anotar(_cerrarAlVolver);
+    }
+    // Lo abierto a propósito no se va por el mouse.
+    if (_flota == null || por != _PorQueFlota.mouse) setState(() => _flota = por);
+  }
+
+  void _cerrarFlotante() {
+    _abrirPorElMouse?.cancel();
+    _cerrarPorElMouse?.cancel();
+    if (_flota == null) return;
+    final conCelda = _flota == _PorQueFlota.celda;
+    _registro?.olvidar(_cerrarAlVolver);
+    _registro = null;
+    setState(() => _flota = null);
+    // Abierto por una celda, se cierra con su detalle (P5).
+    if (conCelda) ref.read(celdaSeleccionadaProvider.notifier).limpiar();
+  }
+
+  void _entraElMouseAlBorde(PointerEnterEvent evento) {
+    if (evento.kind != PointerDeviceKind.mouse) return;
+    _cerrarPorElMouse?.cancel();
+    if (_flota != null) return;
+    _abrirPorElMouse?.cancel();
+    _abrirPorElMouse =
+        Timer(esperaDelBorde, () => _abrirFlotante(_PorQueFlota.mouse));
+  }
+
+  void _saleElMouse(PointerExitEvent _) {
+    _abrirPorElMouse?.cancel();
+    if (_flota != _PorQueFlota.mouse) return;
+    _cerrarPorElMouse?.cancel();
+    _cerrarPorElMouse = Timer(esperaAlSalir, _cerrarFlotante);
+  }
+
+  void _entraElMouseAlPanel(PointerEnterEvent _) => _cerrarPorElMouse?.cancel();
+
   @override
   Widget build(BuildContext context) {
     final ui = ref.watch(voyageUiStateProvider);
@@ -126,6 +205,20 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final ancho = MediaQuery.sizeOf(context).width;
     final conRiel = ancho >= AnchosDeNavegacion.riel;
     final conPanel = ancho >= AnchosDeNavegacion.panel;
+    // Lo que la oficina recuerda en este equipo (14.4); el teléfono no lo lee.
+    final preferencias = conRiel
+        ? ref.watch(preferenciasDeLaOficinaProvider).value ??
+            const PreferenciasDeLaOficina()
+        : const PreferenciasDeLaOficina();
+    final panelFijo = conRiel && conPanel && preferencias.panelVisible;
+    final conBorde = conRiel && !panelFijo && preferencias.panelAlPasarElMouse;
+    // Lo que la oficina tiene a la derecha de la columna central, para que
+    // los avisos no salgan de ella (14.5).
+    final derechaDeLaColumna = panelFijo
+        ? medidas.anchoPanelLateral + 1
+        : conBorde
+            ? _BordeDelPanel.ancho
+            : 0.0;
     final enOperacion = ui is Publicado && voyage.portOfCall != null;
     // Qué modos ofrece la escala: Descarga solo en un plano de llegada
     // (T-75), Carga siempre que haya escala.
@@ -162,9 +255,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final contenido = Column(
       children: [
         const RelojDelNaranja(),
-        // Sin panel lateral, el movimiento se anuncia igual al lector de
-        // pantalla (13.3, punto 5; 10.21, H3): solo el anuncio, sin el panel.
-        if (!conPanel) AnuncioDelMovimiento(voyage: voyage),
+        // Sin panel lateral a la vista, el movimiento se anuncia igual al
+        // lector de pantalla (13.3, punto 5; 10.21, H3): solo el anuncio.
+        if (!panelFijo && _flota == null) AnuncioDelMovimiento(voyage: voyage),
         if (ui is Previo) ...[
           BsBanda(
             key: const ValueKey('preview-banner'),
@@ -197,14 +290,19 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     // Atrás en Android (`DESIGN.md` 8): cierra primero lo abierto; en la raíz
     // pregunta con un previo y, publicado, vuelve al inicio con dos toques.
     // Los avisos de la página flotan por encima del pie del plano (la barra
-    // de la operación o la leyenda), no sobre sus controles (10.29, H2).
+    // de la operación o la leyenda), no sobre sus controles (10.29, H2); en
+    // la oficina viven en la franja de cifras y no salen de la columna
+    // central (14.5).
     Widget conAtras(Widget child) => AtrasDelViaje(
           previo: preview,
-          conPanel: conRiel && conPanel,
+          conPanel: conRiel,
           onDescartarPrevio: () => _discardPreviewIfAny(context),
           onVolverAlInicio: () => _clear(context, preview: false),
           child: AvisosSobreElPie(
-              conPlano: destino == DestinoDelViaje.plano, child: child),
+              conPlano: destino == DestinoDelViaje.plano,
+              oficina: conRiel,
+              derechaDeLaColumna: derechaDeLaColumna,
+              child: child),
         );
 
     if (!conRiel) {
@@ -244,10 +342,109 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       ));
     }
 
-    // La oficina: el riel con la marca, la cabecera y, con sitio, el panel.
+    // La oficina: el riel con la marca, la cabecera y el panel lateral, fijo
+    // u oculto; oculto, sale flotante por el borde, por el botón o con el
+    // detalle de una celda (`DESIGN.md` 14.3).
+    _panelFijo = panelFijo;
+    if (panelFijo && _flota != null) {
+      // El panel quedó fijo: el flotante sobra.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _cerrarFlotante();
+      });
+    }
+    ref.listen<ContainerUnit?>(celdaSeleccionadaProvider, (antes, ahora) {
+      if (ahora != null && !_panelFijo) _abrirFlotante(_PorQueFlota.celda);
+    });
+    final conPlano =
+        destino == DestinoDelViaje.plano || destino == DestinoDelViaje.mas;
+    final franja = conPlano ? ref.watch(franjaDelPlanoProvider) ?? 0.0 : 0.0;
+    final botonDelPanel = TapRegion(
+      groupId: _PanelFlotante.grupo,
+      child: IconButton(
+        key: const ValueKey('boton-del-panel'),
+        tooltip: panelFijo
+            ? 'Ocultar el panel lateral'
+            : _flota != null
+                ? 'Cerrar el panel lateral'
+                : 'Mostrar el panel lateral',
+        icon: Icon(panelFijo || _flota != null
+            ? Icons.view_sidebar
+            : Icons.view_sidebar_outlined),
+        onPressed: () {
+          if (conPanel) {
+            ref
+                .read(preferenciasDeLaOficinaProvider.notifier)
+                .mostrarPanel(!panelFijo);
+            if (_flota != null) _cerrarFlotante();
+          } else if (_flota != null) {
+            _cerrarFlotante();
+          } else {
+            _abrirFlotante(_PorQueFlota.boton);
+          }
+        },
+      ),
+    );
+    final columna = Column(
+      children: [
+        _CabeceraDeOficina(
+          voyage: voyage,
+          publicado: ui is Publicado,
+          selector: conPlano
+              ? (BsFormaDelSelector forma) =>
+                  SelectorDelModo(voyage: voyage, forma: forma)
+              : null,
+          buscar: buscar,
+          botonDelPanel: botonDelPanel,
+        ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, restricciones) => Stack(
+              children: [
+                Positioned.fill(child: contenido),
+                if (_flota != null && !panelFijo)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    bottom: franja,
+                    width: math.min(medidas.anchoPanelLateral,
+                        math.max(0.0, restricciones.maxWidth - 48)),
+                    child: MouseRegion(
+                      onEnter: _entraElMouseAlPanel,
+                      onExit: _saleElMouse,
+                      child: _PanelFlotante(
+                        // Abierto a propósito, toma el foco: Esc lo cierra.
+                        // Por el paso del mouse, no se lo quita a nadie.
+                        conFoco: _flota != _PorQueFlota.mouse,
+                        puedeFijarse: conPanel,
+                        onFijar: () {
+                          ref
+                              .read(preferenciasDeLaOficinaProvider.notifier)
+                              .mostrarPanel(true);
+                          _cerrarFlotante();
+                        },
+                        onCerrar: _cerrarFlotante,
+                        onTocarFuera: () {
+                          // Con un diálogo o una hoja encima, el toque es de
+                          // ellos, no un clic fuera del panel.
+                          if (ModalRoute.isCurrentOf(context) != true) return;
+                          if (_flota != _PorQueFlota.mouse) _cerrarFlotante();
+                        },
+                        child: _PanelLateral(
+                            voyage: voyage,
+                            enOperacion: enOperacion,
+                            conCelda: conPlano),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
     return conAtras(Scaffold(
       body: PanelLateralDisponible(
-        disponible: conPanel,
+        disponible: true,
         child: Row(
           children: [
             RielDelViaje(
@@ -260,29 +457,22 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
               pie: [const SyncAppBarButton(), parametersButton],
             ),
             const VerticalDivider(width: 1),
-            Expanded(
-              child: Column(
-                children: [
-                  _CabeceraDeOficina(
-                    voyage: voyage,
-                    publicado: ui is Publicado,
-                    enOperacion: enOperacion,
-                    modo: modoDeOperacion,
-                    modos: modos,
-                    onModo: elegirModo,
-                    buscar: buscar,
-                  ),
-                  Expanded(child: contenido),
-                ],
-              ),
-            ),
-            if (conPanel) ...[
+            Expanded(child: MideLosLados(child: columna)),
+            if (panelFijo) ...[
               const VerticalDivider(width: 1),
               SizedBox(
                 width: medidas.anchoPanelLateral,
-                child: _PanelLateral(voyage: voyage, enOperacion: enOperacion),
+                child: _PanelLateral(
+                    voyage: voyage,
+                    enOperacion: enOperacion,
+                    conCelda: conPlano),
               ),
-            ],
+            ] else if (conBorde)
+              _BordeDelPanel(
+                onEntrar: _entraElMouseAlBorde,
+                onSalir: _saleElMouse,
+                onTocar: () => _abrirFlotante(_PorQueFlota.boton),
+              ),
           ],
         ),
       ),
@@ -1103,74 +1293,65 @@ class _TituloDelViaje extends StatelessWidget {
   }
 }
 
-/// La cabecera de la oficina (`DESIGN.md` 13.8): el buque y el viaje, el
-/// estado, Descarga / Carga cuando hay operación, buscar y la nube.
+/// La cabecera de la oficina (`DESIGN.md` 13.8 y 14.8): el buque y el viaje,
+/// el estado, el selector de modo con el Plano a la vista, y siempre en el
+/// borde derecho buscar, la nube y el botón del panel lateral.
 class _CabeceraDeOficina extends StatelessWidget {
   const _CabeceraDeOficina({
     required this.voyage,
     required this.publicado,
-    required this.enOperacion,
-    required this.modo,
-    required this.modos,
-    required this.onModo,
+    required this.selector,
     required this.buscar,
+    required this.botonDelPanel,
   });
 
   final VesselVoyage voyage;
   final bool publicado;
-  final bool enOperacion;
-  final BsModoDeOperacion? modo;
-  final Set<BsModoDeOperacion> modos;
-  final ValueChanged<BsModoDeOperacion> onModo;
+
+  /// El selector de modo en la forma que se le pide; sin él, no va (fuera
+  /// del Plano el modo no cambia nada de lo que se ve).
+  final Widget Function(BsFormaDelSelector forma)? selector;
   final Widget buscar;
+  final Widget botonDelPanel;
 
   @override
   Widget build(BuildContext context) {
     final medidas = BsMedidas.de(context);
     final esquema = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
-    final estado = Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: medidas.espacioS, vertical: medidas.espacioXs),
-      decoration: BoxDecoration(
-        color: esquema.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(medidas.radioControl),
-      ),
-      child: Text(publicado ? 'Publicado' : 'Sin confirmar',
-          style: textos.labelMedium),
-    );
-    // El estado y Descarga / Carga; si la letra no deja sitio para los dos
-    // en una línea, también se reparten en dos.
-    final controles = Wrap(
-      key: const ValueKey('cabecera-controles'),
-      spacing: medidas.espacioM,
-      runSpacing: medidas.espacioXs,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        estado,
-        if (enOperacion)
-          SegmentedButton<BsModoDeOperacion>(
-            key: const ValueKey('operar-segmentos'),
-            segments: [
-              for (final valor in BsModoDeOperacion.values)
-                if (modos.contains(valor))
-                  ButtonSegment<BsModoDeOperacion>(
-                    value: valor,
-                    label: Text(valor.rotulo),
-                    icon: Icon(valor.icono),
-                  ),
-            ],
-            selected: <BsModoDeOperacion>{
-              if (modo != null && modos.contains(modo)) modo!,
-            },
-            emptySelectionAllowed: true,
-            showSelectedIcon: false,
-            onSelectionChanged: (valores) {
-              if (valores.isNotEmpty) onModo(valores.first);
-            },
+    Widget estado() => Container(
+          padding: EdgeInsets.symmetric(
+              horizontal: medidas.espacioS, vertical: medidas.espacioXs),
+          decoration: BoxDecoration(
+            color: esquema.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(medidas.radioControl),
           ),
-      ],
-    );
+          child: Text(publicado ? 'Publicado' : 'Sin confirmar',
+              style: textos.labelMedium),
+        );
+    // El estado y el selector. En una línea van en una fila: el ancho
+    // intrínseco de un `Wrap` no cuenta su `spacing`, y la medida se quedaba
+    // corta. En dos líneas, en un `Wrap`, que reparte si la letra no deja
+    // sitio para los dos.
+    Widget controlesEnFila(BsFormaDelSelector forma) => Row(
+          key: const ValueKey('cabecera-controles'),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            estado(),
+            if (selector != null) ...[
+              SizedBox(width: medidas.espacioM),
+              selector!(forma),
+            ],
+          ],
+        );
+    Widget enUnaLinea(BsFormaDelSelector forma) => Row(
+          children: [
+            _TituloDelViaje(voyage: voyage),
+            const Spacer(),
+            SizedBox(width: medidas.espacioM),
+            controlesEnFila(forma),
+          ],
+        );
     return Container(
       key: const ValueKey('cabecera-de-oficina'),
       constraints: BoxConstraints(minHeight: medidas.alturaBarraSuperior),
@@ -1179,27 +1360,42 @@ class _CabeceraDeOficina extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // La cabecera se reparte o se pliega según el ancho y la letra
-          // (10.21, H1): el título a la izquierda y los controles a la
-          // derecha mientras caben en una línea; si no caben, los controles
-          // bajan a una segunda línea y nada se desborda. A 600 dp con la
-          // letra a 2.0, la fila única dejaba Buscar fuera de la pantalla.
+          // La cabecera se reparte o se pliega según el ancho y la letra,
+          // medidos (10.21, H1; 14.8): en una línea con los segmentos; si no
+          // caben, con el menú; si tampoco, el título arriba y los controles
+          // en una segunda línea, y nada se desborda. A 600 dp con la letra a
+          // 2.0, la fila única dejaba Buscar fuera de la pantalla.
           Expanded(
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: medidas.espacioM,
-              runSpacing: medidas.espacioXs,
-              children: [
-                _TituloDelViaje(voyage: voyage),
-                controles,
-              ],
-            ),
+            child: BsPrimeraQueCabe(variantes: [
+              if (selector != null) enUnaLinea(BsFormaDelSelector.segmentos),
+              enUnaLinea(BsFormaDelSelector.menu),
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: medidas.espacioM,
+                runSpacing: medidas.espacioXs,
+                children: [
+                  _TituloDelViaje(voyage: voyage),
+                  Wrap(
+                    key: const ValueKey('cabecera-controles'),
+                    spacing: medidas.espacioM,
+                    runSpacing: medidas.espacioXs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      estado(),
+                      if (selector != null) selector!(BsFormaDelSelector.menu),
+                    ],
+                  ),
+                ],
+              ),
+            ]),
           ),
           SizedBox(width: medidas.espacioS),
-          // Buscar y la nube quedan siempre en el borde derecho, al alcance.
+          // Buscar, la nube y el panel quedan siempre en el borde derecho,
+          // al alcance.
           buscar,
           const SyncAppBarButton(),
+          botonDelPanel,
         ],
       ),
     );
@@ -1257,46 +1453,229 @@ class _BandaDelMuelle extends ConsumerWidget {
   }
 }
 
-/// El panel lateral de la oficina (`DESIGN.md` 8 y 13.8): el detalle de la
-/// celda elegida y, con una escala, «En vivo».
+/// El panel lateral de la oficina (`DESIGN.md` 8, 13.8 y 14.3): el detalle de
+/// la celda elegida y, con una escala, «En vivo», que nunca se corta: con una
+/// celda se queda con hasta la mitad del alto y se desplaza por dentro. Fuera
+/// del Plano ([conCelda] falso) lleva solo «En vivo».
 class _PanelLateral extends ConsumerWidget {
-  const _PanelLateral({required this.voyage, required this.enOperacion});
+  const _PanelLateral({
+    required this.voyage,
+    required this.enOperacion,
+    this.conCelda = true,
+  });
 
   final VesselVoyage voyage;
   final bool enOperacion;
+  final bool conCelda;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final medidas = BsMedidas.de(context);
     final textos = Theme.of(context).textTheme;
     final esquema = Theme.of(context).colorScheme;
-    final celda = ref.watch(celdaSeleccionadaProvider);
-    return Column(
-      key: const ValueKey('panel-lateral'),
-      children: [
-        Expanded(
-          child: celda == null
-              ? Padding(
-                  padding: EdgeInsets.all(medidas.espacioXl),
-                  child: Text(
-                    'Toca una celda del plano para ver su detalle aquí.',
-                    style: textos.bodyMedium
-                        ?.copyWith(color: esquema.onSurfaceVariant),
-                  ),
-                )
-              : DetalleContenedor(
-                  voyage: voyage,
-                  container: celda,
-                  onCerrar: () =>
-                      ref.read(celdaSeleccionadaProvider.notifier).limpiar(),
+    final celda = conCelda ? ref.watch(celdaSeleccionadaProvider) : null;
+    Widget enVivo() => SingleChildScrollView(
+          key: const ValueKey('en-vivo-del-panel'),
+          padding: EdgeInsets.all(medidas.espacioM),
+          child: EnVivoDelViaje(voyage: voyage),
+        );
+    final frase = Padding(
+      padding: EdgeInsets.all(medidas.espacioXl),
+      child: Text(
+        'Toca una celda del plano para ver su detalle aquí.',
+        style: textos.bodyMedium?.copyWith(color: esquema.onSurfaceVariant),
+      ),
+    );
+    return LayoutBuilder(
+      builder: (context, restricciones) => Column(
+        key: const ValueKey('panel-lateral'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (celda != null) ...[
+            Expanded(
+              child: DetalleContenedor(
+                voyage: voyage,
+                container: celda,
+                onCerrar: () =>
+                    ref.read(celdaSeleccionadaProvider.notifier).limpiar(),
+              ),
+            ),
+            if (enOperacion)
+              ConstrainedBox(
+                constraints:
+                    BoxConstraints(maxHeight: restricciones.maxHeight / 2),
+                child: enVivo(),
+              ),
+          ] else
+            // Sin celda, la frase y «En vivo» se desplazan juntos: en una
+            // ventana baja con la letra grande, la frase sola no cabe.
+            Flexible(
+              child: SingleChildScrollView(
+                key: const ValueKey('en-vivo-del-panel'),
+                padding: EdgeInsets.only(bottom: medidas.espacioM),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (conCelda || !enOperacion) frase,
+                    if (enOperacion)
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: medidas.espacioM),
+                        child: EnVivoDelViaje(voyage: voyage),
+                      ),
+                  ],
                 ),
-        ),
-        if (enOperacion)
-          Padding(
-            padding: EdgeInsets.all(medidas.espacioM),
-            child: EnVivoDelViaje(voyage: voyage),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// El panel lateral flotante de la oficina (`DESIGN.md` 14.3): por encima de
+/// la rejilla, sin moverla, con «Fijar» (desde 1200 dp) y «Cerrar». Un clic
+/// fuera o Esc lo cierran; el botón de la cabecera y la franja del borde son
+/// parte de su grupo, para que su toque no cuente como «fuera».
+class _PanelFlotante extends StatelessWidget {
+  const _PanelFlotante({
+    required this.conFoco,
+    required this.puedeFijarse,
+    required this.onFijar,
+    required this.onCerrar,
+    required this.onTocarFuera,
+    required this.child,
+  });
+
+  /// El grupo de toques del panel flotante, su botón y su borde.
+  static const Object grupo = _PanelFlotante;
+
+  /// Si toma el foco al abrirse, para que Esc lo cierre.
+  final bool conFoco;
+  final bool puedeFijarse;
+  final VoidCallback onFijar;
+  final VoidCallback onCerrar;
+  final VoidCallback onTocarFuera;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final medidas = BsMedidas.de(context);
+    final paleta = BsPaleta.de(tema.brightness);
+    final esquema = tema.colorScheme;
+    final radio = Radius.circular(medidas.radioPanel);
+    return TapRegion(
+      groupId: grupo,
+      onTapOutside: (_) => onTocarFuera(),
+      child: Focus(
+        autofocus: conFoco,
+        onKeyEvent: (FocusNode _, KeyEvent evento) {
+          if (evento is KeyDownEvent &&
+              evento.logicalKey == LogicalKeyboardKey.escape) {
+            onCerrar();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Material(
+          key: const ValueKey('panel-flotante'),
+          color: paleta.hojaAlta,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.horizontal(left: radio),
+            side: BorderSide(color: esquema.outlineVariant),
           ),
-      ],
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                    medidas.espacioL, medidas.espacioXs, medidas.espacioXs, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text('Panel lateral',
+                          style: tema.textTheme.titleSmall
+                              ?.copyWith(color: esquema.onSurfaceVariant)),
+                    ),
+                    if (puedeFijarse)
+                      TextButton(
+                        key: const ValueKey('fijar-panel'),
+                        onPressed: onFijar,
+                        child: const Text('Fijar'),
+                      ),
+                    IconButton(
+                      key: const ValueKey('cerrar-panel'),
+                      tooltip: 'Cerrar el panel lateral',
+                      onPressed: onCerrar,
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(child: child),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// El borde del panel guardado (`DESIGN.md` 14.3): 12 dp en el borde derecho
+/// de la ventana, fuera de la columna para no tapar su barra de
+/// desplazamiento. El mouse que se queda ahí 250 ms saca el panel flotante;
+/// un clic o un toque, también. Para el teclado y el lector de pantalla está
+/// el botón de la cabecera.
+class _BordeDelPanel extends StatelessWidget {
+  const _BordeDelPanel({
+    required this.onEntrar,
+    required this.onSalir,
+    required this.onTocar,
+  });
+
+  final void Function(PointerEnterEvent evento) onEntrar;
+  final void Function(PointerExitEvent evento) onSalir;
+  final VoidCallback onTocar;
+
+  /// Lo que mide a lo ancho.
+  static const double ancho = 12;
+
+  @override
+  Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+    final paleta = BsPaleta.de(Theme.of(context).brightness);
+    return TapRegion(
+      groupId: _PanelFlotante.grupo,
+      child: MouseRegion(
+        key: const ValueKey('borde-del-panel'),
+        onEnter: onEntrar,
+        onExit: onSalir,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          onTap: onTocar,
+          child: SizedBox(
+            width: ancho,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(left: BorderSide(color: esquema.outlineVariant)),
+              ),
+              child: Center(
+                child: Container(
+                  width: 4,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: paleta.lineaFuerte,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

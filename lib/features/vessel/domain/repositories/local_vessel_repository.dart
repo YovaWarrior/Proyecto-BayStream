@@ -16,6 +16,12 @@ class VesselProfileLookup {
   bool get requiresConfirmation => nameCandidates.isNotEmpty;
 }
 
+/// T-117 · Preferencias de la interfaz de este equipo (`DESIGN.md` 14.4): el
+/// alto del panel del buque, si el panel lateral se ve y si sale al pasar el
+/// mouse por el borde. El almacén las guarda como texto; qué valores admiten
+/// lo decide la presentación.
+enum UiPreference { bridgeHeight, sidePanel, sidePanelOnHover }
+
 /// Almacén propio, independiente de Firestore y sin tipos de Hive en el dominio.
 abstract class LocalVesselRepository {
   /// Presupuesto de retención acordado en T-35. Los perfiles no tienen este límite.
@@ -42,6 +48,11 @@ abstract class LocalVesselRepository {
   /// T-90 · Sin elección previa, el tema sigue al sistema.
   Future<Either<Failure, AppThemePreference>> getThemePreference();
   Future<Either<Failure, void>> setThemePreference(AppThemePreference preference);
+
+  /// T-117 · Sin valor guardado devuelve null y la interfaz usa el suyo;
+  /// guardar null la borra. Del equipo: no depende del viaje ni se sincroniza.
+  Future<Either<Failure, String?>> getUiPreference(UiPreference key);
+  Future<Either<Failure, void>> setUiPreference(UiPreference key, String? value);
 
   /// T-73 · Tabla de equivalencias del listado de la agencia (tipos, puertos
   /// y líneas). Es del dispositivo, como el último puerto confirmado.

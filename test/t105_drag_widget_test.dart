@@ -4,9 +4,11 @@ import 'package:baystream/features/vessel/domain/services/loading_operation.dart
 import 'package:baystream/features/vessel/presentation/providers/loading_operation_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/loading_plan_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
+import 'package:baystream/features/vessel/presentation/providers/plano_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/sync_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/widgets/bay_plan_view.dart';
+import 'package:baystream/features/vessel/presentation/widgets/loading_plan_controls.dart';
 import 'package:baystream/features/vessel/presentation/widgets/plan_drag_confirmation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
@@ -56,8 +58,25 @@ Future<(T75MemoryLog, ProviderContainer)> start(WidgetTester tester,
   return (log, scope);
 }
 
+/// T-118 (DESIGN.md 14.6): en el teléfono el modo se elige con el selector
+/// del plano; en la oficina el selector va en la cabecera de la página, que
+/// esta prueba no monta, así que se elige en el mismo provider que usa la
+/// cabecera.
 Future<void> mode(WidgetTester tester, String text) async {
-  await tester.tap(find.byKey(const ValueKey('bay-plan-display-mode')));
+  final selector = find.byKey(const ValueKey('bay-plan-display-mode'));
+  if (selector.evaluate().isEmpty) {
+    ProviderScope.containerOf(tester.element(find.byType(BayPlanView)))
+        .read(bayPlanModeProvider.notifier)
+        .elegir(switch (text) {
+          'Contenido' => BayPlanMode.content,
+          'Número de orden' => BayPlanMode.order,
+          'Descarga' => BayPlanMode.discharge,
+          _ => BayPlanMode.loading,
+        });
+    await tester.pumpAndSettle();
+    return;
+  }
+  await tester.tap(selector);
   await tester.pumpAndSettle();
   await tester.tap(find.text(text).last);
   await tester.pumpAndSettle();

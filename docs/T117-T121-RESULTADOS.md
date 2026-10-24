@@ -1122,3 +1122,331 @@ git push
 > informe.
 
 **ALTO: Carlos elige.**
+
+---
+
+## Entrega 1 · T-117 y T-118 (24-oct-2026)
+
+Timonel (Claude Code, Claude Opus 5.5), rama `sprint-4`, carpeta del rediseño, sobre
+`430fa29` (decisión 10.39). Lo decidido está en 10.38: el puente en tres alturas, la columna
+que se desplaza entera con la franja de la bahía arriba y la de cifras abajo, el panel lateral
+fijo, oculto o flotante, las tres preferencias por equipo con el cambio mínimo de 0.5.7, y un
+solo selector de modo con el resumen en fichas.
+
+### E1.1 Resultado en tres líneas
+
+- **La oficina tiene más plano y nada se corta:** la columna central se desplaza entera; el
+  panel del buque (silueta y tarjetas cortas) va en tres alturas con un borde que se arrastra;
+  la franja de la bahía se queda arriba y la de cifras abajo, donde viven los avisos (cierra
+  O3); el panel lateral se oculta, sale flotante por el borde y lleva el detalle con el panel
+  oculto; la app recuerda las tres preferencias en el equipo.
+- **Un solo selector de modo,** `BsSelectorDeModo`, en segmentos o en menú según el ancho
+  medido (`BsPrimeraQueCabe`), en la cabecera de la oficina y como menú en el teléfono; el
+  resumen del modo en fichas de una línea; «Colorear por» con el mismo selector.
+- **Suite 1627 (piso 1371), sin fallidas ni omitidas, en una sola corrida, y `analyze` en
+  cero.** La matriz de 0.5.5 son 189 pruebas y pasa. Faltan RNF-002 en Windows y las capturas,
+  que necesitan compilar y abrir la app: esperan la luz verde de la tarde (E1.9).
+
+### E1.2 Base, luz verde y lo que se corrió
+
+- Leí `AGENTS.md`, `CLAUDE.md`, la sección 2 de `SPRINT-3.md` y de `SPRINT-4.md`, las
+  decisiones 10.30 a 10.39, la fase 0 de este informe y `DESIGN.md` entero.
+- **Primero `DESIGN.md`** (sección 14, notas en 8 y 13.11), después el código.
+- **Luz verde de Carlos a las 11:53** para `analyze`, las pruebas nuevas y la suite, hasta las
+  13:00. Corrí, uno a la vez: `flutter analyze --no-pub` (varias veces), `flutter test` de los
+  archivos nuevos y de los que fallaban, pruebas de exploración en el scratchpad (las medidas de
+  E1.6) y **tres suites completas**: la primera dio 1548 aprobadas y 78 fallidas (E1.7); la
+  última, después de los arreglos, **1627 aprobadas en una sola corrida, sin omitidas**. Paré
+  Flutter a las 12:32.
+- No compilé ni abrí ninguna app, no usé el Honor ni el emulador, no toqué las apps
+  instaladas, «PRUEBA T-105», `C:\Proyectos\baystream-demo17\`, Firebase ni el corpus. Nada
+  se publicó: la 3.1.0 es la del piloto.
+
+### E1.3 Lo hecho · T-117
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| La columna central | `bay_plan_view.dart` (`_columnaDeOficina`) | `CustomScrollView` con el panel del buque, la franja de la bahía, la rejilla a su alto natural y la leyenda que envuelve; abajo, fija, la franja de cifras (en el muelle operando, la barra de la operación) |
+| La rejilla a su alto natural | `plan_drag_confirmation.dart` (`PlanZoomViewport(alturaNatural:)`, `_AltoAmpliado`) | Amplía la rejilla y le dice a la columna su alto ampliado; conserva el desplazamiento horizontal, el pellizco y el arrastre de T-105 |
+| El panel del buque | `puente_del_plano.dart` | Completo, compacto y plegado, medidos; el borde de 12 dp se arrastra (muestra la altura más grande que cabe y al soltar queda en la más cercana), doble clic, teclado (↑ ↓ Intro Espacio) y semántica de control ajustable |
+| La franja de la bahía | `franjas_del_plano.dart` (`FranjaDeLaBahia`, `FranjaFijadaSiCabe`) | ‹ y ›, el título que abre la lista de bahías, las cifras, «Colorear por», el zoom, «OR / últimos dígitos», «Acciones» y el botón del panel; una línea si cabe, si no envuelve; se fija arriba solo si mide un tercio de la columna o menos |
+| La franja de cifras | `franjas_del_plano.dart` (`FranjaDeCifras`) y `resumen_del_modo.dart` | Las fichas del modo; mínimo 64 dp, tope de un cuarto de la ventana, sin controles |
+| Los avisos en la oficina | `avisos_del_viaje.dart` | `MideLaFranja(sinControles:)`, `MideLosLados` (el ancho de la columna) y `AvisosSobreElPie(oficina:, derechaDeLaColumna:)`: el aviso vive en la franja de cifras y no sale de la columna |
+| El panel lateral | `vessel_overview_page.dart` | Fijo, oculto con el botón de la cabecera (y recordado), flotante por el borde de 12 dp (250 ms con el mouse, se va a los 400 ms), por un toque o por una celda; «Fijar», «Cerrar», Esc, clic fuera y Atrás; «En vivo» con hasta la mitad del alto y desplazamiento propio |
+| Las preferencias | `providers/oficina_providers.dart` | `preferenciasDeLaOficinaProvider`: lee las tres al abrir (un fallo es «sin valor»), elige al momento y guarda; `alternarAltura` vuelve a la última altura abierta |
+| Parámetros | `parameters_page.dart` | «Mostrar el panel lateral al pasar el mouse por el borde», solo desde 600 dp; si no se guarda, un aviso con la causa y la acción |
+| Oficina o teléfono | `navegacion_del_viaje.dart` (`PanelLateralDisponible.enLaOficina`) | Lo decide la página; el plano suelto mide su ancho (E1.5, punto 4) |
+
+### E1.4 Lo hecho · T-118
+
+- **`BsSelectorDeModo<T>`** (`lib/core/design/componentes/bs_selector_de_modo.dart`): segmentos
+  (icono, rótulo corto, cuenta en tinta suave, el elegido invertido, el nombre entero y la ayuda
+  en la descripción emergente) o menú (`MenuAnchor` con panel, borde y radio de hoja; entradas
+  de 56 dp o más con icono, nombre, cuenta o ayuda y la palomita). Con vista previa y pruebas.
+- **`BsPrimeraQueCabe`** (`bs_primera_que_cabe.dart`): pone la primera variante que cabe a lo
+  ancho; las demás no se dibujan, no reciben el foco ni toques, y se arman sin tamaño (así los
+  instrumentos de T-99, que buscan lo que tiene tamaño, no las toman por visibles).
+- **`BsFichaDeCifra`** (`bs_ficha_de_cifra.dart`) y **`BsTarjetaCifra(corta: true)`**: la ficha
+  del resumen y la tarjeta del panel del buque (72 dp, el detalle en la etiqueta).
+- **El selector en la página:** `SelectorDelModo` (`loading_plan_controls.dart`) con la clave
+  `bay-plan-display-mode`; en la cabecera de la oficina con el Plano a la vista; en el teléfono
+  como menú, que con la banda del muelle ofrece Contenido, Número de orden y el modo vigente.
+  Sustituye al `DropdownButton` y al `SegmentedButton` Descarga / Carga de la cabecera.
+- **El resumen en fichas** (`resumen_del_modo.dart`), en la franja de cifras y en la línea de
+  T-107 del teléfono; las claves de T-107 se conservan. «Toca un contenedor para marcarlo como
+  descargado» pasa a la ayuda de Descarga; «Importar listado» a «Acciones»;
+  `DischargeSummary` sale (lo sustituyen las fichas).
+- **«Acciones»** (`AccionesDelPlano`) es la misma pieza en la oficina y en el teléfono.
+
+### E1.5 Lo que cambió respecto de la propuesta (también en `DESIGN.md` 14.10)
+
+1. Sin «⌄ más» en la franja de cifras: la franja no lleva controles (el aviso la tapa). Las
+   fichas envuelven, con tope.
+2. La franja de cifras mide al menos 64 dp, no 56: el aviso compacto más su aire de abajo.
+3. El borde del panel guardado va fuera de la columna, para no tapar su barra de desplazamiento.
+4. **Oficina o teléfono lo decide la página.** Lo encontró la suite: a 600 dp la página va en
+   oficina, pero el plano mide 489 dp y se armaba como teléfono, con un segundo selector.
+5. De 600 a 1199 dp el detalle va al panel flotante, no a la hoja de abajo.
+6. Sin escala, la franja de cifras dice el viaje («14 contenedores, …»).
+7. «Colorear por» usa el mismo selector, sin iconos, con Estado solo en Descarga.
+8. El cambio de altura del puente no se anima (4.5).
+9. El selector de la cabecera solo va con el Plano a la vista.
+10. En el teléfono, «Acciones» va solo con su icono en la línea de los controles: el menú del
+    modo con su icono es más ancho que el desplegable de antes y la línea de 360 dp se
+    desbordaba 44 dp (la suite lo vio en once archivos).
+11. Las variantes de una línea no llevan `Wrap`: su ancho intrínseco no suma el `spacing`, y la
+    cabecera se desbordaba 7.4 dp a 1366 × 690 (lo vio la matriz).
+12. **La franja de la bahía se fija solo si cabe, y la de cifras tiene tope.** Lo vieron las
+    medidas de E1.6: con la letra a 2.0, a 800 × 600 la franja fijada medía 224 dp y a la
+    columna le quedaban 217: la rejilla no llegaba a verse nunca.
+13. Los avisos se acotan a lo ancho con el ancho de la columna, no con su posición: durante
+    una transición de página (que escala la vista) la posición sale negativa y el aire del
+    aviso también (lo vio `profile_loading_page_test`).
+
+### E1.6 Validaciones y cifras
+
+**Suite y analizador.** Piso 1371 → **1627 aprobadas, 0 fallidas, 0 omitidas, en una corrida**
+(1:24 min). `flutter analyze --no-pub`: **No issues found**, sin `// ignore:`. Las 256 nuevas:
+
+| Archivo | Pruebas | Qué |
+|---|---:|---|
+| `test/t117_preferencias_test.dart` | 13 | El almacén y el repositorio (sin valor, guardar y leer, null borra, sobrevive al reabrir, la clave `ui.<nombre>`, almacén cerrado → fallo) y la presentación (omisión, lectura, valor raro, fallo de lectura, almacén de antes, guardar, fallo al guardar, última altura abierta) |
+| `test/t117_oficina_test.dart` | 227 | La matriz de 0.5.5 (189), el puente (7), el panel (7), los avisos en la oficina (22) y Parámetros (2) |
+| `test/t118_selector_test.dart` | 16 | El selector en sus dos formas y la accesibilidad en los dos temas (`meetsGuideline`: objetivo táctil, etiqueta y contraste), `BsPrimeraQueCabe`, la tarjeta corta, la ficha, la cabecera a 1920, 800 y 640 dp, el resumen y «Colorear por» |
+
+**La matriz de 0.5.5** (`t117_oficina_test.dart`, con las fuentes del producto): 1920 × 1000,
+1707 × 996, 1536 × 793, 1366 × 690, 1280 × 720, 960 × 1000 y 800 × 600; letra 1.0, 1.45 y 2.0;
+panel fijo, flotante y oculto; Contenido, Descarga y Carga. En cada caso: sin desbordes al
+abrir ni al desplazar; la cabecera dentro de la columna con Buscar y el botón del panel
+tocables; la franja de cifras abajo, de 64 dp o más; las tarjetas enteras; el panel como se
+pidió (el flotante no tapa la franja de cifras y deja 48 dp a la columna); ningún texto
+cortado en la cabecera, las franjas ni la leyenda; **una celda de la rejilla tocable en el
+centro de la columna**; la leyenda entera al final; y la franja de la bahía fijada cuando cabe.
+El buque de prueba tiene una bahía de seis y seis niveles, como las llenas del corpus.
+
+**Los avisos** (14.5): a los siete tamaños y las tres letras, en Descarga, un aviso de 6 s con
+«Deshacer» queda dentro de la franja de cifras (su borde de arriba no pasa del de la franja) y
+de la columna (no cruza el riel ni el panel), por debajo de la columna que se desplaza, y
+«Deshacer» responde; fuera del Plano va al pie, a lo ancho de la columna. **La matriz de 18
+casos del teléfono** (10.31 a 10.33, `t114_candidata_correccion2_test.dart` y
+`t114_candidata_correccion3_test.dart`) y **la guarda de `SnackBar(` en todo `lib/`** siguen
+en la suite y pasan.
+
+**Medidas con las fuentes reales** (prueba de exploración, Carga, el panel fijo desde 1200 dp,
+dp lógicos; el panel del buque incluye su borde de 12; «alto para la rejilla» es el alto de la
+columna que se desplaza menos el panel del buque y la franja de la bahía, sin desplazar):
+
+| Ventana | Letra | Cabecera | Panel del buque (completo / compacto) | Franja de la bahía | Franja de cifras | Alto para la rejilla (completo / plegado) | Fase 0, «hoy» |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1920 × 1000 | 1.0 | 64 | 185 / 110 | 56 | 64 | 631 / 816 | 521 |
+| 1707 × 996 | 1.0 | 64 | 185 / 110 | 56 | 64 | 627 / 812 | 415 |
+| 1536 × 793 | 1.0 | 64 | 185 / 110 | 108 | 64 | 372 / 557 | 212 |
+| 1366 × 690 | 1.0 | 64 | 185 / 110 | 108 | 64 | 269 / 454 | 211 |
+| 1280 × 720 | 1.0 | 64 | 185 / 110 | 108 | 64 | 299 / 484 | — |
+| 960 × 1000 | 1.0 | 64 | 185 / 110 | 108 | 64 | 579 / 764 | — |
+| 800 × 600 | 1.0 | 64 | 185 / 110 | 108 | 64 | 179 / 364 | — |
+| 1920 × 1000 | 2.0 | 92 | 198 / 123 | 126 | 105 | 479 / 677 | — |
+| 1366 × 690 | 2.0 | 92 | 198 / 123 | 178 (se va) | 173 | 49 / 248 | — |
+| 800 × 600 | 2.0 | 144 | 198 / 123 | 224 (se va) | 150 (tope) | la columna entera, 306, al desplazar | — |
+
+- El panel del buque mide lo que dice 14.2: 173 completo y 98 compacto, más los 12 del borde.
+- **La franja de la bahía va en dos líneas en Carga desde 1536 dp hacia abajo con el panel
+  fijo** (108 dp, no 56): la línea lleva las cifras de la bahía, «Colorear por», el zoom, «OR /
+  últimos dígitos», «Acciones» y el botón. Por eso el alto para la rejilla a 1536 y a 1366 es
+  menor que el que estimó la fase 0 (445 y 342). Con el panel oculto la columna gana 361 dp. Si
+  Codex o Carlos lo quieren en una línea, la salida es llevar «Colorear por» a «Acciones» o
+  partir las cifras: se decide en la aceptación.
+- Las tarjetas cortas no salen en esta tabla: el buque de prueba no carga nada en GTSTC y en
+  Carga no hay tarjetas. En Descarga sí, y la matriz las comprueba enteras.
+
+**RNF-002 en Windows: no se midió** (E1.9).
+
+### E1.7 Las pruebas que cambian, una por una
+
+La primera suite dio 78 fallidas en 20 archivos. Cuatro causas eran del producto y se
+corrigieron en el código, no en las pruebas: el desborde de 44 dp del teléfono (E1.5, punto 10,
+que explicaba 27 de las 78), el doble selector a 600 dp (punto 4), el aire negativo de los
+avisos (punto 13) y el título repetido en el estado «sin geometría» de la oficina. Las demás
+afirmaban el contrato de antes y se reescribieron sin bajar el conteo (ninguna se borró ni se
+omitió):
+
+| Archivo | Prueba | Qué cambió y por qué |
+|---|---|---|
+| `test/support/t91_toolbar_support.dart` | `checkT91Toggle` (las 2 de `t91_plan_toolbar_test`) | Lee el modo de `BsSelectorDeModo.elegido`, no del `value` del `DropdownButton` |
+| `test/t105_drag_widget_test.dart` | el ayudante `mode` (lo usan T-105 y T-106) | En la oficina el selector va en la cabecera de la página, que estas pruebas no montan: el modo se elige en el mismo provider que usa la cabecera; en el teléfono, con el selector |
+| `test/t106_plan_widget_test.dart` | «a 300 % con 1600 px» y «con 1920 px la rejilla abre a la vista» | El título de la bahía está en la franja de la bahía, encima de la rejilla |
+| `test/t106_plan_widget_test.dart` | «el margen de 16 dp no se escala con el zoom» | El margen es un `Padding`, no el de un desplazable vertical propio; las medidas del margen no cambian |
+| `test/t107_header_test.dart` | el ayudante `_mode`; «a 1280 dp, Carga» y «a 1280 dp, Descarga» (antes «el encabezado … es el de antes») | En la oficina los controles van en la franja de la bahía y «Acciones», y el resumen en la franja de cifras |
+| `test/t107_texts_test.dart` | «Descarga a 360×780 dp con letra 1.0» y «… 1.45» | La escala se lee de la ficha (`BsFichaDeCifra.texto`); sigue terminando en «0 re‑estibas» |
+| `test/t114_candidata_correccion2_test.dart` | «en la oficina, 1920 × 1080 …» | El aviso vive en la franja de cifras (14.5), no sobre la leyenda |
+| `test/t114_fase3_entrega2_correccion_test.dart` | «H1 · … a 600 dp exactos» (letra 1.0, 1.45 y 2.0) | El selector de modo en lugar de `operar-segmentos` |
+| `test/t114_fase3_plano_test.dart` | «la silueta elige la bahía y la rejilla la titula» | El título se busca como texto simple: las fichas también empiezan por «Bahía 02» |
+| `test/t114_fase3_plano_test.dart` | «el detalle va al panel con sitio y al panel flotante sin él» (antes «… y a una hoja sin él») | A 800 dp el detalle va al panel flotante (14.3) |
+| `test/t114_paquete_test.dart` | «el censo de lib/» | `orden` pasa a tener sitio (el modo Número de orden, 13.11) |
+| `test/t74_loading_plan_test.dart` | «plano a 360 dp, OR y tabla» (con y sin listado) | «Importar listado» está en «Acciones», no en el resumen |
+| `test/t75_discharge_test.dart` | «Descarga a 360 dp» (claro y oscuro) | El resumen se lee de las fichas, con sus frases nuevas |
+| `test/t78_operation_progress_widget_test.dart` | «flujo, actualización y enlace» (las 4) | «Avance de la operación» está en «Acciones» en todos los anchos |
+| `test/t81_office_widget_test.dart` | «Número de orden redibuja plan efectivo y cancelados» | El modo se elige en el provider (como `mode`) |
+| `test/current_profile_parameters_test.dart` | «Recientes dice qué parámetro del perfil no se aplicó» | En la oficina el aviso tiene tope: sale el texto corto y «Ver» abre el entero (10.32) |
+| `test/vessel_profile_view_test.dart` | «selecciona la bahía y abre su rejilla en Bay Plan» | El título se busca como texto simple |
+
+### E1.8 Archivos
+
+**`domain/` y `data/` — la excepción de 0.5.7 (10.38), 31 líneas, solo para las preferencias:**
+- `lib/features/vessel/domain/repositories/local_vessel_repository.dart`: `enum UiPreference`
+  y `getUiPreference` / `setUiPreference`.
+- `lib/features/vessel/data/datasources/hive_vessel_data_source.dart`: la clave `ui.<nombre>`
+  en la caja de ajustes, por la cola de escrituras.
+- `lib/features/vessel/data/repositories/local_vessel_repository_impl.dart`: dos `_guard`.
+- Sin migración. Los dobles de prueba con `noSuchMethod` compilan igual.
+
+**Nuevos (11):** `lib/core/design/componentes/bs_ficha_de_cifra.dart`,
+`bs_primera_que_cabe.dart`, `bs_selector_de_modo.dart`;
+`lib/features/vessel/presentation/providers/oficina_providers.dart`;
+`lib/features/vessel/presentation/widgets/franjas_del_plano.dart`, `puente_del_plano.dart`,
+`resumen_del_modo.dart`; `test/support/t117_oficina_support.dart`, `test/t117_oficina_test.dart`,
+`test/t117_preferencias_test.dart`, `test/t118_selector_test.dart`.
+
+**Cambiados (32):** `DESIGN.md`; en `lib/core/design/`: `design.dart`, `vistas_previas.dart`,
+`componentes/bs_tarjeta_cifra.dart`; los tres de `domain/` y `data/` de arriba; en la
+presentación: `pages/parameters_page.dart`, `pages/vessel_overview_page.dart`,
+`widgets/avisos_del_viaje.dart`, `widgets/bay_plan_view.dart`, `widgets/cifras_del_viaje.dart`,
+`widgets/discharge_controls.dart`, `widgets/loading_controls.dart`,
+`widgets/loading_plan_controls.dart`, `widgets/navegacion_del_viaje.dart`,
+`widgets/plan_drag_confirmation.dart`; y las 15 pruebas de E1.7.
+
+**No cambian:** `pubspec.yaml`, `pubspec.lock`, `lib/main.dart`, los congelados, Firebase, la
+lista del piloto. Ninguna dependencia nueva. Los cuatro archivos que solo difieren en el fin de
+línea (`test/t114_fase3_correccion_test.dart` y tres de `windows/flutter/`) no van en el bloque.
+
+### E1.9 Lo que no se pudo y por qué
+
+- **RNF-002 en Windows** (los instrumentos de T-98 y T-99): hay que compilar el banco `r4` de
+  Windows y abrir la app con clics en la laptop, con su `SEMÁFORO:`. La luz verde de las 11:53
+  fue para `analyze` y las pruebas, y desde las 13:00 no hay Flutter. El instrumento
+  (`tool/t114_primera_windows.py`) mira la pantalla y no depende de la estructura; el conductor
+  de T-99 conserva sus claves (`bay-selector`, `plan-zoom-NN`, `silueta-del-viaje`,
+  `leyenda-del-plano`) y no toma por visibles las variantes que no se ven. Si algo falla al
+  medir, se actualiza antes de medir.
+- **Las capturas** (Windows a 1920 × 1080 y a 1366 × 768 y la Web, claro y oscuro, con datos
+  sintéticos): también piden compilar y abrir los clientes.
+- **La ventana real** (maximizar, Win + ← y →, redimensionar, el segundo monitor) y la Web: con
+  la app abierta en la laptop.
+- No se usó el emulador: lo del teléfono que cambia (el menú del modo, «Acciones» con su icono
+  y el resumen en fichas) está en las pruebas de widgets a 360 dp; la matriz de 18 casos de los
+  avisos sigue en la suite.
+
+### E1.10 Lo que cambia en la lista del piloto (`docs/piloto/LISTA-PILOTO.md`, de Yov)
+
+- **1.3:** en la cabecera ya no hay un segmento «Carga»: está el selector de modo (segmentos con
+  Contenido, Orden y Carga, o un botón con el modo y ⌄ si no caben).
+- **1.5:** «Contenido → Carga» se elige en ese selector de la cabecera.
+- **1.8:** la cabecera ofrece «Descarga» y «Carga» en el mismo selector.
+- **1.10:** desde 1200 dp el panel con «En vivo» está fijo, salvo que se oculte con su botón de
+  la cabecera; con menos ancho o oculto, sale flotante por el borde derecho, por el botón o al
+  tocar una celda. Ya no es «con menos ancho no hay panel».
+- **1.11:** «Acciones» (⋮) está en la franja de la bahía, encima de la rejilla.
+- **2.x (el teléfono):** el resumen sobre la barra dice la bahía en una ficha; el menú del modo
+  ofrece Contenido, Número de orden y el modo vigente; «Acciones» va solo con su icono. Los
+  pasos de la lista no cambian.
+- **5:** la observación O3 (el aviso de la oficina cruza el riel y «En vivo») queda cerrada con
+  esta entrega; se puede quitar o anotar como corregida en la 3.2.0.
+- Nada de esto afecta al piloto del 25 y el 26, que es con la 3.1.0.
+
+### E1.11 Horas
+
+Unas **1.6 h** (11:07 a 12:45): `DESIGN.md` 0.3 h; el código 0.6 h; las pruebas nuevas 0.2 h; las
+corridas, los arreglos y las pruebas reescritas 0.4 h; el informe 0.1 h. La fase 0 estimó 22 a
+27 h para T-117 y T-118; faltan RNF-002, las capturas y la ventana real (unas 3 a 4 h con
+Flutter) y la aceptación.
+
+### E1.12 Git
+
+**Para Carlos** (después de la exposición; no incluye los cuatro archivos de fin de línea):
+
+```bash
+git add -- DESIGN.md
+git add -- docs/T117-T121-RESULTADOS.md
+git add -- lib/core/design/design.dart
+git add -- lib/core/design/vistas_previas.dart
+git add -- lib/core/design/componentes/bs_ficha_de_cifra.dart
+git add -- lib/core/design/componentes/bs_primera_que_cabe.dart
+git add -- lib/core/design/componentes/bs_selector_de_modo.dart
+git add -- lib/core/design/componentes/bs_tarjeta_cifra.dart
+git add -- lib/features/vessel/domain/repositories/local_vessel_repository.dart
+git add -- lib/features/vessel/data/datasources/hive_vessel_data_source.dart
+git add -- lib/features/vessel/data/repositories/local_vessel_repository_impl.dart
+git add -- lib/features/vessel/presentation/pages/parameters_page.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/providers/oficina_providers.dart
+git add -- lib/features/vessel/presentation/widgets/avisos_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/widgets/cifras_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/discharge_controls.dart
+git add -- lib/features/vessel/presentation/widgets/franjas_del_plano.dart
+git add -- lib/features/vessel/presentation/widgets/loading_controls.dart
+git add -- lib/features/vessel/presentation/widgets/loading_plan_controls.dart
+git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart
+git add -- lib/features/vessel/presentation/widgets/puente_del_plano.dart
+git add -- lib/features/vessel/presentation/widgets/resumen_del_modo.dart
+git add -- test/support/t117_oficina_support.dart
+git add -- test/support/t91_toolbar_support.dart
+git add -- test/t117_oficina_test.dart
+git add -- test/t117_preferencias_test.dart
+git add -- test/t118_selector_test.dart
+git add -- test/current_profile_parameters_test.dart
+git add -- test/t105_drag_widget_test.dart
+git add -- test/t106_plan_widget_test.dart
+git add -- test/t107_header_test.dart
+git add -- test/t107_texts_test.dart
+git add -- test/t114_candidata_correccion2_test.dart
+git add -- test/t114_fase3_entrega2_correccion_test.dart
+git add -- test/t114_fase3_plano_test.dart
+git add -- test/t114_paquete_test.dart
+git add -- test/t74_loading_plan_test.dart
+git add -- test/t75_discharge_test.dart
+git add -- test/t78_operation_progress_widget_test.dart
+git add -- test/t81_office_widget_test.dart
+git add -- test/vessel_profile_view_test.dart
+git commit -m "Sprint 4: T-117 y T-118, entrega 1, mas plano en la oficina, el panel lateral que se oculta y un solo selector de modo" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git push
+```
+
+Son 44 rutas: 11 nuevas, 32 cambiadas y este informe. No cambian `pubspec.yaml` ni
+`pubspec.lock`.
+
+### E1.13 Mensaje para Yov
+
+> Yov: la entrega 1 de T-117 y T-118 está en `docs/T117-T121-RESULTADOS.md`, sección «Entrega
+> 1», y `DESIGN.md` 14. La columna de la oficina se desplaza entera con el panel del buque en
+> tres alturas, la franja de la bahía arriba y la de cifras abajo, donde viven los avisos
+> (cierra O3); el panel lateral se oculta y sale flotante; un solo selector de modo y el
+> resumen en fichas. La excepción de `domain/` y `data/` son 31 líneas, solo para las tres
+> preferencias. Suite 1627 (piso 1371) en una corrida, sin omitidas, y `analyze` en cero; la
+> matriz de 0.5.5 (189 casos) pasa. Reescribí 15 archivos de pruebas, uno por uno en E1.7; las
+> corridas destaparon cinco defectos que corregí en el código (E1.5, puntos 4 y 10 a 13).
+> Faltan RNF-002 en Windows y las capturas, que piden la luz verde de la tarde. La lista del
+> piloto cambia en 1.3, 1.5, 1.8, 1.10, 1.11 y la nota de O3 (E1.10); no la toqué.
+
+**ALTO: Codex acepta.**

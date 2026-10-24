@@ -283,8 +283,9 @@ void main() {
         expect(rect.right, lessThanOrEqualTo(600));
         expect(rect.left, greaterThanOrEqualTo(0));
         expect(tester.getRect(cabecera).right, lessThanOrEqualTo(600));
-        // Descarga / Carga siguen a la vista y enteros.
-        final segmentos = find.byKey(const ValueKey('operar-segmentos'));
+        // El selector de modo (T-118, DESIGN.md 14.6, en vez de los
+        // segmentos Descarga / Carga) sigue a la vista y entero.
+        final segmentos = find.byKey(const ValueKey('bay-plan-display-mode'));
         expect(segmentos.hitTestable(), findsOneWidget);
         expect(tester.getRect(segmentos).right, lessThanOrEqualTo(600));
         expect(find.text('BUQUE MANUAL'), findsOneWidget);

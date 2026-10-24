@@ -371,7 +371,7 @@ void main() {
 
     testWidgets(
         'en la oficina, 1920 × 1080 con la letra a 1.0: el aviso compacto, '
-        'entero, sobre la leyenda y sin tapar celdas; «Deshacer» responde',
+        'entero, en la franja de cifras y sin tapar celdas; «Deshacer» responde',
         (tester) async {
       const ventana = Size(1920, 1080);
       await _enLaApp(tester,
@@ -379,10 +379,16 @@ void main() {
           escala: 1.0,
           carga: false,
           plataforma: TargetPlatform.windows, cuerpo: (scope) async {
-        // En la oficina el pie es la leyenda: sin franja, los avisos no tienen
-        // tope (`LugarDelAviso` sin valor) y flotan por encima de ella.
+        // T-117 (DESIGN.md 14.5): en la oficina el pie es la franja de
+        // cifras, fija abajo y sin controles; el aviso vive en ella, con su
+        // tope (`LugarDelAviso`), y la leyenda va dentro de la columna que se
+        // desplaza. Antes (10.32) no había franja y el aviso flotaba sobre la
+        // leyenda.
         expect(_franja, findsNothing);
-        expect(scope.read(franjaDelPlanoProvider), isNull);
+        final cifras = find.byKey(const ValueKey('franja-de-cifras'));
+        expect(cifras, findsOneWidget);
+        expect(scope.read(franjaDelPlanoProvider),
+            closeTo(tester.getSize(cifras).height, 0.5));
         const texto = 'Descargado · MNLU0000107 · 002-02-82';
         var deshecho = false;
         _mostrar(
@@ -396,9 +402,9 @@ void main() {
                 onAccion: () => deshecho = true));
         await tester.pumpAndSettle();
         final tarjeta = _tarjeta(tester, _aviso);
-        final leyenda =
-            tester.getRect(find.byKey(const ValueKey('leyenda-del-plano')));
-        expect(tarjeta.bottom, lessThanOrEqualTo(leyenda.top));
+        expect(tarjeta.top,
+            greaterThanOrEqualTo(tester.getRect(cifras).top - 0.5));
+        expect(tarjeta.bottom, lessThanOrEqualTo(ventana.height));
         for (final celda in _celdas()) {
           final recto = _loQueSeVe(celda, ventana);
           if (recto.isEmpty) continue;

@@ -3,7 +3,6 @@ import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
-import '../../domain/services/loading_plan_progress.dart';
 import '../../domain/services/operation_progress.dart';
 import '../formatters/vessel_error_message.dart';
 import '../formatters/operation_text.dart';
@@ -13,9 +12,12 @@ import '../pages/change_requests_page.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_plan_provider.dart';
 import '../providers/loading_operation_provider.dart';
+import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
+import '../providers/voyage_ui_state.dart';
 import 'discharge_controls.dart';
 import 'loading_controls.dart';
+import 'resumen_del_modo.dart';
 import 'sync_status_chip.dart';
 import '../../../../core/utils/voyage_number.dart';
 
@@ -23,10 +25,11 @@ import '../../../../core/utils/voyage_number.dart';
 /// llegada; fuera de ese modo, tocar una celda abre el detalle, como siempre.
 enum BayPlanMode { content, order, discharge, loading }
 
-/// Qué parte de los controles del plano se dibuja (`DESIGN.md` 13.8). En el
-/// teléfono bajo la barra (el modo, «Acciones», el zoom) va al pie, en la
-/// línea de la leyenda o de la barra de la operación, y el resumen del modo
-/// justo encima del pie; en los demás tamaños, todo junto sobre la silueta.
+/// Qué parte de los controles del plano se dibuja (`DESIGN.md` 13.8 y 14.8).
+/// En el teléfono bajo la barra (el modo, «Acciones», el zoom) va al pie, en
+/// la línea de la leyenda o de la barra de la operación, y el resumen del
+/// modo justo encima del pie; en los demás teléfonos, todo junto sobre la
+/// silueta. En la oficina, solo la parte de la franja de la bahía.
 enum ParteDeLosControles {
   /// La barra y el resumen, sobre la silueta (T-107).
   todo,
@@ -37,6 +40,11 @@ enum ParteDeLosControles {
 
   /// Solo el resumen del modo, en su línea de T-107.
   resumen,
+
+  /// La franja de la bahía de la oficina (14.8): el zoom, «OR / últimos
+  /// dígitos» en Carga y «Acciones». El modo va en la cabecera y el resumen
+  /// en la franja de cifras.
+  franja,
 }
 
 class LoadingPlanControls extends ConsumerWidget {
@@ -50,7 +58,7 @@ class LoadingPlanControls extends ConsumerWidget {
   /// la rejilla (`ZoomDelPlano`); al final de la fila, antes de la nube.
   final Widget? zoom;
 
-  /// Qué se dibuja: todo, o solo la barra o el resumen (el teléfono bajo).
+  /// Qué se dibuja: todo, o solo la barra, el resumen o la franja.
   final ParteDeLosControles parte;
   const LoadingPlanControls(
       {super.key,
@@ -65,11 +73,12 @@ class LoadingPlanControls extends ConsumerWidget {
   bool get orderMode => mode == BayPlanMode.order;
 
   /// T-107 · Por debajo de este ancho (el teléfono) el encabezado se compacta
-  /// en dos líneas. Windows y la Web, más anchos, quedan como estaban.
+  /// en dos líneas. Desde aquí, la oficina (`DESIGN.md` 14.1).
   static const compactWidth = 600.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final medidas = BsMedidas.de(context);
     final discharge = offersDischarge(voyage);
     final dischargeMode = discharge && mode == BayPlanMode.discharge;
     final progress = voyage.portOfCall == null
@@ -89,6 +98,31 @@ class LoadingPlanControls extends ConsumerWidget {
     }
 
     final loadingMode = mode == BayPlanMode.loading && voyage.portOfCall != null;
+    // T-74: sin listado, «Importar listado» en «Acciones» del Número de orden.
+    final importarListado = orderMode && progress?.value?.list == null &&
+        progress?.hasValue == true;
+    // En el muelle operando, Descarga y Carga están en la banda (14.6) y la
+    // barra de la operación cuenta el modo (14.7).
+    final enOperacion =
+        voyage.portOfCall != null && ref.watch(voyageUiStateProvider) is Publicado;
+    final conBanda = medidas.esMuelle && enOperacion;
+    final conBarra = medidas.esMuelle && (dischargeMode || loadingMode);
+    final acciones = AccionesDelPlano(
+        voyage: voyage,
+        selectedBay: selectedBay,
+        dischargeMode: dischargeMode,
+        loadingMode: loadingMode,
+        onPendingTable: pendingTable,
+        onProgress: voyage.portOfCall == null ? null : openProgress,
+        importarListado: importarListado,
+        // En el teléfono, «Acciones» va solo con su icono (0.6.2: «⋮»): la
+        // línea de 360 dp lleva el modo, el zoom y la nube.
+        soloIcono: parte != ParteDeLosControles.franja);
+    Widget selector() => SelectorDelModo(
+        voyage: voyage,
+        forma: BsFormaDelSelector.menu,
+        conBanda: conBanda,
+        onModeChanged: onModeChanged);
     switch (parte) {
       case ParteDeLosControles.barra:
         // La tira del pie del teléfono bajo (13.8): el modo, «Acciones» y el
@@ -96,11 +130,9 @@ class LoadingPlanControls extends ConsumerWidget {
         return _CompactPlanBar(
             voyage: voyage,
             selectedBay: selectedBay,
-            modeSelector: _modeSelector(discharge),
-            dischargeMode: dischargeMode,
+            modeSelector: selector(),
+            actions: acciones,
             loadingMode: loadingMode,
-            onPendingTable: pendingTable,
-            onProgress: voyage.portOfCall == null ? null : openProgress,
             zoom: zoom,
             tira: true);
       case ParteDeLosControles.resumen:
@@ -111,157 +143,58 @@ class LoadingPlanControls extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: _summaryArea(context, dischargeMode, progress, true)),
+              children: _summaryArea(dischargeMode, soloLaBahia: conBarra)),
         );
+      case ParteDeLosControles.franja:
+        final listado = loadingMode
+            ? ref.watch(loadingOperationProvider(voyage)).value?.list
+            : null;
+        return Row(mainAxisSize: MainAxisSize.min, children: [
+          if (zoom != null) zoom!,
+          if (loadingMode)
+            LoadingControls.busquedaDeCarga(context, ref, voyage, selectedBay,
+                conListado: listado != null),
+          acciones,
+        ]);
       case ParteDeLosControles.todo:
         break;
     }
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final compact = constraints.maxWidth < compactWidth;
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (compact)
-            _CompactPlanBar(
-                voyage: voyage,
-                selectedBay: selectedBay,
-                modeSelector: _modeSelector(discharge, compact: true),
-                dischargeMode: dischargeMode,
-                loadingMode: loadingMode,
-                onPendingTable: pendingTable,
-                onProgress: voyage.portOfCall == null ? null : openProgress,
-                zoom: zoom)
-          else
-            Wrap(
-                spacing: 12,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _modeSelector(discharge),
-                  if (dischargeMode)
-                    TextButton.icon(
-                      key: const ValueKey('discharge-table-button'),
-                      onPressed: pendingTable,
-                      icon: const Icon(Icons.table_chart),
-                      label: const Text('Pendientes de descarga'),
-                    )
-                  else
-                    TextButton.icon(
-                      onPressed: pendingTable,
-                      icon: const Icon(Icons.table_chart),
-                      label: const Text('Pendientes por bahía'),
-                    ),
-                  if (voyage.portOfCall != null)
-                    TextButton.icon(
-                      key: const ValueKey('operation-progress-button'),
-                      onPressed: openProgress,
-                      icon: const Icon(Icons.assignment),
-                      label: const Text('Avance de la operación'),
-                    ),
-                  if (voyage.portOfCall != null) const SyncStatusChip(),
-                  if (voyage.portOfCall != null)
-                    ChangeRequestsButton(voyage: voyage),
-                  if (zoom != null) zoom!,
-                ]),
-          ..._summaryArea(context, dischargeMode, progress, compact),
-        ]),
-      );
-    });
-  }
-
-  Widget _modeSelector(bool discharge, {bool compact = false}) {
-    // El nombre del modo se lee entero: en la línea angosta se parte en dos
-    // líneas antes que recortarse (10.8, 10.16), y los elementos del menú
-    // crecen con la letra del sistema.
-    // La elipsis es solo una red: con la letra del sistema el nombre cabe
-    // (a 2.0 el selector pasa a su propia línea).
-    Text label(String text) => Text(text,
-        maxLines: compact ? 2 : 1, overflow: TextOverflow.ellipsis);
-    return DropdownButton<BayPlanMode>(
-      key: const ValueKey('bay-plan-display-mode'),
-      isExpanded: compact,
-      itemHeight: null,
-      value: (!discharge && mode == BayPlanMode.discharge) ||
-              (voyage.portOfCall == null && mode == BayPlanMode.loading)
-          ? BayPlanMode.content
-          : mode,
-      items: [
-        DropdownMenuItem(value: BayPlanMode.content, child: label('Contenido')),
-        DropdownMenuItem(
-            value: BayPlanMode.order, child: label('Número de orden')),
-        if (discharge)
-          DropdownMenuItem(
-              value: BayPlanMode.discharge, child: label('Descarga')),
-        if (voyage.portOfCall != null)
-          DropdownMenuItem(value: BayPlanMode.loading, child: label('Carga')),
-      ],
-      onChanged: (value) {
-        if (value != null) onModeChanged(value);
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _CompactPlanBar(
+            voyage: voyage,
+            selectedBay: selectedBay,
+            modeSelector: selector(),
+            actions: acciones,
+            loadingMode: loadingMode,
+            zoom: zoom),
+        ..._summaryArea(dischargeMode, soloLaBahia: conBarra),
+      ]),
     );
   }
 
-  /// El resumen del modo. En pantallas angostas va en una línea que se abre
-  /// con un toque (T-107); en las anchas, completo, como antes.
-  List<Widget> _summaryArea(BuildContext context, bool dischargeMode,
-      AsyncValue<LoadingPlanProgress>? progress, bool compact) {
+  /// El resumen del modo en fichas (`DESIGN.md` 14.7), en la línea de T-107
+  /// que se abre con un toque.
+  List<Widget> _summaryArea(bool dischargeMode, {required bool soloLaBahia}) {
     if (mode == BayPlanMode.loading && voyage.portOfCall != null) {
       return [
         LoadingControls(
             voyage: voyage,
             selectedBay: selectedBay,
-            compact: compact,
-            busquedaEnLaTira: parte == ParteDeLosControles.resumen)
+            compact: true,
+            busquedaEnLaTira: parte == ParteDeLosControles.resumen,
+            soloLaBahia: soloLaBahia)
       ];
     }
-    if (dischargeMode) {
-      final summary = DischargeSummary(voyage: voyage, selectedBay: selectedBay);
-      return [compact ? PlanSummaryLine(child: summary) : summary];
-    }
-    if (voyage.portOfCall == null) {
-      return [const Text('Confirma la escala para ver el plan de carga.')];
-    }
-    if (progress!.hasError) {
-      return [
-        Text(vesselErrorMessage(progress.error!, progress.stackTrace,
-            'calcular los pendientes de carga'))
-      ];
-    }
-    if (!progress.hasValue) {
-      return [const Text('Leyendo el estado de la operación…')];
-    }
-    final lines = [
-      _summary(progress.value!, selectedBay),
-      if (orderMode && progress.value!.list == null)
-        Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
-          const Text('Esta operación todavía no tiene listado de agencia.'),
-          TextButton(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const ExportListImportPage())),
-              child: const Text('Importar listado')),
-        ])
-      else if (orderMode)
-        Text('${operationCount(progress.value!.unmatched, 'celda de carga sin cruce', 'celdas de carga sin cruce')} (—).'),
+    return [
+      _ResumenEnLinea(
+          voyage: voyage,
+          modo: dischargeMode ? BayPlanMode.discharge : mode,
+          selectedBay: selectedBay,
+          soloLaBahia: soloLaBahia)
     ];
-    return compact
-        ? [
-            PlanSummaryLine(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: lines))
-          ]
-        : lines;
-  }
-
-  Widget _summary(LoadingPlanProgress progress, int? selected) {
-    final bay = selected == null ? null : progress.forBay(selected);
-    return Text(
-        bay == null
-            ? 'Pendientes de carga: 0 en esta bahía.'
-            : 'Bahía ${bay.label} · pendientes de carga: '
-                'cubierta ${bay.deck} (${operationCount(bay.deckFull, 'lleno', 'llenos')} / ${operationCount(bay.deckEmpty, 'vacío', 'vacíos')}) · '
-                'bodega ${bay.hold} (${operationCount(bay.holdFull, 'lleno', 'llenos')} / ${operationCount(bay.holdEmpty, 'vacío', 'vacíos')})',
-        key: const ValueKey('bay-loading-pending'));
   }
 
   void _table(BuildContext context) => showModalBottomSheet<void>(
@@ -346,36 +279,176 @@ class LoadingPlanControls extends ConsumerWidget {
       );
 }
 
-/// T-107 · La primera línea del encabezado en pantallas angostas: el modo,
-/// «Acciones» con lo que en pantallas anchas son botones, y la nube como
-/// ícono. Cada entrada hace lo mismo que su botón y conserva su clave de
-/// prueba; la cuenta de solicitudes pendientes se ve también en «Acciones».
-class _CompactPlanBar extends ConsumerWidget {
+/// El selector de modo del plano (`DESIGN.md` 14.6): `BsSelectorDeModo` con
+/// los modos que la escala ofrece, sus iconos, sus cuentas y su ayuda. Lleva
+/// la clave `bay-plan-display-mode`. Con la banda del muelle ([conBanda]),
+/// Descarga y Carga solo aparecen si son el modo vigente: ya están en la
+/// banda.
+class SelectorDelModo extends ConsumerWidget {
+  const SelectorDelModo({
+    super.key,
+    required this.voyage,
+    required this.forma,
+    this.conBanda = false,
+    this.onModeChanged,
+  });
+
+  final VesselVoyage voyage;
+  final BsFormaDelSelector forma;
+  final bool conBanda;
+
+  /// Qué pasa al elegir; sin él, el modo del plano cambia en su provider.
+  final ValueChanged<BayPlanMode>? onModeChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(bayPlanModeProvider);
+    final discharge = offersDischarge(voyage);
+    final conEscala = voyage.portOfCall != null;
+    // Un modo que esta escala no ofrece se ve como «Contenido», como antes.
+    final elegido = (!discharge && mode == BayPlanMode.discharge) ||
+            (!conEscala && mode == BayPlanMode.loading)
+        ? BayPlanMode.content
+        : mode;
+    String? cuentaDeDescarga;
+    String? cortaDeDescarga;
+    if (discharge) {
+      final progreso = ref.watch(dischargeProgressProvider(voyage)).value;
+      if (progreso != null) {
+        cuentaDeDescarga =
+            '${progreso.pending} por bajar en ${voyage.portOfCall}';
+        cortaDeDescarga = '${progreso.pending}';
+      }
+    }
+    String? cuentaDeCarga;
+    String? cortaDeCarga;
+    String? cuentaDeOrden;
+    if (conEscala) {
+      final carga = ref.watch(loadingOperationProvider(voyage)).value?.progress;
+      if (carga != null) {
+        cuentaDeCarga =
+            '${operationCount(carga.total, 'pendiente', 'pendientes')}: '
+            '${operationCount(carga.full, 'lleno', 'llenos')}, '
+            '${operationCount(carga.empty, 'vacío', 'vacíos')}';
+        cortaDeCarga = '${carga.total}';
+      }
+      final plan = ref.watch(loadingPlanProgressProvider(voyage)).value;
+      if (plan != null) {
+        cuentaDeOrden = plan.list == null
+            ? 'Sin listado de la agencia'
+            : '${plan.labels.length} OR del listado';
+      }
+    }
+    void elegir(BayPlanMode valor) {
+      final cambio = onModeChanged;
+      if (cambio != null) {
+        cambio(valor);
+      } else {
+        ref.read(bayPlanModeProvider.notifier).elegir(valor);
+      }
+    }
+
+    return BsSelectorDeModo<BayPlanMode>(
+      key: const ValueKey('bay-plan-display-mode'),
+      forma: forma,
+      elegido: elegido,
+      onElegir: elegir,
+      entradas: [
+        const BsEntradaDeModo(
+          valor: BayPlanMode.content,
+          rotulo: 'Contenido',
+          icono: BsIconos.contenedor40,
+          ayuda: 'El destino de cada contenedor',
+        ),
+        BsEntradaDeModo(
+          valor: BayPlanMode.order,
+          rotulo: 'Número de orden',
+          rotuloCorto: 'Orden',
+          icono: BsIconos.orden,
+          cuenta: cuentaDeOrden,
+          ayuda: 'Los OR del listado de la agencia',
+        ),
+        if (discharge && (!conBanda || elegido == BayPlanMode.discharge))
+          BsEntradaDeModo(
+            valor: BayPlanMode.discharge,
+            rotulo: 'Descarga',
+            icono: BsIconos.descarga,
+            cuenta: cuentaDeDescarga,
+            cuentaCorta: cortaDeDescarga,
+            ayuda: 'Toca un contenedor para marcarlo como descargado',
+          ),
+        if (conEscala && (!conBanda || elegido == BayPlanMode.loading))
+          BsEntradaDeModo(
+            valor: BayPlanMode.loading,
+            rotulo: 'Carga',
+            icono: BsIconos.carga,
+            cuenta: cuentaDeCarga,
+            cuentaCorta: cortaDeCarga,
+            ayuda: 'Toca un contenedor o busca su OR para cargarlo',
+          ),
+      ],
+    );
+  }
+}
+
+/// El resumen de Contenido, Número de orden y Descarga en la línea de T-107
+/// (`PlanSummaryLine`), en fichas (`DESIGN.md` 14.7).
+class _ResumenEnLinea extends ConsumerWidget {
+  const _ResumenEnLinea({
+    required this.voyage,
+    required this.modo,
+    required this.selectedBay,
+    required this.soloLaBahia,
+  });
+
+  final VesselVoyage voyage;
+  final BayPlanMode modo;
+  final int? selectedBay;
+  final bool soloLaBahia;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => PlanSummaryLine(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: fichasDelResumen(context, ref,
+              voyage: voyage,
+              modo: modo,
+              bahia: selectedBay,
+              soloLaBahia: soloLaBahia),
+        ),
+      );
+}
+
+/// «Acciones» del plano (T-107; `DESIGN.md` 14.7): las tablas de pendientes,
+/// el avance de la operación, las solicitudes de cambio, «Asignar vacío» en
+/// Carga e «Importar listado» en Número de orden sin listado. Cada entrada
+/// hace lo mismo que su botón de antes y conserva su clave de prueba; la
+/// cuenta de solicitudes pendientes se ve también en el botón.
+class AccionesDelPlano extends ConsumerWidget {
   final VesselVoyage voyage;
   final int? selectedBay;
-  final Widget modeSelector;
   final bool dischargeMode;
   final bool loadingMode;
   final VoidCallback? onPendingTable;
   final Future<void> Function()? onProgress;
 
-  /// El chip del zoom (10.20), al final de la línea.
-  final Widget? zoom;
+  /// Número de orden sin listado: la entrada para importarlo.
+  final bool importarListado;
 
-  /// La tira del pie del teléfono bajo (13.8): el modo, «Acciones» y el zoom
-  /// uno tras otro, a su ancho, sin la nube (ya está en la banda o en la
-  /// barra superior) y sin repartir el ancho: la línea se desplaza.
-  final bool tira;
-  const _CompactPlanBar(
-      {required this.voyage,
+  /// En el teléfono, solo el icono, con su nombre en la descripción
+  /// emergente: en la tira del pie, para que la leyenda asome en 360 dp; en
+  /// la línea de los controles, para que quepa el modo con su icono.
+  final bool soloIcono;
+  const AccionesDelPlano(
+      {super.key,
+      required this.voyage,
       required this.selectedBay,
-      required this.modeSelector,
       required this.dischargeMode,
       required this.loadingMode,
       required this.onPendingTable,
       required this.onProgress,
-      this.zoom,
-      this.tira = false});
+      this.importarListado = false,
+      this.soloIcono = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -395,27 +468,22 @@ class _CompactPlanBar extends ConsumerWidget {
             .where((r) => r.status == ChangeRequestStatus.pending)
             .length
         : 0;
-    final status = voyage.portOfCall == null
-        ? null
-        : visibleSyncStatus(ref.watch(syncStatusProvider));
     Widget entry(IconData icon, String text) => Row(children: [
           Icon(icon, size: 20),
           const SizedBox(width: 12),
           Flexible(child: Text(text)),
         ]);
-    // En la tira del pie, «Acciones» va solo con su icono y su descripción
-    // emergente, para que la leyenda asome a la derecha en 360 dp.
-    final rotuloDeAcciones = Row(mainAxisSize: MainAxisSize.min, children: [
+    final rotulo = Row(mainAxisSize: MainAxisSize.min, children: [
       Badge(
           isLabelVisible: pending > 0,
           label: Text('$pending'),
           child: Icon(Icons.more_vert, color: colors.primary)),
-      if (!tira) ...[
+      if (!soloIcono) ...[
         const SizedBox(width: 4),
         Text('Acciones', style: TextStyle(color: colors.primary)),
       ],
     ]);
-    final actions = PopupMenuButton<VoidCallback>(
+    return PopupMenuButton<VoidCallback>(
       key: const ValueKey('bay-plan-actions'),
       tooltip: 'Acciones',
       onSelected: (action) => action(),
@@ -452,12 +520,57 @@ class _CompactPlanBar extends ConsumerWidget {
               value: () => chooseLoadingRow(context, ref, voyage,
                   selectedBay: selectedBay, empties: true),
               child: entry(BsIconos.vacio, 'Asignar vacío')),
+        if (importarListado)
+          PopupMenuItem(
+              key: const ValueKey('import-export-list'),
+              value: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const ExportListImportPage())),
+              child: entry(BsIconos.listadoAgencia, 'Importar listado')),
       ],
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: tira ? 12 : 8, vertical: 12),
-        child: rotuloDeAcciones,
+        padding:
+            EdgeInsets.symmetric(horizontal: soloIcono ? 12 : 8, vertical: 12),
+        child: rotulo,
       ),
     );
+  }
+}
+
+/// T-107 · La primera línea del encabezado en pantallas angostas: el modo,
+/// «Acciones» con lo que en pantallas anchas son botones, y la nube como
+/// ícono.
+class _CompactPlanBar extends ConsumerWidget {
+  final VesselVoyage voyage;
+  final int? selectedBay;
+  final Widget modeSelector;
+  final Widget actions;
+  final bool loadingMode;
+
+  /// El chip del zoom (10.20), al final de la línea.
+  final Widget? zoom;
+
+  /// La tira del pie del teléfono bajo (13.8): el modo, «Acciones» y el zoom
+  /// uno tras otro, a su ancho, sin la nube (ya está en la banda o en la
+  /// barra superior) y sin repartir el ancho: la línea se desplaza.
+  final bool tira;
+  const _CompactPlanBar(
+      {required this.voyage,
+      required this.selectedBay,
+      required this.modeSelector,
+      required this.actions,
+      required this.loadingMode,
+      this.zoom,
+      this.tira = false});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).colorScheme;
+    final data = loadingMode
+        ? ref.watch(loadingOperationProvider(voyage)).value
+        : null;
+    final status = voyage.portOfCall == null
+        ? null
+        : visibleSyncStatus(ref.watch(syncStatusProvider));
     final nube = status == null
         ? null
         : IconButton(
@@ -487,7 +600,7 @@ class _CompactPlanBar extends ConsumerWidget {
     final escala = MediaQuery.textScalerOf(context).scale(10) / 10;
     if (escala > 1.5) {
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        modeSelector,
+        Align(alignment: Alignment.centerLeft, child: modeSelector),
         Row(children: [
           Expanded(child: Align(alignment: Alignment.centerLeft, child: actions)),
           if (zoom != null) zoom!,
@@ -498,7 +611,7 @@ class _CompactPlanBar extends ConsumerWidget {
     return Row(children: [
       Expanded(
           child: Row(children: [
-        Flexible(child: IntrinsicWidth(child: modeSelector)),
+        Flexible(child: modeSelector),
         const SizedBox(width: 8),
         actions,
       ])),

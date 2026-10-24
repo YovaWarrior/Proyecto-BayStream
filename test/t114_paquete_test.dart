@@ -95,6 +95,8 @@ const _conSitio = <String>{
   'carga',
   'reestiba',
   'pedirCambio',
+  // T-118 (DESIGN.md 13.11 y 14.6): el modo Número de orden del selector.
+  'orden',
   'baplie',
   'compararBaplie',
   'baplieSalida',
@@ -110,7 +112,6 @@ const _conSitio = <String>{
 const _sinSitio = <String>{
   'limiteApilamiento',
   'segregacion',
-  'orden',
   'grua',
   'muelle',
   'escala',

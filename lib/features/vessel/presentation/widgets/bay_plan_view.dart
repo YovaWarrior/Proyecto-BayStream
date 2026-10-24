@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,6 +21,7 @@ import '../providers/vessel_providers.dart';
 import 'cifras_del_viaje.dart';
 import 'detalle_contenedor.dart';
 import 'discharge_controls.dart';
+import 'franjas_del_plano.dart';
 import 'hatch_cover_diagram.dart';
 import 'hatch_operation_controls.dart';
 import 'avisos_del_viaje.dart';
@@ -27,6 +30,7 @@ import 'loading_controls.dart';
 import 'loading_plan_controls.dart';
 import 'navegacion_del_viaje.dart';
 import 'plan_drag_confirmation.dart';
+import 'puente_del_plano.dart';
 import 'reserved_slot_details.dart';
 import 'silueta_del_viaje.dart';
 import 'zoom_del_plano.dart';
@@ -50,6 +54,11 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   int? _selectedBayNumber;
   final ScrollController _bayScrollController = ScrollController();
 
+  /// La silueta compacta del panel del buque de la oficina (14.2): mientras
+  /// se arrastra el borde se arman las dos alturas a la vez, cada una con su
+  /// desplazamiento.
+  final ScrollController _bayScrollControllerCompacto = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -72,6 +81,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   @override
   void dispose() {
     _bayScrollController.dispose();
+    _bayScrollControllerCompacto.dispose();
     super.dispose();
   }
 
@@ -164,8 +174,14 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     final enOperacion = dischargeMode ||
         (mode == BayPlanMode.loading && widget.voyage.portOfCall != null);
 
+    // La oficina o el teléfono los decide la página (desde 600 dp de
+    // ventana); el plano suelto, su ancho. Con la ventana entre 600 y unos
+    // 720 dp, el plano mide menos de 600 y se armaba como teléfono dentro de
+    // la oficina, con un segundo selector de modo.
+    final enLaOficina = PanelLateralDisponible.enLaOficina(context);
     return LayoutBuilder(builder: (context, constraints) {
-      final ancha = constraints.maxWidth >= AnchosDeNavegacion.riel;
+      final ancha =
+          enLaOficina ?? constraints.maxWidth >= AnchosDeNavegacion.riel;
       // El teléfono bajo: con menos de 560 dp de alto útil (360 × 640 dp,
       // menos la banda y la barra inferior) la rejilla no cabe debajo de la
       // banda, la silueta y la leyenda; en 360 × 800 sí.
@@ -199,18 +215,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               },
               onModeChanged: (value) =>
                   ref.read(bayPlanModeProvider.notifier).elegir(value));
-      final controles = controlesDelPlano(
-          anidar ? ParteDeLosControles.barra : ParteDeLosControles.todo);
-      final resumen =
-          anidar ? controlesDelPlano(ParteDeLosControles.resumen) : null;
-      final selector = _buildBaySelector(displayedVoyage, mode,
-          porCarga: porCarga, ancha: ancha, compacta: anidar);
-
-      // La bahía elegida, con zoom y desplazamiento.
+      // La bahía elegida, con zoom y desplazamiento. En la oficina, a su alto
+      // natural: la desplaza la columna (14.1).
       final rejilla = _selectedBayNumber != null
                 ? _BayGridWidget(
                     desplazamientoPrimario: anidar,
                     compacta: anidar,
+                    alturaNatural: ancha,
                     hatchCovers: hatches?[_selectedBayNumber],
                     bay: bay,
                     vista: vista,
@@ -265,6 +276,30 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                     onDetailsTap: _showContainerDetails,
                   )
                 : const Center(child: Text('Selecciona una bahía'));
+      if (ancha) {
+        return _columnaDeOficina(
+          displayedVoyage: displayedVoyage,
+          bay: bay,
+          sortedBayNumbers: sortedBayNumbers,
+          mode: mode,
+          vista: vista,
+          porCarga: porCarga,
+          dischargeMode: dischargeMode,
+          enOperacion: enOperacion,
+          loading: loading,
+          discharge: discharge,
+          twenties: twenties,
+          hatchDeclarada: hatches?[bay.bayNumber] != null,
+          rejilla: rejilla,
+          controlesDelPlano: controlesDelPlano,
+        );
+      }
+      final controles = controlesDelPlano(
+          anidar ? ParteDeLosControles.barra : ParteDeLosControles.todo);
+      final resumen =
+          anidar ? controlesDelPlano(ParteDeLosControles.resumen) : null;
+      final selector = _buildBaySelector(displayedVoyage, mode,
+          porCarga: porCarga, compacta: anidar);
       // Abajo: en el muelle, operando, la barra de la operación; si no,
       // la leyenda de la vista. En el teléfono bajo, con los controles del
       // plano al principio de esa línea. Lo que los avisos de la página no
@@ -345,10 +380,113 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     return counts;
   }
 
-  /// La silueta del buque como selector y, en la oficina ancha, las tarjetas
-  /// de cifra a su derecha (`DESIGN.md` 13.8).
+  /// La columna central de la oficina (`DESIGN.md` 14.1): se desplaza entera.
+  /// Arriba el panel del buque en tres alturas (14.2), la franja de la bahía
+  /// fijada al desplazar (14.8), la rejilla a su alto natural por el zoom y
+  /// la leyenda, que envuelve; abajo, fija, la franja de cifras, donde viven
+  /// los avisos (14.5), o la barra de la operación en el muelle operando.
+  Widget _columnaDeOficina({
+    required VesselVoyage displayedVoyage,
+    required Bay bay,
+    required List<int> sortedBayNumbers,
+    required BayPlanMode mode,
+    required ColorearPor vista,
+    required bool porCarga,
+    required bool dischargeMode,
+    required bool enOperacion,
+    required LoadingOperation? loading,
+    required DischargeProgress? discharge,
+    required Map<String, int> twenties,
+    required bool hatchDeclarada,
+    required Widget rejilla,
+    required LoadingPlanControls Function(ParteDeLosControles parte)
+        controlesDelPlano,
+  }) {
+    final medidas = BsMedidas.de(context);
+    final puente = PuenteDelPlano(
+      completo: _buildBaySelector(displayedVoyage, mode,
+          porCarga: porCarga, oficina: true),
+      compacto: _buildBaySelector(displayedVoyage, mode,
+          porCarga: porCarga,
+          oficina: true,
+          compacta: true,
+          controlador: _bayScrollControllerCompacto),
+    );
+    final franja = FranjaDeLaBahia(
+      bahia: bay.bayNumber,
+      numeros: sortedBayNumbers,
+      onBahia: (numero) {
+        setState(() => _selectedBayNumber = numero);
+        ref.read(selectedBayProvider.notifier).select(numero);
+      },
+      cifras: FranjaDeLaBahia.cifrasDe(bay,
+          reservas:
+              displayedVoyage.getReservedSlotsInBay(bay.bayNumber).length,
+          tapasDeclaradas: hatchDeclarada),
+      colorear: (forma) =>
+          _colorearPor(mode, vista, dischargeMode: dischargeMode, forma: forma),
+      controles: () => controlesDelPlano(ParteDeLosControles.franja),
+    );
+    final leyenda = _buildLegend(displayedVoyage, bay, vista,
+        discharge: discharge, twenties: twenties.isNotEmpty, envuelve: true);
+    final pie = medidas.esMuelle && enOperacion
+        ? _barraDeOperacion(dischargeMode, loading, discharge)
+        : FranjaDeCifras(
+            voyage: widget.voyage, modo: mode, bahia: _selectedBayNumber);
+    return Column(children: [
+      Expanded(
+        child: CustomScrollView(
+          key: const ValueKey('columna-del-plano'),
+          slivers: [
+            SliverToBoxAdapter(child: puente),
+            FranjaFijadaSiCabe(child: franja),
+            SliverToBoxAdapter(child: rejilla),
+            SliverToBoxAdapter(child: leyenda),
+          ],
+        ),
+      ),
+      pie,
+    ]);
+  }
+
+  /// «Colorear por» en la franja de la bahía (14.8): el mismo selector que el
+  /// modo, sin iconos; Estado solo en Descarga, la única vista que lo pinta.
+  Widget _colorearPor(BayPlanMode mode, ColorearPor vista,
+          {required bool dischargeMode, required BsFormaDelSelector forma}) =>
+      BsSelectorDeModo<ColorearPor>(
+        key: const ValueKey('colorear-por'),
+        nombre: 'Colorear por',
+        forma: forma,
+        elegido: vista,
+        onElegir: (valor) =>
+            ref.read(colorearPorProvider.notifier).elegir(mode, valor),
+        entradas: [
+          if (dischargeMode)
+            const BsEntradaDeModo(
+                valor: ColorearPor.estado,
+                rotulo: 'Estado',
+                ayuda: 'Por bajar, bajado, de paso o recién movido'),
+          const BsEntradaDeModo(
+              valor: ColorearPor.destino,
+              rotulo: 'Destino',
+              ayuda: 'El puerto de descarga de cada contenedor'),
+          const BsEntradaDeModo(
+              valor: ColorearPor.tipo,
+              rotulo: 'Tipo de vacío',
+              ayuda: 'El tipo ISO de los vacíos; los llenos en papel'),
+        ],
+      );
+
+  /// La silueta del buque como selector y, en la oficina, las tarjetas
+  /// cortas a su derecha (`DESIGN.md` 14.2): por fila, las que caben junto a
+  /// una silueta de 400 dp; en una fila si caben todas y si no en dos, y la
+  /// compacta solo en una. Si no caben dos por fila (una, en la compacta),
+  /// ninguna: las cifras siguen en la franja de cifras.
   Widget _buildBaySelector(VesselVoyage displayedVoyage, BayPlanMode mode,
-      {required bool porCarga, required bool ancha, bool compacta = false}) {
+      {required bool porCarga,
+      bool compacta = false,
+      bool oficina = false,
+      ScrollController? controlador}) {
     final medidas = BsMedidas.de(context);
     final esquema = Theme.of(context).colorScheme;
     final paleta = BsPaleta.de(Theme.of(context).brightness);
@@ -357,7 +495,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       displayedVoyage: displayedVoyage,
       seleccionada: _selectedBayNumber,
       porCarga: porCarga,
-      controlador: _bayScrollController,
+      controlador: controlador ?? _bayScrollController,
       compacta: compacta,
       onSeleccion: (bayNumber) =>
           ref.read(selectedBayProvider.notifier).select(bayNumber),
@@ -385,51 +523,63 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         ],
       ),
     );
-    final tarjetas = ancha && !medidas.esMuelle
+    final tarjetas = oficina && !medidas.esMuelle
         ? CifrasDelViaje.tarjetas(context, ref,
             voyage: widget.voyage,
             modo: mode,
             bahia: _selectedBayNumber,
-            onAlertas: _abrirAlertas)
+            onAlertas: _abrirAlertas,
+            corta: true)
         : const <Widget>[];
     return Container(
       key: const ValueKey('bay-selector'),
       padding: EdgeInsets.fromLTRB(medidas.espacioM, medidas.espacioXs,
           medidas.espacioM, compacta ? medidas.espacioXs : medidas.espacioS),
-      child: LayoutBuilder(builder: (context, constraints) {
-        // Las tarjetas van a la derecha de la silueta cuando caben dos de
-        // 200 junto a ella (13.8); con menos ancho no se apilan debajo, que
-        // le quitarían el alto a la rejilla: las cifras están en «Avance».
-        if (tarjetas.isEmpty || constraints.maxWidth < 1040) {
-          return panelDeSilueta;
-        }
-        // Una fila de tarjetas de 240 si caben todas junto a la silueta
-        // (desde 1400), si no dos por fila: la fila nunca es más alta que la
-        // silueta, para que la rejilla conserve su alto. Con 240 cabe «120 de
-        // 150» a 34 junto al anillo.
-        final porFila = constraints.maxWidth >= 1400 ? tarjetas.length : 2;
-        const anchoDeTarjeta = 240.0;
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: panelDeSilueta),
-            SizedBox(width: medidas.espacioM),
-            SizedBox(
-              width: porFila * anchoDeTarjeta + (porFila - 1) * medidas.espacioM,
-              child: Wrap(
-                spacing: medidas.espacioM,
-                runSpacing: medidas.espacioM,
+      child: tarjetas.isEmpty
+          ? panelDeSilueta
+          : LayoutBuilder(builder: (context, constraints) {
+              // El ancho de la tarjeta crece con la letra (14.2): con 224 cabe
+              // «120 de 150» a 28 junto al anillo de 40.
+              final escala = MediaQuery.textScalerOf(context).scale(10) / 10;
+              final ancho = BsTarjetaCifra.anchoCorta * escala;
+              final hueco = medidas.espacioM;
+              final caben = ((constraints.maxWidth - siluetaMinima) /
+                      (ancho + hueco))
+                  .floor();
+              final filas = compacta ? 1 : 2;
+              final minimo = compacta ? 1 : math.min(2, tarjetas.length);
+              if (caben < minimo) return panelDeSilueta;
+              final porFilaQueCabe = math.min(caben, tarjetas.length);
+              final filasUsadas = math.min(
+                  filas, (tarjetas.length / porFilaQueCabe).ceil());
+              final mostradas =
+                  math.min(tarjetas.length, porFilaQueCabe * filasUsadas);
+              // Repartidas: con cuatro en dos filas, dos y dos.
+              final porFila = (mostradas / filasUsadas).ceil();
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final tarjeta in tarjetas)
-                    SizedBox(width: anchoDeTarjeta, child: tarjeta),
+                  Expanded(child: panelDeSilueta),
+                  SizedBox(width: hueco),
+                  SizedBox(
+                    width: porFila * ancho + (porFila - 1) * hueco,
+                    child: Wrap(
+                      spacing: hueco,
+                      runSpacing: hueco,
+                      children: [
+                        for (final tarjeta in tarjetas.take(mostradas))
+                          SizedBox(width: ancho, child: tarjeta),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
-            ),
-          ],
-        );
-      }),
+              );
+            }),
     );
   }
+
+  /// Lo que la silueta conserva junto a las tarjetas del panel del buque.
+  static const double siluetaMinima = 400;
 
   Future<void> _abrirAlertas() async {
     final position = await Navigator.of(context).push<IsoCoordinate>(
@@ -449,10 +599,14 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
 
   /// La leyenda de la vista (`DESIGN.md` 5.4 y 13.4): las fichas con su
   /// cuenta y «Resaltar» (RF-011), con la muestra del mismo relleno y
-  /// contorno que la celda. En pantallas angostas va en una línea que se
-  /// desplaza.
+  /// contorno que la celda. En el teléfono va en una línea que se desplaza;
+  /// en la oficina ([envuelve]) envuelve al final de la columna y nunca se
+  /// corta (14.9).
   Widget _buildLegend(VesselVoyage displayedVoyage, Bay bay, ColorearPor vista,
-      {DischargeProgress? discharge, bool twenties = false, Widget? tira}) {
+      {DischargeProgress? discharge,
+      bool twenties = false,
+      Widget? tira,
+      bool envuelve = false}) {
     final activeFilter = ref.watch(selectedTypeFilterProvider);
     final semanticos = BsColoresSemanticos.de(context);
     final medidas = BsMedidas.de(context);
@@ -566,7 +720,14 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       ],
       compacta: true,
     );
-    // En una línea que se desplaza, ancha o angosta: la rejilla se queda con
+    if (envuelve) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(medidas.espacioM, medidas.espacioS,
+            medidas.espacioM, medidas.espacioL),
+        child: cartela,
+      );
+    }
+    // En el teléfono, en una línea que se desplaza: la rejilla se queda con
     // el alto. En el teléfono bajo, los controles del plano van delante de
     // la leyenda, en la misma línea, con el aire justo (13.8).
     final vertical = tira == null ? medidas.espacioS : medidas.espacioXs;
@@ -749,6 +910,11 @@ class _BayGridWidget extends StatelessWidget {
   /// vea sin desplazar.
   final bool compacta;
 
+  /// La oficina (14.1): la rejilla a su alto natural, sin desplazamiento
+  /// vertical propio, y sin el título ni el resumen de la bahía, que van en
+  /// la franja de la bahía.
+  final bool alturaNatural;
+
   const _BayGridWidget({
     required this.bay,
     this.hatchCovers,
@@ -762,6 +928,7 @@ class _BayGridWidget extends StatelessWidget {
     this.orderMode = false,
     this.desplazamientoPrimario = false,
     this.compacta = false,
+    this.alturaNatural = false,
     this.progress,
     this.loading,
     this.dragVoyage,
@@ -839,11 +1006,14 @@ class _BayGridWidget extends StatelessWidget {
           children: [
             Icon(Icons.straighten, size: 48, color: colorScheme.onSurfaceVariant),
             const SizedBox(height: 16),
-            Text(
-              'Bahía ${bay.bayNumber.toString().padLeft(2, '0')}',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
+            // En la oficina el título va en la franja de la bahía (14.1).
+            if (!alturaNatural) ...[
+              Text(
+                'Bahía ${bay.bayNumber.toString().padLeft(2, '0')}',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+            ],
             Text(
               'Este viaje no trae la geometría del buque declarada, así que no '
               'hay rejilla contra la cual dibujarlo. Declara los parámetros del '
@@ -1002,10 +1172,12 @@ class _Rejilla extends StatelessWidget {
       );
     }
 
-    // Scroll vertical y horizontal para conservar la alineación en pantallas angostas
+    // Scroll vertical y horizontal para conservar la alineación en pantallas
+    // angostas; en la oficina, solo el horizontal: la columna desplaza.
     return LayoutBuilder(
       builder: (context, outer) => PlanZoomViewport(
         key: ValueKey('plan-zoom-${bay.bayNumber}'),
+        alturaNatural: grid.alturaNatural,
         // T-106: dentro del zoom el ancho es el de la vista lógica. A 300 % la
         // rejilla queda a la vista, sin un lienzo en blanco tan ancho como la
         // pantalla, y el margen de 16 dp se compensa para no ampliarse.
@@ -1037,12 +1209,7 @@ class _Rejilla extends StatelessWidget {
             ),
             SizedBox(height: medidas.espacioXs),
           ];
-          return SingleChildScrollView(
-            primary: grid.desplazamientoPrimario ? true : null,
-            padding: grid.compacta
-                ? EdgeInsets.fromLTRB(margin, margin / 2, margin, margin)
-                : EdgeInsets.all(margin),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          final contenido = Column(mainAxisSize: MainAxisSize.min, children: [
               if (grid.hatchCovers != null && outer.maxWidth < 600) ...[
                 SizedBox(
                     width: inner,
@@ -1060,31 +1227,35 @@ class _Rejilla extends StatelessWidget {
               ],
               // El título y el resumen de la bahía van al ancho de la vista,
               // no al de la rejilla: a 360 dp la rejilla es más ancha que la
-              // pantalla y, centrado sobre ella, el título salía cortado.
-              SizedBox(
-                width: inner,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Bahía ${bay.bayNumber.toString().padLeft(2, '0')}'
-                      '${grid.hatchCovers == null ? ' · tapas sin declarar' : ''}',
-                      style: textos.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      '${operationCount(bay.containers.length, 'contenedor', 'contenedores')}'
-                      '${grid.reservedSlots.isEmpty ? '' : ' · ${operationCount(grid.reservedSlots.length, 'celda reservada', 'celdas reservadas')}'}'
-                      ' · ${formatearToneladas(bay.totalWeight)}',
-                      style: textos.bodyMedium
-                          ?.copyWith(color: esquema.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+              // pantalla y, centrado sobre ella, el título salía cortado. En
+              // la oficina van en la franja de la bahía (14.1).
+              if (!grid.alturaNatural) ...[
+                SizedBox(
+                  width: inner,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Bahía ${bay.bayNumber.toString().padLeft(2, '0')}'
+                        '${grid.hatchCovers == null ? ' · tapas sin declarar' : ''}',
+                        style: textos.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        '${operationCount(bay.containers.length, 'contenedor', 'contenedores')}'
+                        '${grid.reservedSlots.isEmpty ? '' : ' · ${operationCount(grid.reservedSlots.length, 'celda reservada', 'celdas reservadas')}'}'
+                        ' · ${formatearToneladas(bay.totalWeight)}',
+                        style: textos.bodyMedium
+                            ?.copyWith(color: esquema.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(
-                  height: grid.compacta ? medidas.espacioXs : medidas.espacioS),
+                SizedBox(
+                    height:
+                        grid.compacta ? medidas.espacioXs : medidas.espacioS),
+              ],
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: ConstrainedBox(
@@ -1152,7 +1323,16 @@ class _Rejilla extends StatelessWidget {
                   ),
                 ),
               ),
-            ]),
+            ]);
+          if (grid.alturaNatural) {
+            return Padding(padding: EdgeInsets.all(margin), child: contenido);
+          }
+          return SingleChildScrollView(
+            primary: grid.desplazamientoPrimario ? true : null,
+            padding: grid.compacta
+                ? EdgeInsets.fromLTRB(margin, margin / 2, margin, margin)
+                : EdgeInsets.all(margin),
+            child: contenido,
           );
         }),
       ),

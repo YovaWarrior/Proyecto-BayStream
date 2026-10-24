@@ -8,6 +8,8 @@ import 'package:baystream/features/vessel/presentation/widgets/bay_plan_view.dar
 import 'package:baystream/features/vessel/presentation/widgets/loading_controls.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/loading_plan_provider.dart';
+import 'package:baystream/features/vessel/presentation/providers/plano_providers.dart';
+import 'package:baystream/features/vessel/presentation/widgets/loading_plan_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,9 +45,10 @@ void main() {
     await tester.pumpWidget(UncontrolledProviderScope(container: scope,
         child: MaterialApp(home: Scaffold(body: BayPlanView(voyage: t76Loading)))));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('bay-plan-display-mode')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Número de orden').last);
+    // T-118 (DESIGN.md 14.6): a 800 dp, en la oficina, el selector de modo va
+    // en la cabecera de la página, que esta prueba no monta; se elige en el
+    // mismo provider que usa la cabecera.
+    scope.read(bayPlanModeProvider.notifier).elegir(BayPlanMode.order);
     await tester.pumpAndSettle();
     await log.append(MovementDraft.changePosition('op', fixture.move, 'Cambio remoto'), fixture.office.author);
     await log.append(MovementDraft.cancelItem('op', 'C:FULL0005678', 'No embarca'), fixture.office.author);

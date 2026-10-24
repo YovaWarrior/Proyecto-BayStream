@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/app_theme_preference.dart';
 import '../formatters/vessel_error_message.dart';
+import '../providers/oficina_providers.dart';
 import '../providers/theme_preference_provider.dart';
 import '../widgets/avisos_del_viaje.dart';
+import '../widgets/navegacion_del_viaje.dart' show AnchosDeNavegacion;
 import 'privacy_policy_page.dart';
 
 /// Ajustes del dispositivo, separados de la confirmación del perfil del buque.
@@ -15,6 +17,13 @@ class ParametersPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final preference = ref.watch(themePreferenceProvider);
+    // T-117 · Lo de la oficina, solo donde hay oficina (desde 600 dp).
+    final conOficina =
+        MediaQuery.sizeOf(context).width >= AnchosDeNavegacion.riel;
+    final oficina = conOficina
+        ? ref.watch(preferenciasDeLaOficinaProvider).value ??
+            const PreferenciasDeLaOficina()
+        : null;
     return Scaffold(
       appBar: AppBar(title: const Text('Parámetros')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
@@ -52,6 +61,35 @@ class ParametersPage extends ConsumerWidget {
           Text('No se pudo leer el tema guardado: falló la lectura de las preferencias '
               'de este dispositivo; se usa el del sistema. Elígelo de nuevo.',
               style: TextStyle(color: Theme.of(context).colorScheme.error)),
+        ],
+        // T-117 (DESIGN.md 14.3): el panel lateral por el borde, del equipo.
+        if (oficina != null) ...[
+          const SizedBox(height: 24),
+          Text('Panel lateral', style: Theme.of(context).textTheme.titleMedium),
+          SwitchListTile(
+            key: const ValueKey('pref-panel-por-el-borde'),
+            contentPadding: EdgeInsets.zero,
+            title: const Text(
+                'Mostrar el panel lateral al pasar el mouse por el borde'),
+            subtitle: const Text('Con el panel oculto, sale flotante si el '
+                'mouse se queda en el borde derecho de la ventana. Se guarda '
+                'en este equipo.'),
+            value: oficina.panelAlPasarElMouse,
+            onChanged: (value) async {
+              final guardado = await ref
+                  .read(preferenciasDeLaOficinaProvider.notifier)
+                  .panelAlPasarElMouse(value);
+              if (guardado) return;
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+                texto: 'No se guardó la preferencia: falló el almacén local de '
+                    'este equipo. Vale hasta cerrar la app; elígela de nuevo '
+                    'al volver a abrirla.',
+                corto: 'No se guardó la preferencia.',
+                fondo: Theme.of(context).colorScheme.error,
+              ));
+            },
+          ),
         ],
         // T-88: la política, sin viaje y sin sesión.
         const SizedBox(height: 24),

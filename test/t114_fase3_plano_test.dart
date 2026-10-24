@@ -150,6 +150,13 @@ Future<ProviderContainer> _pump(
   return scope;
 }
 
+/// El título de la bahía («Bahía 02»): sobre la rejilla en el teléfono y en
+/// la franja de la bahía en la oficina (T-117, DESIGN.md 14.8). Es un texto
+/// simple; las fichas del resumen (T-118, 14.7), que también empiezan por
+/// «Bahía 02», son `Text.rich` y no cuentan.
+Finder _tituloDeBahia(String numero) => find.byWidgetPredicate((w) =>
+    w is Text && w.data != null && w.data!.startsWith('Bahía $numero'));
+
 BsCelda _celda(WidgetTester tester, String clave) => tester.widget<BsCelda>(
     find.descendant(
         of: find.byKey(ValueKey(clave)),
@@ -296,12 +303,12 @@ void main() {
       final scope = await _pump(tester);
       expect(find.byKey(const ValueKey('silueta-del-viaje')), findsOneWidget);
       expect(find.byKey(const ValueKey('bay-selector')), findsOneWidget);
-      expect(find.textContaining(RegExp(r'^Bahía 02')), findsOneWidget);
+      expect(_tituloDeBahia('02'), findsOneWidget);
       expect(find.byKey(const ValueKey('cell-1-82')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('silueta-bahia-6')));
       await tester.pumpAndSettle();
       expect(scope.read(selectedBayProvider), 6);
-      expect(find.textContaining(RegExp(r'^Bahía 06')), findsOneWidget);
+      expect(_tituloDeBahia('06'), findsOneWidget);
       expect(_celda(tester, 'cell-1-82').codigo, 'PAMIT');
       expect(tester.takeException(), isNull);
     });
@@ -391,7 +398,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('el detalle va al panel con sitio y a una hoja sin él',
+    testWidgets('el detalle va al panel con sitio y al panel flotante sin él',
         (tester) async {
       await _pump(tester);
       final celda = find.byKey(const ValueKey('cell-1-82'));
@@ -407,13 +414,19 @@ void main() {
       await tester.pumpAndSettle();
       expect(detalle, findsNothing);
 
+      // Sin sitio para el panel fijo, el detalle sale en el panel flotante
+      // (T-117, DESIGN.md 14.3), no en la hoja de abajo, que queda para el
+      // teléfono.
       tester.view.physicalSize = const Size(800, 900);
       await tester.pumpAndSettle();
       await tester.ensureVisible(celda);
       await tester.tap(celda);
       await tester.pumpAndSettle();
-      expect(find.byType(BottomSheet), findsOneWidget);
-      expect(detalle, findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.descendant(
+              of: find.byKey(const ValueKey('panel-flotante')),
+              matching: detalle),
+          findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });

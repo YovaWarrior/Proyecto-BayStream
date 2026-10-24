@@ -228,13 +228,14 @@ void main() {
             find.textContaining('1 celda de carga sin cruce'), findsOneWidget);
         expect(find.text('2'), findsWidgets); // OR 2 en bahía 03.
       } else {
-        expect(find.text('Importar listado'), findsOneWidget);
         expect(find.textContaining('todavía no tiene listado'), findsOneWidget);
       }
       expect(tester.takeException(), isNull);
-      // T-107 · A 360 dp la acción está en «Acciones».
+      // T-107 · A 360 dp la acción está en «Acciones». T-118 (DESIGN.md
+      // 14.7): «Importar listado» también, y no en el resumen.
       await tester.tap(find.byKey(const ValueKey('bay-plan-actions')));
       await tester.pumpAndSettle();
+      expect(find.text('Importar listado'), withList ? findsNothing : findsOneWidget);
       await tester.tap(find.text('Pendientes por bahía'));
       await tester.pumpAndSettle();
       expect(find.textContaining('7 pendientes'), findsOneWidget);

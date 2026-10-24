@@ -13,48 +13,6 @@ import 'avisos_del_viaje.dart';
 import 'hatch_operation_controls.dart';
 import '../../../../core/utils/voyage_number.dart';
 
-/// T-75 · Resumen del modo Descarga: la bahía elegida y la escala completa.
-class DischargeSummary extends ConsumerWidget {
-  final VesselVoyage voyage;
-  final int? selectedBay;
-  const DischargeSummary(
-      {super.key, required this.voyage, required this.selectedBay});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final progress = ref.watch(dischargeProgressProvider(voyage));
-    if (progress.hasError) {
-      return Text(vesselErrorMessage(progress.error!, progress.stackTrace,
-          'calcular los pendientes de descarga'));
-    }
-    if (!progress.hasValue) {
-      return const Text('Leyendo el estado de la operación…');
-    }
-    final data = progress.value!;
-    final bay = selectedBay == null ? null : data.forBay(selectedBay!);
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(
-          bay == null
-              ? 'Pendientes de descarga: 0 en esta bahía.'
-              : 'Bahía ${bay.label} · pendientes de descarga: '
-                  'cubierta ${bay.deckPending} · bodega ${bay.holdPending} · '
-                  '${bay.discharged == 1 ? 'descargado' : 'descargados'} ${bay.discharged}'
-                  '${bay.restows == 0 ? '' : ' · ${operationCount(bay.restows, 're‑estiba', 're‑estibas')}'}',
-          key: const ValueKey('bay-discharge-pending')),
-      Text(
-          'Escala ${voyage.portOfCall}: ${data.pending} por descargar '
-          '${pendingZones(data.deckPending, data.holdPending)} · '
-          '${operationCount(data.discharged, 'descargado', 'descargados')} · ${operationCount(data.restows, 're‑estiba', 're‑estibas')}',
-          key: const ValueKey('operation-discharge-totals')),
-      if (!data.canRegister)
-        const Text('Esta escala todavía no tiene operación guardada: vuelve a '
-            'abrir el BAPLIE de llegada y confirma la escala para registrar.')
-      else
-        const Text('Toca un contenedor para marcarlo como descargado.'),
-    ]);
-  }
-}
-
 /// Tabla de pendientes de descarga por bahía, con las re-estibas aparte.
 void showDischargeTable(BuildContext context, VesselVoyage voyage) =>
     showModalBottomSheet<void>(

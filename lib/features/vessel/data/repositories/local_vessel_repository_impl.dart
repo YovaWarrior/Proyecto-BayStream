@@ -66,6 +66,14 @@ class LocalVesselRepositoryImpl implements LocalVesselRepository {
       _guard(() => _source.setThemePreference(preference));
 
   @override
+  Future<Either<Failure, String?>> getUiPreference(UiPreference key) =>
+      _guard(() => _source.getUiPreference(key));
+
+  @override
+  Future<Either<Failure, void>> setUiPreference(UiPreference key, String? value) =>
+      _guard(() => _source.setUiPreference(key, value));
+
+  @override
   Future<Either<Failure, CodeEquivalences>> getCodeEquivalences() =>
       _guard(_source.getCodeEquivalences);
 

@@ -12,11 +12,13 @@ import 'componentes/bs_cartela.dart';
 import 'componentes/bs_casco_bodega.dart';
 import 'componentes/bs_celda.dart';
 import 'componentes/bs_cifra.dart';
+import 'componentes/bs_ficha_de_cifra.dart';
 import 'componentes/bs_fondo_de_plano.dart';
 import 'componentes/bs_hoja_de_detalle.dart';
 import 'componentes/bs_marca.dart';
 import 'componentes/bs_numero_de_contenedor.dart';
 import 'componentes/bs_panel_en_vivo.dart';
+import 'componentes/bs_selector_de_modo.dart';
 import 'componentes/bs_silueta_buque.dart';
 import 'componentes/bs_tarjeta_cifra.dart';
 import 'componentes/bs_tira_de_bahias.dart';
@@ -636,3 +638,106 @@ Widget vistaPreviaTravesia() => Builder(
         child: const SizedBox(height: 240, child: BsTravesia()),
       ),
     );
+
+/// Las entradas del selector de modo de las vistas previas (`DESIGN.md` 14.6).
+const List<BsEntradaDeModo<String>> _modosDeEjemplo = <BsEntradaDeModo<String>>[
+  BsEntradaDeModo<String>(
+    valor: 'contenido',
+    rotulo: 'Contenido',
+    icono: BsIconos.contenedor40,
+    ayuda: 'El destino de cada contenedor',
+  ),
+  BsEntradaDeModo<String>(
+    valor: 'orden',
+    rotulo: 'Número de orden',
+    rotuloCorto: 'Orden',
+    icono: BsIconos.orden,
+    cuenta: '30 OR del listado',
+  ),
+  BsEntradaDeModo<String>(
+    valor: 'descarga',
+    rotulo: 'Descarga',
+    icono: BsIconos.descarga,
+    cuenta: '28 por bajar en GTSTC',
+    cuentaCorta: '28',
+    ayuda: 'Toca un contenedor para marcarlo como descargado',
+  ),
+  BsEntradaDeModo<String>(
+    valor: 'carga',
+    rotulo: 'Carga',
+    icono: BsIconos.carga,
+    cuenta: '29 pendientes: 20 llenos, 9 vacíos',
+    cuentaCorta: '29',
+  ),
+];
+
+/// El selector de modo de la oficina, en segmentos y en menú (14.6).
+@Preview(name: 'Selector de modo', group: 'Diseño', theme: bsTemaDeVistaPreviaOficina, size: Size(720, 200))
+Widget vistaPreviaSelectorDeModo() => _lienzo(Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        BsSelectorDeModo<String>(
+          entradas: _modosDeEjemplo,
+          elegido: 'carga',
+          forma: BsFormaDelSelector.segmentos,
+          onElegir: (String _) {},
+        ),
+        const SizedBox(height: 16),
+        BsSelectorDeModo<String>(
+          entradas: _modosDeEjemplo,
+          elegido: 'carga',
+          forma: BsFormaDelSelector.menu,
+          onElegir: (String _) {},
+        ),
+      ],
+    ));
+
+/// El resumen del modo en fichas y las tarjetas cortas del panel del buque
+/// (14.2 y 14.7).
+@Preview(name: 'Fichas y tarjetas cortas', group: 'Diseño', theme: bsTemaDeVistaPreviaOficina, size: Size(720, 220))
+Widget vistaPreviaFichasYTarjetasCortas() => _lienzo(Builder(
+      builder: (BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Wrap(
+            spacing: 24,
+            runSpacing: 4,
+            children: <Widget>[
+              const BsFichaDeCifra(rotulo: 'Bahía 10', valor: 'cub. 2, bod. 7'),
+              const BsFichaDeCifra(
+                  rotulo: 'Carga', valor: '29 pendientes, 20 llenos, 9 vacíos'),
+              BsFichaDeCifra(
+                valor: 'Importa el listado de agencia para operar por OR.',
+                rol: BsColoresSemanticos.de(context).revisar,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Wrap(
+            spacing: 12,
+            children: <Widget>[
+              SizedBox(
+                width: BsTarjetaCifra.anchoCorta,
+                child: BsTarjetaCifra(
+                  corta: true,
+                  valor: '120 de 150',
+                  rotulo: 'Descarga',
+                  detalle: '80 %',
+                  anillo: BsAnilloAvance(
+                      fraccion: 0.8, tamano: BsTarjetaCifra.anilloCorta, grosor: 7),
+                ),
+              ),
+              SizedBox(
+                width: BsTarjetaCifra.anchoCorta,
+                child: BsTarjetaCifra(
+                  corta: true,
+                  valor: '30',
+                  rotulo: 'Por bajar',
+                  detalle: '18 en la bahía 14',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ));

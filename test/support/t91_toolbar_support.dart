@@ -1,3 +1,4 @@
+import 'package:baystream/core/design/design.dart';
 import 'package:baystream/features/vessel/data/repositories/local_only_operation_sync.dart';
 import 'package:baystream/core/errors/failures.dart';
 import 'package:dartz/dartz.dart';
@@ -132,11 +133,13 @@ Future<void> checkT91Toggle(WidgetTester tester, ProviderContainer scope,
     expect(tester.state(plan), same(planState));
     expect(scope.read(voyageNotifierProvider), same(before));
     expect(scope.read(selectedBayProvider), bays.last);
+    // T-118 (DESIGN.md 14.6): el selector es `BsSelectorDeModo`; el modo
+    // elegido es su `elegido`, como antes el `value` del desplegable.
     expect(
         tester
-            .widget<DropdownButton<BayPlanMode>>(
+            .widget<BsSelectorDeModo<BayPlanMode>>(
                 find.byKey(const ValueKey('bay-plan-display-mode')))
-            .value,
+            .elegido,
         mode);
     expect(positions.map((p) => p.pixels).toList(), offsets);
     expect(tester.takeException(), isNull);
