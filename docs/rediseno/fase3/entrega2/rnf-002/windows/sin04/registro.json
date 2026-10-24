@@ -1,0 +1,158 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "sin",
+ "repeticion": 4,
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-e2\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "inicioUtc": "2026-10-23T06:06:11.506372+00:00",
+ "acciones": [
+  {
+   "paso": 1,
+   "accion": "abrir el binario (icono)",
+   "t": 0.0
+  },
+  {
+   "paso": 2,
+   "accion": "pulsar «Seleccionar archivo»",
+   "t": 0.6898,
+   "punto": [
+    411,
+    266
+   ]
+  },
+  {
+   "paso": 3,
+   "accion": "elegir el archivo en el selector y confirmar",
+   "t": 1.585
+  }
+ ],
+ "cuadros": [
+  {
+   "t": 0.4812,
+   "dif": null
+  },
+  {
+   "t": 0.7071,
+   "dif": 0.137
+  },
+  {
+   "t": 0.7803,
+   "dif": 0.147
+  },
+  {
+   "t": 0.8404,
+   "dif": 0.107
+  },
+  {
+   "t": 0.898,
+   "dif": 0.027
+  },
+  {
+   "t": 0.9485,
+   "dif": 0.029
+  },
+  {
+   "t": 1.011,
+   "dif": 0.096
+  },
+  {
+   "t": 1.5852,
+   "dif": 10.045
+  },
+  {
+   "t": 1.6462,
+   "dif": 10.352
+  },
+  {
+   "t": 1.7076,
+   "dif": 0.218
+  },
+  {
+   "t": 1.7683,
+   "dif": 0.0
+  },
+  {
+   "t": 1.8183,
+   "dif": 11.736
+  },
+  {
+   "t": 1.8687,
+   "dif": 0.0
+  },
+  {
+   "t": 1.9188,
+   "dif": 0.0
+  },
+  {
+   "t": 1.9691,
+   "dif": 0.0
+  },
+  {
+   "t": 2.0194,
+   "dif": 0.0
+  },
+  {
+   "t": 2.0785,
+   "dif": 0.0
+  },
+  {
+   "t": 2.1288,
+   "dif": 0.0
+  },
+  {
+   "t": 2.1793,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2474,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2977,
+   "dif": 0.0
+  },
+  {
+   "t": 2.3479,
+   "dif": 0.0
+  },
+  {
+   "t": 2.398,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4481,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4981,
+   "dif": 0.0
+  }
+ ],
+ "hitos": {
+  "ventana": 0.44303269998636097,
+  "confirmado": 1.585,
+  "rejillaQuieta": 1.8687,
+  "incertidumbreS": 0.05
+ },
+ "almacenApartado": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114-e2\\primera\\windows-3\\almacen-apartado-sin04",
+ "ventana": {
+  "pid": 12052,
+  "rect": [
+   -9,
+   -9,
+   1929,
+   1029
+  ],
+  "maximizada": true
+ },
+ "tema": "oscuro",
+ "pasosDelProducto": 3,
+ "tiempoHastaRejillaS": 1.869,
+ "cumpleTiempo": true,
+ "pngs": {
+  "inicio": "inicio.png",
+  "rejilla": "rejilla.png",
+  "final": "final.png"
+ },
+ "finUtc": "2026-10-23T06:06:14.103072+00:00"
+}

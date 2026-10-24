@@ -1,0 +1,289 @@
+{
+ "nombre": "vacio_recientes",
+ "ancho": 320,
+ "alto": 200,
+ "paleta": {
+  "claro": {
+   "bodega": "#6E9DE6",
+   "fondo": "#F5F8FC",
+   "frase": "#BCD2F7",
+   "hoja": "#FFFFFF",
+   "marca": "#0D47A1",
+   "tinta": "#10243F",
+   "tinta_suave": "#4A5B73"
+  },
+  "oscuro": {
+   "bodega": "#6E9DE6",
+   "fondo": "#07111F",
+   "frase": "#BCD2F7",
+   "marca": "#0D47A1",
+   "panel": "#0C1A31",
+   "panel_alto": "#11223F",
+   "tinta": "#EAF0F9",
+   "tinta_suave": "#A9B9D2"
+  }
+ },
+ "fondo": "fondo",
+ "formas": [
+  {
+   "grupo": "agua",
+   "ruta": "M176 158L320 158L320 200L176 200Z",
+   "relleno": {
+    "claro": "frase",
+    "oscuro": "panel_alto"
+   },
+   "trazo": null,
+   "grosor": 0
+  },
+  {
+   "grupo": "flotacion",
+   "ruta": "M176 158L320 158",
+   "relleno": null,
+   "trazo": {
+    "claro": "tinta_suave",
+    "oscuro": "bodega"
+   },
+   "grosor": 1.75
+  },
+  {
+   "grupo": "muelle_muro",
+   "ruta": "M0 158L176 158L176 200L0 200Z",
+   "relleno": {
+    "claro": null,
+    "oscuro": "panel"
+   },
+   "trazo": null,
+   "grosor": 0
+  },
+  {
+   "grupo": "muelle",
+   "ruta": "M0 134L176 134L176 158L0 158Z",
+   "relleno": "marca",
+   "trazo": null,
+   "grosor": 0
+  },
+  {
+   "grupo": "muelle_cota",
+   "ruta": "M0 134L176 134",
+   "relleno": null,
+   "trazo": "tinta",
+   "grosor": 2
+  },
+  {
+   "grupo": "muelle_base",
+   "ruta": "M0 158L176 158",
+   "relleno": null,
+   "trazo": {
+    "claro": "tinta_suave",
+    "oscuro": "bodega"
+   },
+   "grosor": 1.75
+  },
+  {
+   "grupo": "muelle_cara",
+   "ruta": "M176 134L176 200",
+   "relleno": null,
+   "trazo": "tinta",
+   "grosor": 2
+  },
+  {
+   "grupo": "defensa",
+   "ruta": "M177.44 136.88L181.76 136.88C182.555 136.88 183.2 137.525 183.2 138.32L183.2 147.92C183.2 148.715 182.555 149.36 181.76 149.36L177.44 149.36C176.645 149.36 176 148.715 176 147.92L176 138.32C176 137.525 176.645 136.88 177.44 136.88Z",
+   "relleno": "tinta_suave",
+   "trazo": null,
+   "grosor": 0
+  },
+  {
+   "grupo": "sill",
+   "ruta": "M58 126L82 126L82 130.5L58 130.5Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "rueda",
+   "ruta": "M65.5 131.5C65.5 132.881 64.381 134 63 134C61.619 134 60.5 132.881 60.5 131.5C60.5 130.119 61.619 129 63 129C64.381 129 65.5 130.119 65.5 131.5Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "rueda",
+   "ruta": "M79.5 131.5C79.5 132.881 78.381 134 77 134C75.619 134 74.5 132.881 74.5 131.5C74.5 130.119 75.619 129 77 129C78.381 129 79.5 130.119 79.5 131.5Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "pierna",
+   "ruta": "M67 45L73 45L73 126L67 126Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "sill",
+   "ruta": "M133 126L157 126L157 130.5L133 130.5Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "rueda",
+   "ruta": "M140.5 131.5C140.5 132.881 139.381 134 138 134C136.619 134 135.5 132.881 135.5 131.5C135.5 130.119 136.619 129 138 129C139.381 129 140.5 130.119 140.5 131.5Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "rueda",
+   "ruta": "M154.5 131.5C154.5 132.881 153.381 134 152 134C150.619 134 149.5 132.881 149.5 131.5C149.5 130.119 150.619 129 152 129C153.381 129 154.5 130.119 154.5 131.5Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "pierna",
+   "ruta": "M142 45L148 45L148 126L142 126Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "portal",
+   "ruta": "M73 79L142 79L142 84L73 84Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "riostra",
+   "ruta": "M73 79L142 47",
+   "relleno": null,
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "pluma",
+   "ruta": "M22.5 39L292.5 39L292.5 45L22.5 45Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 2
+  },
+  {
+   "grupo": "maquinas",
+   "ruta": "M28 30L63 30L63 39L28 39Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "tirante",
+   "ruta": "M145 21L289.5 39",
+   "relleno": null,
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "tirante",
+   "ruta": "M145 21L215.06 39",
+   "relleno": null,
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "tirante",
+   "ruta": "M145 21L30 30",
+   "relleno": null,
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "pilon",
+   "ruta": "M138 39L152 39L145 21Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "carro",
+   "ruta": "M79.5 45L100.5 45L100.5 51L79.5 51Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "cabina",
+   "ruta": "M79.5 51L84.5 51L84.5 56L79.5 56Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "cable",
+   "ruta": "M86.5 51L86.5 58",
+   "relleno": null,
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "cable",
+   "ruta": "M98.5 51L98.5 58",
+   "relleno": null,
+   "trazo": "tinta",
+   "grosor": 1.75
+  },
+  {
+   "grupo": "spreader",
+   "ruta": "M84.55 58L100.45 58C100.864 58 101.2 58.336 101.2 58.75L101.2 60.75C101.2 61.164 100.864 61.5 100.45 61.5L84.55 61.5C84.136 61.5 83.8 61.164 83.8 60.75L83.8 58.75C83.8 58.336 84.136 58 84.55 58Z",
+   "relleno": {
+    "claro": "hoja",
+    "oscuro": "panel_alto"
+   },
+   "trazo": "tinta",
+   "grosor": 1.75
+  }
+ ]
+}

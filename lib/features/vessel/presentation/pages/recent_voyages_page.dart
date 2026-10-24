@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
@@ -6,6 +7,7 @@ import '../../domain/repositories/local_vessel_repository.dart';
 import '../providers/vessel_providers.dart';
 import '../formatters/vessel_error_message.dart';
 import '../formatters/operation_text.dart';
+import '../widgets/avisos_del_viaje.dart';
 import '../widgets/empty_state_widget.dart';
 import '../../../../core/utils/voyage_number.dart';
 
@@ -30,18 +32,14 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
       final kept = notifier.reopenKeptParameters;
       if (kept.isNotEmpty) {
         // T-61: el perfil vigente no se aplica si oculta carga; se dice cuál.
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            key: const ValueKey('reopen-kept-parameters'),
-            duration: const Duration(seconds: 10),
-            content: Text('No se aplicó del perfil vigente: '
-                '${kept.map((p) => p.label).join(', ')}. Dejaría contenedores '
-                'de este viaje fuera del plano; se conserva el valor guardado '
-                'con el viaje. Revisa el perfil del buque.')));
+        // El aviso se ve sobre el plano, al volver: es uno de la página.
+        ScaffoldMessenger.of(context).showSnackBar(
+            avisoDelParametroConservado(kept.map((p) => p.label)));
       }
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(
+          avisoDelViaje(texto: error, corto: 'No se abrió el viaje.'));
     }
   }
 
@@ -69,9 +67,10 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
         .deleteRecentVoyage(voyage.id);
     if (!mounted) return;
     setState(() => _working = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            error ?? 'Viaje eliminado. El perfil del buque se conserva.')));
+    // Puede seguir en pantalla al volver al plano: sabe su lugar (10.33).
+    ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+        texto: error ?? 'Viaje eliminado. El perfil del buque se conserva.',
+        corto: error == null ? 'Viaje eliminado.' : 'No se eliminó el viaje.'));
   }
 
   @override
@@ -100,8 +99,12 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
                           child: const Text('Reintentar')),
                     ])),
                     data: (voyages) => voyages.isEmpty
-                        ? EmptyStateWidget(
-                            onPickFile: () => Navigator.pop(context, true))
+                        // Con la ilustración (13.11) el estado vacío se
+                        // desplaza en una pantalla baja.
+                        ? SingleChildScrollView(
+                            child: EmptyStateWidget(
+                                onPickFile: () => Navigator.pop(context, true),
+                                ilustracion: BsIlustraciones.vacioRecientes))
                         : ListView(children: [
                             for (final voyage in voyages)
                               ListTile(
@@ -110,8 +113,7 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
                                       '${voyage.vessel.name} · ${voyageNumberLabel(voyage.voyageNumber)}'),
                                   subtitle: Text(
                                       '${operationCount(voyage.totalContainers, 'contenedor', 'contenedores')} · ${operationCount(voyage.bays.length, 'bahía', 'bahías')}'),
-                                  leading: const Icon(
-                                      Icons.directions_boat_outlined),
+                                  leading: const Icon(BsIconos.buque),
                                   onTap: _working ? null : () => _open(voyage),
                                   trailing: IconButton(
                                       key: ValueKey('delete-${voyage.id}'),

@@ -1,3 +1,4 @@
+import 'package:baystream/core/design/design.dart';
 import 'package:baystream/core/utils/iso_coordinate_parser.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
@@ -212,7 +213,10 @@ void main() {
       final colorPaso = (dePaso.decoration as BoxDecoration).color;
 
       expect(colorPaso, isNot(colorEscala));
-      expect(colorPaso, Theme.of(tester.element(find.byType(BayPlanView))).colorScheme.surface);
+      // Fase 3: «de paso» es el rol del sistema de diseño (el papel con el
+      // código en tinta suave, DESIGN.md 13.2); con el tema del producto, el
+      // papel es el `surface` del esquema.
+      expect(colorPaso, BsColoresSemanticos.claro().dePaso.relleno);
     });
   });
 
@@ -269,7 +273,7 @@ void main() {
         (tester) async {
       await pumpBahia7(tester);
 
-      expect(find.text("40'"), findsOneWidget);
+      expect(find.text('40′'), findsOneWidget);
     });
 
     testWidgets('la leyenda declara el hueco tomado por 40 pies',
@@ -305,7 +309,9 @@ void main() {
     // T-66: la celda también muestra su peso en toneladas; la cabecera se
     // busca sin las celdas para seguir probando lo que esta prueba prueba.
     Finder enCabecera(String texto) => find.byWidgetPredicate((w) =>
-        w is Text && w.data == texto && w.key != const ValueKey('peso-celda'));
+        w is Text &&
+        w.data == texto &&
+        (w.key?.toString().contains('peso-pila-') ?? false));
 
     testWidgets('la cabecera muestra el peso de cada pila', (tester) async {
       // Fila 01: 20 t en cubierta. Fila 03: 30 t en bodega.
@@ -327,7 +333,7 @@ void main() {
           .where((c) => c.decoration is BoxDecoration)
           .where((c) => (c.decoration as BoxDecoration).color != null)
           .where((c) => (c.decoration as BoxDecoration).borderRadius ==
-              BorderRadius.circular(3));
+              BorderRadius.circular(6));
 
       expect(marcadas, isEmpty);
     });
@@ -351,7 +357,7 @@ void main() {
           .where((c) =>
               c.decoration is BoxDecoration &&
               (c.decoration as BoxDecoration).borderRadius ==
-                  BorderRadius.circular(3) &&
+                  BorderRadius.circular(6) &&
               (c.decoration as BoxDecoration).color != null);
 
       expect(marcadas, isEmpty, reason: 'ninguna pila supera el limite');
@@ -375,7 +381,7 @@ void main() {
           .where((c) =>
               c.decoration is BoxDecoration &&
               (c.decoration as BoxDecoration).borderRadius ==
-                  BorderRadius.circular(3) &&
+                  BorderRadius.circular(6) &&
               (c.decoration as BoxDecoration).color != null);
 
       expect(marcadas.length, 1);

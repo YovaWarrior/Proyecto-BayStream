@@ -187,7 +187,8 @@ void main() {
         child: MaterialApp(
             theme: ThemeData(fontFamily: 'Roboto'),
             home: const VesselOverviewPage())));
-    await tester.tap(find.byTooltip('Cargar archivo BAPLIE'));
+    // Fase 3 (10.9): en el inicio la carga es «Seleccionar archivo».
+      await tester.tap(find.byKey(const ValueKey('select-file')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Este archivo no parece un BAPLIE'),
         findsOneWidget);

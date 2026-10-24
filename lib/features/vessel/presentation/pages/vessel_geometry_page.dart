@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/utils/iso_coordinate_parser.dart';
@@ -168,9 +169,16 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     _stackLimit = TextEditingController(
       text: formatStackWeightLimit(start.stackWeightLimitKg),
     );
-    _limitUnavailable =
-        (widget.initial != null || widget.profileOnly ||
-          widget.profile?.origin == VesselProfileOrigin.template) && start.stackWeightLimitKg == null;
+    // «No lo tengo» no se marca por omisión (10.2; DESIGN.md 7.2): viene
+    // marcado solo si el perfil es de este mismo buque, lo declaró el usuario
+    // y no tiene límite. Con una plantilla de otro buque o con la propuesta
+    // del archivo empieza sin marcar y el usuario tiene que elegir (10.15, H1).
+    final perfil = widget.profile;
+    final mismoBuque = perfil != null &&
+        (widget.voyage == null || widget.voyage!.vessel.profileKey == perfil.key);
+    _limitUnavailable = mismoBuque &&
+        perfil.origin == VesselProfileOrigin.declaredByUser &&
+        start.stackWeightLimitKg == null;
 
     for (final controller in _controllers) {
       controller.addListener(_onFieldChanged);
@@ -395,7 +403,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               Text(_hatches.isEmpty ? 'Tapas: sin declarar' : 'Tapas: ${_hatches.length} bahías declaradas'),
               if (_hatchError(candidate) != null) Text(_hatchError(candidate)!, style: TextStyle(color: colorScheme.error)),
               OutlinedButton.icon(key: const ValueKey('profile-hatches'),
-                icon: const Icon(Icons.view_column_outlined), label: const Text('Editar tapas por bahía'),
+                icon: const Icon(BsIconos.tapaEscotilla), label: const Text('Editar tapas por bahía'),
                 onPressed: () async {
                   final result = await Navigator.of(context).push<Map<int, HatchCoverDeclaration>>(
                     MaterialPageRoute(builder: (_) => HatchCoversPage(geometry: candidate,

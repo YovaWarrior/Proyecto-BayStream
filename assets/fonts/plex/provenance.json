@@ -1,0 +1,74 @@
+[
+  {
+    "file": "IBMPlexSans-Regular.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Regular.ttf",
+    "repository": "https://github.com/IBM/plex",
+    "commit": "71f558992315a12ca1f06a2215d57962a1992162",
+    "sha256": "975DCDA37D80F038DCD143C22E33CA2D97A0CC5A929AACE1C749153B0FE1AFA5",
+    "bytes": 200500,
+    "license": "LICENSE-IBMPlex.txt"
+  },
+  {
+    "file": "IBMPlexSans-Medium.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-Medium.ttf",
+    "repository": "https://github.com/IBM/plex",
+    "commit": "71f558992315a12ca1f06a2215d57962a1992162",
+    "sha256": "331C8639D7598B2CDE62A911A71DB195E30CB655CD6BDF2E324A7E984955F907",
+    "bytes": 202460,
+    "license": "LICENSE-IBMPlex.txt"
+  },
+  {
+    "file": "IBMPlexSans-SemiBold.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/packages/plex-sans/fonts/complete/ttf/IBMPlexSans-SemiBold.ttf",
+    "repository": "https://github.com/IBM/plex",
+    "commit": "71f558992315a12ca1f06a2215d57962a1992162",
+    "sha256": "A20CAF8286023A6A7A85E40B1D2A4AE9FC3E3B1F9EDA8F4C542DD4986AF67BB1",
+    "bytes": 202632,
+    "license": "LICENSE-IBMPlex.txt"
+  },
+  {
+    "file": "IBMPlexSansCondensed-Medium.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/packages/plex-sans-condensed/fonts/complete/ttf/IBMPlexSansCondensed-Medium.ttf",
+    "repository": "https://github.com/IBM/plex",
+    "commit": "71f558992315a12ca1f06a2215d57962a1992162",
+    "sha256": "0C6B79EF4A7DE76FFC6BF2091980E5F81A1A87AC3967566BC98AAE0BAA518F54",
+    "bytes": 202500,
+    "license": "LICENSE-IBMPlex.txt"
+  },
+  {
+    "file": "IBMPlexSansCondensed-SemiBold.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/packages/plex-sans-condensed/fonts/complete/ttf/IBMPlexSansCondensed-SemiBold.ttf",
+    "repository": "https://github.com/IBM/plex",
+    "commit": "71f558992315a12ca1f06a2215d57962a1992162",
+    "sha256": "ACC2B1E3B9597EE13B08B767F845BD038FE120CBEE806859AF7C01B60FE6E9E6",
+    "bytes": 202624,
+    "license": "LICENSE-IBMPlex.txt"
+  },
+  {
+    "file": "IBMPlexMono-Regular.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/packages/plex-mono/fonts/complete/ttf/IBMPlexMono-Regular.ttf",
+    "repository": "https://github.com/IBM/plex",
+    "commit": "71f558992315a12ca1f06a2215d57962a1992162",
+    "sha256": "7C6FBDDCA4B700BE918F5F6183D9BD4464FA427FE435F0B480D77FE2BB8C5A43",
+    "bytes": 173052,
+    "license": "LICENSE-IBMPlex.txt"
+  },
+  {
+    "file": "IBMPlexMono-Medium.ttf",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/packages/plex-mono/fonts/complete/ttf/IBMPlexMono-Medium.ttf",
+    "repository": "https://github.com/IBM/plex",
+    "commit": "71f558992315a12ca1f06a2215d57962a1992162",
+    "sha256": "98FBD727AAE340B236955879DABED4D991AAC9E8E90B3B2A67CE4A59221CC97C",
+    "bytes": 174008,
+    "license": "LICENSE-IBMPlex.txt"
+  },
+  {
+    "file": "LICENSE-IBMPlex.txt",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/LICENSE.txt",
+    "repository": "https://github.com/IBM/plex",
+    "commit": "71f558992315a12ca1f06a2215d57962a1992162",
+    "sha256": "7E6B2818EDBD8F6A01AE80641CC8F16A51080D08FB4E532BE3A0B6F74ADB07DA",
+    "bytes": 4456,
+    "license": "SIL Open Font License 1.1"
+  }
+]

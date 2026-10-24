@@ -19,8 +19,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// El namespace de los almacenes de T-99 (ficha, «Clientes»).
-const t99Namespace = 't99';
+/// El namespace de los almacenes del banco: `t99` (ficha de T-99, «Clientes»)
+/// o el que pida la compilación (`--dart-define=T99_NAMESPACE=r4` para los
+/// clientes del rediseño, 10.9), siempre aparte de los de la app instalada.
+const t99Namespace =
+    String.fromEnvironment('T99_NAMESPACE', defaultValue: 't99');
 
 /// La app con los almacenes que se pasan, para el banco y para el arnés.
 Widget t99App({

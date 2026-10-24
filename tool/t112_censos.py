@@ -146,6 +146,88 @@ T112_DECISIONES = {
     (_P + 'pages/vessel_profiles_page.dart', 20): OPERACION,
 }
 
+# T-114 (rediseño, 10.9): los archivos nuevos del sistema de diseño y del
+# inicio y el previo. Van por archivo entero («*»): cada archivo tiene un solo
+# canal, y el idioma lo juzga el censo texto por texto.
+T114_DECISIONES = {
+    ('lib/core/design/bs_formato.dart', '*'): V(
+        'pantalla', 'formatos de número con su unidad («28.7 t», «28 650 kg»), leídos en pantalla (T-114)'),
+    ('lib/core/design/bs_tipografia.dart', '*'): NV(
+        'NV-CODIGO', 'nombres de familias tipográficas (fontFamily): no se leen (T-114)'),
+    ('lib/core/design/componentes/bs_celda.dart', '*'): V(
+        'pantalla', 'rótulos de la marca de operación en la celda del plano (T-114, Fase 2)'),
+    ('lib/core/design/componentes/bs_tira_de_bahias.dart', '*'): V(
+        'accesibilidad', 'etiqueta de accesibilidad de la casilla de bahía (T-114, Fase 2)'),
+    (_P + 'providers/voyage_ui_state.dart', '*'): V(
+        'pantalla', 'textos del previo: la banda, «sin evaluar», exportar y la operación del error (T-114, Fase 3)'),
+    (_P + 'widgets/inicio_view.dart', '*'): V(
+        'pantalla', 'textos del inicio: recientes, perfiles, nube y la operación del error (T-114, Fase 3)'),
+    # Fase 2 bis y Fase 3, entrega 2 (la dirección C).
+    ('lib/core/design/bs_categorico.dart', '*'): NV(
+        'NV-CODIGO', 'nombres de los doce tonos de la rueda de «Colorear por» (DESIGN.md 13.4): nombres '
+                     'de código y de documentación, no se leen en pantalla (T-114, Fase 2 bis)'),
+    ('lib/core/design/componentes/bs_banda_muelle.dart', '*'): V(
+        'pantalla', 'los segmentos Descarga / Carga de la banda del muelle (T-114, Fase 2 bis)'),
+    ('lib/core/design/componentes/bs_marca.dart', '*'): V(
+        'accesibilidad', 'etiqueta accesible de la marca («BayStream», «BayStream, leyendo») (T-114, Fase 2 bis)'),
+    ('lib/core/design/componentes/bs_silueta_buque.dart', '*'): V(
+        'accesibilidad', 'etiquetas accesibles de la silueta y de cada bahía, y «Proa» / «Popa» (T-114, Fase 2 bis)'),
+    ('lib/core/design/componentes/bs_panel_en_vivo.dart', '*'): V(
+        'pantalla', 'el panel «En vivo»: título, los roles Muelle / Oficina, en línea / sin conexión y el '
+                    'texto sin movimientos (T-114, Fase 2 bis)'),
+    (_P + 'providers/plano_providers.dart', '*'): V(
+        'pantalla', 'las vistas de «Colorear por» (Estado, Destino, Tipo de vacío) y los eventos de «En vivo» '
+                    '(Bajado, Cargado, hace N min…) (T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/cifras_del_viaje.dart', '*'): V(
+        'pantalla', 'las tarjetas de cifra del plano: Descarga, Por bajar, Re‑estibas, Carga, Llenos, Vacíos, '
+                    'Conflictos, Alertas y sus detalles (T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/detalle_contenedor.dart', '*'): V(
+        'pantalla', 'el detalle del contenedor: filas (Celda, Tipo ISO, Estado, VGM, Peso bruto, puertos, '
+                    'Naviera), las señales de carga especial y «Sin declarar»; la clave C: no se lee '
+                    '(T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/en_vivo_del_viaje.dart', '*'): V(
+        'pantalla', 'el resumen de «En vivo» mientras se lee la operación (T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/navegacion_del_viaje.dart', '*'): V(
+        'pantalla', 'los destinos de la navegación (Plano, Lista, Avance, Estadísticas / Estad., Más) '
+                    '(T-114, Fase 3, entrega 2)'),
+    (_P + 'widgets/silueta_del_viaje.dart', '*'): V(
+        'accesibilidad', 'el rótulo accesible del avance bajo cada bahía de la silueta (T-114, Fase 3, entrega 2)'),
+    # Corrección de la entrega 2 (10.21): el chip del zoom sale de la rejilla.
+    (_P + 'widgets/zoom_del_plano.dart', '*'): V(
+        'pantalla', 'el chip y el menú del zoom del plano: el porcentaje, «Alejar plano», «Restablecer» y '
+                    '«Acercar plano», antes en plan_drag_confirmation.dart (T-114, Fase 3, entrega 2, 10.20)'),
+    # El paquete de íconos e ilustraciones (10.19, DESIGN.md 13.11).
+    ('lib/core/design/bs_iconos.dart', '*'): NV(
+        'NV-CODIGO', 'nombre de la familia tipográfica de los íconos del dominio (fontFamily BayStreamIconos): '
+                     'no se lee (T-114, 10.19)'),
+    ('lib/core/design/bs_ilustraciones.dart', '*'): NV(
+        'NV-CODIGO', 'datos que genera tool/bs_ilustraciones_generar.py desde design/ilustraciones/*.json: el '
+                     'nombre del dibujo, el grupo del SVG y los nombres de color de la paleta (13.11); no se '
+                     'leen. La descripción de cada dibujo se decide aparte, en preparar() (T-114, 10.19)'),
+    ('lib/core/design/componentes/bs_ilustracion.dart', '*'): NV(
+        'NV-CODIGO', 'nombres de color de las ilustraciones que BsIlustracion resuelve a tokens del tema, y el '
+                     'comando L de la ruta (13.11); no se leen (T-114, 10.19)'),
+    **{('lib/core/design/componentes/bs_ilustracion.dart', linea): NV(
+        'NV-EXCEPCION-INTERNA', 'ArgumentError o FormatException ante un color o una ruta mal formados: los '
+                                'datos son constantes y la prueba los recorre todos, así que la app no la '
+                                'alcanza (T-114, 10.19)') for linea in (152, 167, 171, 207, 210)},
+    # La corrección del paquete (10.23, H1 y O1): el ícono principal del contenedor dice su condición.
+    (_P + 'widgets/iconos_del_dominio.dart', '*'): V(
+        'pantalla', 'los nombres de la condición del contenedor («Carga peligrosa», «Refrigerado», «Fuera de '
+                    'medida», «Vacío», «Tanque», «Plataforma», «Techo abierto», «Contenedor de 20, 40 o 45 '
+                    'pies»): la descripción emergente y la etiqueta accesible del ícono principal en la Lista, '
+                    'la búsqueda y el detalle (DESIGN.md 13.11, regla 3) (T-114, 10.23)'),
+    # La travesía del inicio (10.24, DESIGN.md 13.11, regla 7).
+    ('lib/core/design/componentes/bs_travesia.dart', '*'): NV(
+        'NV-CODIGO', 'los nombres de grupo de las formas de sin_conexion que la travesía toma del paquete '
+                     '(casco_perfil, perfil_0_0 a perfil_0_4, caseta, puente, agua, flotacion); no se leen '
+                     '(T-114, 10.24)'),
+}
+T112_DECISIONES.update(T114_DECISIONES)
+DESCRIPCION_ILUSTRACION = V(
+    'accesibilidad', 'la descripción del dibujo: etiqueta accesible por omisión de BsIlustracion (Semantics, '
+                     'imagen) (T-114, 10.19)')
+
 # Palabras nuevas sin tilde de las cadenas visibles que no son españolas.
 T112_VOCABULARIO = {
     **{w: (I.SIGLA, 'segmento EDIFACT') for w in ('MEA', 'LOC', 'EQD', 'UNA', 'DTM', 'BGM', 'UNT', 'UNZ')},
@@ -174,6 +256,13 @@ def preparar(root, antes):
     I.POR_ARCHIVO = {rel: trasladar_tabla(tabla, maps.get(rel, {})) for rel, tabla in I.POR_ARCHIVO.items()}
     for (rel, clave), decision in T112_DECISIONES.items():
         I.POR_ARCHIVO.setdefault(rel, {})[clave] = decision
+    # T-114 (10.19): en el archivo generado de las ilustraciones solo se lee la
+    # descripción de cada dibujo. Se localiza por su rótulo, no por su línea,
+    # porque el archivo lo regenera tool/bs_ilustraciones_generar.py.
+    rel = 'lib/core/design/bs_ilustraciones.dart'
+    for n, linea in enumerate(L.leer(root / rel).splitlines(), 1):
+        if linea.lstrip().startswith("descripcion: '"):
+            I.POR_ARCHIVO[rel][n] = DESCRIPCION_ILUSTRACION
     I.CORRECCIONES = trasladar_claves(I.CORRECCIONES, maps)
     # T-112 quitó de la pantalla los cuatro valores interpolados en inglés.
     I.INTERPOLA_INGLES = {}
@@ -181,6 +270,40 @@ def preparar(root, antes):
     I.FRAMEWORK = [(ES_FLUTTER[f'F{k:02d}'],) + fila[1:] for k, fila in enumerate(I.FRAMEWORK, 1)]
 
     M3.PANTALLA_DE = {rel: trasladar_tabla(tabla, maps.get(rel, {})) for rel, tabla in M3.PANTALLA_DE.items()}
+    # T-114 (10.9): el inicio nuevo es parte de S01; el sistema de diseño
+    # (componentes, tema y vistas previas) todavía no está en una pantalla.
+    M3.PANTALLAS['T114'] = 'Sistema de diseño de T-114: componentes, tema y vistas previas (sin pantalla aún)'
+    M3.PANTALLA_DE[_P + 'widgets/inicio_view.dart'] = {'*': 'S01'}
+    M3.PANTALLA_DE[_P + 'providers/voyage_ui_state.dart'] = {'*': 'S01'}
+    # Fase 3, entrega 2: la navegación con la barra superior es S01; lo que
+    # vive dentro del plano por bahía es S02.
+    M3.PANTALLA_DE[_P + 'widgets/navegacion_del_viaje.dart'] = {'*': 'S01'}
+    for rel in ('widgets/detalle_contenedor.dart', 'widgets/cifras_del_viaje.dart',
+                'widgets/en_vivo_del_viaje.dart', 'widgets/silueta_del_viaje.dart',
+                'providers/plano_providers.dart', 'widgets/zoom_del_plano.dart'):
+        M3.PANTALLA_DE[_P + rel] = {'*': 'S02'}
+    for rel in ('lib/core/design/bs_tema.dart', 'lib/core/design/vistas_previas.dart',
+                'lib/core/design/bs_iconos.dart', 'lib/core/design/bs_iconos_catalogo.dart',
+                'lib/core/design/bs_ilustraciones.dart', 'lib/core/design/vistas_previas_iconos.dart',
+                'lib/core/design/componentes/bs_ilustracion.dart',
+                'lib/core/design/componentes/bs_travesia.dart',
+                'lib/core/design/componentes/bs_banda.dart',
+                'lib/core/design/componentes/bs_barra_de_operacion.dart',
+                'lib/core/design/componentes/bs_cartela.dart',
+                'lib/core/design/componentes/bs_celda.dart',
+                'lib/core/design/componentes/bs_cifra.dart',
+                'lib/core/design/componentes/bs_hoja_de_detalle.dart',
+                'lib/core/design/componentes/bs_numero_de_contenedor.dart',
+                'lib/core/design/componentes/bs_tira_de_bahias.dart',
+                'lib/core/design/componentes/bs_anillo_avance.dart',
+                'lib/core/design/componentes/bs_banda_muelle.dart',
+                'lib/core/design/componentes/bs_casco_bodega.dart',
+                'lib/core/design/componentes/bs_fondo_de_plano.dart',
+                'lib/core/design/componentes/bs_marca.dart',
+                'lib/core/design/componentes/bs_panel_en_vivo.dart',
+                'lib/core/design/componentes/bs_silueta_buque.dart',
+                'lib/core/design/componentes/bs_tarjeta_cifra.dart'):
+        M3.PANTALLA_DE[rel] = {'*': 'T114'}
     for nombre in ('REJILLA', 'NO_INTERACTIVOS', 'OBSERVACIONES', 'RESUELTOS'):
         setattr(M3, nombre, trasladar_claves(getattr(M3, nombre), maps))
     buscador = (_P + 'widgets/container_search_delegate.dart', maps[_P + 'widgets/container_search_delegate.dart'][347])
@@ -188,6 +311,14 @@ def preparar(root, antes):
         'sí', 'leading: _buildLeadingIcon usa errorContainer, primaryContainer, secondaryContainer y '
               'surfaceContainerHighest del esquema, con sus colores on*: los mismos de las celdas y la leyenda '
               'del plano (T-112); el resaltado usa tertiaryContainer y onTertiaryContainer')
+    # T-114: los componentes toman el color de BsColoresSemanticos, una
+    # ThemeExtension del tema (DESIGN.md 5): son colores del tema.
+    M3.RESUELTOS[('lib/core/design/componentes/bs_banda.dart', 108)] = (
+        'sí', 'icono de cerrar en rol.contorno: el rol semántico de la banda viene de BsColoresSemanticos, '
+              'una ThemeExtension del tema (T-114)')
+    M3.RESUELTOS[('lib/core/design/componentes/bs_tira_de_bahias.dart', 136)] = (
+        'sí', 'relleno y contorno de la casilla del rol semántico (ThemeExtension) y esquema.primary para la '
+              'seleccionada: colores del tema (T-114)')
     implicitos = []
     for pantalla, control, sitio in M3.IMPLICITOS:
         partes = []
@@ -201,7 +332,11 @@ def preparar(root, antes):
         implicitos.append((pantalla, control, ' y '.join(partes)))
     M3.IMPLICITOS = implicitos
 
-    MSG.M = N.M
+    # Fase 3, entrega 2 (10.16): la barra plegable de T-91 se retira con la
+    # navegacion adaptable (DESIGN.md 8), y con ella el aviso de no poder
+    # guardar su preferencia: 218 mensajes pasan a 217.
+    RETIRADOS = {(N.F_OVR, "'guardar la preferencia de la barra'")}
+    MSG.M = [x for x in N.M if (x['archivo'], x['fragmento']) not in RETIRADOS]
     MSG.ENVOLTURAS = N.ENVOLTURAS
     return maps
 
@@ -302,7 +437,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('fuente', type=Path)
     ap.add_argument('salida')
-    ap.add_argument('--antes', type=Path, required=True, help='raíz con el lib/ de sprint3-cierre')
+    ap.add_argument('--antes', type=Path, required=True, help='raíz con el lib/ de la referencia: 5406e20 para la Fase 3, entrega 1 (10.15, O3); con sprint3-cierre las decisiones por línea no coinciden')
     a = ap.parse_args()
     root = a.fuente.resolve()
     out = C.salida(a.salida)

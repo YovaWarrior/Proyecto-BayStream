@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'iconos_del_dominio.dart';
+import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
 import 'detail_text_row.dart';
 
@@ -45,7 +47,7 @@ class _ContainerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final statusColor = _getStatusColor(container.status, colorScheme);
-    final typeColor = _getTypeColor(container.containerType, colorScheme);
+    final iconColor = _getIconColor(container, colorScheme);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -70,17 +72,20 @@ class _ContainerCard extends StatelessWidget {
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  // Icono de tipo de contenedor
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: typeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      _getContainerIcon(container.containerType),
-                      color: typeColor,
-                      size: 20,
+                  // El ícono principal del contenedor: la regla única de
+                  // `condicionDelContenedor` (DESIGN.md 13.11; O1 de 10.23),
+                  // con su nombre como etiqueta y descripción emergente (H1).
+                  IconoDelContenedor(
+                    container,
+                    tamano: 20,
+                    color: iconColor,
+                    marco: (Widget icono) => Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: icono,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -147,7 +152,7 @@ class _ContainerCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.warning_amber, color: colorScheme.onErrorContainer, size: 14),
+                            Icon(BsIconos.peligrosa, color: colorScheme.onErrorContainer, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               'IMO ${container.imdgClass ?? ""}',
@@ -174,7 +179,7 @@ class _ContainerCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.ac_unit, color: colorScheme.onPrimaryContainer, size: 14),
+                            Icon(BsIconos.refrigerado, color: colorScheme.onPrimaryContainer, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               '${container.temperature?.toStringAsFixed(0) ?? "?"}°${container.temperatureUnit ?? "C"}',
@@ -218,7 +223,7 @@ class _ContainerCard extends StatelessWidget {
                   // Posición de estiba
                   _buildInfoItem(
                       context,
-                      Icons.grid_view,
+                      BsIconos.bahia,
                       'Posición',
                       container.stowagePosition?.displayFormat ?? 'Sin asignar',
                   ),
@@ -226,7 +231,9 @@ class _ContainerCard extends StatelessWidget {
                   // Peso efectivo (T-66): el rótulo dice de qué segmento viene
                   _buildInfoItem(
                       context,
-                      Icons.scale,
+                      container.weightSource == WeightSource.vgm
+                          ? BsIconos.vgm
+                          : Icons.scale,
                       container.weightSource == WeightSource.vgm
                           ? 'Peso (VGM)'
                           : container.weightSource == WeightSource.gross
@@ -263,11 +270,11 @@ class _ContainerCard extends StatelessWidget {
                   spacing: 8,
                   children: [
                     if (container.isDangerous)
-                      _buildWarningChip(context, Icons.warning, 'IMDG', colorScheme.error),
+                      _buildWarningChip(context, BsIconos.peligrosa, 'IMDG', colorScheme.error),
                     if (container.isReefer)
-                      _buildWarningChip(context, Icons.ac_unit, 'Refrigerado', colorScheme.primary),
+                      _buildWarningChip(context, BsIconos.refrigerado, 'Refrigerado', colorScheme.primary),
                     if (container.isOverDimension)
-                      _buildWarningChip(context, Icons.open_in_full, 'OOG', colorScheme.tertiary),
+                      _buildWarningChip(context, BsIconos.fueraDeMedida, 'OOG', colorScheme.tertiary),
                   ],
                 ),
               ],
@@ -386,21 +393,14 @@ class _ContainerCard extends StatelessWidget {
     }
   }
 
-  /// Obtiene el icono según el tipo de contenedor
-  IconData _getContainerIcon(ContainerType? type) {
-    switch (type) {
-      case ContainerType.reefer:
-        return Icons.ac_unit;
-      case ContainerType.tank:
-        return Icons.local_gas_station;
-      case ContainerType.openTop:
-        return Icons.open_in_browser;
-      case ContainerType.flatRack:
-        return Icons.view_agenda;
-      case ContainerType.generalPurpose:
-      default:
-        return Icons.inventory_2;
-    }
+  /// El color del ícono principal: el de la condición que manda, como los
+  /// chips de la tarjeta (IMDG, refrigerado, OOG, vacío); si no, el del tipo.
+  Color _getIconColor(ContainerUnit container, ColorScheme scheme) {
+    if (container.isDangerous) return scheme.error;
+    if (container.isReefer) return scheme.primary;
+    if (container.isOverDimension) return scheme.tertiary;
+    if (container.status == ContainerStatus.empty) return scheme.secondary;
+    return _getTypeColor(container.containerType, scheme);
   }
 
   /// Muestra el diálogo con detalles completos del contenedor
@@ -466,7 +466,7 @@ class _ContainerCard extends StatelessWidget {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    Icon(Icons.warning_amber, color: Theme.of(context).colorScheme.error, size: 20),
+                    Icon(BsIconos.peligrosa, color: Theme.of(context).colorScheme.error, size: 20),
                     const SizedBox(width: 8),
                     Expanded(child: Text(
                       'MERCANCÍA PELIGROSA',
@@ -487,7 +487,7 @@ class _ContainerCard extends StatelessWidget {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    Icon(Icons.ac_unit, color: Theme.of(context).colorScheme.primary, size: 20),
+                    Icon(BsIconos.refrigerado, color: Theme.of(context).colorScheme.primary, size: 20),
                     const SizedBox(width: 8),
                     Expanded(child: Text(
                       'CONTENEDOR REFRIGERADO',

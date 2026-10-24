@@ -22,7 +22,7 @@
   contrástalas con el código y los datos reales. Si existe una contradicción,
   detente, presenta la evidencia y propone una corrección.
 - Para tareas relacionadas con alcance, sprint, seguridad o mediciones H5, lee
-  el `SPRINT-N.md` vigente (hoy `SPRINT-3.md`, en la rama `sprint-3`) antes de editar. Las correcciones posteriores
+  el `SPRINT-N.md` vigente (hoy `SPRINT-4.md`, en la rama `sprint-4`; la sección 2 de `SPRINT-3.md` sigue vigente con los cambios de la sección 2 de `SPRINT-4.md`) antes de editar. Las correcciones posteriores
   de ese documento prevalecen sobre sus notas históricas.
 - Lee la versión actual de cada archivo objetivo antes de modificarlo. El árbol
   puede contener trabajo concurrente de Carlos o Yov; no restaures ni
@@ -32,7 +32,9 @@
 
 - Codex **no ejecuta** `git add`, `git commit`, `git push`, `git tag`,
   `git checkout`, `git switch`, `git restore` ni operaciones equivalentes.
-  Desde el 7-oct se trabaja en la rama `sprint-3`: no cambies de rama.
+  Desde el 21-oct, el Sprint 4 trabaja en la rama `sprint-4`, en su propia carpeta
+  (`C:\Proyectos\baystream-rediseno`). La carpeta `C:\Proyectos\proyecto-baystream`
+  se queda en `sprint-3` con `v3.0`, para el piloto. No cambies de rama ni de carpeta.
 - Codex **nunca ejecuta `git status`** en este repositorio; históricamente puede
   dejar un `index.lock` que bloquea la terminal de Carlos.
 - Solo cuando sea imprescindible para una inspección se permiten consultas de

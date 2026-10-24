@@ -1,0 +1,197 @@
+{
+  "instrumento": "tool/t114_primera_android.py + tool/t114_primera_cuadros.py",
+  "condicion": "sin perfil (pm clear del paquete r4 antes de cada video)",
+  "emulador": "emulator-5554, API 26, 360x640 dp (wm density 480)",
+  "corridas": [
+    {
+      "corrida": "sin01",
+      "error": null,
+      "previo": true,
+      "rejillaEnElArbol": true,
+      "pasos": 3,
+      "inicio": {
+        "cuadro": 9,
+        "pts": 5.698078,
+        "ultimoAntes": {
+          "cuadro": 8,
+          "pts": 5.650622
+        }
+      },
+      "fin": {
+        "cuadro": 66,
+        "pts": 10.609567,
+        "ultimoAntes": {
+          "cuadro": 65,
+          "pts": 10.574422
+        }
+      },
+      "duracionAcotadaS": [
+        4.911,
+        4.984
+      ],
+      "cuadros": 72,
+      "jpg": [
+        "cuadro-00008.jpg",
+        "cuadro-00009.jpg",
+        "cuadro-00010.jpg",
+        "cuadro-00064.jpg",
+        "cuadro-00065.jpg",
+        "cuadro-00066.jpg",
+        "cuadro-00067.jpg"
+      ],
+      "sha256Video": "369d4884be121eeff1c2f23da1107818fac3862adba1460b73044126d66ee2e2"
+    },
+    {
+      "corrida": "sin02",
+      "error": null,
+      "previo": true,
+      "rejillaEnElArbol": true,
+      "pasos": 3,
+      "inicio": {
+        "cuadro": 9,
+        "pts": 4.8068,
+        "ultimoAntes": {
+          "cuadro": 8,
+          "pts": 4.576011
+        }
+      },
+      "fin": {
+        "cuadro": 53,
+        "pts": 7.760389,
+        "ultimoAntes": {
+          "cuadro": 52,
+          "pts": 7.7428
+        }
+      },
+      "duracionAcotadaS": [
+        2.954,
+        3.202
+      ],
+      "cuadros": 61,
+      "jpg": [
+        "cuadro-00008.jpg",
+        "cuadro-00009.jpg",
+        "cuadro-00010.jpg",
+        "cuadro-00051.jpg",
+        "cuadro-00052.jpg",
+        "cuadro-00053.jpg",
+        "cuadro-00054.jpg"
+      ],
+      "sha256Video": "9ab66429c2915f85062c3fd07e0ce244cc5745daa0ccb711c12a243df8509071"
+    },
+    {
+      "corrida": "sin03",
+      "error": null,
+      "previo": true,
+      "rejillaEnElArbol": true,
+      "pasos": 3,
+      "inicio": {
+        "cuadro": 11,
+        "pts": 4.473233,
+        "ultimoAntes": {
+          "cuadro": 10,
+          "pts": 4.452711
+        }
+      },
+      "fin": {
+        "cuadro": 61,
+        "pts": 7.394856,
+        "ultimoAntes": {
+          "cuadro": 60,
+          "pts": 7.383344
+        }
+      },
+      "duracionAcotadaS": [
+        2.922,
+        2.959
+      ],
+      "cuadros": 69,
+      "jpg": [
+        "cuadro-00010.jpg",
+        "cuadro-00011.jpg",
+        "cuadro-00012.jpg",
+        "cuadro-00059.jpg",
+        "cuadro-00060.jpg",
+        "cuadro-00061.jpg",
+        "cuadro-00062.jpg"
+      ],
+      "sha256Video": "bf69dff20f55e2aedd41eaa624dd2875683cf0d3a51b8e2a9050fd8635ad2b06"
+    },
+    {
+      "corrida": "sin04",
+      "error": null,
+      "previo": true,
+      "rejillaEnElArbol": true,
+      "pasos": 3,
+      "inicio": {
+        "cuadro": 11,
+        "pts": 4.489189,
+        "ultimoAntes": {
+          "cuadro": 10,
+          "pts": 4.469756
+        }
+      },
+      "fin": {
+        "cuadro": 65,
+        "pts": 7.444789,
+        "ultimoAntes": {
+          "cuadro": 64,
+          "pts": 7.404144
+        }
+      },
+      "duracionAcotadaS": [
+        2.956,
+        2.997
+      ],
+      "cuadros": 71,
+      "jpg": [
+        "cuadro-00010.jpg",
+        "cuadro-00011.jpg",
+        "cuadro-00012.jpg",
+        "cuadro-00063.jpg",
+        "cuadro-00064.jpg",
+        "cuadro-00065.jpg",
+        "cuadro-00066.jpg"
+      ],
+      "sha256Video": "960d873c7f76310c34c25110da1bdf0cbef4aa23dea4e14e0cb78f2f1a773ce3"
+    },
+    {
+      "corrida": "sin05",
+      "error": null,
+      "previo": true,
+      "rejillaEnElArbol": true,
+      "pasos": 3,
+      "inicio": {
+        "cuadro": 11,
+        "pts": 4.5456,
+        "ultimoAntes": {
+          "cuadro": 10,
+          "pts": 4.514244
+        }
+      },
+      "fin": {
+        "cuadro": 59,
+        "pts": 7.390256,
+        "ultimoAntes": {
+          "cuadro": 58,
+          "pts": 7.359256
+        }
+      },
+      "duracionAcotadaS": [
+        2.845,
+        2.894
+      ],
+      "cuadros": 67,
+      "jpg": [
+        "cuadro-00010.jpg",
+        "cuadro-00011.jpg",
+        "cuadro-00012.jpg",
+        "cuadro-00057.jpg",
+        "cuadro-00058.jpg",
+        "cuadro-00059.jpg",
+        "cuadro-00060.jpg"
+      ],
+      "sha256Video": "5c8727e8a2f228c85c30e0429f8a19cc0ea73e1b01cb19ad70eec55638780adb"
+    }
+  ]
+}

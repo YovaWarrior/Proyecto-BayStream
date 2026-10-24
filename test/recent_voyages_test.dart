@@ -83,6 +83,9 @@ void main() {
         await tester.tap(find.byKey(ValueKey('recent-${voyage.id}')));
         await tester.pumpAndSettle();
         expect(container.read(voyageNotifierProvider).value, voyage);
+        // Fase 3 (DESIGN.md 8): con un viaje, los recientes están en «Más».
+        await tester.tap(find.text('Más'));
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('recent-voyages')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(ValueKey('delete-${voyage.id}')));

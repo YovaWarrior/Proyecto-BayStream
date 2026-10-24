@@ -1,0 +1,28 @@
+paso	archivo	nota	hora (UTC)
+1	p01-inicio.png	el inicio sin viajes	2026-10-23T22:06:43.528694+00:00
+2	p02-plan-de-carga-en-previo.png	abre en previo con la banda; tres pasos	2026-10-23T22:06:46.024529+00:00
+3	p03-parametros-del-buque.png	la banda del previo abrió «Parámetros del buque»	2026-10-23T22:06:47.749017+00:00
+4	p04-parametros-no-lo-tengo.png	«No lo tengo» marcado a mano; no viene marcado	2026-10-23T22:06:49.959518+00:00
+5	p05-plan-de-carga-publicado.png	publicado en GTSTC; se queda en el Plano	2026-10-23T22:06:52.583823+00:00
+6	p06-listado-leido.png	el listado leído, con sus cuentas, antes de confirmar	2026-10-23T22:06:57.333107+00:00
+7	p07-listado-importado.png	«Listado guardado en la operación de GTSTC»	2026-10-23T22:06:58.088809+00:00
+8	p08-llegada-publicada.png	la llegada abre publicada sin previo: la escala de siempre	2026-10-23T22:07:06.025336+00:00
+9	p09-descarga.png	modo Descarga: las celdas por bajar dicen «Baja»	2026-10-23T22:07:08.912550+00:00
+10	p10-baja-registrada.png	un toque: la celda sale en naranja y el aviso trae «Deshacer»	2026-10-23T22:07:10.472384+00:00
+11	p11-segunda-baja.png	otra Baja	2026-10-23T22:07:11.991966+00:00
+12	p12-baja-deshecha.png	«Deshacer» del aviso: la celda vuelve a «Baja»	2026-10-23T22:07:14.944588+00:00
+13	p13-paso-pregunta.png	Paso: la pregunta de la re‑estiba	2026-10-23T22:07:16.535550+00:00
+14	p14-reestiba-registrada.png	«Re‑estiba registrada» con «Deshacer»	2026-10-23T22:07:18.245209+00:00
+15	p15-carga.png	modo Carga con el listado: OR en las celdas	2026-10-23T22:07:21.159002+00:00
+16	p16-vacios-del-listado.png	«Vacíos del listado»: los OR de los vacíos con su tara	2026-10-23T22:07:22.757669+00:00
+17	p17-asignar-vacio.png	el formulario propone la celda; tara, hora y marchamo opcionales	2026-10-23T22:07:24.345277+00:00
+18	p18-vacio-asignado.png	«Carga registrada · OR N» con «Deshacer»; la celda en naranja	2026-10-23T22:07:26.057908+00:00
+19	p19-segundo-vacio-asignado.png	otro vacío asignado	2026-10-23T22:07:29.612822+00:00
+20	p20-vacio-deshecho.png	«Deshacer»: el OR vuelve a estar pendiente	2026-10-23T22:07:32.511674+00:00
+21	p21-avance.png	«Avance»: descarga, carga, re‑estibas y último movimiento	2026-10-23T22:07:35.701258+00:00
+22	p22-plano-con-en-vivo.png	el panel «En vivo» con los movimientos (el rol, nunca un nombre)	2026-10-23T22:07:38.572778+00:00
+23	p23-alertas-de-estiba.png	las alertas de estiba	2026-10-23T22:07:41.265860+00:00
+24	p24-baplie-de-salida.png	los a bordo en la salida, los pendientes y los cancelados	2026-10-23T22:07:45.974804+00:00
+25	p25-comparar-con-la-llegada.png	la salida generada contra la llegada	2026-10-23T22:07:47.897749+00:00
+26	p26-baplie-guardado.png	«Exportación BAPLIE completada»; el navegador descargó BayStream_BUQUE MANUAL_M100_salida.edi	2026-10-23T22:07:51.228212+00:00
+27	p27-mas.png	la hoja «Más»	2026-10-23T22:07:54.927773+00:00

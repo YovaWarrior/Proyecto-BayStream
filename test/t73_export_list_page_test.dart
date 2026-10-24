@@ -100,10 +100,18 @@ void main() {
 
     expect(find.text('7 filas en 2 agencias · 4 llenos · 3 vacíos'), findsOneWidget);
     expect(find.text('2 filas sin entender:'), findsOneWidget);
-    expect(find.text('Tipo 40HC → 45G1'), findsOneWidget);
-    expect(find.text('Puerto COMNG → COSPC'), findsOneWidget);
-    expect(find.text('Línea LNB → LINB'), findsOneWidget);
-    expect(find.text('Tipo 40RF → ?'), findsOneWidget);
+    // Desde 10.29 «Confirmar e importar» va al pie fijo y la lista tiene menos
+    // alto: las equivalencias se traen a la vista antes de leerlas.
+    for (final texto in [
+      'Tipo 40HC → 45G1',
+      'Puerto COMNG → COSPC',
+      'Línea LNB → LINB',
+      'Tipo 40RF → ?',
+    ]) {
+      await tester.scrollUntilVisible(find.text(texto), 100,
+          scrollable: find.byType(Scrollable).first);
+      expect(find.text(texto), findsOneWidget);
+    }
     expect(await enabled(tester), isFalse);
 
     final choice = find.byKey(const ValueKey('equivalence-choice-40RF-45R1'));
@@ -145,6 +153,8 @@ void main() {
         .read(exportListImportProvider.notifier)
         .loadBytes(t73ListBytes(), fileName: 'sintetico.xlsx');
     await tester.pump();
+    await tester.scrollUntilVisible(find.text('Tipo 40RF → 45R1'), 100,
+        scrollable: find.byType(Scrollable).first);
     expect(find.text('Tipo 40RF → 45R1'), findsOneWidget);
     expect(find.textContaining('→ ?'), findsNothing);
     expect(await enabled(tester), isTrue);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
@@ -76,6 +77,20 @@ class _CloudPageState extends ConsumerState<CloudPage> {
               child: Text(_message!, key: const ValueKey('cloud-message')),
             ),
           _section(context, 'Cuenta'),
+          // 13.11: trabajando solo en este equipo, con su ilustración.
+          if (session != null &&
+              (!session.supportsAccounts || operator == null))
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: BsIlustracion(
+                  key: ValueKey('nube-solo-aqui'),
+                  datos: BsIlustraciones.sinConexion,
+                  ancho: 320,
+                ),
+              ),
+            ),
           if (session == null)
             const Text('Leyendo la sesión…')
           else if (!session.supportsAccounts)

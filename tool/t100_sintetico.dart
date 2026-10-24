@@ -18,7 +18,6 @@
 // si algo no cuadra, falla y hay que detenerse.
 //
 //   dart tool/t100_sintetico.dart <salida en %TEMP%>
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';

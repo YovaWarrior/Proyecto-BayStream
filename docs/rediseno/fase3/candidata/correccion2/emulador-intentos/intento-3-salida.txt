@@ -1,0 +1,40 @@
+p01-inicio el inicio sin viajes
+p02-plan-de-carga-en-previo abre en previo con la banda; tres pasos
+p03-parametros-del-buque la banda abrió «Parámetros del buque»
+p04-parametros-no-lo-tengo «No lo tengo» marcado a mano
+p05-plan-de-carga-publicado publicado en GTSTC; la banda del muelle con Carga
+p06-listado-leido el listado leído, antes de confirmar
+p07-listado-importado «Listado guardado en la operación de GTSTC: 30 filas.»
+p08-llegada-publicada la llegada abre publicada sin previo; la banda ofrece Descarga
+p09-descarga modo Descarga: «Baja» en las celdas por bajar
+p10-baja-registrada un toque: naranja y el aviso con «Deshacer»
+p11-segunda-baja otra Baja
+p12-baja-deshecha «Deshacer»: la celda vuelve a «Baja»
+p13-paso-pregunta Paso: la pregunta de la re‑estiba
+p14-reestiba-registrada «Re‑estiba registrada» con «Deshacer», sobre las cifras y por encima de los controles
+p15-carga modo Carga: el OR en las celdas, con el aviso de la re‑estiba aún en pantalla
+p16-vacios-del-listado «Vacíos del listado»
+p17-asignar-vacio el formulario propone la celda
+p18-vacio-asignado «Carga registrada · OR N» con «Deshacer», sobre las cifras y por encima de los controles
+p19-segunda-carga-sin-esperar «Acciones» abierto con el aviso de la primera carga todavía en pantalla
+p20-segundo-vacio-asignado otro vacío asignado
+p21-vacio-deshecho «Deshacer»: el OR vuelve a estar pendiente
+p22-avance «Avance» en el teléfono
+p23-atras-con-aviso un toque con el aviso de la Baja en pantalla: la advertencia arriba y el aviso con «Deshacer» abajo, a la vez
+O2: la advertencia, el plano y «Deshacer» en un volcado, a los 1.2 s del Atrás
+p24-atras-tras-la-ventana pasados más de 2 s, otro toque vuelve a advertir y el plano sigue
+Traceback (most recent call last):
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 409, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 382, in main
+    visto = atras_comprobado(r, 'atras-tras-la-ventana', 'pasados más de 2 s, otro toque vuelve a advertir y el plano sigue')
+            ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 174, in atras_comprobado
+    return advertencia_y_plano(desde, con_deshacer)
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 154, in advertencia_y_plano
+    raise RuntimeError(
+        f'A los {visto:.1f} s del Atrás no se vieron juntos la advertencia '
+        f'({advertencia}), el plano ({plano}) y «Deshacer» ({deshacer}).')
+RuntimeError: A los 3.0 s del Atrás no se vieron juntos la advertencia (False), el plano (True) y «Deshacer» (True).
+salida 1

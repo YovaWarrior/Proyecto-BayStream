@@ -1,3 +1,4 @@
+import 'package:baystream/core/design/design.dart';
 import 'dart:io';
 
 import 'package:baystream/core/app.dart';
@@ -167,12 +168,14 @@ void main() {
       final scope = await pumpT91Plan(tester, t90Voyage, T91MemorySettings(), brightness);
       scope.read(selectedBayProvider.notifier).select(2);
       await tester.pumpAndSettle();
-      final weights = find.byKey(const ValueKey('peso-celda'));
-      expect(weights, findsNWidgets(2));
-      for (final element in weights.evaluate()) {
-        final text = element.widget as Text;
-        final cells = find.ancestor(of: find.byWidget(text), matching: find.byWidgetPredicate((w) => w is Container && w.constraints?.maxWidth == 50 && w.constraints?.maxHeight == 40));
-        final cell = tester.widget<Container>(cells.first);
+      // Fase 3: el peso es la segunda línea de BsCelda; se mide el texto
+      // dibujado contra el relleno de su propia celda.
+      final conPeso = find.byWidgetPredicate((w) => w is BsCelda && w.linea2 != null);
+      expect(conPeso, findsNWidgets(2));
+      for (final element in conPeso.evaluate()) {
+        final celda = element.widget as BsCelda;
+        final text = tester.widget<Text>(find.descendant(of: find.byWidget(celda), matching: find.text(celda.linea2!)));
+        final cell = tester.widget<Container>(find.descendant(of: find.byWidget(celda), matching: find.byType(Container)).first);
         expect(t90Contrast(text.style!.color!, (cell.decoration! as BoxDecoration).color!), greaterThanOrEqualTo(4.5));
       }
       await tester.pumpWidget(MaterialApp(theme: ThemeData(brightness: brightness, useMaterial3: true), home: Scaffold(body: ContainersListView(containers: [t90Voyage.containers.first]))));

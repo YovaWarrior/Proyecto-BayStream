@@ -1,25 +1,39 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/design/design.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
+import '../../../../core/utils/voyage_number.dart';
 import '../../data/services/export_service.dart';
 import '../../data/services/pdf_report_service.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/repositories/operation_sync_repository.dart';
 import '../../domain/services/discharge_sequence.dart';
+import '../../domain/services/operation_progress.dart';
 import '../../domain/services/operation_sources.dart';
 import '../providers/vessel_providers.dart';
-import '../providers/plan_toolbar_provider.dart';
+import '../providers/discharge_provider.dart' show offersDischarge;
+import '../providers/plano_providers.dart';
+import '../providers/sync_providers.dart';
+import '../providers/voyage_ui_state.dart';
 import '../formatters/vessel_error_message.dart';
 import '../widgets/voyage_summary_card.dart';
 import '../widgets/reserved_slots_list_view.dart';
 import '../widgets/containers_list_view.dart';
-import '../widgets/empty_state_widget.dart';
+import '../widgets/inicio_view.dart';
 import '../widgets/bay_plan_view.dart';
 import '../widgets/container_search_delegate.dart';
+import '../widgets/detalle_contenedor.dart';
+import '../widgets/en_vivo_del_viaje.dart';
+import '../widgets/hatch_operation_controls.dart';
+import '../widgets/loading_plan_controls.dart' show BayPlanMode;
+import '../widgets/avisos_del_viaje.dart';
+import '../widgets/navegacion_del_viaje.dart';
 import '../widgets/voyage_stats_view.dart';
 import '../widgets/sync_status_chip.dart';
 import 'export_list_import_page.dart';
 import 'departure_baplie_page.dart';
+import 'operation_progress_page.dart';
 import 'vessel_geometry_page.dart';
 import 'vessel_profiles_page.dart';
 import 'recent_voyages_page.dart';
@@ -29,7 +43,19 @@ import 'voyage_comparison_page.dart';
 import 'discharge_sequence_page.dart';
 
 /// Página principal de la aplicación BayStream
-/// Permite cargar archivos BAPLIE y visualizar la información del viaje
+///
+/// Sin viaje es el inicio (`DESIGN.md` 9.1). Con un archivo leído, el plano
+/// abre en previo («ver primero, confirmar después», `DESIGN.md` 7): se mira,
+/// se busca y se colorea; para operar, publicar o exportar hay que confirmar
+/// el perfil y la escala desde la banda. Confirmado, es lo de siempre.
+///
+/// Con un viaje, la navegación es adaptable (`DESIGN.md` 8 y 13.7): por
+/// debajo de 600 dp la barra inferior (Plano · Lista · Avance · Estadísticas
+/// · Más) y, en el muelle con una escala, la banda de la marca arriba; desde
+/// 600 dp el riel con la marca encima y la cabecera de la oficina; desde
+/// 1200 dp, además, el panel lateral de 360 con el detalle de la celda y
+/// «En vivo». «Más» abre una hoja con lo que antes eran las ocho acciones
+/// de la barra.
 class VesselOverviewPage extends ConsumerStatefulWidget {
   const VesselOverviewPage({super.key});
 
@@ -37,271 +63,392 @@ class VesselOverviewPage extends ConsumerStatefulWidget {
   ConsumerState<VesselOverviewPage> createState() => _VesselOverviewPageState();
 }
 
-class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  bool _isBayPlan = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(_onTabChanged);
-  }
-
-  void _onTabChanged() {
-    final isBayPlan = _tabController.index == 1;
-    if (_isBayPlan != isBayPlan) {
-      setState(() => _isBayPlan = isBayPlan);
-    }
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
   @override
   Widget build(BuildContext context) {
-    final voyageAsync = ref.watch(voyageNotifierProvider);
-    final hasVoyage = voyageAsync.hasValue && voyageAsync.value != null;
-    final showToolbarToggle = hasVoyage && _isBayPlan;
-    final toolbarCollapsed = showToolbarToggle &&
-        (ref.watch(planToolbarCollapsedProvider).value ?? true);
-    final tabLabelStyle = Theme.of(context).textTheme.titleSmall!;
-    final tabHeight = 42 + MediaQuery.textScalerOf(context)
-        .scale(tabLabelStyle.fontSize ?? 14) * (tabLabelStyle.height ?? 1.5);
+    final ui = ref.watch(voyageUiStateProvider);
+    final voyage = switch (ui) {
+      Previo(:final voyage) => voyage,
+      Publicado(:final voyage) => voyage,
+      _ => null,
+    };
+    final preview = ui is Previo;
 
-    final toolbarActions = <Widget>[
-      IconButton(
-          key: const ValueKey('recent-voyages'),
-          icon: const Icon(Icons.history),
-          tooltip: 'Viajes recientes',
-          onPressed: () async {
-            final loadFile = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                    builder: (_) => const RecentVoyagesPage()));
-            if (context.mounted && loadFile == true) {
-              await _loadBaplieFile(context);
-            }
-          }),
-      IconButton(
-          key: const ValueKey('saved-profiles'),
-          icon: const Icon(Icons.directions_boat_outlined),
-          tooltip: 'Perfiles guardados',
-          onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                  builder: (_) => const VesselProfilesPage()))),
-      // T-79: cuenta, publicar y unirse; su icono dice el estado de envío.
-      const SyncAppBarButton(),
-      // Botón de búsqueda (solo si hay viaje cargado)
-      if (hasVoyage)
-        IconButton(
-          icon: const Icon(Icons.search),
-          tooltip: 'Buscar contenedor',
-          onPressed: () => _openSearch(context, voyageAsync.value!),
+    final parametersButton = IconButton(
+      key: const ValueKey('edit-geometry'),
+      icon: const Icon(Icons.straighten),
+      tooltip: 'Parámetros',
+      onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => ParametersPage(
+          onVesselParameters:
+              voyage != null ? () => _askForGeometry(context) : null,
         ),
-      // Único punto de exportación para PDF, CSV y JSON
-      if (hasVoyage)
-        PopupMenuButton<VoyageExportFormat>(
-          icon: const Icon(Icons.download),
-          tooltip: 'Exportar viaje',
-          onSelected: (format) =>
-              _exportVoyage(context, voyageAsync.value!, format),
-          itemBuilder: (context) => const [
-            PopupMenuItem(
-              value: VoyageExportFormat.pdf,
-              child: ListTile(
-                leading: Icon(Icons.picture_as_pdf),
-                title: Text('PDF'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            PopupMenuItem(
-              value: VoyageExportFormat.csv,
-              child: ListTile(
-                leading: Icon(Icons.table_view),
-                title: Text('CSV'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            PopupMenuItem(
-              value: VoyageExportFormat.json,
-              child: ListTile(
-                leading: Icon(Icons.data_object),
-                title: Text('JSON'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ],
-        ),
-      // T-90: tema del dispositivo y acceso a la geometría del viaje vigente.
-      IconButton(
-          key: const ValueKey('edit-geometry'),
-          icon: const Icon(Icons.straighten),
-          tooltip: 'Parámetros',
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => ParametersPage(
-              onVesselParameters: hasVoyage ? () => _askForGeometry(context) : null,
-            ),
-          )),
-        ),
-      // Botón para cargar archivo BAPLIE
-      IconButton(
-        icon: const Icon(Icons.upload_file),
-        tooltip: 'Cargar archivo BAPLIE',
-        onPressed: () => _loadBaplieFile(context),
-      ),
-      // Botón para limpiar datos cargados
-      if (hasVoyage)
-        IconButton(
-          icon: const Icon(Icons.clear),
-          tooltip: 'Limpiar datos',
-          onPressed: () {
-            ref.read(voyageNotifierProvider.notifier).clearVoyage();
-            ref.read(highlightedContainerProvider.notifier).clear();
-            ref.read(selectedBayProvider.notifier).clear();
-          },
-        ),
-    ];
+      )),
+    );
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: !toolbarCollapsed,
-        title: const FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text('BayStream', maxLines: 2),
-        ),
-        centerTitle: true,
-        actions: [
-          if (!toolbarCollapsed)
-              // T-97: reserva espacio visible para el título. T-91 conserva
-              // su tira desplazable y el botón fijo con un toque.
-              SizedBox(
-                key: const ValueKey('plan-toolbar-actions'),
-                width: (MediaQuery.sizeOf(context).width - (showToolbarToggle ? 160 : 112) -
-                        (showToolbarToggle ? 48 : 0) -
-                        (Navigator.of(context).canPop() ? 56 : 0))
-                    .clamp(0.0, toolbarActions.length * 48.0),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(mainAxisSize: MainAxisSize.min, children: toolbarActions),
-                ),
-              ),
-          if (showToolbarToggle)
-            IconButton(
-              key: const ValueKey('toggle-plan-toolbar'),
-              tooltip: toolbarCollapsed ? 'Desplegar acciones' : 'Plegar acciones',
-              icon: Icon(toolbarCollapsed ? Icons.expand_more : Icons.expand_less),
-              onPressed: () async {
-                try {
-                  await ref.read(planToolbarCollapsedProvider.notifier).toggle();
-                } catch (error, stack) {
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(vesselErrorMessage(
-                        error, stack, 'guardar la preferencia de la barra')),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                  ));
-                }
-              },
-            ),
-        ],
-        bottom: hasVoyage
-            ? TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                labelStyle: tabLabelStyle,
-                tabs: [
-                  Tab(height: tabHeight, icon: const Icon(Icons.list), text: 'Lista'),
-                  Tab(height: tabHeight, icon: const Icon(Icons.grid_view), text: 'Plano'),
-                  Tab(height: tabHeight, icon: const Icon(Icons.bar_chart), text: 'Estadísticas'),
-                ],
-              )
-            : null,
-      ),
-      body: voyageAsync.when(
-        // Estado: Cargando
-        loading: () => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Procesando archivo BAPLIE...'),
-            ],
+    if (voyage == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('BayStream', maxLines: 2),
           ),
+          centerTitle: true,
+          // El inicio solo lleva Parámetros y Nube (DESIGN.md 9.1): la
+          // carga, los recientes y los perfiles están en el cuerpo.
+          actions: [parametersButton, const SyncAppBarButton()],
         ),
-        // Estado: Error
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
-                const SizedBox(height: 16),
-                Text(
-                  'Error al procesar archivo',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  vesselErrorMessage(error, stack, 'procesar el archivo'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => _loadBaplieFile(context),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Intentar de nuevo'),
-                ),
-              ],
+        body: switch (ui) {
+          Leyendo(:final fileName) => _Leyendo(fileName: fileName),
+          Fallo(:final mensaje) => _Fallo(
+              mensaje: mensaje,
+              onRetry: () => _loadBaplieFile(context),
             ),
-          ),
-        ),
-        // Estado: Datos cargados o vacío
-        data: (voyage) {
-          if (voyage == null) {
-            return EmptyStateWidget(
+          _ => InicioView(
               onPickFile: () => _loadBaplieFile(context),
-            );
-          }
+              onOpenRecent: (recent) => _openRecent(context, recent),
+            ),
+        },
+      );
+    }
 
-          // Mostrar información del viaje con pestañas
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              // Pestaña 1: Lista de contenedores
-              _buildContainersListTab(context, voyage),
+    final destino = ref.watch(destinoDelViajeProvider);
+    final destinos = <DestinoDelViaje>[
+      DestinoDelViaje.plano,
+      DestinoDelViaje.lista,
+      if (voyage.portOfCall != null) DestinoDelViaje.avance,
+      DestinoDelViaje.estadisticas,
+      DestinoDelViaje.mas,
+    ];
+    final alertas = ref.watch(cuentaDeAlertasProvider);
+    final critica = ref.watch(alertaCriticaProvider);
+    final medidas = BsMedidas.de(context);
+    final ancho = MediaQuery.sizeOf(context).width;
+    final conRiel = ancho >= AnchosDeNavegacion.riel;
+    final conPanel = ancho >= AnchosDeNavegacion.panel;
+    final enOperacion = ui is Publicado && voyage.portOfCall != null;
+    // Qué modos ofrece la escala: Descarga solo en un plano de llegada
+    // (T-75), Carga siempre que haya escala.
+    final modos = <BsModoDeOperacion>{
+      if (offersDischarge(voyage)) BsModoDeOperacion.descarga,
+      BsModoDeOperacion.carga,
+    };
+    final mode = ref.watch(bayPlanModeProvider);
+    final modoDeOperacion = switch (mode) {
+      BayPlanMode.discharge => BsModoDeOperacion.descarga,
+      BayPlanMode.loading => BsModoDeOperacion.carga,
+      _ => null,
+    };
+    void elegirModo(BsModoDeOperacion modo) =>
+        ref.read(bayPlanModeProvider.notifier).elegir(
+            modo == BsModoDeOperacion.descarga
+                ? BayPlanMode.discharge
+                : BayPlanMode.loading);
+    void irA(DestinoDelViaje d) {
+      if (d == DestinoDelViaje.mas) {
+        _abrirMas(voyage, preview: preview, conRiel: conRiel, alertas: alertas);
+        return;
+      }
+      ref.read(destinoDelViajeProvider.notifier).ir(d);
+    }
 
-              // Pestaña 2: Bay Plan
+    final buscar = IconButton(
+      key: const ValueKey('buscar-contenedor'),
+      icon: const Icon(Icons.search),
+      tooltip: 'Buscar contenedor',
+      onPressed: () => _openSearch(context, voyage),
+    );
+
+    final contenido = Column(
+      children: [
+        const RelojDelNaranja(),
+        // Sin panel lateral, el movimiento se anuncia igual al lector de
+        // pantalla (13.3, punto 5; 10.21, H3): solo el anuncio, sin el panel.
+        if (!conPanel) AnuncioDelMovimiento(voyage: voyage),
+        if (ui is Previo) ...[
+          BsBanda(
+            key: const ValueKey('preview-banner'),
+            texto: ui.texto,
+            icono: Icons.info_outline,
+            accion: 'Confirmar',
+            onAccion: () => _confirmPreview(context),
+          ),
+          const _SinEvaluar(),
+        ],
+        Expanded(
+          child: switch (destino) {
+            DestinoDelViaje.plano ||
+            DestinoDelViaje.mas =>
               BayPlanView(voyage: voyage),
-
-              // Pestaña 3: Estadísticas
-              VoyageStatsView(
+            DestinoDelViaje.lista => _buildContainersListTab(context, voyage),
+            DestinoDelViaje.avance => voyage.portOfCall == null
+                ? BayPlanView(voyage: voyage)
+                : OperationProgressBody(
+                    voyage: voyage, onCelda: (cell) => _irACelda(cell)),
+            DestinoDelViaje.estadisticas => VoyageStatsView(
                 voyage: voyage,
                 onBaySelected: _openBayPlan,
               ),
-            ],
-          );
-        },
-      ),
-      // Botón flotante para cargar archivo
-      floatingActionButton: voyageAsync.maybeWhen(
-        data: (voyage) => voyage == null
-            ? FloatingActionButton.extended(
-                onPressed: () => _loadBaplieFile(context),
-                icon: const Icon(Icons.file_open),
-                label: const Text('Cargar BAPLIE'),
-              )
-            : null,
-        orElse: () => null,
-      ),
+          },
+        ),
+      ],
     );
+
+    // Atrás en Android (`DESIGN.md` 8): cierra primero lo abierto; en la raíz
+    // pregunta con un previo y, publicado, vuelve al inicio con dos toques.
+    // Los avisos de la página flotan por encima del pie del plano (la barra
+    // de la operación o la leyenda), no sobre sus controles (10.29, H2).
+    Widget conAtras(Widget child) => AtrasDelViaje(
+          previo: preview,
+          conPanel: conRiel && conPanel,
+          onDescartarPrevio: () => _discardPreviewIfAny(context),
+          onVolverAlInicio: () => _clear(context, preview: false),
+          child: AvisosSobreElPie(
+              conPlano: destino == DestinoDelViaje.plano, child: child),
+        );
+
+    if (!conRiel) {
+      // El teléfono: la barra inferior y, operando en el muelle, la banda de
+      // la marca con Descarga / Carga en vez de la barra superior (13.8).
+      final bandaDelMuelle = medidas.esMuelle && enOperacion;
+      return conAtras(Scaffold(
+        appBar: bandaDelMuelle
+            ? null
+            : AppBar(
+                title: _TituloDelViaje(voyage: voyage),
+                actions: [buscar, const SyncAppBarButton()],
+              ),
+        body: PanelLateralDisponible(
+          disponible: false,
+          child: Column(
+            children: [
+              if (bandaDelMuelle)
+                _BandaDelMuelle(
+                  voyage: voyage,
+                  modo: modoDeOperacion,
+                  modos: modos,
+                  onModo: elegirModo,
+                  acciones: [buscar],
+                ),
+              Expanded(child: contenido),
+            ],
+          ),
+        ),
+        bottomNavigationBar: BarraDelViaje(
+          destinos: destinos,
+          activo: destino,
+          onDestino: irA,
+          alertas: alertas,
+          alertaCritica: critica,
+        ),
+      ));
+    }
+
+    // La oficina: el riel con la marca, la cabecera y, con sitio, el panel.
+    return conAtras(Scaffold(
+      body: PanelLateralDisponible(
+        disponible: conPanel,
+        child: Row(
+          children: [
+            RielDelViaje(
+              destinos: destinos,
+              activo: destino,
+              onDestino: irA,
+              alertas: alertas,
+              alertaCritica: critica,
+              onAlertas: conPanel ? () => _openAlerts(voyage) : null,
+              pie: [const SyncAppBarButton(), parametersButton],
+            ),
+            const VerticalDivider(width: 1),
+            Expanded(
+              child: Column(
+                children: [
+                  _CabeceraDeOficina(
+                    voyage: voyage,
+                    publicado: ui is Publicado,
+                    enOperacion: enOperacion,
+                    modo: modoDeOperacion,
+                    modos: modos,
+                    onModo: elegirModo,
+                    buscar: buscar,
+                  ),
+                  Expanded(child: contenido),
+                ],
+              ),
+            ),
+            if (conPanel) ...[
+              const VerticalDivider(width: 1),
+              SizedBox(
+                width: medidas.anchoPanelLateral,
+                child: _PanelLateral(voyage: voyage, enOperacion: enOperacion),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ));
+  }
+
+  /// «Más» (`DESIGN.md` 8): la hoja con las alertas primero y, después, lo
+  /// que antes eran las acciones de la barra. Nube y Parámetros solo aquí
+  /// cuando no hay riel que los lleve al pie.
+  Future<void> _abrirMas(VesselVoyage voyage,
+      {required bool preview,
+      required bool conRiel,
+      required int alertas}) async {
+    final loadedAtCall = voyage.portOfCall == null
+        ? 0
+        : voyage.cargoCountsFor(voyage.portOfCall).loaded +
+            voyage.reservedCountsFor(voyage.portOfCall).loaded;
+    final entradas = <_EntradaDeMas>[
+      _EntradaDeMas(
+        clave: 'mas-alertas',
+        icono: Icons.fact_check,
+        titulo: 'Alertas de estiba',
+        cuenta: alertas,
+        onTap: () => _openAlerts(voyage),
+      ),
+      if (voyage.portOfCall != null)
+        _EntradaDeMas(
+          clave: 'mas-tapas',
+          icono: BsIconos.tapaEscotilla,
+          titulo: 'Tapas en la operación',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => HatchOperationPage(voyage: voyage))),
+        ),
+      if (voyage.geometry != null &&
+          DischargeSequence.dischargePorts(voyage).isNotEmpty)
+        _EntradaDeMas(
+          clave: 'mas-orden',
+          icono: Icons.low_priority,
+          titulo: 'Orden de descarga',
+          onTap: () => _openDischargeSequence(voyage),
+        ),
+      if (loadedAtCall > 0)
+        _EntradaDeMas(
+          clave: 'mas-listado',
+          icono: BsIconos.listadoAgencia,
+          titulo: 'Listado de la agencia',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const ExportListImportPage())),
+        ),
+      _EntradaDeMas(
+        clave: 'mas-comparar',
+        icono: BsIconos.compararBaplie,
+        titulo: 'Comparar con otro BAPLIE…',
+        onTap: () => compareWithAnotherBaplie(context, ref, voyage),
+      ),
+      // Único punto de exportación para PDF, CSV y JSON. En previo, exportar
+      // cuenta como operar: la entrada dice que falta confirmar (10.4).
+      if (preview)
+        _EntradaDeMas(
+          clave: 'export-preview',
+          icono: Icons.download,
+          titulo: 'Exportar viaje',
+          subtitulo: 'Primero confirma el perfil y la escala',
+          onTap: () => _avisar(context, exportarSinConfirmar),
+        )
+      else
+        for (final format in VoyageExportFormat.values)
+          _EntradaDeMas(
+            clave: 'export-${format.name}',
+            icono: switch (format) {
+              VoyageExportFormat.pdf => Icons.picture_as_pdf,
+              VoyageExportFormat.csv => Icons.table_view,
+              VoyageExportFormat.json => Icons.data_object,
+            },
+            titulo: 'Exportar ${format.label}',
+            onTap: () => _exportVoyage(context, voyage, format),
+          ),
+      if (!conRiel) ...[
+        _EntradaDeMas(
+          clave: 'mas-nube',
+          icono: Icons.cloud,
+          titulo: 'Nube y cuenta',
+          onTap: () => openCloudPage(context),
+        ),
+        _EntradaDeMas(
+          clave: 'edit-geometry',
+          icono: Icons.straighten,
+          titulo: 'Parámetros',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => ParametersPage(
+                  onVesselParameters: () => _askForGeometry(context)))),
+        ),
+      ],
+      _EntradaDeMas(
+        clave: 'mas-cargar',
+        icono: BsIconos.baplie,
+        titulo: 'Cargar archivo BAPLIE',
+        onTap: () => _loadBaplieFile(context),
+      ),
+      _EntradaDeMas(
+        clave: 'recent-voyages',
+        icono: Icons.history,
+        titulo: 'Viajes recientes',
+        onTap: () => _openRecentVoyages(context),
+      ),
+      _EntradaDeMas(
+        clave: 'saved-profiles',
+        icono: BsIconos.buque,
+        titulo: 'Perfiles guardados',
+        onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const VesselProfilesPage())),
+      ),
+      _EntradaDeMas(
+        clave: 'mas-cerrar',
+        icono: Icons.close,
+        titulo: 'Cerrar el plano',
+        subtitulo: preview
+            ? 'Descarta el previo sin guardar nada'
+            : 'Limpia los datos cargados en este dispositivo',
+        onTap: () => _clear(context, preview: preview),
+      ),
+    ];
+    final elegida = await showModalBottomSheet<_EntradaDeMas>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => _HojaMas(entradas: entradas),
+    );
+    if (!mounted || elegida == null) return;
+    elegida.onTap();
+  }
+
+  /// Desde «Avance», una celda en conflicto lleva al plano, con su modo y su
+  /// bahía (T-78).
+  void _irACelda(OperationCellLink cell) {
+    final bay = IsoCoordinateParser.parse(cell.position).bay;
+    ref.read(bayPlanModeProvider.notifier).elegir(
+        cell.role == PlanRole.discharge
+            ? BayPlanMode.discharge
+            : BayPlanMode.loading);
+    ref.read(selectedBayProvider.notifier).select(bay);
+    ref.read(highlightedContainerProvider.notifier).highlight(
+        cell.role == PlanRole.discharge && cell.key.startsWith('C:')
+            ? cell.key.substring(2)
+            : cell.displayKey);
+    ref.read(selectedTypeFilterProvider.notifier).clear();
+    ref.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
+  }
+
+  void _openDischargeSequence(VesselVoyage voyage) {
+    final profile = ref.read(voyageNotifierProvider.notifier).currentProfile;
+    final covers =
+        profile?.key == (voyage.vesselProfileKey ?? voyage.vessel.profileKey)
+            ? profile!.hatchCovers
+            : const <int, HatchCoverDeclaration>{};
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) =>
+            DischargeSequencePage(voyage: voyage, hatchCovers: covers)));
+  }
+
+  /// Un aviso corto, con el mismo texto en todas partes. El aire lo pone la
+  /// página ([AvisosSobreElPie]): con plano, por encima de su pie y sin pasar
+  /// del borde de arriba de la franja ([avisoDelViaje]).
+  void _avisar(BuildContext context, String texto, {String? corto}) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(avisoDelViaje(texto: texto, corto: corto));
   }
 
   /// Abre el buscador de contenedores
@@ -314,16 +461,18 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       delegate: ContainerSearchDelegate(
         containers: voyage.containers,
         ref: ref,
-        tabController: _tabController,
+        onIrAlPlano: () => ref
+            .read(destinoDelViajeProvider.notifier)
+            .ir(DestinoDelViaje.plano),
       ),
     );
   }
 
-  /// Selecciona una bahía desde el perfil y abre su rejilla en Bay Plan.
+  /// Selecciona una bahía desde el perfil y abre su rejilla en el Plano.
   void _openBayPlan(int bayNumber) {
     ref.read(highlightedContainerProvider.notifier).clear();
     ref.read(selectedBayProvider.notifier).select(bayNumber);
-    _tabController.animateTo(1);
+    ref.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
   }
 
   Future<void> _openAlerts(VesselVoyage voyage) async {
@@ -352,14 +501,12 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
     try {
       Uint8List? pdfBytes;
       if (format == VoyageExportFormat.pdf) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Generando reporte PDF...'),
-            duration: Duration(minutes: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        await Future<void>.delayed(Duration.zero);
+        ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: 'Generando reporte PDF...',
+          duracion: const Duration(minutes: 2),
+        ));
+        // Deja que el aviso se dibuje antes de generar el PDF.
+        await WidgetsBinding.instance.endOfFrame;
         pdfBytes = await const PdfReportService().generate(
           voyage,
           geometry: voyage.geometry!,
@@ -375,40 +522,126 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       if (path == null && !kIsWeb) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Exportación ${format.label} completada'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _avisar(context, 'Exportación ${format.label} completada');
     } catch (error, stack) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              vesselErrorMessage(error, stack, 'exportar ${format.label}')),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+        texto: vesselErrorMessage(error, stack, 'exportar ${format.label}'),
+        corto: 'No se pudo exportar ${format.label}.',
+        fondo: Theme.of(context).colorScheme.error,
+      ));
+    }
+  }
+
+  /// Pregunta antes de perder un previo (DESIGN.md 7.2, punto 5). Devuelve
+  /// `true` si se descartó o si no había previo.
+  Future<bool> _discardPreviewIfAny(BuildContext context) async {
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    if (!notifier.isPreview) return true;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Descartar el plano sin confirmar?'),
+        content: const Text(
+            'No se guardó nada. Podrás volver a abrir el archivo cuando quieras.'),
+        actions: [
+          TextButton(
+              key: const ValueKey('preview-keep'),
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Seguir mirando')),
+          FilledButton(
+              key: const ValueKey('preview-discard'),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Descartar')),
+        ],
+      ),
+    );
+    if (discard != true) return false;
+    notifier.discardPreview();
+    ref.read(highlightedContainerProvider.notifier).clear();
+    ref.read(selectedBayProvider.notifier).clear();
+    return true;
+  }
+
+  /// «Cerrar el plano»: con un previo pregunta; publicado, limpia como siempre.
+  Future<void> _clear(BuildContext context, {required bool preview}) async {
+    if (preview) {
+      await _discardPreviewIfAny(context);
+      return;
+    }
+    ref.read(voyageNotifierProvider.notifier).clearVoyage();
+    ref.read(highlightedContainerProvider.notifier).clear();
+    ref.read(selectedBayProvider.notifier).clear();
+  }
+
+  /// «Viajes recientes» desde la barra; un previo se descarta antes.
+  Future<void> _openRecentVoyages(BuildContext context) async {
+    if (!await _discardPreviewIfAny(context)) return;
+    if (!context.mounted) return;
+    final loadFile = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const RecentVoyagesPage()));
+    if (context.mounted && loadFile == true) {
+      await _loadBaplieFile(context);
+    }
+  }
+
+  /// Reabre un viaje guardado desde el inicio, sin parser ni archivo.
+  Future<void> _openRecent(BuildContext context, VesselVoyage recent) async {
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    final error = await notifier.openRecentVoyage(recent.id);
+    if (!context.mounted) return;
+    if (error != null) {
+      _avisar(context, error, corto: 'No se pudo abrir el viaje.');
+      return;
+    }
+    final kept = notifier.reopenKeptParameters;
+    if (kept.isNotEmpty) {
+      // T-61: el perfil vigente no se aplica si oculta carga; se dice cuál.
+      ScaffoldMessenger.of(context).showSnackBar(avisoDelParametroConservado(
+          kept.map((p) => p.label)));
     }
   }
 
   /// Carga un archivo BAPLIE usando el VoyageNotifier
   ///
-  /// Un perfil conocido permite abrir directamente. Un buque nuevo, homónimo
-  /// o con carga fuera del perfil requiere confirmación antes de publicar.
+  /// El plano abre en previo con el perfil propuesto o el guardado; la banda
+  /// guía la confirmación. Solo con perfil guardado que cubre la carga y la
+  /// escala de siempre abre publicado (DESIGN.md 7.2).
   Future<void> _loadBaplieFile(BuildContext context) async {
+    if (!await _discardPreviewIfAny(context)) return;
+    if (!context.mounted) return;
     final notifier = ref.read(voyageNotifierProvider.notifier);
-    var result = await notifier.loadVesselFromFile();
+    final result = await notifier.loadVesselFromFile();
 
     if (!context.mounted) return;
 
     // No mostrar nada si el usuario canceló el selector de archivos
     if (result.isCancelled) return;
 
-    if (result.needsIdentity) {
+    // En previo (también con homónimos) la banda dice qué falta.
+    if (result.preview || result.needsIdentity) return;
+
+    // Mostrar SnackBar según el resultado
+    ScaffoldMessenger.of(context).showSnackBar(result.success
+        ? avisoDelViaje(
+            texto: 'Archivo "${result.fileName}" cargado correctamente',
+            corto: 'Archivo cargado.')
+        : avisoDelViaje(
+            texto: result.errorMessage ??
+                unexpectedErrorMessage('cargar el archivo'),
+            corto: 'No se pudo cargar el archivo.',
+            fondo: Theme.of(context).colorScheme.error,
+          ));
+  }
+
+  /// «Confirmar» en la banda del previo: identidad si hay homónimos, plantilla
+  /// si el buque es nuevo y los parámetros del buque. Cancelar en cualquier
+  /// paso deja el previo como estaba: se sigue mirando, sin operar.
+  Future<void> _confirmPreview(BuildContext context) async {
+    final notifier = ref.read(voyageNotifierProvider.notifier);
+    final fileName = notifier.loadedFileName;
+    if (notifier.identityCandidates.isNotEmpty) {
       final candidates = notifier.identityCandidates;
       final selection = await showDialog<int>(
         context: context,
@@ -441,37 +674,29 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           ],
         ),
       );
-      if (!context.mounted) return;
-      if (selection == null) {
-        notifier.discardPendingVoyage();
-        return;
-      }
-      result = await notifier
+      if (!context.mounted || selection == null) return;
+      final result = await notifier
           .resolveIdentity(selection < 0 ? null : candidates[selection]);
       if (!context.mounted) return;
-      if (!result.success) notifier.discardPendingVoyage();
+      if (!result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: result.errorMessage ??
+              unexpectedErrorMessage('aplicar el perfil del buque'),
+          corto: 'No se aplicó el perfil del buque.',
+          fondo: Theme.of(context).colorScheme.error,
+        ));
+        return;
+      }
+      if (!result.needsGeometry) {
+        // El homónimo elegido cubre la carga y la escala es la de siempre.
+        _avisar(context, 'Archivo "$fileName" cargado correctamente',
+            corto: 'Archivo cargado.');
+        return;
+      }
     }
-
-    if (result.needsGeometry) {
-      if (notifier.canChooseTemplate && !await _chooseTemplate(context)) return;
-      if (!context.mounted) return;
-      await _askForGeometry(context, fileName: result.fileName);
-      return;
-    }
-
-    // Mostrar SnackBar según el resultado
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result.success
-              ? 'Archivo "${result.fileName}" cargado correctamente'
-              : result.errorMessage ?? unexpectedErrorMessage('cargar el archivo'),
-        ),
-        backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    if (notifier.canChooseTemplate && !await _chooseTemplate(context)) return;
+    if (!context.mounted) return;
+    await _askForGeometry(context, fileName: fileName);
   }
 
   Future<bool> _chooseTemplate(BuildContext context) async {
@@ -512,18 +737,15 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         ),
       );
       if (!context.mounted) return false;
-      if (selection == null) {
-        notifier.discardPendingVoyage();
-        return false;
-      }
+      // Cancelar deja el previo como estaba.
+      if (selection == null) return false;
       if (selection >= 0) notifier.useTemplate(profiles[selection]);
       return true;
     } catch (error, stack) {
-      notifier.discardPendingVoyage();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(vesselErrorMessage(
-                error, stack, 'aplicar la plantilla del buque'))));
+        _avisar(context,
+            vesselErrorMessage(error, stack, 'aplicar la plantilla del buque'),
+            corto: 'No se aplicó la plantilla del buque.');
       }
       return false;
     }
@@ -531,8 +753,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
 
   /// Abre la pantalla de parámetros del buque con la propuesta deducida.
   ///
-  /// Si el usuario cancela, el viaje pendiente se descarta: no se publica un
-  /// viaje sin geometría confirmada.
+  /// Cancelar deja el previo como estaba: nada publicado, el plano a la
+  /// vista. Confirmar publica y se queda en el Plano (10.2 a).
   Future<void> _askForGeometry(
     BuildContext context, {
     String? fileName,
@@ -566,7 +788,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar carga')),
+                child: const Text('Cancelar')),
             FilledButton(
                 onPressed: () => Navigator.pop(context, true),
                 child: const Text('Revisar ampliación')),
@@ -574,10 +796,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         ),
       );
       if (!context.mounted) return;
-      if (expand != true) {
-        notifier.discardPendingVoyage();
-        return;
-      }
+      if (expand != true) return;
       // Solo un borrador después de aceptar revisar; no se modifica el perfil.
       final saved = profile.geometry;
       initial = saved.copyWith(
@@ -615,21 +834,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
 
       if (!context.mounted) return;
 
-      if (result == null) {
-        // Cancelar deja el árbol como estaba: nada publicado, nada pendiente.
-        notifier.discardPendingVoyage();
-        if (isEditing) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Carga cancelada: no se confirmó la geometría del buque',
-            ),
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(16),
-          ),
-        );
-        return;
-      }
+      // Cancelar deja el árbol como estaba: nada publicado, el previo a la vista.
+      if (result == null) return;
 
       OperationSourceKind? sourceKind;
       if (!isEditing &&
@@ -661,10 +867,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           ),
         );
         if (!context.mounted) return;
-        if (sourceKind == null) {
-          notifier.discardPendingVoyage();
-          return;
-        }
+        if (sourceKind == null) return;
       }
       final error = await notifier.confirmGeometry(result.geometry,
           sourceKind: sourceKind,
@@ -675,9 +878,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
           reeferSlotsOrigin: result.reeferSlotsOrigin);
       if (!context.mounted) return;
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(error),
-          backgroundColor: Theme.of(context).colorScheme.error,
+        ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: error,
+          corto: 'No se guardaron los parámetros.',
+          fondo: Theme.of(context).colorScheme.error,
         ));
         initial = result.geometry;
         profile = profile.copyWith(
@@ -688,17 +892,15 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
         continue;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isEditing
-                ? 'Parámetros del buque actualizados'
-                : 'Archivo "$fileName" cargado correctamente',
-          ),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+      if (!isEditing) {
+        ref.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
+      }
+      _avisar(
+          context,
+          isEditing
+              ? 'Parámetros del buque actualizados'
+              : 'Archivo "$fileName" cargado correctamente',
+          corto: isEditing ? null : 'Archivo cargado.');
       return;
     }
   }
@@ -721,14 +923,14 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
               if (voyage.portOfCall != null)
                 DepartureBaplieButton(voyage: voyage),
               TextButton.icon(
-                icon: const Icon(Icons.fact_check_outlined),
+                icon: const Icon(Icons.fact_check),
                 label: const Text('Alertas de estiba'),
                 onPressed: () => _openAlerts(voyage),
               ),
               // T-96: el segundo archivo se lee sin el flujo de carga.
               TextButton.icon(
                 key: const ValueKey('compare-baplie'),
-                icon: const Icon(Icons.compare_arrows),
+                icon: const Icon(BsIconos.compararBaplie),
                 label: const Text('Comparar con otro BAPLIE…'),
                 onPressed: () => compareWithAnotherBaplie(context, ref, voyage),
               ),
@@ -739,17 +941,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                   key: const ValueKey('open-discharge-sequence'),
                   icon: const Icon(Icons.low_priority),
                   label: const Text('Orden de descarga'),
-                  onPressed: () {
-                    final profile =
-                        ref.read(voyageNotifierProvider.notifier).currentProfile;
-                    final covers = profile?.key ==
-                            (voyage.vesselProfileKey ?? voyage.vessel.profileKey)
-                        ? profile!.hatchCovers
-                        : const <int, HatchCoverDeclaration>{};
-                    Navigator.of(context).push(MaterialPageRoute<void>(
-                        builder: (_) => DischargeSequencePage(
-                            voyage: voyage, hatchCovers: covers)));
-                  },
+                  onPressed: () => _openDischargeSequence(voyage),
                 ),
               // T-73: el listado de la agencia se cruza con lo que se carga aquí.
               if (voyage.portOfCall != null &&
@@ -758,7 +950,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
                       0)
                 TextButton.icon(
                   key: const ValueKey('open-export-list'),
-                  icon: const Icon(Icons.table_view),
+                  icon: const Icon(BsIconos.listadoAgencia),
                   label: const Text('Listado de la agencia'),
                   onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
@@ -866,10 +1058,396 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage>
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w500,
-          fontSize: 12,
+        style: Theme.of(context)
+            .textTheme
+            .labelMedium
+            ?.copyWith(color: color, fontWeight: FontWeight.w500),
+      ),
+    );
+  }
+}
+
+/// El nombre del buque y, debajo, el viaje y la escala.
+class _TituloDelViaje extends StatelessWidget {
+  const _TituloDelViaje({required this.voyage});
+
+  final VesselVoyage voyage;
+
+  @override
+  Widget build(BuildContext context) {
+    final textos = Theme.of(context).textTheme;
+    final esquema = Theme.of(context).colorScheme;
+    final viaje = <String>[
+      'Viaje ${voyageNumberLabel(voyage.voyageNumber)}',
+      if (voyage.portOfCall != null) 'Escala ${voyage.portOfCall}',
+    ].join(' · ');
+    // Sin elipsis: con la letra grande se encoge, como el título de antes.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(voyage.vessel.name, maxLines: 1, style: textos.titleMedium),
+        ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(viaje,
+              maxLines: 1,
+              style: textos.bodySmall?.copyWith(color: esquema.onSurfaceVariant)),
+        ),
+      ],
+    );
+  }
+}
+
+/// La cabecera de la oficina (`DESIGN.md` 13.8): el buque y el viaje, el
+/// estado, Descarga / Carga cuando hay operación, buscar y la nube.
+class _CabeceraDeOficina extends StatelessWidget {
+  const _CabeceraDeOficina({
+    required this.voyage,
+    required this.publicado,
+    required this.enOperacion,
+    required this.modo,
+    required this.modos,
+    required this.onModo,
+    required this.buscar,
+  });
+
+  final VesselVoyage voyage;
+  final bool publicado;
+  final bool enOperacion;
+  final BsModoDeOperacion? modo;
+  final Set<BsModoDeOperacion> modos;
+  final ValueChanged<BsModoDeOperacion> onModo;
+  final Widget buscar;
+
+  @override
+  Widget build(BuildContext context) {
+    final medidas = BsMedidas.de(context);
+    final esquema = Theme.of(context).colorScheme;
+    final textos = Theme.of(context).textTheme;
+    final estado = Container(
+      padding: EdgeInsets.symmetric(
+          horizontal: medidas.espacioS, vertical: medidas.espacioXs),
+      decoration: BoxDecoration(
+        color: esquema.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(medidas.radioControl),
+      ),
+      child: Text(publicado ? 'Publicado' : 'Sin confirmar',
+          style: textos.labelMedium),
+    );
+    // El estado y Descarga / Carga; si la letra no deja sitio para los dos
+    // en una línea, también se reparten en dos.
+    final controles = Wrap(
+      key: const ValueKey('cabecera-controles'),
+      spacing: medidas.espacioM,
+      runSpacing: medidas.espacioXs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        estado,
+        if (enOperacion)
+          SegmentedButton<BsModoDeOperacion>(
+            key: const ValueKey('operar-segmentos'),
+            segments: [
+              for (final valor in BsModoDeOperacion.values)
+                if (modos.contains(valor))
+                  ButtonSegment<BsModoDeOperacion>(
+                    value: valor,
+                    label: Text(valor.rotulo),
+                    icon: Icon(valor.icono),
+                  ),
+            ],
+            selected: <BsModoDeOperacion>{
+              if (modo != null && modos.contains(modo)) modo!,
+            },
+            emptySelectionAllowed: true,
+            showSelectedIcon: false,
+            onSelectionChanged: (valores) {
+              if (valores.isNotEmpty) onModo(valores.first);
+            },
+          ),
+      ],
+    );
+    return Container(
+      key: const ValueKey('cabecera-de-oficina'),
+      constraints: BoxConstraints(minHeight: medidas.alturaBarraSuperior),
+      padding: EdgeInsets.symmetric(
+          horizontal: medidas.espacioL, vertical: medidas.espacioS),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // La cabecera se reparte o se pliega según el ancho y la letra
+          // (10.21, H1): el título a la izquierda y los controles a la
+          // derecha mientras caben en una línea; si no caben, los controles
+          // bajan a una segunda línea y nada se desborda. A 600 dp con la
+          // letra a 2.0, la fila única dejaba Buscar fuera de la pantalla.
+          Expanded(
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: medidas.espacioM,
+              runSpacing: medidas.espacioXs,
+              children: [
+                _TituloDelViaje(voyage: voyage),
+                controles,
+              ],
+            ),
+          ),
+          SizedBox(width: medidas.espacioS),
+          // Buscar y la nube quedan siempre en el borde derecho, al alcance.
+          buscar,
+          const SyncAppBarButton(),
+        ],
+      ),
+    );
+  }
+}
+
+/// La banda de la marca arriba del muelle (`DESIGN.md` 13.6 y 13.8): el
+/// buque, el viaje y la escala, el chip de la nube y Descarga / Carga.
+class _BandaDelMuelle extends ConsumerWidget {
+  const _BandaDelMuelle({
+    required this.voyage,
+    required this.modo,
+    required this.modos,
+    required this.onModo,
+    required this.acciones,
+  });
+
+  final VesselVoyage voyage;
+  final BsModoDeOperacion? modo;
+  final Set<BsModoDeOperacion> modos;
+  final ValueChanged<BsModoDeOperacion> onModo;
+  final List<Widget> acciones;
+
+  /// El estado de la nube en una o dos palabras, para el chip de la banda.
+  static String nubeCorta(SyncStatus status) => switch (status.state) {
+        SyncState.localOnly => 'Solo aquí',
+        SyncState.connecting => 'Conectando',
+        SyncState.upToDate => status.rejected > 0 ? 'Revisar' : 'Al día',
+        SyncState.sending => 'Enviando',
+        SyncState.offline => 'Sin conexión',
+        SyncState.sessionExpired ||
+        SyncState.notAuthorized ||
+        SyncState.unconfirmed =>
+          'Revisar',
+      };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final status = visibleSyncStatus(ref.watch(syncStatusProvider));
+    return BsBandaMuelle(
+      key: const ValueKey('banda-del-muelle'),
+      buque: voyage.vessel.name,
+      viaje: 'Viaje ${voyageNumberLabel(voyage.voyageNumber)} · ${voyage.portOfCall}',
+      nube: BsChipDeNube(
+        texto: nubeCorta(status),
+        alDia: status.state == SyncState.upToDate && status.rejected == 0,
+        onTap: () => openCloudPage(context),
+      ),
+      modo: modo,
+      modos: modos,
+      mostrarModos: true,
+      onModo: onModo,
+      acciones: acciones,
+    );
+  }
+}
+
+/// El panel lateral de la oficina (`DESIGN.md` 8 y 13.8): el detalle de la
+/// celda elegida y, con una escala, «En vivo».
+class _PanelLateral extends ConsumerWidget {
+  const _PanelLateral({required this.voyage, required this.enOperacion});
+
+  final VesselVoyage voyage;
+  final bool enOperacion;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final medidas = BsMedidas.de(context);
+    final textos = Theme.of(context).textTheme;
+    final esquema = Theme.of(context).colorScheme;
+    final celda = ref.watch(celdaSeleccionadaProvider);
+    return Column(
+      key: const ValueKey('panel-lateral'),
+      children: [
+        Expanded(
+          child: celda == null
+              ? Padding(
+                  padding: EdgeInsets.all(medidas.espacioXl),
+                  child: Text(
+                    'Toca una celda del plano para ver su detalle aquí.',
+                    style: textos.bodyMedium
+                        ?.copyWith(color: esquema.onSurfaceVariant),
+                  ),
+                )
+              : DetalleContenedor(
+                  voyage: voyage,
+                  container: celda,
+                  onCerrar: () =>
+                      ref.read(celdaSeleccionadaProvider.notifier).limpiar(),
+                ),
+        ),
+        if (enOperacion)
+          Padding(
+            padding: EdgeInsets.all(medidas.espacioM),
+            child: EnVivoDelViaje(voyage: voyage),
+          ),
+      ],
+    );
+  }
+}
+
+/// Una entrada de la hoja «Más».
+class _EntradaDeMas {
+  const _EntradaDeMas({
+    required this.clave,
+    required this.icono,
+    required this.titulo,
+    required this.onTap,
+    this.subtitulo,
+    this.cuenta,
+  });
+
+  final String clave;
+  final IconData icono;
+  final String titulo;
+  final String? subtitulo;
+  final int? cuenta;
+  final VoidCallback onTap;
+}
+
+/// La hoja «Más» (`DESIGN.md` 8). Devuelve la entrada elegida; la página la
+/// ejecuta con la hoja ya cerrada.
+class _HojaMas extends StatelessWidget {
+  const _HojaMas({required this.entradas});
+
+  final List<_EntradaDeMas> entradas;
+
+  @override
+  Widget build(BuildContext context) {
+    final medidas = BsMedidas.de(context);
+    final semanticos = BsColoresSemanticos.de(context);
+    return SingleChildScrollView(
+      key: const ValueKey('hoja-mas'),
+      padding: EdgeInsets.symmetric(vertical: medidas.espacioS),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final entrada in entradas)
+            ListTile(
+              key: ValueKey<String>(entrada.clave),
+              leading: Icon(entrada.icono),
+              title: Text(entrada.titulo),
+              subtitle:
+                  entrada.subtitulo == null ? null : Text(entrada.subtitulo!),
+              trailing: entrada.cuenta == null || entrada.cuenta == 0
+                  ? null
+                  : Badge(
+                      backgroundColor: semanticos.revisar.contorno,
+                      textColor: semanticos.revisar.relleno,
+                      label: Text('${entrada.cuenta}'),
+                    ),
+              onTap: () => Navigator.of(context).pop(entrada),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Leyendo el archivo: un indicador con su nombre.
+class _Leyendo extends StatelessWidget {
+  const _Leyendo({required this.fileName});
+
+  final String fileName;
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('Leyendo $fileName…'),
+          ],
+        ),
+      );
+}
+
+/// El error con su causa y «Intentar de nuevo».
+class _Fallo extends StatelessWidget {
+  const _Fallo({required this.mensaje, required this.onRetry});
+
+  final String mensaje;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline,
+                  size: 64, color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: 16),
+              Text(
+                'Error al procesar archivo',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                mensaje,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Intentar de nuevo'),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+/// Lo que el previo no evalúa, con su icono, en todas las pestañas: nunca un
+/// hueco ni «sin alertas» (DESIGN.md 7.2, punto 4).
+class _SinEvaluar extends StatelessWidget {
+  const _SinEvaluar();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final medidas = BsMedidas.de(context);
+    return Material(
+      key: const ValueKey('preview-sin-evaluar'),
+      color: colorScheme.surfaceContainerLow,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal: medidas.espacioL, vertical: medidas.espacioS),
+        child: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded,
+                size: 20, color: colorScheme.onSurfaceVariant),
+            SizedBox(width: medidas.espacioS),
+            Expanded(
+              child: Text(
+                sinEvaluarHastaConfirmar,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+              ),
+            ),
+          ],
         ),
       ),
     );

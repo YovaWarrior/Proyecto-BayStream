@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'iconos_del_dominio.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
@@ -7,12 +9,13 @@ import '../providers/vessel_providers.dart';
 class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
   final List<ContainerUnit> containers;
   final WidgetRef ref;
-  final TabController? tabController;
+  /// Cómo ir al Plano al elegir un resultado; sin esto, solo selecciona.
+  final VoidCallback? onIrAlPlano;
 
   ContainerSearchDelegate({
     required this.containers,
     required this.ref,
-    this.tabController,
+    this.onIrAlPlano,
   }) : super(
           searchFieldLabel: 'Buscar contenedor o puerto...',
           searchFieldStyle: const TextStyle(fontSize: 16),
@@ -284,10 +287,11 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off,
-            size: 64,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          // 13.11: «ningún contenedor coincide», con la ilustración del paquete.
+          const BsIlustracion(
+            key: ValueKey('busqueda-sin-resultados'),
+            datos: BsIlustraciones.vacioBusqueda,
+            ancho: 240,
           ),
           const SizedBox(height: 16),
           Text(
@@ -297,10 +301,11 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
                 ),
           ),
           const SizedBox(height: 8),
+          // Tinta suave entera: con el 70 % de opacidad quedaba en 3.3:1.
           Text(
             'Intenta con otro término de búsqueda',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
         ],
@@ -317,10 +322,8 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
       ref.read(selectedBayProvider.notifier).select(bayNumber);
       ref.read(highlightedContainerProvider.notifier).highlight(container.containerId);
       
-      // Cambiar a la pestaña Bay Plan si hay TabController
-      if (tabController != null) {
-        tabController!.animateTo(1); // Índice 1 = Bay Plan
-      }
+      // Ir al Plano, si quien abrió la búsqueda dijo cómo.
+      onIrAlPlano?.call();
     }
     
     // Cerrar la búsqueda
@@ -420,33 +423,35 @@ class _ContainerSearchResultTile extends StatelessWidget {
   }
 
   Widget _buildLeadingIcon(ColorScheme colorScheme) {
-    IconData icon;
     Color background;
     Color foreground;
 
     // T-112: los mismos colores del esquema que las celdas y la leyenda del
     // plano (bay_plan_view.dart), en vez de colores fijos.
     if (container.isDangerous) {
-      icon = Icons.warning_amber;
       background = colorScheme.errorContainer;
       foreground = colorScheme.onErrorContainer;
     } else if (container.isReefer) {
-      icon = Icons.ac_unit;
       background = colorScheme.primaryContainer;
       foreground = colorScheme.onPrimaryContainer;
     } else if (container.status == ContainerStatus.full) {
-      icon = Icons.inventory_2;
       background = colorScheme.secondaryContainer;
       foreground = colorScheme.onSecondaryContainer;
     } else {
-      icon = Icons.inventory_2_outlined;
       background = colorScheme.surfaceContainerHighest;
       foreground = colorScheme.onSurfaceVariant;
     }
 
-    return CircleAvatar(
-      backgroundColor: background,
-      child: Icon(icon, color: foreground, size: 20),
+    // 10.23 (H1): el glifo lleva el nombre de su condición como etiqueta
+    // accesible y como descripción emergente, que cubre el círculo entero.
+    return IconoDelContenedor(
+      container,
+      tamano: 20,
+      color: foreground,
+      marco: (Widget icono) => CircleAvatar(
+        backgroundColor: background,
+        child: icono,
+      ),
     );
   }
 

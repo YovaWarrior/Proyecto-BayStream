@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <title>vacio_recientes · oscuro</title>
+  <rect width="320" height="200" fill="#07111F"/>
+  <path d="M176 158H320V200H176Z" fill="#11223F" data-grupo="agua"/>
+  <path d="M176 158L320 158" fill="none" stroke="#6E9DE6" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="flotacion"/>
+  <path d="M0 158H176V200H0Z" fill="#0C1A31" data-grupo="muelle_muro"/>
+  <path d="M0 134H176V158H0Z" fill="#0D47A1" data-grupo="muelle"/>
+  <path d="M0 134L176 134" fill="none" stroke="#EAF0F9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-grupo="muelle_cota"/>
+  <path d="M0 158L176 158" fill="none" stroke="#6E9DE6" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="muelle_base"/>
+  <path d="M176 134L176 200" fill="none" stroke="#EAF0F9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-grupo="muelle_cara"/>
+  <path d="M177.44 136.88H181.76A1.44 1.44 0 0 1 183.2 138.32V147.92A1.44 1.44 0 0 1 181.76 149.36H177.44A1.44 1.44 0 0 1 176 147.92V138.32A1.44 1.44 0 0 1 177.44 136.88Z" fill="#A9B9D2" data-grupo="defensa"/>
+  <path d="M58 126H82V130.5H58Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="sill"/>
+  <path d="M65.5 131.5A2.5 2.5 0 1 1 60.5 131.5A2.5 2.5 0 1 1 65.5 131.5Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="rueda"/>
+  <path d="M79.5 131.5A2.5 2.5 0 1 1 74.5 131.5A2.5 2.5 0 1 1 79.5 131.5Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="rueda"/>
+  <path d="M67 45H73V126H67Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="pierna"/>
+  <path d="M133 126H157V130.5H133Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="sill"/>
+  <path d="M140.5 131.5A2.5 2.5 0 1 1 135.5 131.5A2.5 2.5 0 1 1 140.5 131.5Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="rueda"/>
+  <path d="M154.5 131.5A2.5 2.5 0 1 1 149.5 131.5A2.5 2.5 0 1 1 154.5 131.5Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="rueda"/>
+  <path d="M142 45H148V126H142Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="pierna"/>
+  <path d="M73 79H142V84H73Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="portal"/>
+  <path d="M73 79L142 47" fill="none" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="riostra"/>
+  <path d="M22.5 39H292.5V45H22.5Z" fill="#11223F" stroke="#EAF0F9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-grupo="pluma"/>
+  <path d="M28 30H63V39H28Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="maquinas"/>
+  <path d="M145 21L289.5 39" fill="none" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="tirante"/>
+  <path d="M145 21L215.06 39" fill="none" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="tirante"/>
+  <path d="M145 21L30 30" fill="none" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="tirante"/>
+  <path d="M138 39L152 39L145 21Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="pilon"/>
+  <path d="M79.5 45H100.5V51H79.5Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="carro"/>
+  <path d="M79.5 51H84.5V56H79.5Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="cabina"/>
+  <path d="M86.5 51L86.5 58" fill="none" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="cable"/>
+  <path d="M98.5 51L98.5 58" fill="none" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="cable"/>
+  <path d="M84.55 58H100.45A0.75 0.75 0 0 1 101.2 58.75V60.75A0.75 0.75 0 0 1 100.45 61.5H84.55A0.75 0.75 0 0 1 83.8 60.75V58.75A0.75 0.75 0 0 1 84.55 58Z" fill="#11223F" stroke="#EAF0F9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" data-grupo="spreader"/>
+</svg>

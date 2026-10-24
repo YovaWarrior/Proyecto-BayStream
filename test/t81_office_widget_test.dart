@@ -50,7 +50,7 @@ void main() {
     await log.append(MovementDraft.changePosition('op', fixture.move, 'Cambio remoto'), fixture.office.author);
     await log.append(MovementDraft.cancelItem('op', 'C:FULL0005678', 'No embarca'), fixture.office.author);
     await tester.pumpAndSettle();
-    expect(find.text('CANC.'), findsOneWidget);
+    expect(find.text('Cancelado'), findsOneWidget);
     scope.read(selectedBayProvider.notifier).select(5);
     await tester.pumpAndSettle();
     final cell = tester.widget<LoadingCell>(find.byKey(const ValueKey('loading-C:FULL0001234')));

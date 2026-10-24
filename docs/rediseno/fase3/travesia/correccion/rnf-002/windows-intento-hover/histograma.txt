@@ -1,0 +1,11 @@
+Histograma de colores (muestra cada 4 px) de los cuadros del primer intento de RNF-002 (10.26, H2):
+el botón bajo el cursor lleva la capa de hover de Material 3 (onPrimary al 8 %): (74, 132, 230) en vez de (79, 142, 247).
+
+rnf-windows/sin01/inicio.png: (7, 17, 31) x94304, (17, 34, 63) x15407, (32, 32, 32) x3300, (0, 0, 0) x2740, (79, 142, 247) x2575, (12, 26, 49) x1773
+rnf-windows/sin02/inicio.png: (7, 17, 31) x92809, (17, 34, 63) x14673, (32, 32, 32) x3300, (0, 0, 0) x2740, (13, 71, 161) x2733, (79, 142, 247) x2575
+rnf-windows/sin04/ultimo.png: (7, 17, 31) x92992, (17, 34, 63) x14852, (32, 32, 32) x3300, (0, 0, 0) x2740, (74, 132, 230) x2564, (13, 71, 161) x2344
+rnf-windows-2/sin01/inicio.png: (7, 17, 31) x94315, (17, 34, 63) x15346, (32, 32, 32) x3300, (0, 0, 0) x2740, (79, 142, 247) x2575, (12, 26, 49) x1773
+sin01: ventana 1.387 s, pulsado 1.7987, rejilla 3.075, error None
+sin02: ventana 0.437 s, pulsado 66.6485, rejilla 67.744, error None
+sin03: ventana 0.437 s, pulsado 1.0264, rejilla 2.129, error None
+sin04: ventana 0.457 s, pulsado -, rejilla -, error Más de 120 s sin rejilla.

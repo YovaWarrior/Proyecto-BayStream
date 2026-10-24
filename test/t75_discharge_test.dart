@@ -191,14 +191,15 @@ void main() {
       await tester.tap(find.text('Descarga').last);
       await tester.pumpAndSettle();
       expect(summary(), contains('cubierta 2 · bodega 1 · descargados 0'));
+      // Fase 3: en la oficina la vista Estado deja el código a la vista; la
+      // marca de T-75 se reconoce por su clave (en el muelle dice «Baja»).
       expect(find.byKey(const ValueKey('discharge-pending')), findsNWidgets(3));
-      expect(find.text('BAJA'), findsNWidgets(3));
 
       // Un toque marca; el «Deshacer» inmediato lo anula con motivo.
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
       await tester.pumpAndSettle();
       expect(summary(), contains('cubierta 1 · bodega 1 · descargado 1'));
-      expect(find.text('DESC.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('discharge-discharged')), findsOneWidget);
       expect(find.textContaining('Descargado · TEST0000011'), findsOneWidget);
       await tester.tap(find.text('Deshacer'));
       await tester.pumpAndSettle();
@@ -209,7 +210,7 @@ void main() {
       // Más tarde, desde el detalle, con quién y cuándo y texto libre.
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
       await tester.pumpAndSettle();
-      expect(find.text('DESC.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('discharge-discharged')), findsOneWidget);
       wide(true);
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
@@ -246,7 +247,7 @@ void main() {
       scope.read(selectedBayProvider.notifier).select(14);
       await tester.pumpAndSettle();
       expect(summary(), contains('cubierta 0 · bodega 1 · descargados 0'));
-      expect(find.text('PASO'), findsOneWidget);
+      expect(find.byKey(const ValueKey('discharge-transit')), findsOneWidget);
       await tester.ensureVisible(find.byKey(const ValueKey('cell-2-82')));
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
       await tester.pumpAndSettle();
@@ -259,7 +260,10 @@ void main() {
       expect((restow.type, restow.payload['restow'], restow.reason),
           (MovementType.discharge, true, 'Despejar la bodega'));
       expect(summary(), contains('1 re‑estiba'));
-      expect(find.text('RE‑EST.'), findsOneWidget);
+      expect(find.byKey(const ValueKey('discharge-restowed')), findsOneWidget);
+      // La celda escribe «Re‑est.» (no cabe entera, 10.28); la etiqueta
+      // accesible y el resumen dicen «re‑estiba».
+      expect(find.text('Re‑est.'), findsWidgets);
       expect(
           tester
               .widget<Text>(
@@ -275,7 +279,12 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('discharge-table-button')));
       await tester.pumpAndSettle();
       expect(find.textContaining('2 bahías · 4 pendientes'), findsOneWidget);
-      expect(find.text('Re‑est.'), findsOneWidget);
+      // La columna de la tabla; la celda del plano, detrás, también dice
+      // «Re‑est.» desde 10.28.
+      expect(
+          find.descendant(
+              of: find.byType(DataTable), matching: find.text('Re‑est.')),
+          findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     });

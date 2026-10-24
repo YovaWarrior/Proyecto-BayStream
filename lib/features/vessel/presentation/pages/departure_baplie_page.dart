@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/departure_export_repository_impl.dart';
@@ -13,6 +14,7 @@ import '../providers/loading_operation_provider.dart';
 import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import 'voyage_comparison_page.dart';
+import '../widgets/avisos_del_viaje.dart';
 import '../../../../core/utils/voyage_number.dart';
 
 final departureExportRepositoryProvider = Provider<DepartureExportRepository>(
@@ -31,7 +33,7 @@ class DepartureBaplieButton extends ConsumerWidget {
     if (!_allowed(ref.watch(operatorProvider))) return const SizedBox.shrink();
     return TextButton.icon(
         key: const ValueKey('departure-baplie-button'),
-        icon: const Icon(Icons.save_alt),
+        icon: const Icon(BsIconos.baplieSalida),
         label: const Text('Generar BAPLIE de salida'),
         onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
             builder: (_) => DepartureBapliePage(voyage: voyage))));
@@ -139,7 +141,7 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
       FilledButton.icon(
           key: const ValueKey('departure-save'),
           onPressed: _saving ? null : _save,
-          icon: const Icon(Icons.save_alt),
+          icon: const Icon(BsIconos.baplieSalida),
           label: Text(_saving ? 'Guardando…' : 'Guardar BAPLIE de salida')),
       const SizedBox(height: 12),
       // T-96: la salida generada, releída en memoria, contra la llegada.
@@ -148,7 +150,7 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
         OutlinedButton.icon(
             key: const ValueKey('departure-compare-arrival'),
             onPressed: () => _compareWithArrival(operation, output),
-            icon: const Icon(Icons.compare_arrows),
+            icon: const Icon(BsIconos.compararBaplie),
             label: const Text('Comparar con la llegada'))
       else
         const Text('La operación no tiene un plano de llegada para comparar.',
@@ -167,7 +169,8 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
     final failure = arrival.fold((f) => f, (_) => null) ??
         departure.fold((f) => f, (_) => null);
     if (failure != null) {
-      _notice(vesselFailureMessage(failure, 'comparar la salida con la llegada'));
+      _notice(vesselFailureMessage(failure, 'comparar la salida con la llegada'),
+          corto: 'No se pudo comparar.');
       return;
     }
     await Navigator.of(context).push(MaterialPageRoute<void>(
@@ -178,8 +181,9 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
             secondLabel: 'Salida generada, sin guardar')));
   }
 
-  void _notice(String message) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(message)));
+  /// Puede seguir en pantalla al volver al plano: sabe su lugar (10.33).
+  void _notice(String message, {String? corto}) => ScaffoldMessenger.of(context)
+      .showSnackBar(avisoDelViaje(texto: message, corto: corto));
 
   Future<void> _save() async {
     if (!_allowed(ref.read(operatorProvider))) return;
@@ -197,13 +201,15 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
           .read(departureExportRepositoryProvider)
           .save(operation, output.text);
       if (mounted && (path != null || kIsWeb)) {
-        _notice('Exportación BAPLIE completada');
+        _notice('Exportación BAPLIE completada', corto: 'BAPLIE exportado.');
       }
     } catch (error, stack) {
       if (mounted) {
-        _notice(error is StateError
-            ? error.message
-            : vesselErrorMessage(error, stack, 'generar el BAPLIE de salida'));
+        _notice(
+            error is StateError
+                ? error.message
+                : vesselErrorMessage(error, stack, 'generar el BAPLIE de salida'),
+            corto: 'No se generó el BAPLIE.');
       }
     } finally {
       if (mounted) setState(() => _saving = false);

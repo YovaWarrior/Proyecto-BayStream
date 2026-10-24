@@ -1,29 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/design/design.dart';
+import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/discharge_progress.dart';
-import '../../domain/services/loading_plan_progress.dart';
 import '../../domain/services/loading_operation.dart';
-import '../../../../core/utils/iso_coordinate_parser.dart';
+import '../../domain/services/loading_plan_progress.dart';
+import '../formatters/operation_text.dart';
+import '../pages/operation_progress_page.dart';
+import '../pages/stowage_alerts_page.dart';
 import '../providers/discharge_provider.dart';
-import '../providers/loading_plan_provider.dart';
 import '../providers/loading_operation_provider.dart';
-import '../providers/vessel_providers.dart';
-import 'discharge_controls.dart';
-import 'loading_plan_controls.dart';
-import 'loading_controls.dart';
-import 'reserved_slot_details.dart';
-import 'office_plan_controls.dart';
+import '../providers/loading_plan_provider.dart';
+import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
+import '../providers/vessel_providers.dart';
+import 'cifras_del_viaje.dart';
+import 'detalle_contenedor.dart';
+import 'discharge_controls.dart';
 import 'hatch_cover_diagram.dart';
 import 'hatch_operation_controls.dart';
-import 'detail_text_row.dart';
+import 'avisos_del_viaje.dart';
+import 'iconos_del_dominio.dart';
+import 'loading_controls.dart';
+import 'loading_plan_controls.dart';
+import 'navegacion_del_viaje.dart';
 import 'plan_drag_confirmation.dart';
-import '../formatters/operation_text.dart';
+import 'reserved_slot_details.dart';
+import 'silueta_del_viaje.dart';
+import 'zoom_del_plano.dart';
 
-/// Widget que muestra el Bay Plan como un grid visual de contenedores
-/// Permite navegar entre bahías y ver la disposición de contenedores
-/// Permite ampliar con pellizco o botones, desplazar y resaltar contenedores.
+/// El plano por bahía en la dirección C «Puente de mando» (`DESIGN.md` 13):
+/// la silueta del buque como selector, las tarjetas de cifra con la
+/// operación real, la rejilla dibujada como el ícono (celdas de radio 8, la
+/// tapa, el casco que cierra la bodega), «Colorear por» con las fichas y la
+/// regla del naranja para lo que se acaba de mover. Conserva el zoom, el
+/// arrastre, los modos de T-74/T-75/T-81 y las claves de prueba de antes.
 class BayPlanView extends ConsumerStatefulWidget {
   final VesselVoyage voyage;
 
@@ -35,20 +48,24 @@ class BayPlanView extends ConsumerStatefulWidget {
 
 class _BayPlanViewState extends ConsumerState<BayPlanView> {
   int? _selectedBayNumber;
-  BayPlanMode _mode = BayPlanMode.content;
   final ScrollController _bayScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // Respetar una selección hecha antes de construir esta pestaña.
+    // Respetar una selección hecha antes de construir esta pestaña. Sin
+    // ella, la primera bahía con carga propia: una impar que solo trae la
+    // sombra de los 40 de sus pares vecinas (T-110) no es por donde se
+    // empieza a mirar un plano.
     if (widget.voyage.bays.isNotEmpty) {
       final sortedBayNumbers = widget.voyage.bays.keys.toList()..sort();
       final requestedBay = ref.read(selectedBayProvider);
       _selectedBayNumber =
           requestedBay != null && widget.voyage.bays.containsKey(requestedBay)
               ? requestedBay
-              : sortedBayNumbers.first;
+              : sortedBayNumbers.firstWhere(
+                  (n) => widget.voyage.bays[n]!.containers.isNotEmpty,
+                  orElse: () => sortedBayNumbers.first);
     }
   }
 
@@ -62,10 +79,17 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
   Widget build(BuildContext context) {
     ref.watch(voyageNotifierProvider);
     final profile = ref.read(voyageNotifierProvider.notifier).currentProfile;
-    final hatches = profile?.key == (widget.voyage.vesselProfileKey ?? widget.voyage.vessel.profileKey)
-        ? profile?.hatchCovers : null;
-    final loading = (_mode == BayPlanMode.loading || _mode == BayPlanMode.order) && widget.voyage.portOfCall != null
-        ? ref.watch(loadingOperationProvider(widget.voyage)).value : null;
+    final hatches = profile?.key ==
+            (widget.voyage.vesselProfileKey ?? widget.voyage.vessel.profileKey)
+        ? profile?.hatchCovers
+        : null;
+    final mode = ref.watch(bayPlanModeProvider);
+    final vistas = ref.watch(colorearPorProvider);
+    final vista = vistas[mode] ?? colorearPorOmision(mode);
+    final porCarga = mode == BayPlanMode.loading || mode == BayPlanMode.order;
+    final loading = porCarga && widget.voyage.portOfCall != null
+        ? ref.watch(loadingOperationProvider(widget.voyage)).value
+        : null;
     final displayedVoyage = loading?.loading ?? widget.voyage;
     final sortedBayNumbers = displayedVoyage.bays.keys.toList()..sort();
     final highlightedContainerId = ref.watch(highlightedContainerProvider);
@@ -76,7 +100,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         : ref.watch(loadingPlanProgressProvider(widget.voyage)).value;
     // T-75: la bitácora de descarga solo se abre en el modo Descarga.
     final dischargeMode =
-        _mode == BayPlanMode.discharge && offersDischarge(widget.voyage);
+        mode == BayPlanMode.discharge && offersDischarge(widget.voyage);
     final discharge = dischargeMode
         ? ref.watch(dischargeProgressProvider(widget.voyage)).value
         : null;
@@ -99,6 +123,25 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         ? const <String, int>{}
         : _neighborTwenties(displayedVoyage, _selectedBayNumber!, arriving);
 
+    // 13.3: lo que llega a la bitácora (lo propio y lo de la nube) enciende
+    // el naranja de la celda; la primera lectura solo aprende lo que ya había.
+    if (widget.voyage.portOfCall != null) {
+      final operacion = loadingOperationProvider(widget.voyage);
+      ref.listen(operacion, (previo, actual) {
+        final movimientos = actual.value?.movements;
+        if (movimientos != null) {
+          ref.read(recienMovidoProvider.notifier).observar(movimientos);
+        }
+      });
+      // Lo que ya está al construir se aprende sin destello; observar otra
+      // vez lo mismo no hace nada.
+      final yaLeidos = ref.read(operacion).value?.movements;
+      if (yaLeidos != null) {
+        ref.read(recienMovidoProvider.notifier).observar(yaLeidos);
+      }
+    }
+    final recien = ref.watch(recienMovidoProvider);
+
     // Escuchar cambios en la bahía seleccionada desde búsqueda o perfil.
     ref.listen<int?>(selectedBayProvider, (previous, next) {
       if (next != null &&
@@ -115,79 +158,163 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         child: Text('No hay bahías disponibles'),
       );
     }
+    final medidas = BsMedidas.de(context);
+    final bay = displayedVoyage.bays[_selectedBayNumber] ??
+        displayedVoyage.bays[sortedBayNumbers.first]!;
+    final enOperacion = dischargeMode ||
+        (mode == BayPlanMode.loading && widget.voyage.portOfCall != null);
 
-    return Column(
-      children: [
-        LoadingPlanControls(
-            voyage: widget.voyage,
-            selectedBay: _selectedBayNumber,
-            mode: _mode,
-            onOperationCell: (cell) {
-              final bay = IsoCoordinateParser.parse(cell.position).bay;
-              setState(() {
-                _mode = cell.role == PlanRole.discharge
-                    ? BayPlanMode.discharge : BayPlanMode.loading;
-                _selectedBayNumber = bay;
-              });
-              ref.read(selectedBayProvider.notifier).select(bay);
-              ref.read(highlightedContainerProvider.notifier).highlight(
-                  cell.role == PlanRole.discharge && cell.key.startsWith('C:')
-                      ? cell.key.substring(2) : cell.displayKey);
-              ref.read(selectedTypeFilterProvider.notifier).clear();
-            },
-            onModeChanged: (value) => setState(() => _mode = value)),
-        // Selector de bahías
-        _buildBaySelector(sortedBayNumbers, displayedVoyage),
-        const Divider(height: 1),
+    return LayoutBuilder(builder: (context, constraints) {
+      final ancha = constraints.maxWidth >= AnchosDeNavegacion.riel;
+      // El teléfono bajo: con menos de 560 dp de alto útil (360 × 640 dp,
+      // menos la banda y la barra inferior) la rejilla no cabe debajo de la
+      // banda, la silueta y la leyenda; en 360 × 800 sí.
+      final anidar = !ancha && constraints.maxHeight < alturaParaAnidar;
+      // Los relojes del naranja (13.3) viven en la página, no aquí.
+      // En el teléfono bajo (13.8, 10.21 H4) lo primero es la rejilla: los
+      // controles del plano no van sobre la silueta sino al pie, en la línea
+      // de la leyenda o de la barra de la operación, y el resumen del modo
+      // justo encima del pie; así la primera fila se ve sin desplazar.
+      LoadingPlanControls controlesDelPlano(ParteDeLosControles parte) =>
+          LoadingPlanControls(
+              voyage: widget.voyage,
+              selectedBay: _selectedBayNumber,
+              mode: mode,
+              parte: parte,
+              // El chip del zoom va aquí y no sobre la rejilla (10.20).
+              zoom: const ZoomDelPlano(),
+              onOperationCell: (cell) {
+                final bayNumber = IsoCoordinateParser.parse(cell.position).bay;
+                ref.read(bayPlanModeProvider.notifier).elegir(
+                    cell.role == PlanRole.discharge
+                        ? BayPlanMode.discharge
+                        : BayPlanMode.loading);
+                setState(() => _selectedBayNumber = bayNumber);
+                ref.read(selectedBayProvider.notifier).select(bayNumber);
+                ref.read(highlightedContainerProvider.notifier).highlight(
+                    cell.role == PlanRole.discharge && cell.key.startsWith('C:')
+                        ? cell.key.substring(2)
+                        : cell.displayKey);
+                ref.read(selectedTypeFilterProvider.notifier).clear();
+              },
+              onModeChanged: (value) =>
+                  ref.read(bayPlanModeProvider.notifier).elegir(value));
+      final controles = controlesDelPlano(
+          anidar ? ParteDeLosControles.barra : ParteDeLosControles.todo);
+      final resumen =
+          anidar ? controlesDelPlano(ParteDeLosControles.resumen) : null;
+      final selector = _buildBaySelector(displayedVoyage, mode,
+          porCarga: porCarga, ancha: ancha, compacta: anidar);
 
-        // Grid de la bahía seleccionada con scroll normal
-        Expanded(
-          child: _selectedBayNumber != null
-              ? _BayGridWidget(
-                  hatchCovers: hatches?[_selectedBayNumber],
-                  bay: displayedVoyage.bays[_selectedBayNumber] ?? displayedVoyage.bays[sortedBayNumbers.first]!,
-                  loading: loading,
-                  dragVoyage: loading == null ? null : widget.voyage,
-                  onContainerTap: loading != null
-                      ? (container) => onLoadingContainerTap(context, ref, widget.voyage, container,
-                          selectedBay: _selectedBayNumber, openDetails: () => _showContainerDetails(container))
-                      : dischargeMode
-                      ? (container) => onDischargeTap(
-                          context, ref, widget.voyage, container,
-                          openDetails: () => _showContainerDetails(container))
-                      : _showContainerDetails,
-                  reservedSlots:
-                      displayedVoyage.getReservedSlotsInBay(_selectedBayNumber!),
-                  reservedNeighbors:
-                      reservedNeighbors[_selectedBayNumber] ?? const {},
-                  // En el modo Descarga, una reserva no se opera.
-                  onReservedSlotTap: loading != null
-                      ? (slot) => ref.read(operatorProvider).value?.role == OperatorRole.office ||
-                          loading.movementOf(loading.plan.loadingItemAt(slot.stowagePosition.toIsoCode())!.key) != null
-                          ? showLoadingDetails(context, widget.voyage, loading.plan.loadingItemAt(slot.stowagePosition.toIsoCode())!.key)
-                          : chooseLoadingRow(context, ref, widget.voyage, empties: true,
-                              selectedBay: _selectedBayNumber, slot: slot)
-                      : dischargeMode
-                      ? (_) {}
-                      : (slot) => showReservedSlotDetails(context, slot, voyage: widget.voyage),
-                  highlightedContainerId: highlightedContainerId,
-                  activeTypeFilter: activeTypeFilter,
-                  isInTransit: displayedVoyage.isInTransit,
-                  orderMode: _mode == BayPlanMode.order,
+      // La bahía elegida, con zoom y desplazamiento.
+      final rejilla = _selectedBayNumber != null
+                ? _BayGridWidget(
+                    desplazamientoPrimario: anidar,
+                    compacta: anidar,
+                    hatchCovers: hatches?[_selectedBayNumber],
+                    bay: bay,
+                    vista: vista,
+                    recienMovidoId: recien?.containerId,
+                    loading: loading,
+                    dragVoyage: loading == null ? null : widget.voyage,
+                    onContainerTap: loading != null
+                        ? (container) => onLoadingContainerTap(
+                            context, ref, widget.voyage, container,
+                            selectedBay: _selectedBayNumber,
+                            openDetails: () => _showContainerDetails(container))
+                        : dischargeMode
+                            ? (container) => _tocarEnDescarga(container, discharge)
+                            : _showContainerDetails,
+                    reservedSlots: displayedVoyage
+                        .getReservedSlotsInBay(_selectedBayNumber!),
+                    reservedNeighbors:
+                        reservedNeighbors[_selectedBayNumber] ?? const {},
+                    // En el modo Descarga, una reserva no se opera.
+                    onReservedSlotTap: loading != null
+                        ? (slot) => ref.read(operatorProvider).value?.role ==
+                                    OperatorRole.office ||
+                                loading.movementOf(loading.plan
+                                        .loadingItemAt(
+                                            slot.stowagePosition.toIsoCode())!
+                                        .key) !=
+                                    null
+                            ? showLoadingDetails(
+                                context,
+                                widget.voyage,
+                                loading.plan
+                                    .loadingItemAt(
+                                        slot.stowagePosition.toIsoCode())!
+                                    .key)
+                            : chooseLoadingRow(context, ref, widget.voyage,
+                                empties: true,
+                                selectedBay: _selectedBayNumber,
+                                slot: slot)
+                        : dischargeMode
+                            ? (_) {}
+                            : (slot) => showReservedSlotDetails(context, slot,
+                                voyage: widget.voyage),
+                    highlightedContainerId: highlightedContainerId,
+                    activeTypeFilter: activeTypeFilter,
+                    isInTransit: displayedVoyage.isInTransit,
+                    orderMode: mode == BayPlanMode.order,
+                    discharge: discharge,
+                    progress: loading?.progress ?? progress,
+                    portOfCall: widget.voyage.portOfCall,
+                    arriving: arriving[_selectedBayNumber] ?? const {},
+                    neighborTwenties: twenties,
+                    onDetailsTap: _showContainerDetails,
+                  )
+                : const Center(child: Text('Selecciona una bahía'));
+      // Abajo: en el muelle, operando, la barra de la operación; si no,
+      // la leyenda de la vista. En el teléfono bajo, con los controles del
+      // plano al principio de esa línea. Lo que los avisos de la página no
+      // deben tapar se mide (10.29, H2; `avisos_del_viaje.dart`): la fila de
+      // controles de la barra, dentro de `_barraDeOperacion`, o la leyenda
+      // entera, que es toda controles. La barra entera también se mide: su
+      // borde de arriba es el tope de los avisos (10.31).
+      final pie = medidas.esMuelle && enOperacion
+          ? _barraDeOperacion(dischargeMode, loading, discharge,
+              tira: anidar ? controles : null)
+          : MideElPieDelPlano(
+              sinFranja: true,
+              child: _buildLegend(displayedVoyage, bay, vista,
                   discharge: discharge,
-                  progress: loading?.progress ?? progress,
-                  portOfCall: widget.voyage.portOfCall,
-                  arriving: arriving[_selectedBayNumber] ?? const {},
-                  neighborTwenties: twenties,
-                  onDetailsTap: _showContainerDetails,
-                )
-              : const Center(child: Text('Selecciona una bahía')),
-        ),
-
-        // Leyenda
-        _buildLegend(displayedVoyage, twenties: twenties.isNotEmpty),
-      ],
-    );
+                  twenties: twenties.isNotEmpty,
+                  tira: anidar ? controles : null),
+            );
+      if (anidar) {
+        // Teléfono bajo (13.8): arriba solo la silueta compacta, que se va
+        // hacia arriba al desplazar la rejilla y vuelve al desplazarla hacia
+        // abajo; la primera fila de la rejilla ya se ve sin desplazar. La
+        // banda, el resumen, el pie con los controles y la barra inferior no
+        // se mueven.
+        return Column(children: [
+          Expanded(
+            child: NestedScrollView(
+              key: const ValueKey('plano-anidado'),
+              headerSliverBuilder: (context, _) => [
+                SliverToBoxAdapter(
+                  child: Column(children: [
+                    selector,
+                    const Divider(height: 1),
+                  ]),
+                ),
+              ],
+              body: rejilla,
+            ),
+          ),
+          if (resumen != null) resumen,
+          pie,
+        ]);
+      }
+      return Column(children: [
+        controles,
+        selector,
+        const Divider(height: 1),
+        Expanded(child: rejilla),
+        pie,
+      ]);
+    });
   }
 
   /// T-106: en una bahía par, cuántos 20 de sus impares vecinas ocupan cada
@@ -218,374 +345,373 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     return counts;
   }
 
-  Widget _buildBaySelector(List<int> bayNumbers, VesselVoyage displayedVoyage) {
-    return Container(
-      key: const ValueKey('bay-selector'),
-      // Android puede escalar 10/12 sp más que 28 sp. Se miden las dos
-      // líneas que realmente lleva el chip, sin suponer escala lineal.
-      height: (32 + (MediaQuery.textScalerOf(context).scale(12) +
-              MediaQuery.textScalerOf(context).scale(10)) * 1.6).clamp(60.0, double.infinity),
-      padding: const EdgeInsets.symmetric(vertical: 8),
+  /// La silueta del buque como selector y, en la oficina ancha, las tarjetas
+  /// de cifra a su derecha (`DESIGN.md` 13.8).
+  Widget _buildBaySelector(VesselVoyage displayedVoyage, BayPlanMode mode,
+      {required bool porCarga, required bool ancha, bool compacta = false}) {
+    final medidas = BsMedidas.de(context);
+    final esquema = Theme.of(context).colorScheme;
+    final paleta = BsPaleta.de(Theme.of(context).brightness);
+    final silueta = SiluetaDelViaje(
+      voyage: widget.voyage,
+      displayedVoyage: displayedVoyage,
+      seleccionada: _selectedBayNumber,
+      porCarga: porCarga,
+      controlador: _bayScrollController,
+      compacta: compacta,
+      onSeleccion: (bayNumber) =>
+          ref.read(selectedBayProvider.notifier).select(bayNumber),
+    );
+    final tapas = widget.voyage.portOfCall == null
+        ? null
+        : IconButton(
+            key: const ValueKey('hatch-operation-button'),
+            tooltip: 'Tapas en la operación',
+            icon: const Icon(BsIconos.tapaEscotilla),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => HatchOperationPage(
+                    voyage: widget.voyage, initialBay: _selectedBayNumber))));
+    final panelDeSilueta = Material(
+      color: paleta.hoja,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(medidas.radioPanel),
+        side: BorderSide(color: esquema.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Row(
         children: [
-          // Flecha izquierda
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () {
-              _bayScrollController.animateTo(
-                (_bayScrollController.offset - 200).clamp(0, _bayScrollController.position.maxScrollExtent),
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
-            tooltip: 'Anterior',
-          ),
-          // Lista de bahías
-          if (widget.voyage.portOfCall != null)
-            IconButton(key: const ValueKey('hatch-operation-button'),
-                tooltip: 'Tapas en la operación', icon: const Icon(Icons.layers_outlined),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                    builder: (_) => HatchOperationPage(voyage: widget.voyage, initialBay: _selectedBayNumber)))),
-          Expanded(
-            child: LayoutBuilder(builder: (context, constraints) => ListView.builder(
-              controller: _bayScrollController,
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              itemCount: bayNumbers.length,
-              itemBuilder: (context, index) {
-                final bayNumber = bayNumbers[index];
-                final bay = displayedVoyage.bays[bayNumber]!;
-                final reservedCount =
-                    displayedVoyage.getReservedSlotsInBay(bayNumber).length;
-                final isSelected = bayNumber == _selectedBayNumber;
-                
-                // Sin geometria declarada no hay porcentaje que mostrar; se
-                // rotula el hueco en vez de rellenarlo con un numero inventado.
-                final occupancy = bay.occupancyRate;
-                final occupancyLabel = occupancy == null
-                    ? 'sin geometria'
-                    : '${occupancy.toStringAsFixed(0)}%';
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: FilterChip(
-                    label: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: (constraints.maxWidth - 112).clamp(1.0, double.infinity)),
-                      child: FittedBox(fit: BoxFit.scaleDown, child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'BAHÍA ${bayNumber.toString().padLeft(2, '0')} ($occupancyLabel)',
-                          style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          reservedCount == 0
-                              ? '${bay.containers.length}'
-                              : '${bay.containers.length} · $reservedCount reservas',
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      ],
-                    ))),
-                    selected: isSelected,
-                    onSelected: (_) {
-                      ref
-                          .read(selectedBayProvider.notifier)
-                          .select(bayNumber);
-                    },
-                  ),
-                );
-              },
-            )),
-          ),
-          // Flecha derecha
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: () {
-              _bayScrollController.animateTo(
-                (_bayScrollController.offset + 200).clamp(0, _bayScrollController.position.maxScrollExtent),
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
-            tooltip: 'Siguiente',
-          ),
+          Expanded(child: silueta),
+          if (tapas != null) tapas,
         ],
       ),
     );
-  }
-
-  Widget _buildLegend(VesselVoyage displayedVoyage, {bool twenties = false}) {
-    final activeFilter = ref.watch(selectedTypeFilterProvider);
-    final scheme = Theme.of(context).colorScheme;
+    final tarjetas = ancha && !medidas.esMuelle
+        ? CifrasDelViaje.tarjetas(context, ref,
+            voyage: widget.voyage,
+            modo: mode,
+            bahia: _selectedBayNumber,
+            onAlertas: _abrirAlertas)
+        : const <Widget>[];
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildLegendItem(scheme.secondaryContainer, 'Lleno', LegendFilterType.full, activeFilter),
-            const SizedBox(width: 16),
-            _buildLegendItem(scheme.surfaceContainerHighest, 'Vacío / OOG', LegendFilterType.empty, activeFilter),
-            const SizedBox(width: 16),
-            _buildLegendItem(scheme.errorContainer, 'IMO', LegendFilterType.imo, activeFilter),
-            const SizedBox(width: 16),
-            _buildLegendItem(scheme.primaryContainer, 'Refrigerado', LegendFilterType.reefer, activeFilter),
-            const SizedBox(width: 16),
-            _buildLegendItem(scheme.tertiaryContainer, 'OOG', LegendFilterType.oog, activeFilter),
-            if (widget.voyage.portOfCall != null) ...[
-              const SizedBox(width: 16),
-              _buildLegendItem(scheme.surface, 'De paso',
-                  LegendFilterType.transit, activeFilter),
-            ],
-            const SizedBox(width: 16),
-            _buildLegendItem(
-                scheme.surfaceContainerHigh, 'Ocupado por 40 pies', null, activeFilter),
-            // T-106: la sombra de los 20 vecinos solo aparece en una par.
-            if (twenties) ...[
-              const SizedBox(width: 16),
-              _buildLegendItem(scheme.surfaceContainerHigh,
-                  'Ocupado por 20 pies', null, activeFilter),
-            ],
-            if (displayedVoyage.totalReservedSlots > 0) ...[
-              const SizedBox(width: 16),
-              _buildReservedLegendItem(),
-            ],
-            const SizedBox(width: 16),
-            _buildLegendItem(scheme.surfaceContainerLow, 'Sin contenedor', null, activeFilter),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReservedLegendItem() {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(2),
-            border: Border.all(color: colorScheme.onSurfaceVariant, width: 2),
-          ),
-        ),
-        const SizedBox(width: 4),
-        const Text('Celda reservada', style: TextStyle(fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildLegendItem(
-    Color color,
-    String label,
-    LegendFilterType? type,
-    LegendFilterType? activeFilter,
-  ) {
-    final isActive = type != null && type == activeFilter;
-    return InkWell(
-      borderRadius: BorderRadius.circular(4),
-      onTap: () {
-        if (type == null) {
-          return;
+      key: const ValueKey('bay-selector'),
+      padding: EdgeInsets.fromLTRB(medidas.espacioM, medidas.espacioXs,
+          medidas.espacioM, compacta ? medidas.espacioXs : medidas.espacioS),
+      child: LayoutBuilder(builder: (context, constraints) {
+        // Las tarjetas van a la derecha de la silueta cuando caben dos de
+        // 200 junto a ella (13.8); con menos ancho no se apilan debajo, que
+        // le quitarían el alto a la rejilla: las cifras están en «Avance».
+        if (tarjetas.isEmpty || constraints.maxWidth < 1040) {
+          return panelDeSilueta;
         }
-        ref.read(selectedTypeFilterProvider.notifier).toggle(type);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        // Una fila de tarjetas de 240 si caben todas junto a la silueta
+        // (desde 1400), si no dos por fila: la fila nunca es más alta que la
+        // silueta, para que la rejilla conserve su alto. Con 240 cabe «120 de
+        // 150» a 34 junto al anillo.
+        final porFila = constraints.maxWidth >= 1400 ? tarjetas.length : 2;
+        const anchoDeTarjeta = 240.0;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 16,
-              height: 16,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-                border: Border.all(
-                  color: isActive ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.outline,
-                  width: isActive ? 2 : 1,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                decoration: isActive ? TextDecoration.underline : null,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showContainerDetails(ContainerUnit container) {
-    ref.read(highlightedContainerProvider.notifier).clear();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.8,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Barra de arrastre
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              
-              // Título con indicadores
-              Row(
+            Expanded(child: panelDeSilueta),
+            SizedBox(width: medidas.espacioM),
+            SizedBox(
+              width: porFila * anchoDeTarjeta + (porFila - 1) * medidas.espacioM,
+              child: Wrap(
+                spacing: medidas.espacioM,
+                runSpacing: medidas.espacioM,
                 children: [
-                  Expanded(
-                    child: Text(
-                      container.containerId,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                  if (container.operatorCode != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        container.operatorCode!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                  for (final tarjeta in tarjetas)
+                    SizedBox(width: anchoDeTarjeta, child: tarjeta),
                 ],
               ),
-              const SizedBox(height: 16),
-              
-              // Detalles
-              _buildDetailRow('Posición', container.stowagePosition?.displayFormat ?? 'N/A'),
-              _buildDetailRow('Tipo ISO', '${container.isoSizeType ?? "N/A"} (${container.sizeInFeet ?? "?"}ft)'),
-              _buildDetailRow('Estado', container.status == ContainerStatus.full ? 'LLENO' : 
-                             container.status == ContainerStatus.empty ? 'VACÍO' : 'Desconocido'),
-              // T-66: cada peso con su fuente; si vienen los dos, los dos.
-              if (container.vgmWeight != null)
-                _buildDetailRow('Peso (VGM)', '${container.vgmWeight!.toStringAsFixed(0)} kg'),
-              if (container.grossWeight != null)
-                _buildDetailRow('Peso bruto', '${container.grossWeight!.toStringAsFixed(0)} kg'),
-              if (container.effectiveWeight == null)
-                _buildDetailRow('Peso', 'El archivo no trae peso'),
-              _buildDetailRow('Puerto Carga', container.portOfLoading ?? 'N/A'),
-              _buildDetailRow('Puerto Descarga', container.portOfDischarge ?? 'N/A'),
-              
-              // IMO
-              if (container.isDangerous) ...[
-                const Divider(height: 24),
-                Row(
-                  children: [
-                    Icon(Icons.warning_amber, color: Theme.of(context).colorScheme.error),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(
-                      'CARGA PELIGROSA - IMO ${container.imdgClass ?? ""}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )),
-                  ],
-                ),
-                if (container.unNumber != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text('UN: ${container.unNumber}'),
-                  ),
-              ],
-              
-              // Reefer
-              if (container.isReefer) ...[
-                const Divider(height: 24),
-                Row(
-                  children: [
-                    Icon(Icons.ac_unit, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(
-                      'REFRIGERADO: ${container.temperature?.toStringAsFixed(1) ?? "?"}°${container.temperatureUnit ?? "C"}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )),
-                  ],
-                ),
-              ],
+            ),
+          ],
+        );
+      }),
+    );
+  }
 
-              // T-75: estado en la escala, quién y cuándo, y deshacer.
-              if (offersDischarge(widget.voyage))
-                DischargeDetailSection(
-                    voyage: widget.voyage, container: container),
-              if (widget.voyage.portOfCall != null)
-                OfficePlanActions(voyage: widget.voyage, itemKey: 'C:${container.containerId}'),
+  Future<void> _abrirAlertas() async {
+    final position = await Navigator.of(context).push<IsoCoordinate>(
+      MaterialPageRoute(builder: (_) => const StowageAlertsPage()),
+    );
+    if (!mounted || position == null) return;
+    ref.read(selectedTypeFilterProvider.notifier).clear();
+    ref.read(selectedBayProvider.notifier).select(position.bay);
+    final matches = widget.voyage.containers
+        .where((c) => c.stowagePosition == position);
+    if (matches.isNotEmpty) {
+      ref
+          .read(highlightedContainerProvider.notifier)
+          .highlight(matches.first.containerId);
+    }
+  }
 
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cerrar'),
-                ),
+  /// La leyenda de la vista (`DESIGN.md` 5.4 y 13.4): las fichas con su
+  /// cuenta y «Resaltar» (RF-011), con la muestra del mismo relleno y
+  /// contorno que la celda. En pantallas angostas va en una línea que se
+  /// desplaza.
+  Widget _buildLegend(VesselVoyage displayedVoyage, Bay bay, ColorearPor vista,
+      {DischargeProgress? discharge, bool twenties = false, Widget? tira}) {
+    final activeFilter = ref.watch(selectedTypeFilterProvider);
+    final semanticos = BsColoresSemanticos.de(context);
+    final medidas = BsMedidas.de(context);
+    final contenedores = bay.containers;
+    final porVista = <BsEntradaDeLeyenda>[];
+    switch (vista) {
+      case ColorearPor.destino:
+        final cuentas = <String, int>{};
+        for (final c in contenedores) {
+          final pod = c.portOfDischarge;
+          if (pod != null) cuentas[pod] = (cuentas[pod] ?? 0) + 1;
+        }
+        final orden = cuentas.keys.toList()
+          ..sort((a, b) => cuentas[b]!.compareTo(cuentas[a]!));
+        for (final pod in orden.take(8)) {
+          porVista.add(BsEntradaDeLeyenda(
+              rotulo: pod, rol: semanticos.categorico(pod), cuenta: cuentas[pod]));
+        }
+      case ColorearPor.tipo:
+        final cuentas = <String, int>{};
+        for (final c in contenedores) {
+          final iso = c.isoSizeType;
+          if (iso != null && c.status == ContainerStatus.empty) {
+            cuentas[iso] = (cuentas[iso] ?? 0) + 1;
+          }
+        }
+        for (final slot in displayedVoyage.getReservedSlotsInBay(bay.bayNumber)) {
+          final iso = slot.isoSizeType;
+          if (iso != null) cuentas[iso] = (cuentas[iso] ?? 0) + 1;
+        }
+        final orden = cuentas.keys.toList()
+          ..sort((a, b) => cuentas[b]!.compareTo(cuentas[a]!));
+        for (final iso in orden.take(8)) {
+          porVista.add(BsEntradaDeLeyenda(
+              rotulo: '$iso vacío',
+              rol: semanticos.categorico(iso),
+              cuenta: cuentas[iso]));
+        }
+      case ColorearPor.estado:
+        if (discharge != null) {
+          final pendiente = discharge.forBay(bay.bayNumber);
+          porVista.addAll([
+            BsEntradaDeLeyenda(
+                rotulo: 'Por bajar',
+                rol: semanticos.porBajarCubierta,
+                cuenta: pendiente?.pending ?? 0),
+            BsEntradaDeLeyenda(
+                rotulo: 'Bajado',
+                rol: semanticos.bajado,
+                cuenta: pendiente?.discharged ?? 0),
+            BsEntradaDeLeyenda(rotulo: 'De paso', rol: semanticos.dePaso),
+            if ((pendiente?.restows ?? 0) > 0)
+              BsEntradaDeLeyenda(
+                  rotulo: 'Re‑estiba',
+                  rol: semanticos.enMovimiento,
+                  cuenta: pendiente!.restows),
+          ]);
+        }
+    }
+    int cuenta(bool Function(ContainerUnit) prueba) =>
+        contenedores.where(prueba).length;
+    BsEntradaDeLeyenda resaltar(String rotulo, LegendFilterType tipo,
+            {BsRol? rol, IconData? icono, required int cuenta}) =>
+        BsEntradaDeLeyenda(
+          rotulo: rotulo,
+          rol: rol,
+          icono: icono,
+          cuenta: cuenta,
+          activa: activeFilter == tipo,
+          onTap: () => ref.read(selectedTypeFilterProvider.notifier).toggle(tipo),
+        );
+    final resaltares = <BsEntradaDeLeyenda>[
+      resaltar('Lleno', LegendFilterType.full,
+          icono: Icons.inventory_2,
+          cuenta: cuenta((c) => c.status == ContainerStatus.full)),
+      resaltar('Vacío', LegendFilterType.empty,
+          icono: BsIconos.vacio,
+          cuenta: cuenta((c) => c.status == ContainerStatus.empty)),
+      resaltar('IMO', LegendFilterType.imo,
+          rol: semanticos.peligrosa, cuenta: cuenta((c) => c.isDangerous)),
+      resaltar('Refrigerado', LegendFilterType.reefer,
+          rol: semanticos.refrigerado, cuenta: cuenta((c) => c.isReefer)),
+      resaltar('OOG', LegendFilterType.oog,
+          rol: semanticos.oog, cuenta: cuenta((c) => c.isOverDimension)),
+      if (widget.voyage.portOfCall != null)
+        resaltar('De paso', LegendFilterType.transit,
+            rol: semanticos.dePaso,
+            cuenta: cuenta(displayedVoyage.isInTransit)),
+    ];
+    final huecos = <BsEntradaDeLeyenda>[
+      // C-5b: el hueco tomado por un 40 de la par vecina se declara siempre.
+      const BsEntradaDeLeyenda(
+          rotulo: 'Ocupado por 40 pies', icono: Icons.view_week),
+      // T-106: la sombra de los 20 vecinos solo aparece en una par.
+      if (twenties)
+        const BsEntradaDeLeyenda(
+            rotulo: 'Ocupado por 20 pies', icono: Icons.view_week),
+      if (displayedVoyage.totalReservedSlots > 0)
+        BsEntradaDeLeyenda(
+            rotulo: 'Celda reservada', rol: semanticos.reservado),
+    ];
+    final cartela = BsCartela(
+      key: const ValueKey('leyenda-del-plano'),
+      titulo: 'Leyenda · ${vista.rotulo}',
+      leyenda: [
+        // La vista va de primera, como ficha sin tocar.
+        BsEntradaDeLeyenda(rotulo: vista.rotulo, icono: Icons.palette),
+        ...porVista,
+        ...resaltares,
+        ...huecos,
+      ],
+      compacta: true,
+    );
+    // En una línea que se desplaza, ancha o angosta: la rejilla se queda con
+    // el alto. En el teléfono bajo, los controles del plano van delante de
+    // la leyenda, en la misma línea, con el aire justo (13.8).
+    final vertical = tira == null ? medidas.espacioS : medidas.espacioXs;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          medidas.espacioM, vertical, medidas.espacioM, vertical),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: tira == null
+            ? cartela
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [tira, SizedBox(width: medidas.espacioS), cartela],
               ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return DetailTextRow(label: label, value: value);
+  /// La barra de la operación del muelle (`DESIGN.md` 9.3 y 13.8): las cifras
+  /// del modo y la acción; el aviso con «Deshacer» sigue siendo el de T-75.
+  Widget _barraDeOperacion(bool dischargeMode, LoadingOperation? loading,
+      DischargeProgress? discharge,
+      {Widget? tira}) {
+    final semanticos = BsColoresSemanticos.de(context);
+    final medidas = BsMedidas.de(context);
+    final contadores = <BsContador>[];
+    Widget? accion;
+    if (dischargeMode && discharge != null) {
+      contadores.addAll([
+        BsContador(valor: '${discharge.pending}', rotulo: 'por bajar'),
+        BsContador(
+            valor: '${discharge.discharged}',
+            rotulo: discharge.discharged == 1 ? 'hecha' : 'hechas',
+            rol: semanticos.hecho),
+        BsContador(valor: '${discharge.restows}', rotulo: 're‑estibas'),
+      ]);
+      accion = TextButton.icon(
+        key: const ValueKey('barra-pendientes'),
+        onPressed: () => showDischargeTable(context, widget.voyage),
+        icon: const Icon(Icons.table_chart),
+        label: const Text('Pendientes de descarga'),
+      );
+    } else if (loading != null) {
+      contadores.addAll([
+        BsContador(valor: '${loading.progress.total}', rotulo: 'pendientes'),
+        BsContador(valor: '${loading.progress.full}', rotulo: 'llenos'),
+        BsContador(valor: '${loading.progress.empty}', rotulo: 'vacíos'),
+      ]);
+      accion = TextButton.icon(
+        key: const ValueKey('barra-avance'),
+        onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => OperationProgressPage(voyage: widget.voyage))),
+        icon: const Icon(Icons.assignment),
+        label: const Text('Avance de la operación'),
+      );
+    }
+    if (contadores.isEmpty) return const SizedBox.shrink();
+    // En el teléfono bajo, los controles del plano van en la línea de la
+    // acción, que se desplaza (13.8).
+    final fila = tira == null
+        ? accion
+        : SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                tira,
+                if (accion != null) ...[
+                  SizedBox(width: medidas.espacioS),
+                  accion,
+                ],
+              ],
+            ),
+          );
+    // Los avisos de la página flotan por encima de la fila de controles y
+    // del aire de abajo de la barra (su `espacioM`), sobre las cifras, que no
+    // se tocan (10.29, H2); y no pasan del borde de arriba de la barra, donde
+    // termina la rejilla, sea cual sea su alto (10.31).
+    return MideLaFranja(
+      child: BsBarraDeOperacion(
+        key: const ValueKey('barra-de-operacion'),
+        contadores: contadores,
+        accion: fila == null
+            ? null
+            : MideElPieDelPlano(
+                key: const ValueKey('controles-de-la-franja'),
+                ajuste: medidas.espacioM,
+                child: fila,
+              ),
+      ),
+    );
+  }
+
+  /// Un toque en Descarga (T-75) que, antes de registrar, saca la celda de
+  /// su sitio en naranja (13.3): el planificador ve qué tocó mientras la
+  /// bitácora escribe; cuando el movimiento llega, el naranja sigue desde él.
+  Future<void> _tocarEnDescarga(
+      ContainerUnit container, DischargeProgress? discharge) async {
+    final position = container.stowagePosition;
+    if (discharge != null &&
+        position != null &&
+        discharge.canRegister &&
+        discharge.markOf(container.containerId) == DischargeMark.pending) {
+      final rol = ref.read(movementAuthorProvider).role;
+      ref.read(recienMovidoProvider.notifier).marcar(RecienMovido(
+            containerId: container.containerId,
+            bahia: position.bay,
+            movimientoId: 'local:${container.containerId}',
+            quien: rol == OperatorRole.office ? BsEquipo.oficina : BsEquipo.muelle,
+          ));
+    }
+    await onDischargeTap(context, ref, widget.voyage, container,
+        openDetails: () => _showContainerDetails(container));
+  }
+
+  /// El detalle: en la oficina con panel lateral va al panel; si no, una hoja
+  /// (`DESIGN.md` 8). Una sola hoja de detalle para los dos.
+  void _showContainerDetails(ContainerUnit container) {
+    ref.read(highlightedContainerProvider.notifier).clear();
+    if (PanelLateralDisponible.of(context)) {
+      ref.read(celdaSeleccionadaProvider.notifier).elegir(container);
+      return;
+    }
+    BsHojaDeDetalle.mostrar<void>(
+      context,
+      constructor: (context, controlador) => DetalleContenedor(
+        voyage: widget.voyage,
+        container: container,
+        controlador: controlador,
+      ),
+    );
   }
 }
 
-/// Widget que muestra el grid de una bahía específica
-class _BayGridWidget extends StatelessWidget {
-  static const double _tierLabelWidth = 40;
-  static const double _tierWeightWidth = 88;
+/// La rejilla de una bahía, dibujada como el ícono (`DESIGN.md` 13.2).
+/// Alto útil del plano por debajo del cual los controles y la silueta se
+/// desplazan con la rejilla (`NestedScrollView`): 360 × 640 dp da unos 460;
+/// 360 × 800, unos 620, y ahí la rejilla cabe debajo de la silueta.
+const double alturaParaAnidar = 560;
 
+class _BayGridWidget extends StatelessWidget {
   final Bay bay;
   final HatchCoverDeclaration? hatchCovers;
+  final ColorearPor vista;
+  final String? recienMovidoId;
   final bool orderMode;
   final LoadingPlanProgress? progress;
   final LoadingOperation? loading;
@@ -612,16 +738,30 @@ class _BayGridWidget extends StatelessWidget {
 
   /// Solo abre los detalles: lo que baja no se opera desde el modo Carga.
   final void Function(ContainerUnit)? onDetailsTap;
+  /// En el teléfono la rejilla es el desplazamiento primario del
+  /// `NestedScrollView` del plano: al bajar por ella se va la silueta (la
+  /// cabecera) y vuelve al subir. Se declara en vez de heredarlo, para que
+  /// Windows y la Web hagan lo mismo que Android.
+  final bool desplazamientoPrimario;
+
+  /// El teléfono bajo (13.8): menos aire sobre el título y los pesos por
+  /// pila debajo de la bodega, como en 9.2 bis, para que la primera fila se
+  /// vea sin desplazar.
+  final bool compacta;
 
   const _BayGridWidget({
     required this.bay,
     this.hatchCovers,
+    required this.vista,
+    this.recienMovidoId,
     required this.onContainerTap,
     required this.reservedSlots,
     required this.reservedNeighbors,
     required this.onReservedSlotTap,
     required this.isInTransit,
     this.orderMode = false,
+    this.desplazamientoPrimario = false,
+    this.compacta = false,
     this.progress,
     this.loading,
     this.dragVoyage,
@@ -644,230 +784,41 @@ class _BayGridWidget extends StatelessWidget {
       return _buildMissingGeometryState(context);
     }
 
-    final containers = bay.containers;
-
-    // Crear mapa de posiciones para búsqueda rápida
-    final positionMap = <String, ContainerUnit>{};
-    for (final container in containers) {
-      final pos = container.stowagePosition;
-      if (pos != null) {
-        positionMap['${pos.row}-${pos.tier}'] = container;
-      }
-    }
-    final reservedPositionMap = <String, ReservedSlot>{
-      for (final slot in reservedSlots)
-        '${slot.stowagePosition.row}-${slot.stowagePosition.tier}': slot,
-    };
-
-    // C-2 · Orden fijo de columnas: pares descendentes hacia babor, la fila 00
-    // en el centro, e impares ascendentes hacia estribor. La fila 00 se dibuja
-    // aunque este viaje no la traiga ocupada.
-    final rows = geometry.orderedRows;
-
-    // C-4 · Cubierta y bodega se calculan por separado, como ya hace el PDF.
-    final deckTiers = geometry.deckTierNumbers;
-    final holdTiers = geometry.holdTierNumbers;
-    // T-102: solo la carga propia sin peso vuelve incompleta una pila.
-    final missingDeckRows = <int>{};
-    final missingHoldRows = <int>{};
-    for (final container in containers) {
-      final position = container.stowagePosition;
-      if (position == null || container.effectiveWeight != null) continue;
-      (geometry.isDeckTier(position.tier) ? missingDeckRows : missingHoldRows)
-          .add(position.row);
-    }
-
-    // Ningún contenedor puede desaparecer en silencio: los que no caen en
-    // ninguna celda dibujada se cuentan y se muestran encima de la rejilla.
-    final drawnRows = rows.toSet();
-    final drawnTiers = <int>{...deckTiers, ...holdTiers};
-    final outsideGeometry = containers.where((container) {
-      final pos = container.stowagePosition;
-      if (pos == null) return true;
-      return !drawnRows.contains(pos.row) || !drawnTiers.contains(pos.tier);
-    }).toList();
-    final outsideReserved = reservedSlots.where((slot) {
-      final pos = slot.stowagePosition;
-      return !drawnRows.contains(pos.row) || !drawnTiers.contains(pos.tier);
-    }).toList();
-
-    // Scroll vertical y horizontal para conservar la alineación en pantallas angostas
-    return LayoutBuilder(
-      builder: (context, outer) => PlanZoomViewport(
-        key: ValueKey('plan-zoom-${bay.bayNumber}'),
-        // T-106: dentro del zoom el ancho es el de la vista lógica. A 300 % la
-        // rejilla queda a la vista, sin un lienzo en blanco tan ancho como la
-        // pantalla, y el margen de 16 dp se compensa para no ampliarse.
-        child: LayoutBuilder(builder: (context, constraints) {
-        final margin = 16 / PlanZoomScope.of(context);
-        final inner = constraints.maxWidth > 2 * margin
-            ? constraints.maxWidth - 2 * margin
-            : 0.0;
-        return SingleChildScrollView(
-        padding: EdgeInsets.all(margin),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-        if (hatchCovers != null && outer.maxWidth < 600) ...[
-          SizedBox(width: inner,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Tapas · bahía ${bay.bayNumber.toString().padLeft(2, '0')}'),
-              HatchCoverDiagram(key: const ValueKey('hatch-compact-plan'),
-                declaration: hatchCovers, rows: rows),
-            ])),
-          const SizedBox(height: 12),
-        ],
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: inner),
-            child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-          // Título de la bahía
-          Text(
-            'BAHÍA ${bay.bayNumber.toString().padLeft(2, '0')}'
-            '${hatchCovers == null ? ' · tapas sin declarar' : ''}',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            '${operationCount(bay.containers.length, 'contenedor', 'contenedores')}'
-            '${reservedSlots.isEmpty ? '' : ' · ${operationCount(reservedSlots.length, 'celda reservada', 'celdas reservadas')}'}'
-            ' | ${(bay.totalWeight / 1000).toStringAsFixed(1)} ton',
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 16),
-
-          // Carga que la geometría declarada no alcanza a representar
-          if (outsideGeometry.isNotEmpty) ...[
-            _buildOutsideGeometryNotice(context, outsideGeometry),
-            const SizedBox(height: 16),
-          ],
-          if (outsideReserved.isNotEmpty) ...[
-            _buildOutsideReservedNotice(context, outsideReserved),
-            const SizedBox(height: 16),
-          ],
-
-          // C-7 · Peso de cada pila, como el plano impreso: dos líneas arriba,
-          // alineadas con las columnas. Es donde el límite de apilamiento
-          // aplica de verdad.
-          _buildStackWeights(
-            context,
-            rows: rows,
-            weights: bay.deckWeightByRow,
-            missingRows: missingDeckRows,
-            zona: 'cub.',
-            limitKg: geometry.stackWeightLimitKg,
-          ),
-          _buildStackWeights(
-            context,
-            rows: rows,
-            weights: bay.holdWeightByRow,
-            missingRows: missingHoldRows,
-            zona: 'bod.',
-            limitKg: geometry.stackWeightLimitKg,
-          ),
-          const SizedBox(height: 4),
-
-          // Header de rows
-          _buildRowHeader(rows),
-          const SizedBox(height: 4),
-          
-          // CUBIERTA (DECK) - Tiers >= 80
-          if (deckTiers.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                '▲ CUBIERTA',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            ...deckTiers.map((tier) => _buildTierRow(
-              context, tier, rows, positionMap, reservedPositionMap,
-              highlightedContainerId, activeTypeFilter,
-            )),
-          ],
-          
-          // Separador visual entre cubierta y bodega
-          if (deckTiers.isNotEmpty && holdTiers.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              height: 3,
-              margin: const EdgeInsets.symmetric(horizontal: 40),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          
-          // BODEGA (HOLD) - Tiers < 80
-          if (hatchCovers != null) ...[
-            SizedBox(width: _tierLabelWidth + rows.length * 54 + _tierWeightWidth,
-              child: Padding(padding: const EdgeInsets.only(left: _tierLabelWidth, right: _tierWeightWidth),
-                child: HatchCoverDiagram(declaration: hatchCovers, rows: rows, columnWidth: 54))),
-            const SizedBox(height: 8),
-          ],
-          if (holdTiers.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                '▼ BODEGA',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSecondaryContainer,
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            ...holdTiers.map((tier) => _buildTierRow(
-              context, tier, rows, positionMap, reservedPositionMap,
-              highlightedContainerId, activeTypeFilter,
-            )),
-          ],
-          ],
-            ),
-          ),
-        ),
-        ]),
-      );
-      })),
+    // El código de cinco letras entero con la letra del sistema (10.8): si a
+    // esta escala no cabe en la celda de la densidad, la celda se ensancha y
+    // con ella la columna; la medida vive en el tema para que BsCelda la lea.
+    final tema = Theme.of(context);
+    final medidasBase = BsMedidas.de(context);
+    final textos =
+        tema.extension<BsTextos>() ?? BsTextos.de(BsPaleta.de(tema.brightness));
+    final escalador = MediaQuery.textScalerOf(context);
+    final pintor = TextPainter(
+      // Las letras más anchas: «USMSY» no cabía a 1.45 medido con «GTSTC».
+      text: TextSpan(text: 'WWWWW', style: textos.celda),
+      textDirection: TextDirection.ltr,
+      textScaler: escalador,
+    )..layout();
+    // Lo que el código mide con la fuente, y nunca más que lo que creció la
+    // letra: a 1.0 la celda de la densidad alcanza (9.2); a 2.0 crece con el
+    // texto y no más (una fuente de prueba más ancha no la dispara).
+    final tope = medidasBase.anchoCelda * escalador.scale(10) / 10;
+    final medido = pintor.width + 2 * (medidasBase.grosorContornoCelda + 3);
+    final anchoNecesario = (medido < tope ? medido : tope).ceilToDouble();
+    final medidas = anchoNecesario > medidasBase.anchoCelda
+        ? medidasBase.copyWith(anchoCelda: anchoNecesario)
+        : medidasBase;
+    final rejilla = _Rejilla(
+      grid: this,
+      geometry: geometry,
+      medidas: medidas,
     );
-  }
-
-  Widget _buildOutsideReservedNotice(
-      BuildContext context, List<ReservedSlot> outside) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      key: const ValueKey('outside-reserved-geometry-notice'),
-      constraints: const BoxConstraints(maxWidth: 520),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        '${outside.length} celdas reservadas fuera de la geometría declarada: '
-        '${outside.take(6).map((slot) => slot.stowagePosition.toIsoCode()).join(', ')}'
-        '${outside.length > 6 ? ' y ${outside.length - 6} más' : ''}. Amplía la '
-        'geometría en Parámetros del buque.',
-        style: TextStyle(color: colorScheme.onErrorContainer),
-      ),
+    if (identical(medidas, medidasBase)) return rejilla;
+    // El tema con las medidas ensanchadas; las demás extensiones siguen.
+    final extensiones = Map<Object, ThemeExtension<dynamic>>.of(tema.extensions)
+      ..[BsMedidas] = medidas;
+    return Theme(
+      data: tema.copyWith(extensions: extensiones.values),
+      child: rejilla,
     );
   }
 
@@ -905,6 +856,326 @@ class _BayGridWidget extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// La rejilla con sus medidas ya resueltas.
+class _Rejilla extends StatelessWidget {
+  const _Rejilla({
+    required this.grid,
+    required this.geometry,
+    required this.medidas,
+  });
+
+  final _BayGridWidget grid;
+  final VesselGeometry geometry;
+  final BsMedidas medidas;
+
+  Bay get bay => grid.bay;
+
+  /// El ancho de una columna: la celda con su hueco.
+  double get columna => medidas.anchoCelda + medidas.huecoCelda;
+
+  /// El alto de una fila de celdas.
+  double get fila => medidas.altoCelda + medidas.huecoCelda;
+
+  @override
+  Widget build(BuildContext context) {
+    final containers = bay.containers;
+    final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    final textos = tema.textTheme;
+
+    // Crear mapa de posiciones para búsqueda rápida
+    final positionMap = <String, ContainerUnit>{};
+    for (final container in containers) {
+      final pos = container.stowagePosition;
+      if (pos != null) {
+        positionMap['${pos.row}-${pos.tier}'] = container;
+      }
+    }
+    final reservedPositionMap = <String, ReservedSlot>{
+      for (final slot in grid.reservedSlots)
+        '${slot.stowagePosition.row}-${slot.stowagePosition.tier}': slot,
+    };
+
+    // C-2 · Orden fijo de columnas: pares descendentes hacia babor, la fila 00
+    // en el centro, e impares ascendentes hacia estribor. La fila 00 se dibuja
+    // aunque este viaje no la traiga ocupada.
+    final rows = geometry.orderedRows;
+
+    // C-4 · Cubierta y bodega se calculan por separado, como ya hace el PDF.
+    final deckTiers = geometry.deckTierNumbers;
+    final holdTiers = geometry.holdTierNumbers;
+    // T-102: solo la carga propia sin peso vuelve incompleta una pila.
+    final missingDeckRows = <int>{};
+    final missingHoldRows = <int>{};
+    for (final container in containers) {
+      final position = container.stowagePosition;
+      if (position == null || container.effectiveWeight != null) continue;
+      (geometry.isDeckTier(position.tier) ? missingDeckRows : missingHoldRows)
+          .add(position.row);
+    }
+
+    // Ningún contenedor puede desaparecer en silencio: los que no caen en
+    // ninguna celda dibujada se cuentan y se muestran encima de la rejilla.
+    final drawnRows = rows.toSet();
+    final drawnTiers = <int>{...deckTiers, ...holdTiers};
+    final outsideGeometry = containers.where((container) {
+      final pos = container.stowagePosition;
+      if (pos == null) return true;
+      return !drawnRows.contains(pos.row) || !drawnTiers.contains(pos.tier);
+    }).toList();
+    final outsideReserved = grid.reservedSlots.where((slot) {
+      final pos = slot.stowagePosition;
+      return !drawnRows.contains(pos.row) || !drawnTiers.contains(pos.tier);
+    }).toList();
+
+    final anchoDeFilas = rows.length * columna;
+
+    Widget bloque(List<int> tiers, {required bool bodega}) {
+      final etiquetas = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final tier in tiers)
+            SizedBox(
+              width: medidas.anchoEtiquetaNivel,
+              height: fila,
+              child: Center(
+                child: Text(
+                  tier.toString().padLeft(2, '0'),
+                  style: textos.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: cifrasTabulares),
+                ),
+              ),
+            ),
+        ],
+      );
+      final celdas = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final tier in tiers)
+            SizedBox(
+              height: fila,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: _celdasDeNivel(
+                  context,
+                  tier,
+                  rows,
+                  positionMap,
+                  reservedPositionMap,
+                  enCubierta: !bodega,
+                  ultimaFila: bodega && tier == tiers.last,
+                ),
+              ),
+            ),
+        ],
+      );
+      final pesos = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final tier in tiers)
+            SizedBox(
+              width: medidas.anchoColumnaPesos,
+              height: fila,
+              child: _pesoDeNivel(context, tier),
+            ),
+        ],
+      );
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          etiquetas,
+          bodega
+              ? BsCascoBodega(
+                  radio: medidas.radioCasco * 2,
+                  child: celdas,
+                )
+              : celdas,
+          pesos,
+        ],
+      );
+    }
+
+    // Scroll vertical y horizontal para conservar la alineación en pantallas angostas
+    return LayoutBuilder(
+      builder: (context, outer) => PlanZoomViewport(
+        key: ValueKey('plan-zoom-${bay.bayNumber}'),
+        // T-106: dentro del zoom el ancho es el de la vista lógica. A 300 % la
+        // rejilla queda a la vista, sin un lienzo en blanco tan ancho como la
+        // pantalla, y el margen de 16 dp se compensa para no ampliarse.
+        child: LayoutBuilder(builder: (context, constraints) {
+          final margin = 16 / PlanZoomScope.of(context);
+          final inner = constraints.maxWidth > 2 * margin
+              ? constraints.maxWidth - 2 * margin
+              : 0.0;
+          // C-7 · Peso de cada pila, como el plano impreso: dos líneas
+          // alineadas con las columnas. Van arriba, donde el límite de
+          // apilamiento aplica de verdad; en el teléfono bajo, debajo de la
+          // bodega (9.2 bis), para que la primera fila se vea sin desplazar.
+          final pesosPorPila = <Widget>[
+            _buildStackWeights(
+              context,
+              rows: rows,
+              weights: bay.deckWeightByRow,
+              missingRows: missingDeckRows,
+              zona: 'cub.',
+              limitKg: geometry.stackWeightLimitKg,
+            ),
+            _buildStackWeights(
+              context,
+              rows: rows,
+              weights: bay.holdWeightByRow,
+              missingRows: missingHoldRows,
+              zona: 'bod.',
+              limitKg: geometry.stackWeightLimitKg,
+            ),
+            SizedBox(height: medidas.espacioXs),
+          ];
+          return SingleChildScrollView(
+            primary: grid.desplazamientoPrimario ? true : null,
+            padding: grid.compacta
+                ? EdgeInsets.fromLTRB(margin, margin / 2, margin, margin)
+                : EdgeInsets.all(margin),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              if (grid.hatchCovers != null && outer.maxWidth < 600) ...[
+                SizedBox(
+                    width: inner,
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                              'Tapas · bahía ${bay.bayNumber.toString().padLeft(2, '0')}'),
+                          HatchCoverDiagram(
+                              key: const ValueKey('hatch-compact-plan'),
+                              declaration: grid.hatchCovers,
+                              rows: rows),
+                        ])),
+                const SizedBox(height: 12),
+              ],
+              // El título y el resumen de la bahía van al ancho de la vista,
+              // no al de la rejilla: a 360 dp la rejilla es más ancha que la
+              // pantalla y, centrado sobre ella, el título salía cortado.
+              SizedBox(
+                width: inner,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Bahía ${bay.bayNumber.toString().padLeft(2, '0')}'
+                      '${grid.hatchCovers == null ? ' · tapas sin declarar' : ''}',
+                      style: textos.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      '${operationCount(bay.containers.length, 'contenedor', 'contenedores')}'
+                      '${grid.reservedSlots.isEmpty ? '' : ' · ${operationCount(grid.reservedSlots.length, 'celda reservada', 'celdas reservadas')}'}'
+                      ' · ${formatearToneladas(bay.totalWeight)}',
+                      style: textos.bodyMedium
+                          ?.copyWith(color: esquema.onSurfaceVariant),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                  height: grid.compacta ? medidas.espacioXs : medidas.espacioS),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: inner),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Carga que la geometría declarada no alcanza a representar
+                      if (outsideGeometry.isNotEmpty) ...[
+                        _buildOutsideGeometryNotice(context, outsideGeometry),
+                        SizedBox(height: medidas.espacioL),
+                      ],
+                      if (outsideReserved.isNotEmpty) ...[
+                        _buildOutsideReservedNotice(context, outsideReserved),
+                        SizedBox(height: medidas.espacioL),
+                      ],
+
+                      if (!grid.compacta) ...pesosPorPila,
+
+                      // Header de rows
+                      _buildRowHeader(context, rows),
+                      SizedBox(height: medidas.espacioXs),
+
+                      // Cubierta: los niveles sobre la tapa. La zona la dicen
+                      // la tapa y el casco (13.2), no un rótulo.
+                      if (deckTiers.isNotEmpty) bloque(deckTiers, bodega: false),
+
+                      // La tapa de escotilla: la línea de 2 dp entre cubierta y
+                      // bodega (13.2), en tinta.
+                      if (deckTiers.isNotEmpty && holdTiers.isNotEmpty) ...[
+                        SizedBox(height: medidas.espacioS),
+                        Container(
+                          key: const ValueKey('linea-de-tapa'),
+                          width: anchoDeFilas,
+                          height: 2,
+                          margin: EdgeInsets.only(
+                              left: medidas.anchoEtiquetaNivel,
+                              right: medidas.anchoColumnaPesos),
+                          decoration: BoxDecoration(
+                            color: esquema.onSurface,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                        SizedBox(height: medidas.espacioS),
+                      ],
+
+                      // Las tapas declaradas, con el ancho de las columnas.
+                      if (grid.hatchCovers != null) ...[
+                        Padding(
+                            padding: EdgeInsets.only(
+                                left: medidas.anchoEtiquetaNivel,
+                                right: medidas.anchoColumnaPesos),
+                            child: HatchCoverDiagram(
+                                declaration: grid.hatchCovers,
+                                rows: rows,
+                                columnWidth: columna)),
+                        SizedBox(height: medidas.espacioS),
+                      ],
+
+                      // Bodega: dentro del casco (13.2)
+                      if (holdTiers.isNotEmpty) bloque(holdTiers, bodega: true),
+                      SizedBox(height: medidas.espacioS),
+                      if (grid.compacta) ...pesosPorPila,
+                    ],
+                  ),
+                ),
+              ),
+            ]),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildOutsideReservedNotice(
+      BuildContext context, List<ReservedSlot> outside) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      key: const ValueKey('outside-reserved-geometry-notice'),
+      constraints: const BoxConstraints(maxWidth: 520),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        '${outside.length} celdas reservadas fuera de la geometría declarada: '
+        '${outside.take(6).map((slot) => slot.stowagePosition.toIsoCode()).join(', ')}'
+        '${outside.length > 6 ? ' y ${outside.length - 6} más' : ''}. Amplía la '
+        'geometría en Parámetros del buque.',
+        style: TextStyle(color: colorScheme.onErrorContainer),
       ),
     );
   }
@@ -988,299 +1259,479 @@ class _BayGridWidget extends StatelessWidget {
     required String zona,
     required double? limitKg,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final tema = Theme.of(context);
+    final colorScheme = tema.colorScheme;
+    final semanticos = BsColoresSemanticos.de(context);
+    final estilo = tema.textTheme.labelSmall?.copyWith(
+        color: colorScheme.onSurfaceVariant, fontFeatures: cifrasTabulares);
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: _tierLabelWidth,
-          child: Text(
-            zona,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 9, color: colorScheme.onSurfaceVariant),
+          width: medidas.anchoEtiquetaNivel,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(zona, textAlign: TextAlign.center, style: estilo),
           ),
         ),
         ...rows.map((row) {
           final weight = weights[row] ?? 0;
           final excede = limitKg != null && weight > limitKg;
           return Container(
-            width: 50,
+            width: columna - 2,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 2),
-            margin: const EdgeInsets.symmetric(horizontal: 2),
+            margin: const EdgeInsets.symmetric(horizontal: 1),
             decoration: excede
                 ? BoxDecoration(
-                    color: colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(3),
+                    color: semanticos.error.relleno,
+                    borderRadius: BorderRadius.circular(medidas.radioControl),
                   )
                 : null,
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
+                // Como el plano impreso: toneladas con un decimal, sin unidad.
                 '${(weight / 1000).toStringAsFixed(1)}${missingRows.contains(row) ? '+?' : ''}',
                 key: ValueKey('peso-pila-$zona-$row'),
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: excede ? FontWeight.bold : FontWeight.normal,
-                  color: excede
-                      ? colorScheme.onErrorContainer
-                      : colorScheme.onSurfaceVariant,
+                style: estilo?.copyWith(
+                  fontWeight: excede ? FontWeight.w700 : FontWeight.w400,
+                  color: excede ? semanticos.error.texto : null,
                 ),
               ),
             ),
           );
         }),
-        const SizedBox(width: _tierWeightWidth),
+        SizedBox(width: medidas.anchoColumnaPesos),
       ],
     );
   }
 
-  Widget _buildRowHeader(List<int> rows) {
+  Widget _buildRowHeader(BuildContext context, List<int> rows) {
+    final estilo = Theme.of(context).textTheme.labelMedium?.copyWith(
+        fontWeight: FontWeight.w600, fontFeatures: cifrasTabulares);
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(width: _tierLabelWidth),
-        ...rows.map((row) => Container(
-          width: 50,
-          alignment: Alignment.center,
-          child: Text(
-            row.toString().padLeft(2, '0'),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        )),
-        const SizedBox(width: _tierWeightWidth),
+        SizedBox(width: medidas.anchoEtiquetaNivel),
+        ...rows.map((row) => SizedBox(
+              width: columna,
+              child: Text(
+                row.toString().padLeft(2, '0'),
+                textAlign: TextAlign.center,
+                style: estilo,
+              ),
+            )),
+        SizedBox(width: medidas.anchoColumnaPesos),
       ],
     );
   }
 
-  Widget _buildTierRow(
+  /// C-7: el peso por nivel es la suma horizontal de las filas, no una pila.
+  /// Se queda como dato informativo; el limite de apilamiento se compara
+  /// arriba, contra cada pila, que es la magnitud que el nombre describe.
+  Widget _pesoDeNivel(BuildContext context, int tier) {
+    final tierWeight = bay.weightByTier[tier];
+    if (tierWeight == null || tierWeight <= 0) return const SizedBox.shrink();
+    final tema = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.only(left: medidas.espacioS),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          formatearToneladas(tierWeight),
+          style: tema.textTheme.labelSmall?.copyWith(
+            color: tema.colorScheme.onSurfaceVariant,
+            fontFeatures: cifrasTabulares,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Las celdas de un nivel, de babor a estribor.
+  List<Widget> _celdasDeNivel(
     BuildContext context,
     int tier,
     List<int> rows,
     Map<String, ContainerUnit> positionMap,
-    Map<String, ReservedSlot> reservedPositionMap,
-    String? highlightedContainerId,
-    LegendFilterType? activeTypeFilter,
-  ) {
-    final tierWeight = bay.weightByTier[tier];
-    // C-7: el peso por nivel es la suma horizontal de las filas, no una pila.
-    // Se queda como dato informativo; el limite de apilamiento se compara
-    // arriba, contra cada pila, que es la magnitud que el nombre describe.
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Label de tier
-        SizedBox(
-          width: _tierLabelWidth,
-          child: Text(
-            tier.toString().padLeft(2, '0'),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
-        // Celdas de contenedores
-        ...rows.map((row) {
-          final position = '${bay.bayNumber.toString().padLeft(3, '0')}'
-              '${row.toString().padLeft(2, '0')}${tier.toString().padLeft(2, '0')}';
-          Widget target(Widget cell, {String? itemKey}) =>
-              dragVoyage == null || loading == null ? cell : PlanDragCell(
-                key: ValueKey('plan-cell-$position'),
-                voyage: dragVoyage!, data: loading!, position: position,
-                itemKey: itemKey, enableDrag: !orderMode, child: cell);
-          final key = '$row-$tier';
-          final container = positionMap[key];
-          final isHighlighted = container != null &&
-              highlightedContainerId != null &&
-              container.containerId == highlightedContainerId;
-          final slotKey = '${row.toString().padLeft(2, '0')}'
-              '${tier.toString().padLeft(2, '0')}';
-          final reservation = reservedPositionMap[key];
-          final reservedNeighbor = reservedNeighbors[slotKey];
-          final loadSlot = reservation ?? reservedNeighbor;
-          final loadKey = container == null
-              ? (loadSlot == null ? null : loading?.plan.loadingItemAt(loadSlot.stowagePosition.toIsoCode())?.key ?? loadSlot.key)
-              : 'C:${container.containerId}';
-          if (loading != null && loadKey != null &&
-              loading!.plan.loading[loadKey]?.role == PlanRole.load) {
-            final loadHighlighted = isHighlighted || highlightedContainerId == loadKey;
-            final cell = LoadingCell(
-                key: ValueKey('loading-$loadKey'), itemKey: loadKey,
-                operation: loading!, highlighted: loadHighlighted,
-                onTap: container == null
-                    ? () => onReservedSlotTap(loadSlot!)
-                    : () => onContainerTap(container));
-            return target(loadHighlighted ? _RevealPosition(key: ValueKey(loadKey), child: cell) : cell, itemKey: loadKey);
-          }
-          if (container == null && reservation != null) {
-            return target(_ReservedCell(
-              key: ValueKey('reserved-${reservation.key}'),
-              slot: reservation,
-              orderLabel: orderMode && reservation.portOfLoading == portOfCall
-                  ? progress?.label(reservation.key) ?? '—'
-                  : null,
-              onTap: () => onReservedSlotTap(reservation),
-            ));
-          }
-          if (container == null &&
-              !bay.slotsOccupiedByNeighbors.contains(slotKey) &&
-              reservedNeighbor != null) {
-            return target(_ReservedCell(
-              key: ValueKey(
-                  'reserved-shadow-${bay.bayNumber}-$slotKey-${reservedNeighbor.key}'),
-              slot: reservedNeighbor,
-              orderLabel:
-                  orderMode && reservedNeighbor.portOfLoading == portOfCall
-                      ? progress?.label(reservedNeighbor.key) ?? '—'
-                      : null,
-              isNeighbor: true,
-              onTap: () => onReservedSlotTap(reservedNeighbor),
-            ));
-          }
-          // T-106: la descarga pendiente se ve ocupada, con la marca de T-75.
-          // No se arrastra; soltar ahí sigue dando el rojo del dominio.
-          final arrival = container == null ? arriving[key] : null;
-          if (arrival != null) {
-            return target(_ContainerCell(
-              key: ValueKey('pending-discharge-${arrival.containerId}'),
-              container: arrival,
-              dischargeMark: DischargeMark.pending,
-              onTap: onDetailsTap == null ? null : () => onDetailsTap!(arrival),
-              activeTypeFilter: activeTypeFilter,
-            ));
-          }
-          final cell = _ContainerCell(
-            key: ValueKey('cell-$row-$tier'),
-            container: container,
-            orderLabel: orderMode &&
-                    container != null &&
-                    container.portOfLoading == portOfCall
-                ? progress?.label('C:${container.containerId}') ?? '—'
-                : null,
-            dischargeMark: container == null
-                ? null
-                : discharge?.markOf(container.containerId),
-            onTap: container != null ? () => onContainerTap(container) : null,
-            isHighlighted: isHighlighted,
-            activeTypeFilter: activeTypeFilter,
-            isInTransit: container != null && isInTransit(container),
-            isOccupiedByNeighbor: container == null &&
-                bay.slotsOccupiedByNeighbors.contains(slotKey),
-            neighborTwenties: container == null ? neighborTwenties[key] ?? 0 : 0,
-          );
-          return target(isHighlighted
-              ? _RevealPosition(
-                  key: ValueKey(container.containerId), child: cell)
-              : cell);
-        }),
-        SizedBox(
-          width: _tierWeightWidth,
-          child: tierWeight == null || tierWeight <= 0
+    Map<String, ReservedSlot> reservedPositionMap, {
+    required bool enCubierta,
+    required bool ultimaFila,
+  }) {
+    final loading = grid.loading;
+    final dragVoyage = grid.dragVoyage;
+    final celdas = <Widget>[];
+    for (var i = 0; i < rows.length; i++) {
+      final row = rows[i];
+      // 13.2: las celdas de los extremos de cada fila de bodega llevan la
+      // curva del casco en su esquina exterior; la fila con una sola, las dos.
+      final curva = enCubierta
+          ? BsCurvaDeCelda.ninguna
+          : rows.length == 1
+              ? BsCurvaDeCelda.ambas
+              : i == 0
+                  ? BsCurvaDeCelda.babor
+                  : i == rows.length - 1
+                      ? BsCurvaDeCelda.estribor
+                      : BsCurvaDeCelda.ninguna;
+      final position = '${bay.bayNumber.toString().padLeft(3, '0')}'
+          '${row.toString().padLeft(2, '0')}${tier.toString().padLeft(2, '0')}';
+      Widget target(Widget cell, {String? itemKey}) =>
+          dragVoyage == null || loading == null
+              ? cell
+              : PlanDragCell(
+                  key: ValueKey('plan-cell-$position'),
+                  voyage: dragVoyage,
+                  data: loading,
+                  position: position,
+                  itemKey: itemKey,
+                  enableDrag: !grid.orderMode,
+                  child: cell);
+      final key = '$row-$tier';
+      final container = positionMap[key];
+      final isHighlighted = container != null &&
+          grid.highlightedContainerId != null &&
+          container.containerId == grid.highlightedContainerId;
+      final slotKey = '${row.toString().padLeft(2, '0')}'
+          '${tier.toString().padLeft(2, '0')}';
+      final reservation = reservedPositionMap[key];
+      final reservedNeighbor = grid.reservedNeighbors[slotKey];
+      final loadSlot = reservation ?? reservedNeighbor;
+      final loadKey = container == null
+          ? (loadSlot == null
               ? null
-              : Container(
-                  margin: const EdgeInsets.only(left: 6),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    '${(tierWeight / 1000).toStringAsFixed(1)} t',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                ),
-        ),
-      ],
+              : loading?.plan
+                      .loadingItemAt(loadSlot.stowagePosition.toIsoCode())
+                      ?.key ??
+                  loadSlot.key)
+          : 'C:${container.containerId}';
+      if (loading != null &&
+          loadKey != null &&
+          loading.plan.loading[loadKey]?.role == PlanRole.load) {
+        final loadHighlighted =
+            isHighlighted || grid.highlightedContainerId == loadKey;
+        // 13.3: lo recién movido también enciende la celda de carga, sea el
+        // lleno del listado (C:) o la reserva con el vacío que se le asignó.
+        final recien = grid.recienMovidoId;
+        final recienMovida = recien != null &&
+            (loadKey == 'C:$recien' ||
+                loading.state[loadKey]?.assignedContainer == recien);
+        final cell = LoadingCell(
+            key: ValueKey('loading-$loadKey'),
+            itemKey: loadKey,
+            operation: loading,
+            highlighted: loadHighlighted,
+            curva: curva,
+            recienMovida: recienMovida,
+            onTap: container == null
+                ? () => grid.onReservedSlotTap(loadSlot!)
+                : () => grid.onContainerTap(container));
+        celdas.add(target(
+            loadHighlighted
+                ? _RevealPosition(key: ValueKey(loadKey), child: cell)
+                : cell,
+            itemKey: loadKey));
+        continue;
+      }
+      if (container == null && reservation != null) {
+        celdas.add(target(_reserva(
+          context,
+          reservation,
+          key: ValueKey('reserved-${reservation.key}'),
+          orderLabel: grid.orderMode && reservation.portOfLoading == grid.portOfCall
+              ? grid.progress?.label(reservation.key) ?? '—'
+              : null,
+          curva: curva,
+          onTap: () => grid.onReservedSlotTap(reservation),
+        )));
+        continue;
+      }
+      if (container == null &&
+          !bay.slotsOccupiedByNeighbors.contains(slotKey) &&
+          reservedNeighbor != null) {
+        celdas.add(target(_reserva(
+          context,
+          reservedNeighbor,
+          key: ValueKey(
+              'reserved-shadow-${bay.bayNumber}-$slotKey-${reservedNeighbor.key}'),
+          orderLabel:
+              grid.orderMode && reservedNeighbor.portOfLoading == grid.portOfCall
+                  ? grid.progress?.label(reservedNeighbor.key) ?? '—'
+                  : null,
+          isNeighbor: true,
+          curva: curva,
+          onTap: () => grid.onReservedSlotTap(reservedNeighbor),
+        )));
+        continue;
+      }
+      // T-106: la descarga pendiente se ve ocupada, con la marca de T-75.
+      // No se arrastra; soltar ahí sigue dando el rojo del dominio.
+      final arrival = container == null ? grid.arriving[key] : null;
+      if (arrival != null) {
+        celdas.add(target(_contenedor(
+            context,
+            arrival,
+            clave: ValueKey('pending-discharge-${arrival.containerId}'),
+            mark: DischargeMark.pending,
+            enCubierta: enCubierta,
+            curva: curva,
+            onTap: grid.onDetailsTap == null
+                ? null
+                : () => grid.onDetailsTap!(arrival),
+        )));
+        continue;
+      }
+      if (container == null) {
+        celdas.add(target(_hueco(
+          context,
+          position: position,
+          key: ValueKey('cell-$row-$tier'),
+          ocupadaPorVecino: bay.slotsOccupiedByNeighbors.contains(slotKey),
+          veintes: grid.neighborTwenties[key] ?? 0,
+          curva: curva,
+        )));
+        continue;
+      }
+      final cell = _contenedor(
+        context,
+        container,
+        clave: ValueKey('cell-$row-$tier'),
+        orderLabel: grid.orderMode && container.portOfLoading == grid.portOfCall
+            ? grid.progress?.label('C:${container.containerId}') ?? '—'
+            : null,
+        mark: grid.discharge?.markOf(container.containerId),
+        isHighlighted: isHighlighted,
+        isInTransit: grid.isInTransit(container),
+        enCubierta: enCubierta,
+        curva: curva,
+        onTap: () => grid.onContainerTap(container),
+      );
+      celdas.add(target(isHighlighted
+          ? _RevealPosition(key: ValueKey(container.containerId), child: cell)
+          : cell));
+    }
+    return celdas;
+  }
+
+  /// Una celda con contenedor (`DESIGN.md` 5.4, 13.2 y 13.3): el código y el
+  /// color según la vista, la insignia de carga especial, la marca de T-75 y
+  /// el estado de la vista Estado; recién movida si es la que se acaba de
+  /// mover.
+  Widget _contenedor(
+    BuildContext context,
+    ContainerUnit container, {
+    required Key clave,
+    String? orderLabel,
+    DischargeMark? mark,
+    bool isHighlighted = false,
+    bool isInTransit = false,
+    required bool enCubierta,
+    required BsCurvaDeCelda curva,
+    VoidCallback? onTap,
+  }) {
+    final semanticos = BsColoresSemanticos.de(context);
+    final esMuelle = medidas.esMuelle;
+    final pod = container.portOfDischarge;
+    final iso = container.isoSizeType;
+    final pies = container.sizeInFeet?.toString() ?? '';
+    final posicion = container.stowagePosition?.toIsoCode();
+    final esRecien = grid.recienMovidoId != null &&
+        container.containerId == grid.recienMovidoId;
+
+    // Qué dice la celda y de qué color va, según «Colorear por».
+    String codigo;
+    BsRol? categoria;
+    switch (grid.vista) {
+      case ColorearPor.destino:
+        codigo = pod ?? iso ?? pies;
+        categoria = pod == null ? null : semanticos.categorico(pod);
+      case ColorearPor.tipo:
+        // Los vacíos por tipo; los llenos en papel.
+        codigo = iso ?? pies;
+        categoria = iso != null && container.status == ContainerStatus.empty
+            ? semanticos.categorico(iso)
+            : null;
+      case ColorearPor.estado:
+        codigo = pod ?? iso ?? pies;
+        categoria = null;
+    }
+    // Número de orden (T-74): el número grande y «OR» como segunda línea.
+    String? linea2 = container.effectiveWeight == null
+        ? null
+        : (container.effectiveWeight! / 1000).toStringAsFixed(1);
+    if (orderLabel != null) {
+      codigo = orderLabel.replaceFirst('OR ', '');
+      linea2 = orderLabel.startsWith('OR ') ? 'OR' : null;
+    }
+
+    final insignia = container.isDangerous
+        ? BsInsigniaDeCelda.peligrosa
+        : container.isReefer
+            ? BsInsigniaDeCelda.refrigerado
+            : container.isOverDimension
+                ? BsInsigniaDeCelda.oog
+                : BsInsigniaDeCelda.ninguna;
+
+    // El estado de la vista Estado manda en el relleno (13.2); la marca de
+    // T-75 pone icono y rótulo en el muelle («Baja», «Hecho», «Paso») y en
+    // las demás vistas; en la oficina, la vista Estado deja el código y el
+    // peso a la vista, salvo la re‑estiba y el conflicto, que se nombran.
+    var estado = BsEstadoDeCelda.ninguno;
+    var marca = BsMarcaDeCelda.ninguna;
+    if (mark != null) {
+      if (grid.vista == ColorearPor.estado) {
+        estado = switch (mark) {
+          DischargeMark.pending => enCubierta
+              ? BsEstadoDeCelda.porBajarCubierta
+              : BsEstadoDeCelda.porBajarBodega,
+          DischargeMark.transit => BsEstadoDeCelda.dePaso,
+          DischargeMark.discharged => BsEstadoDeCelda.bajado,
+          DischargeMark.restowed ||
+          DischargeMark.cancelled ||
+          DischargeMark.conflict =>
+            BsEstadoDeCelda.ninguno,
+        };
+      }
+      final conRotulo = esMuelle ||
+          grid.vista != ColorearPor.estado ||
+          mark == DischargeMark.restowed ||
+          mark == DischargeMark.cancelled ||
+          mark == DischargeMark.conflict;
+      if (conRotulo) {
+        marca = switch (mark) {
+          DischargeMark.pending => BsMarcaDeCelda.baja,
+          DischargeMark.discharged => BsMarcaDeCelda.hecho,
+          DischargeMark.transit => BsMarcaDeCelda.paso,
+          DischargeMark.restowed => BsMarcaDeCelda.reestiba,
+          DischargeMark.cancelled => BsMarcaDeCelda.cancelado,
+          DischargeMark.conflict => BsMarcaDeCelda.revisar,
+        };
+      }
+    } else if (isInTransit) {
+      // C-5a: la carga de paso se apaga en todas las vistas, como lo que el
+      // planificador tacha a mano en el plano impreso: «lo que opero» contra
+      // «lo que sigue a bordo».
+      estado = BsEstadoDeCelda.dePaso;
+      categoria = null;
+    }
+    if (esRecien) estado = BsEstadoDeCelda.recienMovido;
+
+    // RF-011: atenuar contenedores que no coinciden con el filtro activo.
+    final atenuada = grid.activeTypeFilter != null &&
+        !_containerMatchesFilter(container, grid.activeTypeFilter!,
+            isInTransit: isInTransit);
+
+    // 10.23: la celda nombra lo que su insignia y su color señalan y el
+    // lector no ve: la carga peligrosa, el refrigerado, el fuera de medida y
+    // el vacío, con los nombres del ícono principal (`CondicionDelContenedor`),
+    // en las tres vistas de «Colorear por». `BsCelda` excluye el resto.
+    final condicion = condicionDelContenedor(container);
+    final etiqueta = <String>[
+      formatearContenedor(container.containerId),
+      if (posicion != null) formatearPosicion(posicion),
+      if (mark != null) dischargeMarkText(mark),
+      if (condicion.enLaCelda) condicion.nombre,
+      if (orderLabel != null) orderLabel.replaceAll('\n', ' '),
+      if (isInTransit && mark == null) 'de paso',
+    ].join(', ');
+
+    final celda = BsCelda(
+      // Sin marca, la clave va en la celda; con marca, por fuera.
+      key: mark == null ? clave : null,
+      codigo: codigo,
+      etiqueta: etiqueta,
+      categoria: categoria,
+      // Peso en toneladas con un decimal, como el plano impreso («28.7»).
+      linea2: linea2,
+      insignia: insignia,
+      marca: marca,
+      estado: estado,
+      curva: curva,
+      resaltada: isHighlighted,
+      atenuada: atenuada,
+      zoom: PlanZoomScope.of(context),
+      onTap: onTap,
+    );
+    if (mark == null) return celda;
+    // La clave de la celda por fuera y la de la marca de T-75
+    // («discharge-pending»), que las pruebas buscan, como única hija: dos
+    // hermanas con la misma clave no se permiten.
+    return KeyedSubtree(
+      key: clave,
+      child: KeyedSubtree(
+        key: ValueKey('discharge-${mark.name}'),
+        child: celda,
+      ),
     );
   }
-}
 
-/// Una reserva conserva el contorno y el destino, sin fingir carga ni peso.
-class _ReservedCell extends StatelessWidget {
-  final String? orderLabel;
-  final ReservedSlot slot;
-  final VoidCallback onTap;
-  final bool isNeighbor;
-
-  const _ReservedCell({
-    super.key,
-    required this.slot,
-    required this.onTap,
-    this.isNeighbor = false,
-    this.orderLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Semantics(
-      button: true,
-      label:
+  /// Una reserva conserva el contorno y el destino, sin fingir carga ni peso.
+  Widget _reserva(
+    BuildContext context,
+    ReservedSlot slot, {
+    required Key key,
+    String? orderLabel,
+    bool isNeighbor = false,
+    required BsCurvaDeCelda curva,
+    required VoidCallback onTap,
+  }) {
+    final semanticos = BsColoresSemanticos.de(context);
+    final tipo = slot.isoSizeType;
+    final codigo = orderLabel ?? (isNeighbor ? "40′" : tipo ?? '?');
+    return BsCelda(
+      key: key,
+      codigo: codigo,
+      etiqueta:
           '${isNeighbor ? 'Extensión de 40 pies de la reserva' : 'Celda reservada'} '
-          '${slot.key}, ${slot.isoSizeType ?? 'tipo no declarado'}, '
+          '${slot.key}, ${tipo ?? 'tipo no declarado'}, '
           '${slot.portOfDischarge ?? 'puerto no declarado'}',
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 50,
-          height: 40,
-          margin: const EdgeInsets.all(2),
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: colorScheme.onSurfaceVariant,
-              width: isNeighbor ? 1 : 2,
-            ),
-          ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (orderLabel != null)
-                  Text(orderLabel!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 9,
-                          height: 1.1,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurfaceVariant))
-                else ...[
-                  if (isNeighbor)
-                    Text("40' reserva",
-                        style: TextStyle(
-                            fontSize: 8,
-                            height: 1.1,
-                            color: colorScheme.onSurfaceVariant)),
-                  Text(slot.isoSizeType ?? '?',
-                      style: TextStyle(
-                          fontSize: 10,
-                          height: 1.1,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurfaceVariant)),
-                  Text(slot.portOfDischarge ?? '?',
-                      style: TextStyle(
-                          fontSize: 9,
-                          height: 1.1,
-                          color: colorScheme.onSurfaceVariant)),
-                ],
-              ],
-            ),
-          ),
+      categoria: grid.vista == ColorearPor.tipo && tipo != null && !isNeighbor
+          ? semanticos.categorico(tipo)
+          : null,
+      linea2: orderLabel != null ? null : slot.portOfDischarge,
+      reservada: true,
+      curva: curva,
+      zoom: PlanZoomScope.of(context),
+      onTap: onTap,
+    );
+  }
+
+  /// Una celda sin contenedor: libre, tomada por un 40 de la par vecina
+  /// (C-5b) o por 20 de las impares vecinas (T-106). Mostrarla libre cuando
+  /// no lo está sería mentirle al planificador.
+  Widget _hueco(
+    BuildContext context, {
+    required String position,
+    required Key key,
+    required bool ocupadaPorVecino,
+    required int veintes,
+    required BsCurvaDeCelda curva,
+  }) {
+    if (!ocupadaPorVecino && veintes > 0) {
+      return KeyedSubtree(
+        key: const ValueKey('neighbor-twenty'),
+        child: BsCelda(
+          key: key,
+          codigo: veintes == 1 ? "20′" : "2×20′",
+          etiqueta:
+              'Celda ${formatearPosicion(position)}, ocupada por ${veintes == 1 ? 'un contenedor de 20 pies' : 'dos contenedores de 20 pies'} de las bahías vecinas',
+          atenuada: true,
+          curva: curva,
+          zoom: PlanZoomScope.of(context),
         ),
-      ),
+      );
+    }
+    return BsCelda(
+      key: key,
+      codigo: ocupadaPorVecino ? "40′" : '',
+      etiqueta: ocupadaPorVecino
+          ? 'Celda ${formatearPosicion(position)}, ocupada por un contenedor de 40 pies de la bahía vecina'
+          : 'Celda ${formatearPosicion(position)}, libre',
+      atenuada: ocupadaPorVecino,
+      curva: curva,
+      zoom: PlanZoomScope.of(context),
     );
   }
 }
@@ -1329,324 +1780,5 @@ bool _containerMatchesFilter(
       return container.isOverDimension;
     case LegendFilterType.transit:
       return isInTransit;
-  }
-}
-
-/// Widget de celda individual de contenedor (optimizado para rendimiento)
-class _ContainerCell extends StatelessWidget {
-  final String? orderLabel;
-
-  /// T-75: marca del modo Descarga. Icono y rótulo, además del color, para
-  /// que se lea a 360 dp y en los dos temas.
-  final DischargeMark? dischargeMark;
-  final ContainerUnit? container;
-  final VoidCallback? onTap;
-  final bool isHighlighted;
-  final LegendFilterType? activeTypeFilter;
-
-  /// El contenedor ya venía a bordo: no se opera en esta escala.
-  final bool isInTransit;
-
-  /// El hueco está vacío en esta bahía pero lo ocupa físicamente un contenedor
-  /// de 40 pies estibado en una bahía par vecina.
-  final bool isOccupiedByNeighbor;
-
-  /// T-106: en una bahía par, cuántos 20 de las impares vecinas ocupan el
-  /// hueco. Es solo dibujo: no se arrastra ni se toca.
-  final int neighborTwenties;
-
-  const _ContainerCell({
-    super.key,
-    this.container,
-    this.onTap,
-    this.isHighlighted = false,
-    this.activeTypeFilter,
-    this.isInTransit = false,
-    this.isOccupiedByNeighbor = false,
-    this.neighborTwenties = 0,
-    this.orderLabel,
-    this.dischargeMark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (container == null && !isOccupiedByNeighbor && neighborTwenties > 0) {
-      return Container(
-        key: const ValueKey('neighbor-twenty'),
-        width: 50,
-        height: 40,
-        margin: const EdgeInsets.all(2),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-        ),
-        child: Text(
-          neighborTwenties == 1 ? "20'" : "2×20'",
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
-    if (container == null) {
-      // C-5b: el hueco puede estar vacío en esta bahía pero tomado por un
-      // contenedor de 40 pies estibado en una par vecina. No es carga de este
-      // viaje, así que no se cuenta como contenedor, pero el planificador no
-      // puede estibar ahí: mostrarlo libre sería mentirle.
-      return Container(
-        width: 50,
-        height: 40,
-        margin: const EdgeInsets.all(2),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isOccupiedByNeighbor
-              ? Theme.of(context).colorScheme.surfaceContainerHigh
-              : Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-        ),
-        child: isOccupiedByNeighbor
-            ? Text(
-                "40'",
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              )
-            : null,
-      );
-    }
-
-    // Determinar color según estado y tipo
-    Color cellColor;
-    Color borderColor;
-    Color contentColor;
-    final scheme = Theme.of(context).colorScheme;
-    IconData? icon;
-
-    if (container!.isDangerous) {
-      cellColor = scheme.errorContainer;
-      borderColor = scheme.error;
-      contentColor = scheme.onErrorContainer;
-      icon = Icons.warning_amber;
-    } else if (container!.isReefer) {
-      cellColor = scheme.primaryContainer;
-      borderColor = scheme.primary;
-      contentColor = scheme.onPrimaryContainer;
-      icon = Icons.ac_unit;
-    } else if (container!.isOverDimension) {
-      // RF-008: indicador visual para carga OOG (Out of Gauge)
-      cellColor = scheme.tertiaryContainer;
-      borderColor = scheme.tertiary;
-      contentColor = scheme.onTertiaryContainer;
-      icon = Icons.open_in_full;
-    } else if (container!.status == ContainerStatus.full) {
-      cellColor = scheme.secondaryContainer;
-      borderColor = scheme.secondary;
-      contentColor = scheme.onSecondaryContainer;
-    } else if (container!.status == ContainerStatus.empty) {
-      cellColor = scheme.surfaceContainerHighest;
-      borderColor = scheme.outline;
-      contentColor = scheme.onSurface;
-    } else {
-      cellColor = scheme.surfaceContainerLow;
-      borderColor = scheme.outline;
-      contentColor = scheme.onSurface;
-    }
-
-    // RF-011: atenuar contenedores que no coinciden con el filtro activo
-    final bool isDimmedByFilter = activeTypeFilter != null &&
-        !_containerMatchesFilter(container!, activeTypeFilter!,
-            isInTransit: isInTransit);
-
-    // C-5a: la carga de paso conserva su icono de tipo pero se apaga, para que
-    // la bahia se lea de un vistazo como "lo que opero" contra "lo que sigue a
-    // bordo". Es lo que el planificador tacha a mano en el plano impreso.
-    if (isInTransit) {
-      cellColor = scheme.surface;
-      borderColor = scheme.outlineVariant;
-      contentColor = scheme.onSurfaceVariant;
-    }
-
-    if (orderLabel != null) {
-      cellColor = scheme.primaryContainer;
-      borderColor = scheme.primary;
-      contentColor = scheme.onPrimaryContainer;
-    }
-    final mark = dischargeMark;
-    var borderWidth = 2.0;
-    var markColor = scheme.onSurface;
-    if (mark != null) {
-      (cellColor, markColor, borderColor, borderWidth) = switch (mark) {
-        DischargeMark.pending => (
-            scheme.primaryContainer,
-            scheme.onPrimaryContainer,
-            scheme.primary,
-            2.0
-          ),
-        DischargeMark.discharged => (
-            scheme.surfaceContainerHighest,
-            scheme.onSurfaceVariant,
-            scheme.outline,
-            1.0
-          ),
-        DischargeMark.transit => (
-            scheme.surface,
-            scheme.onSurfaceVariant,
-            scheme.outlineVariant,
-            1.0
-          ),
-        DischargeMark.restowed => (
-            scheme.secondaryContainer,
-            scheme.onSecondaryContainer,
-            scheme.secondary,
-            2.0
-          ),
-        DischargeMark.cancelled => (
-            scheme.surfaceContainerHighest,
-            scheme.onSurfaceVariant,
-            scheme.outline,
-            1.0
-          ),
-        DischargeMark.conflict => (
-            scheme.errorContainer,
-            scheme.onErrorContainer,
-            scheme.error,
-            2.0
-          ),
-      };
-    }
-    if (isHighlighted) {
-      cellColor = scheme.tertiaryContainer;
-      borderColor = scheme.tertiary;
-      contentColor = scheme.onTertiaryContainer;
-      markColor = contentColor;
-    }
-    final cell = Container(
-      width: 50,
-      height: 40,
-      margin: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: cellColor,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: borderColor,
-          width: isHighlighted ? 3 : borderWidth,
-        ),
-        boxShadow: isHighlighted
-            ? [
-                BoxShadow(
-                  color: scheme.tertiary.withValues(alpha: 0.5),
-                  blurRadius: 6,
-                  spreadRadius: 1,
-                ),
-              ]
-            : null,
-      ),
-      // T-66: tres líneas en 36 px útiles. El FittedBox solo reduce, nunca
-      // amplía: con la letra del sistema agrandada (Android) la celda encoge
-      // su contenido en vez de desbordarse y tapar a la vecina.
-      child: mark != null
-          ? Semantics(
-              label: '${container!.containerId}, '
-                  '${container!.stowagePosition?.toIsoCode()}, '
-                  '${dischargeMarkText(mark)}',
-              child: FittedBox(
-                key: ValueKey('discharge-${mark.name}'),
-                fit: BoxFit.scaleDown,
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(dischargeMarkIcon(mark), size: 15, color: markColor),
-                  Text(dischargeMarkLabel(mark),
-                      style: TextStyle(
-                          fontSize: 9,
-                          height: 1.1,
-                          fontWeight: FontWeight.bold,
-                          color: markColor)),
-                ]),
-              ),
-            )
-          : orderLabel != null
-          ? Semantics(
-              label:
-                  '${container!.containerId}, ${container!.stowagePosition?.toIsoCode()}, $orderLabel',
-              child: Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                if (orderLabel!.startsWith('OR '))
-                  Text('OR',
-                      style: TextStyle(
-                          fontSize: 9,
-                          height: 1,
-                          color: contentColor)),
-                Text(orderLabel!.replaceFirst('OR ', ''),
-                    style: TextStyle(
-                        fontSize: 18,
-                        height: 1.1,
-                        fontWeight: FontWeight.bold,
-                        color: contentColor)),
-              ])),
-            )
-          : FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null)
-                    Icon(icon, size: 12, color: contentColor)
-                  else
-                    Text(
-                      container!.sizeInFeet?.toString() ?? '',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: contentColor,
-                        height: 1.1,
-                      ),
-                    ),
-                  if (container!.operatorCode != null)
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 44),
-                      child: Text(
-                        container!.operatorCode!,
-                        style: TextStyle(
-                          fontSize: 8,
-                          color: contentColor,
-                          height: 1.1,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  // Peso en toneladas con un decimal, como el plano impreso («28.7»).
-                  if (container!.effectiveWeight != null)
-                    Text(
-                      (container!.effectiveWeight! / 1000).toStringAsFixed(1),
-                      key: const ValueKey('peso-celda'),
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: contentColor,
-                        height: 1.1,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-    );
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: isDimmedByFilter ? 0.25 : 1.0,
-        child: cell,
-      ),
-    );
   }
 }

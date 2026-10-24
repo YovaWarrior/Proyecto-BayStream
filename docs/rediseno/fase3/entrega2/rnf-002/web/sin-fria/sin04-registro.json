@@ -1,0 +1,73 @@
+{
+  "instrumento": "tool/t114_primera_web.py + tool/t114_primera_web.js",
+  "perfil": "sin",
+  "repeticion": 4,
+  "url": "http://127.0.0.1:5899/",
+  "archivo": "/t114/T99_SINTETICO_977.edi",
+  "navegador": "Chrome 155.0.8059.85 (Playwright, perfil temporal)",
+  "ventana": {
+    "ancho": 1280,
+    "alto": 800,
+    "vista": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "tema": "oscuro",
+  "cache": "fría (contexto nuevo por repetición: primera visita, sin caché ni almacén)",
+  "inicioUtc": "2026-10-23T06:07:03.848334+00:00",
+  "finUtc": "2026-10-23T06:07:05.265302+00:00",
+  "pasosDelProducto": 3,
+  "primerCuadroDesdeNavegacionS": 1.132,
+  "origenDelPrimerCuadro": "first-contentful-paint",
+  "semanticaS": {
+    "primerCuadroS": 1.131,
+    "semanticos": 15
+  },
+  "tiempoDesdeElClicS": 0.218,
+  "tiempoHastaRejillaS": 1.35,
+  "incertidumbreS": 0.109,
+  "previo": true,
+  "parametrosAbiertos": false,
+  "cumplePasos": true,
+  "cumpleTiempo": true,
+  "marcas": [
+    {
+      "evento": "primer cuadro del motor (lienzo observado)",
+      "t": 1130.699999988079,
+      "desdeNavegacionMs": 1130.699999988079
+    },
+    {
+      "evento": "semantica activada (acción del instrumento, no del producto)",
+      "t": 1132.5,
+      "intento": 1
+    },
+    {
+      "evento": "1 app abierta: navegación",
+      "t": 1161.0999999642372,
+      "desdeOrigenMs": 1161.0999999642372
+    },
+    {
+      "evento": "2 pulsar «Seleccionar archivo»",
+      "t": 1161.0999999642372
+    },
+    {
+      "evento": "3 selector abierto (interceptado por el navegador)",
+      "t": 1164.0999999642372
+    },
+    {
+      "evento": "3 archivo elegido",
+      "t": 1164.300000011921,
+      "archivo": "T99_SINTETICO_977.edi",
+      "bytes": 164312
+    },
+    {
+      "evento": "fin: rejilla en la semántica",
+      "t": 1381.5999999642372,
+      "cuadrosMuestreados": 2,
+      "texto": "Plano\nPestaña 1 de 5Lista\nPestaña 2 de 5",
+      "previo": true,
+      "parametrosAbiertos": false
+    }
+  ]
+}

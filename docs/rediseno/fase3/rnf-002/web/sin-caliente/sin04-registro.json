@@ -1,0 +1,74 @@
+{
+  "instrumento": "tool/t114_primera_web.py + tool/t114_primera_web.js",
+  "perfil": "sin",
+  "repeticion": 4,
+  "url": "http://127.0.0.1:5899/",
+  "archivo": "/t114/T99_SINTETICO_977.edi",
+  "navegador": "Chrome 155.0.8059.85 (Playwright, perfil temporal)",
+  "ventana": {
+    "ancho": 1280,
+    "alto": 800,
+    "vista": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "tema": "oscuro",
+  "cache": "caliente (calentamiento previo)",
+  "inicioUtc": "2026-10-22T19:59:14.370326+00:00",
+  "finUtc": "2026-10-22T19:59:14.716240+00:00",
+  "pasosDelProducto": 3,
+  "primerCuadroDesdeNavegacionS": 0.184,
+  "origenDelPrimerCuadro": "first-contentful-paint",
+  "semanticaS": {
+    "primerCuadroS": 0.167,
+    "semanticos": 15
+  },
+  "tiempoDesdeElClicS": 0.141,
+  "tiempoHastaRejillaS": 0.325,
+  "incertidumbreS": 0.07,
+  "previo": true,
+  "parametrosAbiertos": false,
+  "bahia": "BayStreamDesplegar accionesConfirmarPeso",
+  "cumplePasos": true,
+  "cumpleTiempo": true,
+  "marcas": [
+    {
+      "evento": "primer cuadro del motor (lienzo observado)",
+      "t": 166.9000000357628,
+      "desdeNavegacionMs": 166.9000000357628
+    },
+    {
+      "evento": "semantica activada (acción del instrumento, no del producto)",
+      "t": 167.5,
+      "intento": 1
+    },
+    {
+      "evento": "1 app abierta: navegación",
+      "t": 198.30000001192093,
+      "desdeOrigenMs": 198.30000001192093
+    },
+    {
+      "evento": "2 pulsar «Seleccionar archivo»",
+      "t": 198.30000001192093
+    },
+    {
+      "evento": "3 selector abierto (interceptado por el navegador)",
+      "t": 199.70000004768372
+    },
+    {
+      "evento": "3 archivo elegido",
+      "t": 199.9000000357628,
+      "archivo": "T99_SINTETICO_977.edi",
+      "bytes": 164312
+    },
+    {
+      "evento": "fin: rejilla en la semántica",
+      "t": 340.30000001192093,
+      "cuadrosMuestreados": 2,
+      "texto": "BayStreamDesplegar accionesConfirmarPeso",
+      "previo": true,
+      "parametrosAbiertos": false
+    }
+  ]
+}

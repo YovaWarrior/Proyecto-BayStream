@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 
 import '../../domain/entities/entities.dart';
 import '../../domain/services/discharge_sequence.dart';
@@ -219,17 +220,17 @@ class _DischargeSequencePageState extends State<DischargeSequencePage> {
             ? 'Tapa T${cover.number}'
             : 'Tapa automática';
     return switch (step.kind) {
-      DischargeStepKind.discharge => ('Descarga', Icons.south),
-      DischargeStepKind.restowOut => ('Re‑estiba: sale', Icons.north),
+      DischargeStepKind.discharge => ('Descarga', BsIconos.descarga),
+      DischargeStepKind.restowOut => ('Re‑estiba: sale', BsIconos.descarga),
       DischargeStepKind.coverOff => (
           cover!.crane ? '$name: quitar' : '$name: abrir',
-          Icons.expand_less
+          BsIconos.tapaEscotilla
         ),
       DischargeStepKind.coverOn => (
           cover!.crane ? '$name: reponer' : '$name: cerrar',
-          Icons.expand_more
+          BsIconos.tapaEscotilla
         ),
-      DischargeStepKind.restowBack => ('Re‑estiba: vuelve', Icons.undo),
+      DischargeStepKind.restowBack => ('Re‑estiba: vuelve', BsIconos.carga),
     };
   }
 

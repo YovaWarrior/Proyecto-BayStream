@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/entities.dart';
@@ -8,6 +9,7 @@ import '../formatters/operation_text.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
+import 'avisos_del_viaje.dart';
 import 'hatch_operation_controls.dart';
 import '../../../../core/utils/voyage_number.dart';
 
@@ -153,9 +155,10 @@ Future<void> onDischargeTap(BuildContext context, WidgetRef ref,
   if (!progress.canRegister) {
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-          content: Text('Esta escala no tiene operación guardada: vuelve a '
-              'abrir el BAPLIE de llegada y confirma la escala.')));
+      ..showSnackBar(avisoDelViaje(
+          texto: 'Esta escala no tiene operación guardada: vuelve a '
+              'abrir el BAPLIE de llegada y confirma la escala.',
+          corto: 'Esta escala no tiene operación guardada.'));
     return;
   }
   var restow = false;
@@ -177,7 +180,9 @@ Future<void> onDischargeTap(BuildContext context, WidgetRef ref,
     final first = await appendMovement(repository, MovementDraft.hatchCover(
         progress.operationId!, cover.bay, cover.number, remove: true), author);
     if (first.error != null) {
-      messenger.showSnackBar(SnackBar(content: Text('No se quitó la tapa: ${first.error}')));
+      messenger.showSnackBar(avisoDelViaje(
+          texto: 'No se quitó la tapa: ${first.error}',
+          corto: 'No se quitó la tapa.'));
       return;
     }
     removed = first.record;
@@ -191,29 +196,31 @@ Future<void> onDischargeTap(BuildContext context, WidgetRef ref,
   final record = result.record;
   messenger.hideCurrentSnackBar();
   if (record == null) {
-    messenger.showSnackBar(
-        SnackBar(content: Text('No se registró: ${result.error}')));
+    messenger.showSnackBar(avisoDelViaje(
+        texto: 'No se registró: ${result.error}', corto: 'No se registró.'));
     return;
   }
-  messenger.showSnackBar(SnackBar(
+  // Con la letra grande, si el aviso entero no cabe sobre las cifras de la
+  // franja, va sin la celda: la celda ya está en naranja (13.3) y el número
+  // del contenedor no se ve en la rejilla (10.31).
+  messenger.showSnackBar(avisoDelViaje(
     key: const ValueKey('discharge-undo-snackbar'),
-    duration: const Duration(seconds: 6),
-    persist: false,
-    content: Text('${restow ? 'Re‑estiba registrada' : 'Descargado'} · '
-        '${container.containerId} · ${_cell(position)}'),
-    action: SnackBarAction(
-        label: 'Deshacer',
-        onPressed: () async {
-          var error = await annulMovement(
-              repository, record.movement, markedByMistake, author);
-          if (error == null && removed != null) {
-            error = await annulMovement(repository, removed.movement, markedByMistake, author);
-          }
-          if (error != null) {
-            messenger
-                .showSnackBar(SnackBar(content: Text('No se deshizo: $error')));
-          }
-        }),
+    duracion: const Duration(seconds: 6),
+    texto: '${restow ? 'Re‑estiba registrada' : 'Descargado'} · '
+        '${container.containerId} · ${_cell(position)}',
+    corto: '${restow ? 'Re‑estiba' : 'Descargado'} · ${container.containerId}',
+    accion: 'Deshacer',
+    onAccion: () async {
+      var error = await annulMovement(
+          repository, record.movement, markedByMistake, author);
+      if (error == null && removed != null) {
+        error = await annulMovement(repository, removed.movement, markedByMistake, author);
+      }
+      if (error != null) {
+        messenger.showSnackBar(avisoDelViaje(
+            texto: 'No se deshizo: $error', corto: 'No se deshizo.'));
+      }
+    },
   ));
 }
 
@@ -399,10 +406,14 @@ class DischargeDetailSection extends ConsumerWidget {
                     ref.read(movementAuthorProvider));
                 messenger
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(
-                      content: Text(error == null
-                          ? 'Deshecho · ${container.containerId} · $reason'
-                          : 'No se deshizo: $error')));
+                  ..showSnackBar(error == null
+                      ? avisoDelViaje(
+                          texto:
+                              'Deshecho · ${container.containerId} · $reason',
+                          corto: 'Deshecho · ${container.containerId}')
+                      : avisoDelViaje(
+                          texto: 'No se deshizo: $error',
+                          corto: 'No se deshizo.'));
               },
             ),
           ),
@@ -432,12 +443,12 @@ String dischargeMarkLabel(DischargeMark mark) => switch (mark) {
     };
 
 IconData dischargeMarkIcon(DischargeMark mark) => switch (mark) {
-      DischargeMark.pending => Icons.south,
+      DischargeMark.pending => BsIconos.descarga,
       DischargeMark.discharged => Icons.check_circle,
-      DischargeMark.transit => Icons.directions_boat_outlined,
-      DischargeMark.restowed => Icons.swap_vert,
+      DischargeMark.transit => BsIconos.buque,
+      DischargeMark.restowed => BsIconos.reestiba,
       DischargeMark.cancelled => Icons.block,
-      DischargeMark.conflict => Icons.error_outline,
+      DischargeMark.conflict => Icons.error,
     };
 
 /// Hora local del dispositivo, como la columna HORA del listado.

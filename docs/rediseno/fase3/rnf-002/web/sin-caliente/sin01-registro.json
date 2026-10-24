@@ -1,0 +1,74 @@
+{
+  "instrumento": "tool/t114_primera_web.py + tool/t114_primera_web.js",
+  "perfil": "sin",
+  "repeticion": 1,
+  "url": "http://127.0.0.1:5899/",
+  "archivo": "/t114/T99_SINTETICO_977.edi",
+  "navegador": "Chrome 155.0.8059.85 (Playwright, perfil temporal)",
+  "ventana": {
+    "ancho": 1280,
+    "alto": 800,
+    "vista": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "tema": "oscuro",
+  "cache": "caliente (calentamiento previo)",
+  "inicioUtc": "2026-10-22T19:59:12.496700+00:00",
+  "finUtc": "2026-10-22T19:59:13.297342+00:00",
+  "pasosDelProducto": 3,
+  "primerCuadroDesdeNavegacionS": 0.212,
+  "origenDelPrimerCuadro": "first-contentful-paint",
+  "semanticaS": {
+    "primerCuadroS": 0.198,
+    "semanticos": 15
+  },
+  "tiempoDesdeElClicS": 0.209,
+  "tiempoHastaRejillaS": 0.421,
+  "incertidumbreS": 0,
+  "previo": true,
+  "parametrosAbiertos": false,
+  "bahia": "BayStreamDesplegar accionesConfirmarPeso",
+  "cumplePasos": true,
+  "cumpleTiempo": true,
+  "marcas": [
+    {
+      "evento": "primer cuadro del motor (lienzo observado)",
+      "t": 198.39999997615814,
+      "desdeNavegacionMs": 198.39999997615814
+    },
+    {
+      "evento": "semantica activada (acción del instrumento, no del producto)",
+      "t": 199,
+      "intento": 1
+    },
+    {
+      "evento": "1 app abierta: navegación",
+      "t": 337.80000001192093,
+      "desdeOrigenMs": 337.80000001192093
+    },
+    {
+      "evento": "2 pulsar «Seleccionar archivo»",
+      "t": 337.80000001192093
+    },
+    {
+      "evento": "3 selector abierto (interceptado por el navegador)",
+      "t": 340.69999998807907
+    },
+    {
+      "evento": "3 archivo elegido",
+      "t": 340.89999997615814,
+      "archivo": "T99_SINTETICO_977.edi",
+      "bytes": 164312
+    },
+    {
+      "evento": "fin: rejilla en la semántica",
+      "t": 549.3000000119209,
+      "cuadrosMuestreados": 1,
+      "texto": "BayStreamDesplegar accionesConfirmarPeso",
+      "previo": true,
+      "parametrosAbiertos": false
+    }
+  ]
+}

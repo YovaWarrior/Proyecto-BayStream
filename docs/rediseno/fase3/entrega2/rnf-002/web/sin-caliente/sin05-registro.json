@@ -1,0 +1,73 @@
+{
+  "instrumento": "tool/t114_primera_web.py + tool/t114_primera_web.js",
+  "perfil": "sin",
+  "repeticion": 5,
+  "url": "http://127.0.0.1:5899/",
+  "archivo": "/t114/T99_SINTETICO_977.edi",
+  "navegador": "Chrome 155.0.8059.85 (Playwright, perfil temporal)",
+  "ventana": {
+    "ancho": 1280,
+    "alto": 800,
+    "vista": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "tema": "oscuro",
+  "cache": "caliente (calentamiento previo; almacén borrado por repetición)",
+  "inicioUtc": "2026-10-23T06:06:56.678757+00:00",
+  "finUtc": "2026-10-23T06:06:57.013583+00:00",
+  "pasosDelProducto": 3,
+  "primerCuadroDesdeNavegacionS": 0.152,
+  "origenDelPrimerCuadro": "lienzo observado por el instrumento",
+  "semanticaS": {
+    "primerCuadroS": 0.152,
+    "semanticos": 15
+  },
+  "tiempoDesdeElClicS": 0.15,
+  "tiempoHastaRejillaS": 0.302,
+  "incertidumbreS": 0,
+  "previo": true,
+  "parametrosAbiertos": false,
+  "cumplePasos": true,
+  "cumpleTiempo": true,
+  "marcas": [
+    {
+      "evento": "primer cuadro del motor (lienzo observado)",
+      "t": 151.89999997615814,
+      "desdeNavegacionMs": 151.89999997615814
+    },
+    {
+      "evento": "semantica activada (acción del instrumento, no del producto)",
+      "t": 152.39999997615814,
+      "intento": 1
+    },
+    {
+      "evento": "1 app abierta: navegación",
+      "t": 178.80000001192093,
+      "desdeOrigenMs": 178.80000001192093
+    },
+    {
+      "evento": "2 pulsar «Seleccionar archivo»",
+      "t": 178.80000001192093
+    },
+    {
+      "evento": "3 selector abierto (interceptado por el navegador)",
+      "t": 180.0999999642372
+    },
+    {
+      "evento": "3 archivo elegido",
+      "t": 180.19999998807907,
+      "archivo": "T99_SINTETICO_977.edi",
+      "bytes": 164312
+    },
+    {
+      "evento": "fin: rejilla en la semántica",
+      "t": 329.5999999642372,
+      "cuadrosMuestreados": 1,
+      "texto": "Plano\nPestaña 1 de 5Lista\nPestaña 2 de 5",
+      "previo": true,
+      "parametrosAbiertos": false
+    }
+  ]
+}

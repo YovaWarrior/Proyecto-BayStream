@@ -1,0 +1,161 @@
+{
+ "instrumento": "tool/t114_primera_windows.py",
+ "perfil": "sin",
+ "repeticion": 1,
+ "exe": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t99-r4-fase3\\copia\\build\\windows\\x64\\runner\\Release\\baystream.exe",
+ "archivo": "C:\\Users\\Giova\\AppData\\Local\\Temp\\t114\\sinteticos\\T99_SINTETICO_977.edi",
+ "inicioUtc": "2026-10-22T19:22:46.069959+00:00",
+ "acciones": [
+  {
+   "paso": 1,
+   "accion": "abrir el binario (icono)",
+   "t": 0.0
+  },
+  {
+   "paso": 2,
+   "accion": "pulsar «Seleccionar archivo»",
+   "t": 0.6732,
+   "punto": [
+    411,
+    266
+   ]
+  },
+  {
+   "paso": 3,
+   "accion": "elegir el archivo en el selector y confirmar",
+   "t": 1.6296
+  }
+ ],
+ "cuadros": [
+  {
+   "t": 0.4845,
+   "dif": null
+  },
+  {
+   "t": 0.6834,
+   "dif": 0.164
+  },
+  {
+   "t": 0.7542,
+   "dif": 0.132
+  },
+  {
+   "t": 0.8258,
+   "dif": 0.197
+  },
+  {
+   "t": 0.8807,
+   "dif": 0.015
+  },
+  {
+   "t": 0.9311,
+   "dif": 0.096
+  },
+  {
+   "t": 0.9922,
+   "dif": 0.088
+  },
+  {
+   "t": 1.0493,
+   "dif": 0.137
+  },
+  {
+   "t": 1.6298,
+   "dif": 10.13
+  },
+  {
+   "t": 1.6856,
+   "dif": 10.181
+  },
+  {
+   "t": 1.75,
+   "dif": 0.034
+  },
+  {
+   "t": 1.8,
+   "dif": 0.0
+  },
+  {
+   "t": 1.8501,
+   "dif": 12.908
+  },
+  {
+   "t": 1.9001,
+   "dif": 0.0
+  },
+  {
+   "t": 1.9504,
+   "dif": 0.0
+  },
+  {
+   "t": 2.0005,
+   "dif": 0.0
+  },
+  {
+   "t": 2.0506,
+   "dif": 0.0
+  },
+  {
+   "t": 2.1006,
+   "dif": 0.0
+  },
+  {
+   "t": 2.155,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2051,
+   "dif": 0.0
+  },
+  {
+   "t": 2.2556,
+   "dif": 0.0
+  },
+  {
+   "t": 2.3207,
+   "dif": 0.0
+  },
+  {
+   "t": 2.3711,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4212,
+   "dif": 0.0
+  },
+  {
+   "t": 2.4874,
+   "dif": 0.0
+  },
+  {
+   "t": 2.5383,
+   "dif": 0.0
+  }
+ ],
+ "hitos": {
+  "ventana": 0.44312849995912984,
+  "confirmado": 1.6296,
+  "rejillaQuieta": 1.9001,
+  "incertidumbreS": 0.05
+ },
+ "ventana": {
+  "pid": 18524,
+  "rect": [
+   -9,
+   -9,
+   1929,
+   1029
+  ],
+  "maximizada": true
+ },
+ "tema": "oscuro",
+ "pasosDelProducto": 3,
+ "tiempoHastaRejillaS": 1.9,
+ "cumpleTiempo": true,
+ "pngs": {
+  "inicio": "inicio.png",
+  "rejilla": "rejilla.png",
+  "final": "final.png"
+ },
+ "finUtc": "2026-10-22T19:22:48.698526+00:00"
+}

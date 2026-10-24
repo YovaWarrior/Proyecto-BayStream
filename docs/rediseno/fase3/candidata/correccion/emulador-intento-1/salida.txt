@@ -1,0 +1,29 @@
+﻿p01-inicio el inicio sin viajes
+p02-plan-de-carga-en-previo abre en previo con la banda; tres pasos
+p03-parametros-del-buque la banda abrió «Parámetros del buque»
+p04-parametros-no-lo-tengo «No lo tengo» marcado a mano
+p05-plan-de-carga-publicado publicado en GTSTC; la banda del muelle con Carga
+p06-listado-leido el listado leído, antes de confirmar
+p07-listado-importado «Listado guardado en la operación de GTSTC: 30 filas.»
+p08-llegada-publicada la llegada abre publicada sin previo; la banda ofrece Descarga
+p09-descarga modo Descarga: «Baja» en las celdas por bajar
+p10-baja-registrada un toque: naranja y el aviso con «Deshacer»
+p11-segunda-baja otra Baja
+python : Traceback (most recent call last):
+En línea: 1 Carácter: 595
++ ...  = 'utf-8'; python -X utf8 tool\t114_piloto_android.py "$env:TEMP\t11 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 321, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 223, in main
+    tocar_patron(r'^Deshacer$')
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 44, in tocar_patron
+    rows = esperar(patron, intentos)
+  File "C:\Proyectos\baystream-rediseno\tool\t114_capturas_android.py", line 55, in esperar
+    raise RuntimeError(f'No apareció: {patron}')
+RuntimeError: No apareció: ^Deshacer$

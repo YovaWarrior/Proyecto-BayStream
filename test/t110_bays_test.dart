@@ -119,8 +119,11 @@ void main() {
           (ref) async => throw StateError('No abrir almacen real')),
     ], child: MaterialApp(home: Scaffold(body: BayPlanView(voyage: voyage)))));
     await tester.pumpAndSettle();
-    expect(find.text('BAHÍA 01 (17%)'), findsOneWidget);
-    expect(find.text('BAHÍA 11 (0%)'), findsOneWidget);
+    // Fase 3: la silueta es el selector; cada bahía es un botón con clave.
+    expect(find.byKey(const ValueKey('silueta-bahia-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('silueta-bahia-11')), findsOneWidget);
+    expect(voyage.bays[1]!.occupancyRate, closeTo(16.7, 0.1));
+    expect(voyage.bays[11]!.occupancyRate, 0);
     final scope =
         ProviderScope.containerOf(tester.element(find.byType(BayPlanView)));
     expect(scope.read(voyageStatsProvider)!.totalBays, 3);

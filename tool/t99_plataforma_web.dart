@@ -18,6 +18,9 @@ Future<void> _enviar(String url, JSAny cuerpo) async {
   }
 }
 
+/// En la Web no hay entorno del proceso: solo valen las definiciones.
+String variableDeEntorno(String nombre) => '';
+
 /// El servidor guarda la línea en el archivo de nombre igual al de [ruta].
 Future<void> anexarLinea(String ruta, String linea) async {
   if (ruta.isEmpty) return;

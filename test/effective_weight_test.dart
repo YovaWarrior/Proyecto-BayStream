@@ -1,3 +1,4 @@
+import 'package:baystream/core/design/design.dart';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/data/services/export_service.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
@@ -115,13 +116,13 @@ UNT+14+1'
       await tester.pumpAndSettle();
     }
 
-    String? cellWeight(WidgetTester tester, String cellKey) {
-      final finder = find.descendant(
-          of: find.byKey(ValueKey(cellKey)),
-          matching: find.byKey(const ValueKey('peso-celda')));
-      if (finder.evaluate().isEmpty) return null;
-      return tester.widget<Text>(finder).data;
-    }
+    // Fase 3: el peso es la segunda línea de BsCelda.
+    String? cellWeight(WidgetTester tester, String cellKey) => tester
+        .widget<BsCelda>(find.descendant(
+            of: find.byKey(ValueKey(cellKey)),
+            matching: find.byType(BsCelda),
+            matchRoot: true))
+        .linea2;
 
     testWidgets('la celda muestra el peso en toneladas con un decimal',
         (tester) async {
@@ -138,8 +139,8 @@ UNT+14+1'
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey('cell-1-82')));
       await tester.pumpAndSettle();
-      expect(find.text('Peso (VGM)'), findsOneWidget);
-      expect(find.text('28700 kg'), findsOneWidget);
+      expect(find.text('VGM'), findsOneWidget);
+      expect(find.text(formatearKilos(28700)), findsOneWidget);
       expect(find.text('Peso bruto'), findsNothing);
       expect(find.textContaining('N/A kg'), findsNothing);
     });
@@ -149,10 +150,10 @@ UNT+14+1'
       await pump(tester);
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
       await tester.pumpAndSettle();
-      expect(find.text('Peso (VGM)'), findsOneWidget);
-      expect(find.text('25500 kg'), findsOneWidget);
+      expect(find.text('VGM'), findsOneWidget);
+      expect(find.text(formatearKilos(25500)), findsOneWidget);
       expect(find.text('Peso bruto'), findsOneWidget);
-      expect(find.text('25000 kg'), findsOneWidget);
+      expect(find.text(formatearKilos(25000)), findsOneWidget);
     });
 
     testWidgets('sin peso, el detalle lo declara en vez de «N/A kg»',

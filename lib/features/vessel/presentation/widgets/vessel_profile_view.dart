@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 
 import '../../domain/entities/entities.dart';
 
@@ -86,7 +87,7 @@ class _VesselProfileViewState extends State<VesselProfileView> {
               segments: const [
                 ButtonSegment(
                   value: VesselProfileMetric.occupancy,
-                  icon: Icon(Icons.grid_view),
+                  icon: Icon(BsIconos.bahia),
                   label: Text('Ocupación'),
                 ),
                 ButtonSegment(

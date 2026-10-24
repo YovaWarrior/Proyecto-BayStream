@@ -58,6 +58,9 @@ Future<void> _pumpPlan(WidgetTester tester, VesselVoyage voyage,
   await tester.pumpAndSettle();
 }
 
+/// El relleno de una reserva en claro: el papel del rol «reservado».
+const _papel = Color(0xFFFFFFFF);
+
 BoxDecoration _cellDecoration(WidgetTester tester, Finder cell) => tester
     .widget<Container>(
         find.descendant(of: cell, matching: find.byType(Container)).first)
@@ -85,9 +88,11 @@ void main() {
         find.descendant(of: cell, matching: find.text('22G1')), findsOneWidget);
     expect(find.descendant(of: cell, matching: find.text('PAMIT')),
         findsOneWidget);
+    // Fase 3: la reserva es solo contorno (BsCelda reservada): el relleno es
+    // el papel, nunca un color de carga, y el borde es el de la celda.
     final decoration = _cellDecoration(tester, cell);
-    expect(decoration.color, isNull);
-    expect((decoration.border! as Border).top.width, 2);
+    expect(decoration.color, _papel);
+    expect((decoration.border! as Border).top.width, greaterThanOrEqualTo(1));
     expect(voyage.bays[3]!.occupancyRate, 0);
     expect(voyage.bays[3]!.totalWeight, 0);
     await tester.ensureVisible(cell);
@@ -120,9 +125,10 @@ void main() {
       final shadow =
           find.byKey(ValueKey('reserved-shadow-$neighbor-0284-R:0060284'));
       expect(shadow, findsOneWidget);
-      expect(find.descendant(of: shadow, matching: find.text("40' reserva")),
+      // Fase 3: la sombra del 40 dice «40′» y conserva el destino.
+      expect(find.descendant(of: shadow, matching: find.text('40′')),
           findsOneWidget);
-      expect(_cellDecoration(tester, shadow).color, isNull);
+      expect(_cellDecoration(tester, shadow).color, _papel);
       expect(voyage.getReservedSlotsInBay(neighbor), isEmpty);
       expect(voyage.bays[neighbor]!.occupancyRate, 0);
       expect(voyage.totalReservedSlots, 1);
@@ -159,7 +165,7 @@ void main() {
           findsOneWidget);
       expect(find.descendant(of: cell, matching: find.text('PAMIT')),
           findsOneWidget);
-      expect(_cellDecoration(tester, cell).color, isNull);
+      expect(_cellDecoration(tester, cell).color, _papel);
       expect(tester.takeException(), isNull);
     });
   }

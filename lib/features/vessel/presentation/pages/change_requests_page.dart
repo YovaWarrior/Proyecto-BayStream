@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/change_requests.dart';
@@ -44,7 +45,7 @@ class ChangeRequestsButton extends ConsumerWidget {
         key: const ValueKey('change-requests-button'),
         onPressed: () => Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => ChangeRequestsPage(voyage: voyage))),
-        icon: Icon(office ? Icons.inbox_outlined : Icons.swap_vert),
+        icon: const Icon(BsIconos.pedirCambio),
         label: Text(
             '${office ? 'Bandeja de cambios' : 'Solicitudes de cambio'} ($pending)'));
   }
@@ -129,7 +130,7 @@ class _ChangeRequestsPageState extends ConsumerState<ChangeRequestsPage> {
                                 ? null
                                 : () =>
                                     showChangeRequest(context, widget.voyage),
-                            icon: const Icon(Icons.swap_vert),
+                            icon: const Icon(BsIconos.pedirCambio),
                             label: const Text('Pedir cambio'))),
                   if (error != null)
                     Text(error!,

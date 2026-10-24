@@ -1,0 +1,129 @@
+{
+  "idioma": {
+    "cadenas": 5558,
+    "por_regla": {
+      "V-PANTALLA": 1062,
+      "NV-DIRECTIVA": 931,
+      "NV-CLAVE-MAPA": 703,
+      "SIN-LETRAS": 676,
+      "V-TEXTO": 536,
+      "NV-FUERA-DEL-PRODUCTO": 332,
+      "NV-CLAVE-WIDGET": 291,
+      "NV-INTERNO": 199,
+      "NV-DATOS-EDI": 79,
+      "V-TEXTO/ANIDADA": 73,
+      "NV-COMPARACION": 70,
+      "V-PANTALLA/ANIDADA": 70,
+      "NV-OPERANDO": 69,
+      "V-ETIQUETA": 62,
+      "V-PDF": 59,
+      "NV-VOZ": 59,
+      "NV-CODIGO": 44,
+      "NV-PATRON": 43,
+      "V-ARCHIVO": 29,
+      "NV-PERSISTENCIA": 27,
+      "NV-DEPURACION": 20,
+      "V-ACCESIBILIDAD": 19,
+      "NV-REGISTRO": 19,
+      "NV-DATOS": 17,
+      "V-ARGUMENTO": 15,
+      "NV-EXCEPCION-INTERNA": 12,
+      "NV-ENTORNO": 11,
+      "NV-DEPURACION/ANIDADA": 6,
+      "NV-SOLO-H5": 6,
+      "NV-REEMPLAZADO": 5,
+      "V-SISTEMA": 4,
+      "NV-NO-MOSTRADO": 3,
+      "V-ACCESIBILIDAD/ANIDADA": 2,
+      "NV-DATOS-EDI/ANIDADA": 2,
+      "NV-SIN-USO": 2,
+      "NV-INALCANZABLE": 1
+    },
+    "directivas": 931,
+    "fuera_del_producto": 332,
+    "sin_letras": 676,
+    "no_visibles_con_letras": 1688,
+    "visibles": 1931,
+    "visibles_por_idioma": {
+      "sin idioma (siglas, nombres o unidades)": 131,
+      "español": 1800
+    },
+    "visibles_por_canal": {
+      "sistema": {
+        "sin idioma (siglas, nombres o unidades)": 2,
+        "español": 7
+      },
+      "pantalla": {
+        "sin idioma (siglas, nombres o unidades)": 108,
+        "español": 1660
+      },
+      "accesibilidad": {
+        "español": 57,
+        "sin idioma (siglas, nombres o unidades)": 1
+      },
+      "archivo": {
+        "español": 28,
+        "sin idioma (siglas, nombres o unidades)": 1
+      },
+      "pdf": {
+        "español": 48,
+        "sin idioma (siglas, nombres o unidades)": 19
+      }
+    },
+    "literales": 6027,
+    "anidados": 431,
+    "framework_en_espanol": 20
+  },
+  "material3": {
+    "incluidos": 251,
+    "excluidos": 7,
+    "excepciones": 3
+  },
+  "mensajes": {
+    "mensajes": 217,
+    "causa": {
+      "sí": 217
+    },
+    "accion": {
+      "sí": 217
+    },
+    "causa_y_accion_estricto": 217,
+    "causa_y_accion_con_implicitas": 217,
+    "parseo_edifact": 12,
+    "parseo_con_segmento": 12,
+    "por_tipo": {
+      "falla": {
+        "mensajes": 50,
+        "estricto": 50,
+        "con_implicitas": 50
+      },
+      "rechazo": {
+        "mensajes": 44,
+        "estricto": 44,
+        "con_implicitas": 44
+      },
+      "validación": {
+        "mensajes": 70,
+        "estricto": 70,
+        "con_implicitas": 70
+      },
+      "aviso de datos": {
+        "mensajes": 21,
+        "estricto": 21,
+        "con_implicitas": 21
+      },
+      "estado de error": {
+        "mensajes": 4,
+        "estricto": 4,
+        "con_implicitas": 4
+      },
+      "conflicto": {
+        "mensajes": 28,
+        "estricto": 28,
+        "con_implicitas": 28
+      }
+    },
+    "envolturas": 29
+  },
+  "archivos_trasladados": 155
+}

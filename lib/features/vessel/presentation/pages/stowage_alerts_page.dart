@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/stowage_validation_result.dart';
 import '../../domain/services/segregation_rules.dart';
 import '../providers/stowage_validation_provider.dart';
+import '../providers/voyage_ui_state.dart';
 
 /// Devuelve la posición elegida al plano del viaje que abrió el panel.
 class StowageAlertsPage extends ConsumerWidget {
@@ -30,6 +32,9 @@ class StowageAlertsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final results = ref.watch(stowageValidationResultsProvider);
+    // En previo no hay perfil confirmado: el peso por pila y las tomas se
+    // dicen «sin evaluar», nunca «sin alertas» (DESIGN.md 7.2, punto 4).
+    final previo = ref.watch(voyageUiStateProvider) is Previo;
     final colors = Theme.of(context).colorScheme;
     void open(IsoCoordinate p) => Navigator.of(context).pop(p);
     return Scaffold(
@@ -42,6 +47,15 @@ class StowageAlertsPage extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (previo) ...[
+                  const BsBanda(
+                    key: ValueKey('alerts-sin-evaluar'),
+                    texto: sinEvaluarHastaConfirmar,
+                    tono: BsTonoDeBanda.aviso,
+                    icono: Icons.warning_amber_rounded,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 const Text('Apoyo a la decisión. Revisar con el planificador; '
                     'este panel no verifica cumplimiento.'),
                 const Text(SegregationRules.disclaimer),
@@ -50,11 +64,30 @@ class StowageAlertsPage extends ConsumerWidget {
                     '${results.where((r) => r.status == ValidationStatus.nonConforming).length} posibles incumplimientos · '
                     '${results.where((r) => r.status == ValidationStatus.notEvaluated).length} no evaluados · '
                     '${results.where((r) => r.status == ValidationStatus.conforming).length} conformes en las reglas evaluadas'),
+                // 13.11: sin posibles incumplimientos, con su ilustración:
+                // solo con reglas evaluadas y ninguna incumplida; lo no
+                // evaluado o la lista vacía no declaran nada.
+                if (!previo &&
+                    results.any(
+                        (r) => r.status == ValidationStatus.conforming) &&
+                    results.every(
+                        (r) => r.status != ValidationStatus.nonConforming)) ...[
+                  const SizedBox(height: 12),
+                  const Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: BsIlustracion(
+                      key: ValueKey('alertas-sin-incumplimientos'),
+                      datos: BsIlustraciones.sinAlertas,
+                      ancho: 240,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 const Text(
                     'Orden: error, aviso, información. Se evalúa todo el viaje. '
                     'Sin límite de peso en el perfil no se emiten alertas de peso. '
                     'Las tomas propuestas o de plantilla no prueban ausencia de enchufe.'),
-                if (results.isEmpty)
+                if (results.isEmpty && !previo)
                   const Text(
                       'No hay resultados para mostrar. Esto no declara el viaje conforme.'),
                 const SizedBox(height: 16),

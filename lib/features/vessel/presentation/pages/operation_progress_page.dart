@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
@@ -23,19 +24,39 @@ class OperationProgressPage extends ConsumerWidget {
           fit: BoxFit.scaleDown,
           child: Text('Avance de la operación', maxLines: 2),
         ), actions: [
-          IconButton(tooltip: 'Tapas en la operación', icon: const Icon(Icons.layers_outlined),
+          IconButton(tooltip: 'Tapas en la operación', icon: const Icon(BsIconos.tapaEscotilla),
               onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
                   builder: (_) => HatchOperationPage(voyage: voyage)))),
         ]),
-        body: ref.watch(loadingOperationProvider(voyage)).when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) =>
-                  Center(
-                      child: Text(vesselErrorMessage(
-                          error, stack, 'calcular el avance de la operación'))),
-              data: (operation) => _content(context, operation),
-            ),
+        body: OperationProgressBody(voyage: voyage),
       );
+}
+
+/// El avance de la operación sin barra: lo usa la página y el destino
+/// «Avance» de la navegación (`DESIGN.md` 8). Con [onCelda], «Ir a» de un
+/// conflicto lo llama en vez de cerrar la página.
+class OperationProgressBody extends ConsumerWidget {
+  final VesselVoyage voyage;
+  final ValueChanged<OperationCellLink>? onCelda;
+  const OperationProgressBody({super.key, required this.voyage, this.onCelda});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) =>
+      ref.watch(loadingOperationProvider(voyage)).when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => Center(
+                child: Text(vesselErrorMessage(
+                    error, stack, 'calcular el avance de la operación'))),
+            data: (operation) => _content(context, operation),
+          );
+
+  void _irA(BuildContext context, OperationCellLink cell) {
+    if (onCelda != null) {
+      onCelda!(cell);
+      return;
+    }
+    Navigator.pop(context, cell);
+  }
 
   Widget _content(BuildContext context, LoadingOperation operation) {
     final data = OperationProgress.build(operation);
@@ -69,6 +90,24 @@ class OperationProgressPage extends ConsumerWidget {
                     const Text(
                         'Hechos y pendientes según el estado de la operación. Las re‑estibas se muestran aparte.'),
                     const SizedBox(height: 12),
+                    // 13.11: la descarga de la escala terminó.
+                    if (operation.plan.hasArrival &&
+                        data.bays.any((b) => b.discharged > 0) &&
+                        data.bays.every((b) => b.dischargePending == 0)) ...[
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: BsIlustracion(
+                          key: const ValueKey('descarga-completa'),
+                          datos: BsIlustraciones.descargaCompleta,
+                          ancho: 320,
+                          etiqueta: 'Descarga completa en ${voyage.portOfCall}',
+                        ),
+                      ),
+                      Text('Descarga completa en ${voyage.portOfCall}.',
+                          key: const ValueKey('descarga-completa-texto'),
+                          style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 12),
+                    ],
                     if (constraints.maxWidth >= 1000)
                       SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
@@ -167,10 +206,10 @@ class OperationProgressPage extends ConsumerWidget {
                                   TextButton.icon(
                                     key: ValueKey(
                                         'progress-conflict-${item.conflict.movementId}'),
-                                    icon: const Icon(Icons.grid_view),
+                                    icon: const Icon(BsIconos.bahia),
                                     label: Text(
                                         'Ir a ${loadingPosition(item.position!)}'),
-                                    onPressed: () => Navigator.pop(
+                                    onPressed: () => _irA(
                                         context,
                                         OperationCellLink(
                                             item.conflict.key,

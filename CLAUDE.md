@@ -98,6 +98,14 @@ completa en `CASO_A08_EVENTOS.json` y `CASO_A08_ESTADO_FINAL.csv`. Qué es cada 
 y cómo se usa: `SPRINT-3.md`, 2.4, y `docs/S3-CASO-MAGELLAN-STAR.md`. **Nada de esa
 carpeta se copia al repositorio**, que es público.
 
+## Estado al abrir el Sprint 4 (21 de octubre)
+
+El Sprint 3 cerró con **49 de 49 tareas** y quedó desplegado en los tres clientes
+(`v3.0`; 10.113 de `SPRINT-3.md`). El piso es **1063 pruebas** y `analyze` en cero.
+El Sprint 4 abre con el rediseño visual (T-114) en la rama `sprint-4`, en la carpeta
+`C:\Proyectos\baystream-rediseno`. Su brief es `SPRINT-4.md`; la sección 2 de
+`SPRINT-3.md` sigue vigente con los cambios que ahí se anotan.
+
 ## Estado al abrir el Sprint 3 (6 de octubre)
 
 El Sprint 2 cerró con **26 de 26 tareas**: perfil de buque persistente, almacén

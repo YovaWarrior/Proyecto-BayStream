@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/app_theme_preference.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/theme_preference_provider.dart';
+import '../widgets/avisos_del_viaje.dart';
 import 'privacy_policy_page.dart';
 
 /// Ajustes del dispositivo, separados de la confirmación del perfil del buque.
@@ -34,9 +35,12 @@ class ParametersPage extends ConsumerWidget {
               await ref.read(themePreferenceProvider.notifier).select(value);
             } catch (error, stack) {
               if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(vesselErrorMessage(error, stack, 'guardar el tema')),
-                backgroundColor: Theme.of(context).colorScheme.error,
+              // Puede seguir en pantalla al volver al plano: sabe su
+              // lugar (10.33).
+              ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+                texto: vesselErrorMessage(error, stack, 'guardar el tema'),
+                corto: 'No se guardó el tema.',
+                fondo: Theme.of(context).colorScheme.error,
               ));
             }
           },

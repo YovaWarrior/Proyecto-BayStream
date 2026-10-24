@@ -147,50 +147,83 @@ void main() {
 
   for (final brightness in Brightness.values) {
     testWidgets(
-        'T-91 plegada a 360 dp, tema ${brightness.name}, acciones y vista conservadas',
-        (tester) async {
+        'T-91 en la dirección C a 360 dp, tema ${brightness.name}: Buscar arriba, '
+        'lo demás en «Más», y el plano se conserva', (tester) async {
       final local = T91MemorySettings();
       final scope = await pumpT91Plan(tester, voyage, local, brightness);
       tester.view.physicalSize = const Size(360, 800);
       await tester.pumpAndSettle();
+      // Fase 3 (DESIGN.md 8): la barra de ocho acciones y su plegado de T-91
+      // se retiran. Arriba quedan Buscar y la nube; el resto está en «Más».
       final appBar = tester.widget<AppBar>(find.byType(AppBar));
-      expect(appBar.actions, hasLength(1));
-      expect(appBar.automaticallyImplyLeading, isFalse);
-      expect(find.byTooltip('Desplegar acciones'), findsOneWidget);
+      expect(appBar.actions, hasLength(2));
+      expect(find.byTooltip('Desplegar acciones'), findsNothing);
+      expect(find.byKey(const ValueKey('toggle-plan-toolbar')), findsNothing);
+      expect(find.byTooltip('Buscar contenedor'), findsOneWidget);
       for (final action in t91ActionTooltips) {
+        // Buscar y la nube sí van arriba (DESIGN.md 8).
+        if (action == 'Buscar contenedor' || action.startsWith('Nube y cuenta')) {
+          continue;
+        }
         expect(
             find.descendant(
                 of: find.byType(AppBar), matching: find.byTooltip(action)),
-            findsNothing);
+            findsNothing,
+            reason: action);
       }
+      expect(find.byKey(const ValueKey('barra-del-viaje')), findsOneWidget);
       expect(tester.takeException(), isNull);
-      // La aceptación del Honor detectó que el botón quedaba fuera de pantalla
-      // al desplegar. Se conserva fijo aun con objetivos táctiles de 48 dp.
-      await tester.tap(find.byTooltip('Desplegar acciones'));
+      await tester.tap(find.byKey(const ValueKey('destino-mas')));
       await tester.pumpAndSettle();
-      final toggleRect =
-          tester.getRect(find.byKey(const ValueKey('toggle-plan-toolbar')));
-      expect(toggleRect.left, greaterThanOrEqualTo(0));
-      expect(toggleRect.right, lessThanOrEqualTo(360));
-      final strip = find.byKey(const ValueKey('plan-toolbar-actions'));
-      await tester.drag(strip, const Offset(-250, 0));
+      final hoja = find.byKey(const ValueKey('hoja-mas'));
+      expect(hoja, findsOneWidget);
+      // Cada entrada cabe en la pantalla del teléfono y se alcanza.
+      for (final clave in [
+        'mas-alertas',
+        'export-pdf',
+        'export-csv',
+        'export-json',
+        'mas-nube',
+        'edit-geometry',
+        'mas-cargar',
+        'recent-voyages',
+        'saved-profiles',
+        'mas-cerrar',
+      ]) {
+        final entrada = find.byKey(ValueKey(clave));
+        await tester.scrollUntilVisible(entrada, 80, scrollable: find.descendant(of: hoja, matching: find.byType(Scrollable)));
+        await tester.pumpAndSettle();
+        final rect = tester.getRect(entrada);
+        expect(rect.left, greaterThanOrEqualTo(0), reason: clave);
+        expect(rect.right, lessThanOrEqualTo(360), reason: clave);
+      }
+      await tester.tapAt(const Offset(8, 8));
       await tester.pumpAndSettle();
-      expect(find.byTooltip('Limpiar datos').hitTestable(), findsOneWidget);
-      await tester.tap(find.byTooltip('Plegar acciones'));
-      await tester.pumpAndSettle();
-      expect(tester.widget<AppBar>(find.byType(AppBar)).actions, hasLength(1));
+      expect(hoja, findsNothing);
       expect(tester.takeException(), isNull);
+      // En la oficina ancha, el riel lleva la nube y Parámetros al pie, y
+      // «Más» ya no los repite.
       tester.view.physicalSize = const Size(1200, 900);
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Desplegar acciones'));
+      final riel = find.byKey(const ValueKey('riel-del-viaje'));
+      expect(riel, findsOneWidget);
+      expect(
+          find.descendant(
+              of: riel, matching: find.byKey(const ValueKey('edit-geometry'))),
+          findsOneWidget);
+      expect(
+          find.descendant(
+              of: riel, matching: find.byKey(const ValueKey('cloud-page'))),
+          findsOneWidget);
+      await tester.tap(find.text('Más'));
       await tester.pumpAndSettle();
-      for (final action in t91ActionTooltips) {
-        expect(
-            find.descendant(
-                of: find.byType(AppBar), matching: find.byTooltip(action)),
-            findsOneWidget);
-      }
-      await tester.tap(find.byTooltip('Plegar acciones'));
+      expect(find.byKey(const ValueKey('mas-nube')), findsNothing);
+      expect(
+          find.descendant(
+              of: find.byKey(const ValueKey('hoja-mas')),
+              matching: find.byKey(const ValueKey('edit-geometry'))),
+          findsNothing);
+      await tester.tapAt(const Offset(8, 8));
       await tester.pumpAndSettle();
       for (final mode in BayPlanMode.values) {
         await checkT91Toggle(tester, scope, voyage, mode);
@@ -198,7 +231,7 @@ void main() {
       await tester.tap(find.text('Lista'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('toggle-plan-toolbar')), findsNothing);
-      expect(find.byTooltip('Cargar archivo BAPLIE'), findsOneWidget);
+      expect(find.byKey(const ValueKey('compare-baplie')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

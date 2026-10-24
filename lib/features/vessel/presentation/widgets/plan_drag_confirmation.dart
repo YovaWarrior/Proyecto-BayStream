@@ -3,13 +3,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/change_requests.dart';
 import '../formatters/vessel_error_message.dart';
 import '../../domain/services/loading_operation.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
+import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
+import 'avisos_del_viaje.dart';
 import 'loading_controls.dart' show loadingPosition;
 
 /// T-106: la escala del zoom, para lo que no debe ampliarse (el margen) o se
@@ -26,25 +29,26 @@ class PlanZoomScope extends InheritedWidget {
 }
 
 /// Amplía la rejilla y su área desplazable; conserva los gestos de cada celda.
-class PlanZoomViewport extends StatefulWidget {
+/// La escala vive en `planZoomProvider`: la pellizca aquí y la cambia el chip
+/// `ZoomDelPlano`, que desde 10.20 va fuera de la rejilla, en la línea de los
+/// controles, para no tapar ninguna celda.
+class PlanZoomViewport extends ConsumerStatefulWidget {
   final Widget child;
   const PlanZoomViewport({super.key, required this.child});
 
   @override
-  State<PlanZoomViewport> createState() => _PlanZoomViewportState();
+  ConsumerState<PlanZoomViewport> createState() => _PlanZoomViewportState();
 }
 
-class _PlanZoomViewportState extends State<PlanZoomViewport> {
-  double scale = 1;
+class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
   double gestureScale = 1;
   double span = 1;
-  bool controls = false;
   final pointers = <int, Offset>{};
 
   void beginPinch() {
     if (pointers.length != 2) return;
     span = (pointers.values.first - pointers.values.last).distance;
-    gestureScale = scale;
+    gestureScale = ref.read(planZoomProvider);
   }
 
   void endPointer(int pointer) {
@@ -52,96 +56,53 @@ class _PlanZoomViewportState extends State<PlanZoomViewport> {
     beginPinch();
   }
 
-  void zoom(double value) => setState(() => scale = value.clamp(.75, 3));
-
   @override
-  Widget build(BuildContext context) => Stack(children: [
-        Positioned.fill(child: LayoutBuilder(builder: (context, constraints) {
-          return Listener(
-              key: const ValueKey('plan-zoom-gesture'),
-              behavior: HitTestBehavior.opaque,
-              // Observar dos contactos evita competir con los scrolls y
-              // LongPressDraggable por el gesto de un solo dedo.
-              onPointerDown: (event) {
-                setState(() {
-                  controls = false;
-                  pointers[event.pointer] = event.localPosition;
-                });
-                beginPinch();
-              },
-              onPointerMove: (event) {
-                if (!pointers.containsKey(event.pointer)) return;
-                pointers[event.pointer] = event.localPosition;
-                if (pointers.length == 2 && span > 0) {
-                  zoom(gestureScale *
-                      (pointers.values.first - pointers.values.last).distance /
-                      span);
-                }
-              },
-              onPointerUp: (event) => endPointer(event.pointer),
-              onPointerCancel: (event) => endPointer(event.pointer),
-              child: ClipRect(
-                  // El viewport lógico disminuye al ampliar: los scrolls
-                  // conservan acceso a TODA la rejilla, también a sus bordes.
-                  child: SizedBox.expand(
-                      child: OverflowBox(
+  Widget build(BuildContext context) {
+    final scale = ref.watch(planZoomProvider);
+    return LayoutBuilder(builder: (context, constraints) {
+      return Listener(
+          key: const ValueKey('plan-zoom-gesture'),
+          behavior: HitTestBehavior.opaque,
+          // Observar dos contactos evita competir con los scrolls y
+          // LongPressDraggable por el gesto de un solo dedo.
+          onPointerDown: (event) {
+            setState(() => pointers[event.pointer] = event.localPosition);
+            beginPinch();
+          },
+          onPointerMove: (event) {
+            if (!pointers.containsKey(event.pointer)) return;
+            pointers[event.pointer] = event.localPosition;
+            if (pointers.length == 2 && span > 0) {
+              ref.read(planZoomProvider.notifier).fijar(gestureScale *
+                  (pointers.values.first - pointers.values.last).distance /
+                  span);
+            }
+          },
+          onPointerUp: (event) => endPointer(event.pointer),
+          onPointerCancel: (event) => endPointer(event.pointer),
+          child: ClipRect(
+              // El viewport lógico disminuye al ampliar: los scrolls
+              // conservan acceso a TODA la rejilla, también a sus bordes.
+              child: SizedBox.expand(
+                  child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      minWidth: constraints.maxWidth / scale,
+                      maxWidth: constraints.maxWidth / scale,
+                      minHeight: constraints.maxHeight / scale,
+                      maxHeight: constraints.maxHeight / scale,
+                      child: Transform.scale(
                           alignment: Alignment.topLeft,
-                          minWidth: constraints.maxWidth / scale,
-                          maxWidth: constraints.maxWidth / scale,
-                          minHeight: constraints.maxHeight / scale,
-                          maxHeight: constraints.maxHeight / scale,
-                          child: Transform.scale(
-                              alignment: Alignment.topLeft,
-                              scale: scale,
-                              child: ScrollConfiguration(
-                                  behavior: ScrollConfiguration.of(context)
-                                      .copyWith(
-                                          physics: pointers.length >= 2
-                                              ? const NeverScrollableScrollPhysics()
-                                              : null),
-                                  child: PlanZoomScope(
-                                      scale: scale, child: widget.child)))))));
-        })),
-        Positioned(
-            top: 0,
-            right: 0,
-            child: Material(
-                color: Theme.of(context).colorScheme.surfaceContainerLow,
-                elevation: 1,
-                borderRadius: BorderRadius.circular(8),
-                child: !controls
-                    ? Tooltip(
-                        message: 'Zoom del plano',
-                        child: TextButton(
-                            key: const ValueKey('plan-zoom-toggle'),
-                            onPressed: () => setState(() => controls = true),
-                            child: Text('${(scale * 100).round()} %')))
-                    : Row(mainAxisSize: MainAxisSize.min, children: [
-                        IconButton(
-                            key: const ValueKey('plan-zoom-out'),
-                            tooltip: 'Alejar plano',
-                            onPressed:
-                                scale <= .75 ? null : () => zoom(scale - .25),
-                            icon: const Icon(Icons.zoom_out)),
-                        TextButton(
-                            key: const ValueKey('plan-zoom-reset'),
-                            onPressed: () => zoom(1),
-                            child: Semantics(
-                                label: 'Restablecer zoom del plano',
-                                child: Text('${(scale * 100).round()} %'))),
-                        IconButton(
-                            key: const ValueKey('plan-zoom-in'),
-                            tooltip: 'Acercar plano',
-                            onPressed:
-                                scale >= 3 ? null : () => zoom(scale + .25),
-                            icon: const Icon(Icons.zoom_in)),
-                        IconButton(
-                            key: const ValueKey('plan-zoom-toggle'),
-                            tooltip: 'Cerrar controles de zoom',
-                            onPressed: () => setState(() => controls = false),
-                            icon: const Icon(Icons.close)),
-                      ]))),
-      ]);
+                          scale: scale,
+                          child: ScrollConfiguration(
+                              behavior: ScrollConfiguration.of(context)
+                                  .copyWith(
+                                      physics: pointers.length >= 2
+                                          ? const NeverScrollableScrollPhysics()
+                                          : null),
+                              child: PlanZoomScope(
+                                  scale: scale, child: widget.child)))))));
+    });
+  }
 }
 
 class _PlanDrag {
@@ -211,11 +172,19 @@ class PlanDragCell extends ConsumerWidget {
         operation?.id == data.operationId;
     // T-106: la copia vive en el Overlay, fuera del zoom; se dibuja a su escala.
     final zoom = PlanZoomScope.of(context);
+    // La copia va centrada sobre el dedo y por encima de él: media columna a
+    // la izquierda y una fila más 16 dp arriba, con las medidas de la celda
+    // (Fase 3: BsCelda, 52 o 56 de ancho más su hueco).
+    final medidas = BsMedidas.de(context);
+    final columna = medidas.anchoCelda + medidas.huecoCelda;
+    final fila = medidas.altoCelda + medidas.huecoCelda;
     Widget cell = child;
     if (enableDrag && pending && actor?.authorized != true) {
       cell = GestureDetector(
           onLongPress: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text(ChangeRequests.signInToMove))),
+              avisoDelViaje(
+                  texto: ChangeRequests.signInToMove,
+                  corto: 'Mover exige una cuenta autorizada.')),
           child: cell);
     } else if (enableDrag && pending && open && actor?.authorized == true) {
       cell = LongPressDraggable<_PlanDrag>(
@@ -224,7 +193,7 @@ class PlanDragCell extends ConsumerWidget {
         maxSimultaneousDrags: 1,
         dragAnchorStrategy: pointerDragAnchorStrategy,
         feedback: Transform.translate(
-            offset: Offset(-27 * zoom, -60 * zoom),
+            offset: Offset(-columna / 2 * zoom, -(fila + 16) * zoom),
             child: Transform.scale(
                 key: const ValueKey('plan-drag-feedback'),
                 scale: zoom,
@@ -248,8 +217,8 @@ class PlanDragCell extends ConsumerWidget {
       onAcceptWithDetails: (details) {
         final result = _preview(ref, details.data);
         if (!result.valid) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(result.error!)));
+          ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+              texto: result.error!, corto: 'Ese cambio no se puede hacer.'));
           return;
         }
         final current = ref.read(loadingOperationProvider(voyage)).value!;
@@ -296,7 +265,7 @@ class PlanDragCell extends ConsumerWidget {
                         color: scheme.surface,
                         child: Icon(
                             preview == null
-                                ? Icons.schedule
+                                ? BsIconos.pedirCambio
                                 : !preview.valid
                                     ? Icons.block
                                     : preview.isSwap

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/design/design.dart';
+import 'plan_drag_confirmation.dart' show PlanZoomScope;
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
@@ -12,6 +15,7 @@ import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
+import 'avisos_del_viaje.dart';
 import 'discharge_controls.dart';
 import 'office_plan_controls.dart';
 import 'hatch_operation_controls.dart';
@@ -35,10 +39,10 @@ Future<void> onLoadingContainerTap(BuildContext context, WidgetRef ref,
       await showLoadingDetails(context, voyage, 'C:${container.containerId}');
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content:
-            Text('Este contenedor no tiene OR en el listado de la agencia: '
-                'importa el listado actualizado.')));
+    ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+        texto: 'Este contenedor no tiene OR en el listado de la agencia: '
+            'importa el listado actualizado.',
+        corto: 'Este contenedor no tiene OR.'));
     return;
   }
   await openLoadingRow(context, ref, voyage, row, selectedBay: selectedBay);
@@ -50,8 +54,31 @@ class LoadingControls extends ConsumerWidget {
   /// T-107 · En pantallas angostas el resumen va en una línea, junto a
   /// «OR / últimos dígitos»; «Asignar vacío» pasa a «Acciones».
   final bool compact;
+
+  /// En el teléfono bajo (13.8) «OR / últimos dígitos» va en la tira del pie
+  /// con los demás controles ([busquedaDeCarga]); aquí queda solo la línea
+  /// del resumen.
+  final bool busquedaEnLaTira;
   const LoadingControls(
-      {super.key, required this.voyage, this.selectedBay, this.compact = false});
+      {super.key,
+      required this.voyage,
+      this.selectedBay,
+      this.compact = false,
+      this.busquedaEnLaTira = false});
+
+  /// El botón de buscar por OR, el mismo de la línea del resumen, para la
+  /// tira del pie del teléfono bajo.
+  static Widget busquedaDeCarga(BuildContext context, WidgetRef ref,
+          VesselVoyage voyage, int? selectedBay,
+          {required bool conListado}) =>
+      TextButton.icon(
+          key: const ValueKey('load-search'),
+          onPressed: !conListado
+              ? null
+              : () => chooseLoadingRow(context, ref, voyage,
+                  selectedBay: selectedBay),
+          icon: const Icon(Icons.search),
+          label: const Text('OR / últimos dígitos'));
   @override
   Widget build(BuildContext context, WidgetRef ref) =>
       ref.watch(loadingOperationProvider(voyage)).when(
@@ -78,17 +105,11 @@ class LoadingControls extends ConsumerWidget {
                   const Text(
                       'Importa el listado de agencia para operar por OR.'),
               ];
-              final search = TextButton.icon(
-                  key: const ValueKey('load-search'),
-                  onPressed: data.list == null
-                      ? null
-                      : () => chooseLoadingRow(context, ref, voyage,
-                          selectedBay: selectedBay),
-                  icon: const Icon(Icons.search),
-                  label: const Text('OR / últimos dígitos'));
+              final search = busquedaDeCarga(context, ref, voyage, selectedBay,
+                  conListado: data.list != null);
               if (compact) {
                 return PlanSummaryLine(
-                    trailing: search,
+                    trailing: busquedaEnLaTira ? null : search,
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: summary));
@@ -105,7 +126,7 @@ class LoadingControls extends ConsumerWidget {
                               ? null
                               : () => chooseLoadingRow(context, ref, voyage,
                                   selectedBay: selectedBay, empties: true),
-                          icon: const Icon(Icons.add_box_outlined),
+                          icon: const Icon(BsIconos.vacio),
                           label: const Text('Asignar vacío')),
                     ]),
                   ]);
@@ -466,29 +487,31 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
       Navigator.pop(context);
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
+        ..showSnackBar(avisoDelViaje(
             key: const ValueKey('loading-undo-snackbar'),
-            duration: const Duration(seconds: 6),
-            persist: false,
-            content: Text(
-                '${discharged != null ? 'Descarga y carga registradas' : widget.correcting == null ? 'Carga registrada' : 'Carga corregida'} · OR ${row.order}'),
-            action: SnackBarAction(
-                label: 'Deshacer',
-                onPressed: () async {
-                  var error = await annulMovement(repository,
-                      result.record!.movement, markedByMistake, author);
-                  if (error == null && discharged != null) {
-                    error = await annulMovement(repository, discharged.movement,
-                        markedByMistake, author);
-                  }
-                  if (error == null && removed != null) {
-                    error = await annulMovement(repository, removed.movement,
-                        markedByMistake, author);
-                  }
-                  if (error != null) {
-                    messenger.showSnackBar(SnackBar(content: Text(error)));
-                  }
-                })));
+            duracion: const Duration(seconds: 6),
+            texto:
+                '${discharged != null ? 'Descarga y carga registradas' : widget.correcting == null ? 'Carga registrada' : 'Carga corregida'} · OR ${row.order}',
+            // Con la letra grande, si el entero no cabe sobre las cifras.
+            corto:
+                '${discharged != null ? 'Descarga y carga' : widget.correcting == null ? 'Cargado' : 'Corregido'} · OR ${row.order}',
+            accion: 'Deshacer',
+            onAccion: () async {
+              var error = await annulMovement(repository,
+                  result.record!.movement, markedByMistake, author);
+              if (error == null && discharged != null) {
+                error = await annulMovement(repository, discharged.movement,
+                    markedByMistake, author);
+              }
+              if (error == null && removed != null) {
+                error = await annulMovement(repository, removed.movement,
+                    markedByMistake, author);
+              }
+              if (error != null) {
+                messenger.showSnackBar(avisoDelViaje(
+                    texto: 'No se deshizo: $error', corto: 'No se deshizo.'));
+              }
+            }));
     } catch (failure, stack) {
       if (mounted) {
         setState(() => error = failure is StateError
@@ -770,18 +793,18 @@ class _LoadCheckPanel extends StatelessWidget {
       if (check.dischargeFirst != null)
         line(
             const ValueKey('load-discharge-first'),
-            Icons.south,
+            BsIconos.descarga,
             scheme.primary,
             'La celda la ocupa ${check.dischargeFirst!.container?.containerId}, '
             'que baja en ${portOfCall ?? 'esta escala'} y no se ha marcado. '
             '«Marcar su descarga y cargar» registra las dos cosas.'),
       if (stack != null && stack.status != StackWeightStatus.exceeded)
-        line(const ValueKey('load-stack'), Icons.scale_outlined,
+        line(const ValueKey('load-stack'), BsIconos.pesoPila,
             scheme.onSurfaceVariant, stack.message),
       if (check.issues.isEmpty && check.dischargeFirst == null)
         line(
             const ValueKey('load-clean'),
-            Icons.check_circle_outline,
+            Icons.check_circle,
             scheme.onSurfaceVariant,
             'Revisado: tipo, celda y grupo coinciden con el plan.'),
     ]);
@@ -866,8 +889,10 @@ Future<void> showLoadingDetails(
                                 ref.read(movementAuthorProvider));
                             if (!context.mounted) return;
                             if (error != null) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(content: Text(error)));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  avisoDelViaje(
+                                      texto: 'No se deshizo: $error',
+                                      corto: 'No se deshizo.'));
                             } else {
                               Navigator.pop(context);
                             }
@@ -935,81 +960,59 @@ String loadingCellSemantics(LoadingOperation operation, String itemKey) {
   return '$name, $mark';
 }
 
-/// OR y estado con icono: la marca sigue siendo legible sin depender del color.
+/// La celda de carga en la dirección C (`DESIGN.md` 13): el OR como código,
+/// el estado como rol (pendiente, hecho) y, en la oficina, como segunda
+/// línea («Sube», «Cargado»); el conflicto y la cancelación van como marca,
+/// con icono y rótulo. La etiqueta accesible sigue siendo la de T-107.
 class LoadingCell extends StatelessWidget {
   final String itemKey;
   final LoadingOperation operation;
   final VoidCallback onTap;
   final bool highlighted;
+
+  /// La curva del casco en las celdas de los extremos de la bodega (13.2).
+  final BsCurvaDeCelda curva;
+
+  /// Verdadero cuando este embarque es lo que se acaba de mover (13.3): la
+  /// celda sale en naranja 1.5 s, sea un lleno o una reserva con su vacío
+  /// asignado. Lo decide el plano con `recienMovidoProvider` (10.21, H2).
+  final bool recienMovida;
   const LoadingCell(
       {super.key,
       required this.itemKey,
       required this.operation,
       required this.onTap,
-      this.highlighted = false});
+      this.highlighted = false,
+      this.curva = BsCurvaDeCelda.ninguna,
+      this.recienMovida = false});
   @override
   Widget build(BuildContext context) {
     final status = operation.state[itemKey];
     final loaded = status?.state == ItemState.moved;
     final conflict = status?.inConflict == true;
-    final scheme = Theme.of(context).colorScheme;
+    final cancelled = status?.state == ItemState.cancelled;
+    final semanticos = BsColoresSemanticos.de(context);
     final label = status?.order == null
         ? operation.progress.label(itemKey)
         : 'OR ${status!.order}';
-    final mark = conflict
-        ? 'REVISAR'
-        : status?.state == ItemState.cancelled
-            ? 'CANC.'
-            : loaded
-                ? 'CARG.'
-                : 'SUBE';
-    final foreground =
-        loaded ? scheme.onSurfaceVariant : scheme.onPrimaryContainer;
-    // T-107: se lee solo la etiqueta, sin repetir el OR y la marca de la
-    // celda; el toque sigue disponible para el lector de pantalla.
-    return Semantics(
-        button: true,
-        label: loadingCellSemantics(operation, itemKey),
-        excludeSemantics: true,
-        onTap: onTap,
-        child: InkWell(
-            onTap: onTap,
-            child: Container(
-              width: 50,
-              height: 40,
-              margin: const EdgeInsets.all(2),
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                  color: loaded
-                      ? scheme.surfaceContainerHighest
-                      : scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                      width: highlighted ? 3 : 1,
-                      color: highlighted ? scheme.onSurface : scheme.primary)),
-              child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(
-                        conflict
-                            ? Icons.warning_amber
-                            : status?.state == ItemState.cancelled
-                                ? Icons.block
-                                : loaded
-                                    ? Icons.check_circle_outline
-                                    : Icons.arrow_upward,
-                        size: 12,
-                        color: foreground),
-                    Text(label,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 10,
-                            height: 1.1,
-                            fontWeight: FontWeight.bold,
-                            color: foreground)),
-                    Text(mark,
-                        style: TextStyle(fontSize: 8, color: foreground)),
-                  ])),
-            )));
+    final marca = conflict
+        ? BsMarcaDeCelda.revisar
+        : cancelled
+            ? BsMarcaDeCelda.cancelado
+            : BsMarcaDeCelda.ninguna;
+    return BsCelda(
+      codigo: label.replaceAll('\n', ' '),
+      etiqueta: loadingCellSemantics(operation, itemKey),
+      categoria: loaded ? semanticos.hecho : semanticos.pendiente,
+      estado: recienMovida
+          ? BsEstadoDeCelda.recienMovido
+          : BsEstadoDeCelda.ninguno,
+      linea2: loaded ? 'Cargado' : 'Sube',
+      marca: marca,
+      curva: curva,
+      resaltada: highlighted,
+      zoom: PlanZoomScope.of(context),
+      onTap: onTap,
+    );
   }
 }

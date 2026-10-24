@@ -112,15 +112,18 @@ void main() {
           container: scope,
           child: _app(const VesselOverviewPage(), brightness)));
       await tester.pumpAndSettle();
-      for (final label in ['Lista', 'Plano', 'Estadísticas']) {
-        final text = find.descendant(
-            of: find.byType(TabBar), matching: find.text(label));
-        await tester.ensureVisible(text);
-        await tester.pumpAndSettle();
+      // Fase 3 (DESIGN.md 8): la barra inferior en vez de las pestañas. Sus
+      // rótulos crecen con la letra hasta 1.3 y se leen enteros en 360 dp.
+      final barra = find.byType(NavigationBar);
+      expect(barra, findsOneWidget);
+      final rotulos =
+          find.descendant(of: barra, matching: find.byType(Text));
+      expect(rotulos, findsAtLeastNWidgets(4));
+      for (final element in rotulos.evaluate()) {
+        final text = find.byWidget(element.widget);
         _oneLine(tester, text);
-        final tab = find.ancestor(of: text, matching: find.byType(Tab));
         expect(tester.getRect(text).bottom,
-            lessThanOrEqualTo(tester.getRect(tab).bottom));
+            lessThanOrEqualTo(tester.getRect(barra).bottom));
         expect(tester.takeException(), isNull);
       }
     });
@@ -232,7 +235,10 @@ void main() {
       _size(tester);
       await tester.pumpWidget(_app(
           Scaffold(
-              body: EmptyStateWidget(onPickFile: () {}),
+              // Fase 3 (10.9): la cabecera del inicio vive dentro del
+              // desplazable del inicio; aquí se le da uno.
+              body: SingleChildScrollView(
+                  child: EmptyStateWidget(onPickFile: () {})),
               floatingActionButton: FloatingActionButton.extended(
                   onPressed: () {},
                   icon: const Icon(Icons.file_open),

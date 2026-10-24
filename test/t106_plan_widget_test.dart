@@ -73,9 +73,9 @@ LoadingOperation _arriving([List<Movement> movements = const []]) =>
 Finder _inCell(String position, Finder matching) => find.descendant(
     of: find.byKey(ValueKey('plan-cell-$position')), matching: matching);
 
-/// El título de la rejilla; el selector también dice «BAHÍA 03 (…)».
+/// El título de la rejilla («Bahía 03», con las tapas si no están declaradas).
 Finder _title(int bay) => find.textContaining(
-    RegExp('^BAHÍA ${bay.toString().padLeft(2, '0')}(\$| ·)'));
+    RegExp('^Bahía ${bay.toString().padLeft(2, '0')}(\$| ·)'));
 
 void main() {
   for (final width in [1600.0, 1920.0]) {
@@ -137,6 +137,10 @@ void main() {
     final (log, _) = await start(tester);
     await _zoomTo300(tester);
     final cell = find.byKey(const ValueKey('plan-cell-0030282'));
+    // A 300 % la fila de arriba puede quedar bajo el borde del área del plano
+    // (el título va al ancho de la vista y, con la fuente de prueba, ocupa dos
+    // líneas): se trae a la vista antes de tomar la celda.
+    await tester.ensureVisible(cell);
     final cellRect = tester.getRect(cell);
     final gesture = await tester.startGesture(tester.getCenter(cell));
     await tester.pump(const Duration(milliseconds: 600));
@@ -177,7 +181,7 @@ void main() {
         find.descendant(
             of: pending, matching: find.byKey(const ValueKey('discharge-pending'))),
         findsOneWidget);
-    expect(find.descendant(of: pending, matching: find.text('BAJA')),
+    expect(find.descendant(of: pending, matching: find.text('Baja')),
         findsOneWidget);
     expect(find.byKey(const ValueKey('plan-drag-C:ARRIVAL0')), findsNothing);
     expect(find.byKey(const ValueKey('plan-drag-C:FULL0001234')), findsOneWidget);
@@ -249,9 +253,9 @@ void main() {
       // Fila 02: el 20 de la 003 y la reserva de la 005. Fila 06: el 20 de la
       // 003 y la descarga pendiente de la 005. Fila 08: un 20 de la 005.
       for (final (position, label) in [
-        ('0040282', "2×20'"),
-        ('0040682', "2×20'"),
-        ('0040882', "20'"),
+        ('0040282', '2×20′'),
+        ('0040682', '2×20′'),
+        ('0040882', '20′'),
       ]) {
         expect(
             find.descendant(

@@ -1,0 +1,31 @@
+p01-inicio el inicio sin viajes
+p02-plan-de-carga-en-previo abre en previo con la banda; tres pasos
+p03-parametros-del-buque la banda abrió «Parámetros del buque»
+p04-parametros-no-lo-tengo «No lo tengo» marcado a mano
+p05-plan-de-carga-publicado publicado en GTSTC; la banda del muelle con Carga
+p06-listado-leido el listado leído, antes de confirmar
+p07-listado-importado «Listado guardado en la operación de GTSTC: 30 filas.»
+p08-llegada-publicada la llegada abre publicada sin previo; la banda ofrece Descarga
+p09-descarga modo Descarga: «Baja» en las celdas por bajar
+p10-baja-registrada un toque: naranja y el aviso con «Deshacer»
+p11-segunda-baja otra Baja
+p12-baja-deshecha «Deshacer»: la celda vuelve a «Baja»
+p13-paso-pregunta Paso: la pregunta de la re‑estiba
+p14-reestiba-registrada «Re‑estiba registrada» con «Deshacer», sobre las cifras y por encima de los controles
+p15-carga modo Carga: el OR en las celdas, con el aviso de la re‑estiba aún en pantalla
+p16-vacios-del-listado «Vacíos del listado»
+p17-asignar-vacio el formulario propone la celda
+p18-vacio-asignado «Carga registrada · OR N» con «Deshacer», sobre las cifras y por encima de los controles
+p19-segunda-carga-sin-esperar «Acciones» abierto con el aviso de la primera carga todavía en pantalla
+p20-segundo-vacio-asignado otro vacío asignado
+p21-vacio-deshecho «Deshacer»: el OR vuelve a estar pendiente
+p22-avance «Avance» en el teléfono
+p23-atras-con-aviso un toque con el aviso de la Baja en pantalla: la advertencia arriba y el aviso con «Deshacer» abajo, a la vez
+O2: la advertencia, el plano y «Deshacer» en un volcado, a los 1.2 s del Atrás
+p24-atras-tras-la-ventana pasados más de 2 s, otro toque vuelve a advertir y el plano sigue
+O2: otra vez la advertencia y el plano, a los 1.2 s del Atrás
+p25-inicio-con-recientes dos toques seguidos: el inicio con el viaje en los recientes
+p26-reciente-reabierto el reciente reabre publicado, con la operación
+p27-mas la hoja «Más»
+capturas: ['p01-inicio.png', 'p02-plan-de-carga-en-previo.png', 'p03-parametros-del-buque.png', 'p04-parametros-no-lo-tengo.png', 'p05-plan-de-carga-publicado.png', 'p06-listado-leido.png', 'p07-listado-importado.png', 'p08-llegada-publicada.png', 'p09-descarga.png', 'p10-baja-registrada.png', 'p11-segunda-baja.png', 'p12-baja-deshecha.png', 'p13-paso-pregunta.png', 'p14-reestiba-registrada.png', 'p15-carga.png', 'p16-vacios-del-listado.png', 'p17-asignar-vacio.png', 'p18-vacio-asignado.png', 'p19-segunda-carga-sin-esperar.png', 'p20-segundo-vacio-asignado.png', 'p21-vacio-deshecho.png', 'p22-avance.png', 'p23-atras-con-aviso.png', 'p24-atras-tras-la-ventana.png', 'p25-inicio-con-recientes.png', 'p26-reciente-reabierto.png', 'p27-mas.png']
+salida 0

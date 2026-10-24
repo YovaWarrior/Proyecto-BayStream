@@ -4,6 +4,7 @@ import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/domain/repositories/local_vessel_repository.dart';
 import 'package:baystream/features/vessel/presentation/pages/vessel_overview_page.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
+import 'package:baystream/features/vessel/presentation/providers/voyage_ui_state.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +30,9 @@ class _ProfileResponses implements LocalVesselRepository {
   Future<Either<Failure, void>> setLastConfirmedPortOfCall(String? port) async => const Right(null);
   @override
   Future<Either<Failure, void>> saveVoyage(VesselVoyage voyage) async => const Right(null);
+  // Fase 3 (10.9): la regla de publicación directa lee los viajes guardados.
+  @override
+  Future<Either<Failure, List<VesselVoyage>>> getAllVoyages() async => const Right([]);
   @override
   Future<Either<Failure, List<VesselProfile>>> getAllProfiles() async => Right(templates);
   @override
@@ -55,6 +59,11 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    // La travesía del inicio (DESIGN.md 13.11, regla 7) no se asienta
+    // nunca; con el movimiento reducido queda quieta y pumpAndSettle vuelve.
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
     notifier = _ReplayNotifier();
     await tester.pumpWidget(ProviderScope(overrides: [
       vesselRepositoryProvider.overrideWithValue(ParserOnlyRepository()),
@@ -63,8 +72,32 @@ void main() {
     ], child: const MaterialApp(home: VesselOverviewPage())));
   }
 
+  /// Fase 3 (10.9): en el inicio la carga es «Seleccionar archivo»; con un
+  /// viaje a la vista, la barra (desde la Lista, donde no se pliega), y un
+  /// previo abierto se descarta antes (DESIGN.md 7.2, punto 5).
   Future<void> load(WidgetTester tester) async {
-    await tester.tap(find.byTooltip('Cargar archivo BAPLIE'));
+    final selectFile = find.byKey(const ValueKey('select-file'));
+    if (selectFile.evaluate().isNotEmpty) {
+      await tester.tap(selectFile);
+      await tester.pumpAndSettle();
+      return;
+    }
+    // Fase 3 (DESIGN.md 8): con un viaje, cargar otro archivo está en «Más».
+    await tester.tap(find.text('Más'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mas-cargar')));
+    await tester.pumpAndSettle();
+    final discard = find.byKey(const ValueKey('preview-discard'));
+    if (discard.evaluate().isNotEmpty) {
+      await tester.tap(discard);
+      await tester.pumpAndSettle();
+    }
+  }
+
+  /// «Confirmar» en la banda del previo: lo que antes se abría solo.
+  Future<void> confirmar(WidgetTester tester) async {
+    expect(find.byKey(const ValueKey('preview-banner')), findsOneWidget);
+    await tester.tap(find.text('Confirmar'));
     await tester.pumpAndSettle();
   }
 
@@ -79,6 +112,7 @@ void main() {
     local.templates = [source];
     await open(tester);
     await load(tester);
+    await confirmar(tester);
     expect(find.text('Perfil del buque nuevo'), findsOneWidget);
     await tester.tap(find.byKey(ValueKey('profile-template-${source.key}')));
     await tester.pumpAndSettle();
@@ -99,11 +133,15 @@ void main() {
       profileTestEdi.replaceAll('9000003', '9000004')))];
     await open(tester);
     await load(tester);
+    await confirmar(tester);
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
-    expect(notifier.pendingVoyage, isNull);
+    // Cancelar deja el previo a la vista, sin guardar nada.
+    expect(notifier.isPreview, isTrue);
+    expect(notifier.publishedVoyage, isNull);
     expect(local.saved, isEmpty);
     await load(tester);
+    await confirmar(tester);
     await tester.tap(find.byKey(const ValueKey('profile-from-file')));
     await tester.pumpAndSettle();
     expect(notifier.currentProfile!.origin, VesselProfileOrigin.proposedFromFile);
@@ -118,6 +156,7 @@ void main() {
     await open(tester);
     notifier.content = profileTestEdi.replaceAll('42G1', '42R1');
     await load(tester);
+    await confirmar(tester);
     expect(
         find.textContaining(
             '1 posiciones propuestas del archivo (cota inferior)'),
@@ -137,6 +176,7 @@ void main() {
       (tester) async {
     await open(tester);
     await load(tester);
+    await confirmar(tester);
     expect(find.text('Confirmar y ver el plano'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('geometry-no-limit')));
     await tester.pumpAndSettle();
@@ -144,9 +184,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(local.saved, hasLength(1));
     await load(tester);
+    // Fase 3 (10.9): el archivo no declara escala, así que la segunda carga
+    // abre en previo con el perfil guardado, sin volver a preguntarlo
+    // (DESIGN.md 7.2); los parámetros no se abren solos.
     expect(find.text('Confirmar y ver el plano'), findsNothing);
+    expect(find.byKey(const ValueKey('preview-banner')), findsOneWidget);
+    expect(notifier.previewReason, PreviewReason.escalaPorDecidir);
     expect(local.saved, hasLength(1));
-    expect(notifier.publishedVoyage!.geometry, local.saved.single.geometry);
+    expect(notifier.currentProfile!.geometry, local.saved.single.geometry);
   });
 
   testWidgets(
@@ -159,15 +204,18 @@ void main() {
     await open(tester);
     notifier.content = profileTestEdi.replaceAll('0020182', '0020386');
     await load(tester);
+    expect(notifier.previewReason, PreviewReason.fueraDelPerfil);
+    await confirmar(tester);
     expect(find.text('La carga excede el perfil guardado'), findsOneWidget);
     expect(find.textContaining('0020386'), findsOneWidget);
     expect(local.saved, isEmpty);
-    await tester.tap(find.text('Cancelar carga'));
+    await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
-    expect(notifier.pendingVoyage, isNull);
+    expect(notifier.isPreview, isTrue);
     expect(notifier.publishedVoyage, isNull);
     expect(local.saved, isEmpty);
     await load(tester);
+    await confirmar(tester);
     await tester.tap(find.text('Revisar ampliación'));
     await tester.pumpAndSettle();
     expect(local.saved, isEmpty);
@@ -187,11 +235,13 @@ void main() {
     local.lookup = VesselProfileLookup(nameCandidates: [profile]);
     await open(tester);
     await load(tester);
+    expect(notifier.previewReason, PreviewReason.homonimo);
+    await confirmar(tester);
     expect(find.text('Confirma la identidad del buque'), findsOneWidget);
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
     expect(notifier.publishedVoyage, isNull);
-    expect(notifier.pendingVoyage, isNull);
+    expect(notifier.isPreview, isTrue, reason: 'cancelar deja el previo');
     expect(local.saved, isEmpty);
   });
 }

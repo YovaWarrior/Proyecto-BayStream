@@ -11,8 +11,13 @@ final loadingOperationProvider = StreamProvider.autoDispose
     .family<LoadingOperation, VesselVoyage>((ref, voyage) async* {
   ref.watch(operationSourcesRevisionProvider);
   final repository = await ref.watch(movementLogRepositoryProvider.future);
+  // Si el viaje se cierra mientras esto construye (Atrás dos veces nada más
+  // abrir el plano, «Cerrar el plano»), el provider ya está desechado y usar
+  // `ref` lanzaría: se comprueba después de cada espera (10.28).
+  if (!ref.mounted) return;
   final operation =
       await OperationSources.find(repository, voyage, voyage.portOfCall!);
+  if (!ref.mounted) return;
   ref.watch(voyageNotifierProvider);
   final current = ref.read(voyageNotifierProvider.notifier).publishedProfile;
   final profile = operation?.published == true ? operation?.profile :
@@ -30,7 +35,9 @@ final loadingOperationProvider = StreamProvider.autoDispose
   }
 
   final arrival = await source(OperationSourceKind.arrivalBaplie);
+  if (!ref.mounted) return;
   final loading = await source(OperationSourceKind.loadingBaplie) ?? voyage;
+  if (!ref.mounted) return;
   final listSource = operation?.source(OperationSourceKind.exportList);
   final list = listSource == null
       ? null

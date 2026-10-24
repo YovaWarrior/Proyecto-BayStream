@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/presentation/pages/vessel_overview_page.dart';
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
@@ -114,16 +116,25 @@ void main() {
     expect(container.read(selectedBayProvider), 3);
     expect(find.byType(BayPlanView), findsOneWidget);
 
-    final selectedBayChip = find.ancestor(
-      of: find.text('BAHÍA 03 (0%)'),
-      matching: find.byType(FilterChip),
-    );
-    expect(selectedBayChip, findsOneWidget);
-    expect(tester.widget<FilterChip>(selectedBayChip).selected, isTrue);
+    // Fase 3: la silueta es el selector; la bahía elegida se anuncia como
+    // seleccionada y la rejilla la titula.
+    final semantics = tester.ensureSemantics();
+    bool seleccionada(int bahia) =>
+        tester
+            .getSemantics(find.bySemanticsLabel(
+                RegExp('^Bahía ${bahia.toString().padLeft(2, '0')},')))
+            .flagsCollection
+            .isSelected ==
+        Tristate.isTrue;
+    expect(seleccionada(3), isTrue);
+    expect(seleccionada(5), isFalse);
+    expect(find.textContaining(RegExp(r'^Bahía 03')), findsOneWidget);
 
-    await tester.tap(find.text('BAHÍA 05 (0%)'));
+    await tester.tap(find.byKey(const ValueKey('silueta-bahia-5')));
     await tester.pumpAndSettle();
     expect(container.read(selectedBayProvider), 5);
+    expect(seleccionada(5), isTrue);
+    expect(seleccionada(3), isFalse);
 
     await tester.tap(find.text('Estadísticas'));
     await tester.pumpAndSettle();
@@ -132,12 +143,9 @@ void main() {
     await tester.tap(bayTarget);
     await tester.pumpAndSettle();
 
-    final reopenedBayChip = find.ancestor(
-      of: find.text('BAHÍA 03 (0%)'),
-      matching: find.byType(FilterChip),
-    );
     expect(container.read(selectedBayProvider), 3);
-    expect(tester.widget<FilterChip>(reopenedBayChip).selected, isTrue);
+    expect(seleccionada(3), isTrue);
+    semantics.dispose();
   });
 }
 

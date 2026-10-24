@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
 import 'voyage_call_summary.dart';
 import '../../../../core/utils/voyage_number.dart';
@@ -80,7 +81,7 @@ class VoyageSummaryCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    Icons.directions_boat,
+                    BsIconos.buque,
                     color: colorScheme.onPrimary,
                     size: 28,
                   ),
@@ -166,7 +167,7 @@ class VoyageSummaryCard extends StatelessWidget {
                 ),
                 SizedBox(width: width, child: _buildStatItem(
                     context,
-                    Icons.view_module,
+                    BsIconos.bahia,
                     voyage.bays.length.toString(),
                     'Bahías',
                     colorScheme.secondary,
