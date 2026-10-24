@@ -258,3 +258,25 @@ rediseñar se revisan con `test/t114_candidata_pantallas_test.dart` y las captur
 3.1.0.0, Web 3.1.0 (4); `pubspec.yaml` ya las lleva. El banco r4 del piloto está en
 `%TEMP%\t99-r4-piloto\copia` (Windows, Web en `build/web` servido en 127.0.0.1:5901 con
 `t114/` para las entradas, y el APK instalado en `t99_api26`).
+
+## La corrección de la candidata (23-oct, 10.29)
+
+Codex no aceptó la candidata por H1 (Atrás usaba la cola de avisos como reloj: con un aviso de
+movimiento de 6 s en pantalla, la advertencia quedaba detrás, la ventana dependía de cuándo se apagaba
+ese aviso y el segundo toque intentaba cerrar un aviso que no era el primero de la cola) y H2 (los
+avisos flotantes tapaban la franja de la operación y «Confirmar e importar»). La corrección está en la
+sección «Fase 3 · Candidata del piloto · Corrección tras la aceptación de Codex» de
+`docs/REDISENO-RESULTADOS.md`. Lo que hay que saber: la advertencia de Atrás es una tarjeta propia
+(`_AdvertenciaDeAtras`, en `navegacion_del_viaje.dart`) con su `Timer` de 2 s contado desde el primer
+toque, arriba, que no recibe toques y no entra en la cola del `ScaffoldMessenger`; los avisos de la
+página del viaje flotan por encima de la fila de controles de la barra de la operación (sobre sus
+cifras, nunca sobre la rejilla) porque esa fila mide su alto (`MideElPieDelPlano`, clave
+`controles-de-la-franja`, → `pieDelPlanoProvider`, en `avisos_del_viaje.dart`; sin operación se mide la
+leyenda entera) y la página lo pone como `insetPadding` del tema de `SnackBar` (`AvisosSobreElPie`,
+solo con el Plano a la vista): ningún aviso lleva ya `margin` propio, y uno que lo lleve se saldría de
+esa regla; en el listado de la agencia los dos botones van en `persistentFooterButtons`. El primer
+anclaje (sobre la barra entera) tapaba la única fila de celdas del teléfono bajo con la silueta a la
+vista (`candidata/correccion/emulador-intento-1/`): no volver a él. En las pruebas con la fuente de Ahem el aviso mide el
+doble que con Plex: `test/t114_candidata_correccion_test.dart` carga las fuentes reales para medir la
+franja y el aviso como en el muelle. El recorrido del emulador (`tool/t114_piloto_android.py`) ya no
+espera a que se apaguen los avisos y prueba Atrás con el aviso de una «Baja» en pantalla.

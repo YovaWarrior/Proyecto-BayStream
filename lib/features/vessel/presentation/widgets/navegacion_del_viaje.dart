@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,7 +94,8 @@ class CerrablesDeAtras extends Notifier<int> {
   }
 }
 
-/// Atrás en Android con un viaje abierto (`DESIGN.md` 8; decisión 10.28).
+/// Atrás en Android con un viaje abierto (`DESIGN.md` 8; decisiones 10.28 y
+/// 10.29).
 ///
 /// En orden: (1) cierra lo abierto que no es una ruta (el menú del zoom,
 /// [cerrablesDeAtrasProvider]); las hojas, los diálogos y la búsqueda son
@@ -100,10 +103,20 @@ class CerrablesDeAtras extends Notifier<int> {
 /// lateral, cierra el detalle de la celda; (3) en la raíz del viaje, con un
 /// previo pregunta si descartarlo ([onDescartarPrevio]) y, con el viaje
 /// publicado, vuelve al inicio ([onVolverAlInicio]) **solo con dos toques
-/// seguidos**: el primero avisa «Toca Atrás otra vez para volver al inicio» y
-/// el segundo, dentro de [ventana], vuelve. En el muelle, un toque por error
-/// no saca a nadie del plano. El viaje publicado sigue guardado y se reabre
-/// desde los recientes.
+/// seguidos**: el primero advierte «Toca Atrás otra vez para volver al
+/// inicio» y el segundo, dentro de [ventana], vuelve. En el muelle, un toque
+/// por error no saca a nadie del plano. El viaje publicado sigue guardado y
+/// se reabre desde los recientes.
+///
+/// La ventana se cuenta desde el primer toque, con su propio reloj, y la
+/// advertencia es una pieza aparte que se dibuja arriba, sobre el viaje: no
+/// entra en la cola de avisos del `ScaffoldMessenger`. Con un aviso de
+/// movimiento en pantalla (los 6 s con «Deshacer» de cada registro), la
+/// advertencia anterior quedaba formada detrás, la ventana dependía de cuándo
+/// se apagaba ese aviso y el segundo toque intentaba cerrar un aviso que no
+/// era el primero de la cola (10.29, H1). Ahora la advertencia se ve aunque
+/// haya otro aviso, no toca ningún aviso ajeno y el «Deshacer» del
+/// movimiento sigue su curso.
 ///
 /// Solo gobierna Atrás donde hay un botón Atrás del sistema, Android; en la
 /// Web el navegador manda y en Windows no existe ([activo]).
@@ -135,10 +148,11 @@ class AtrasDelViaje extends ConsumerStatefulWidget {
   /// Si Atrás se gobierna aquí. Sin valor, [porOmision].
   final bool? activo;
 
-  /// Cuánto dura el aviso y, con él, la ventana para el segundo toque.
+  /// Cuánto dura la advertencia y, con ella, la ventana para el segundo
+  /// toque, contada desde el primero.
   static const Duration ventana = Duration(seconds: 2);
 
-  /// El aviso del primer toque con el viaje publicado.
+  /// La advertencia del primer toque con el viaje publicado.
   static const String avisoDeSalida =
       'Toca Atrás otra vez para volver al inicio.';
 
@@ -151,7 +165,15 @@ class AtrasDelViaje extends ConsumerStatefulWidget {
 }
 
 class _AtrasDelViajeState extends ConsumerState<AtrasDelViaje> {
-  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _aviso;
+  /// El reloj de la ventana: corre desde el primer toque y, al vencer, la
+  /// advertencia se va. Mientras exista, el siguiente toque vuelve al inicio.
+  Timer? _ventana;
+
+  @override
+  void dispose() {
+    _ventana?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +183,18 @@ class _AtrasDelViajeState extends ConsumerState<AtrasDelViaje> {
       onPopInvokedWithResult: (bool didPop, Object? _) {
         if (!didPop) _atras();
       },
-      child: widget.child,
+      // La advertencia va encima del viaje, con sus mismas medidas: la pila
+      // pasa las restricciones tal cual y no cambia nada del layout.
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: <Widget>[
+          widget.child,
+          if (_ventana != null)
+            const Positioned.fill(
+              child: _AdvertenciaDeAtras(key: ValueKey('aviso-de-atras')),
+            ),
+        ],
+      ),
     );
   }
 
@@ -175,26 +208,89 @@ class _AtrasDelViajeState extends ConsumerState<AtrasDelViaje> {
       await widget.onDescartarPrevio();
       return;
     }
-    final pendiente = _aviso;
-    if (pendiente != null) {
-      _aviso = null;
-      pendiente.close();
+    if (_ventana != null) {
+      // El segundo toque, dentro de la ventana: se retira la advertencia y se
+      // vuelve al inicio. Los avisos de la cola (el del movimiento, con su
+      // «Deshacer») no se tocan.
+      _cerrarVentana();
       widget.onVolverAlInicio();
       return;
     }
-    final aviso = ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      key: ValueKey('aviso-de-atras'),
-      content: Text(AtrasDelViaje.avisoDeSalida),
-      duration: AtrasDelViaje.ventana,
-      behavior: SnackBarBehavior.floating,
-      margin: EdgeInsets.all(16),
-    ));
-    _aviso = aviso;
-    // Al apagarse el aviso se cierra la ventana: el siguiente toque vuelve a
-    // avisar en vez de salir.
-    aviso.closed.then((SnackBarClosedReason _) {
-      if (_aviso == aviso) _aviso = null;
+    // El primer toque abre la ventana, contada desde ahora.
+    setState(() {
+      _ventana = Timer(AtrasDelViaje.ventana, () {
+        if (mounted) setState(() => _ventana = null);
+      });
     });
+  }
+
+  void _cerrarVentana() {
+    _ventana?.cancel();
+    if (mounted) setState(() => _ventana = null);
+  }
+}
+
+/// La advertencia de Atrás: una tarjeta como la de los avisos (los mismos
+/// colores, borde y letra del tema de `SnackBar`), centrada arriba, bajo la
+/// barra de estado, que no recibe toques y se anuncia al lector de pantalla.
+/// Arriba y no al pie, porque al pie van los avisos del registro y la franja
+/// de la operación (10.29, H2): así se ve a la vez que cualquiera de ellos.
+/// Entra con un fundido de opacidad; quieta si se reduce el movimiento.
+class _AdvertenciaDeAtras extends StatelessWidget {
+  const _AdvertenciaDeAtras({super.key});
+
+  /// Hasta dónde se ensancha en una pantalla ancha.
+  static const double anchoMaximo = 560;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final avisos = tema.snackBarTheme;
+    final medidas = BsMedidas.de(context);
+    final quieta = MediaQuery.disableAnimationsOf(context);
+    return IgnorePointer(
+      child: SafeArea(
+        bottom: false,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+                medidas.espacioL, medidas.espacioS, medidas.espacioL, 0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: anchoMaximo),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: quieta ? 1 : 0, end: 1),
+                duration: quieta ? Duration.zero : BsMovimiento.pulsacion,
+                builder: (BuildContext context, double opacidad, Widget? hijo) =>
+                    Opacity(opacity: opacidad, child: hijo),
+                child: Semantics(
+                  container: true,
+                  liveRegion: true,
+                  child: Material(
+                    color: avisos.backgroundColor ??
+                        tema.colorScheme.inverseSurface,
+                    elevation: avisos.elevation ?? 6,
+                    shape: avisos.shape,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: medidas.espacioL,
+                          vertical: medidas.espacioM),
+                      child: Text(
+                        AtrasDelViaje.avisoDeSalida,
+                        textAlign: TextAlign.center,
+                        style: avisos.contentTextStyle ??
+                            tema.textTheme.bodyMedium?.copyWith(
+                                color: tema.colorScheme.onInverseSurface),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

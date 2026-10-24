@@ -33,6 +33,12 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
     final theme = Theme.of(context);
 
     final Widget body;
+    // Con un listado leído y sin confirmar, sus dos botones van al pie fijo
+    // de la página (`persistentFooterButtons`), siempre a la vista: al final
+    // de la lista, el aviso flotante «Archivo … cargado correctamente» de
+    // hace un momento tapaba «Confirmar e importar» (10.29, H2). Los avisos
+    // flotan por encima del pie fijo.
+    List<Widget>? pie;
     if (plan == null || plan.portOfCall == null) {
       body = const Center(
         child: Padding(
@@ -96,37 +102,35 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
               ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.end,
-              children: [
-                OutlinedButton(
-                  onPressed: state.busy ? null : notifier.discard,
-                  child: const Text('Descartar'),
-                ),
-                FilledButton.icon(
-                  key: const ValueKey('export-list-confirm'),
-                  onPressed: state.busy || state.hasPending
-                      ? null
-                      : () async {
-                          final error = await notifier.confirm();
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(error ?? 'Listado importado.')));
-                        },
-                  icon: const Icon(Icons.check),
-                  label: const Text('Confirmar e importar'),
-                ),
-              ],
-            ),
           ],
         ],
       );
+      if (list != null) {
+        pie = [
+          OutlinedButton(
+            onPressed: state.busy ? null : notifier.discard,
+            child: const Text('Descartar'),
+          ),
+          FilledButton.icon(
+            key: const ValueKey('export-list-confirm'),
+            onPressed: state.busy || state.hasPending
+                ? null
+                : () async {
+                    final error = await notifier.confirm();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(error ?? 'Listado importado.')));
+                  },
+            icon: const Icon(Icons.check),
+            label: const Text('Confirmar e importar'),
+          ),
+        ];
+      }
     }
     return Scaffold(
       appBar: AppBar(title: const Text('Listado de la agencia')),
       body: body,
+      persistentFooterButtons: pie,
     );
   }
 }

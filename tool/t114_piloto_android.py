@@ -10,7 +10,18 @@ llegada (T100_LLEGADA.edi) por «Más → Cargar archivo BAPLIE», que abre
 publicada por DESIGN.md 7.2; la descarga (Baja, otra Baja y Deshacer, Paso con
 su pregunta); la carga (asignar un vacío por OR, otro y Deshacer); el avance;
 Atrás (un toque avisa, dos vuelven al inicio; el reciente se reabre); y «Más».
-Lo que necesita cuenta (pedir cambio) no se recorre aquí. Los archivos van a
+Lo que necesita cuenta (pedir cambio) no se recorre aquí.
+
+Corrección tras la aceptación de Codex (10.29): el recorrido ya no espera a que
+se apague el aviso de 6 s de cada registro, porque ahora flota por encima de los
+controles de la franja: toca «Acciones» con el aviso en pantalla y lo captura, y
+la segunda carga por OR sale sin esperar (H2). Atrás se prueba con el aviso de
+una «Baja» recién registrada: la advertencia arriba y el aviso con «Deshacer»
+abajo, a la vez; pasados más de 2 s otro toque vuelve a advertir y el plano
+sigue; dos toques seguidos vuelven al inicio (H1). Los estados que duran 2 y 6 s
+se capturan al instante (`foto(..., rapida=True)`), con las coordenadas de los
+controles tomadas antes del registro: cada volcado de uiautomator tarda cerca de
+un segundo y una captura tras dos volcados ya llega tarde. Los archivos van a
 /sdcard/Download/t114 (el selector de AOSP los elige ahí). Cada paso es una
 captura numerada (screencap) en la salida (TEMP) y una línea de registro.tsv.
 
@@ -87,13 +98,24 @@ def tocar_ultimo(patron, intentos=8):
     raise RuntimeError(f'No apareció al deslizar: {patron}')
 
 
-def sin_aviso(segundos=10):
-    """Espera a que se apague el aviso flotante (su «Deshacer» tapa la tira del
-    pie, donde están «Acciones» y «OR / últimos dígitos»)."""
-    for _ in range(segundos * 2):
-        if not observe(False, r'^Deshacer$'):
-            return
-        time.sleep(0.5)
+def con_aviso():
+    """Exige que el aviso flotante de un registro («Deshacer») siga en pantalla:
+    desde 10.29 flota por encima de los controles de la franja y no hay que esperarlo."""
+    if not observe(False, r'^Deshacer$'):
+        raise RuntimeError('El aviso con «Deshacer» ya no está: el paso tenía que seguir con él en pantalla.')
+
+
+def posicion_de(patron):
+    """Dónde está un control ahora, para tocarlo después sin volver a volcar el
+    árbol (un volcado tarda cerca de un segundo)."""
+    rows = esperar(patron)
+    return position([rows[0]], rows[0][1])
+
+
+def sin_inicio():
+    """El plano sigue: el inicio no apareció."""
+    if observe(False, r'Seleccionar archivo'):
+        raise RuntimeError('El plano se cerró cuando no tocaba.')
 
 
 class Recorrido:
@@ -102,9 +124,12 @@ class Recorrido:
         self.paso = 0
         self.registro = ['paso\tarchivo\tnota\thora (UTC)']
 
-    def foto(self, nombre, nota=''):
+    def foto(self, nombre, nota='', rapida=False):
+        """Una captura numerada; `rapida` no espera a que se asiente, para los
+        estados que duran 2 o 6 s."""
         self.paso += 1
-        time.sleep(0.6)
+        if not rapida:
+            time.sleep(0.6)
         archivo = f'p{self.paso:02d}-{nombre}'
         captura(self.out, archivo)
         self.registro.append(f'{self.paso}\t{archivo}.png\t{nota}\t{datetime.now(timezone.utc).isoformat()}')
@@ -217,18 +242,21 @@ def main():
         tocar_patron(r'^Deshacer$')
         time.sleep(1)
         r.foto('baja-deshecha', '«Deshacer»: la celda vuelve a «Baja»')
+        # Dónde están «Carga» (la banda) y «Acciones» (la franja): se tocan sin
+        # volver a volcar el árbol mientras dura un aviso.
+        carga_xy = posicion_de(r'^Carga$')
+        acciones_xy = posicion_de(r'^Acciones$')
         tocar_celda(r'de paso, sigue a bordo$')
         esperar(r'Registrar re')
         time.sleep(0.8)
         r.foto('paso-pregunta', 'Paso: la pregunta de la re‑estiba')
         tocar_patron(r'^Registrar re')
         time.sleep(1)
-        r.foto('reestiba-registrada', '«Re‑estiba registrada» con «Deshacer»')
-        # 5. La carga.
-        tocar_patron(r'^Carga$')
-        time.sleep(1.2)
-        r.foto('carga', 'modo Carga: el OR en las celdas')
-        sin_aviso()
+        r.foto('reestiba-registrada', '«Re‑estiba registrada» con «Deshacer», sobre las cifras y por encima de los controles')
+        # 5. La carga, con el aviso de la re‑estiba (6 s) todavía en pantalla.
+        tap(carga_xy)
+        time.sleep(1.0)
+        r.foto('carga', 'modo Carga: el OR en las celdas, con el aviso de la re‑estiba aún en pantalla', rapida=True)
         tocar_patron(r'^Acciones$')
         time.sleep(0.8)
         tocar_texto('Asignar vacío')
@@ -241,11 +269,14 @@ def main():
         r.foto('asignar-vacio', 'el formulario propone la celda')
         tocar_ultimo(r'^(?:Confirmar carga|Marcar su descarga y cargar)$')
         esperar(r'Carga registrada|carga registradas', 30)
-        time.sleep(0.6)
-        r.foto('vacio-asignado', '«Carga registrada · OR N» con «Deshacer»')
-        sin_aviso()
-        tocar_patron(r'^Acciones$')
-        time.sleep(0.8)
+        r.foto('vacio-asignado', '«Carga registrada · OR N» con «Deshacer», sobre las cifras y por encima de los controles', rapida=True)
+        # La segunda carga, sin esperar a que se vaya el aviso de la primera (10.29, H2):
+        # con el aviso en pantalla (se comprueba antes de abrir el menú: la barrera del
+        # menú oculta al lector lo que queda debajo), «Acciones» abre y el aviso se ve detrás.
+        con_aviso()
+        tap(acciones_xy)
+        time.sleep(0.7)
+        r.foto('segunda-carga-sin-esperar', '«Acciones» abierto con el aviso de la primera carga todavía en pantalla', rapida=True)
         tocar_texto('Asignar vacío')
         esperar(r'Vacíos del listado')
         time.sleep(0.8)
@@ -265,11 +296,26 @@ def main():
         r.foto('avance', '«Avance» en el teléfono')
         tocar_texto('Plano')
         time.sleep(1)
-        # 7. Atrás: un toque avisa, dos seguidos vuelven al inicio; el reciente se reabre.
-        atras()
-        esperar(r'Toca Atrás otra vez', 10)
-        r.foto('atras-aviso', 'un toque por error: el aviso, y el plano sigue')
-        time.sleep(3.5)
+        # 7. Atrás con un aviso de movimiento en pantalla (10.29, H1): una «Baja»
+        # recién registrada deja su aviso de 6 s con «Deshacer»; un toque advierte
+        # arriba sin apartarlo; pasados más de 2 s otro toque vuelve a advertir y el
+        # plano sigue; dos seguidos vuelven al inicio, y el reciente se reabre.
+        tocar_patron(r'^Descarga$')
+        time.sleep(1.2)
+        tocar_patron(r'por descargar$')
+        time.sleep(0.3)
+        # La advertencia dura 2 s: la captura va al instante, sin volcar antes.
+        adb('shell', 'input', 'keyevent', '4')
+        time.sleep(0.5)
+        r.foto('atras-con-aviso', 'un toque con el aviso de la Baja en pantalla: la advertencia arriba y el aviso con «Deshacer» abajo, a la vez', rapida=True)
+        con_aviso()
+        sin_inicio()
+        time.sleep(2.5)
+        adb('shell', 'input', 'keyevent', '4')
+        time.sleep(0.5)
+        r.foto('atras-tras-la-ventana', 'pasados más de 2 s, otro toque vuelve a advertir y el plano sigue', rapida=True)
+        sin_inicio()
+        time.sleep(3)
         adb('shell', 'input', 'keyevent', '4')
         time.sleep(0.4)
         adb('shell', 'input', 'keyevent', '4')

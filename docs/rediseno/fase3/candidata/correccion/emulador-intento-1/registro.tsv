@@ -1,0 +1,12 @@
+paso	archivo	nota	hora (UTC)
+1	p01-inicio.png	el inicio sin viajes	2026-10-24T00:13:15.724413+00:00
+2	p02-plan-de-carga-en-previo.png	abre en previo con la banda; tres pasos	2026-10-24T00:13:25.525077+00:00
+3	p03-parametros-del-buque.png	la banda abrió «Parámetros del buque»	2026-10-24T00:13:29.923423+00:00
+4	p04-parametros-no-lo-tengo.png	«No lo tengo» marcado a mano	2026-10-24T00:14:06.763586+00:00
+5	p05-plan-de-carga-publicado.png	publicado en GTSTC; la banda del muelle con Carga	2026-10-24T00:14:21.620880+00:00
+6	p06-listado-leido.png	el listado leído, antes de confirmar	2026-10-24T00:14:40.894530+00:00
+7	p07-listado-importado.png	«Listado guardado en la operación de GTSTC: 30 filas.»	2026-10-24T00:14:44.160229+00:00
+8	p08-llegada-publicada.png	la llegada abre publicada sin previo; la banda ofrece Descarga	2026-10-24T00:15:08.405696+00:00
+9	p09-descarga.png	modo Descarga: «Baja» en las celdas por bajar	2026-10-24T00:15:11.692026+00:00
+10	p10-baja-registrada.png	un toque: naranja y el aviso con «Deshacer»	2026-10-24T00:15:14.349991+00:00
+11	p11-segunda-baja.png	otra Baja	2026-10-24T00:15:17.043301+00:00

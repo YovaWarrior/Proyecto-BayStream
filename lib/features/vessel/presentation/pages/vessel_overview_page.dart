@@ -27,6 +27,7 @@ import '../widgets/detalle_contenedor.dart';
 import '../widgets/en_vivo_del_viaje.dart';
 import '../widgets/hatch_operation_controls.dart';
 import '../widgets/loading_plan_controls.dart' show BayPlanMode;
+import '../widgets/avisos_del_viaje.dart';
 import '../widgets/navegacion_del_viaje.dart';
 import '../widgets/voyage_stats_view.dart';
 import '../widgets/sync_status_chip.dart';
@@ -195,12 +196,15 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
 
     // Atrás en Android (`DESIGN.md` 8): cierra primero lo abierto; en la raíz
     // pregunta con un previo y, publicado, vuelve al inicio con dos toques.
+    // Los avisos de la página flotan por encima del pie del plano (la barra
+    // de la operación o la leyenda), no sobre sus controles (10.29, H2).
     Widget conAtras(Widget child) => AtrasDelViaje(
           previo: preview,
           conPanel: conRiel && conPanel,
           onDescartarPrevio: () => _discardPreviewIfAny(context),
           onVolverAlInicio: () => _clear(context, preview: false),
-          child: child,
+          child: AvisosSobreElPie(
+              conPlano: destino == DestinoDelViaje.plano, child: child),
         );
 
     if (!conRiel) {
@@ -439,12 +443,12 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
             DischargeSequencePage(voyage: voyage, hatchCovers: covers)));
   }
 
-  /// Un aviso corto, con el mismo texto en todas partes.
+  /// Un aviso corto, con el mismo texto en todas partes. El aire lo pone la
+  /// página ([AvisosSobreElPie]): con plano, por encima de su pie.
   void _avisar(BuildContext context, String texto) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(texto),
       behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.all(16),
     ));
   }
 
@@ -645,7 +649,6 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         ),
         backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -699,7 +702,6 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
               unexpectedErrorMessage('aplicar el perfil del buque')),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
         ));
         return;
       }
@@ -917,7 +919,6 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
                 : 'Archivo "$fileName" cargado correctamente',
           ),
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
         ),
       );
       return;

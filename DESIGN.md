@@ -436,11 +436,18 @@ zoom no es una ruta, así que mientras está abierto se anota en
 cierra el detalle de la celda. En la raíz del viaje, con un previo, pregunta lo mismo
 que «Más → Cerrar el plano», «¿Descartar el plano sin confirmar?», con «Seguir mirando»
 y «Descartar» (Atrás sobre la pregunta es seguir mirando); con el viaje publicado,
-vuelve al inicio solo con **dos toques seguidos**: el primero avisa «Toca Atrás otra
-vez para volver al inicio» durante 2 s y el segundo, mientras dura el aviso, vuelve. El
-viaje publicado sigue guardado y se reabre desde los recientes con un toque. En el
-muelle, un toque por error no saca a nadie del plano. En el inicio, Atrás sale de la
-app como siempre.
+vuelve al inicio solo con **dos toques seguidos**: el primero advierte «Toca Atrás otra
+vez para volver al inicio» durante 2 s, contados desde ese toque con su propio reloj, y
+el segundo, dentro de esos 2 s, vuelve. **La advertencia es una tarjeta propia** (los
+colores, el borde y la letra del tema de `SnackBar`), centrada arriba bajo la barra de
+estado, que no recibe toques y se anuncia al lector de pantalla; no entra en la cola de
+avisos del `ScaffoldMessenger`, así que se ve aunque esté el aviso de 6 s de un registro,
+y ese aviso, con su «Deshacer», sigue su curso (corrección de 10.29, H1: antes la
+advertencia era un aviso más, quedaba formada detrás del de movimiento, la ventana
+dependía de cuándo se apagaba y el segundo toque intentaba cerrar un aviso que no era el
+primero de la cola). El viaje publicado sigue guardado y se reabre desde los recientes
+con un toque. En el muelle, un toque por error no saca a nadie del plano. En el inicio,
+Atrás sale de la app como siempre.
 
 **Lo que la entrega 2 dejó en el código (22-oct, 10.16):** la barra de ocho acciones y su
 plegado (T-91) se retiran: Buscar va en la barra superior o en la cabecera de la oficina
@@ -1180,6 +1187,27 @@ trae sus dos avisos encima) el plano se arma así:
   cubierta se ve sin desplazar**: en el previo (la medición de RNF-002) y en Descarga; en
   Carga, con la línea del resumen, queda a un gesto, como antes. A 360 × 800 publicado
   (el Honor) nada cambia: los controles siguen sobre la silueta normal.
+
+**Los avisos del muelle tras la aceptación de la candidata (23-oct, 10.29, H2).** El aviso
+del registro sigue siendo el flotante de T-75 (6 s, con «Deshacer»), pero ya no cae sobre
+los controles de la franja de la operación: **flota por encima de la fila de controles de la
+barra** (el modo, el zoom, «Acciones», «OR / últimos dígitos», la acción), sobre las cifras,
+que no se tocan, y nunca sobre la rejilla. Esa fila mide su alto, más el aire de abajo de la
+barra (`MideElPieDelPlano` anota en `pieDelPlanoProvider`, en `avisos_del_viaje.dart`; sin
+operación se mide la leyenda entera, que es toda controles), y la página del viaje lo pone
+como aire de abajo del tema de `SnackBar` (`AvisosSobreElPie`, solo con el Plano a la
+vista): vale para todo aviso de la página (el registro, «cargado correctamente», los
+errores), sin tocar cada uno. Así todo lo que se toca en el muelle sigue tocable mientras
+dura el aviso, «Deshacer» queda a mano todo su plazo y, esos segundos, las cifras de la barra
+quedan debajo del aviso que las explica. El primer intento lo puso por encima de la barra
+entera: en el teléfono bajo, con la silueta a la vista, cubría la única fila de celdas y la
+siguiente «Baja» caía sobre el aviso (la corrección lo midió en el emulador y lo cambió). Las
+hojas (los vacíos, el detalle) y los diálogos son rutas y quedan por encima de los avisos:
+su pie nunca se tapa. En el listado de la agencia, «Descartar» y «Confirmar e importar» van
+al pie fijo de la página (`persistentFooterButtons`), siempre a la vista, y el aviso flota
+por encima. La barra de 4.3 («112, cifras, aviso y acción») y la ranura `aviso` de
+`BsBarraDeOperacion` siguen disponibles; la candidata no las usa porque el aviso dentro de
+la barra la haría crecer y mover la rejilla bajo el dedo.
 
 ### 13.9 Lo que no se toma y los datos que no se inventan
 

@@ -21,6 +21,7 @@ import 'detalle_contenedor.dart';
 import 'discharge_controls.dart';
 import 'hatch_cover_diagram.dart';
 import 'hatch_operation_controls.dart';
+import 'avisos_del_viaje.dart';
 import 'iconos_del_dominio.dart';
 import 'loading_controls.dart';
 import 'loading_plan_controls.dart';
@@ -266,14 +267,19 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
                 : const Center(child: Text('Selecciona una bahía'));
       // Abajo: en el muelle, operando, la barra de la operación; si no,
       // la leyenda de la vista. En el teléfono bajo, con los controles del
-      // plano al principio de esa línea.
+      // plano al principio de esa línea. Lo que los avisos de la página no
+      // deben tapar se mide (10.29, H2; `avisos_del_viaje.dart`): la fila de
+      // controles de la barra, dentro de `_barraDeOperacion`, o la leyenda
+      // entera, que es toda controles.
       final pie = medidas.esMuelle && enOperacion
           ? _barraDeOperacion(dischargeMode, loading, discharge,
               tira: anidar ? controles : null)
-          : _buildLegend(displayedVoyage, bay, vista,
-              discharge: discharge,
-              twenties: twenties.isNotEmpty,
-              tira: anidar ? controles : null);
+          : MideElPieDelPlano(
+              child: _buildLegend(displayedVoyage, bay, vista,
+                  discharge: discharge,
+                  twenties: twenties.isNotEmpty,
+                  tira: anidar ? controles : null),
+            );
       if (anidar) {
         // Teléfono bajo (13.8): arriba solo la silueta compacta, que se va
         // hacia arriba al desplazar la rejilla y vuelve al desplazarla hacia
@@ -618,23 +624,33 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     if (contadores.isEmpty) return const SizedBox.shrink();
     // En el teléfono bajo, los controles del plano van en la línea de la
     // acción, que se desplaza (13.8).
+    final fila = tira == null
+        ? accion
+        : SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                tira,
+                if (accion != null) ...[
+                  SizedBox(width: medidas.espacioS),
+                  accion,
+                ],
+              ],
+            ),
+          );
     return BsBarraDeOperacion(
       key: const ValueKey('barra-de-operacion'),
       contadores: contadores,
-      accion: tira == null
-          ? accion
-          : SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  tira,
-                  if (accion != null) ...[
-                    SizedBox(width: medidas.espacioS),
-                    accion,
-                  ],
-                ],
-              ),
+      // Los avisos de la página flotan por encima de esta fila y del aire de
+      // abajo de la barra (su `espacioM`), sobre las cifras, que no se tocan,
+      // y nunca sobre la rejilla (10.29, H2).
+      accion: fila == null
+          ? null
+          : MideElPieDelPlano(
+              key: const ValueKey('controles-de-la-franja'),
+              ajuste: medidas.espacioM,
+              child: fila,
             ),
     );
   }

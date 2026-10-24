@@ -5,6 +5,12 @@
 // al inicio solo con dos toques seguidos: un toque por error no saca a nadie
 // del plano. En Windows y en la Web no gobierna nada.
 //
+// Corrección tras la aceptación de Codex (10.29, H1): la ventana de 2 s se
+// cuenta desde el primer toque con su propio reloj, la advertencia se ve
+// aunque haya otro aviso en pantalla (el de 6 s con «Deshacer» de cada
+// registro) y nunca se cierra un aviso que no sea el primero de la cola. Los
+// casos combinados van en «la ventana de Atrás con otros avisos en pantalla».
+//
 // Los archivos son sintéticos: BUQUE MANUAL, con dos cajas en la bahía 002.
 import 'dart:io';
 
@@ -296,6 +302,143 @@ void main() {
         expect(estado(), isA<SinViaje>());
         expect(await atras(tester), isFalse);
         expect(find.byType(AtrasDelViaje), findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    });
+  });
+
+  group('la ventana de Atrás con otros avisos en pantalla', () {
+    /// Un aviso como el del muelle, mostrado desde la página del viaje: el
+    /// de un registro dura 6 s y lleva «Deshacer»; el de «cargado
+    /// correctamente», 4 s.
+    void mostrarAviso(WidgetTester tester, String texto, Duration duracion,
+        {bool deshacer = false}) {
+      final contexto = tester.element(find.byType(VesselOverviewPage));
+      ScaffoldMessenger.of(contexto).showSnackBar(SnackBar(
+        key: ValueKey<String>('aviso-de-prueba-${duracion.inSeconds}'),
+        content: Text(texto),
+        duration: duracion,
+        action: deshacer
+            ? SnackBarAction(label: 'Deshacer', onPressed: () {})
+            : null,
+      ));
+    }
+
+    final avisoDe6 = find.byKey(const ValueKey('aviso-de-prueba-6'));
+    final avisoDe4 = find.byKey(const ValueKey('aviso-de-prueba-4'));
+
+    testWidgets(
+        'con un aviso de movimiento de 6 s en pantalla, la advertencia se ve a '
+        'la vez, «Deshacer» sigue, y dos toques seguidos salen sin excepciones',
+        (tester) async {
+      await en(tester, TargetPlatform.android, () async {
+        await publicado();
+        await pumpApp(tester);
+        mostrarAviso(tester, 'Descargado · TEST0000001 · 002-01-82',
+            const Duration(seconds: 6),
+            deshacer: true);
+        await tester.pumpAndSettle();
+        expect(avisoDe6, findsOneWidget);
+        // El primer toque: la advertencia, encima del viaje, con el aviso
+        // del movimiento todavía a la vista y con su «Deshacer».
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(find.text(AtrasDelViaje.avisoDeSalida), findsOneWidget);
+        expect(avisoDe6, findsOneWidget,
+            reason: 'la advertencia no aparta el aviso del movimiento');
+        expect(find.text('Deshacer'), findsOneWidget);
+        expect(estado(), isA<Publicado>());
+        // La advertencia va arriba y el aviso abajo: no se tapan.
+        final arriba = tester.getRect(
+            find.descendant(of: aviso, matching: find.byType(Material)).first);
+        final abajo = tester.getRect(
+            find.descendant(of: avisoDe6, matching: find.byType(Material)).first);
+        expect(arriba.bottom, lessThan(abajo.top));
+        // El segundo toque, dentro de la ventana: al inicio, sin tocar la
+        // cola de avisos (antes, `close()` sobre un aviso que no era el
+        // primero lanzaba `_snackBars.first == controller`).
+        expect(await atras(tester), isTrue);
+        expect(estado(), isA<SinViaje>());
+        expect(find.text('Abre un plano de estiba'), findsOneWidget);
+        expect(aviso, findsNothing);
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    testWidgets(
+        'con un aviso de 4 s y otro de 6 s en cola, dos toques separados por '
+        'más de 2 s no salen: la advertencia vence y vuelve a avisar',
+        (tester) async {
+      await en(tester, TargetPlatform.android, () async {
+        await publicado();
+        await pumpApp(tester);
+        mostrarAviso(tester, 'Archivo "carga.edi" cargado correctamente',
+            const Duration(seconds: 4));
+        mostrarAviso(tester, 'Descargado · TEST0000001 · 002-01-82',
+            const Duration(seconds: 6),
+            deshacer: true);
+        await tester.pumpAndSettle();
+        expect(avisoDe4, findsOneWidget, reason: 'el de 4 s va primero');
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(estado(), isA<Publicado>());
+        // Pasados 3 s de reloj, la ventana venció aunque el aviso de 4 s
+        // siga o ya haya dado paso al de 6 s: el toque vuelve a avisar.
+        await Future<void>.delayed(const Duration(seconds: 3));
+        await tester.pumpAndSettle();
+        expect(aviso, findsNothing, reason: 'la advertencia dura 2 s');
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(estado(), isA<Publicado>(),
+            reason: 'dos toques separados por más de 2 s no cierran el viaje');
+        expect(find.byType(VesselOverviewPage), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    testWidgets(
+        'con un aviso de 4 s y otro de 6 s en cola, dos toques dentro de 2 s '
+        'salen, sin excepciones y sin cerrar un aviso que no era el primero',
+        (tester) async {
+      await en(tester, TargetPlatform.android, () async {
+        await publicado();
+        await pumpApp(tester);
+        mostrarAviso(tester, 'Archivo "carga.edi" cargado correctamente',
+            const Duration(seconds: 4));
+        mostrarAviso(tester, 'Descargado · TEST0000001 · 002-01-82',
+            const Duration(seconds: 6),
+            deshacer: true);
+        await tester.pumpAndSettle();
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(avisoDe4, findsOneWidget);
+        expect(await atras(tester), isTrue);
+        expect(estado(), isA<SinViaje>());
+        expect(find.text('Abre un plano de estiba'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    testWidgets('la advertencia no recibe toques y se anuncia al lector de pantalla',
+        (tester) async {
+      await en(tester, TargetPlatform.android, () async {
+        await publicado();
+        final semantica = tester.ensureSemantics();
+        await pumpApp(tester);
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(
+            tester.getSemantics(find.text(AtrasDelViaje.avisoDeSalida)),
+            matchesSemantics(
+                label: AtrasDelViaje.avisoDeSalida, isLiveRegion: true));
+        // Lo que está debajo de la advertencia sigue respondiendo: el toque
+        // la atraviesa (la barra de la marca o la barra superior están ahí).
+        expect(
+            tester.widget<IgnorePointer>(find.ancestor(
+                of: find.text(AtrasDelViaje.avisoDeSalida),
+                matching: find.byType(IgnorePointer)).first).ignoring,
+            isTrue);
+        semantica.dispose();
         expect(tester.takeException(), isNull);
       });
     });

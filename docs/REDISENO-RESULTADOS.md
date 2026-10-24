@@ -4842,3 +4842,324 @@ diálogo del sistema (queda para el ensayo); los avisos escriben el número sin 
 (textos de T-75); el micrófono del manifiesto (10.112) sigue sin declararse. Además,
 `t114_primera_windows.py` marca como no válidas las corridas con reintentos (10.27). Me
 detengo: **ALTO: Codex acepta la candidata.**
+
+## Fase 3 · Candidata del piloto · Corrección tras la aceptación de Codex (23-oct-2026)
+
+Codex no aceptó la candidata (`docs/rediseno/fase3/candidata/aceptacion-codex.md`; decisión 10.29) por dos
+fallos del muelle: **H1**, Atrás usaba la cola de avisos como reloj (con un aviso de movimiento de 6 s en
+pantalla, la advertencia «toca otra vez para salir» quedaba formada detrás, la ventana de 2 s dependía de
+cuándo se apagaba ese aviso y el segundo toque intentaba cerrar un aviso que no era el primero de la cola:
+en pruebas, `_snackBars.first == controller`); y **H2**, los avisos flotantes tapaban los controles del
+muelle (el de 6 s, «Acciones», «OR / últimos dígitos» y el pie de la hoja de los vacíos; el de 4 s,
+«Confirmar e importar»). También pidió rehacer cuatro capturas de las pantallas sin rediseñar. Esta
+sección corrige las tres cosas en un bloque aparte, sin agregar funciones. Paso 0: la candidata
+(`e78035d`) y el dictamen con la decisión 10.29 (`3fb6d4c`) están en commits; en el árbol solo quedaban
+los tres generados de `windows/flutter/` y `test/t114_fase3_correccion_test.dart` con el fin de línea
+cambiado, que no son de nadie y no se tocan.
+
+### 10.1 Resultado en tres líneas
+
+- H1: la ventana de 2 s se cuenta desde el primer toque con su propio reloj (un `Timer` que se cancela
+  al salir o al desmontarse) y la advertencia es una tarjeta propia, arriba, que no entra en la cola de
+  avisos: se ve aunque esté el aviso de 6 s de un registro, ese aviso con su «Deshacer» sigue su curso y
+  ningún aviso ajeno se cierra. Cuatro pruebas nuevas con avisos de 4 y 6 s en cola: dos toques dentro de
+  2 s salen; dos separados por más de 2 s no; sin excepciones.
+- H2: los avisos de la página del viaje flotan **por encima de la fila de controles** de la barra de la
+  operación (el modo, el zoom, «Acciones», «OR / últimos dígitos»), sobre las cifras, que no se tocan, y
+  nunca sobre la rejilla: la fila mide su alto y la página lo pone como aire del tema de `SnackBar`. Todo
+  lo que se toca en el muelle sigue tocable mientras dura el aviso y «Deshacer» queda a mano todo su
+  plazo; en el listado de la agencia, «Descartar» y «Confirmar e importar» van al pie fijo de la página.
+  Cinco pruebas nuevas con las fuentes reales, y el tramo del muelle repetido en el emulador sin esperar a
+  que se apaguen los avisos: dos cargas por OR seguidas y dos «Baja» seguidas.
+- Las 54 capturas de las pantallas sin rediseñar se rehicieron dibujando cada página dentro de `runAsync`:
+  ninguna trae ya el indicador de carga, y la comparación de noche sale con el chip corregido. Suite
+  **1338** (piso 1329; ninguna omitida), `analyze` **«No issues found»**. **ALTO: Codex acepta la
+  corrección de la candidata.**
+
+### 10.2 H1 · Atrás con su propio reloj y una advertencia aparte
+
+Antes, el primer toque guardaba el controlador que devolvía `showSnackBar` y «había ventana» mientras ese
+controlador no se cerrara; el segundo toque hacía `close()` sobre él. Con otro aviso delante, el de Atrás
+quedaba formado detrás (la ventana duraba lo que tardara en apagarse el anterior más los 2 s propios),
+`close()` sobre un aviso que no es el primero de la cola rompe la aserción del `ScaffoldMessenger`, y en
+Release esa rama podía sacar del viaje con dos toques separados por más de 2 s y apagar el «Deshacer».
+
+Ahora `AtrasDelViaje` (`navegacion_del_viaje.dart`) no usa la cola de avisos:
+
+- **El reloj** es un `Timer` de `AtrasDelViaje.ventana` (2 s) que arranca en el primer toque; mientras
+  existe, el siguiente toque lo cancela y vuelve al inicio (`onVolverAlInicio`); al vencer, la advertencia
+  se va y el siguiente toque vuelve a advertir. Se cancela al desmontarse, así que ninguna prueba deja un
+  `Timer` pendiente.
+- **La advertencia** es `_AdvertenciaDeAtras`: una tarjeta con los colores, el borde y la letra del tema de
+  `SnackBar` (así se ve como un aviso de la app), centrada arriba bajo la barra de estado, de hasta 560 dp
+  de ancho, dentro de un `Stack` con `StackFit.passthrough` sobre el `Scaffold` (no cambia nada del
+  layout), con `IgnorePointer` (el toque la atraviesa) y `Semantics(liveRegion: true)` (el lector de
+  pantalla la anuncia). Entra con un fundido de opacidad de 150 ms, quieto con reducción de movimiento.
+  Va arriba y no al pie porque al pie van los avisos del registro y la franja de la operación (H2): así se
+  ve a la vez que cualquiera de ellos y no tapa ningún control.
+- **La cola de avisos no se toca:** el aviso del movimiento, con su «Deshacer», sigue su curso; nada llama
+  a `close()` ni a `hideCurrentSnackBar()` desde Atrás.
+
+**Pruebas** (`test/t114_candidata_atras_test.dart`, de 9 a 13): con un aviso de movimiento de 6 s con
+«Deshacer» en pantalla, un toque muestra la advertencia **a la vez** que ese aviso (la tarjeta arriba, el
+aviso abajo, sin pisarse), «Deshacer» sigue, y el segundo toque sale sin excepción; con un aviso de 4 s y
+otro de 6 s en cola (el caso de Codex más el de «cargado correctamente»), dos toques separados por 3 s no
+salen y la advertencia vuelve a avisar; con los mismos dos avisos en cola, dos toques dentro de 2 s salen;
+y la advertencia no recibe toques y es región en vivo con su texto. Las nueve de antes siguen igual. La
+reproducción de Codex (`atras-cola_test.dart.txt`) no se tocó; su caso es el segundo de los nuevos.
+
+### 10.3 H2 · Los avisos flotan por encima de los controles de la franja
+
+El `SnackBar` se dibuja al pie del cuerpo del `Scaffold`; la franja de la operación (`BsBarraDeOperacion`:
+las cifras y, debajo, la fila con la acción y, en el teléfono bajo, el modo, el zoom, «Acciones» y «OR /
+últimos dígitos») está dentro del cuerpo, al pie del plano, así que el aviso le caía encima (capturas p14 a
+p19 del emulador en la candidata). La corrección es una sola regla para toda la página, en vez de un
+margen por aviso:
+
+- **Lo que no se tapa se mide.** `MideElPieDelPlano` (`avisos_del_viaje.dart`, nuevo) envuelve, en
+  `BayPlanView`, la fila de controles de la barra de la operación (con el aire de abajo de la barra) en el
+  muelle operando, o la leyenda entera si no se opera (es toda controles), con un `RenderProxyBox` que,
+  después de cada cuadro en que su alto cambia, lo anota en `pieDelPlanoProvider`. Nunca durante el layout.
+- **La página pone el aire.** `AvisosSobreElPie` envuelve el `Scaffold` de la página del viaje (dentro de
+  `AtrasDelViaje`) y copia el tema con `snackBarTheme.insetPadding = (16, 4, 16, 8 + lo medido)`, solo con
+  el Plano a la vista (`conPlano: destino == plano`); en la Lista, el Avance y las estadísticas no hay
+  franja y el aviso va donde siempre. Vale para todo aviso que salga en la página (el registro con
+  «Deshacer», «Deshecho», «cargado correctamente», los errores), sin tocar cada `showSnackBar`; los cuatro
+  avisos de la página que traían `margin: EdgeInsets.all(16)` lo pierden para que mande el tema.
+- **Dónde queda:** sobre las cifras de la barra (que no se tocan y que el propio aviso explica: «Descargado
+  · … · 002-02-82»), con aire sobre la fila de controles, y **nunca sobre la rejilla**. El primer intento
+  de esta noche lo puso por encima de la barra entera, entre la rejilla y la franja, como dibuja el lienzo
+  de 13.8; el emulador enseñó el problema antes que las pruebas: en el teléfono bajo, con la silueta a la
+  vista, el aviso cubría la única fila de celdas y la segunda «Baja» del recorrido cayó sobre el aviso
+  (sobre su «Deshacer»: la primera descarga quedó deshecha). Para Descarga, donde se toca una celda tras
+  otra, eso era peor que el fallo original. Las once capturas de ese intento quedan en
+  `docs/rediseno/fase3/candidata/correccion/emulador-intento-1/` (p10: el aviso sobre la fila; p11: la
+  descarga deshecha). La ranura `aviso` de `BsBarraDeOperacion` sigue sin usarse: un aviso dentro de la
+  barra la haría crecer y movería la rejilla bajo el dedo.
+- **Las hojas** («Vacíos del listado», el detalle) y los diálogos son rutas del `Navigator`, por encima
+  del `Scaffold`: el aviso queda detrás de ellas y su pie («Cerrar», la última fila) nunca se tapa. Lo que
+  el conductor de Windows apartaba antes de tocar «Asignar vacío» (`_sinAvisos()`, «el pie de la hoja de
+  los vacíos») era en realidad el control de la franja; la hoja no estaba abierta.
+- **El listado de la agencia** (`export_list_import_page.dart`): «Descartar» y «Confirmar e importar»
+  pasan al pie fijo del `Scaffold` (`persistentFooterButtons`), solo mientras hay un listado leído sin
+  confirmar. Siempre a la vista, sin desplazar la lista, y el aviso «Archivo … cargado correctamente»
+  (4 s) flota por encima. El texto «Falta elegir N equivalencias» sigue al final de la lista.
+
+**Pruebas** (`test/t114_candidata_correccion_test.dart`, nuevo, 5; con las fuentes del producto cargadas,
+porque con la fuente cuadrada de las pruebas el aviso de dos líneas con «Deshacer» mide 153 dp y la
+franja 146, el doble que con Plex): en Carga, en el teléfono bajo (el plano anidado, los controles en la
+franja), la medida es la fila de controles más el aire de la barra y el tema de la página lleva ese aire;
+la primera carga por OR deja el aviso entero por encima de la fila de controles y sin pisar ninguna celda
+(`cell-*`); con el aviso en pantalla «Acciones» abre su menú y la segunda carga por OR sale sin esperar;
+«Deshacer» responde a los 5 s. En Descarga, dos «Baja» seguidas, cada una con su aviso por encima de los
+controles y fuera de las celdas, y el modo sigue al alcance. La hoja de los vacíos abre con un aviso de
+6 s detrás y su «Cerrar» responde sin apagarlo. La página real del viaje (Android, 360 × 640, el plan de
+carga publicado): el aviso de la página flota por encima de los controles con «Acciones» y «OR / últimos
+dígitos» a la vista; en la Lista baja a su sitio de siempre; de vuelta al Plano la medida vuelve. Y el
+listado a 360 × 640: sin listado no hay pie; con uno leído, los dos botones están en el pie fijo (fuera de
+la lista) y el aviso de 4 s flota por encima sin pisarlos. La prueba de T-73 a 360 dp se ajustó
+(`t73_export_list_page_test.dart`, sin bajar el conteo): el pie fijo le quita unos 60 dp a la lista y las
+equivalencias se traen a la vista antes de leerlas.
+
+### 10.4 Las cuatro capturas de las pantallas sin rediseñar
+
+`build/t114-candidata/pantallas_test.dart` (fuera de la suite y de Git) dibujaba cada página fuera de
+`runAsync`, así que las que leen el almacén en disco al abrirse (Perfiles guardados, Viajes recientes,
+Tapas en la operación) se quedaban con el indicador de carga en la primera configuración y su registro
+decía «pumpAndSettle timed out»; la comparación de noche era de antes de corregir el chip. Ahora cada
+página se dibuja dentro de `runAsync` (la pauta de contraste sigue fuera, porque llama a `runAsync` por su
+cuenta) y el registro anota «indicador de carga» si quedara uno. Se regeneraron las 54: **cambian cinco**
+(las tres del indicador, ahora con su contenido; `comparar_1920_oscuro`, con «Solo con cambios» legible;
+y `parametros_360_claro_letra1.0`, cuyo desplegable del tema sale ya cargado, en tinta y no apagado) y
+**las otras 49 son byte a byte las mismas** (`build/t114-candidata-correccion/pantallas-antes.sha256`
+guarda las huellas de antes). El registro queda: 57 configuraciones, **0 excepciones, 0 indicadores de
+carga**, contraste **55 de 57** (los dos que no pasan son los falsos positivos ya explicados en 9.5:
+«Tapas: sin declarar» y «BUQUE MANUAL · V114» a 360). Las cifras del informe de la candidata (9.5) decían
+54 de 57 con la comparación de noche sin pasar; con la captura rehecha son 55 de 57.
+
+### 10.5 El tramo del muelle, repetido en el emulador
+
+`tool/t114_piloto_android.py` ya no espera a que se apaguen los avisos (`sin_aviso()` desaparece): exige
+que el aviso con «Deshacer» **siga en pantalla** (`con_aviso()`) antes de tocar «Acciones», captura el menú
+abierto con el aviso debajo y hace la segunda carga por OR sin esperar. Atrás se prueba ahora con el aviso
+de una «Baja» recién registrada: un toque, y la advertencia arriba con el aviso y su «Deshacer» abajo, a
+la vez; pasados 3.5 s otro toque vuelve a advertir y el plano sigue (si el inicio apareciera, el
+instrumento falla); y dos toques seguidos vuelven al inicio. El recorrido entero (el inicio, el plan de
+carga por la interfaz, el listado, la llegada, Descarga, Carga, el avance, Atrás, el reciente y «Más») se
+repitió en `t99_api26` (360 × 640 dp, el muelle de día, la letra a 1.0) con el APK r4 compilado de este
+árbol (`%TEMP%\t99-r4-corr-candidata\copia`, `flutter build apk --release -t tool/t99_main.dart`), con los
+sintéticos de T-100; el Honor no se tocó. **Hicieron falta cuatro intentos: el primero, con el anclaje sobre la barra entera, se detuvo en el paso 12 y enseñó el problema de la rejilla (10.3); el segundo completó los 28 pasos ya con el anclaje definitivo, pero sus capturas de los estados de 2 y 6 s llegaron tarde; el tercero se detuvo en el paso 19 por una comprobación mal puesta del instrumento; el cuarto, el definitivo, completó los **27 pasos sin un solo fallo**, con las capturas al instante.** Las capturas numeradas, con su registro,
+están en `docs/rediseno/fase3/candidata/correccion/emulador/` (`pNN-*.png`, `registro.tsv`); ninguna
+muestra «Nube y cuenta», un correo ni el corpus.
+
+| Paso | Captura | Qué se ve |
+|---|---|---|
+| «Baja» y otra «Baja», sin esperar | p10, p11 | «Descargado · … · 002-02-82» con «Deshacer» sobre las cifras de la barra; la fila de controles («Descarga ▾», el zoom, «Acciones», «Pendientes…») y las celdas a la vista; la segunda «Baja» registra con el aviso de la primera en pantalla |
+| La re‑estiba y el cambio a Carga | p14, p15 | «Re‑estiba registrada» sobre las cifras; el modo Carga abre con ese aviso todavía en pantalla y los controles libres |
+| La primera carga por OR | p18 | «Descarga y carga registradas · OR 16» con «Deshacer», sobre las cifras; la celda en naranja |
+| La segunda carga, sin esperar | p19, p20 | «Acciones» abierto con el aviso de la primera carga detrás, a la vista; después, «… · OR 17» |
+| Atrás con el aviso de una «Baja» | p23 | la advertencia arriba y el aviso con «Deshacer» abajo, a la vez; el plano sigue |
+| Otro toque pasados más de 2 s | p24 | la advertencia otra vez y el plano sigue: no sale |
+| Dos toques seguidos | p25, p26 | el inicio con el viaje en los recientes; el reciente reabre publicado |
+
+Los estados que duran 2 y 6 s se capturan al instante, con las coordenadas de «Carga» y «Acciones»
+tomadas antes del registro: cada volcado de uiautomator tarda cerca de un segundo y, en el segundo
+intento de la noche (28 pasos completos ya con el anclaje definitivo; sus capturas no se versionan
+porque el recorrido final las sustituye), las capturas tomadas tras dos volcados ya no mostraban el
+aviso ni la advertencia. Un tercer intento se detuvo en el paso 19 por una comprobación mal puesta del
+instrumento: con el menú «Acciones» abierto, su barrera oculta al lector lo que queda debajo y
+«Deshacer» no aparece en el volcado aunque se vea; la comprobación se hace ahora antes de abrir el
+menú.
+
+### 10.6 Los instrumentos
+
+- `tool/t114_piloto_android.py`: `con_aviso()` en lugar de `sin_aviso()`, las dos capturas de «Acciones»
+  con el aviso y el tramo nuevo de Atrás (10.5).
+- `build/t114-candidata/pantallas_test.dart` (fuera de Git): cada página dentro de `runAsync` y la
+  columna de excepción anota «indicador de carga» (10.4).
+- El conductor de Windows (`tool/t99_conductor.dart`, escenario `piloto`) **no cambia**: conserva sus tres
+  `_sinAvisos()`. Dos de ellos (antes de «Confirmar e importar» y de «Asignar vacío») ya no hacen falta y
+  el tercero (antes del BAPLIE de salida, en la Lista) sigue siendo necesario porque en la Lista no hay
+  pie y el aviso va al pie. Retirarlos y repetir el recorrido de Windows es una vuelta de instrumentos que
+  no toca el producto; queda anotada (10.9).
+
+### 10.7 Validaciones ejecutadas
+
+Un comando de Flutter a la vez, con la luz verde de 10.29; un cliente a la vez para compilar y capturar;
+el Honor (`AJ5TBB6531101024`, también conectado) no se tocó: cada orden de `adb` lleva `-s emulator-5554`.
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze --no-pub` | **«No issues found»** (`build/t114-candidata-correccion/analyze-2.txt`) |
+| `flutter test --no-pub` | **1338** pruebas en verde, ninguna omitida (piso 1329 → 1338; `suite-2.txt`) |
+| `test/t114_candidata_atras_test.dart` | 13 (9 + 4 nuevas de H1) |
+| `test/t114_candidata_correccion_test.dart` | 5 nuevas de H2, con las fuentes del producto |
+| `test/t73_export_list_page_test.dart` | ajustada al pie fijo, mismas aserciones |
+| `build/t114-candidata/pantallas_test.dart` | 57 configuraciones: 0 excepciones, 0 indicadores de carga, contraste 55/57; 5 PNG cambian, 49 idénticos |
+| `tool/t114_piloto_android.py` | **27 pasos, 0 fallos** (cuarto intento; `build/t114-candidata-correccion/emulador-corrida-4.log`); el primer intento, 11 pasos y el fallo de la rejilla (`correccion/emulador-intento-1/salida.txt`) |
+| Banco r4 | `%TEMP%\t99-r4-corr-candidata\copia` (`t99_copia.ps1 -Arbol -Sufijo r4 -Entradas …`), APK `gt.cmartinez.baystream.r4` instalado encima en `t99_api26` |
+
+No se repitieron RNF-002, la RAM, la auditoría ni los censos: nada de esta corrección toca los tres
+pasos, las listas ni añade textos nuevos salvo los de las pruebas; el único texto visible nuevo no existe
+(la advertencia de Atrás conserva su frase). Windows y la Web no se recompilaron (10.6).
+
+### 10.8 Archivos
+
+- **`lib/` (solo presentación):** nuevo
+  `features/vessel/presentation/widgets/avisos_del_viaje.dart` (`pieDelPlanoProvider`,
+  `MideElPieDelPlano`, `AvisosSobreElPie`); modificados
+  `widgets/navegacion_del_viaje.dart` (H1: el `Timer` y `_AdvertenciaDeAtras`),
+  `pages/vessel_overview_page.dart` (`AvisosSobreElPie` dentro de `conAtras`; cuatro avisos sin
+  `margin`), `widgets/bay_plan_view.dart` (el pie dentro de `MideElPieDelPlano`),
+  `pages/export_list_import_page.dart` (`persistentFooterButtons`).
+- **`test/`:** nuevo `t114_candidata_correccion_test.dart`; modificados `t114_candidata_atras_test.dart`
+  (+4) y `t73_export_list_page_test.dart` (ajuste).
+- **`tool/`:** `t114_piloto_android.py`.
+- **Documentos:** `DESIGN.md` (8: la advertencia propia y su reloj; 13.8: dónde flotan los avisos),
+  `docs/rediseno/fase3/traspaso-entrega2.md`, este informe, y la evidencia nueva en
+  `docs/rediseno/fase3/candidata/correccion/emulador/` y las cinco capturas rehechas con su registro en
+  `docs/rediseno/fase3/candidata/pantallas/`.
+- Sin cambios: `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.yaml`, `pubspec.lock`,
+  Firebase, las apps instaladas, «PRUEBA T-105», `C:\Proyectos\baystream-demo17\`,
+  `docs/piloto/LISTA-PILOTO.md` y el Honor. Los generados de `windows/flutter/` y
+  `test/t114_fase3_correccion_test.dart` siguen figurando modificados solo por el fin de línea y no se
+  agregan.
+
+### 10.9 Lo que queda anotado y lo que Carlos decide
+
+1. **El aviso cubre durante su plazo las cifras de la barra** («29 por bajar · 1 hecha · 0
+   re‑estibas») y, en el teléfono bajo, la línea del resumen (10.3). Es el precio de no tapar ni una
+   celda ni un control; el propio aviso dice qué pasó. Si en el piloto molesta, la alternativa es
+   acortar el texto del aviso (hoy el número de contenedor va sin agrupar y parte en dos líneas: ya
+   anotado en 9.3) o usar la ranura `aviso` de `BsBarraDeOperacion` reservándole sitio fijo, que cuesta
+   56 dp de rejilla en el teléfono bajo. La decisión 10.29 pedía los avisos «fuera de la franja de
+   operación»: quedan fuera de todo lo que se toca en ella; sobre sus cifras, no. Carlos decide si eso
+   basta o si se reserva el sitio fijo.
+2. **El conductor de Windows conserva `_sinAvisos()`** (10.6); retirarlos y repetir el recorrido es una
+   vuelta de instrumentos aparte.
+3. **La advertencia de Atrás va arriba.** Android acostumbra el «toca otra vez» abajo, pero abajo están
+   la franja y los avisos; arriba no tapa ningún control. Si Carlos la prefiere en otro sitio, es un
+   `Alignment` en `_AdvertenciaDeAtras`.
+4. **`pieDelPlanoProvider` guarda la última medida** y la página decide cuándo aplica (`conPlano`):
+   Riverpod 3.1 no permite `ref` en `dispose`, y un post-frame que escribiera en el provider cuando el
+   contenedor ya no existe lanzaría. Está escrito en el código.
+5. **Las capturas de las pantallas sin rediseñar cambian cinco, no cuatro:** la de Parámetros a 360
+   sale ahora con el desplegable del tema cargado (antes, apagado mientras leía el almacén). Es la misma
+   causa que las tres del indicador.
+
+### 10.10 Horas
+
+De ≈ 17:30 (el mensaje que abre el encargo) a ≈ 18:50 del 23-oct-2026: **≈ 1.3 h** de reloj.
+Leer el dictamen, la reproducción y el código; H1 y H2 con sus pruebas (dos vueltas por la fuente de las
+pruebas y por `ref` en `dispose`); la suite tres veces (una delató el ajuste de T-73); las capturas; el
+banco r4, dos APK y cuatro recorridos del emulador; los documentos.
+
+### Git para Carlos (Fase 3, candidata del piloto, corrección)
+
+Un `git add` por ruta; la evidencia nueva va por carpeta y las cinco capturas rehechas con su registro,
+por su carpeta también (solo cambian esas seis rutas dentro de `pantallas/`). `pubspec.*`, `domain/`,
+`data/`, `lib/main.dart`, los congelados y `docs/piloto/LISTA-PILOTO.md` no cambian. El último comando
+tiene que mostrar **59 files changed**.
+
+```powershell
+git add -- lib/features/vessel/presentation/widgets/avisos_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/pages/export_list_import_page.dart
+git add -- test/t114_candidata_correccion_test.dart
+git add -- test/t114_candidata_atras_test.dart
+git add -- test/t73_export_list_page_test.dart
+git add -- tool/t114_piloto_android.py
+git add -- DESIGN.md
+git add -- docs/rediseno/fase3/traspaso-entrega2.md
+git add -- docs/rediseno/fase3/candidata/pantallas
+git add -- docs/rediseno/fase3/candidata/correccion/emulador
+git add -- docs/rediseno/fase3/candidata/correccion/emulador-intento-1
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: correccion de la candidata del piloto (10.29), Atras con reloj propio y advertencia aparte, los avisos flotan por encima de la franja del muelle y del pie del listado, capturas rehechas y el muelle repetido en el emulador"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+### Tres líneas
+
+- H1: la ventana de Atrás es un reloj propio de 2 s desde el primer toque y la advertencia una tarjeta
+  aparte, arriba, fuera de la cola de avisos: se ve con el aviso de movimiento delante, no cierra ningún
+  aviso ajeno y «Deshacer» sigue; cuatro pruebas con avisos de 4 y 6 s en cola.
+- H2: los avisos de la página flotan por encima del pie del plano (el pie mide su alto, la página lo pone
+  como aire del tema de `SnackBar`) y «Confirmar e importar» va al pie fijo del listado; cinco pruebas con
+  las fuentes reales y el muelle repetido en el emulador con dos cargas seguidas sin esperar.
+- Las cinco capturas rehechas (0 indicadores de carga, contraste 55/57); suite 1338, `analyze` 0. ALTO:
+  Codex acepta la corrección de la candidata.
+
+### Mensaje para Yov
+
+Yov: la **corrección de la candidata (10.29)** está escrita, probada y repetida en el emulador, en un
+bloque aparte de 59 archivos. **H1:** `AtrasDelViaje` ya no usa `showSnackBar`: la ventana es un
+`Timer` de 2 s desde el primer toque (se cancela al salir y al desmontarse) y la advertencia es
+`_AdvertenciaDeAtras`, una tarjeta con los colores del tema de `SnackBar`, arriba bajo la barra de
+estado, `IgnorePointer` y región en vivo, sobre un `Stack` con `passthrough`; la cola de avisos no se
+toca, así que el «Deshacer» del movimiento sigue y nada cierra un aviso que no sea el primero. Cuatro
+pruebas nuevas: con el aviso de 6 s delante, la advertencia se ve a la vez y dos toques salen; con 4 s y
+6 s en cola, dos toques separados por 3 s no salen (el caso de Codex) y dos dentro de 2 s sí; sin
+excepciones. **H2:** una regla para toda la página: la fila de controles de la barra de la operación (o la
+leyenda entera, sin operación) se mide (`MideElPieDelPlano` → `pieDelPlanoProvider`, en
+`avisos_del_viaje.dart`) y `AvisosSobreElPie` envuelve el `Scaffold` con `snackBarTheme.insetPadding =
+8 + lo medido` solo con el Plano a la vista; los avisos flotan sobre las cifras de la barra, por encima
+del modo, el zoom, «Acciones» y «OR», y nunca sobre la rejilla; los cuatro `margin` explícitos de la
+página se quitaron. El primer intento los puso sobre la barra entera y el emulador enseñó que, con la
+silueta a la vista, tapaban la única fila de celdas y la segunda «Baja» caía sobre «Deshacer»
+(`correccion/emulador-intento-1/`, p10 y p11): se cambió el anclaje antes de seguir. En el listado,
+«Descartar» y «Confirmar e importar» van a `persistentFooterButtons`. Las hojas son rutas y quedan por
+encima de los avisos (lo que el conductor apartaba era la franja, no la hoja). Cinco pruebas con las
+fuentes reales (con Ahem el aviso mide 153 dp): dos cargas por OR seguidas sin esperar con «Acciones»
+abierto bajo el aviso, dos «Baja» seguidas con las celdas libres, la hoja con un aviso detrás, la página
+real a 360 × 640 y el listado. A cambio, el aviso cubre esos segundos las cifras de la barra (anotado; la
+decisión pedía «fuera de la franja» y queda fuera de todo lo que se toca en ella). **Emulador:**
+el tramo del muelle repetido en `t99_api26` con el APK r4 de este árbol, 27 pasos sin fallos: p10–p11, dos «Baja» seguidas con el aviso sobre las cifras y las celdas libres; p15, el modo Carga con el aviso de la re‑estiba aún en pantalla; p19, «Acciones» abierto con el aviso de la primera carga detrás, y p20 la segunda carga sin esperar; p23, Atrás con el aviso de una «Baja»: la advertencia arriba y el aviso con «Deshacer» abajo, a la vez; p24, otro toque pasados más de 2 s vuelve a advertir y el plano sigue; p25–p26, dos toques seguidos al inicio y el reciente reabre. El primer intento (el anclaje sobre la barra entera) queda en `correccion/emulador-intento-1/` como la razón del cambio. **Capturas:** las 54 regeneradas dentro de `runAsync`; cambian cinco (las tres del indicador,
+la comparación de noche y Parámetros, cuyo desplegable sale cargado), 49 idénticas byte a byte; 0
+indicadores, contraste 55/57. **Cifras:** suite 1338 (1329 + 9), `analyze` 0; `pubspec.*`, `domain/`,
+`data/` y la lista del piloto sin tocar; Windows y la Web no se recompilaron y el conductor de Windows
+conserva sus `_sinAvisos()` (anotado). `DESIGN.md` 8 y 13.8 dicen lo nuevo. Me detengo: **ALTO: Codex
+acepta la corrección de la candidata.**

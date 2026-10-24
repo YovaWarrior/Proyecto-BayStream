@@ -1,17 +1,17 @@
-Pantallas sin rediseñar con el tema nuevo (candidata del piloto, 10.28): prueba de widget con las fuentes reales; Dart 3.10.8, Flutter 3.38.9 estable. Excepción: lo que Flutter lanzó al dibujar (un desborde es una). Contraste: la pauta textContrastGuideline de flutter_test (4.5:1; 3:1 en texto grande).
+Pantallas sin rediseñar con el tema nuevo (candidata del piloto, 10.28; capturas rehechas en la corrección de 10.29): prueba de widget con las fuentes reales; Dart 3.10.8, Flutter 3.38.9 estable. Excepción: lo que Flutter lanzó al dibujar (un desborde es una); «indicador de carga» si la página quedó cargando. Contraste: la pauta textContrastGuideline de flutter_test (4.5:1; 3:1 en texto grande).
 pantalla	configuración	excepción	contraste	archivo	detalle
 parametros	360_claro_letra1.0	ninguna	pasa	parametros_360_claro_letra1.0.png	
 parametros-del-buque	360_claro_letra1.0	ninguna	pasa	parametros-del-buque_360_claro_letra1.0.png	
-perfiles-guardados	360_claro_letra1.0	pumpAndSettle timed out	pasa	perfiles-guardados_360_claro_letra1.0.png	
-viajes-recientes	360_claro_letra1.0	pumpAndSettle timed out	pasa	viajes-recientes_360_claro_letra1.0.png	
+perfiles-guardados	360_claro_letra1.0	ninguna	pasa	perfiles-guardados_360_claro_letra1.0.png	
+viajes-recientes	360_claro_letra1.0	ninguna	pasa	viajes-recientes_360_claro_letra1.0.png	
 alertas-de-estiba	360_claro_letra1.0	ninguna	pasa	alertas-de-estiba_360_claro_letra1.0.png	
 matriz-de-segregacion	360_claro_letra1.0	ninguna	pasa	matriz-de-segregacion_360_claro_letra1.0.png	
-tapas-por-bahia	360_claro_letra1.0	ninguna	no pasa	tapas-por-bahia_360_claro_letra1.0.png	SemanticsNode#117(Rect.fromLTRB(16.0, 341.0, 344.0, 362.0), tags: [RenderViewport.twoPane], label: "Tapas: sin declarar", textDirection: ltr, indexInParent: 8): Expected contrast ratio of at least 4.5 but found 3.76 for a font size of 14.0. The computed colors was: light - Color(alpha: 1.0000, red: 0.9608, green: 0.9725, blue: 0.9882, colorSpace: ColorSpace.sRGB), dark - Color(alpha: 1.0000, red: 0.4275, green: 0.5020, blue: 0.6235, colorSpace: ColorSpace.sRGB) See also: https://www.w3.org/TR/UNDERSTANDING-WCAG20/visual-audio-contrast-contrast.html      
-tapas-en-la-operacion	360_claro_letra1.0	pumpAndSettle timed out	pasa	tapas-en-la-operacion_360_claro_letra1.0.png	
+tapas-por-bahia	360_claro_letra1.0	ninguna	no pasa	tapas-por-bahia_360_claro_letra1.0.png	SemanticsNode#124(Rect.fromLTRB(16.0, 341.0, 344.0, 362.0), tags: [RenderViewport.twoPane], label: "Tapas: sin declarar", textDirection: ltr, indexInParent: 8): Expected contrast ratio of at least 4.5 but found 3.76 for a font size of 14.0. The computed colors was: light - Color(alpha: 1.0000, red: 0.9608, green: 0.9725, blue: 0.9882, colorSpace: ColorSpace.sRGB), dark - Color(alpha: 1.0000, red: 0.4275, green: 0.5020, blue: 0.6235, colorSpace: ColorSpace.sRGB) See also: https://www.w3.org/TR/UNDERSTANDING-WCAG20/visual-audio-contrast-contrast.html      
+tapas-en-la-operacion	360_claro_letra1.0	ninguna	pasa	tapas-en-la-operacion_360_claro_letra1.0.png	
 orden-de-descarga	360_claro_letra1.0	ninguna	pasa	orden-de-descarga_360_claro_letra1.0.png	
 listado-de-la-agencia	360_claro_letra1.0	ninguna	pasa	listado-de-la-agencia_360_claro_letra1.0.png	
 comparar	360_claro_letra1.0	ninguna	pasa	comparar_360_claro_letra1.0.png	
-bandeja-de-cambios	360_claro_letra1.0	ninguna	no pasa	bandeja-de-cambios_360_claro_letra1.0.png	SemanticsNode#198(Rect.fromLTRB(16.0, 64.0, 344.0, 85.0), tags: [RenderViewport.twoPane], label: "BUQUE MANUAL · V114", textDirection: ltr, indexInParent: 1): Expected contrast ratio of at least 4.5 but found 1.36 for a font size of 14.0. The computed colors was: light - Color(alpha: 1.0000, red: 0.9608, green: 0.9725, blue: 0.9882, colorSpace: ColorSpace.sRGB), dark - Color(alpha: 1.0000, red: 0.8078, green: 0.8431, blue: 0.8902, colorSpace: ColorSpace.sRGB) See also: https://www.w3.org/TR/UNDERSTANDING-WCAG20/visual-audio-contrast-contrast.html    
+bandeja-de-cambios	360_claro_letra1.0	ninguna	no pasa	bandeja-de-cambios_360_claro_letra1.0.png	SemanticsNode#210(Rect.fromLTRB(16.0, 64.0, 344.0, 85.0), tags: [RenderViewport.twoPane], label: "BUQUE MANUAL · V114", textDirection: ltr, indexInParent: 1): Expected contrast ratio of at least 4.5 but found 1.36 for a font size of 14.0. The computed colors was: light - Color(alpha: 1.0000, red: 0.9608, green: 0.9725, blue: 0.9882, colorSpace: ColorSpace.sRGB), dark - Color(alpha: 1.0000, red: 0.8078, green: 0.8431, blue: 0.8902, colorSpace: ColorSpace.sRGB) See also: https://www.w3.org/TR/UNDERSTANDING-WCAG20/visual-audio-contrast-contrast.html    
 baplie-de-salida	360_claro_letra1.0	ninguna	pasa	baplie-de-salida_360_claro_letra1.0.png	
 avance	360_claro_letra1.0	ninguna	pasa	avance_360_claro_letra1.0.png	
 privacidad	360_claro_letra1.0	ninguna	pasa	privacidad_360_claro_letra1.0.png	
@@ -48,7 +48,7 @@ tapas-por-bahia	1920_oscuro_letra1.0	ninguna	pasa	tapas-por-bahia_1920_oscuro_le
 tapas-en-la-operacion	1920_oscuro_letra1.0	ninguna	pasa	tapas-en-la-operacion_1920_oscuro_letra1.0.png	
 orden-de-descarga	1920_oscuro_letra1.0	ninguna	pasa	orden-de-descarga_1920_oscuro_letra1.0.png	
 listado-de-la-agencia	1920_oscuro_letra1.0	ninguna	pasa	listado-de-la-agencia_1920_oscuro_letra1.0.png	
-comparar	1920_oscuro_letra1.0	ninguna	no pasa	comparar_1920_oscuro_letra1.0.png	SemanticsNode#2337(Rect.fromLTRB(16.0, 8.0, 153.8, 56.0), actions: [focus, tap], flags: [isSelected, isButton, hasEnabledState, isEnabled, isFocusable, hasSelectedState], label: "Solo con cambios", textDirection: ltr): Expected contrast ratio of at least 4.5 but found 1.00 for a font size of 12.0. The computed colors was: light - Color(alpha: 1.0000, red: 0.9176, green: 0.9412, blue: 0.9765, colorSpace: ColorSpace.sRGB), dark - Color(alpha: 1.0000, red: 0.9176, green: 0.9412, blue: 0.9765, colorSpace: ColorSpace.sRGB) See also: https://www.w3.org/TR/UNDERSTANDING-WCAG20/visual-audio-contrast-c…
+comparar	1920_oscuro_letra1.0	ninguna	pasa	comparar_1920_oscuro_letra1.0.png	
 bandeja-de-cambios	1920_oscuro_letra1.0	ninguna	pasa	bandeja-de-cambios_1920_oscuro_letra1.0.png	
 baplie-de-salida	1920_oscuro_letra1.0	ninguna	pasa	baplie-de-salida_1920_oscuro_letra1.0.png	
 avance	1920_oscuro_letra1.0	ninguna	pasa	avance_1920_oscuro_letra1.0.png	
