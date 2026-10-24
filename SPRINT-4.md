@@ -720,3 +720,31 @@ La siguiente decisión es la **10.30**.
 **Lo que sigue:** Codex vuelve a aceptar solo esta corrección: H1; H2 en el teléfono bajo con la letra a 1.0, 1.45 y 2.0; los avisos de la oficina en Windows sin los `_sinAvisos()` del conductor; y las capturas. Si pasa, el sábado se publica (10.28).
 
 La siguiente decisión es la **10.31**.
+
+### 10.31 · La reaceptación no pasa: con la letra a 2.0 el aviso pisa tres celdas; Timonel corrige con Claude Opus 5.5 (23-oct, 20:14)
+
+**Codex volvió a aceptar solo la corrección, en `9015662`: NO PASA** (`docs/rediseno/fase3/candidata/reaceptacion-codex.md`).
+- **H2 sigue abierto con la letra a 2.0.** En el teléfono bajo (360 × 640), el aviso de 6 s con «Deshacer» mide 328 × 196 dp y va de y=296 a y=492. Las celdas del nivel 88 se ven hasta y=300, así que el aviso pisa 4 dp de tres celdas, en Descarga y en Carga. Con la letra a 1.0 y a 1.45 las celdas quedan libres. La fila de controles (y=500 a 548) queda libre y «Deshacer» responde en las seis configuraciones.
+- La 10.30 deja tapar las cifras de la franja, no las celdas. Codex no extiende esa autorización a la rejilla.
+- Las cinco pruebas de Timonel pasan, pero tienen una sola fila de celdas, que no llega a la zona del aviso. La de Codex usa planes sintéticos de 24 contenedores en seis niveles, desplaza el plano 350 dp y carga las fuentes reales: pasan 4 configuraciones y fallan 2.
+- La medida vieja no deja un aviso visible mal puesto: el primer cuadro es invisible y desde el segundo vale la medida nueva.
+- **H1 queda cerrado:** el reloj de 2 s, la advertencia arriba y los avisos en cola. Pasan las 13 + 5 pruebas y la reproducción anterior.
+- **Tres observaciones P3, que no bloquean:**
+  - **O1:** tras el primer Atrás, si se abre el zoom o el detalle de una celda y Atrás lo cierra, otro toque dentro de los mismos 2 s sale del viaje.
+  - **O2:** el instrumento de Android ya no comprueba en positivo el plano ni la advertencia tras el primer Atrás. Lo suplen las capturas p23 y p24 y las pruebas de widget.
+  - **O3:** en la oficina, el aviso cruza el espacio vacío del riel y filas del panel En vivo. No tapa la leyenda, celdas ni controles.
+- **Codex rectifica la 10.29:** la hoja de vacíos va por encima del aviso y su «Cerrar» queda libre.
+- **Pasa lo demás:** suite 1338 y `analyze` en cero; 27 pasos en el emulador; Windows a 1920 con 26 capturas y una auxiliar, sin los dos primeros `_sinAvisos()`; 54 capturas, cinco cambiadas y 49 idénticas. La Web queda para el ensayo del sábado.
+
+**Yov acepta el dictamen.** **Carlos decide** que el siguiente Timonel trabaje en un chat nuevo con Claude Opus 5.5, porque Fable tarda más de una hora por encargo.
+
+**Timonel corrige esta noche:**
+- **H2:** ningún aviso pisa celdas ni controles en el teléfono, con la letra a 1.0, 1.45 y 2.0, en Descarga y en Carga, con varios niveles y el plano desplazado. Tiene que cumplirse por construcción, no con unos dp de margen que pasen justo con estas cifras. Las cifras de la franja se pueden tapar (10.30), el texto no se corta y «Deshacer» responde.
+- La prueba de Codex entra en la suite, a 360 × 640 y a 412 × 915.
+- **O1 y O2, si caben sin crecer:** Atrás que cierra otra cosa reinicia la ventana, y el instrumento vuelve a comprobar en positivo el plano y la advertencia.
+- **O3 queda para COMAR.**
+- Si la única salida cambia lo decidido en la 10.30 (reservar sitio, llevar el aviso arriba o bajar la letra del aviso), Timonel para y trae opciones.
+
+**Lo que sigue:** Codex acepta solo esta segunda corrección: H2 con las tres letras y los dos teléfonos, O1 y O2 si entraron, la suite y `analyze`. Si pasa, el sábado se publica (10.28).
+
+La siguiente decisión es la **10.32**.
