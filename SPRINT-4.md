@@ -996,3 +996,41 @@ La siguiente decisión es la **10.40**.
 - La lista del piloto se actualiza al publicar la 3.2.0, no antes: el piloto es con la 3.1.0.
 
 La siguiente decisión es la **10.41**.
+
+### 10.41 · La entrega 1 de T-117 y T-118, completa y revisada: la franja de la bahía en una línea, RNF-002, las capturas y la ventana real; pasa a Codex (24-oct, 17:15)
+
+**Carlos cambió el orden de 10.40:** Timonel siguió primero, con la luz verde para Flutter, y el ensayo y el piloto van después (lo confirmó a las 15:06). Timonel trabajó de ≈ 14:55 a 16:50, un comando de Flutter a la vez (`docs/T117-T121-RESULTADOS.md`, E1.1 a E1.13):
+- **El ajuste de la franja (10.40):**
+  - las cifras de la bahía abren ahora la franja de cifras: «Bahía 02: 20 contenedores, 244.7 t, tapas sin declarar; …»;
+  - con el panel fijo y la letra a 1.0, la franja de la bahía va en una línea (56 dp) de 960 a 1920 dp, y la rejilla gana 52 dp a 1536 × 793 y a 1366 × 690;
+  - si aun así no cabe, «OR / últimos dígitos» queda solo con su ícono y su descripción emergente;
+  - en la tableta del muelle operando, que no tiene franja de cifras, las cifras siguen junto al título.
+- **Lo que se paga:** a 800 × 600 con la letra a 1.0, la franja de cifras pasa a dos líneas (de 64 a 88 dp) y la rejilla pierde 24 dp. Es el tamaño más chico de la matriz, y nada se corta.
+- **Cifras:** suite 1629 (piso 1371, más 258), sin fallidas ni omitidas, en una sola corrida, y `analyze` en cero. La matriz de 0.5.5 comprueba la línea única en seis casos, y hay dos pruebas nuevas.
+- **RNF-002 en Windows:** 5 de 5 válidas, tres pasos, mediana 2.26 s (de 2.17 a 2.68 s), con su `SEMÁFORO:` al empezar y al terminar. La última medida era 1.87 s (`REDISENO-RESULTADOS.md` 8.3): la oficina arma más piezas y el diálogo de Windows tarda más. Sigue lejos de los 30 s.
+  - El primer intento no contó: la ventana del banco nació detrás de la consola y el detector esperó 120 s. Timonel corrigió el instrumento (`al_frente`, en `tool/t114_primera_windows.py`), y el registro dice ahora si la ventana quedó al frente. La imagen final de ese intento no se guardó, porque mostraba la consola con los proyectos de Carlos.
+- **Capturas con datos sintéticos:** 72 de Windows (1920 × 1080 y 1366 × 768, claro y oscuro, letra 1.0 y 2.0), sin textos cortados ni errores de Flutter, y 24 de la Web. El conductor de T-99 se amplió para tomar la Carga, el panel del buque compacto y plegado, y el panel lateral oculto y flotante.
+- **La ventana real:** maximizar, Win + ← y →, y el borde a 1000, 700, 560 y 1280 dp: nada se corta. No hay segundo monitor, así que el arrastre entre pantallas queda sin probar.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 10 archivos cambiados y uno nuevo (`tool/t117_capturas_web.py`), más la evidencia: 129 archivos en `docs/t117/entrega1/`, ninguno ignorado;
+- el código es chico, unas 130 líneas nuevas en cinco archivos de presentación, y hace lo que dice `DESIGN.md` en 14.7, 14.8 y 14.10. La tarde no toca `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto;
+- la evidencia está limpia. Yov pasó las 119 imágenes por OCR y miró una por una las 23 que toman la pantalla o la ventana: solo se ve el banco con datos sintéticos (BUQUE MANUAL y el sintético de 977). No hay correos, ni «Nube y cuenta», ni nada del corpus;
+- **dos cosas para la aceptación:**
+  - a 700 dp, sin el panel fijo, la franja de la bahía envuelve y el botón del panel queda solo en la segunda línea (`ventana-real/06-borde-875px.png`). No se corta nada; Codex dice si es un defecto;
+  - T-118 es para los tres clientes, y Timonel no abrió Android: lo del teléfono solo está en las pruebas de widgets a 360 dp. Codex lo mira en el emulador.
+
+**Carlos decide (17:12):**
+- **La evidencia no va a Git.** Se queda sin versionar en `docs/t117/entrega1/`, en la carpeta del rediseño, y el commit lleva solo los 11 archivos.
+- **El mouse movido por script queda aceptado.** Para arrastrar el borde, la tarjeta de permiso del control del escritorio llevaba 33 minutos esperando, y Timonel movió el mouse real con un script (`mouse_event`). Carlos lo da por bueno: cuando la tarjeta no responde, un programador puede mover el mouse con un script, pero solo sobre la ventana del banco.
+
+**Entregables del curso de hoy:** los paquetes de los incrementos 2 y 3 están en `docs/` de `proyecto-baystream`, sin versionar. La presentación del Incremento 3 faltaba, y la hizo Yov: 15 diapositivas con notas, con el diseño de la del Incremento 2.
+
+**Lo que sigue:**
+- Carlos sube dos bloques: el de Timonel, con los 11 archivos, y el de esta decisión.
+- Codex acepta la entrega 1 en `baystream-qa-r4`, con HEAD separado en el commit de esta decisión, fuera de las horas del ensayo y del piloto. La meta no cambia: la entrega 1 aceptada el 29 o el 30-oct.
+- El ensayo y el piloto, con la 3.1.0, siguen las secciones 0 a 3 de la lista del piloto.
+- Carlos cree que la exposición del curso de SQA pasa a la próxima semana (14:57). La mezcla de `pruebas-curso` (10.35) espera a que pase.
+- Con la entrega 1 aceptada, sigue la entrega 2: T-121, las estadísticas A.
+
+La siguiente decisión es la **10.42**.
