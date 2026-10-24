@@ -963,3 +963,36 @@ La siguiente decisión es la **10.39**.
 - **Si COMAR pide algo que cambie esta entrega**, Carlos se lo dice a Timonel y Timonel ajusta.
 
 La siguiente decisión es la **10.40**.
+
+### 10.40 · La entrega 1 de T-117 y T-118, hecha y revisada; faltan RNF-002 y las capturas (24-oct, 15:00)
+
+**Timonel la entregó a las 12:45, con Claude Opus 5.5 en Extra, en unas 1.6 h** (`docs/T117-T121-RESULTADOS.md`, sección «Entrega 1», y `DESIGN.md` 14).
+- **T-117:**
+  - la columna central se desplaza entera, y el panel del buque tiene tres alturas, con el borde que se arrastra, doble clic, teclado y lector de pantalla;
+  - la franja de la bahía va arriba y la de cifras fija abajo, donde viven los avisos, que no salen de la columna: eso cierra O3;
+  - el panel lateral va fijo, oculto o flotante, y «En vivo» ya no se corta;
+  - las tres preferencias se guardan en el equipo.
+- **T-118:** un solo selector de modo (`BsSelectorDeModo`), en segmentos o en menú según el ancho, y el resumen en fichas de una línea. «Colorear por» usa el mismo selector.
+- **Cifras:**
+  - suite 1627 (piso 1371, más 256), sin fallidas ni omitidas, en una sola corrida, y `analyze` en cero;
+  - la matriz de 0.5.5 son 189 casos y pasa, y los avisos en la oficina, 22;
+  - la matriz de 18 casos del teléfono y la guarda de `SnackBar(` siguen pasando.
+- **La primera suite dio 78 fallos.** Cuatro eran del producto y se corrigieron en el código: un desborde de 44 dp en el teléfono, dos selectores a la vez a 600 dp, el aire negativo de los avisos en las transiciones y el título repetido sin geometría. Las medidas con las fuentes reales destaparon dos más: la franja de la bahía fijada tapaba la rejilla con la letra a 2.0 en ventanas bajas, y la franja de cifras crecía sin tope. Se reescribieron 15 archivos de pruebas, uno por uno en E1.7; ninguna prueba se borró ni se omitió.
+- **Falta:** RNF-002 en Windows, las capturas y la ventana real, que piden compilar y abrir la app (unas 3 a 4 h con Flutter).
+
+**Yov la revisó contra el disco:**
+- el bloque de git tiene 44 rutas y coincide una a una con lo cambiado: 32 archivos cambiados, 11 nuevos y el informe. Fuera quedan los cuatro que solo cambian el fin de línea;
+- `domain/` y `data/` suman 31 líneas, todas nuevas y solo para las preferencias, como autorizó la 10.38: el `enum UiPreference`, leer y guardar en el repositorio, sus dos `_guard` y la clave `ui.<nombre>` en la caja de ajustes;
+- no cambian `lib/main.dart`, los congelados, `pubspec.*` ni la lista del piloto.
+
+**Una decisión para Carlos.** Con el panel fijo, en Carga, la franja de la bahía ocupa dos líneas desde 1536 dp hacia abajo, y a la rejilla le quedan 372 dp a 1536 y 269 a 1366 (la fase 0 estimó 445 y 342). Yov recomienda dejarla en una línea con la letra a 1.0 sin esconder «Colorear por»: las cifras de la bahía bajan a la franja de cifras, que ya empieza por la bahía; si aun así no cabe, «OR / últimos dígitos» queda solo con su ícono y su descripción.
+
+**La presentación final es el 7-nov** (Carlos, a las 11:05). La 3.2.0 lleva las entregas 1 y 2, y la 3 va en una 3.2.1 (10.38). Las metas: la entrega 1 aceptada el 29 o el 30-oct, la 2 hacia el 3-nov y la 3.2.0 publicada a más tardar el 4-nov.
+
+**Lo que sigue:**
+- Carlos sube el bloque de la entrega 1 tal como está: es un punto seguro, porque la suite pasa.
+- Primero, el ensayo del piloto. Después, luz verde a Timonel para el ajuste de la franja, si Carlos lo aprueba, y para RNF-002, las capturas y la ventana real, con su `SEMÁFORO:`.
+- Después, Codex acepta la entrega 1.
+- La lista del piloto se actualiza al publicar la 3.2.0, no antes: el piloto es con la 3.1.0.
+
+La siguiente decisión es la **10.41**.
