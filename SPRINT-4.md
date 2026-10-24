@@ -867,3 +867,31 @@ La siguiente decisión es la **10.35**.
 - después de la exposición, `pruebas-curso` se mezcla en `sprint-4`, con la suite y `analyze` (10.12). La prueba de muestra de la clase (`test/muestra/`) está sin versionar en esa carpeta: se decide entonces si entra.
 
 La siguiente decisión es la **10.36**.
+
+### 10.36 · Carlos pide más espacio para el plano en la oficina y unas estadísticas de impacto (24-oct, 10:08)
+
+**Carlos lo pidió hoy a las 09:59 y a las 10:01, viendo la 3.1.0 en Windows.** Son cinco tareas nuevas, para Windows y la Web salvo donde se dice:
+- **T-117 · Más plano en la oficina:**
+  - la parte de arriba (cabecera, selector, resumen, silueta y cifras) se pliega con un botón y se ajusta arrastrando su borde, y la app recuerda cómo la dejó cada usuario;
+  - toda la columna central se desplaza, no solo la rejilla: al bajar, lo de arriba sube y el plano usa la pantalla;
+  - «En vivo» se oculta y se muestra con un botón y, además, al pasar el mouse por el borde; lo del mouse se apaga en Parámetros;
+  - con cualquier tamaño de ventana (maximizada, a media pantalla o arrastrada) nada se deforma ni se corta. Hoy, a 1920 con «En vivo» abierto, la leyenda de abajo no cabe y se corta a la derecha.
+- **T-118 · El selector de modo y su resumen, compactos:** el selector de Carga, Descarga y Contenido se ve plano, también al abrirlo; se rediseña, y las líneas de resumen de debajo ocupan menos. En los tres clientes.
+- **T-119 · El mouse y el touchpad:**
+  - en la silueta del buque, la rueda del mouse avanza a la derecha y regresa a la izquierda, no solo el touchpad;
+  - el touchpad acerca y aleja el plano con dos dedos; la rueda sigue moviendo arriba y abajo;
+  - el plano muestra también una barra de desplazamiento horizontal abajo, que se arrastra con el mouse, cuando la bahía no cabe a lo ancho.
+- **T-120 · Filtrar por destino en la Lista**, junto a «Filtrar por naviera»: cuántos contenedores van a cada puerto y cuáles son. En los tres clientes.
+- **T-121 · Las estadísticas, rediseñadas por completo** con la dirección «Puente de mando» (10.14) y lo que se tomó de sus referencias: las cifras grandes en tarjetas (ShipX), el azul profundo y el anillo de avance (OceanView), la silueta del buque y los códigos de puerto en caja (Shipping Logistics Dashboard). Hoy usan violeta y naranja de adorno, que la dirección prohíbe. En los tres clientes.
+
+**Lo que no cambia:**
+- La 3.1.0 publicada es la del piloto (10.35) y no se toca.
+- Estas tareas van en `sprint-4`, en la carpeta del rediseño, con las reglas de T-114: solo la capa de presentación, ninguna dependencia nueva, el piso de 1371 y `analyze` en cero, y Codex acepta cada entrega.
+- Si guardar las preferencias de T-117 exige tocar `domain/` o `data/`, se propone y decide Carlos.
+
+**Yov propone el orden, y lo confirma Carlos:**
+1. Ya: Timonel hace el diagnóstico y la propuesta, sin código y sin correr Flutter, para no estorbar al ensayo ni al piloto. Para con «ALTO: Carlos elige».
+2. Desde el 27-oct, después del piloto y con lo que diga COMAR, la implementación: T-117, T-118, T-119, T-120 y T-121.
+3. Se publica como 3.2.0 antes de la presentación final (7 o 14-nov).
+
+La siguiente decisión es la **10.37**.
