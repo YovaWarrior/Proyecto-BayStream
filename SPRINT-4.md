@@ -895,3 +895,61 @@ La siguiente decisión es la **10.36**.
 3. Se publica como 3.2.0 antes de la presentación final (7 o 14-nov).
 
 La siguiente decisión es la **10.37**.
+
+### 10.37 · La fase 0 de T-117 a T-121, entregada y revisada: Carlos responde once preguntas (24-oct, 10:57)
+
+**Timonel entregó el diagnóstico y la propuesta** (`docs/T117-T121-RESULTADOS.md`, Claude Opus 5.5 en Extra), sin código y sin correr Flutter.
+- **El diagnóstico, con archivo y línea:**
+  - lo de arriba ocupa del 40 al 63 % de la ventana, porque la columna central no se desplaza y la rejilla es lo único que cede. En la laptop de Carlos las tarjetas pasan a dos filas (262 dp contra los 161 de la silueta), aunque el código dice que nunca son más altas que ella;
+  - la leyenda se corta porque su `Wrap` vive dentro de un desplazamiento horizontal, que en escritorio no tiene barra;
+  - «En vivo» no se desplaza y se corta en ventanas de menos de unos 600 dp de alto;
+  - la rueda no mueve nada horizontal, el zoom solo escucha dos dedos sobre la pantalla y no hay barra horizontal;
+  - el selector de modo es un `DropdownButton` de Material 2 y está repetido en la cabecera;
+  - las estadísticas nunca se rediseñaron: 27 `Colors.*`, texto a 9 dp y girado, y el naranja de la grúa como color del peso.
+- **La propuesta:**
+  - la columna central se desplaza entera. El puente (la silueta y las cifras) tiene tres alturas, que se eligen arrastrando su borde o con un botón. La franja de la bahía queda fija arriba y una franja de cifras fija abajo, donde viven los avisos como en el muelle: eso cierra O3;
+  - el panel lateral se fija, se oculta o sale flotante por el borde;
+  - un solo selector de modo, en segmentos o en menú, y el resumen en fichas de una línea;
+  - la rueda en la silueta, el pellizco y Ctrl + rueda para el zoom, y una barra horizontal pegada abajo;
+  - «Filtrar por destino», con la ficha de cada puerto y cuentas cruzadas con la naviera;
+  - dos estadísticas: A, «El buque en corte», la que recomienda, y B, «Tablero de destinos». La rampa de azules está validada por script; la de `DESIGN.md` 5.5 no pasa en su paso claro.
+- **Horas:** de 47 a 57, en tres entregas: T-117 con T-118, después T-121 y al final T-119 con T-120.
+
+**Yov la revisó contra el código:**
+- seis afirmaciones comprobadas en su archivo y línea: el comentario de las tarjetas, la cartela dentro del desplazamiento horizontal, los 27 `Colors.*`, «Filtrar por Naviera», el `DropdownButton` y el zoom de dos dedos;
+- el árbol no cambió fuera del informe. Los cuatro archivos que `git diff --stat` marca (`test/t114_fase3_correccion_test.dart` y tres de `windows/flutter/`) solo difieren en el fin de línea y no entran en ningún bloque;
+- **una diferencia con lo que pidió Carlos:** él quería ajustar el alto «a su gusto», y Timonel propone tres alturas (P1). Con la columna que se desplaza, el puente sale de la vista tanto como se quiera; las tres alturas evitan que la silueta y las tarjetas se recorten.
+
+**Las once preguntas (sección 0.12), con lo que recomienda Yov:**
+- P1, tres alturas; P2, sí al cambio mínimo en `domain/` y `data/` para guardar las preferencias, con sus pruebas; P3, el usuario del equipo;
+- P4, Ctrl + rueda también con el mouse; P5, el panel flotante con el detalle; P6, lo del mouse encendido; P7, `web/index.html` solo si la prueba lo exige;
+- P8, las estadísticas A; P9, la cifra protagonista a 48 dp;
+- P10, cuentas cruzadas, y la Lista perezosa dentro de la tercera entrega, porque ataca la memoria de la Lista (RNF-001 y RNF-007: hoy sube de 190 a 510 MB, con un umbral de 200);
+- P11, depende de la fecha de la presentación final.
+
+**Lo que sigue:** Carlos responde, y la implementación arranca el 27-oct con la entrega 1.
+
+La siguiente decisión es la **10.38**.
+
+### 10.38 · Carlos acepta las recomendaciones de Yov para T-117 a T-121 (24-oct, 10:59)
+
+**Carlos lo decidió a las 10:58:**
+- **T-117:**
+  - el puente tiene tres alturas (P1);
+  - se autoriza el cambio mínimo en `domain/` y `data/` de la sección 0.5.7, con sus pruebas, para guardar las tres preferencias (P2). Es una excepción a la regla de T-114, solo para eso;
+  - se guardan por equipo, no por cuenta (P3);
+  - con el panel oculto, el detalle sale en el panel flotante (P5);
+  - mostrar el panel al pasar el mouse viene encendido y se apaga en Parámetros (P6).
+- **T-119:**
+  - Ctrl + rueda acerca y aleja también con el mouse (P4);
+  - si la prueba demuestra que en la Web el pellizco amplía la página, se autoriza tocar `web/index.html`, solo para el plano (P7).
+- **T-121:** las estadísticas A, «El buque en corte» (P8), con la cifra protagonista a 48 dp, escrita antes en `DESIGN.md` (P9).
+- **T-120:** cuentas cruzadas entre naviera y destino, y la Lista perezosa dentro de la tercera entrega, medida con T-99 (P10).
+- **El orden (P11):**
+  - entrega 1, T-117 con T-118; entrega 2, T-121; entrega 3, T-119 con T-120;
+  - las entregas 1 y 2 van en la 3.2.0. La 3 entra también si la presentación final es el 14-nov; si es el 7, va en una 3.2.1;
+  - falta la fecha de la presentación y saber si hay un segundo monitor para probar el arrastre entre pantallas.
+
+**Lo que sigue:** el 27-oct, después del piloto, Timonel arranca la entrega 1 con Claude Opus 5.5. Codex acepta cada entrega antes de la siguiente.
+
+La siguiente decisión es la **10.39**.
