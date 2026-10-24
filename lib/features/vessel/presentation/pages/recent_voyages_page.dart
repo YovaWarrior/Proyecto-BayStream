@@ -7,6 +7,7 @@ import '../../domain/repositories/local_vessel_repository.dart';
 import '../providers/vessel_providers.dart';
 import '../formatters/vessel_error_message.dart';
 import '../formatters/operation_text.dart';
+import '../widgets/avisos_del_viaje.dart';
 import '../widgets/empty_state_widget.dart';
 import '../../../../core/utils/voyage_number.dart';
 
@@ -31,13 +32,9 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
       final kept = notifier.reopenKeptParameters;
       if (kept.isNotEmpty) {
         // T-61: el perfil vigente no se aplica si oculta carga; se dice cuál.
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            key: const ValueKey('reopen-kept-parameters'),
-            duration: const Duration(seconds: 10),
-            content: Text('No se aplicó del perfil vigente: '
-                '${kept.map((p) => p.label).join(', ')}. Dejaría contenedores '
-                'de este viaje fuera del plano; se conserva el valor guardado '
-                'con el viaje. Revisa el perfil del buque.')));
+        // El aviso se ve sobre el plano, al volver: es uno de la página.
+        ScaffoldMessenger.of(context).showSnackBar(
+            avisoDelParametroConservado(kept.map((p) => p.label)));
       }
       Navigator.pop(context);
     } else {

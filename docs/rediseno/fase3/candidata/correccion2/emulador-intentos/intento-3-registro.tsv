@@ -1,0 +1,26 @@
+paso	archivo	nota	hora (UTC)
+1	p01-inicio.png	el inicio sin viajes	2026-10-24T03:10:52.056001+00:00
+2	p02-plan-de-carga-en-previo.png	abre en previo con la banda; tres pasos	2026-10-24T03:10:59.245339+00:00
+3	p03-parametros-del-buque.png	la banda abrió «Parámetros del buque»	2026-10-24T03:11:03.649096+00:00
+4	p04-parametros-no-lo-tengo.png	«No lo tengo» marcado a mano	2026-10-24T03:11:40.598475+00:00
+5	p05-plan-de-carga-publicado.png	publicado en GTSTC; la banda del muelle con Carga	2026-10-24T03:11:55.372931+00:00
+6	p06-listado-leido.png	el listado leído, antes de confirmar	2026-10-24T03:12:13.929562+00:00
+7	p07-listado-importado.png	«Listado guardado en la operación de GTSTC: 30 filas.»	2026-10-24T03:12:17.277481+00:00
+8	p08-llegada-publicada.png	la llegada abre publicada sin previo; la banda ofrece Descarga	2026-10-24T03:12:41.700176+00:00
+9	p09-descarga.png	modo Descarga: «Baja» en las celdas por bajar	2026-10-24T03:12:45.028149+00:00
+10	p10-baja-registrada.png	un toque: naranja y el aviso con «Deshacer»	2026-10-24T03:12:47.724590+00:00
+11	p11-segunda-baja.png	otra Baja	2026-10-24T03:12:50.426792+00:00
+12	p12-baja-deshecha.png	«Deshacer»: la celda vuelve a «Baja»	2026-10-24T03:12:53.527301+00:00
+13	p13-paso-pregunta.png	Paso: la pregunta de la re‑estiba	2026-10-24T03:13:04.986082+00:00
+14	p14-reestiba-registrada.png	«Re‑estiba registrada» con «Deshacer», sobre las cifras y por encima de los controles	2026-10-24T03:13:08.062579+00:00
+15	p15-carga.png	modo Carga: el OR en las celdas, con el aviso de la re‑estiba aún en pantalla	2026-10-24T03:13:09.372135+00:00
+16	p16-vacios-del-listado.png	«Vacíos del listado»	2026-10-24T03:13:15.644990+00:00
+17	p17-asignar-vacio.png	el formulario propone la celda	2026-10-24T03:13:19.738167+00:00
+18	p18-vacio-asignado.png	«Carga registrada · OR N» con «Deshacer», sobre las cifras y por encima de los controles	2026-10-24T03:13:22.447205+00:00
+19	p19-segunda-carga-sin-esperar.png	«Acciones» abierto con el aviso de la primera carga todavía en pantalla	2026-10-24T03:13:24.633484+00:00
+20	p20-segundo-vacio-asignado.png	otro vacío asignado	2026-10-24T03:13:36.539799+00:00
+21	p21-vacio-deshecho.png	«Deshacer»: el OR vuelve a estar pendiente	2026-10-24T03:13:39.853042+00:00
+22	p22-avance.png	«Avance» en el teléfono	2026-10-24T03:13:43.425943+00:00
+23	p23-atras-con-aviso.png	un toque con el aviso de la Baja en pantalla: la advertencia arriba y el aviso con «Deshacer» abajo, a la vez	2026-10-24T03:13:51.361687+00:00
+		O2: la advertencia, el plano y «Deshacer» en un volcado, a los 1.2 s del Atrás	2026-10-24T03:13:52.105526+00:00
+24	p24-atras-tras-la-ventana.png	pasados más de 2 s, otro toque vuelve a advertir y el plano sigue	2026-10-24T03:13:55.239910+00:00

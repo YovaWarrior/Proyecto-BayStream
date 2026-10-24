@@ -444,6 +444,87 @@ void main() {
     });
   });
 
+  // Segunda corrección (10.31, O1): Codex mostró que, tras el primer toque,
+  // abrir el zoom o el detalle y cerrarlo con Atrás dejaba la ventana abierta,
+  // y otro toque dentro de los mismos 2 s salía del viaje. Ahora lo que se
+  // abre o se cierra en medio cancela la ventana.
+  group('lo que se abre o se cierra en medio cancela la ventana', () {
+    testWidgets(
+        'el zoom (Codex): se abre, Atrás lo cierra y el siguiente toque vuelve '
+        'a advertir; dos toques seguidos en la raíz siguen saliendo',
+        (tester) async {
+      await en(tester, TargetPlatform.android, () async {
+        await publicado();
+        await pumpApp(tester);
+        final chip = find.byKey(const ValueKey('plan-zoom-toggle'));
+        await tester.ensureVisible(chip);
+        await tester.pumpAndSettle();
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        await tester.tap(chip);
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('plan-zoom-in')), findsOneWidget);
+        expect(aviso, findsNothing, reason: 'abrir el zoom cancela la ventana');
+        expect(await atras(tester), isTrue);
+        expect(find.byKey(const ValueKey('plan-zoom-in')), findsNothing);
+        expect(aviso, findsNothing);
+        // Dentro de los 2 s del primer toque: advierte de nuevo y no sale.
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(estado(), isA<Publicado>());
+        // Y dos toques seguidos en la raíz salen, como siempre.
+        expect(await atras(tester), isTrue);
+        expect(estado(), isA<SinViaje>());
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    testWidgets(
+        'el detalle en el panel lateral (Codex): se elige una celda, Atrás '
+        'cierra el detalle y el siguiente toque vuelve a advertir',
+        (tester) async {
+      await en(tester, TargetPlatform.android, () async {
+        await publicado();
+        await pumpApp(tester, tamano: const Size(1300, 900));
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('cell-1-82')));
+        await tester.pumpAndSettle();
+        expect(container.read(celdaSeleccionadaProvider), isNotNull);
+        expect(aviso, findsNothing,
+            reason: 'abrir el detalle cancela la ventana');
+        expect(await atras(tester), isTrue);
+        expect(container.read(celdaSeleccionadaProvider), isNull);
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(estado(), isA<Publicado>(),
+            reason: 'el toque tras cerrar el detalle no sale del viaje');
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    testWidgets(
+        'una hoja: la hoja «Más» se abre encima, Atrás la cierra y el '
+        'siguiente toque vuelve a advertir', (tester) async {
+      await en(tester, TargetPlatform.android, () async {
+        await publicado();
+        await pumpApp(tester);
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('destino-mas')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('hoja-mas')), findsOneWidget);
+        expect(aviso, findsNothing, reason: 'la hoja encima cancela la ventana');
+        expect(await atras(tester), isTrue);
+        expect(find.byKey(const ValueKey('hoja-mas')), findsNothing);
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(estado(), isA<Publicado>());
+        expect(tester.takeException(), isNull);
+      });
+    });
+  });
+
   group('fuera de Android', () {
     testWidgets('en Windows no gobierna nada: Atrás no se atiende y nada cambia',
         (tester) async {

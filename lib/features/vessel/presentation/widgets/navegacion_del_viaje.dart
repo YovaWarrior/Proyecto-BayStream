@@ -118,6 +118,11 @@ class CerrablesDeAtras extends Notifier<int> {
 /// haya otro aviso, no toca ningún aviso ajeno y el «Deshacer» del
 /// movimiento sigue su curso.
 ///
+/// La ventana es solo para dos toques seguidos en la raíz: si en medio Atrás
+/// cierra otra cosa (el menú del zoom, el detalle de una celda, una hoja) o
+/// se abre otra cosa, se cancela y la advertencia se va; el siguiente Atrás
+/// en la raíz vuelve a advertir (10.31, O1).
+///
 /// Solo gobierna Atrás donde hay un botón Atrás del sistema, Android; en la
 /// Web el navegador manda y en Windows no existe ([activo]).
 class AtrasDelViaje extends ConsumerStatefulWidget {
@@ -176,8 +181,27 @@ class _AtrasDelViajeState extends ConsumerState<AtrasDelViaje> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Una hoja, un diálogo o la búsqueda encima: la ruta del viaje deja de
+    // ser la actual y la ventana se cancela. Viene un build: basta el campo.
+    if (ModalRoute.isCurrentOf(context) == false && _ventana != null) {
+      _ventana!.cancel();
+      _ventana = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (!(widget.activo ?? AtrasDelViaje.porOmision)) return widget.child;
+    // Lo que se abre sin ser una ruta (el menú del zoom, el detalle en el
+    // panel lateral) también cancela la ventana.
+    ref.listen<int>(cerrablesDeAtrasProvider, (int? antes, int ahora) {
+      if (ahora > (antes ?? 0)) _cerrarVentana();
+    });
+    ref.listen(celdaSeleccionadaProvider, (_, ahora) {
+      if (ahora != null) _cerrarVentana();
+    });
     return PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? _) {
@@ -199,9 +223,15 @@ class _AtrasDelViajeState extends ConsumerState<AtrasDelViaje> {
   }
 
   Future<void> _atras() async {
-    if (ref.read(cerrablesDeAtrasProvider.notifier).cerrarUltimo()) return;
+    // Atrás que cierra otra cosa no cuenta como primer toque y cancela la
+    // ventana abierta.
+    if (ref.read(cerrablesDeAtrasProvider.notifier).cerrarUltimo()) {
+      _cerrarVentana();
+      return;
+    }
     if (widget.conPanel && ref.read(celdaSeleccionadaProvider) != null) {
       ref.read(celdaSeleccionadaProvider.notifier).limpiar();
+      _cerrarVentana();
       return;
     }
     if (widget.previo) {
@@ -225,7 +255,8 @@ class _AtrasDelViajeState extends ConsumerState<AtrasDelViaje> {
   }
 
   void _cerrarVentana() {
-    _ventana?.cancel();
+    if (_ventana == null) return;
+    _ventana!.cancel();
     if (mounted) setState(() => _ventana = null);
   }
 }

@@ -12,6 +12,7 @@ import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
+import 'avisos_del_viaje.dart';
 import 'loading_controls.dart' show loadingPosition;
 
 /// T-106: la escala del zoom, para lo que no debe ampliarse (el margen) o se
@@ -181,7 +182,9 @@ class PlanDragCell extends ConsumerWidget {
     if (enableDrag && pending && actor?.authorized != true) {
       cell = GestureDetector(
           onLongPress: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text(ChangeRequests.signInToMove))),
+              avisoDelViaje(
+                  texto: ChangeRequests.signInToMove,
+                  corto: 'Mover exige una cuenta autorizada.')),
           child: cell);
     } else if (enableDrag && pending && open && actor?.authorized == true) {
       cell = LongPressDraggable<_PlanDrag>(
@@ -214,8 +217,8 @@ class PlanDragCell extends ConsumerWidget {
       onAcceptWithDetails: (details) {
         final result = _preview(ref, details.data);
         if (!result.valid) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(result.error!)));
+          ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+              texto: result.error!, corto: 'Ese cambio no se puede hacer.'));
           return;
         }
         final current = ref.read(loadingOperationProvider(voyage)).value!;

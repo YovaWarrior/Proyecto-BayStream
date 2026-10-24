@@ -270,11 +270,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       // plano al principio de esa línea. Lo que los avisos de la página no
       // deben tapar se mide (10.29, H2; `avisos_del_viaje.dart`): la fila de
       // controles de la barra, dentro de `_barraDeOperacion`, o la leyenda
-      // entera, que es toda controles.
+      // entera, que es toda controles. La barra entera también se mide: su
+      // borde de arriba es el tope de los avisos (10.31).
       final pie = medidas.esMuelle && enOperacion
           ? _barraDeOperacion(dischargeMode, loading, discharge,
               tira: anidar ? controles : null)
           : MideElPieDelPlano(
+              sinFranja: true,
               child: _buildLegend(displayedVoyage, bay, vista,
                   discharge: discharge,
                   twenties: twenties.isNotEmpty,
@@ -639,19 +641,22 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
               ],
             ),
           );
-    return BsBarraDeOperacion(
-      key: const ValueKey('barra-de-operacion'),
-      contadores: contadores,
-      // Los avisos de la página flotan por encima de esta fila y del aire de
-      // abajo de la barra (su `espacioM`), sobre las cifras, que no se tocan,
-      // y nunca sobre la rejilla (10.29, H2).
-      accion: fila == null
-          ? null
-          : MideElPieDelPlano(
-              key: const ValueKey('controles-de-la-franja'),
-              ajuste: medidas.espacioM,
-              child: fila,
-            ),
+    // Los avisos de la página flotan por encima de la fila de controles y
+    // del aire de abajo de la barra (su `espacioM`), sobre las cifras, que no
+    // se tocan (10.29, H2); y no pasan del borde de arriba de la barra, donde
+    // termina la rejilla, sea cual sea su alto (10.31).
+    return MideLaFranja(
+      child: BsBarraDeOperacion(
+        key: const ValueKey('barra-de-operacion'),
+        contadores: contadores,
+        accion: fila == null
+            ? null
+            : MideElPieDelPlano(
+                key: const ValueKey('controles-de-la-franja'),
+                ajuste: medidas.espacioM,
+                child: fila,
+              ),
+      ),
     );
   }
 

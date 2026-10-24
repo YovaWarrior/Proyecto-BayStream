@@ -15,6 +15,7 @@ import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
+import 'avisos_del_viaje.dart';
 import 'discharge_controls.dart';
 import 'office_plan_controls.dart';
 import 'hatch_operation_controls.dart';
@@ -38,10 +39,10 @@ Future<void> onLoadingContainerTap(BuildContext context, WidgetRef ref,
       await showLoadingDetails(context, voyage, 'C:${container.containerId}');
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content:
-            Text('Este contenedor no tiene OR en el listado de la agencia: '
-                'importa el listado actualizado.')));
+    ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+        texto: 'Este contenedor no tiene OR en el listado de la agencia: '
+            'importa el listado actualizado.',
+        corto: 'Este contenedor no tiene OR.'));
     return;
   }
   await openLoadingRow(context, ref, voyage, row, selectedBay: selectedBay);
@@ -486,29 +487,31 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
       Navigator.pop(context);
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
+        ..showSnackBar(avisoDelViaje(
             key: const ValueKey('loading-undo-snackbar'),
-            duration: const Duration(seconds: 6),
-            persist: false,
-            content: Text(
-                '${discharged != null ? 'Descarga y carga registradas' : widget.correcting == null ? 'Carga registrada' : 'Carga corregida'} · OR ${row.order}'),
-            action: SnackBarAction(
-                label: 'Deshacer',
-                onPressed: () async {
-                  var error = await annulMovement(repository,
-                      result.record!.movement, markedByMistake, author);
-                  if (error == null && discharged != null) {
-                    error = await annulMovement(repository, discharged.movement,
-                        markedByMistake, author);
-                  }
-                  if (error == null && removed != null) {
-                    error = await annulMovement(repository, removed.movement,
-                        markedByMistake, author);
-                  }
-                  if (error != null) {
-                    messenger.showSnackBar(SnackBar(content: Text(error)));
-                  }
-                })));
+            duracion: const Duration(seconds: 6),
+            texto:
+                '${discharged != null ? 'Descarga y carga registradas' : widget.correcting == null ? 'Carga registrada' : 'Carga corregida'} · OR ${row.order}',
+            // Con la letra grande, si el entero no cabe sobre las cifras.
+            corto:
+                '${discharged != null ? 'Descarga y carga' : widget.correcting == null ? 'Cargado' : 'Corregido'} · OR ${row.order}',
+            accion: 'Deshacer',
+            onAccion: () async {
+              var error = await annulMovement(repository,
+                  result.record!.movement, markedByMistake, author);
+              if (error == null && discharged != null) {
+                error = await annulMovement(repository, discharged.movement,
+                    markedByMistake, author);
+              }
+              if (error == null && removed != null) {
+                error = await annulMovement(repository, removed.movement,
+                    markedByMistake, author);
+              }
+              if (error != null) {
+                messenger.showSnackBar(avisoDelViaje(
+                    texto: 'No se deshizo: $error', corto: 'No se deshizo.'));
+              }
+            }));
     } catch (failure, stack) {
       if (mounted) {
         setState(() => error = failure is StateError
@@ -886,8 +889,10 @@ Future<void> showLoadingDetails(
                                 ref.read(movementAuthorProvider));
                             if (!context.mounted) return;
                             if (error != null) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(content: Text(error)));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  avisoDelViaje(
+                                      texto: 'No se deshizo: $error',
+                                      corto: 'No se deshizo.'));
                             } else {
                               Navigator.pop(context);
                             }

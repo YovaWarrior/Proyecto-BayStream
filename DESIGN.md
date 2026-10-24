@@ -447,7 +447,10 @@ advertencia era un aviso más, quedaba formada detrás del de movimiento, la ven
 dependía de cuándo se apagaba y el segundo toque intentaba cerrar un aviso que no era el
 primero de la cola). El viaje publicado sigue guardado y se reabre desde los recientes
 con un toque. En el muelle, un toque por error no saca a nadie del plano. En el inicio,
-Atrás sale de la app como siempre.
+Atrás sale de la app como siempre. **La ventana es solo para dos toques seguidos en la
+raíz** (10.31, O1): si en medio se abre otra cosa (el menú del zoom, el detalle de una
+celda, una hoja, un diálogo) o Atrás cierra otra cosa, la ventana se cancela y la
+advertencia se va; el siguiente Atrás en la raíz vuelve a advertir.
 
 **Lo que la entrega 2 dejó en el código (22-oct, 10.16):** la barra de ocho acciones y su
 plegado (T-91) se retiran: Buscar va en la barra superior o en la cabecera de la oficina
@@ -1208,6 +1211,35 @@ al pie fijo de la página (`persistentFooterButtons`), siempre a la vista, y el 
 por encima. La barra de 4.3 («112, cifras, aviso y acción») y la ranura `aviso` de
 `BsBarraDeOperacion` siguen disponibles; la candidata no las usa porque el aviso dentro de
 la barra la haría crecer y mover la rejilla bajo el dedo.
+
+**El borde de arriba del aviso (23-oct, 10.31, H2).** Con la letra a 2.0 el aviso de 6 s
+crecía hacia arriba más que las cifras y pisaba la última fila de celdas: la regla de 10.29
+acotaba el borde de abajo y nada acotaba el de arriba. **La regla completa: en el muelle
+operando, el aviso de la página vive en la franja, entre el borde de arriba de la barra de
+la operación (donde termina la rejilla) y su aire sobre la fila de controles; puede tapar
+las cifras durante su plazo (10.30); la rejilla, el resumen de encima de la barra y los
+controles, nunca.**
+- **La página mide los dos bordes.** La barra entera se mide (`MideLaFranja` →
+  `franjaDelPlanoProvider`), además de su fila de controles; `AvisosSobreElPie` resta el
+  aire de abajo y dice a los avisos cuánto alto tienen (`LugarDelAviso`). Sin franja (la
+  leyenda, la Lista, la oficina) no hay tope y nada cambia.
+- **El aviso cabe por construcción.** Todos los avisos que pueden verse sobre el plano se
+  hacen con `avisoDelViaje` (`avisos_del_viaje.dart`): compactos (4 dp de aire arriba y
+  abajo, «Deshacer» al lado del texto con 8 dp a los lados) y con dos textos, el entero y uno
+  corto que sigue diciendo qué pasó. El aviso mide los dos al ancho que tiene y muestra el
+  primero que cabe en su alto; si ni el corto cabe (fuera de lo que se prueba: letra mayor
+  que 2.0 o pantallas de menos de 360 dp), se recorta a su lugar: el tope no se pasa nunca.
+  La letra del aviso es la del sistema y no se reserva sitio.
+- **Los textos cortos.** El registro en Descarga pierde la celda («Descargado ·
+  MNLU0000107»): la celda ya está en naranja (13.3) y el número del contenedor no se ve en
+  la rejilla. En Carga, «Descarga y carga · OR 16», «Cargado · OR 16», «Corregido · OR 16».
+  Un error o un aviso largo sin acción dice qué pasó («No se registró.», «No se aplicó todo
+  el perfil vigente.») y lleva **«Ver»**, que abre el texto entero en un diálogo.
+- **Las cifras de 10.31** (fuentes reales, 24 contenedores, el plano desplazado): el alto
+  para el aviso va de 64 dp con la letra a 1.0 a 117–146 dp con la letra a 2.0. Con la letra
+  a 1.0 el texto entero cabe en los dos teléfonos (360 × 640 y 412 × 915); con 1.45 y 2.0,
+  según el ancho, sale el corto. El aviso de T-61 (10 s), el más largo de la página, sale
+  corto con «Ver» a 2.0.
 
 ### 13.9 Lo que no se toma y los datos que no se inventan
 

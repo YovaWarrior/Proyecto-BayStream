@@ -5163,3 +5163,322 @@ indicadores, contraste 55/57. **Cifras:** suite 1338 (1329 + 9), `analyze` 0; `p
 `data/` y la lista del piloto sin tocar; Windows y la Web no se recompilaron y el conductor de Windows
 conserva sus `_sinAvisos()` (anotado). `DESIGN.md` 8 y 13.8 dicen lo nuevo. Me detengo: **ALTO: Codex
 acepta la corrección de la candidata.**
+
+## Fase 3 · Candidata del piloto · Segunda corrección (letra 2.0) (23-oct-2026)
+
+Codex volvió a aceptar la corrección (`docs/rediseno/fase3/candidata/reaceptacion-codex.md`; decisión
+10.31) y no pasó por **H2 con la letra a 2.0**: en el teléfono bajo (360 × 640) el aviso de 6 s con
+«Deshacer» medía 328 × 196 dp, iba de y=296 a y=492 y pisaba 4 dp de tres celdas del nivel 88, en
+Descarga y en Carga. La regla de la corrección anterior medía la fila de controles y ponía el aviso
+encima, pero nada acotaba su borde de arriba. Dejó además tres observaciones P3: **O1** (Atrás que
+cierra otra cosa dejaba abierta la ventana de 2 s), **O2** (el instrumento de Android ya no comprobaba
+en positivo el plano y la advertencia) y O3 (la oficina, que queda para COMAR y no se toca). Esta
+sección corrige H2, O1 y O2 en un bloque aparte, sin agregar funciones. Paso 0: arriba, `81f4bc9` con
+la decisión 10.31; en el árbol solo los tres generados de `windows/flutter/` y
+`test/t114_fase3_correccion_test.dart` con el fin de línea cambiado, que no son de nadie y no se tocan.
+Semáforo: Codex había terminado; solo este chat usó Flutter y el emulador, un comando a la vez.
+
+### 11.1 Resultado en tres líneas
+
+- H2: el aviso de la página vive en la franja, **entre el borde de arriba de la barra de la operación
+  (donde termina la rejilla) y su aire sobre los controles**, por construcción: la página mide los dos
+  bordes y cada aviso de la página (`avisoDelViaje`) sabe cuánto alto tiene, muestra su texto entero si
+  cabe o, si no, uno corto que sigue diciendo qué pasó, y nunca pasa de ese borde. Compacto, con
+  «Deshacer» al lado del texto, a la letra del sistema y sin sitio reservado (10.30 intacta). La matriz
+  de Codex (2 teléfonos × 3 letras × 2 modos) pasa entera, con el aviso más largo de la página y la
+  oficina a 1920.
+- O1: lo que se abre o se cierra en medio (el zoom, el detalle, una hoja, un diálogo) cancela la ventana
+  de Atrás; el siguiente toque en la raíz vuelve a advertir. O2: tras cada Atrás, el instrumento exige en
+  un mismo volcado, dentro de los 2 s, la advertencia, el plano y (con la Baja) «Deshacer».
+- Suite **1359** (piso 1338; 21 nuevas, ninguna omitida), `analyze` **«No issues found»**, el muelle
+  completo en el emulador: 27 pasos sin fallos con la letra a 1.0. **ALTO: Codex acepta la segunda corrección.**
+
+### 11.2 H2 · El aviso no pasa del borde de arriba de la franja
+
+**Lo que fallaba, medido.** Además de lo que vio Codex a 360 × 640, la misma regla fallaba a
+412 × 915 (no anidado, sin resumen sobre la barra, así que el lugar para el aviso son solo las cifras):
+con la letra a 1.45 el aviso de Descarga pisaba 6 dp de cuatro celdas, y con 2.0, 13 dp en Descarga y
+26 dp en Carga; con 1.0 ya pasaba 6 dp por encima de la barra, sin celdas debajo en ese plan. Y el aviso
+más largo de la página (T-61, 10 s, al reabrir un viaje) subía sobre la rejilla con cualquier letra:
+86 dp a 1.45 y 214 dp a 2.0 en 360 × 640. En el Honor (360 × 800, que con la letra a 1.0 no va anidado)
+pasaba lo mismo que a 412 × 915: 6 dp por encima de la barra con 1.0 y cuatro celdas pisadas con 1.45. Las capturas `antes-*.png` y `antes.jsonl` de
+`docs/rediseno/fase3/candidata/correccion2/geometria/` lo muestran (con el aviso como lo hacía la
+página, sobre la regla de `81f4bc9`).
+
+**Por qué no bastaba un aviso «más compacto».** Con la letra a 2.0 el lugar que la 10.30 deja al aviso
+(las cifras de la barra) mide 117 dp a 412 × 915 en Descarga, y el aviso de un registro con el número
+del contenedor, la celda y «Deshacer» necesita tres líneas más su relleno: no cabe con ningún relleno.
+Hacía falta que el aviso supiera cuánto alto tiene y eligiera qué decir.
+
+**La regla nueva** (`avisos_del_viaje.dart`, `DESIGN.md` 13.8):
+- **Los dos bordes se miden.** Además de la fila de controles (`MideElPieDelPlano`, de 10.29), la barra
+  de la operación entera se mide (`MideLaFranja` → `franjaDelPlanoProvider`, en `BayPlanView`); la
+  leyenda, sin operación, deja la franja sin valor. `AvisosSobreElPie` resta el aire de abajo del aviso
+  y pasa el alto que queda (`LugarDelAviso`) a lo que está debajo del `Scaffold`, que incluye el aviso.
+  El resumen de encima de la barra (la línea que se abre con un toque) queda fuera: es un control.
+- **El aviso cabe por construcción.** `avisoDelViaje(texto:, corto:, accion:, …)` hace el `SnackBar`
+  de la página: compacto (4 dp de aire arriba y abajo, «Deshacer» al lado del texto con 8 dp a los
+  lados en vez de 16) y con dos filas, la del texto entero y la del corto. Una pieza propia
+  (`_ElQueCabe`) las mide al ancho que hay y muestra la primera que cabe en el alto del lugar; las demás
+  ni se dibujan, ni reciben toques, ni se anuncian, ni las encuentran las pruebas. Si ni la corta cabe
+  (fuera de lo probado: letra mayor que 2.0 o pantallas de menos de 360 dp), se recorta a su lugar: el
+  tope no se pasa nunca. La letra del aviso es la del sistema; no se reserva sitio; no va arriba.
+- **Todos los avisos de la página pasan por ahí**: los de `discharge_controls.dart` (la Baja y la
+  re‑estiba con «Deshacer», «Deshecho», «No se registró», «No se deshizo», «No se quitó la tapa»,
+  «Esta escala no tiene operación guardada»), `loading_controls.dart` (la carga con «Deshacer», «Este
+  contenedor no tiene OR», los errores al deshacer), `plan_drag_confirmation.dart` y
+  `vessel_overview_page.dart` (exportar, cargar el archivo, el perfil, los parámetros, T-61). T-61 se
+  arma en un solo sitio (`avisoDelParametroConservado`) porque sale sobre el plano también cuando se
+  reabre desde «Viajes recientes». Una prueba lee esos archivos y falla si aparece un `SnackBar(` hecho
+  a mano.
+- **Los textos cortos.** La Baja: «Descargado · MNLU0000107» (sin la celda, que ya está en naranja y se
+  ve en la rejilla; el número del contenedor no se ve en ningún otro sitio). La carga: «Descarga y carga ·
+  OR 16», «Cargado · OR 16», «Corregido · OR 16». Un error o un aviso largo sin acción dice qué pasó («No
+  se registró.», «No se deshizo.», «No se aplicó todo el perfil vigente.») y lleva **«Ver»**, que abre el
+  texto entero en un diálogo con «Cerrar». Los errores al deshacer una carga, que antes eran solo el
+  mensaje del dominio, ahora empiezan «No se deshizo:», como los de la descarga.
+- **Sin franja no cambia nada**: en la Lista, el Avance, la oficina y el plano sin operación no hay tope y
+  el aviso dice siempre su texto entero; solo se ve más compacto.
+
+**Cifras con la regla nueva** (fuentes reales, 24 contenedores, el plano desplazado; la tarjeta del aviso
+y el borde de arriba de la barra en dp; `geometria.jsonl`):
+
+| Pantalla | Letra | Descarga: texto · aviso (borde de la barra) | Carga: texto · aviso (borde de la barra) | Celdas tapadas |
+|---|---|---|---|---|
+| 360 × 640 | 1.0 | entero · 434–492 (428) | entero · 436–492 (428) | 0 |
+| 360 × 640 | 1.45 | corto · 416–492 (404) | entero · 416–492 (404) | 0 |
+| 360 × 640 | 2.0 | corto · 350–492 (346) | corto · 392–492 (346) | 0 |
+| 412 × 915 | 1.0 | entero · 711–767 (703) | entero · 711–767 (703) | 0 |
+| 412 × 915 | 1.45 | corto · 691–767 (679) | entero · 691–767 (679) | 0 |
+| 412 × 915 | 2.0 | corto · 667–767 (650) | entero · 625–767 (621) | 0 |
+
+La fila de controles empieza en y=500 (360 × 640) y y=775 (412 × 915) en todos los casos, 8 dp por debajo
+del aviso. T-61 con la letra a 2.0 en 360 × 640: «No se aplicó todo el perfil vigente.» con «Ver», 392–492;
+el diálogo lo muestra entero (`360x640-t61-letra2.0-ver.png`).
+
+**Pruebas** (`test/t114_candidata_correccion2_test.dart`, nuevo, 18). Con la prueba de geometría de
+Codex como base (la app entera, las fuentes reales, los planes de 24 contenedores, el plano desplazado
+y cada celda recortada por los desplazables y la ventana; en Carga también `plan-cell-*` y
+`loading-C:*`):
+- **la matriz, 12 casos** (360 × 640 y 412 × 915; letra 1.0, 1.45 y 2.0; Descarga y Carga), con el
+  aviso de 6 s hecho como lo hace la página y los textos de los avisos de verdad. Cada caso comprueba que
+  ninguna celda visible cruza el aviso y que no pasa del borde de arriba de la barra; que la fila de
+  controles y lo que se toca en ella quedan libres; que el texto que se ve es el entero o el corto, entero
+  (sin elipsis y sin líneas recortadas: su alto es el de su texto) y dentro de la tarjeta; y que
+  «Deshacer» responde. Con la letra a 1.0 exige además el texto entero;
+- **el aviso más largo** de los demás de la página (T-61) con la letra a 2.0 en 360 × 640: el corto,
+  entero y sin tapar nada; el lector de pantalla lee ese y no el que no cabe; y «Ver» abre el texto entero,
+  que se lee sin cortes;
+- **la oficina a 1920 × 1080** con la letra a 1.0 (el aviso compacto también cambia ahí): sin franja,
+  sin tope; el aviso, entero y por encima de la leyenda, no tapa celdas y «Deshacer» responde;
+- **dos registros de verdad** con la letra a 2.0 en el teléfono bajo: dos Baja seguidas y una carga por
+  OR, cada aviso en su lugar y entero, y «Deshacer» deshace;
+- **la medida vieja** de Codex, adaptada: con medidas viejas grandes y pequeñas (también de la franja),
+  al abrir otro viaje y al volver de la Lista, en todos los cuadros visibles el aviso queda entre el borde
+  de arriba de la barra y los controles, y las medidas nuevas sustituyen a las viejas. Sigue teniendo
+  sentido: la franja también se mide después del cuadro;
+- **una guarda**: ningún `SnackBar(` hecho a mano en los cuatro archivos de la página, y T-61 de los
+  recientes por `avisoDelParametroConservado`.
+
+La prueba de Codex tal cual (`geometria-final_test.dart.txt`) **sigue fallando**, y es lo esperado: pone
+en pantalla un `SnackBar` hecho a mano, que no sabe su lugar. La regla es de los avisos de la página, y
+la guarda asegura que todos se hacen con `avisoDelViaje`; la matriz nueva es la suya con el aviso como
+lo hace la página. Las cinco pruebas de la corrección anterior siguen pasando sin cambios.
+
+### 11.3 O1 · Atrás que cierra otra cosa
+
+La ventana de 2 s es para dos toques seguidos en la raíz. Ahora `AtrasDelViaje` la cancela, y la
+advertencia se va, cuando en medio:
+- **se abre algo que no es una ruta**: el menú del zoom (`cerrablesDeAtrasProvider` sube) o el detalle
+  en el panel lateral (`celdaSeleccionadaProvider` deja de estar vacío);
+- **se abre una ruta encima** (una hoja, un diálogo, la búsqueda): la página deja de ser la ruta actual
+  (`ModalRoute.isCurrentOf`, en `didChangeDependencies`);
+- **Atrás cierra otra cosa** (el zoom, el detalle): ese toque no cuenta como primero y cancela la que
+  hubiera.
+El siguiente Atrás en la raíz vuelve a advertir. Lo demás de H1 no cambia: el reloj cuenta desde el
+primer toque, la tarjeta va arriba fuera de la cola de avisos y no cierra avisos ajenos, y solo aplica al
+viaje publicado en Android. **Pruebas** (`test/t114_candidata_atras_test.dart`, 13 → 16): los dos casos de
+Codex (`h1-intermedio_test.dart.txt`), ahora sin salir del viaje (el zoom; el detalle en el panel lateral a
+1300 × 900), el de una hoja («Más»), y en el primero, al final, dos toques seguidos en la raíz siguen
+saliendo. Las 13 de antes pasan sin cambios.
+
+### 11.4 O2 · El instrumento de Android
+
+`tool/t114_piloto_android.py`: tras cada Atrás en la raíz, `advertencia_y_plano()` sondea el árbol de
+uiautomator mientras dura la ventana y exige en **un mismo volcado** la advertencia («Toca Atrás otra
+vez…»), un elemento del plano (una celda «por descargar», la bahía o una cifra de la franja) y, con el
+aviso de la Baja, «Deshacer»; el inicio o un volcado vacío no valen, y si no aparecen antes de los 2 s
+el paso falla. Anota en `registro.tsv` a qué segundo los vio. `sin_inicio()` también exige ahora el plano
+en positivo. La captura va al instante, en otro hilo, a la vez que el sondeo (`atras_comprobado()`).
+
+Hicieron falta tres intentos para ajustar el instrumento, y los tres los paró la comprobación nueva, no la
+app (sus capturas p23 muestran la advertencia, el plano y el aviso a la vez): **un volcado de uiautomator
+espera a que la app se quede quieta**. En reposo tarda 1,2 s y ve la advertencia; justo después de una
+Baja, o cuando se va el aviso de 6 s, tarda 3,0 s y llega con la ventana ya cerrada (medido aparte en el
+emulador). Ahora, tras la Baja, el primer volcado comprueba el aviso con «Deshacer» (`con_aviso()`, que
+espera a que la app esté quieta) y entonces va el Atrás; antes del segundo Atrás, `sin_inicio()` hace lo
+mismo. Los intentos quedan en `%TEMP%\t114-correccion2\emulador-1.0-intento-{1,2,3}` (fuera de Git) y se
+cuentan en 11.5. El instrumento acepta además `--letra` (por omisión 1.0; al terminar vuelve a 1.0) para la
+corrida con la letra grande.
+
+### 11.5 El emulador
+
+`tool/t114_piloto_android.py` con el APK r4 de este árbol (banco `%TEMP%\t99-r4-corr2\copia`,
+`flutter build apk --release -t tool/t99_main.dart`), instalado solo en `t99_api26` (`emulator-5554`,
+360 × 640 dp, el muelle de día), con los sintéticos T100_CARGA.edi, T100_LLEGADA.edi y T100_LISTADO.xlsx,
+desde datos limpios (el instrumento hace `pm clear`). El Honor no se tocó.
+
+- **Con la letra a 1.0: 27 pasos, 0 fallos**, en el cuarto intento (`correccion2/emulador/`: `pNN-*.png`,
+  `registro.tsv`, `salida.txt`). Los tres anteriores los paró la comprobación nueva de O2, en el paso 23
+  (dos) y en el 24 (uno), por el tiempo del volcado (11.4): en los tres, los pasos 1 a 22 pasaron igual, y
+  la captura p23 del primero muestra la advertencia, el plano y el aviso a la vez
+  (`correccion2/emulador-intentos/`, con sus registros). Antes del cuarto se recompiló el APK con la línea
+  que rehace la semántica de `_ElQueCabe` al cambiar de texto (11.2); lo demás es igual.
+
+| Paso | Captura | Qué se ve |
+|---|---|---|
+| Baja y otra Baja, sin esperar | p10, p11 | el aviso entero, «Descargado · MNLU… · 002-0x-82» con «Deshacer», entre la línea del resumen y la fila de controles: el resumen ya no queda debajo; la segunda Baja registra con el aviso de la primera en pantalla |
+| La re‑estiba y el cambio a Carga | p14, p15 | «Re‑estiba registrada» sobre las cifras; Carga abre con ese aviso aún en pantalla |
+| La primera carga por OR | p18 | «Descarga y carga registradas · OR 16», en una línea, con «Deshacer» al lado |
+| La segunda, sin esperar | p19, p20 | «Acciones» abierto con el aviso de la primera detrás; después, la segunda carga |
+| Atrás con el aviso de una Baja | p23 | la advertencia arriba y el aviso con «Deshacer» abajo; O2 los ve con el plano a los 1,2 s |
+| Otro toque pasados más de 2 s | p24 | la advertencia otra vez y el plano sigue; O2, a los 1,2 s |
+| Dos toques seguidos | p25, p26 | el inicio con el viaje en los recientes; el reciente reabre publicado |
+
+- **Con la letra a 2.0** (`--letra 2.0`, sin tocar ningún paso): el instrumento se detiene en el **paso 4**,
+  en «Parámetros del buque»: «No lo tengo» no llega entero a la vista al deslizar
+  (`correccion2/emulador-letra2.0/`: p01 a p03 y la salida). **No llega a una Baja ni a una carga por OR**, así
+  que no hay capturas del aviso con la letra a 2.0 en el emulador; no se forzó el instrumento. Con la letra a
+  2.0 lo cubren las capturas de geometría con las fuentes reales (11.2) y las dos pruebas que registran de
+  verdad a 2.0. Al terminar, `font_scale` quedó en 1.0 (comprobado con `adb -s emulator-5554 shell settings
+  get system font_scale`).
+
+### 11.6 Validaciones ejecutadas
+
+Un comando de Flutter a la vez; el Honor (`AJ5TBB6531101024`, conectado) no se tocó: el instrumento fija
+`ANDROID_SERIAL=emulator-5554` y las órdenes sueltas llevan `-s emulator-5554`.
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze --no-pub` | **«No issues found»**, sin `// ignore:` |
+| `flutter test --no-pub`, al final, tras el último cambio | **1359** en verde, ninguna omitida, sin reintentos (piso 1338 → 1359; `build/t114-correccion2/suite-final.txt`, fuera de Git). Una corrida anterior, antes de la línea de la semántica de `_ElQueCabe`, dio también 1359 |
+| `test/t114_candidata_correccion2_test.dart` | 18 nuevas (H2: 12 de la matriz, T-61, la oficina, dos registros de verdad, la medida vieja, la guarda) |
+| `test/t114_candidata_atras_test.dart` | 16 (13 + 3 de O1) |
+| `test/t114_candidata_correccion_test.dart` | las 5 de antes, sin cambios |
+| Capturas de geometría | `correccion2/geometria/`: 10 con la regla nueva (1.0 y 2.0, los dos teléfonos, los dos modos; T-61 y su «Ver») y 5 de antes, con sus medidas |
+| `tool/t114_piloto_android.py` | **27 pasos, 0 fallos** con la letra a 1.0 (cuarto intento; los tres anteriores, parados por O2 en p23/p24 por el tiempo del volcado); con la letra a 2.0 se detiene en el paso 4 y no llega a la Baja |
+| Banco r4 | `%TEMP%\t99-r4-corr2\copia` (`t99_copia.ps1 -Arbol -Sufijo r4 -Entradas …`), APK `gt.cmartinez.baystream.r4` (`flutter build apk --release -t tool/t99_main.dart`) |
+
+**Las 54 capturas de las pantallas sin rediseñar no se rehacen**: la corrección solo cambia los avisos
+(que no salen en ellas), la ventana de Atrás (que no se ve sin tocar Atrás) y dos medidores
+(`MideLaFranja` y la leyenda con `sinFranja`), que son cajas que no dibujan ni cambian el layout. Ninguna
+página cambia sin aviso. Windows y la Web no se recompilaron; RNF-002, la RAM, la auditoría y los censos no
+se repitieron: nada toca los tres pasos ni las listas.
+
+### 11.7 Archivos
+
+- **`lib/` (solo presentación):** `features/vessel/presentation/widgets/avisos_del_viaje.dart`
+  (`franjaDelPlanoProvider`, `MideLaFranja`, `LugarDelAviso`, `avisoDelViaje`,
+  `avisoDelParametroConservado`, `_ElQueCabe`; `MideElPieDelPlano(sinFranja:)`), `widgets/bay_plan_view.dart`
+  (la barra dentro de `MideLaFranja`; la leyenda sin franja), `widgets/navegacion_del_viaje.dart` (O1),
+  `widgets/discharge_controls.dart`, `widgets/loading_controls.dart`, `widgets/plan_drag_confirmation.dart`,
+  `pages/vessel_overview_page.dart` y `pages/recent_voyages_page.dart` (los avisos por `avisoDelViaje`).
+- **`test/`:** nuevo `t114_candidata_correccion2_test.dart`; modificado `t114_candidata_atras_test.dart` (+3).
+- **`tool/`:** `t114_piloto_android.py` (O2 y `--letra`).
+- **Documentos:** `DESIGN.md` (8: la ventana se cancela; 13.8: el borde de arriba del aviso), este informe y
+  la evidencia nueva en `docs/rediseno/fase3/candidata/correccion2/` (`geometria/`, `emulador/`, `emulador-intentos/` y `emulador-letra2.0/`).
+- Sin cambios: `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.yaml`, `pubspec.lock`, Firebase,
+  las apps instaladas, «PRUEBA T-105», `C:\Proyectos\baystream-demo17\`, `docs/piloto/LISTA-PILOTO.md` y el
+  Honor. Los generados de `windows/flutter/` y `test/t114_fase3_correccion_test.dart` siguen figurando
+  modificados solo por el fin de línea y no se agregan.
+
+### 11.8 Lo que queda anotado
+
+1. **Con la letra grande, el aviso de la Baja dice el contenedor y no la celda** («Descargado ·
+   MNLU0000107»), y a 360 dp el número parte en dos líneas («MNLU00001 / 07») porque no cabe entero al lado
+   de «Deshacer». Está entero, pero se lee peor. Agrupar el número como en ISO 6346 («MNLU 000010 7»,
+   ya anotado en 9.3) lo partiría por los espacios; es un cambio de presentación de todos los números de
+   contenedor y no entra aquí.
+2. **Los errores largos se leen con «Ver».** Con la letra a 1.0 casi todos caben enteros; con la grande, el
+   aviso dice qué pasó y el porqué está a un toque. Si en el piloto molesta, el porqué puede ir en el detalle
+   de la celda.
+3. **Un aviso que se muestra en otra página y sigue en pantalla al volver al plano** (por ejemplo «Listado
+   importado.» si se vuelve en sus 4 s) no pasa por `avisoDelViaje` y no sabe su lugar. Son textos de una
+   línea y caben; T-61, el único que está hecho para verse en el plano, ya pasa por ahí.
+4. **El plano sin operación** (la leyenda al pie) no tiene franja: el aviso flota por encima de la leyenda,
+   como desde 10.29, y puede cruzar la rejilla. La 10.31 pide el muelle operando (Descarga y Carga); fuera
+   de él no se cambió.
+5. **O3 (la oficina)** queda para COMAR, como dice la 10.31.
+
+### 11.9 Horas
+
+De ≈ 20:20 (el encargo) a ≈ 21:35 del 23-oct-2026: **≈ 1.3 h** de reloj. Medir la regla vieja en los dos
+teléfonos y en el Honor (360 × 800), probar tres formas del aviso, la regla y sus 18 pruebas, O1 con 3,
+O2, la suite una vez, el banco y el APK, cinco corridas del emulador y los documentos.
+
+### Git para Carlos (Fase 3, candidata del piloto, segunda corrección)
+
+Un `git add` por ruta; la evidencia nueva va por su carpeta, verificada: 58 archivos, ninguno ignorado
+(`geometria/` 17, `emulador/` 29, `emulador-intentos/` 7, `emulador-letra2.0/` 5). `pubspec.*`, `domain/`,
+`data/`, `lib/main.dart`, los congelados y `docs/piloto/LISTA-PILOTO.md` no cambian; los generados de
+`windows/flutter/` y `test/t114_fase3_correccion_test.dart` no se agregan. El último comando tiene que
+mostrar **71 files changed**.
+
+```powershell
+git add -- lib/features/vessel/presentation/widgets/avisos_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/discharge_controls.dart
+git add -- lib/features/vessel/presentation/widgets/loading_controls.dart
+git add -- lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/pages/recent_voyages_page.dart
+git add -- test/t114_candidata_correccion2_test.dart
+git add -- test/t114_candidata_atras_test.dart
+git add -- tool/t114_piloto_android.py
+git add -- DESIGN.md
+git add -- docs/rediseno/fase3/candidata/correccion2
+git add -- docs/REDISENO-RESULTADOS.md
+git commit -m "Sprint 4: segunda correccion de la candidata del piloto (10.31), el aviso no pasa del borde de arriba de la franja con cualquier letra, Atras cancela la ventana al abrir o cerrar otra cosa, el instrumento de Android comprueba en positivo y el muelle repetido en el emulador" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git push origin sprint-4
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+### Tres líneas
+
+- H2: el aviso de la página vive entre el borde de arriba de la barra de la operación y sus controles, por
+  construcción: la página mide los dos bordes y `avisoDelViaje` muestra el texto entero si cabe o uno corto
+  que sigue diciendo qué pasó («Ver» para el entero en los largos); compacto, con «Deshacer» al lado, a la
+  letra del sistema y sin sitio reservado.
+- O1: lo que se abre o se cierra en medio cancela la ventana de Atrás; O2: el instrumento exige en un
+  volcado, dentro de los 2 s, la advertencia, el plano y «Deshacer».
+- Suite 1359, `analyze` 0, la matriz de Codex (2 teléfonos × 3 letras × 2 modos) en verde, el muelle en el emulador con 27 pasos sin fallos. ALTO: Codex
+  acepta la segunda corrección.
+
+### Mensaje para Yov
+
+Yov: la **segunda corrección de la candidata (10.31)** está escrita, probada y repetida en el emulador, en
+un bloque aparte de 71 archivos. **H2:** la regla de 10.29 acotaba el borde de abajo del aviso y nada el de
+arriba; además de lo que vio Codex a 360 × 640, a 412 × 915 pisaba celdas ya con la letra a 1.45, y el aviso
+de T-61 subía sobre la rejilla con cualquier letra. Con la letra a 2.0 el lugar que deja la 10.30 (las
+cifras) mide 117 dp a 412 × 915 y el aviso con número, celda y «Deshacer» no cabe con ningún relleno, así
+que el aviso tiene que elegir qué decir. Ahora la barra entera se mide (`MideLaFranja`), `AvisosSobreElPie`
+pasa a los avisos su alto (`LugarDelAviso`) y todos los avisos de la página se hacen con `avisoDelViaje`:
+compactos, con «Deshacer» al lado del texto, y con dos textos, el entero y uno corto que sigue diciendo qué
+pasó («Descargado · MNLU0000107»; los errores, «No se registró.» con «Ver» para el entero). Una pieza propia
+mide los dos y muestra el primero que cabe; si ni el corto cabe, se recorta a su lugar: el tope no se pasa
+nunca. Letra del sistema, sin sitio reservado, abajo: la 10.30 queda intacta. Una prueba-guarda falla si
+aparece un `SnackBar(` a mano en los archivos de la página. La prueba de Codex tal cual sigue fallando,
+porque pone un `SnackBar` hecho a mano; la matriz nueva es la suya con el aviso como lo hace la página.
+**Pruebas:** 18 nuevas: la matriz de 12 (360 × 640 y 412 × 915; 1.0, 1.45 y 2.0; Descarga y Carga), T-61 a
+2.0 con «Ver», la oficina a 1920, dos registros de verdad a 2.0, la medida vieja de Codex y la guarda. **O1:**
+lo que se abre o se cierra en medio (zoom, detalle, hoja, diálogo) cancela la ventana de Atrás; tres
+pruebas, los dos casos de Codex sin salir y la hoja; dos toques seguidos siguen saliendo. **O2:** tras cada
+Atrás, el instrumento exige en un volcado, dentro de los 2 s, la advertencia, el plano y «Deshacer»; un
+volcado de uiautomator espera a que la app quede quieta (3 s tras una Baja, 1,2 s en reposo) y costó tres
+intentos ajustarlo. **Emulador:** 27 pasos sin fallos a 1.0, O2 a los 1,2 s en los dos Atrás; a 2.0 el
+instrumento se detiene en el paso 4 («No lo tengo») y no llega a la Baja: no se forzó. **Cifras:** suite 1359
+(1338 + 21), `analyze` 0; `pubspec.*`, `domain/`, `data/` y la lista del piloto sin tocar; las 54 capturas
+no cambian (nada se ve distinto sin aviso). Anotado: a 360 dp con letra grande el número del contenedor
+parte en dos líneas, y el plano sin operación sigue sin tope. `DESIGN.md` 8 y 13.8 dicen lo nuevo. Me
+detengo: **ALTO: Codex acepta la segunda corrección.**

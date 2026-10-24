@@ -1,0 +1,15 @@
+p01-inicio el inicio sin viajes
+p02-plan-de-carga-en-previo abre en previo con la banda; tres pasos
+p03-parametros-del-buque la banda abrió «Parámetros del buque»
+Traceback (most recent call last):
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 412, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Proyectos\baystream-rediseno\tool\t114_piloto_android.py", line 248, in main
+    tocar_entero(r'No lo tengo', 12)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Proyectos\baystream-rediseno\tool\t114_capturas_android_plano.py", line 45, in tocar_entero
+    raise RuntimeError(f'No se pudo tocar entero: {texto}')
+RuntimeError: No se pudo tocar entero: No lo tengo
+salida 1
+1.0

@@ -444,12 +444,11 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
   }
 
   /// Un aviso corto, con el mismo texto en todas partes. El aire lo pone la
-  /// página ([AvisosSobreElPie]): con plano, por encima de su pie.
-  void _avisar(BuildContext context, String texto) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(texto),
-      behavior: SnackBarBehavior.floating,
-    ));
+  /// página ([AvisosSobreElPie]): con plano, por encima de su pie y sin pasar
+  /// del borde de arriba de la franja ([avisoDelViaje]).
+  void _avisar(BuildContext context, String texto, {String? corto}) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(avisoDelViaje(texto: texto, corto: corto));
   }
 
   /// Abre el buscador de contenedores
@@ -502,13 +501,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     try {
       Uint8List? pdfBytes;
       if (format == VoyageExportFormat.pdf) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Generando reporte PDF...'),
-            duration: Duration(minutes: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: 'Generando reporte PDF...',
+          duracion: const Duration(minutes: 2),
+        ));
         // Deja que el aviso se dibuje antes de generar el PDF.
         await WidgetsBinding.instance.endOfFrame;
         pdfBytes = await const PdfReportService().generate(
@@ -526,23 +522,15 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       if (path == null && !kIsWeb) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Exportación ${format.label} completada'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _avisar(context, 'Exportación ${format.label} completada');
     } catch (error, stack) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              vesselErrorMessage(error, stack, 'exportar ${format.label}')),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+        texto: vesselErrorMessage(error, stack, 'exportar ${format.label}'),
+        corto: 'No se pudo exportar ${format.label}.',
+        fondo: Theme.of(context).colorScheme.error,
+      ));
     }
   }
 
@@ -604,19 +592,14 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final error = await notifier.openRecentVoyage(recent.id);
     if (!context.mounted) return;
     if (error != null) {
-      _avisar(context, error);
+      _avisar(context, error, corto: 'No se pudo abrir el viaje.');
       return;
     }
     final kept = notifier.reopenKeptParameters;
     if (kept.isNotEmpty) {
       // T-61: el perfil vigente no se aplica si oculta carga; se dice cuál.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          key: const ValueKey('reopen-kept-parameters'),
-          duration: const Duration(seconds: 10),
-          content: Text('No se aplicó del perfil vigente: '
-              '${kept.map((p) => p.label).join(', ')}. Dejaría contenedores '
-              'de este viaje fuera del plano; se conserva el valor guardado '
-              'con el viaje. Revisa el perfil del buque.')));
+      ScaffoldMessenger.of(context).showSnackBar(avisoDelParametroConservado(
+          kept.map((p) => p.label)));
     }
   }
 
@@ -640,17 +623,16 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     if (result.preview || result.needsIdentity) return;
 
     // Mostrar SnackBar según el resultado
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result.success
-              ? 'Archivo "${result.fileName}" cargado correctamente'
-              : result.errorMessage ?? unexpectedErrorMessage('cargar el archivo'),
-        ),
-        backgroundColor: result.success ? null : Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(result.success
+        ? avisoDelViaje(
+            texto: 'Archivo "${result.fileName}" cargado correctamente',
+            corto: 'Archivo cargado.')
+        : avisoDelViaje(
+            texto: result.errorMessage ??
+                unexpectedErrorMessage('cargar el archivo'),
+            corto: 'No se pudo cargar el archivo.',
+            fondo: Theme.of(context).colorScheme.error,
+          ));
   }
 
   /// «Confirmar» en la banda del previo: identidad si hay homónimos, plantilla
@@ -697,17 +679,18 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
           .resolveIdentity(selection < 0 ? null : candidates[selection]);
       if (!context.mounted) return;
       if (!result.success) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(result.errorMessage ??
-              unexpectedErrorMessage('aplicar el perfil del buque')),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
+        ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: result.errorMessage ??
+              unexpectedErrorMessage('aplicar el perfil del buque'),
+          corto: 'No se aplicó el perfil del buque.',
+          fondo: Theme.of(context).colorScheme.error,
         ));
         return;
       }
       if (!result.needsGeometry) {
         // El homónimo elegido cubre la carga y la escala es la de siempre.
-        _avisar(context, 'Archivo "$fileName" cargado correctamente');
+        _avisar(context, 'Archivo "$fileName" cargado correctamente',
+            corto: 'Archivo cargado.');
         return;
       }
     }
@@ -760,9 +743,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       return true;
     } catch (error, stack) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(vesselErrorMessage(
-                error, stack, 'aplicar la plantilla del buque'))));
+        _avisar(context,
+            vesselErrorMessage(error, stack, 'aplicar la plantilla del buque'),
+            corto: 'No se aplicó la plantilla del buque.');
       }
       return false;
     }
@@ -895,9 +878,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
           reeferSlotsOrigin: result.reeferSlotsOrigin);
       if (!context.mounted) return;
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(error),
-          backgroundColor: Theme.of(context).colorScheme.error,
+        ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: error,
+          corto: 'No se guardaron los parámetros.',
+          fondo: Theme.of(context).colorScheme.error,
         ));
         initial = result.geometry;
         profile = profile.copyWith(
@@ -911,16 +895,12 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       if (!isEditing) {
         ref.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isEditing
-                ? 'Parámetros del buque actualizados'
-                : 'Archivo "$fileName" cargado correctamente',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _avisar(
+          context,
+          isEditing
+              ? 'Parámetros del buque actualizados'
+              : 'Archivo "$fileName" cargado correctamente',
+          corto: isEditing ? null : 'Archivo cargado.');
       return;
     }
   }

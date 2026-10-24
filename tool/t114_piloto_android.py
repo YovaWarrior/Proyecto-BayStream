@@ -21,16 +21,23 @@ abajo, a la vez; pasados más de 2 s otro toque vuelve a advertir y el plano
 sigue; dos toques seguidos vuelven al inicio (H1). Los estados que duran 2 y 6 s
 se capturan al instante (`foto(..., rapida=True)`), con las coordenadas de los
 controles tomadas antes del registro: cada volcado de uiautomator tarda cerca de
-un segundo y una captura tras dos volcados ya llega tarde. Los archivos van a
+un segundo y una captura tras dos volcados ya llega tarde.
+
+Segunda corrección (10.31, O2): tras cada Atrás en la raíz, el recorrido comprueba
+en positivo, dentro de la ventana de 2 s, que en un mismo volcado se ven la
+advertencia y un elemento del plano (y, con el aviso de la Baja, su «Deshacer»),
+con un sondeo corto del árbol de uiautomator: un árbol vacío o el inicio no valen,
+y si no aparecen a tiempo el paso falla. Los archivos van a
 /sdcard/Download/t114 (el selector de AOSP los elige ahí). Cada paso es una
 captura numerada (screencap) en la salida (TEMP) y una línea de registro.tsv.
 
-python tool/t114_piloto_android.py <salida en TEMP> --entradas <carpeta con los .edi y el .xlsx>
+python tool/t114_piloto_android.py <salida en TEMP> --entradas <carpeta con los .edi y el .xlsx> [--letra 2.0]
 """
 import argparse
 import os
 import re
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -112,10 +119,61 @@ def posicion_de(patron):
     return position([rows[0]], rows[0][1])
 
 
+# La ventana de Atrás (`AtrasDelViaje.ventana`) y lo que dice que el plano sigue:
+# una celda de la Descarga, la bahía o una cifra de la franja.
+VENTANA_DE_ATRAS = 2.0
+PLANO = r'por descargar$|^Bah[ií]a|por bajar'
+
+
 def sin_inicio():
-    """El plano sigue: el inicio no apareció."""
-    if observe(False, r'Seleccionar archivo'):
+    """El plano sigue, en positivo: en el volcado hay un elemento del plano y no
+    está el inicio. Un árbol vacío no vale."""
+    textos = [t for _, t in observe(False)]
+    if any(re.search(r'Seleccionar archivo', t) for t in textos):
         raise RuntimeError('El plano se cerró cuando no tocaba.')
+    if not any(re.search(PLANO, t, re.I) for t in textos):
+        raise RuntimeError('No se ve el plano (volcado sin celdas ni franja).')
+
+
+def advertencia_y_plano(desde, con_deshacer=False):
+    """Tras un Atrás en la raíz (en `desde`, reloj monotónico), en positivo y
+    dentro de la ventana: la advertencia y un elemento del plano en un mismo
+    volcado y, si se pide, el aviso con «Deshacer». Sondea el árbol mientras dura
+    la ventana; un árbol vacío o el inicio no valen. Devuelve cuándo se vio."""
+    while True:
+        textos = [t for _, t in observe(False)]
+        visto = time.monotonic() - desde
+        if any(re.search(r'Seleccionar archivo', t) for t in textos):
+            raise RuntimeError('El plano se cerró cuando no tocaba.')
+        advertencia = any(re.search(r'Toca Atrás otra vez', t) for t in textos)
+        plano = any(re.search(PLANO, t, re.I) for t in textos)
+        deshacer = not con_deshacer or any(re.fullmatch(r'Deshacer', t) for t in textos)
+        if advertencia and plano and deshacer:
+            return visto
+        if visto > VENTANA_DE_ATRAS:
+            raise RuntimeError(
+                f'A los {visto:.1f} s del Atrás no se vieron juntos la advertencia '
+                f'({advertencia}), el plano ({plano}) y «Deshacer» ({deshacer}).')
+
+
+def atras_comprobado(r, nombre, nota, con_deshacer=False):
+    """Atrás en la raíz y su comprobación en positivo (O2). El sondeo arranca
+    enseguida y la captura va a la vez, en otro hilo: un volcado de uiautomator
+    espera a que la app se quede quieta y tarda más de un segundo, así que tras
+    la captura llegaba pasados los 2 s (primer intento de la segunda corrección)."""
+    adb('shell', 'input', 'keyevent', '4')
+    desde = time.monotonic()
+
+    def captura_al_instante():
+        time.sleep(0.3)
+        r.foto(nombre, nota, rapida=True)
+
+    hilo = threading.Thread(target=captura_al_instante)
+    hilo.start()
+    try:
+        return advertencia_y_plano(desde, con_deshacer)
+    finally:
+        hilo.join()
 
 
 class Recorrido:
@@ -135,6 +193,11 @@ class Recorrido:
         self.registro.append(f'{self.paso}\t{archivo}.png\t{nota}\t{datetime.now(timezone.utc).isoformat()}')
         print(archivo, nota)
 
+    def nota(self, texto):
+        """Una línea del registro sin captura."""
+        self.registro.append(f'		{texto}	{datetime.now(timezone.utc).isoformat()}')
+        print(texto)
+
     def guardar(self):
         (self.out / 'registro.tsv').write_text('\n'.join(self.registro) + '\n', encoding='utf-8')
 
@@ -148,6 +211,8 @@ def main():
     p.add_argument('--plan-de-carga', default='T100_CARGA.edi')
     p.add_argument('--listado', default='T100_LISTADO.xlsx')
     p.add_argument('--llegada', default='T100_LLEGADA.edi')
+    p.add_argument('--letra', default='1.0',
+                   help='la letra del sistema durante la corrida (font_scale); al terminar vuelve a 1.0')
     args = p.parse_args()
     if args.serial != 'emulator-5554' and not os.environ.get('T114_HONOR_AUTORIZADO'):
         raise ValueError('El Honor solo con el permiso de Carlos (T114_HONOR_AUTORIZADO=1).')
@@ -164,7 +229,7 @@ def main():
     adb('shell', 'pm', 'clear', args.paquete)
     r = Recorrido(out)
     try:
-        adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0')
+        adb('shell', 'settings', 'put', 'system', 'font_scale', args.letra)
         adb('shell', 'monkey', '-p', args.paquete, '-c', 'android.intent.category.LAUNCHER', '1')
         esperar(r'Seleccionar archivo')
         time.sleep(1.5)
@@ -303,17 +368,22 @@ def main():
         tocar_patron(r'^Descarga$')
         time.sleep(1.2)
         tocar_patron(r'por descargar$')
-        time.sleep(0.3)
-        # La advertencia dura 2 s: la captura va al instante, sin volcar antes.
-        adb('shell', 'input', 'keyevent', '4')
-        time.sleep(0.5)
-        r.foto('atras-con-aviso', 'un toque con el aviso de la Baja en pantalla: la advertencia arriba y el aviso con «Deshacer» abajo, a la vez', rapida=True)
+        # Un volcado de uiautomator espera a que la app se quede quieta, y tras una
+        # Baja (el naranja, el aviso que entra) eso tarda unos 3 s: con una ventana
+        # de 2 s, el Atrás va después del primer volcado que ve el aviso con
+        # «Deshacer», que dura 6 s. En reposo, un volcado tarda 1,2 s.
         con_aviso()
+        # La advertencia dura 2 s: la captura va al instante y, a la vez, el
+        # sondeo comprueba dentro de la ventana la advertencia, el plano y
+        # «Deshacer» (O2).
+        visto = atras_comprobado(r, 'atras-con-aviso', 'un toque con el aviso de la Baja en pantalla: la advertencia arriba y el aviso con «Deshacer» abajo, a la vez', con_deshacer=True)
+        r.nota(f'O2: la advertencia, el plano y «Deshacer» en un volcado, a los {visto:.1f} s del Atrás')
+        time.sleep(VENTANA_DE_ATRAS + 0.5)
+        # Antes del toque, la app quieta (ahora se va el aviso de 6 s): el volcado
+        # de `sin_inicio()` espera a eso y comprueba que el plano sigue.
         sin_inicio()
-        time.sleep(2.5)
-        adb('shell', 'input', 'keyevent', '4')
-        time.sleep(0.5)
-        r.foto('atras-tras-la-ventana', 'pasados más de 2 s, otro toque vuelve a advertir y el plano sigue', rapida=True)
+        visto = atras_comprobado(r, 'atras-tras-la-ventana', 'pasados más de 2 s, otro toque vuelve a advertir y el plano sigue')
+        r.nota(f'O2: otra vez la advertencia y el plano, a los {visto:.1f} s del Atrás')
         sin_inicio()
         time.sleep(3)
         adb('shell', 'input', 'keyevent', '4')
