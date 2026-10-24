@@ -52,6 +52,7 @@ import 'package:baystream/features/vessel/presentation/providers/theme_preferenc
 import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/discharge_provider.dart';
 import 'package:baystream/features/vessel/presentation/providers/export_list_providers.dart';
+import 'package:baystream/features/vessel/presentation/providers/oficina_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/plano_providers.dart';
 import 'package:baystream/features/vessel/presentation/widgets/loading_plan_controls.dart'
     show BayPlanMode;
@@ -392,6 +393,10 @@ class T99Conductor {
             contenedor.read(bayPlanModeProvider.notifier).elegir(BayPlanMode.content);
             await _asentar();
           }
+          final tamano = _tamano.value;
+          if (tamano != null && tamano.width >= 1200) {
+            await _capturasDeLaOficina(contenedor, viaje, sufijo);
+          }
           contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.lista);
           await _asentar();
           await _capturar(sufijo, 'lista');
@@ -409,6 +414,37 @@ class T99Conductor {
     await contenedor
         .read(themePreferenceProvider.notifier)
         .select(AppThemePreference.system);
+    await _asentar();
+  }
+
+  /// T-117 (`DESIGN.md` 14): con el panel lateral fijo (desde 1200 dp), la
+  /// Carga, el panel del buque compacto y plegado, y el panel lateral oculto
+  /// y flotante (por un toque en su borde). Deja la oficina como la encontró.
+  Future<void> _capturasDeLaOficina(
+      ProviderContainer contenedor, VesselVoyage viaje, String sufijo) async {
+    final oficina = contenedor.read(preferenciasDeLaOficinaProvider.notifier);
+    if (viaje.portOfCall != null) {
+      contenedor.read(bayPlanModeProvider.notifier).elegir(BayPlanMode.loading);
+      await _asentar();
+      await _capturar(sufijo, 'plano_carga');
+      contenedor.read(bayPlanModeProvider.notifier).elegir(BayPlanMode.content);
+      await _asentar();
+    }
+    await oficina.elegirAltura(AlturaDelPuente.compacto);
+    await _asentar();
+    await _capturar(sufijo, 'plano_puente_compacto');
+    await oficina.elegirAltura(AlturaDelPuente.plegado);
+    await _asentar();
+    await _capturar(sufijo, 'plano_puente_plegado');
+    await oficina.elegirAltura(AlturaDelPuente.completo);
+    await oficina.mostrarPanel(false);
+    await _asentar();
+    await _capturar(sufijo, 'plano_panel_oculto');
+    await _tocar(_conClave('borde-del-panel'));
+    await _asentar();
+    await _capturar(sufijo, 'plano_panel_flotante');
+    await _tocar(_conClave('cerrar-panel'));
+    await oficina.mostrarPanel(true);
     await _asentar();
   }
 

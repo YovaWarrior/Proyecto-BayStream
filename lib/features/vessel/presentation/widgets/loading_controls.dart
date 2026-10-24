@@ -73,18 +73,29 @@ class LoadingControls extends ConsumerWidget {
       this.soloLaBahia = false});
 
   /// El botón de buscar por OR, el mismo de la línea del resumen, para la
-  /// tira del pie del teléfono bajo.
+  /// tira del pie del teléfono bajo y la franja de la bahía. Con [soloIcono]
+  /// (la franja que no cabe en una línea, 10.40) queda el icono y el rótulo
+  /// pasa a la descripción emergente.
   static Widget busquedaDeCarga(BuildContext context, WidgetRef ref,
-          VesselVoyage voyage, int? selectedBay,
-          {required bool conListado}) =>
-      TextButton.icon(
+      VesselVoyage voyage, int? selectedBay,
+      {required bool conListado, bool soloIcono = false}) {
+    final VoidCallback? buscar = !conListado
+        ? null
+        : () => chooseLoadingRow(context, ref, voyage, selectedBay: selectedBay);
+    const rotulo = 'OR / últimos dígitos';
+    if (soloIcono) {
+      return IconButton(
           key: const ValueKey('load-search'),
-          onPressed: !conListado
-              ? null
-              : () => chooseLoadingRow(context, ref, voyage,
-                  selectedBay: selectedBay),
-          icon: const Icon(Icons.search),
-          label: const Text('OR / últimos dígitos'));
+          tooltip: rotulo,
+          onPressed: buscar,
+          icon: const Icon(Icons.search));
+    }
+    return TextButton.icon(
+        key: const ValueKey('load-search'),
+        onPressed: buscar,
+        icon: const Icon(Icons.search),
+        label: const Text(rotulo));
+  }
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // El resumen en fichas (`DESIGN.md` 14.7): la bahía, la carga y la

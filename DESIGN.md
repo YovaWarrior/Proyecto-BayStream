@@ -1609,14 +1609,21 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
   y el dato en tinta con cifras tabulares, en una línea que envuelve si no cabe, nunca con elipsis;
   con `rol` (revisar), en el contorno del rol.
 - **En la oficina, en la franja de cifras,** tres fichas a lo sumo, en este orden: la bahía (lo que
-  las tarjetas no dicen), el modo y el otro modo:
+  las tarjetas no dicen), el modo y el otro modo. **La ficha de la bahía empieza por sus cifras**
+  (10.40: bajan de la franja de la bahía para que esta quepa en una línea) y sigue, tras un punto y
+  coma, con lo que la operación dice de la bahía:
 
 | Modo | La bahía | El modo | El otro modo |
 |---|---|---|---|
-| Carga | «Bahía 10: cub. 2, bod. 7» | «Carga: 29 pendientes, 20 llenos, 9 vacíos» (`loading-operation-totals`) | «Descarga: 28 pendientes, 1 re‑estiba» |
-| Descarga | «Bahía 14: 3 por bajar en cub., 5 en bod., 2 bajados» (`bay-discharge-pending`) | «GTSTC: 30 por bajar, 120 bajados, 3 re‑estibas» (`operation-discharge-totals`) | «Carga: 29 pendientes» |
-| Contenido o Número de orden, con escala | «Bahía 10, carga: cub. 2 (1 lleno, 1 vacío), bod. 7 (5 llenos, 2 vacíos)» (`bay-loading-pending`) | En Número de orden, «Listado: 3 celdas de carga sin cruce» o «Sin listado de la agencia» | — |
-| Sin escala | «Viaje: 977 contenedores, 27 bahías, 7 419.5 t» | — | — |
+| Carga | «Bahía 10: 20 contenedores, 231.9 t; por cargar cub. 2, bod. 7» | «Carga: 29 pendientes, 20 llenos, 9 vacíos» (`loading-operation-totals`) | «Descarga: 28 pendientes, 1 re‑estiba» |
+| Descarga | «Bahía 14: 36 contenedores, 712.4 t; 3 por bajar en cub., 5 en bod., 2 bajados» (`bay-discharge-pending`) | «GTSTC: 30 por bajar, 120 bajados, 3 re‑estibas» (`operation-discharge-totals`) | «Carga: 29 pendientes» |
+| Contenido o Número de orden, con escala | «Bahía 10: 20 contenedores, 231.9 t; carga: cub. 2 (1 lleno, 1 vacío), bod. 7 (5 llenos, 2 vacíos)» (`bay-loading-pending`) | En Número de orden, «Listado: 3 celdas de carga sin cruce» o «Sin listado de la agencia» | — |
+| Sin escala | «Bahía 10: 20 contenedores, 231.9 t» (`cifras-de-la-bahia`) | «Viaje: 977 contenedores, 27 bahías, 7 419.5 t» | — |
+
+- Las cifras de la bahía son las de antes: los contenedores, las celdas reservadas si hay, el peso y
+  «tapas sin declarar» si faltan. Mientras se lee la operación, o si falla, van en su ficha propia
+  (`cifras-de-la-bahia`) delante de la que lo dice. En el teléfono no cambian: el resumen no las
+  lleva, y en la tableta del muelle operando, sin franja de cifras, siguen en la franja de la bahía.
 
 - Lo que el resumen avisaba sigue, como ficha en revisar: «Importa el listado de agencia para
   operar por OR.» y «Esta escala todavía no tiene operación guardada: …». También «Leyendo el estado
@@ -1642,11 +1649,18 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
   corrección de 10.21).
 - **La franja de la bahía** (`franja-de-la-bahia`): ‹ y › (la bahía anterior y la siguiente,
   `bahia-anterior` y `bahia-siguiente`); el título «Bahía 10», que abre la lista de bahías
-  (`bahia-elegir`), y sus cifras («20 contenedores, 3 celdas reservadas, 231.9 t, tapas sin
-  declarar»); a la derecha «Colorear por» (`colorear-por`), el zoom (`ZoomDelPlano`), «OR / últimos
-  dígitos» en Carga, «Acciones» (`bay-plan-actions`) y el botón del puente. En una línea con
-  «Colorear por» en segmentos; si no cabe, con el menú; si tampoco, envuelve en las líneas que
-  pida: nada se corta.
+  (`bahia-elegir`); a la derecha «Colorear por» (`colorear-por`), el zoom (`ZoomDelPlano`), «OR /
+  últimos dígitos» en Carga, «Acciones» (`bay-plan-actions`) y el botón del puente. Las cifras de
+  la bahía no van aquí: abren la franja de cifras (14.7, 10.40). En una línea con «Colorear por» en
+  segmentos; si no cabe, con el menú; si tampoco, con «OR / últimos dígitos» solo con su icono y el
+  rótulo en la descripción emergente; si tampoco, envuelve en las líneas que pida: nada se corta.
+- **Con el panel fijo y la letra a 1.0 va en una línea** a 1920 × 1000, 1707 × 996, 1536 × 793 y
+  1366 × 690, en los cuatro modos (56 dp, con «Colorear por» a la vista; la matriz lo comprueba a
+  1536 y a 1366). Medido con las fuentes reales: a 1536 caben los segmentos; a 1366, en Carga, el
+  menú. El icono solo del OR entra con la letra a 1.45 a 1366 × 690. Con la letra a 1.45 a 1280 y
+  con 2.0 puede ir en dos líneas (62 a 126 dp).
+- **En la tableta del muelle operando** no hay franja de cifras (va la barra de la operación,
+  13.8): ahí las cifras siguen junto al título, como antes.
 - **«Colorear por»** usa el mismo selector, sin iconos: Destino y Tipo de vacío siempre, y Estado
   solo en Descarga, la única vista que lo pinta. La elección sigue en memoria por modo (5.4).
 - La franja de la bahía lleva el papel de fondo y una línea abajo: la rejilla pasa por debajo sin
@@ -1689,6 +1703,10 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
 12. **La franja de la bahía se fija solo si cabe y la de cifras tiene tope** (14.1 y 14.5): con la
     letra a 2.0, a 800 × 600 y a 1280 × 720, la franja fijada era más alta que el hueco de la
     columna y la rejilla no llegaba a verse; la de cifras llegaba a 239 dp.
+13. **Las cifras de la bahía bajan a la franja de cifras** (10.40): con ellas en la franja de la
+    bahía, con el panel fijo y la letra a 1.0, la franja iba en dos líneas (108 dp) a 1536 × 793 y
+    a 1366 × 690. Ahora va en una (56 dp) y la ficha de la bahía empieza por ellas. Si aun así no
+    cabe, «OR / últimos dígitos» queda solo con su icono.
 
 ### 14.11 Las piezas nuevas y su API
 

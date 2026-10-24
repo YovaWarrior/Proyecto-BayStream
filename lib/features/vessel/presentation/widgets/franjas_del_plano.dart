@@ -16,20 +16,22 @@ import 'resumen_del_modo.dart';
 /// La franja de la bahía de la oficina (`DESIGN.md` 14.8): fijada arriba de
 /// la columna que se desplaza. ‹ y › cambian de bahía y el título abre la
 /// lista de bahías, así que con el panel del buque fuera de la vista se
-/// sigue navegando; después, las cifras de la bahía, «Colorear por», los
-/// controles del plano y el botón que pliega o despliega el panel.
+/// sigue navegando; después, «Colorear por», los controles del plano y el
+/// botón que pliega o despliega el panel. Las cifras de la bahía van en la
+/// franja de cifras, que empieza por la bahía (10.40).
 ///
 /// Se pone en una línea con «Colorear por» en segmentos; si no cabe, con el
-/// menú; si tampoco, envuelve en las líneas que pida ([BsPrimeraQueCabe]).
+/// menú; si tampoco, con «OR / últimos dígitos» solo con su icono; y si
+/// tampoco, envuelve en las líneas que pida ([BsPrimeraQueCabe]).
 class FranjaDeLaBahia extends StatelessWidget {
   const FranjaDeLaBahia({
     super.key,
     required this.bahia,
     required this.numeros,
     required this.onBahia,
-    required this.cifras,
     required this.colorear,
     required this.controles,
+    this.cifras,
   });
 
   /// El número de la bahía a la vista.
@@ -41,15 +43,17 @@ class FranjaDeLaBahia extends StatelessWidget {
   /// Qué pasa al elegir otra bahía.
   final ValueChanged<int> onBahia;
 
-  /// Las cifras de la bahía, ya escritas.
-  final String cifras;
+  /// Las cifras de la bahía, solo donde no hay franja de cifras que las
+  /// diga (el muelle operando en una tableta, con la barra de la operación).
+  final String? cifras;
 
   /// «Colorear por» en la forma que se le pide.
   final Widget Function(BsFormaDelSelector forma) colorear;
 
   /// Los controles del plano (el zoom, «OR / últimos dígitos», «Acciones»),
-  /// uno nuevo por variante.
-  final Widget Function() controles;
+  /// uno nuevo por variante; con `orSoloIcono`, la búsqueda por OR solo con
+  /// su icono y su descripción emergente.
+  final Widget Function({required bool orSoloIcono}) controles;
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +103,7 @@ class FranjaDeLaBahia extends StatelessWidget {
           ],
         );
     Widget lasCifras() => Text(
-          cifras,
+          cifras!,
           key: const ValueKey('cifras-de-la-bahia'),
           style: textos.bodyMedium?.copyWith(
               color: esquema.onSurfaceVariant, fontFeatures: cifrasTabulares),
@@ -114,16 +118,19 @@ class FranjaDeLaBahia extends StatelessWidget {
             colorear(forma),
           ],
         );
-    Widget enUnaLinea(BsFormaDelSelector forma) => Row(
+    Widget enUnaLinea(BsFormaDelSelector forma, {bool orSoloIcono = false}) =>
+        Row(
           children: <Widget>[
             navegacion(),
-            SizedBox(width: medidas.espacioS),
-            lasCifras(),
+            if (cifras != null) ...<Widget>[
+              SizedBox(width: medidas.espacioS),
+              lasCifras(),
+            ],
             const Spacer(),
             SizedBox(width: medidas.espacioL),
             colorearPor(forma),
             SizedBox(width: medidas.espacioS),
-            controles(),
+            controles(orSoloIcono: orSoloIcono),
             const _BotonDelPuente(),
           ],
         );
@@ -139,15 +146,16 @@ class FranjaDeLaBahia extends StatelessWidget {
           child: BsPrimeraQueCabe(variantes: <Widget>[
             enUnaLinea(BsFormaDelSelector.segmentos),
             enUnaLinea(BsFormaDelSelector.menu),
+            enUnaLinea(BsFormaDelSelector.menu, orSoloIcono: true),
             Wrap(
               spacing: medidas.espacioS,
               runSpacing: medidas.espacioXs,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: <Widget>[
                 navegacion(),
-                lasCifras(),
+                if (cifras != null) lasCifras(),
                 colorearPor(BsFormaDelSelector.menu),
-                controles(),
+                controles(orSoloIcono: false),
                 const _BotonDelPuente(),
               ],
             ),
@@ -157,9 +165,9 @@ class FranjaDeLaBahia extends StatelessWidget {
     );
   }
 
-  /// Las cifras de [bay] como las escribe la franja: los contenedores, las
-  /// reservas, el peso y, si no hay tapas declaradas, que faltan (11.6: con
-  /// comas, no con punto medio).
+  /// Las cifras de [bay] como las escribe la franja de cifras (14.7): los
+  /// contenedores, las reservas, el peso y, si no hay tapas declaradas, que
+  /// faltan (11.6: con comas, no con punto medio).
   static String cifrasDe(Bay bay,
           {required int reservas, required bool tapasDeclaradas}) =>
       <String>[
@@ -286,11 +294,16 @@ class FranjaDeCifras extends ConsumerWidget {
     required this.voyage,
     required this.modo,
     required this.bahia,
+    this.cifrasDeLaBahia,
   });
 
   final VesselVoyage voyage;
   final BayPlanMode modo;
   final int? bahia;
+
+  /// Las cifras de la bahía a la vista ([FranjaDeLaBahia.cifrasDe]), que
+  /// encabezan la ficha de la bahía (10.40).
+  final String? cifrasDeLaBahia;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -298,7 +311,10 @@ class FranjaDeCifras extends ConsumerWidget {
     final tema = Theme.of(context);
     final paleta = BsPaleta.de(tema.brightness);
     final fichas = fichasDelResumen(context, ref,
-        voyage: voyage, modo: modo, bahia: bahia);
+        voyage: voyage,
+        modo: modo,
+        bahia: bahia,
+        cifrasDeLaBahia: cifrasDeLaBahia);
     final minimo = medidas.objetivoTactil + 2 * medidas.espacioS;
     final tope = math.max(minimo, MediaQuery.sizeOf(context).height / 4);
     return MideLaFranja(

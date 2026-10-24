@@ -191,12 +191,14 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       // controles del plano no van sobre la silueta sino al pie, en la línea
       // de la leyenda o de la barra de la operación, y el resumen del modo
       // justo encima del pie; así la primera fila se ve sin desplazar.
-      LoadingPlanControls controlesDelPlano(ParteDeLosControles parte) =>
+      LoadingPlanControls controlesDelPlano(ParteDeLosControles parte,
+              {bool orSoloIcono = false}) =>
           LoadingPlanControls(
               voyage: widget.voyage,
               selectedBay: _selectedBayNumber,
               mode: mode,
               parte: parte,
+              orSoloIcono: orSoloIcono,
               // El chip del zoom va aquí y no sobre la rejilla (10.20).
               zoom: const ZoomDelPlano(),
               onOperationCell: (cell) {
@@ -399,7 +401,8 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     required Map<String, int> twenties,
     required bool hatchDeclarada,
     required Widget rejilla,
-    required LoadingPlanControls Function(ParteDeLosControles parte)
+    required LoadingPlanControls Function(ParteDeLosControles parte,
+            {bool orSoloIcono})
         controlesDelPlano,
   }) {
     final medidas = BsMedidas.de(context);
@@ -412,6 +415,13 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
           compacta: true,
           controlador: _bayScrollControllerCompacto),
     );
+    // Las cifras de la bahía van en la franja de cifras, que empieza por la
+    // bahía (10.40); con la barra de la operación del muelle, en la franja
+    // de la bahía.
+    final cifras = FranjaDeLaBahia.cifrasDe(bay,
+        reservas: displayedVoyage.getReservedSlotsInBay(bay.bayNumber).length,
+        tapasDeclaradas: hatchDeclarada);
+    final conBarra = medidas.esMuelle && enOperacion;
     final franja = FranjaDeLaBahia(
       bahia: bay.bayNumber,
       numeros: sortedBayNumbers,
@@ -419,20 +429,22 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         setState(() => _selectedBayNumber = numero);
         ref.read(selectedBayProvider.notifier).select(numero);
       },
-      cifras: FranjaDeLaBahia.cifrasDe(bay,
-          reservas:
-              displayedVoyage.getReservedSlotsInBay(bay.bayNumber).length,
-          tapasDeclaradas: hatchDeclarada),
+      cifras: conBarra ? cifras : null,
       colorear: (forma) =>
           _colorearPor(mode, vista, dischargeMode: dischargeMode, forma: forma),
-      controles: () => controlesDelPlano(ParteDeLosControles.franja),
+      controles: ({required bool orSoloIcono}) => controlesDelPlano(
+          ParteDeLosControles.franja,
+          orSoloIcono: orSoloIcono),
     );
     final leyenda = _buildLegend(displayedVoyage, bay, vista,
         discharge: discharge, twenties: twenties.isNotEmpty, envuelve: true);
-    final pie = medidas.esMuelle && enOperacion
+    final pie = conBarra
         ? _barraDeOperacion(dischargeMode, loading, discharge)
         : FranjaDeCifras(
-            voyage: widget.voyage, modo: mode, bahia: _selectedBayNumber);
+            voyage: widget.voyage,
+            modo: mode,
+            bahia: _selectedBayNumber,
+            cifrasDeLaBahia: cifras);
     return Column(children: [
       Expanded(
         child: CustomScrollView(

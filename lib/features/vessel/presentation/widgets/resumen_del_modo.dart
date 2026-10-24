@@ -14,6 +14,11 @@ import 'loading_plan_controls.dart' show BayPlanMode;
 /// bahía, que las tarjetas no dicen; después el modo y el otro modo. En la
 /// oficina va en la franja de cifras; en el teléfono, en la línea de T-107.
 ///
+/// Con [cifrasDeLaBahia] (la oficina, 10.40: bajan de la franja de la bahía)
+/// la ficha de la bahía empieza por ellas: «Bahía 02: 20 contenedores,
+/// 231.9 t; 3 por bajar en cub., …». Sin escala, o mientras se lee la
+/// operación, van en una ficha propia (`cifras-de-la-bahia`).
+///
 /// Con [soloLaBahia] (el teléfono con la barra de la operación del muelle,
 /// que ya cuenta el modo) queda la bahía y lo que falta por hacer. Las fichas
 /// conservan las claves de las frases de T-107 (`loading-operation-totals`,
@@ -26,16 +31,28 @@ List<Widget> fichasDelResumen(
   required BayPlanMode modo,
   required int? bahia,
   bool soloLaBahia = false,
+  String? cifrasDeLaBahia,
 }) {
   final semanticos = BsColoresSemanticos.de(context);
   BsFichaDeCifra revisar(String clave, String texto) => BsFichaDeCifra(
       key: ValueKey<String>(clave), valor: texto, rol: semanticos.revisar);
   String rotuloDeBahia(int numero) =>
       'Bahía ${numero.toString().padLeft(2, '0')}';
+  // Lo que la ficha de la bahía dice de la operación, detrás de las cifras.
+  String conCifras(String valor) =>
+      cifrasDeLaBahia == null ? valor : '$cifrasDeLaBahia; $valor';
+  final soloLasCifras = <Widget>[
+    if (bahia != null && cifrasDeLaBahia != null)
+      BsFichaDeCifra(
+          key: const ValueKey('cifras-de-la-bahia'),
+          rotulo: rotuloDeBahia(bahia),
+          valor: cifrasDeLaBahia),
+  ];
 
-  // Sin escala no hay operación: el viaje entero.
+  // Sin escala no hay operación: la bahía y el viaje entero.
   if (voyage.portOfCall == null) {
     return <Widget>[
+      ...soloLasCifras,
       BsFichaDeCifra(
         key: const ValueKey('resumen-del-viaje'),
         rotulo: 'Viaje',
@@ -49,11 +66,13 @@ List<Widget> fichasDelResumen(
   if (modo == BayPlanMode.loading) {
     return ref.watch(loadingOperationProvider(voyage)).when(
           loading: () => <Widget>[
+            ...soloLasCifras,
             const BsFichaDeCifra(
                 key: ValueKey('resumen-leyendo'),
                 valor: 'Leyendo el plan combinado…'),
           ],
           error: (error, stack) => <Widget>[
+            ...soloLasCifras,
             revisar(
                 'resumen-error',
                 vesselErrorMessage(
@@ -70,8 +89,11 @@ List<Widget> fichasDelResumen(
                       ? rotuloDeBahia(bahia)
                       : 'Bahía ${enLaBahia.label}',
                   valor: enLaBahia == null
-                      ? 'sin carga pendiente'
-                      : 'cub. ${enLaBahia.deck}, bod. ${enLaBahia.hold}',
+                      ? conCifras('sin carga pendiente')
+                      : cifrasDeLaBahia == null
+                          ? 'cub. ${enLaBahia.deck}, bod. ${enLaBahia.hold}'
+                          : conCifras('por cargar cub. ${enLaBahia.deck}, '
+                              'bod. ${enLaBahia.hold}'),
                 ),
               if (!soloLaBahia) ...<Widget>[
                 BsFichaDeCifra(
@@ -103,6 +125,7 @@ List<Widget> fichasDelResumen(
     final progreso = ref.watch(dischargeProgressProvider(voyage));
     if (progreso.hasError) {
       return <Widget>[
+        ...soloLasCifras,
         revisar(
             'resumen-error',
             vesselErrorMessage(progreso.error!, progreso.stackTrace,
@@ -111,8 +134,9 @@ List<Widget> fichasDelResumen(
     }
     final data = progreso.value;
     if (data == null) {
-      return const <Widget>[
-        BsFichaDeCifra(
+      return <Widget>[
+        ...soloLasCifras,
+        const BsFichaDeCifra(
             key: ValueKey('resumen-leyendo'),
             valor: 'Leyendo el estado de la operación…'),
       ];
@@ -128,12 +152,12 @@ List<Widget> fichasDelResumen(
           rotulo: enLaBahia == null
               ? rotuloDeBahia(bahia)
               : 'Bahía ${enLaBahia.label}',
-          valor: enLaBahia == null
+          valor: conCifras(enLaBahia == null
               ? 'nada por bajar'
               : '${enLaBahia.deckPending} por bajar en cub., '
                   '${enLaBahia.holdPending} en bod., '
                   '${operationCount(enLaBahia.discharged, 'bajado', 'bajados')}'
-                  '${enLaBahia.restows == 0 ? '' : ', ${operationCount(enLaBahia.restows, 're‑estiba', 're‑estibas')}'}',
+                  '${enLaBahia.restows == 0 ? '' : ', ${operationCount(enLaBahia.restows, 're‑estiba', 're‑estibas')}'}'),
         ),
       if (!soloLaBahia)
         BsFichaDeCifra(
@@ -162,6 +186,7 @@ List<Widget> fichasDelResumen(
   final progreso = ref.watch(loadingPlanProgressProvider(voyage));
   if (progreso.hasError) {
     return <Widget>[
+      ...soloLasCifras,
       revisar(
           'resumen-error',
           vesselErrorMessage(progreso.error!, progreso.stackTrace,
@@ -170,26 +195,31 @@ List<Widget> fichasDelResumen(
   }
   final data = progreso.value;
   if (data == null) {
-    return const <Widget>[
-      BsFichaDeCifra(
+    return <Widget>[
+      ...soloLasCifras,
+      const BsFichaDeCifra(
           key: ValueKey('resumen-leyendo'),
           valor: 'Leyendo el estado de la operación…'),
     ];
   }
   final enLaBahia = bahia == null ? null : data.forBay(bahia);
+  final carga = enLaBahia == null
+      ? 'nada pendiente'
+      : 'cub. ${enLaBahia.deck} '
+          '(${operationCount(enLaBahia.deckFull, 'lleno', 'llenos')}, '
+          '${operationCount(enLaBahia.deckEmpty, 'vacío', 'vacíos')}), '
+          'bod. ${enLaBahia.hold} '
+          '(${operationCount(enLaBahia.holdFull, 'lleno', 'llenos')}, '
+          '${operationCount(enLaBahia.holdEmpty, 'vacío', 'vacíos')})';
   return <Widget>[
     if (bahia != null)
       BsFichaDeCifra(
         key: const ValueKey('bay-loading-pending'),
-        rotulo: '${enLaBahia == null ? rotuloDeBahia(bahia) : 'Bahía ${enLaBahia.label}'}, carga',
-        valor: enLaBahia == null
-            ? 'nada pendiente'
-            : 'cub. ${enLaBahia.deck} '
-                '(${operationCount(enLaBahia.deckFull, 'lleno', 'llenos')}, '
-                '${operationCount(enLaBahia.deckEmpty, 'vacío', 'vacíos')}), '
-                'bod. ${enLaBahia.hold} '
-                '(${operationCount(enLaBahia.holdFull, 'lleno', 'llenos')}, '
-                '${operationCount(enLaBahia.holdEmpty, 'vacío', 'vacíos')})',
+        // Con las cifras, la carga va detrás: «Bahía 02: 20 contenedores,
+        // 231.9 t; carga: cub. 3 (…)».
+        rotulo: '${enLaBahia == null ? rotuloDeBahia(bahia) : 'Bahía ${enLaBahia.label}'}'
+            '${cifrasDeLaBahia == null ? ', carga' : ''}',
+        valor: cifrasDeLaBahia == null ? carga : conCifras('carga: $carga'),
       ),
     if (modo == BayPlanMode.order)
       if (data.list == null)

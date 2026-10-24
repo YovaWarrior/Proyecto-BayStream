@@ -87,6 +87,31 @@ Future<void> _desplazarHasta(WidgetTester tester, Finder buscado) async {
 double _altoDelPuente(WidgetTester tester) =>
     tester.getSize(_puente).height - tester.getSize(_borde).height;
 
+/// 10.40: la franja de la bahía en una línea, con «Colorear por» a la vista,
+/// y las cifras de la bahía al principio de la franja de cifras.
+void _franjaEnUnaLinea(WidgetTester tester) {
+  expect(tester.getCenter(find.byKey(const ValueKey('bahia-elegir'))).dy,
+      closeTo(tester.getCenter(_botonDelPuente).dy, 0.5),
+      reason: 'la bahía y el botón del panel, en la misma línea');
+  expect(tester.getSize(_franjaDeLaBahia).height, lessThanOrEqualTo(56.5));
+  expect(
+      find
+          .descendant(of: _franjaDeLaBahia, matching: find.text('Colorear por'))
+          .hitTestable(),
+      findsOneWidget);
+  expect(
+      find.descendant(
+          of: _franjaDeLaBahia,
+          matching: find.byKey(const ValueKey('cifras-de-la-bahia'))),
+      findsNothing);
+  final fichas = tester
+      .widgetList<BsFichaDeCifra>(find.descendant(
+          of: _franjaDeCifras, matching: find.byType(BsFichaDeCifra)))
+      .toList();
+  expect(fichas.first.texto,
+      startsWith('Bahía 02: 12 contenedores, ${formatearToneladas(202000)}'));
+}
+
 void main() {
   group('la matriz de 0.5.5: nada se corta ni se desborda', () {
     for (final ventana in _ventanas) {
@@ -107,6 +132,12 @@ void main() {
                 expect(_flotante, findsOneWidget);
               }
               expect(tester.takeException(), isNull, reason: 'al abrir');
+              if (panel == _Panel.fijo &&
+                  letra == 1.0 &&
+                  (ventana == const Size(1536, 793) ||
+                      ventana == const Size(1366, 690))) {
+                _franjaEnUnaLinea(tester);
+              }
 
               final columna = tester.getRect(_columna);
               expect(columna.right, lessThanOrEqualTo(ventana.width + 0.5));
@@ -204,6 +235,30 @@ void main() {
         }
       }
     }
+  });
+
+  group('la franja de la bahía en una línea (10.40)', () {
+    testWidgets('si con el rótulo no cabe, «OR / últimos dígitos» queda con '
+        'su icono y su descripción emergente', (tester) async {
+      await t117Pump(tester,
+          tamano: const Size(1366, 690), letra: 1.45, modo: BayPlanMode.loading);
+      final buscar = find.byKey(const ValueKey('load-search'));
+      expect(buscar, findsOneWidget);
+      expect(tester.widget(buscar), isA<IconButton>());
+      expect(tester.widget<IconButton>(buscar).tooltip, 'OR / últimos dígitos');
+      expect(tester.getCenter(buscar).dy,
+          closeTo(tester.getCenter(_botonDelPuente).dy, 0.5));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('sin escala, la franja de cifras empieza por la bahía',
+        (tester) async {
+      await t117Pump(tester,
+          tamano: const Size(1366, 690), voyage: t117SinEscala);
+      _franjaEnUnaLinea(tester);
+      expect(find.byKey(const ValueKey('cifras-de-la-bahia')), findsOneWidget);
+      expect(find.byKey(const ValueKey('resumen-del-viaje')), findsOneWidget);
+    });
   });
 
   group('el panel del buque en tres alturas (14.2)', () {

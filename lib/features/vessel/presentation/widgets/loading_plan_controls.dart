@@ -60,6 +60,10 @@ class LoadingPlanControls extends ConsumerWidget {
 
   /// Qué se dibuja: todo, o solo la barra, el resumen o la franja.
   final ParteDeLosControles parte;
+
+  /// En la franja de la bahía, «OR / últimos dígitos» solo con su icono y su
+  /// descripción emergente, cuando con el rótulo no cabe en una línea (10.40).
+  final bool orSoloIcono;
   const LoadingPlanControls(
       {super.key,
       required this.voyage,
@@ -68,7 +72,8 @@ class LoadingPlanControls extends ConsumerWidget {
       required this.onModeChanged,
       this.onOperationCell,
       this.zoom,
-      this.parte = ParteDeLosControles.todo});
+      this.parte = ParteDeLosControles.todo,
+      this.orSoloIcono = false});
 
   bool get orderMode => mode == BayPlanMode.order;
 
@@ -153,7 +158,7 @@ class LoadingPlanControls extends ConsumerWidget {
           if (zoom != null) zoom!,
           if (loadingMode)
             LoadingControls.busquedaDeCarga(context, ref, voyage, selectedBay,
-                conListado: listado != null),
+                conListado: listado != null, soloIcono: orSoloIcono),
           acciones,
         ]);
       case ParteDeLosControles.todo:
