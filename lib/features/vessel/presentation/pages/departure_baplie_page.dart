@@ -14,6 +14,7 @@ import '../providers/loading_operation_provider.dart';
 import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import 'voyage_comparison_page.dart';
+import '../widgets/avisos_del_viaje.dart';
 import '../../../../core/utils/voyage_number.dart';
 
 final departureExportRepositoryProvider = Provider<DepartureExportRepository>(
@@ -168,7 +169,8 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
     final failure = arrival.fold((f) => f, (_) => null) ??
         departure.fold((f) => f, (_) => null);
     if (failure != null) {
-      _notice(vesselFailureMessage(failure, 'comparar la salida con la llegada'));
+      _notice(vesselFailureMessage(failure, 'comparar la salida con la llegada'),
+          corto: 'No se pudo comparar.');
       return;
     }
     await Navigator.of(context).push(MaterialPageRoute<void>(
@@ -179,8 +181,9 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
             secondLabel: 'Salida generada, sin guardar')));
   }
 
-  void _notice(String message) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(message)));
+  /// Puede seguir en pantalla al volver al plano: sabe su lugar (10.33).
+  void _notice(String message, {String? corto}) => ScaffoldMessenger.of(context)
+      .showSnackBar(avisoDelViaje(texto: message, corto: corto));
 
   Future<void> _save() async {
     if (!_allowed(ref.read(operatorProvider))) return;
@@ -198,13 +201,15 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
           .read(departureExportRepositoryProvider)
           .save(operation, output.text);
       if (mounted && (path != null || kIsWeb)) {
-        _notice('Exportación BAPLIE completada');
+        _notice('Exportación BAPLIE completada', corto: 'BAPLIE exportado.');
       }
     } catch (error, stack) {
       if (mounted) {
-        _notice(error is StateError
-            ? error.message
-            : vesselErrorMessage(error, stack, 'generar el BAPLIE de salida'));
+        _notice(
+            error is StateError
+                ? error.message
+                : vesselErrorMessage(error, stack, 'generar el BAPLIE de salida'),
+            corto: 'No se generó el BAPLIE.');
       }
     } finally {
       if (mounted) setState(() => _saving = false);

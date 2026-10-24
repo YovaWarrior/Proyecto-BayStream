@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../providers/vessel_providers.dart';
 import '../formatters/vessel_error_message.dart';
+import '../widgets/avisos_del_viaje.dart';
 import 'vessel_geometry_page.dart';
 
 /// Acceso a los parámetros del buque aunque no haya un viaje abierto.
@@ -70,10 +71,11 @@ class VesselProfilesPage extends ConsumerWidget {
           updatedAt: DateTime.now());
       final error = await notifier.saveEditedProfile(original, draft);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(error ?? 'Perfil guardado'),
-          backgroundColor:
-              error == null ? null : Theme.of(context).colorScheme.error));
+      // Puede seguir en pantalla al volver al plano: sabe su lugar (10.33).
+      ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: error ?? 'Perfil guardado',
+          corto: error == null ? null : 'No se guardó el perfil.',
+          fondo: error == null ? null : Theme.of(context).colorScheme.error));
       if (error == null) return;
     }
   }

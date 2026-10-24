@@ -148,12 +148,15 @@ def advertencia_y_plano(desde, con_deshacer=False):
         advertencia = any(re.search(r'Toca Atrás otra vez', t) for t in textos)
         plano = any(re.search(PLANO, t, re.I) for t in textos)
         deshacer = not con_deshacer or any(re.fullmatch(r'Deshacer', t) for t in textos)
-        if advertencia and plano and deshacer:
-            return visto
+        # El plazo manda también cuando se ven los tres: un volcado que vuelve
+        # pasada la ventana ya no prueba que se vieron dentro de ella (10.33).
         if visto > VENTANA_DE_ATRAS:
             raise RuntimeError(
-                f'A los {visto:.1f} s del Atrás no se vieron juntos la advertencia '
-                f'({advertencia}), el plano ({plano}) y «Deshacer» ({deshacer}).')
+                f'A los {visto:.1f} s del Atrás no se vieron juntos, dentro de la '
+                f'ventana, la advertencia ({advertencia}), el plano ({plano}) y '
+                f'«Deshacer» ({deshacer}).')
+        if advertencia and plano and deshacer:
+            return visto
 
 
 def atras_comprobado(r, nombre, nota, con_deshacer=False):

@@ -6,6 +6,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/export_list_cross_checker.dart';
 import '../providers/export_list_providers.dart';
 import '../providers/vessel_providers.dart';
+import '../widgets/avisos_del_viaje.dart';
 import '../../../../core/utils/voyage_number.dart';
 
 /// T-73 · Importar el listado de exportación de la agencia (RF-038): elegir
@@ -118,8 +119,13 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
                 : () async {
                     final error = await notifier.confirm();
                     if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(error ?? 'Listado importado.')));
+                    // Puede seguir en pantalla al volver al plano: sabe
+                    // su lugar (10.33).
+                    ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+                        texto: error ?? 'Listado importado.',
+                        corto: error == null
+                            ? null
+                            : 'No se importó el listado.'));
                   },
             icon: const Icon(Icons.check),
             label: const Text('Confirmar e importar'),

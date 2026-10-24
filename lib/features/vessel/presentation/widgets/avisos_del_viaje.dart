@@ -215,13 +215,17 @@ class LugarDelAviso extends InheritedWidget {
   bool updateShouldNotify(LugarDelAviso oldWidget) => oldWidget.alto != alto;
 }
 
-/// Un aviso de la página del viaje (`DESIGN.md` 13.8). Todos los avisos que
-/// pueden verse sobre el plano se hacen aquí, para que quepan en su lugar
-/// ([LugarDelAviso]) con cualquier letra: compactos, con la acción
+/// Un aviso de la página del viaje (`DESIGN.md` 13.8). Todos los avisos de la
+/// app se hacen aquí (10.33): también los de otras páginas, que siguen en
+/// pantalla al volver al plano mientras dura su plazo, y los de Comparar, que
+/// se llama desde el plano. Así caben en su lugar ([LugarDelAviso]) con
+/// cualquier letra, donde se vean: compactos, con la acción
 /// ([accion], «Deshacer») al lado del texto; si [texto] no cabe entero en el
 /// alto que deja la franja, sale [corto], que sigue diciendo qué pasó. Un
 /// aviso sin acción que se queda en [corto] lleva «Ver», que abre [texto]
 /// entero. Si ni [corto] cabe, se recorta al lugar: la rejilla no se tapa.
+/// Sobre el fondo de error ([fondo]), el texto y la acción van en su color de
+/// contraste.
 SnackBar avisoDelViaje({
   Key? key,
   required String texto,
@@ -239,7 +243,11 @@ SnackBar avisoDelViaje({
       // El relleno lo pone el contenido, que mide lo que ocupa.
       padding: EdgeInsets.zero,
       content: _ContenidoDelAviso(
-          texto: texto, corto: corto, accion: accion, onAccion: onAccion),
+          texto: texto,
+          corto: corto,
+          accion: accion,
+          onAccion: onAccion,
+          fondo: fondo),
     );
 
 /// T-61: al reabrir un viaje, los parámetros del perfil vigente que no se
@@ -258,12 +266,15 @@ SnackBar avisoDelParametroConservado(Iterable<String> parametros) =>
 /// El texto del aviso y su acción, en una fila, con el texto que cabe.
 class _ContenidoDelAviso extends StatelessWidget {
   const _ContenidoDelAviso(
-      {required this.texto, this.corto, this.accion, this.onAccion});
+      {required this.texto, this.corto, this.accion, this.onAccion, this.fondo});
 
   final String texto;
   final String? corto;
   final String? accion;
   final VoidCallback? onAccion;
+
+  /// El fondo del aviso, si no es el del tema.
+  final Color? fondo;
 
   /// Lo que dice la acción que abre el texto entero.
   static const String ver = 'Ver';
@@ -272,6 +283,11 @@ class _ContenidoDelAviso extends StatelessWidget {
   Widget build(BuildContext context) {
     final alto = LugarDelAviso.altoDe(context);
     final medidas = BsMedidas.de(context);
+    final esquema = Theme.of(context).colorScheme;
+    // Sobre el fondo de error, el texto y la acción van en su color de
+    // contraste: la tinta y la marca no llegaban a 3:1 sobre el rojo (10.33).
+    final sobreElFondo =
+        fondo != null && fondo == esquema.error ? esquema.onError : null;
     // La acción, con menos aire a los lados que en un aviso de Material: con
     // la letra grande deja más ancho al texto.
     final estiloDelBoton = TextButton.styleFrom(
@@ -287,13 +303,17 @@ class _ContenidoDelAviso extends StatelessWidget {
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: medidas.espacioXs),
-                    child: Text(linea),
+                    child: Text(linea,
+                        style: sobreElFondo == null
+                            ? null
+                            : TextStyle(color: sobreElFondo)),
                   ),
                 ),
                 if (accion != null || conVer)
                   TextButtonTheme(
                     data: TextButtonThemeData(style: estiloDelBoton),
                     child: SnackBarAction(
+                      textColor: sobreElFondo,
                       label: accion ?? ver,
                       onPressed: accion != null
                           ? (onAccion ?? () {})

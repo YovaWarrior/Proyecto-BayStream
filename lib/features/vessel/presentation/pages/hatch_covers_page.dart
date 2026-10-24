@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
 import '../widgets/hatch_cover_diagram.dart';
 import '../formatters/operation_text.dart';
+import '../widgets/avisos_del_viaje.dart';
 
 /// Borrador local: cancelar no cambia el perfil; copiar se valida antes de aplicar.
 class HatchCoversPage extends StatefulWidget {
@@ -146,8 +147,9 @@ class _HatchCoversPageState extends State<HatchCoversPage> {
       }
     });
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Copiado a ${operationCount(targets.length, 'bahía', 'bahías')}')));
+      // Puede seguir en pantalla al volver al plano: sabe su lugar (10.33).
+      ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: 'Copiado a ${operationCount(targets.length, 'bahía', 'bahías')}'));
     }
   }
 

@@ -38,8 +38,8 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
       }
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(
+          avisoDelViaje(texto: error, corto: 'No se abrió el viaje.'));
     }
   }
 
@@ -67,9 +67,10 @@ class _RecentVoyagesPageState extends ConsumerState<RecentVoyagesPage> {
         .deleteRecentVoyage(voyage.id);
     if (!mounted) return;
     setState(() => _working = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            error ?? 'Viaje eliminado. El perfil del buque se conserva.')));
+    // Puede seguir en pantalla al volver al plano: sabe su lugar (10.33).
+    ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+        texto: error ?? 'Viaje eliminado. El perfil del buque se conserva.',
+        corto: error == null ? 'Viaje eliminado.' : 'No se eliminó el viaje.'));
   }
 
   @override

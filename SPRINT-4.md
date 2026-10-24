@@ -784,3 +784,32 @@ La siguiente decisión es la **10.32**.
 Si pasa, el sábado se publica (10.28).
 
 La siguiente decisión es la **10.33**.
+
+### 10.33 · La segunda reaceptación no pasa por los avisos hechos a mano; Yov los corrige (23-oct, 22:37)
+
+**Codex volvió a aceptar `6b9d80e`: NO PASA** (`docs/rediseno/fase3/candidata/reaceptacion2-codex.md`).
+- **Pasa lo que corrigió Timonel:** la matriz de 18 casos (360 × 640, 360 × 800 y 412 × 915; letra 1.0, 1.45 y 2.0; Descarga y Carga), los registros de verdad a 2.0, «Ver» y «Cerrar», O1 con un diálogo en medio, la suite 1359, `analyze` en cero, el emulador en 27 pasos y la oficina con el aviso compacto.
+- **H2-A · P2:** quedaban nueve avisos hechos a mano en ocho archivos, fuera de la guarda de cuatro. A 360 × 640 con la letra a 2.0, el error de Comparar (que se llama desde el plano) y el de Parámetros (al volver) iban de y=128 a y=492 y tapaban nueve celdas.
+- **H2-B · P2:** el registro de una tapa, al volver de «Tapas en la operación», pisaba 8 dp del resumen de encima de la barra.
+- **Observaciones P3:**
+  - T-61 en el plano sin operación tapa 18 celdas durante 10 s, una vez al reabrir;
+  - O2 aceptaba un volcado fuera de plazo (prueba con el reloj simulado);
+  - «No lo tengo» sí se alcanza a mano con la letra a 2.0: es del instrumento.
+
+**Carlos pide que Yov lo corrija.** Yov lo hizo en su espacio, sobre `6b9d80e` y con el mismo Flutter 3.38.9, y dejó los archivos en la carpeta del rediseño. Git, como siempre, lo hace Carlos. El detalle está en la sección «Fase 3 · Candidata del piloto · Tercera corrección (Yov)» de `docs/REDISENO-RESULTADOS.md` (12.1 a 12.6).
+- **Los nueve avisos pasan por `avisoDelViaje`**, con su texto corto: Comparar, Parámetros, Tapas en la operación, Perfiles, BAPLIE de salida, Listado de la agencia, Tapas de escotilla y Viajes recientes (dos). En su página dicen el texto entero; sobre el plano, el que cabe. Los textos, las duraciones y el «Deshacer» no cambian.
+- **La guarda revisa todo `lib/`:** falla si aparece un `SnackBar(` hecho a mano fuera de la fábrica.
+- **El aviso con fondo de error se lee:** texto y acción en `onError`, con 4,5:1 o más en los dos temas (la tinta y la marca no llegaban a 3:1).
+- **O2:** el plazo manda también cuando el volcado ve los tres textos.
+- **Con la propia prueba de Codex**, a 360 × 640 y letra 2.0: Comparar y Parámetros pasan de 128–492 a 392–492, y la tapa de 338–492 a 350–492, con la franja desde y=346. Pasa 4 de 4.
+- **Pruebas:**
+  - 12 nuevas en `test/t114_candidata_correccion3_test.dart`: las tres rutas en tres teléfonos con la letra a 2.0, el fondo de error en los dos temas y la guarda;
+  - `analyze` en cero;
+  - la suite completa en Linux da +1359 −7, y `6b9d80e` sin cambios da +1347 −7: las 12 de más son las nuevas, y las 7 que fallan en Linux son las mismas antes y después (dibujo, fuentes y rutas de Windows);
+  - en Windows se esperan 1371 (1359 + 12).
+- **Sin cambios:** `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.*` y la lista del piloto.
+- **Queda anotado:** T-61 en el plano sin operación (P3) y O3 para COMAR.
+
+**Lo que sigue:** Carlos corre `analyze` y la suite en Windows y sube el bloque. Codex acepta solo esta tercera corrección. Si pasa, el sábado se publica (10.28).
+
+La siguiente decisión es la **10.34**.

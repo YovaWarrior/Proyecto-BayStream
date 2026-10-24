@@ -5482,3 +5482,88 @@ instrumento se detiene en el paso 4 («No lo tengo») y no llega a la Baja: no s
 no cambian (nada se ve distinto sin aviso). Anotado: a 360 dp con letra grande el número del contenedor
 parte en dos líneas, y el plano sin operación sigue sin tope. `DESIGN.md` 8 y 13.8 dicen lo nuevo. Me
 detengo: **ALTO: Codex acepta la segunda corrección.**
+
+## Fase 3 · Candidata del piloto · Tercera corrección (Yov) (23-oct-2026)
+
+La segunda reaceptación de Codex (`docs/rediseno/fase3/candidata/reaceptacion2-codex.md`) no pasó por
+H2-A y H2-B: quedaban avisos hechos a mano fuera de la guarda. Carlos le pidió a Yov la corrección. Yov la
+hizo en su espacio, sobre `6b9d80e` y con el mismo Flutter 3.38.9, y dejó los archivos en la carpeta del
+rediseño; Git, como siempre, lo hace Carlos (`SPRINT-4.md` 10.33).
+
+### 12.1 Resultado en tres líneas
+
+- Los nueve avisos hechos a mano que quedaban en ocho partes de la app se hacen con `avisoDelViaje`: donde
+  se vean, saben su lugar. Las tres rutas de Codex ya no pasan del borde de arriba de la franja.
+- Una guarda revisa todo `lib/`; el aviso con fondo de error lleva el texto y la acción en `onError`; el
+  instrumento de Android exige el plazo también cuando ve los tres textos (O2).
+- La prueba de Codex pasa 4 de 4; 12 pruebas nuevas; `analyze` en cero y la suite sin regresiones (12.4).
+
+### 12.2 Los avisos
+
+Comparar se llama desde el plano, y los avisos de las otras páginas siguen en pantalla al volver mientras
+dura su plazo: un `SnackBar(` hecho a mano no sabía su lugar y crecía sin tope. Ahora todos pasan por
+`avisoDelViaje`, con un texto corto que sigue diciendo qué pasó. En su página, sin franja, dicen el texto
+entero; sobre el plano, el que cabe, y «Ver» abre el entero. Los textos, las duraciones (4 s) y el
+«Deshacer» de la tapa no cambian.
+
+| Archivo | Aviso | Texto corto |
+|---|---|---|
+| `pages/voyage_comparison_page.dart` | los errores de Comparar | «No se pudo comparar.» |
+| `pages/parameters_page.dart` | el error de guardar el tema, con fondo de error | «No se guardó el tema.» |
+| `widgets/hatch_operation_controls.dart` | «Movimiento de tapa registrado», con «Deshacer» | «Tapa registrada» |
+| `pages/vessel_profiles_page.dart` | «Perfil guardado» y su error, con fondo de error | «No se guardó el perfil.» |
+| `pages/departure_baplie_page.dart` | «Exportación BAPLIE completada», «Lista de cancelados copiada» y los errores | «BAPLIE exportado.», «No se pudo comparar.», «No se generó el BAPLIE.» |
+| `pages/export_list_import_page.dart` | «Listado importado.» y su error | «No se importó el listado.» |
+| `pages/hatch_covers_page.dart` | «Copiado a N bahías» | (cabe entero) |
+| `pages/recent_voyages_page.dart` | el error al abrir; «Viaje eliminado. El perfil del buque se conserva.» y su error | «No se abrió el viaje.», «Viaje eliminado.», «No se eliminó el viaje.» |
+
+**El fondo de error.** El tema da al aviso la tinta y la marca, que sobre el rojo no llegaban a 3:1 en los
+dos temas, y con los textos cortos el fondo de error lleva ahora «Ver». `avisoDelViaje` pone el texto y la
+acción en `onError` cuando el fondo es el de error: 4,5:1 o más en los dos temas.
+
+**O2.** `advertencia_y_plano()` devolvía al ver los tres textos antes de mirar el plazo; un volcado que
+volvía a los 3,1 s se aceptaba (prueba de Codex con el reloj simulado). Ahora el plazo se mira primero.
+
+### 12.3 Lo que mide la prueba de Codex
+
+Su prueba de la reaceptación (`aceptacion_rutas_test.dart.txt`), contra este código, a 360 × 640 con la
+letra a 2.0 (la franja empieza en y=346):
+
+| Ruta | En `6b9d80e` | Ahora |
+|---|---|---|
+| Comparar con un archivo vacío, desde el plano | 128–492, nueve celdas | 392–492 |
+| El error de Parámetros, al volver al plano | 128–492, nueve celdas | 392–492 |
+| El registro de una tapa, al volver al plano | 338–492, 8 dp del resumen | 350–492 |
+
+Pasa 4 de 4, con la Baja, la otra Baja, la re‑estiba y «Deshacer» a 2.0.
+
+### 12.4 Validaciones
+
+| Qué | Resultado |
+|---|---|
+| `test/t114_candidata_correccion3_test.dart` (nuevo) | **12 en verde**: las tres rutas de Codex en 360 × 640, 360 × 800 y 412 × 915 con la letra a 2.0 (la franja, las celdas, el resumen, los controles y el texto; «Ver» y «Cerrar» en Comparar; el texto entero en Parámetros, en su página; «Deshacer» deshace la tapa); el fondo de error en los temas claro y oscuro; la guarda de todo `lib/` |
+| `flutter analyze --no-pub` | **«No issues found»**, sin `// ignore:` |
+| La suite completa, en Linux | **+1359 −7**; en `6b9d80e` sin cambios, **+1347 −7**. Las 12 de más son las nuevas, y las 7 que fallan en Linux son las mismas antes y después (dibujo, fuentes y rutas de Windows: `t114_iconos`, `t114_paquete`, `t114_travesia`, `t114_candidata_pantallas`, `t99_instrumentos`). En Windows se espera **1371** (1359 + 12) |
+| El instrumento (O2), aislado, con el reloj simulado | a 3,1 s **rechaza**; a 1,2 s acepta; sondea hasta verlo dentro del plazo |
+
+No se corrió en Windows, en el emulador ni en el Honor: Yov trabaja en su espacio. La reaceptación lo
+repite.
+
+### 12.5 Archivos
+
+- **`lib/` (solo presentación):** `widgets/avisos_del_viaje.dart` (el fondo de error y el comentario),
+  `widgets/hatch_operation_controls.dart`, `pages/voyage_comparison_page.dart`, `pages/parameters_page.dart`,
+  `pages/vessel_profiles_page.dart`, `pages/departure_baplie_page.dart`, `pages/export_list_import_page.dart`,
+  `pages/hatch_covers_page.dart` y `pages/recent_voyages_page.dart`.
+- **`test/`:** nuevo `t114_candidata_correccion3_test.dart`.
+- **`tool/`:** `t114_piloto_android.py` (O2).
+- **Documentos:** `DESIGN.md` (13.8), este informe y `SPRINT-4.md` (10.33).
+- Sin cambios: `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.yaml`, `pubspec.lock`, Firebase y
+  `docs/piloto/LISTA-PILOTO.md`.
+
+### 12.6 Lo que queda anotado
+
+1. **T-61 en el plano sin operación** (P3 de Codex): sin franja no hay tope, y al reabrir un viaje cuyo perfil
+   dejaría carga fuera, el aviso tapa celdas durante 10 s, una vez. Fuera del muelle operando que pide la 10.31.
+2. **O3 (la oficina)** queda para COMAR.
+3. **«No lo tengo» con la letra a 2.0** se alcanza a mano (Codex); el barrido fijo del instrumento no llega.

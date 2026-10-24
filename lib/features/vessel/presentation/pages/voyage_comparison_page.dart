@@ -8,6 +8,7 @@ import '../../domain/services/voyage_comparison.dart';
 import '../formatters/operation_text.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/vessel_providers.dart';
+import '../widgets/avisos_del_viaje.dart';
 import '../widgets/voyage_summary_card.dart' show smdg15Notice;
 import '../../../../core/utils/voyage_number.dart';
 
@@ -38,8 +39,9 @@ Future<ComparisonFile?> _pickWithDialog() async {
 /// confirma identidad ni perfil, no publica, no entra a Recientes ni se guarda.
 Future<void> compareWithAnotherBaplie(
     BuildContext context, WidgetRef ref, VesselVoyage open) async {
-  void notice(String message) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(message)));
+  // Se llama desde el plano: el aviso sabe su lugar (10.33).
+  void notice(String message) => ScaffoldMessenger.of(context).showSnackBar(
+      avisoDelViaje(texto: message, corto: 'No se pudo comparar.'));
   try {
     final file = await ref.read(comparisonFilePickerProvider)();
     if (file == null || !context.mounted) return;

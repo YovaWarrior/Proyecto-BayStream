@@ -6,6 +6,7 @@ import '../providers/discharge_provider.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/movement_log_provider.dart';
 import '../providers/sync_providers.dart';
+import 'avisos_del_viaje.dart';
 import 'discharge_controls.dart';
 
 /// null cancela; false continúa con la tapa puesta; true registra quitarla.
@@ -64,15 +65,17 @@ class _HatchOperationPageState extends ConsumerState<HatchOperationPage> {
       _error = result.error;
     });
     if (result.record != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Movimiento de tapa registrado'),
-          action: SnackBarAction(
-              label: 'Deshacer',
-              onPressed: () async {
-                final error = await annulMovement(repository,
-                    result.record!.movement, markedByMistake, author);
-                if (mounted && error != null) setState(() => _error = error);
-              })));
+      // Se ve sobre el plano al volver de la hoja: sabe su lugar y no pasa
+      // del borde de arriba de la franja (10.33).
+      ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: 'Movimiento de tapa registrado',
+          corto: 'Tapa registrada',
+          accion: 'Deshacer',
+          onAccion: () async {
+            final error = await annulMovement(
+                repository, result.record!.movement, markedByMistake, author);
+            if (mounted && error != null) setState(() => _error = error);
+          }));
     }
   }
 

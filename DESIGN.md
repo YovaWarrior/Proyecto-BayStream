@@ -1240,6 +1240,14 @@ controles, nunca.**
   a 1.0 el texto entero cabe en los dos teléfonos (360 × 640 y 412 × 915); con 1.45 y 2.0,
   según el ancho, sale el corto. El aviso de T-61 (10 s), el más largo de la página, sale
   corto con «Ver» a 2.0.
+- **Todos los avisos de la app (23-oct, 10.33).** No solo los de la página se ven sobre el
+  plano: Comparar se llama desde el plano, y los avisos de otras páginas (Parámetros, Tapas
+  en la operación, Perfiles, BAPLIE de salida, Listado de la agencia, Tapas de escotilla y
+  Viajes recientes) siguen en pantalla al volver mientras dura su plazo. Todos se hacen con
+  `avisoDelViaje`: en su página, sin franja, dicen el texto entero; sobre el plano, el que
+  cabe. Una guarda falla si aparece un `SnackBar(` hecho a mano en `lib/` fuera de
+  `avisos_del_viaje.dart`. Sobre el fondo de error, el texto y la acción van en `onError`:
+  la tinta y la marca no llegaban a 3:1 sobre el rojo.
 
 ### 13.9 Lo que no se toma y los datos que no se inventan
 
