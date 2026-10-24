@@ -117,7 +117,7 @@ Codex aceptó la candidata en `cc24766` (10.34); `sprint-4` se sube antes, con e
 esa decisión. El `master` local de esa carpeta está atrasado (sigue en el cierre del
 Sprint 2), así que primero se mueve a `origin/master`, que es el mismo commit que
 `sprint-3`. Así `git checkout master` no cambia ningún archivo, y los documentos
-modificados de la carpeta se quedan como están (Yov, 23-oct; comprobado otra vez el 24).
+modificados de la carpeta se quedan como están (Yov, 23-oct; comprobado otra vez esa noche).
 
 ```powershell
 Set-Location -LiteralPath C:\Proyectos\proyecto-baystream

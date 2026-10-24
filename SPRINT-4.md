@@ -814,7 +814,7 @@ La siguiente decisión es la **10.33**.
 
 La siguiente decisión es la **10.34**.
 
-### 10.34 · La tercera reaceptación pasa: la candidata del piloto queda aceptada (24-oct, 05:07)
+### 10.34 · La tercera reaceptación pasa: la candidata del piloto queda aceptada (23-oct, 23:07)
 
 **Codex volvió a aceptar `cc24766`: PASA** (`docs/rediseno/fase3/candidata/reaceptacion3-codex.md`).
 - **H2-A y H2-B, cerrados.** Con su propia prueba, no con la de Yov, las tres rutas pasan a 360 × 640, 360 × 800 y 412 × 915 con la letra a 2.0: Comparar desde el plano, Parámetros al volver y la tapa con «Deshacer», que anota la anulación en la bitácora. Ningún aviso pisa celdas, resumen ni controles, y el texto elegido sale entero. A 360 × 640, con la franja desde y=346, Comparar y Parámetros van de y=392 a 492, y la tapa, de 350 a 492.
@@ -841,9 +841,29 @@ La siguiente decisión es la **10.34**.
 - 4.1: la mezcla se cierra con `git commit` y las dos líneas de autoría, como los demás commits;
 - 5: la letra grande en los avisos y los dos P3, para no anotarlos como fallos nuevos.
 
-**Lo que sigue, hoy sábado:**
+**Lo que sigue, el sábado 24:**
 - Carlos sube `cc24766` y el bloque de esta decisión.
 - Después de la exposición, publica con la sección 4 de la lista: la mezcla, el MSIX 3.1.0.0, el AAB 3.1.0 (4) y la Web.
 - Después, el ensayo, secciones 0 a 2. Si falla en algo serio, el piloto del 25 y el 26 se hace con la v3.0.
 
 La siguiente decisión es la **10.35**.
+
+### 10.35 · La candidata del piloto, publicada en los tres clientes (24-oct, 09:42)
+
+**Carlos publicó la 3.1.0 con la sección 4 de la lista del piloto, de las 09:10 a las 09:40.** Yov revisó su terminal y la carpeta.
+- **La mezcla:** `7488321` en `master`, con la etiqueta `v3.1`. Une `sprint-3` (`063d2ae`) y `sprint-4` (`38965b8`), y su contenido es idéntico al de `sprint-4`. El commit salió sin las dos líneas de autoría; no se reescribe, porque ya está publicado con su etiqueta.
+- **Windows:** `BayStream_3.1.0.0.msix`, con la firma `Valid` de `CN=BayStream` y SHA-256 `E934097F552EC8166A566289535E40FD1DC821A00078DD9A01C07BD4AED69D95`. El MSIX 3.0.0.0 y su `.sha256` siguen en `build\t93`, para volver (4.5).
+- **Android:** el AAB 3.1.0 (4), de 51,1 MB, en la prueba interna de Play. Yov propuso el nombre de la versión («4 (3.1.0) · Candidata del piloto») y las notas en español.
+- **Web:** la compilación dice 3.1.0 y 4 en `version.json` y trae Firebase Auth. El verificador T-92 pasó con 57 archivos, los mismos que en la aceptación de Codex, y Hosting subió 56: no sube `.last_build_id`, porque `firebase.json` excluye los archivos ocultos. El aviso de `CupertinoIcons` es el conocido desde el Sprint 3 (T-102 y T-103); la app no usa esos íconos.
+- **Las compilaciones no cambiaron ningún archivo del repositorio:** la carpeta queda en `master`, con los documentos de Carlos como estaban.
+- **Corrección de la 10.34:** su título llevaba la hora UTC del reloj de Yov. Se escribió el 23-oct a las 23:07; quedan corregidos el título y la nota de 4.1 en la lista del piloto.
+
+**Falta comprobar, al empezar el ensayo (0.1):** `version.json` en una ventana de incógnito, Windows con la 3.1.0.0 instalada y el Honor actualizado por el enlace de la prueba.
+
+**Lo que sigue:**
+- hoy a las 14:00, la exposición del curso, con la demo en `C:\Proyectos\baystream-pruebas`;
+- el ensayo, secciones 0 a 2 de la lista; si falla en algo serio, el piloto se hace con la v3.0 (4.5);
+- el piloto con COMAR, el 25 y el 26 (sección 3 de la lista);
+- después de la exposición, `pruebas-curso` se mezcla en `sprint-4`, con la suite y `analyze` (10.12). La prueba de muestra de la clase (`test/muestra/`) está sin versionar en esa carpeta: se decide entonces si entra.
+
+La siguiente decisión es la **10.36**.
