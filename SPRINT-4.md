@@ -1099,3 +1099,35 @@ La siguiente decisión es la **10.43**.
 - La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
 
 La siguiente decisión es la **10.44**.
+
+### 10.44 · La reaceptación de la entrega 1 no pasa por H4: «Acciones» sin nombre accesible en Windows; Timonel corrige (25-oct, 16:40)
+
+**Codex la cerró hoy a las 16:32, sobre `916bf2b`** (`docs/t117/entrega1/reaceptacion-codex.md`, con su evidencia en `build/t117-entrega1-reaceptacion/` de `baystream-qa-r4`):
+- **H1 pasa:** el botón cierra el flotante, el panel sigue oculto y la preferencia no cambia, también al cerrar y abrir la app en Windows. Sin flotante, el botón muestra y oculta el fijo, y «Fijar» lo fija.
+- **H2 pasa:**
+  - en el emulador, en claro y en oscuro, el primer Atrás cierra el menú sin advertencia y el siguiente es el primero del doble Atrás;
+  - Esc cierra el menú en Windows y en la Web, abierto con el mouse y con el teclado;
+  - abierto con el teclado, tras Esc el foco vuelve al botón del modo: Intro lo reabre y Tab sigue a «Buscar contenedor».
+- **La geometría de H3 pasa:** a 700 dp, en Contenido y Descarga, la franja mide 56 dp; cuando envuelve, el botón queda al final de la primera línea. Lo comprobó también en Windows nativo, con el borde a 700 y a 600 dp.
+- **H4 · P2 — «Acciones» solo con su ícono no tiene nombre accesible en Windows.** A 700 dp desaparece del árbol accesible, aunque la descripción emergente sí sale. La causa: `_PlanActions` (`loading_plan_controls.dart`) es un `PopupMenuButton` con un hijo propio, que no da nombre ni rol de botón; el motor de Windows toma el nombre de la etiqueta, no de la descripción. En la Web, Chrome sí lo anuncia como botón «Acciones».
+- **O1 · P3 — a 800 × 600 con la letra a 2.0, en Contenido, la franja pasa de 126 a 178 dp** y la rejilla pierde 52 dp al abrir. Es el costo del nuevo reparto de la variante que envuelve. Se trabaja desplazando la columna o plegando el puente.
+- **El cambio de tolerancia de `BsPrimeraQueCabe` no movió nada más:** solo cambia la elección a 960 × 1000 con la letra a 2.0, en Descarga, donde una variante se pasaba 0.08 dp. Ninguna elección de la cabecera cambia y no hay desbordes nuevos.
+- **Cifras:**
+  - la suite, 1677 aprobadas, sin fallidas ni omitidas, en una corrida;
+  - `analyze` en cero en la copia limpia;
+  - la matriz, 92 de 92: los dos casos de 800 × 600 que fallaron cierran el menú con Esc y «Deshacer» responde;
+  - la prueba propia de H4, roja.
+
+**Yov lo revisó:**
+- el informe coincide con la huella de su manifiesto, y las 238 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe;
+- H4 está en el código como dice Codex. El árbol accesible de Windows lo muestra: a 700 dp no hay «Acciones» entre «100 %» y «Plegar el panel del buque», y los demás botones de la oficina sí tienen nombre («Mostrar el panel lateral», «Bahía anterior»…);
+- **Es más ancho de lo que dice el informe:** a 600 dp, con su rótulo, «Acciones» tampoco es un botón. Windows lo muestra como «texto Acciones. Acciones»: el nombre repetido, sin rol de botón. Viene de antes de T-117; con el ícono solo, el nombre desaparece del todo.
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión.
+- Timonel corrige H4 en la corrección 2: «Acciones» como botón con su nombre, en las dos variantes y en los tres clientes, y busca el mismo patrón en lo que tocaron T-117 y T-118.
+- **O1 queda anotado como P3 y no se toca ahora.** Arreglarlo cambia otra vez el reparto de la franja y arriesga otra vuelta de aceptación; se puede ver en la entrega 3.
+- Codex reacepta solo H4, con la suite y `analyze`.
+- La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
+
+La siguiente decisión es la **10.45**.
