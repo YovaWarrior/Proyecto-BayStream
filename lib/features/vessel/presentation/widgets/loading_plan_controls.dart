@@ -455,7 +455,9 @@ class AccionesDelPlano extends ConsumerWidget {
 
   /// En el teléfono, solo el icono, con su nombre en la descripción
   /// emergente: en la tira del pie, para que la leyenda asome en 360 dp; en
-  /// la línea de los controles, para que quepa el modo con su icono.
+  /// la línea de los controles, para que quepa el modo con su icono. Con el
+  /// icono o con el rótulo, el lector de pantalla oye lo mismo: el botón
+  /// «Acciones» (10.44).
   final bool soloIcono;
   const AccionesDelPlano(
       {super.key,
@@ -501,54 +503,76 @@ class AccionesDelPlano extends ConsumerWidget {
         Text('Acciones', style: TextStyle(color: colors.primary)),
       ],
     ]);
-    return PopupMenuButton<VoidCallback>(
-      key: const ValueKey('bay-plan-actions'),
-      tooltip: 'Acciones',
-      onSelected: (action) => action(),
-      // Las acciones usan el contexto del plano: el del menú ya se cerró.
-      itemBuilder: (_) => [
-        PopupMenuItem(
-            key: dischargeMode
-                ? const ValueKey('discharge-table-button')
-                : null,
-            enabled: onPendingTable != null,
-            value: onPendingTable,
-            child: entry(
-                Icons.table_chart,
-                dischargeMode
-                    ? 'Pendientes de descarga'
-                    : 'Pendientes por bahía')),
-        if (onProgress != null)
-          PopupMenuItem(
-              key: const ValueKey('operation-progress-button'),
-              value: () => onProgress!(),
-              child: entry(Icons.assignment, 'Avance de la operación')),
-        if (requests)
-          PopupMenuItem(
-              key: const ValueKey('change-requests-button'),
-              value: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => ChangeRequestsPage(voyage: voyage))),
-              child: entry(
-                  BsIconos.pedirCambio,
-                  '${office ? 'Bandeja de cambios' : 'Solicitudes de cambio'} ($pending)')),
-        if (loadingMode)
-          PopupMenuItem(
-              key: const ValueKey('empty-search'),
-              enabled: data?.list != null,
-              value: () => chooseLoadingRow(context, ref, voyage,
-                  selectedBay: selectedBay, empties: true),
-              child: entry(BsIconos.vacio, 'Asignar vacío')),
-        if (importarListado)
-          PopupMenuItem(
-              key: const ValueKey('import-export-list'),
-              value: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const ExportListImportPage())),
-              child: entry(BsIconos.listadoAgencia, 'Importar listado')),
-      ],
-      child: Padding(
-        padding:
-            EdgeInsets.symmetric(horizontal: soloIcono ? 12 : 8, vertical: 12),
-        child: rotulo,
+    // Un botón con su nombre, dicho una vez (10.44, H4). Con un hijo propio,
+    // `PopupMenuButton` no da el rol de botón, y Windows toma el nombre de la
+    // etiqueta y le suma la descripción emergente: solo con el icono, el nodo
+    // quedaba sin nombre y fuera del árbol; con el rótulo, «Acciones.
+    // Acciones», como texto. El nombre lleva la cuenta del distintivo; la
+    // descripción emergente sigue para el mouse, fuera de la semántica.
+    final nombre = pending > 0
+        ? 'Acciones, ${operationCount(pending, 'solicitud pendiente', 'solicitudes pendientes')}'
+        : 'Acciones';
+    return Tooltip(
+      message: 'Acciones',
+      excludeFromSemantics: true,
+      child: Semantics(
+        container: true,
+        button: true,
+        label: nombre,
+        child: PopupMenuButton<VoidCallback>(
+          key: const ValueKey('bay-plan-actions'),
+          // Sin mensaje no pone el suyo: la descripción emergente es la de
+          // fuera.
+          tooltip: '',
+          onSelected: (action) => action(),
+          // Las acciones usan el contexto del plano: el del menú ya se cerró.
+          itemBuilder: (_) => [
+            PopupMenuItem(
+                key: dischargeMode
+                    ? const ValueKey('discharge-table-button')
+                    : null,
+                enabled: onPendingTable != null,
+                value: onPendingTable,
+                child: entry(
+                    Icons.table_chart,
+                    dischargeMode
+                        ? 'Pendientes de descarga'
+                        : 'Pendientes por bahía')),
+            if (onProgress != null)
+              PopupMenuItem(
+                  key: const ValueKey('operation-progress-button'),
+                  value: () => onProgress!(),
+                  child: entry(Icons.assignment, 'Avance de la operación')),
+            if (requests)
+              PopupMenuItem(
+                  key: const ValueKey('change-requests-button'),
+                  value: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ChangeRequestsPage(voyage: voyage))),
+                  child: entry(
+                      BsIconos.pedirCambio,
+                      '${office ? 'Bandeja de cambios' : 'Solicitudes de cambio'} ($pending)')),
+            if (loadingMode)
+              PopupMenuItem(
+                  key: const ValueKey('empty-search'),
+                  enabled: data?.list != null,
+                  value: () => chooseLoadingRow(context, ref, voyage,
+                      selectedBay: selectedBay, empties: true),
+                  child: entry(BsIconos.vacio, 'Asignar vacío')),
+            if (importarListado)
+              PopupMenuItem(
+                  key: const ValueKey('import-export-list'),
+                  value: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const ExportListImportPage())),
+                  child: entry(BsIconos.listadoAgencia, 'Importar listado')),
+          ],
+          child: ExcludeSemantics(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: soloIcono ? 12 : 8, vertical: 12),
+              child: rotulo,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1823,3 +1823,277 @@ El último comando tiene que decir **12 files changed**. No cambian `pubspec.yam
 > rutas en el bloque; la evidencia no va a Git.
 
 **ALTO: Codex reacepta.**
+
+## Corrección 2 de la entrega 1 (25-oct-2026)
+
+Timonel (Claude Code, Claude Opus 5.5), rama `sprint-4`, carpeta del rediseño, sobre `41f458d`
+(decisión 10.44). La reaceptación de Codex (`docs/t117/entrega1/reaceptacion-codex.md`) no pasó
+por un solo hallazgo, H4 · P2. «Acciones» solo con su icono no tenía nombre accesible en Windows, y
+con su rótulo salía como texto, con el nombre repetido. O1 (Contenido a 800 × 600 con la letra a
+2.0 pierde 52 dp al abrir) queda como P3 en 10.44 y no se toca.
+
+### C2.1 Resultado en tres líneas
+
+- **«Acciones» es el botón «Acciones»** para el lector de pantalla, con el icono y con el rótulo.
+  La etiqueta lo nombra una vez, con la cuenta del distintivo cuando la muestra («Acciones, 1
+  solicitud pendiente»); es botón y se puede tocar. La descripción emergente sigue al pasar el
+  mouse, fuera de la semántica.
+- **El mismo patrón aparece una vez más** en lo que tocaron T-117 y T-118: el resumen de una línea
+  del teléfono (`PlanSummaryLine`), que se abre y se recoge con un `InkWell` sin rol de botón. Ahora
+  también es un botón.
+- **Suite 1685 (piso 1677, más 8)**, sin fallidas ni omitidas, en una corrida, y `analyze` en cero.
+  Las 8 pruebas nuevas fallan contra `41f458d` y pasan después. **En el árbol accesible de Windows**,
+  a 700, 600 y 560 dp, «Acciones» dice ahora «botón Acciones» en UIA y «botón de comando Acciones»
+  en MSAA. Antes no estaba (700 y 560) o decía «texto Acciones. Acciones» (600).
+
+### C2.2 Lo que se corrió
+
+- Leí la decisión 10.44, el informe de Codex (H4 y O1) y su evidencia, solo como lectura:
+  `nombre_acciones_test.dart` y los árboles `windows-real/18-h3-700-semantica.json` y
+  `24-600-acciones-con-rotulo.json` de `baystream-qa-r4`. No toqué esa carpeta.
+- **Sin Flutter,** escribí el código, la prueba, `DESIGN.md` y el instrumento del árbol de Windows,
+  y preparé el banco «antes». Después, **con la luz verde de Carlos («Corre flutter»)**, corrí uno a
+  la vez:
+  1. `analyze`;
+  2. las pruebas nuevas;
+  3. las pruebas nuevas contra `41f458d`, en una copia de `%TEMP%`;
+  4. **la suite completa, una vez**;
+  5. los dos bancos de Windows, «antes» y «después», y su árbol accesible;
+  6. `analyze` sobre la prueba, tras corregir uno de sus comentarios (C2.6).
+- No se usaron el Honor, el emulador ni la Web. Datos sintéticos de T-100, nunca el corpus ni la
+  página «Nube y cuenta». No se tocaron las apps instaladas, «PRUEBA T-105» ni
+  `C:\Proyectos\baystream-demo17\`. Nada se publicó.
+
+### C2.3 Qué cambió y por qué
+
+**La causa, en el motor de Windows de Flutter 3.38.9**
+(`engine/src/flutter/shell/platform/common/accessibility_bridge.cc` y
+`third_party/accessibility/ax/platform/ax_platform_node_win.cc`):
+- el nombre del nodo es la etiqueta, y la descripción emergente se le suma: en el árbol del banco
+  «antes», UIA y MSAA dicen los dos «Acciones. Acciones», con la ayuda vacía;
+- un nodo sin rol de botón y sin hijos es texto; si además no tiene etiqueta, se ignora y no entra
+  al árbol.
+
+«Acciones» era un `PopupMenuButton` con un hijo propio. Así, `PopupMenuButton` pone una
+descripción emergente y un `InkWell`, pero no el rol de botón:
+- solo con el icono no había etiqueta: el nodo era texto vacío y el motor lo ignoraba;
+- con el rótulo, la etiqueta era el texto «Acciones» y la descripción emergente otra vez
+  «Acciones»: «texto Acciones. Acciones».
+
+En la Web, Chrome ya lo anunciaba como botón «Acciones» (Codex, `web-semantica/`).
+
+**El arreglo** (`loading_plan_controls.dart`, `AccionesDelPlano`):
+1. un `Semantics` de contenedor, con rol de botón y la etiqueta «Acciones», alrededor del
+   `PopupMenuButton`. El toque del menú cae en ese mismo nodo;
+2. lo que se dibuja (el icono, el distintivo y el rótulo) queda fuera de la semántica, para que la
+   etiqueta no se arme con el texto suelto («1\nAcciones»);
+3. la cuenta del distintivo va en la etiqueta cuando el distintivo la muestra: «Acciones, 1
+   solicitud pendiente», «Acciones, 2 solicitudes pendientes»;
+4. la descripción emergente «Acciones» es ahora un `Tooltip` por fuera, con `excludeFromSemantics`,
+   y el `PopupMenuButton` va sin la suya (`tooltip: ''`, que no dibuja nada). Al pasar el mouse se
+   ve igual; el lector de pantalla no oye el nombre dos veces. Es la regla que `DESIGN.md` 13.11 ya
+   tenía para los iconos del contenedor.
+
+El menú, sus entradas y sus claves de prueba no cambian. `DESIGN.md` 14.8 (una viñeta nueva) y
+14.10 (punto 15).
+
+### C2.4 El mismo patrón en lo que tocaron T-117 y T-118
+
+Busqué en las 23 rutas de `lib/` que cambiaron de `48f941e` a `41f458d`: `PopupMenuButton`,
+`InkWell`, `InkResponse`, `GestureDetector`, `MenuAnchor`, `Listener` y `MouseRegion`.
+
+| Dónde | Qué es | Veredicto |
+|---|---|---|
+| `loading_plan_controls.dart`, `AccionesDelPlano` | `PopupMenuButton` con hijo propio | **H4, corregido** (C2.3) |
+| `loading_controls.dart`, `PlanSummaryLine` | Tres `InkWell` con su hijo: el resumen de una línea del teléfono, que se abre y se recoge | **El mismo patrón, corregido.** Tenía nombre (el resumen y «Ver el resumen completo») pero no rol: Windows lo daba como «texto», sin Invoke. El `InkWell` viene de T-107, pero T-117 cambió lo que lleva dentro (las fichas) y lo usa en `_ResumenEnLinea`. Ahora cada uno va en un `Semantics` de contenedor con rol de botón; el nombre sigue siendo el que tenía |
+| `bs_tarjeta_cifra.dart` | `InkWell` de la tarjeta que se toca (Alertas) | Bien: ya va en un `Semantics` con su etiqueta, rol de botón y toque |
+| `vessel_overview_page.dart`, `_BordeDelPanel` | `GestureDetector` del borde del panel | Bien: queda fuera de la semántica a propósito; para el teclado y el lector está el botón de la cabecera (14.3) |
+| `puente_del_plano.dart` | `GestureDetector` del asa del puente | Bien: el lector lo oye como el control deslizante «Alto del panel del buque» |
+| `bs_selector_de_modo.dart`, `franjas_del_plano.dart` | `MenuAnchor` del modo, de «Colorear por» y de la lista de bahías | Sus botones ya son botones con nombre («Modo del plano: Descarga», «Colorear por: Estado», «Bahía 02»). Sus entradas son de Flutter (C2.9) |
+| `plan_drag_confirmation.dart` | `GestureDetector` de la pulsación larga en la celda | Bien: la celda es su propio botón; la pulsación larga se suma a ese nodo |
+
+El otro `PopupMenuButton` de `lib/` está en `vessel_geometry_page.dart`, que T-117 y T-118 no
+tocaron; no lo toqué.
+
+### C2.5 La prueba
+
+`test/t117_correccion2_test.dart`, 8 pruebas, con las fuentes del producto:
+
+| Prueba | Qué comprueba |
+|---|---|
+| A 700 dp en Contenido y en Descarga (2) | La cuarta variante de la franja, solo con el icono: el nodo de «Acciones» tiene la etiqueta «Acciones», es botón, tiene el toque, no lleva descripción emergente en la semántica, el nombre sale una sola vez y hay un solo nodo con ese nombre |
+| A 600 dp en Descarga, con el rótulo | Lo mismo con el rótulo a la vista: ni «Acciones. Acciones» ni texto |
+| En el teléfono (360 × 800) | Lo mismo, solo con el icono |
+| El lector lo toca; el mouse ve la descripción | El toque por semántica (`tester.semantics.tap`) abre el menú; al pasar el mouse sale la descripción emergente «Acciones» |
+| La cuenta del distintivo (2) | Con una solicitud de cambio pendiente (oficina con cuenta, operación publicada), con el icono y con el rótulo: el distintivo dice 1 y el nombre es «Acciones, 1 solicitud pendiente» |
+| El resumen del teléfono | Cerrado y abierto, es botón y se toca; «Ver el resumen completo» y «Recoger el resumen» salen una sola vez |
+
+**Antes del arreglo** (las mismas 8 en una copia de `41f458d` en `%TEMP%`, hecha con
+`tool/t99_copia.ps1`, que usa `git archive`): **las 8 fallan**, cada una por lo que reproduce:
+- a 700 dp y en el teléfono, la etiqueta es «» (vacía);
+- a 600 dp no es botón;
+- el lector no encuentra un nodo «Acciones» para tocar;
+- con la cuenta, la etiqueta era «1» (con el icono) o «1\nAcciones» (con el rótulo);
+- el resumen no era botón.
+
+Después del arreglo pasan las 8.
+
+### C2.6 Cifras
+
+- **`flutter analyze`:** No issues found (42 s), sin `// ignore:`. Después de la suite solo cambió
+  un comentario de la prueba; `analyze` sobre ese archivo, otra vez en cero.
+- **Suite:** **1685 aprobadas, 0 fallidas, 0 omitidas, en una corrida** (2:08 min; piso 1677, más
+  las 8 nuevas).
+- **Las pruebas nuevas:** 8 de 8 después; contra `41f458d`, 0 de 8.
+
+### C2.7 El árbol accesible de Windows, antes y después
+
+**Bancos** (`build/t117-correccion2/bancos/bancos.json`):
+- **«Antes»:** copia de `41f458d` (`t99_copia.ps1 -Commit 41f458d -Sufijo r4`). EXE SHA-256
+  `F9143648…AD460`.
+- **«Después»:** copia del árbol corregido (`-Arbol`); los dos archivos cambiados coinciden por
+  SHA-256 con el árbol. EXE `F85BC8EB…25719`.
+- Los dos se compilaron con `flutter build windows --release --no-pub -t tool/t99_main.dart` y su
+  almacén en `%TEMP%\t117-c2\<antes|despues>\store-windows`.
+- El almacén es una copia del sintético del banco de la entrega 1: `T100_LLEGADA` publicado en
+  GTSTC.
+- Para no bajar otra vez el SDK de Firebase (915 MB), la carpeta de compilación de cada uno llevó,
+  antes de compilar, el zip de ese banco (como enlace duro) y su `extracted` copiado. CMake no
+  bajó nada: 72 s y 66 s.
+- Se abrieron con `explorer.exe`.
+
+**Instrumento:** `tool/t117_correccion2_windows.ps1`, nuevo. Lee el árbol de la ventana de las dos
+maneras que usan los lectores de pantalla:
+- **UIA** (la vista de control): tipo de control, nombre, ayuda y patrones;
+- **MSAA**: rol y nombre clásico.
+
+No mueve el mouse ni toca el teclado:
+- abre el viaje y elige el modo con Invoke de UIA, o con la acción por omisión de MSAA donde Flutter
+  no da Invoke;
+- fija el ancho de la ventana en dp con `SetWindowPos`.
+
+La laptop está a 120 DPI: 700 dp son 875 px. La letra a 1.0 y el tema del sistema (oscuro). Las
+capturas son las de `t100_windows.ps1` (`PrintWindow`).
+
+| Estado (cliente) | Antes: UIA · MSAA | Después: UIA · MSAA |
+|---|---|---|
+| 1266 × 682 dp, Contenido (con el rótulo) | texto «Acciones. Acciones» · texto «Acciones. Acciones» | **botón «Acciones»** (Invoke) · **botón de comando «Acciones»** |
+| 700 × 682, Contenido (solo el icono) | **no está**: entre «100 %» y «Plegar el panel del buque» no hay nada | **botón «Acciones»** (Invoke) · **botón de comando «Acciones»** |
+| 700 × 682, Descarga (solo el icono) | **no está** | **botón «Acciones»** · **botón de comando «Acciones»** |
+| 600 × 682, Descarga (con el rótulo) | texto «Acciones. Acciones», sin Invoke · texto «Acciones. Acciones» | **botón «Acciones»** (Invoke), sin ayuda · **botón de comando «Acciones»** |
+| 560 × 682, Descarga (el teléfono, solo el icono) | **no está** | **botón «Acciones»** · **botón de comando «Acciones»** |
+| 560 × 682, el resumen de una línea | texto «Bahía 02: … / Ver el resumen completo», sin Invoke | **botón** «Bahía 02: … / Ver el resumen completo» (Invoke); abierto, **botón «Recoger el resumen»**, con los textos del resumen dentro |
+
+- **Nada más cambia en el árbol.** Por estado, antes y después (`windows/diferencias.txt`), las
+  únicas diferencias en UIA y en MSAA son las de esta tabla. A 700 dp hay un nodo más («Acciones»),
+  a 600 el mismo número de nodos (el texto pasa a botón) y a 560, uno más.
+- **Se puede tocar:** activado por Invoke de UIA a 700 dp, «Acciones» abre su menú, con «Pendientes
+  de descarga» y «Avance de la operación» como botones (`13-700-acciones-abierto`).
+- **Un tropiezo del instrumento:** para cerrar ese menú busqué un nodo «Cerrar», y el primero era el
+  botón «Cerrar» de la barra de título de Windows. Cerró el banco «después», que era mío y con su
+  almacén en `%TEMP%`. Lo volví a abrir por `explorer.exe` y repetí 600 y 560 dp; lo de 700 dp ya
+  estaba volcado.
+- Evidencia: `build/t117-correccion2/windows/antes/` y `…/despues/`. Por estado hay un `.json` (el
+  árbol entero, con la ventana, el DPI y el momento), un `.txt` (los dos árboles legibles) y un
+  `.png`. Además, `diferencias.txt` y `diferencias.json`.
+
+### C2.8 Archivos
+
+- **Cambiados (4):**
+  - `DESIGN.md`: 14.8 (una viñeta) y 14.10 (punto 15);
+  - en `lib/features/vessel/presentation/widgets/`: `loading_plan_controls.dart` y
+    `loading_controls.dart`;
+  - y este informe.
+- **Nuevos (2):** `test/t117_correccion2_test.dart` y `tool/t117_correccion2_windows.ps1`.
+- **Evidencia, fuera de Git:** `build/t117-correccion2/` (56 archivos):
+  - `analyze.log` y `suite.log`;
+  - las pruebas nuevas antes y después;
+  - los bancos (registros y huellas);
+  - los árboles de Windows;
+  - la versión de Flutter.
+- **No cambian:** `domain/`, `data/`, `pubspec.yaml`, `pubspec.lock`, `lib/main.dart`, los
+  congelados, Firebase y `docs/piloto/LISTA-PILOTO.md`. Ninguna dependencia nueva. Los cuatro
+  archivos que solo difieren en el fin de línea no van en el bloque, ni la evidencia de
+  `docs/t117/entrega1/`, que sigue sin versionar (10.41).
+
+### C2.9 Lo que queda anotado
+
+1. **La prueba de Codex de H4** (`nombre_acciones_test.dart`) pide la etiqueta «Acciones» y además
+   `tooltip: "Acciones"` en el nodo. La etiqueta ya está. La descripción emergente queda fuera de la
+   semántica **a propósito**: dejarla es lo que hace que Windows diga «Acciones. Acciones». Esa
+   línea de su prueba va a seguir roja; la descripción se comprueba al pasar el mouse.
+2. **Visto en el árbol de Windows, sin corregir.** No es el patrón de 10.44 (tienen nombre y rol, o
+   son de Flutter); queda para que Carlos y Yov decidan:
+   - **Los segmentos de `BsSelectorDeModo`** (T-118: «Colorear por» y el modo en segmentos) repiten
+     el nombre: «botón Destino. Destino. El puerto de descarga de cada contenedor». Son
+     `SegmentedButton` de Flutter con `tooltip`, y la descripción emergente empieza por el mismo
+     nombre. Se arreglaría dejando la descripción fuera de la semántica y pasando la ayuda como
+     pista (`hint`). Toca el componente compartido, así que no lo hice sin pedirlo.
+   - **Las entradas de los menús de Flutter** (`MenuItemButton`: el menú del modo, el de «Colorear
+     por» y la lista de bahías) salen como «texto Descarga, 30 por bajar en GTSTC». No son botón ni
+     tienen Invoke en UIA, porque Flutter 3.38.9 las arma así (`isSemanticButton: null`). La acción
+     por omisión de MSAA sí las activa: así eligió Descarga el instrumento.
+   - **La barra lateral** dice «texto Plano / Pestaña 1 de 6»: es el `NavigationRail` de Flutter y
+     viene de antes de T-117.
+3. **La Web y Android no se miraron en su árbol nativo.** 10.44 pedía el de Windows. La semántica
+   es la misma en los tres clientes y la cubren las pruebas de widgets, incluida la del teléfono.
+   Codex ya había visto en Chrome el botón «Acciones», y ahora la etiqueta está explícita.
+4. **El instrumento del piloto en Android** (`tool/t114_piloto_android.py`) busca «Acciones» con
+   `^Acciones$`, y sin solicitudes pendientes el nombre sigue siendo exactamente ese. Con
+   solicitudes pendientes, el nombre sigue con la cuenta. La lista del piloto no cambia.
+5. **O1 no se tocó** (10.44).
+
+### C2.10 Horas
+
+Unas **0.7 h**, de ≈ 16:45 a 17:30:
+- la lectura, la búsqueda del patrón, el código, la prueba y el instrumento, sin Flutter;
+- con Flutter: `analyze`, las pruebas antes y después, la suite, los dos bancos, el árbol de
+  Windows y este informe.
+
+### C2.11 Git
+
+**Para Carlos.** Un `git add` por ruta, 6 rutas. No incluye:
+- los cuatro archivos que solo difieren en el fin de línea;
+- la evidencia de `build/t117-correccion2/` (ignorada);
+- la de `docs/t117/entrega1/` (sin versionar por 10.41).
+
+```powershell
+git add -- DESIGN.md
+git add -- docs/T117-T121-RESULTADOS.md
+git add -- lib/features/vessel/presentation/widgets/loading_controls.dart
+git add -- lib/features/vessel/presentation/widgets/loading_plan_controls.dart
+git add -- test/t117_correccion2_test.dart
+git add -- tool/t117_correccion2_windows.ps1
+git commit -m "Sprint 4: T-117 y T-118, correccion 2 de la entrega 1 (10.44), Acciones es un boton con su nombre para el lector de pantalla y el resumen del telefono tambien" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+El último comando tiene que decir **6 files changed**. No cambian `pubspec.yaml` ni `pubspec.lock`.
+
+### C2.12 Mensaje para Yov
+
+> Yov: la corrección 2 de la entrega 1 de T-117 y T-118 (10.44) está en
+> `docs/T117-T121-RESULTADOS.md`, sección «Corrección 2», y en `DESIGN.md` 14.8 y 14.10.
+>
+> **H4:** «Acciones» es ahora un botón con la etiqueta «Acciones», con el icono y con el rótulo, y
+> con la cuenta del distintivo cuando la muestra («Acciones, 1 solicitud pendiente»). La descripción
+> emergente sigue al pasar el mouse, fuera de la semántica, porque Windows la suma a la etiqueta en
+> el nombre. **El mismo patrón** estaba en el resumen de una línea del teléfono
+> (`PlanSummaryLine`), y ahora también es un botón. No hay otro en lo que tocaron T-117 y T-118.
+>
+> **Cifras:** las 8 pruebas nuevas fallan contra `41f458d` y pasan después; suite 1685 y `analyze`
+> en cero.
+>
+> **Árbol accesible de Windows, en dos bancos propios abiertos con `explorer.exe`:** a 700, 600 y
+> 560 dp dice «botón Acciones» en UIA y «botón de comando Acciones» en MSAA; antes no estaba, o era
+> «texto Acciones. Acciones». Nada más del árbol cambia.
+>
+> **Anotado, sin corregir:**
+> - los segmentos de `BsSelectorDeModo` repiten el nombre («Destino. Destino. …»);
+> - las entradas de los menús de Flutter salen como texto, sin Invoke;
+> - la prueba de Codex que pide `tooltip: "Acciones"` en el nodo seguirá roja a propósito.
+>
+> Son 6 rutas en el bloque; la evidencia no va a Git.
+
+**ALTO: Codex reacepta.**

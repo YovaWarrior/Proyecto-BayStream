@@ -164,12 +164,18 @@ class _PlanSummaryLineState extends State<PlanSummaryLine> {
     final icon = Icon(open ? Icons.expand_less : Icons.expand_more,
         size: line,
         semanticLabel: open ? 'Recoger el resumen' : 'Ver el resumen completo');
+    // Un botón (10.44): el `InkWell` con su hijo no da el rol, y Windows lo
+    // tomaba por texto. El nombre es lo que se lee dentro: el resumen y «Ver
+    // el resumen completo», o «Recoger el resumen».
+    Widget alternar({Key? key, required Widget child}) => Semantics(
+        container: true,
+        button: true,
+        child: InkWell(key: key, onTap: toggle, child: child));
     if (!open) {
       return Row(key: const ValueKey('plan-summary-line'), children: [
         Expanded(
-            child: InkWell(
+            child: alternar(
                 key: const ValueKey('plan-summary-toggle'),
-                onTap: toggle,
                 child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Expanded(
                       child: ClipRect(
@@ -199,19 +205,17 @@ class _PlanSummaryLineState extends State<PlanSummaryLine> {
           if (widget.trailing != null)
             Row(children: [
               Expanded(
-                  child: InkWell(
+                  child: alternar(
                       key: const ValueKey('plan-summary-toggle'),
-                      onTap: toggle,
                       child: Align(
                           alignment: AlignmentDirectional.centerEnd,
                           child: icon))),
               widget.trailing!,
             ]),
-          InkWell(
+          alternar(
               key: widget.trailing == null
                   ? const ValueKey('plan-summary-toggle')
                   : null,
-              onTap: toggle,
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Expanded(child: detail),
                 if (widget.trailing == null) icon,

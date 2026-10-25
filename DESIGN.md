@@ -1682,6 +1682,15 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
   135 a 600), algo que ya pasaba antes y que la matriz de 0.5.5 no veía. En la variante que
   envuelve, «Colorear por» puede partirse de su menú, y los controles van con rótulos solo si caben
   en una línea entera; si no, el OR y después «Acciones» quedan solo con su icono.
+- **«Acciones» es un botón con su nombre, con el icono o con el rótulo** (10.44, H4). Para el
+  lector de pantalla es el botón «Acciones», dicho una vez, y con la cuenta del distintivo cuando
+  la muestra («Acciones, 2 solicitudes pendientes»). La descripción emergente sigue al pasar el
+  mouse, fuera de la semántica (la regla de los iconos del contenedor, 13.11): Windows toma el
+  nombre de la etiqueta y le suma la descripción emergente, en UIA y en MSAA. Por eso
+  `PopupMenuButton`, con un hijo propio, no basta: no da el rol de botón. Solo con el icono, el nodo
+  quedaba sin nombre y fuera del árbol; con el rótulo, salía «texto Acciones. Acciones». En el
+  teléfono, el resumen de una línea que se abre y se recoge (`PlanSummaryLine`) es también un
+  botón por la misma razón.
 - **Con el panel fijo y la letra a 1.0 va en una línea** a 1920 × 1000, 1707 × 996, 1536 × 793 y
   1366 × 690, en los cuatro modos (56 dp, con «Colorear por» a la vista; la matriz lo comprueba a
   1536 y a 1366). Medido con las fuentes reales: a 1536 caben los segmentos; a 1366, en Carga, el
@@ -1739,6 +1748,9 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
     cierra el flotante y no fija el panel (14.3); Esc y Atrás cierran el menú del selector, y ese
     Atrás no cuenta como el primero del doble Atrás (14.6); y el botón del puente no queda solo en
     una segunda línea de la franja de la bahía (14.8).
+15. **La corrección 2 de la entrega 1** (10.44): «Acciones» es un botón con su nombre para el
+    lector de pantalla, con el icono o con el rótulo, y el resumen de una línea del teléfono
+    también es un botón (14.8).
 
 ### 14.11 Las piezas nuevas y su API
 
