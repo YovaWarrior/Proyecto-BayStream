@@ -1065,3 +1065,37 @@ La siguiente decisión es la **10.42**.
 - La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
 
 La siguiente decisión es la **10.43**.
+
+### 10.43 · La corrección 1 de la entrega 1, entregada y revisada: pasa a la reaceptación de Codex (25-oct, 12:25)
+
+**Timonel la entregó a las 12:18, con la luz verde de Carlos para Flutter** (`docs/T117-T121-RESULTADOS.md`, «Corrección 1 de la entrega 1», C1.1 a C1.11):
+- **H1:** con el panel oculto y el flotante abierto, el botón de la cabecera solo cierra el flotante, en cualquier ancho. El panel sigue oculto y la preferencia no cambia; para fijarlo está «Fijar».
+- **H2:**
+  - Esc no cerraba el menú porque el foco no entraba en él. Ahora, al abrirse, el foco pasa a la entrada elegida;
+  - el menú se anota en `cerrablesDeAtrasProvider` desde el lado del viaje (`SelectorDelModo` y «Colorear por»): el primer Atrás lo cierra, el plano se queda y ese toque no cuenta como el primero del doble Atrás. `BsSelectorDeModo` sigue sin saber nada del viaje;
+  - al cerrarse, el foco ya no vuelve al botón a la fuerza, porque en el emulador el botón quedaba sombreado tras Atrás. Según `DESIGN.md` 14.6, si el menú se abrió con el teclado, el foco vuelve solo.
+- **H3:** hay una cuarta variante de una línea, con «Acciones» solo con su ícono. A 700 dp, en Contenido y Descarga, la franja va en una línea (56 dp; antes 108). Cuando envuelve, el botón del puente queda al final de la primera línea.
+- **Lo que encontró la medida, ya corregido:**
+  - con la letra a 2.0, en Carga, un desborde que ya existía y que la matriz de 0.5.5 no veía: 135 dp a 600 y 35 dp a 700;
+  - uno de 0.08 dp de la variante nueva a 960 dp. `BsPrimeraQueCabe` mide ahora con la tolerancia de `RenderFlex` y no con medio dp.
+- **Cifras:**
+  - suite 1677 (piso 1629, más 48), sin fallidas ni omitidas, en una corrida con el código final, y `analyze` en cero. Antes hubo otra suite completa, también 1677, con la versión que devolvía el foco: no es un reintento, porque el código cambió entre las dos;
+  - corridas contra `80ae18b`, 38 de las pruebas fallan antes del arreglo, y después pasan todas. Los dos casos de Codex (800 × 600, letra 2.0, Descarga) pasan;
+  - en el emulador, H2 pasa en claro y en oscuro.
+- **Queda anotado, fuera de 10.42:** a 700 dp en Carga la franja sigue en dos líneas, con el botón en la primera, y a 600 dp va en dos líneas en los tres modos.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 10 archivos cambiados y 2 nuevos (`test/t117_correccion1_test.dart` y `tool/t117_correccion1_android.py`). No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto;
+- el código hace lo que dice el informe. El cambio en `test/t114_candidata_atras_test.dart` solo agrega una prueba y pone al día el comentario: ninguna prueba vieja se aflojó;
+- el instrumento del emulador no corre con otro aparato que `emulator-5554`;
+- las capturas del emulador muestran el menú abierto, el menú cerrado sin advertencia tras el primer Atrás y la advertencia con el segundo;
+- **dos cosas para la reaceptación:**
+  - el foco con el teclado, en Windows y en la Web: si el menú se abrió con el teclado, tras Esc el foco debe volver al botón del modo;
+  - `BsPrimeraQueCabe` cambió de tolerancia, y lo usan la cabecera y la franja de la bahía: la matriz de Codex dice si alguna elección cambió.
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y el de esta decisión, y mueve `qa-r4` al commit de esta decisión.
+- Codex reacepta H1, H2 (Atrás en el emulador y Esc con el teclado) y H3, con su matriz de 92 casos, la suite y `analyze`. RNF-002 no se repite: la corrección no toca la apertura de un plano.
+- La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
+
+La siguiente decisión es la **10.44**.
