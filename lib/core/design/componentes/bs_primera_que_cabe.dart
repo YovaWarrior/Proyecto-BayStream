@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show precisionErrorTolerance;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
@@ -112,8 +113,7 @@ class _RenderPrimeraQueCabe extends RenderBox
     for (RenderBox? hijo = firstChild; hijo != null; hijo = childAfter(hijo)) {
       // La última no se mide: si nada cupo, va con el ancho que hay.
       final esLaUltima = childAfter(hijo) == null;
-      if (esLaUltima ||
-          hijo.getMaxIntrinsicWidth(double.infinity) <= ancho + 0.5) {
+      if (esLaUltima || _cabe(hijo, ancho)) {
         _hijoElegido = hijo;
         elegida = indice;
         break;
@@ -142,6 +142,13 @@ class _RenderPrimeraQueCabe extends RenderBox
 
   bool _avisada = false;
 
+  /// Si [hijo] cabe entero en [ancho]. Con la tolerancia de `RenderFlex`
+  /// para avisar de un desborde: con medio dp de gracia, a 960 dp con la
+  /// letra a 2.0 entraba una variante 0.08 dp más ancha (10.42).
+  static bool _cabe(RenderBox hijo, double ancho) =>
+      hijo.getMaxIntrinsicWidth(double.infinity) <=
+      ancho + precisionErrorTolerance;
+
   @override
   double computeMinIntrinsicWidth(double height) {
     var minimo = double.infinity;
@@ -168,8 +175,7 @@ class _RenderPrimeraQueCabe extends RenderBox
     final ancho = constraints.maxWidth;
     for (RenderBox? hijo = firstChild; hijo != null; hijo = childAfter(hijo)) {
       final esLaUltima = childAfter(hijo) == null;
-      if (esLaUltima ||
-          hijo.getMaxIntrinsicWidth(double.infinity) <= ancho + 0.5) {
+      if (esLaUltima || _cabe(hijo, ancho)) {
         return constraints.constrain(hijo.getDryLayout(
             constraints.loosen().copyWith(minWidth: constraints.minWidth)));
       }

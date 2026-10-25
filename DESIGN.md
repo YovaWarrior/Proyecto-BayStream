@@ -449,9 +449,11 @@ dependía de cuándo se apagaba y el segundo toque intentaba cerrar un aviso que
 primero de la cola). El viaje publicado sigue guardado y se reabre desde los recientes
 con un toque. En el muelle, un toque por error no saca a nadie del plano. En el inicio,
 Atrás sale de la app como siempre. **La ventana es solo para dos toques seguidos en la
-raíz** (10.31, O1): si en medio se abre otra cosa (el menú del zoom, el detalle de una
-celda, una hoja, un diálogo) o Atrás cierra otra cosa, la ventana se cancela y la
-advertencia se va; el siguiente Atrás en la raíz vuelve a advertir.
+raíz** (10.31, O1): si en medio se abre otra cosa (el menú del zoom, el menú del modo o de
+«Colorear por», el detalle de una celda, una hoja, un diálogo) o Atrás cierra otra cosa, la
+ventana se cancela y la advertencia se va; el siguiente Atrás en la raíz vuelve a advertir.
+Los menús del modo y de «Colorear por» no son rutas: Atrás los cierra primero porque se
+anotan en `cerrablesDeAtrasProvider` (10.42, H2; 14.6).
 
 **Lo que la entrega 2 dejó en el código (22-oct, 10.16):** la barra de ocho acciones y su
 plegado (T-91) se retiran: Buscar va en la barra superior o en la cabecera de la oficina
@@ -1493,7 +1495,9 @@ central se arma así, de arriba abajo:
 - **Fijo** (por omisión desde 1200 dp): 360 dp a la derecha, como hasta ahora.
 - **El botón de la cabecera** (`boton-del-panel`, junto a Buscar y la nube): desde 1200 dp oculta
   o muestra el panel fijo, y la app lo recuerda (14.4); de 600 a 1199 dp, donde no hay panel fijo,
-  abre o cierra el flotante.
+  abre o cierra el flotante. **Con el flotante abierto dice «Cerrar el panel lateral» y hace eso,
+  en cualquier ancho** (10.42, H1): cierra el flotante, el panel sigue oculto y la preferencia no
+  cambia. Para dejarlo fijo desde el flotante está «Fijar».
 - **El borde del panel guardado.** Con el panel oculto, y siempre de 600 a 1199 dp, queda en el
   borde derecho de la ventana una franja de 12 dp (`borde-del-panel`) con una línea y una
   agarradera. **Va fuera de la columna**, para no tapar la barra de desplazamiento de la columna,
@@ -1564,7 +1568,8 @@ central se arma así, de arriba abajo:
 
 `BsSelectorDeModo<T>({required List<BsEntradaDeModo<T>> entradas, required T? elegido, required
 ValueChanged<T> onElegir, BsFormaDelSelector forma = BsFormaDelSelector.segunElAncho, String nombre
-= 'Modo del plano'})`, con `BsEntradaDeModo<T>({required valor, required rotulo, rotuloCorto,
+= 'Modo del plano', ValueChanged<VoidCallback>? alAbrirElMenu, ValueChanged<VoidCallback>?
+alCerrarElMenu})`, con `BsEntradaDeModo<T>({required valor, required rotulo, rotuloCorto,
 icono, cuenta, cuentaCorta, ayuda})`, en `lib/core/design/componentes/bs_selector_de_modo.dart`.
 **Un solo selector:** sustituye al `DropdownButton` de Material 2 del plano y al `SegmentedButton`
 Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear por» (14.8).
@@ -1579,6 +1584,16 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
   la palomita en marca. Con flechas, Intro y Esc, y para el lector de pantalla, como todo
   `MenuAnchor`; con la letra a 2.0 cada entrada crece con su texto y el menú se desplaza dentro de
   la pantalla.
+- **Esc y Atrás cierran el menú** (10.42, H2). `MenuAnchor` atiende Esc solo con el foco dentro del
+  menú, y al abrirse con el mouse o el dedo el foco no entraba: al abrirse, el foco pasa a la
+  entrada elegida (o a la primera), como en un menú del sistema. En Windows y en la Web, Esc lo
+  cierra. Al cerrarse no se le devuelve el foco al botón a la fuerza: en el emulador, tras Atrás,
+  el botón quedaba con el sombreado del foco (Android pinta el foco después de una tecla); abierto
+  con el teclado, el foco vuelve a él por su cuenta. El menú no es una ruta, así que Atrás de Android no
+  lo cerraba: el selector da a quien lo usa lo que lo cierra (`alAbrirElMenu`, `alCerrarElMenu`) y,
+  del lado del viaje, `SelectorDelModo` y «Colorear por» lo anotan en `cerrablesDeAtrasProvider`
+  (8): el primer Atrás cierra el menú, el plano se queda y ese toque no cuenta como el primero del
+  doble Atrás. El componente no sabe nada del viaje.
 - **La forma la elige el ancho medido** (`segunElAncho`): los segmentos si caben enteros en el
   ancho que hay; si no, el menú. Lo mide `BsPrimeraQueCabe` (14.11).
 - **Los modos:**
@@ -1653,7 +1668,20 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
   últimos dígitos» en Carga, «Acciones» (`bay-plan-actions`) y el botón del puente. Las cifras de
   la bahía no van aquí: abren la franja de cifras (14.7, 10.40). En una línea con «Colorear por» en
   segmentos; si no cabe, con el menú; si tampoco, con «OR / últimos dígitos» solo con su icono y el
-  rótulo en la descripción emergente; si tampoco, envuelve en las líneas que pida: nada se corta.
+  rótulo en la descripción emergente; si tampoco, además con «Acciones» solo con su icono (⋮, como
+  en el teléfono, 14.6); si tampoco, envuelve en las líneas que pida: nada se corta.
+- **El botón del puente no queda solo en una línea** (10.42, H3). A 700 dp, sin el panel fijo, en
+  Contenido, la franja iba en dos líneas (108 dp) solo porque el botón no cabía al final de la
+  primera. Con «Acciones» solo con su icono va en una (56 dp), también en Descarga. En Carga, con
+  el OR, a 700 dp no cabe ni así y va en dos líneas, con el botón al final de la primera. Y cuando
+  la franja envuelve de verdad (la letra grande, o de 600 a 700 dp), el botón va fuera de lo que
+  envuelve, arriba a la derecha, al final de la primera línea: la franja no crece por él.
+- **Lo que envuelve no se desborda nunca** (10.42). Al medir la corrección, la matriz angosta (600,
+  700, 800 y 960 dp; letra 1.0, 1.45 y 2.0; los tres modos) encontró que con la letra a 2.0, en
+  Carga, los controles con sus rótulos no cabían en una línea entera y se desbordaban (35 dp a 700,
+  135 a 600), algo que ya pasaba antes y que la matriz de 0.5.5 no veía. En la variante que
+  envuelve, «Colorear por» puede partirse de su menú, y los controles van con rótulos solo si caben
+  en una línea entera; si no, el OR y después «Acciones» quedan solo con su icono.
 - **Con el panel fijo y la letra a 1.0 va en una línea** a 1920 × 1000, 1707 × 996, 1536 × 793 y
   1366 × 690, en los cuatro modos (56 dp, con «Colorear por» a la vista; la matriz lo comprueba a
   1536 y a 1366). Medido con las fuentes reales: a 1536 caben los segmentos; a 1366, en Carga, el
@@ -1707,6 +1735,10 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
     bahía, con el panel fijo y la letra a 1.0, la franja iba en dos líneas (108 dp) a 1536 × 793 y
     a 1366 × 690. Ahora va en una (56 dp) y la ficha de la bahía empieza por ellas. Si aun así no
     cabe, «OR / últimos dígitos» queda solo con su icono.
+14. **La corrección 1 de la entrega 1** (10.42): con el flotante abierto, el botón de la cabecera
+    cierra el flotante y no fija el panel (14.3); Esc y Atrás cierran el menú del selector, y ese
+    Atrás no cuenta como el primero del doble Atrás (14.6); y el botón del puente no queda solo en
+    una segunda línea de la franja de la bahía (14.8).
 
 ### 14.11 Las piezas nuevas y su API
 
@@ -1715,7 +1747,7 @@ Las de `lib/core/design/componentes/`, con documentación, vista previa y prueba
 | Pieza | API | Qué hace |
 |---|---|---|
 | `BsSelectorDeModo` | 14.6 | El selector de modo, en segmentos o en menú |
-| `BsPrimeraQueCabe` | `BsPrimeraQueCabe({required List<Widget> variantes})` | Mide cada variante a su ancho natural y pone la primera que cabe en el ancho que hay; si ninguna cabe, la última, con el ancho que hay (se espera que envuelva). Solo la elegida se dibuja, se toca y se anuncia, como en un `IndexedStack` |
+| `BsPrimeraQueCabe` | `BsPrimeraQueCabe({required List<Widget> variantes})` | Mide cada variante a su ancho natural y pone la primera que cabe en el ancho que hay; si ninguna cabe, la última, con el ancho que hay (se espera que envuelva). Solo la elegida se dibuja, se toca y se anuncia, como en un `IndexedStack`. «Cabe» es con la tolerancia con que `RenderFlex` avisa de un desborde (`precisionErrorTolerance`): con medio dp de gracia, a 960 dp con la letra a 2.0 entraba una variante 0.08 dp más ancha (10.42) |
 | `BsFichaDeCifra` | 14.7 | La ficha del resumen |
 | `BsTarjetaCifra` | nuevo `corta = false` | La tarjeta corta del puente (14.2) |
 

@@ -69,6 +69,15 @@ class BsEntradaDeModo<T> {
 /// `MenuAnchor` de Material 3 con el panel, el borde en línea y el radio de
 /// hoja; cada entrada mide 56 dp o más, con el icono, el nombre, su cuenta o
 /// su ayuda, y la palomita en marca en la elegida.
+///
+/// El menú abierto se cierra con Esc (10.42): al abrirse, el foco pasa a la
+/// entrada elegida, como en un menú del sistema, y Esc llega a los atajos del
+/// propio menú aunque se abra con el mouse o el dedo. Al cerrarse no se
+/// devuelve el foco al botón a la fuerza: en Android, tras Atrás, el botón
+/// quedaba con el sombreado del foco. El menú no es una ruta, así que Atrás
+/// de Android no lo cierra solo: [alAbrirElMenu] y [alCerrarElMenu] le dan a
+/// quien lo usa lo que lo cierra, para que lo anote donde Atrás cierra lo
+/// abierto.
 class BsSelectorDeModo<T> extends StatelessWidget {
   /// Crea el selector.
   const BsSelectorDeModo({
@@ -78,6 +87,8 @@ class BsSelectorDeModo<T> extends StatelessWidget {
     required this.onElegir,
     this.forma = BsFormaDelSelector.segunElAncho,
     this.nombre = 'Modo del plano',
+    this.alAbrirElMenu,
+    this.alCerrarElMenu,
   });
 
   /// Los modos que se ofrecen, en su orden.
@@ -94,6 +105,13 @@ class BsSelectorDeModo<T> extends StatelessWidget {
 
   /// Qué se elige, para el lector de pantalla y el botón del menú.
   final String nombre;
+
+  /// Al abrirse el menú, con lo que lo cierra.
+  final ValueChanged<VoidCallback>? alAbrirElMenu;
+
+  /// Al cerrarse el menú (o al desaparecer abierto), con lo mismo que se dio
+  /// al abrirlo.
+  final ValueChanged<VoidCallback>? alCerrarElMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -166,13 +184,48 @@ class _Segmentos<T> extends StatelessWidget {
   }
 }
 
-class _Menu<T> extends StatelessWidget {
+class _Menu<T> extends StatefulWidget {
   const _Menu({required this.selector});
 
   final BsSelectorDeModo<T> selector;
 
   @override
+  State<_Menu<T>> createState() => _MenuState<T>();
+}
+
+class _MenuState<T> extends State<_Menu<T>> {
+  final MenuController _menu = MenuController();
+  late final VoidCallback _cerrar = _menu.close;
+  final FocusNode _focoDeLaElegida = FocusNode(debugLabel: 'Entrada elegida');
+  bool _abierto = false;
+
+  void _alAbrir() {
+    _abierto = true;
+    widget.selector.alAbrirElMenu?.call(_cerrar);
+    // El panel se arma en el cuadro siguiente: entonces el foco pasa a la
+    // entrada elegida, dentro de los atajos del menú (Esc lo cierra).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _menu.isOpen) _focoDeLaElegida.requestFocus();
+    });
+  }
+
+  void _alCerrar() {
+    if (!_abierto) return;
+    _abierto = false;
+    widget.selector.alCerrarElMenu?.call(_cerrar);
+  }
+
+  @override
+  void dispose() {
+    // Desmontado abierto, `MenuAnchor` no llama a `onClose`.
+    _alCerrar();
+    _focoDeLaElegida.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final selector = widget.selector;
     final tema = Theme.of(context);
     final medidas = BsMedidas.de(context);
     final paleta = BsPaleta.de(tema.brightness);
@@ -181,7 +234,12 @@ class _Menu<T> extends StatelessWidget {
     final elegida = selector.entradas
         .where((e) => e.valor == selector.elegido)
         .firstOrNull;
+    // Sin elegida, el foco va a la primera.
+    final conFoco = elegida ?? selector.entradas.firstOrNull;
     return MenuAnchor(
+      controller: _menu,
+      onOpen: _alAbrir,
+      onClose: _alCerrar,
       style: MenuStyle(
         backgroundColor: WidgetStatePropertyAll<Color>(paleta.hoja),
         surfaceTintColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
@@ -196,6 +254,7 @@ class _Menu<T> extends StatelessWidget {
             entrada: entrada,
             elegida: entrada.valor == selector.elegido,
             onElegir: selector.onElegir,
+            focusNode: identical(entrada, conFoco) ? _focoDeLaElegida : null,
           ),
       ],
       builder: (BuildContext context, MenuController menu, Widget? _) {
@@ -246,11 +305,13 @@ class _EntradaDelMenu<T> extends StatelessWidget {
     required this.entrada,
     required this.elegida,
     required this.onElegir,
+    this.focusNode,
   });
 
   final BsEntradaDeModo<T> entrada;
   final bool elegida;
   final ValueChanged<T> onElegir;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -261,6 +322,7 @@ class _EntradaDelMenu<T> extends StatelessWidget {
     final textos = tema.textTheme;
     final linea = entrada.cuenta ?? entrada.ayuda;
     return MenuItemButton(
+      focusNode: focusNode,
       style: MenuItemButton.styleFrom(
         minimumSize: const Size(240, 56),
         padding: EdgeInsets.symmetric(

@@ -1573,3 +1573,253 @@ congelados o `docs/piloto/LISTA-PILOTO.md`.
 > Carlos. La lista del piloto suma una nota (E1.10); no la toqué.
 
 **ALTO: Codex acepta.**
+
+## Corrección 1 de la entrega 1 (25-oct-2026)
+
+Timonel (Claude Code, Claude Opus 5.5), rama `sprint-4`, carpeta del rediseño, sobre `80ae18b`
+(decisión 10.42). Codex no aceptó la entrega 1 (`docs/t117/entrega1/aceptacion-codex.md`) por
+dos P2 y un P3: H1, «Cerrar el panel lateral» fijaba el panel y guardaba `visible`; H2, Atrás no
+cerraba el menú del modo en Android (y Esc tampoco, en la matriz); H3, a 700 dp el botón del
+puente quedaba solo en una segunda línea de la franja de la bahía.
+
+### C1.1 Resultado en tres líneas
+
+- **H1:** con el flotante abierto, el botón de la cabecera solo cierra el flotante: el panel sigue
+  oculto y la preferencia no cambia. **H2:** al abrirse, el menú del modo lleva el foco a la entrada
+  elegida, y Esc lo cierra; además se anota en `cerrablesDeAtrasProvider`, así que el primer Atrás
+  de Android lo cierra y no cuenta como el primero del doble Atrás. Comprobado en el emulador, en
+  claro y en oscuro. **H3:** a 700 dp la franja va en una línea (56 dp), y cuando envuelve, el
+  botón queda al final de la primera.
+- Al medir aparecieron **dos desbordes**, y los corregí. Uno era viejo y la matriz de 0.5.5 no lo
+  veía: con la letra a 2.0, en Carga, a 600 y 700 dp, los controles con rótulos se desbordaban (135
+  y 35 dp). El otro lo traía la variante nueva: a 960 dp con 2.0 en Descarga entraba aunque medía
+  0.08 dp más, porque `BsPrimeraQueCabe` daba medio dp de gracia.
+- **Suite 1677 (piso 1629, más 48)**, sin fallidas ni omitidas, en una corrida, y `analyze` en
+  cero. Las pruebas nuevas, corridas contra `80ae18b`: 38 fallan antes del arreglo y pasan todas
+  después.
+
+### C1.2 Lo que se corrió
+
+- Leí la decisión 10.42, el informe de Codex con H1 a H3, y sus pruebas
+  (`cerrar_panel_test.dart` y `matriz_codex_test.dart` de `baystream-qa-r4`, solo como receta: la
+  carpeta es de Codex y no la toqué).
+- **Sin Flutter,** escribí el código, las pruebas, `DESIGN.md` y el instrumento del emulador.
+  Después, **con la luz verde de Carlos («Corre flutter»)**, corrí uno a la vez:
+  - `analyze` (tres veces, siempre en cero);
+  - las pruebas nuevas;
+  - una prueba de exploración de la franja en ventanas angostas, que encontró los dos desbordes
+    (C1.3, punto 5);
+  - las pruebas nuevas contra `80ae18b`, en una copia de `%TEMP%`;
+  - **dos suites completas,** porque el código cambió entre las dos (C1.3, punto 6). Las dos
+    dieron 1677; la que vale es la segunda, con el código final;
+  - el APK r4, dos veces, y H2 en el emulador.
+- No se usó el Honor; el emulador solo con `-s emulator-5554`. Datos sintéticos de T-100, nunca el
+  corpus ni «Nube y cuenta». No se tocaron las apps instaladas, «PRUEBA T-105» ni
+  `C:\Proyectos\baystream-demo17\`. Nada se publicó.
+
+### C1.3 Qué cambió y por qué
+
+1. **H1 · el botón de la cabecera** (`vessel_overview_page.dart`). Desde 1200 dp el botón siempre
+   hacía `mostrarPanel(!panelFijo)`, aunque con el flotante abierto dijera «Cerrar el panel
+   lateral». Ahora, con el panel oculto y el flotante abierto, en cualquier ancho, solo cierra el
+   flotante (y la celda que lo abrió, como «Cerrar»). Sin flotante sigue ocultando o mostrando el
+   panel fijo. Para fijarlo desde el flotante está «Fijar». `DESIGN.md` 14.3.
+2. **H2 · Esc** (`bs_selector_de_modo.dart`). `MenuAnchor` atiende Esc con los atajos de su panel,
+   y esos atajos solo actúan con el foco dentro del panel. Al abrirse con el mouse o el dedo, el
+   foco no entraba, así que Esc no llegaba. Ahora, al abrirse, el foco pasa a la entrada elegida (o
+   a la primera), como en un menú del sistema. `DESIGN.md` 14.6.
+3. **H2 · Atrás.** El menú no es una ruta y no se anotaba en `cerrablesDeAtrasProvider`. El
+   componente no sabe nada del viaje: da a quien lo usa lo que lo cierra (`alAbrirElMenu` y
+   `alCerrarElMenu`, con lo mismo que se dio al abrir; también al desmontarse abierto). Del lado del
+   viaje, `SelectorDelModo` (`loading_plan_controls.dart`) y «Colorear por» (`bay_plan_view.dart`,
+   el mismo menú) lo anotan. El registro se toma al construir, porque al desmontarse ya no se puede
+   usar `ref`. `DESIGN.md` 8 y 14.6.
+4. **H3 · el botón del puente** (`franjas_del_plano.dart`). Hay una cuarta variante de una línea
+   con «Acciones» solo con su icono (⋮, como en el teléfono). En la que envuelve, el botón va fuera
+   del `Wrap`, arriba a la derecha, al final de la primera línea. `DESIGN.md` 14.8.
+5. **Lo que encontró la medida** (C1.5). En la variante que envuelve, «Colorear por» puede
+   partirse de su menú, y los controles van con sus rótulos solo si caben en una línea entera (un
+   `BsPrimeraQueCabe` dentro); si no, el OR y después «Acciones» quedan con su icono. Y
+   `BsPrimeraQueCabe` acepta una variante con la tolerancia con que `RenderFlex` avisa de un
+   desborde (`precisionErrorTolerance`), no con medio dp. `DESIGN.md` 14.8 y 14.11.
+6. **El foco al cerrar, quitado tras el emulador.** La primera versión de H2 devolvía el foco al
+   botón al cerrarse el menú. En el emulador, tras el Atrás, el botón quedaba con el sombreado del
+   foco: Android pinta el foco después de una tecla (`android-intento-2-boton-sombreado/`). Ya no
+   se devuelve a la fuerza; abierto con el teclado, el foco vuelve solo. La prueba del selector
+   suelto comprueba ahora que el foco sale con el menú.
+
+### C1.4 Las pruebas nuevas
+
+| Archivo | Pruebas | Qué |
+|---|---:|---|
+| `test/t117_correccion1_test.dart` · H1 | 4 | Con la preferencia guardada (`oculto`), el flotante abierto por una celda y por el borde: «Cerrar el panel lateral» lo cierra, el panel no se fija, la preferencia sigue en `oculto`, la celda se limpia. Sin flotante, el botón oculta y muestra el fijo (`visible`). «Fijar» lo fija |
+| ídem · H2 | 4 | Esc cierra el menú de la cabecera a 800 × 600. **Los dos casos de Codex** (800 × 600, letra 2.0, Descarga, panel fijo y oculto): con Esc el menú se cierra y «Deshacer» del aviso responde. El selector suelto da lo que lo cierra y lo recibe de vuelta al cerrarse (por eso, como Atrás, y por Esc), y el foco entra y sale con el menú |
+| ídem · H3 | 39 | A 700 × 682 en Contenido, la franja de 56 dp o menos con el botón a la altura del título. Con 1.45 y 2.0, el botón en la primera línea. Y la **matriz angosta**: 600, 700, 800 y 960 dp × letra 1.0, 1.45 y 2.0 × los tres modos (36), sin desbordes ni textos cortados, con el botón en la primera línea |
+| `test/t114_candidata_atras_test.dart` | 1 | Con el viaje publicado en Android (360 dp), el menú del modo se anota al abrirse; el primer Atrás lo cierra, el plano se queda, sin la advertencia; el siguiente es el primero del doble Atrás: advierte y no sale |
+
+**Antes del arreglo** (las mismas pruebas en una copia de `80ae18b` en `%TEMP%`, hecha con
+`tool/t99_copia.ps1`, que usa `git archive`; la del selector suelto se quitó solo en esa copia,
+porque usa la API nueva y no compila contra el código de antes; `antes.py` en la evidencia):
+**38 fallan y 25 pasan.**
+- **Fallan:** H1 por una celda y por el borde («Found 1 widget with key `panel-lateral`»); Esc en
+  la cabecera y los dos casos de Codex (siguen las 4 entradas del menú); Atrás (el registro tenía 0
+  cosas abiertas en vez de 1); H3 a 700 en Contenido (108 dp contra 56,5); las dos de 1.45 y 2.0; y
+  29 de las 36 de la matriz angosta (el botón cae a otra línea; y a 600 y 700 con 2.0 en Carga, los
+  desbordes de 135 y 35 dp).
+- **Pasan, como deben:** «sin flotante» y «Fijar», las 16 de Atrás que ya había y 7 casos de la
+  matriz que ya iban en una línea.
+- Después del arreglo pasan todas.
+
+### C1.5 Cifras
+
+- **`flutter analyze --no-pub`:** No issues found, sin `// ignore:`.
+- **Suite:** **1677 aprobadas, 0 fallidas, 0 omitidas, en una corrida** (2:13 min; piso 1629, más
+  48: 47 de `t117_correccion1_test.dart` y 1 de Atrás). Antes de quitar el foco al cerrar (C1.3,
+  punto 6), otra corrida completa dio también 1677 (1:49 min); vale la segunda.
+- **La franja de la bahía**, medida con las fuentes reales (`franja_angosta_test.dart`). Cada celda
+  dice «alto de la franja · si "Acciones" lleva rótulo»; con 1.45 y 2.0 envuelve, como permite
+  10.40, y en todos los casos el botón queda en la primera línea, sin desbordes:
+
+| Ventana | Letra | Contenido | Descarga | Carga |
+|---|---:|---|---|---|
+| 600 × 800 | 1.0 | 108 · sí | 108 · sí | 108 · sí |
+| 700 × 682 | 1.0 | **56 · no** (antes 108) | **56 · no** | 108 · sí |
+| 700 × 682 | 1.45 | 114 | 114 | 166 |
+| 700 × 682 | 2.0 | 178 | 178 | 178 (antes, desborde de 35) |
+| 800 × 600 | 1.0 | 56 · sí | 56 · sí | 56 · no |
+| 800 × 600 | 2.0 | 178 | 126 | 178 |
+| 960 × 1000 | 1.0 | 56 · sí | 56 · sí | 56 · sí |
+| 960 × 1000 | 2.0 | 126 | 126 | 126 |
+
+- **A 700 dp en Carga la franja sigue en dos líneas** (108 dp), con el botón al final de la
+  primera: con el OR no cabe ni con «Acciones» y el OR solo con sus iconos. A 600 dp no cabe en una
+  línea en ningún modo. Ninguno de los dos casos lo pedía 10.42; quedan anotados (C1.8).
+
+### C1.6 H2 en el emulador
+
+**Banco:** r4 de `%TEMP%\t99-r4-c1`, copiado del árbol corregido (`t99_copia.ps1 -Arbol -Sufijo
+r4`, con `T100_LLEGADA` y `T100_CARGA`). APK `gt.cmartinez.baystream.r4` con
+`flutter build apk --release -t tool/t99_main.dart`, SHA-256 `749a54320e384dbc…`, instalado encima
+del r4 anterior solo con `adb -s emulator-5554`.
+
+**Emulador:** AVD `t99_api26`, Android 8 (API 26), 1080 × 1920 a 480 dpi (360 dp). Al terminar se
+detuvo; no se usó el Honor.
+
+**Instrumento:** `tool/t117_correccion1_android.py`, nuevo. Repite la reproducción de Codex:
+1. reinicia los datos del banco y publica `T100_CARGA` confirmando su perfil (escala GTSTC);
+2. abre `T100_LLEGADA`, que abre publicado en GTSTC;
+3. elige Descarga en la banda del muelle y abre el menú del modo;
+4. pulsa Atrás del sistema (`keyevent 4`) dos veces.
+
+Lo hace en claro y en oscuro, con la letra a 1.0, y deja el tema en «Seguir al sistema».
+
+| Tema | El menú se abre | 1.er Atrás: el menú se cierra | 1.er Atrás: sin advertencia | 1.er Atrás: sigue el plano | 2.º Atrás: advierte | 2.º Atrás: sigue el plano |
+|---|---|---|---|---|---|---|
+| Claro | sí | sí | sí | sí | sí | sí |
+| Oscuro | sí | sí | sí | sí | sí | sí |
+
+**Capturas** (`build/t117-correccion1/android/`, ocho PNG con `registro.jsonl` y `resultado.json`),
+por tema:
+- `01-plano-descarga`;
+- `02-menu-abierto`: Contenido, Número de orden y Descarga, con la palomita;
+- `03-primer-atras`: el plano sin menú, sin advertencia y sin sombreado en el botón;
+- `04-segundo-atras`: «Toca Atrás otra vez para volver al inicio.».
+
+**Dos intentos que no cuentan,** guardados aparte:
+- `android-intento-1-la-captura-tarde/`: el producto ya cerraba el menú, pero el instrumento leía
+  la pantalla antes de capturarla y la captura del segundo Atrás salió cuando la advertencia de
+  2 s ya se había ido. Ahora captura primero.
+- `android-intento-2-boton-sombreado/`: todo pasaba, pero el botón quedaba sombreado (C1.3, punto
+  6). Se corrigió el código, se recompiló el APK y se repitió.
+
+### C1.7 Archivos
+
+- **Cambiados (10):**
+  - `DESIGN.md`: 8 (Atrás), 14.3, 14.6 (y la firma del selector), 14.8, 14.10 (punto 14) y 14.11;
+  - en `lib/core/design/componentes/`: `bs_selector_de_modo.dart` y `bs_primera_que_cabe.dart`;
+  - `lib/features/vessel/presentation/pages/vessel_overview_page.dart`;
+  - en `lib/features/vessel/presentation/widgets/`: `bay_plan_view.dart`,
+    `franjas_del_plano.dart`, `loading_plan_controls.dart` y `navegacion_del_viaje.dart` (solo
+    documentación);
+  - `test/t114_candidata_atras_test.dart`;
+  - y este informe.
+- **Nuevos (2):** `test/t117_correccion1_test.dart` y `tool/t117_correccion1_android.py`.
+- **Evidencia, fuera de Git:** `build/t117-correccion1/` (38 archivos):
+  - las tres corridas del emulador;
+  - las dos suites;
+  - la corrida de antes del arreglo;
+  - la medida de la franja y su prueba;
+  - `antes.py`;
+  - la versión de Flutter.
+- **No cambian:** `domain/`, `data/`, `pubspec.yaml`, `pubspec.lock`, `lib/main.dart`, los
+  congelados, Firebase y `docs/piloto/LISTA-PILOTO.md`. Ninguna dependencia nueva. Los cuatro
+  archivos que solo difieren en el fin de línea no van en el bloque, ni la evidencia de ayer en
+  `docs/t117/entrega1/`, que Carlos dejó sin versionar (10.41).
+
+### C1.8 Lo que queda anotado
+
+1. **A 700 dp en Carga** la franja va en dos líneas (108 dp), con el botón al final de la primera.
+   Para que quepa en una habría que quitar algo más; por ejemplo, el rótulo «Colorear por», que
+   seguiría en la descripción emergente y en la etiqueta. Se decide en la reaceptación.
+2. **A 600 dp** la franja va en dos líneas en los tres modos (el ancho mínimo de la oficina; 10.42
+   no lo pedía).
+3. **Windows y la Web no se recompilaron** ni se repitieron RNF-002 ni las capturas: 10.42 pedía
+   la suite, `analyze` y H2 en el emulador. El cambio de la franja y del selector está en las
+   pruebas de widgets con las fuentes del producto, incluida la matriz angosta.
+4. **La lista del piloto** (`docs/piloto/LISTA-PILOTO.md`, de Yov) no cambia por esta corrección:
+   en la 3.2.0, el menú del modo se cierra con Atrás y con Esc, y con el flotante abierto el botón
+   del panel solo lo cierra.
+
+### C1.9 Horas
+
+Unas **0.8 h**, de ≈ 11:30 a 12:15:
+- la lectura y el código, sin Flutter;
+- con Flutter: las pruebas, los desbordes y su arreglo, las dos suites, los dos APK, las tres
+  corridas del emulador y este informe.
+
+### C1.10 Git
+
+**Para Carlos.** Un `git add` por ruta, 12 rutas. No incluye:
+- los cuatro archivos que solo difieren en el fin de línea;
+- la evidencia de `build/t117-correccion1/` (ignorada);
+- la de `docs/t117/entrega1/` (sin versionar por 10.41).
+
+```powershell
+git add -- DESIGN.md
+git add -- docs/T117-T121-RESULTADOS.md
+git add -- lib/core/design/componentes/bs_primera_que_cabe.dart
+git add -- lib/core/design/componentes/bs_selector_de_modo.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/widgets/franjas_del_plano.dart
+git add -- lib/features/vessel/presentation/widgets/loading_plan_controls.dart
+git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
+git add -- test/t114_candidata_atras_test.dart
+git add -- test/t117_correccion1_test.dart
+git add -- tool/t117_correccion1_android.py
+git commit -m "Sprint 4: T-117 y T-118, correccion 1 de la entrega 1 (10.42), cerrar el panel lateral no lo fija, Esc y Atras cierran el menu del modo y el boton del puente no queda solo en la franja" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+El último comando tiene que decir **12 files changed**. No cambian `pubspec.yaml` ni
+`pubspec.lock`.
+
+### C1.11 Mensaje para Yov
+
+> Yov: la corrección 1 de la entrega 1 de T-117 y T-118 (10.42) está en
+> `docs/T117-T121-RESULTADOS.md`, sección «Corrección 1», y en `DESIGN.md` 8, 14.3, 14.6, 14.8,
+> 14.10 y 14.11. **H1:** con el flotante abierto, el botón de la cabecera solo lo cierra; el panel
+> sigue oculto y la preferencia no cambia. **H2:** al abrirse, el menú del modo lleva el foco a la
+> entrada elegida, y Esc lo cierra; se anota en `cerrablesDeAtrasProvider` desde `SelectorDelModo`
+> y «Colorear por», así que el primer Atrás lo cierra y no cuenta como el primero del doble Atrás.
+> En el emulador pasa en claro y en oscuro, con capturas en `build/t117-correccion1/android/`.
+> **H3:** a 700 dp en Contenido y Descarga la franja va en una línea (56 dp), y cuando envuelve el
+> botón queda en la primera. Al medir apareció un desborde viejo que la matriz de 0.5.5 no veía (a
+> 600 y 700 dp con la letra a 2.0 en Carga) y otro de 0.08 dp que traía la variante nueva a 960 dp,
+> por la tolerancia de `BsPrimeraQueCabe`; los corregí, con una matriz angosta de 36 casos. Las pruebas nuevas, contra
+> `80ae18b`: 38 fallan antes y pasan todas después. **Suite 1677, `analyze` en cero.** Quedan
+> anotados Carga a 700 dp (dos líneas, con el botón en la primera) y 600 dp (dos líneas). Son 12
+> rutas en el bloque; la evidencia no va a Git.
+
+**ALTO: Codex reacepta.**

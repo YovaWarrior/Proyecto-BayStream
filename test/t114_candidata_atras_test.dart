@@ -1,7 +1,8 @@
 // T-114 · Candidata del piloto (SPRINT-4.md 10.28): Atrás en Android como
 // dice DESIGN.md 8. Primero cierra lo abierto (la hoja «Más», la hoja del
-// detalle, el menú del zoom, el detalle del panel lateral); en la raíz del
-// viaje, con un previo pregunta si descartarlo; con el viaje publicado vuelve
+// detalle, el menú del zoom, el menú del modo (10.42), el detalle del panel
+// lateral); en la raíz del viaje, con un previo pregunta si descartarlo; con
+// el viaje publicado vuelve
 // al inicio solo con dos toques seguidos: un toque por error no saca a nadie
 // del plano. En Windows y en la Web no gobierna nada.
 //
@@ -193,6 +194,38 @@ void main() {
         await tester.tap(chip);
         await tester.pumpAndSettle();
         expect(container.read(cerrablesDeAtrasProvider), 0);
+        expect(tester.takeException(), isNull);
+      });
+    });
+
+    testWidgets(
+        'el menú del modo no es una ruta (10.42, H2): el primer Atrás lo '
+        'cierra, el plano se queda y ese toque no cuenta como el primero',
+        (tester) async {
+      await en(tester, TargetPlatform.android, () async {
+        await publicado();
+        await pumpApp(tester);
+        final menu = find.descendant(
+            of: find.byKey(const ValueKey('bay-plan-display-mode')),
+            matching: find.byType(OutlinedButton));
+        expect(menu, findsOneWidget, reason: 'en el teléfono, el modo en menú');
+        await tester.ensureVisible(menu);
+        await tester.pumpAndSettle();
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        expect(find.byType(MenuItemButton), findsWidgets);
+        expect(container.read(cerrablesDeAtrasProvider), 1,
+            reason: 'el menú abierto se anota para Atrás');
+        expect(await atras(tester), isTrue);
+        expect(find.byType(MenuItemButton), findsNothing);
+        expect(container.read(cerrablesDeAtrasProvider), 0);
+        expect(aviso, findsNothing, reason: 'cerrar el menú no es salir');
+        expect(estado(), isA<Publicado>());
+        expect(find.byType(VesselOverviewPage), findsOneWidget);
+        // El siguiente Atrás es el primero del doble Atrás: advierte y no sale.
+        expect(await atras(tester), isTrue);
+        expect(aviso, findsOneWidget);
+        expect(estado(), isA<Publicado>());
         expect(tester.takeException(), isNull);
       });
     });

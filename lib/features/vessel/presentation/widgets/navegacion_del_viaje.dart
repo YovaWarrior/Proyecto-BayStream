@@ -60,7 +60,8 @@ class DestinoDelViajeNotifier extends Notifier<DestinoDelViaje> {
 }
 
 /// Lo abierto que no es una ruta y que Atrás cierra antes que nada
-/// (`DESIGN.md` 8): hoy, el menú del zoom. Las hojas, los diálogos y la
+/// (`DESIGN.md` 8): el menú del zoom y, desde 10.42, los menús del modo y de
+/// «Colorear por» (`BsSelectorDeModo`). Las hojas, los diálogos y la
 /// búsqueda son rutas y las cierra el `Navigator` por su cuenta. Quien abre
 /// algo que no lo es se anota al abrir y se olvida al cerrar; Atrás cierra lo
 /// último anotado. El estado es cuántas cosas hay abiertas.
@@ -97,10 +98,11 @@ class CerrablesDeAtras extends Notifier<int> {
 /// Atrás en Android con un viaje abierto (`DESIGN.md` 8; decisiones 10.28 y
 /// 10.29).
 ///
-/// En orden: (1) cierra lo abierto que no es una ruta (el menú del zoom,
-/// [cerrablesDeAtrasProvider]); las hojas, los diálogos y la búsqueda son
-/// rutas y se cierran solas antes de llegar aquí; (2) en la oficina con panel
-/// lateral, cierra el detalle de la celda; (3) en la raíz del viaje, con un
+/// En orden: (1) cierra lo abierto que no es una ruta (el menú del zoom, el
+/// del modo, [cerrablesDeAtrasProvider]); las hojas, los diálogos y la
+/// búsqueda son rutas y se cierran solas antes de llegar aquí; (2) en la
+/// oficina con panel lateral, cierra el detalle de la celda; (3) en la raíz
+/// del viaje, con un
 /// previo pregunta si descartarlo ([onDescartarPrevio]) y, con el viaje
 /// publicado, vuelve al inicio ([onVolverAlInicio]) **solo con dos toques
 /// seguidos**: el primero advierte «Toca Atrás otra vez para volver al

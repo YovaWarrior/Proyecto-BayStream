@@ -21,8 +21,13 @@ import 'resumen_del_modo.dart';
 /// franja de cifras, que empieza por la bahía (10.40).
 ///
 /// Se pone en una línea con «Colorear por» en segmentos; si no cabe, con el
-/// menú; si tampoco, con «OR / últimos dígitos» solo con su icono; y si
-/// tampoco, envuelve en las líneas que pida ([BsPrimeraQueCabe]).
+/// menú; si tampoco, con «OR / últimos dígitos» solo con su icono; si
+/// tampoco, además con «Acciones» solo con su icono (10.42, H3: así cabe a
+/// 700 dp); y si tampoco, envuelve en las líneas que pida
+/// ([BsPrimeraQueCabe]), con el botón del panel arriba a la derecha: nunca
+/// queda solo en otra línea ni hace crecer la franja. Lo que envuelve no se
+/// desborda: «Colorear por» se parte de su menú y los controles dejan sus
+/// rótulos si con ellos no caben en una línea entera.
 class FranjaDeLaBahia extends StatelessWidget {
   const FranjaDeLaBahia({
     super.key,
@@ -51,9 +56,11 @@ class FranjaDeLaBahia extends StatelessWidget {
   final Widget Function(BsFormaDelSelector forma) colorear;
 
   /// Los controles del plano (el zoom, «OR / últimos dígitos», «Acciones»),
-  /// uno nuevo por variante; con `orSoloIcono`, la búsqueda por OR solo con
-  /// su icono y su descripción emergente.
-  final Widget Function({required bool orSoloIcono}) controles;
+  /// uno nuevo por variante; con `orSoloIcono` y `accionesSoloIcono`, la
+  /// búsqueda por OR y «Acciones» solo con su icono y su descripción
+  /// emergente.
+  final Widget Function(
+      {required bool orSoloIcono, required bool accionesSoloIcono}) controles;
 
   @override
   Widget build(BuildContext context) {
@@ -108,17 +115,18 @@ class FranjaDeLaBahia extends StatelessWidget {
           style: textos.bodyMedium?.copyWith(
               color: esquema.onSurfaceVariant, fontFeatures: cifrasTabulares),
         );
+    Widget rotuloDeColorear() => Text('Colorear por',
+        style: textos.labelLarge?.copyWith(color: esquema.onSurfaceVariant));
     Widget colorearPor(BsFormaDelSelector forma) => Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text('Colorear por',
-                style: textos.labelLarge
-                    ?.copyWith(color: esquema.onSurfaceVariant)),
+            rotuloDeColorear(),
             SizedBox(width: medidas.espacioS),
             colorear(forma),
           ],
         );
-    Widget enUnaLinea(BsFormaDelSelector forma, {bool orSoloIcono = false}) =>
+    Widget enUnaLinea(BsFormaDelSelector forma,
+            {bool orSoloIcono = false, bool accionesSoloIcono = false}) =>
         Row(
           children: <Widget>[
             navegacion(),
@@ -130,7 +138,8 @@ class FranjaDeLaBahia extends StatelessWidget {
             SizedBox(width: medidas.espacioL),
             colorearPor(forma),
             SizedBox(width: medidas.espacioS),
-            controles(orSoloIcono: orSoloIcono),
+            controles(
+                orSoloIcono: orSoloIcono, accionesSoloIcono: accionesSoloIcono),
             const _BotonDelPuente(),
           ],
         );
@@ -147,15 +156,43 @@ class FranjaDeLaBahia extends StatelessWidget {
             enUnaLinea(BsFormaDelSelector.segmentos),
             enUnaLinea(BsFormaDelSelector.menu),
             enUnaLinea(BsFormaDelSelector.menu, orSoloIcono: true),
-            Wrap(
-              spacing: medidas.espacioS,
-              runSpacing: medidas.espacioXs,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            enUnaLinea(BsFormaDelSelector.menu,
+                orSoloIcono: true, accionesSoloIcono: true),
+            // El botón del panel, fuera de lo que envuelve y arriba a la
+            // derecha: en el `Wrap` quedaba solo en una segunda línea.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                navegacion(),
-                if (cifras != null) lasCifras(),
-                colorearPor(BsFormaDelSelector.menu),
-                controles(orSoloIcono: false),
+                Expanded(
+                  child: Wrap(
+                    spacing: medidas.espacioS,
+                    runSpacing: medidas.espacioXs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      navegacion(),
+                      if (cifras != null) lasCifras(),
+                      // Con la letra grande en una ventana angosta no cabían
+                      // en una línea entera y se desbordaban (10.42):
+                      // «Colorear por» se parte del menú, y los controles
+                      // dejan los rótulos del OR y de «Acciones» si con ellos
+                      // no caben.
+                      Wrap(
+                        spacing: medidas.espacioS,
+                        runSpacing: medidas.espacioXs,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: <Widget>[
+                          rotuloDeColorear(),
+                          colorear(BsFormaDelSelector.menu),
+                        ],
+                      ),
+                      BsPrimeraQueCabe(variantes: <Widget>[
+                        controles(orSoloIcono: false, accionesSoloIcono: false),
+                        controles(orSoloIcono: true, accionesSoloIcono: false),
+                        controles(orSoloIcono: true, accionesSoloIcono: true),
+                      ]),
+                    ],
+                  ),
+                ),
                 const _BotonDelPuente(),
               ],
             ),

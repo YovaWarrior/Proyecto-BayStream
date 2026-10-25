@@ -17,6 +17,7 @@ import '../providers/sync_providers.dart';
 import '../providers/voyage_ui_state.dart';
 import 'discharge_controls.dart';
 import 'loading_controls.dart';
+import 'navegacion_del_viaje.dart';
 import 'resumen_del_modo.dart';
 import 'sync_status_chip.dart';
 import '../../../../core/utils/voyage_number.dart';
@@ -64,6 +65,10 @@ class LoadingPlanControls extends ConsumerWidget {
   /// En la franja de la bahía, «OR / últimos dígitos» solo con su icono y su
   /// descripción emergente, cuando con el rótulo no cabe en una línea (10.40).
   final bool orSoloIcono;
+
+  /// En la franja de la bahía, «Acciones» solo con su icono, cuando ni así
+  /// cabe en una línea (10.42, H3).
+  final bool accionesSoloIcono;
   const LoadingPlanControls(
       {super.key,
       required this.voyage,
@@ -73,7 +78,8 @@ class LoadingPlanControls extends ConsumerWidget {
       this.onOperationCell,
       this.zoom,
       this.parte = ParteDeLosControles.todo,
-      this.orSoloIcono = false});
+      this.orSoloIcono = false,
+      this.accionesSoloIcono = false});
 
   bool get orderMode => mode == BayPlanMode.order;
 
@@ -122,7 +128,7 @@ class LoadingPlanControls extends ConsumerWidget {
         importarListado: importarListado,
         // En el teléfono, «Acciones» va solo con su icono (0.6.2: «⋮»): la
         // línea de 360 dp lleva el modo, el zoom y la nube.
-        soloIcono: parte != ParteDeLosControles.franja);
+        soloIcono: parte != ParteDeLosControles.franja || accionesSoloIcono);
     Widget selector() => SelectorDelModo(
         voyage: voyage,
         forma: BsFormaDelSelector.menu,
@@ -353,11 +359,18 @@ class SelectorDelModo extends ConsumerWidget {
       }
     }
 
+    // El menú no es una ruta: abierto, se anota para que Atrás de Android lo
+    // cierre antes que nada y ese Atrás no cuente como primer toque (10.42,
+    // H2). El registro se toma aquí: el menú puede olvidarse al desmontarse,
+    // cuando `ref` ya no se puede usar.
+    final atras = ref.read(cerrablesDeAtrasProvider.notifier);
     return BsSelectorDeModo<BayPlanMode>(
       key: const ValueKey('bay-plan-display-mode'),
       forma: forma,
       elegido: elegido,
       onElegir: elegir,
+      alAbrirElMenu: atras.anotar,
+      alCerrarElMenu: atras.olvidar,
       entradas: [
         const BsEntradaDeModo(
           valor: BayPlanMode.content,

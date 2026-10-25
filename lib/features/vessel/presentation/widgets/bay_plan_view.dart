@@ -192,13 +192,14 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       // de la leyenda o de la barra de la operación, y el resumen del modo
       // justo encima del pie; así la primera fila se ve sin desplazar.
       LoadingPlanControls controlesDelPlano(ParteDeLosControles parte,
-              {bool orSoloIcono = false}) =>
+              {bool orSoloIcono = false, bool accionesSoloIcono = false}) =>
           LoadingPlanControls(
               voyage: widget.voyage,
               selectedBay: _selectedBayNumber,
               mode: mode,
               parte: parte,
               orSoloIcono: orSoloIcono,
+              accionesSoloIcono: accionesSoloIcono,
               // El chip del zoom va aquí y no sobre la rejilla (10.20).
               zoom: const ZoomDelPlano(),
               onOperationCell: (cell) {
@@ -402,7 +403,7 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
     required bool hatchDeclarada,
     required Widget rejilla,
     required LoadingPlanControls Function(ParteDeLosControles parte,
-            {bool orSoloIcono})
+            {bool orSoloIcono, bool accionesSoloIcono})
         controlesDelPlano,
   }) {
     final medidas = BsMedidas.de(context);
@@ -432,9 +433,10 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
       cifras: conBarra ? cifras : null,
       colorear: (forma) =>
           _colorearPor(mode, vista, dischargeMode: dischargeMode, forma: forma),
-      controles: ({required bool orSoloIcono}) => controlesDelPlano(
-          ParteDeLosControles.franja,
-          orSoloIcono: orSoloIcono),
+      controles: (
+              {required bool orSoloIcono, required bool accionesSoloIcono}) =>
+          controlesDelPlano(ParteDeLosControles.franja,
+              orSoloIcono: orSoloIcono, accionesSoloIcono: accionesSoloIcono),
     );
     final leyenda = _buildLegend(displayedVoyage, bay, vista,
         discharge: discharge, twenties: twenties.isNotEmpty, envuelve: true);
@@ -472,6 +474,9 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
         elegido: vista,
         onElegir: (valor) =>
             ref.read(colorearPorProvider.notifier).elegir(mode, valor),
+        // En menú, como el del modo: Atrás de Android lo cierra (10.42).
+        alAbrirElMenu: ref.read(cerrablesDeAtrasProvider.notifier).anotar,
+        alCerrarElMenu: ref.read(cerrablesDeAtrasProvider.notifier).olvidar,
         entradas: [
           if (dischargeMode)
             const BsEntradaDeModo(

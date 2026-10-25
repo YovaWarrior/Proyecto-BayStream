@@ -371,13 +371,16 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
             ? Icons.view_sidebar
             : Icons.view_sidebar_outlined),
         onPressed: () {
-          if (conPanel) {
+          if (!panelFijo && _flota != null) {
+            // Con el flotante abierto el botón dice «Cerrar el panel
+            // lateral» y hace eso: el panel sigue oculto y la preferencia
+            // no cambia (10.42, H1). Para fijarlo está «Fijar».
+            _cerrarFlotante();
+          } else if (conPanel) {
             ref
                 .read(preferenciasDeLaOficinaProvider.notifier)
                 .mostrarPanel(!panelFijo);
             if (_flota != null) _cerrarFlotante();
-          } else if (_flota != null) {
-            _cerrarFlotante();
           } else {
             _abrirFlotante(_PorQueFlota.boton);
           }
