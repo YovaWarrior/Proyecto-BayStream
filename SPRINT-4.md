@@ -1131,3 +1131,35 @@ La siguiente decisión es la **10.44**.
 - La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
 
 La siguiente decisión es la **10.45**.
+
+### 10.45 · La corrección 2 de la entrega 1, entregada y revisada: «Acciones» ya es un botón con su nombre; pasa a la reaceptación (25-oct, 17:35)
+
+**Timonel la entregó a las 17:27** (`docs/T117-T121-RESULTADOS.md`, «Corrección 2 de la entrega 1»):
+- **H4:** «Acciones» es un botón con la etiqueta «Acciones», con el ícono y con el rótulo. Con solicitudes pendientes, el nombre lleva la cuenta («Acciones, 1 solicitud pendiente»). La descripción emergente sigue con el mouse, fuera de la semántica, para que el nombre no se repita.
+  - La causa: en Windows, el nombre es la etiqueta más la descripción emergente, y un nodo de texto sin etiqueta se ignora.
+- **El mismo patrón, una vez más:** el resumen de una línea del teléfono (`PlanSummaryLine`) era un `InkWell` sin rol de botón; ahora es un botón. No hay otro caso en lo que tocaron T-117 y T-118.
+- **El árbol accesible de Windows**, en bancos propios abiertos con `explorer.exe`, antes y después:
+  - a 700 dp, «Acciones» no aparecía, y ahora dice «botón Acciones»;
+  - a 600 dp decía «texto Acciones. Acciones», y ahora «botón Acciones»;
+  - a 560 dp, en el teléfono, igual que a 700.
+  En MSAA sale como «botón de comando Acciones», y activado por UIA abre su menú. Nada más cambia en los árboles.
+- **Cifras:** suite 1685 (piso 1677, más 8), sin fallidas ni omitidas, en una corrida, y `analyze` en cero. Las 8 pruebas nuevas fallan contra `41f458d` y pasan después.
+- **Un tropiezo del instrumento:** al cerrar el menú, activó el «Cerrar» de la barra de título y cerró el banco. El instrumento solo actúa dentro de la ventana del proceso que se le da, así que no podía tocar otra ventana. Timonel repitió 600 y 560 dp.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 4 archivos cambiados y 2 nuevos (`test/t117_correccion2_test.dart` y `tool/t117_correccion2_windows.ps1`). No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto;
+- el código hace lo que dice el informe: cambia solo la semántica, y las capturas de antes y de después son iguales;
+- la comparación de los árboles de Windows coincide: solo cambian «Acciones» y el resumen del teléfono.
+
+**Queda anotado, y no bloquea esta aceptación:**
+- **La prueba de Codex que pide la descripción emergente dentro del nodo queda superada.** Con la descripción en la semántica, Windows repite el nombre. Para un botón de ícono se acepta esto: su etiqueta, el rol de botón, que se pueda tocar y la descripción emergente con el mouse.
+- **O2 · P3 — los segmentos de `BsSelectorDeModo` repiten el nombre en Windows:** «botón Destino. Destino. El puerto de descarga…». Tienen nombre y rol, pero el lector de pantalla lo dice dos veces.
+- **O3 · límite de Flutter:** las entradas de los menús de Flutter se leen como texto y no se activan desde UIA (Invoke); sí se activan con la acción por omisión de MSAA, la que usan los lectores de pantalla. Es del motor, no del producto.
+- O1 y O2 se ven en la entrega 3, con lo demás de accesibilidad de la oficina.
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y el de esta decisión, y mueve `qa-r4` al commit de esta decisión.
+- Codex reacepta solo H4 y el resumen del teléfono, con el árbol de Windows, la suite y `analyze`.
+- La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
+
+La siguiente decisión es la **10.46**.
