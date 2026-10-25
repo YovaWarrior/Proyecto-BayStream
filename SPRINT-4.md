@@ -1034,3 +1034,34 @@ La siguiente decisión es la **10.41**.
 - Con la entrega 1 aceptada, sigue la entrega 2: T-121, las estadísticas A.
 
 La siguiente decisión es la **10.42**.
+
+### 10.42 · La aceptación de la entrega 1 no pasa por dos P2; Timonel corrige (25-oct, 11:25)
+
+**Codex la cerró hoy a las 11:13, sobre `f60d2a8`** (`docs/t117/entrega1/aceptacion-codex.md`, con su evidencia en `build/t117-entrega1-aceptacion/` de `baystream-qa-r4`):
+- **H1 · P2 — «Cerrar el panel lateral» lo fija.** Con el panel oculto y el flotante abierto por una celda, el botón de la cabecera dice «Cerrar el panel lateral», pero fija el panel y guarda `visible`. Lo esperado es cerrar el flotante y dejar el panel oculto. La causa está en `vessel_overview_page.dart` (líneas 364 a 382): desde 1200 dp, el botón siempre ejecuta `mostrarPanel(!panelFijo)`. `DESIGN.md` 14.3 no previó ese caso.
+- **H2 · P2 — Atrás no cierra el menú del modo en Android.** En el emulador, con el menú abierto, el primer Atrás deja el menú y muestra «Toca Atrás otra vez para volver al inicio»; el segundo saca del plano. El menú de «Acciones» sí se cierra. La causa: el menú de `BsSelectorDeModo` es un `MenuAnchor` que no se anota en `cerrablesDeAtrasProvider`.
+  - En la matriz, Esc tampoco lo cerró, aunque `DESIGN.md` 14.6 lo pide. Por eso fallaron dos casos de 800 × 600 con la letra a 2.0, en Descarga: el menú abierto tapaba «Deshacer».
+- **H3 · P3 — a 700 dp, el botón del puente queda solo en una segunda línea:** la franja mide 108 dp en vez de 56. Es la observación de Yov en 10.41.
+- **A 800 × 600 se puede trabajar,** desplazando la columna o plegando el puente.
+- **Lo demás pasa, con pruebas propias:**
+  - la suite, 1629 aprobadas, sin fallidas ni omitidas, en una corrida, y `analyze` en cero en una copia limpia;
+  - la matriz de 90 combinaciones;
+  - en Windows, las tres preferencias sobreviven al reabrir, y la ventana real pasa (el borde, con el script que autorizó la 10.41);
+  - la Web y, en el emulador, Android;
+  - RNF-002, 5 de 5 válidas, con mediana de 2.80 s; Timonel midió 2.26 s. Varía con el estado del equipo y sigue lejos de los 30 s.
+- **Dos salvedades de Codex, correctas:**
+  - `analyze` en `qa-r4` da 33 incidencias, todas bajo `build/`: 32 en pruebas guardadas como evidencia de aceptaciones anteriores y una en su propio instrumento, que corrigió. El producto da cero en la copia limpia, con las mismas fuentes, y ese método vale para la reaceptación;
+  - la lista del piloto sí difiere de `cc24766`, por 10.34 y 10.35, de antes de la entrega. La frase del prompt de Yov («no cambian contra la base») era inexacta: la entrega no la tocó.
+
+**Yov lo revisó:**
+- el informe coincide con la huella de su manifiesto, y las 224 huellas de la evidencia coinciden;
+- el árbol de `qa-r4` está intacto: solo se agregó el informe;
+- H1 y H2 están en el código como dice Codex, y sus capturas los muestran: el menú sigue abierto tras el primer Atrás, y el panel queda fijo tras «Cerrar».
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión. Tiene que ser antes de mover `qa-r4` otra vez: si el informe queda ahí sin versionar, el cambio de commit se detiene.
+- Timonel corrige H1, H2 (con Esc) y H3 en la corrección 1 de la entrega 1, con una prueba que reproduce cada uno, y pone al día `DESIGN.md` 14.3, 14.6 y 14.8. Corre Flutter solo con la luz verde de Carlos, fuera del ensayo y del piloto (10.39).
+- Codex reacepta lo corregido, con la suite y `analyze`, H2 en el emulador y los dos casos de 800 × 600 que fallaron.
+- La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
+
+La siguiente decisión es la **10.43**.
