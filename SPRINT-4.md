@@ -1473,3 +1473,40 @@ La siguiente decisión es la **10.56**.
 - Después, la 3.1.1 pasa a `sprint-4`, y de ahí sale la 3.2.0, a más tardar el 4-nov.
 
 La siguiente decisión es la **10.57**.
+
+### 10.57 · T-122, la 3.1.1, entregada y revisada: seis hallazgos corregidos y una corrección antes de Codex, por el BAPLIE de salida (26-oct, 16:45)
+
+**Timonel la entregó a las 16:32** (`docs/T122-RESULTADOS.md`, en `master` sobre `7488321`):
+- **H1:** los puertos de descarga entran en las opciones de la escala con su cuenta («GTSTC (7)»), y se proponen si fueron la última escala confirmada. «Descarga» aparece sola.
+- **H3:** «AGREGADOS» es un encabezado de sección. Sus filas se cuentan en «AGREGADOS: n» y no en la última agencia, como pasaba en la 3.1.0.
+- **H4:** en el muelle, un lleno del plan sin fila en el listado se carga por su número, tocando su celda o con «OR / últimos dígitos», que ya no se apaga sin listado. La oficina sigue sin registrar cargas, y los vacíos siguen necesitando el listado.
+- **H5:** la regla de la par vive en `reference_bay.dart`. La impar va con la par vecina que está en el plano, no con la convención de 02, 06, 10…, porque A01 trae una 044. El avance y la silueta del plano ya suben bajo la 22.
+- **H6:** el vacío asignado sale en «OR / últimos dígitos» («Ya cargado»), en la búsqueda general con su celda, y en la Lista. Las alertas, la comparación de viajes y las estadísticas leen el BAPLIE; quedan para `sprint-4`.
+- **H7:** durante el arrastre, el plano se desplaza solo en los dos ejes cuando el dedo o el mouse se acercan al borde, también con zoom (`EdgeDraggingAutoScroller`), y al soltar cuenta la celda que queda bajo el dedo.
+- **H2, solo diagnóstico** (sección 8): las reglas publicadas no dejan cambiar el manifiesto de las fuentes, y `join` rechazaría trozos nuevos. Hace falta tocar las reglas: el listado con revisión, `replaceSource` en la oficina y el muelle escuchando el documento de la operación. Los movimientos no se pierden. Decide Carlos.
+- **La versión:** 3.1.1, compilación 5, y el MSIX 3.1.1.0. `pubspec.lock` no cambia.
+- **Cifras:**
+  - 25 pruebas nuevas: 14 de los hallazgos, 3 del arrastre y 8 del dominio. El informe dice 26 y 15 en dos lugares; son 25 y 14;
+  - contra la 3.1.0, 16 de las 17 de los hallazgos y el arrastre fallan, y una ya pasaba (la impar sola);
+  - la suite, 1396 de 1396 en una corrida (el piso de `master` es 1371), y `analyze` de `lib/` y `test/` en cero. El proyecto entero arrastra 13 avisos de copias viejas en `build/t112acc`, fuera de Git;
+  - 80 capturas sintéticas en los tres clientes y los dos temas.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 30 rutas, 20 cambiadas y 10 nuevas. Los documentos de Carlos en `docs/` no se tocaron. No cambian `lib/main.dart`, las reglas, los congelados, la lista del piloto ni `pubspec.lock`. En lo cambiado no hay datos del piloto;
+- las pruebas viejas que cambian de expectativa siguen la regla nueva, no se aflojan:
+  - T-68 cambia su puerto ajeno: PAMIT ahora es puerto de descarga en su archivo;
+  - T-76 y T-78 pasan a la par de referencia;
+  - T-93 pide el MSIX 3.1.1.0;
+- una carga sin OR sube a la nube: el borrador quita los campos vacíos, y las reglas publicadas aceptan `load_full` sin `order`;
+- «AGREGADOS» como sección propia no cambia los grupos de los vacíos, que van por tipo, puerto y línea. Yov recomienda dejarlo así: es lo que dice el Excel;
+- las capturas del teléfono muestran cada arreglo: las fichas de la escala, «AGREGADOS: 2», «sin OR en el listado», el avance bajo la 22, el vacío en la búsqueda general con su celda y el arrastre que llega al borde;
+- **un defecto (P1) que abre H4:** el BAPLIE de salida (`departure_baplie_writer.dart`, líneas 64 a 71) exige la fila del listado de cada lleno cargado que no venía en el plano de llegada. Si falta, se detiene: «El contenedor cargado … no está en el listado». Con H4, un lleno cargado sin fila deja la operación sin BAPLIE de salida, y mientras H2 siga abierto, la oficina tampoco puede importar el listado después. El informe lo nombra en 8.3, pero ninguna prueba lo cubre;
+- **una nota (P3):** la par se busca en el plano que se dibuja, el de carga. Si una bahía de 40 solo viene en el plano de llegada, sus mitades de 20 van en filas propias en el avance de la descarga (T-78). No es un error; se vuelve a ver con Estadísticas en `sprint-4`.
+
+**Lo que sigue:**
+- Carlos sube T-122 y esta decisión.
+- Timonel hace la corrección 1 de T-122 en el mismo chat: el BAPLIE de salida con los llenos cargados sin fila, con los datos del plan de carga y una prueba roja antes.
+- Después, Codex acepta T-122 con su corrección, y Carlos publica la 3.1.1 cuando termine la operación del buque.
+- H2 espera la decisión de Carlos sobre las reglas; no va en la 3.1.1.
+
+La siguiente decisión es la **10.58**.
