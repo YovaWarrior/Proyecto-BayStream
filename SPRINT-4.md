@@ -1163,3 +1163,28 @@ La siguiente decisión es la **10.45**.
 - La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
 
 La siguiente decisión es la **10.46**.
+
+### 10.46 · La entrega 1 de T-117 y T-118, aceptada; sigue la entrega 2, T-121 (25-oct, 18:10)
+
+**Codex la aceptó hoy a las 17:56, en la segunda reaceptación, sobre `0949488`** (`docs/t117/entrega1/reaceptacion2-codex.md`, con su evidencia en `build/t117-entrega1-reaceptacion2/` de `baystream-qa-r4`):
+- **H4 queda cerrado.** En UIA y en MSAA, «Acciones» es un botón con un solo nombre, con el ícono y con el rótulo, y con la cuenta del distintivo en singular y en plural. Invoke abre su menú. El resumen del teléfono también es un botón.
+- Sus árboles de Windows, comparados con los de la reaceptación anterior, solo cambian en «Acciones».
+- **Cifras:** la suite, 1685 de 1685 en una corrida, sin omitidas; sus pruebas propias, 9 de 9; `analyze` en cero en la copia limpia. No hay hallazgos nuevos.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, las 85 huellas de la evidencia coinciden, y el árbol de `qa-r4` está intacto.
+
+**La entrega 1 queda aceptada, cuatro días antes de la meta del 29 o el 30-oct.** Pasó por tres rondas de Codex: la aceptación (H1, H2 y H3), la reaceptación (H4) y la segunda reaceptación, que pasa. **El piso de la suite sube a 1685.**
+
+**Queda anotado para la entrega 3:** O1 y O2 (P3), y el arrastre entre dos monitores, que no se pudo probar. O3 es un límite de Flutter.
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión.
+- **La entrega 2, T-121: las estadísticas A, «El buque en corte»** (10.37 y 10.38), según la sección 0.9 del informe de la fase 0:
+  - Timonel escribe primero `DESIGN.md` (la cifra protagonista a 48 dp y la rampa nueva) y después el código;
+  - lleva lo que dejó la entrega 1: cada control con su nombre en el árbol de Windows, y Esc y Atrás para lo que se abre sin ser una ruta;
+  - tocar una bahía la abre en el plano. Tocar un puerto para ir a la Lista filtrada va con T-120, en la entrega 3;
+  - corre Flutter solo con la luz verde de Carlos.
+- Para el ensayo y el piloto con la 3.1.0 sigue la regla de 10.39: no hay Flutter en esas horas, y Carlos pausa a Timonel antes de salir con la laptop.
+- Las metas: la entrega 2 hacia el 3-nov, la 3.2.0 publicada a más tardar el 4-nov y la presentación final el 7-nov. La lista del piloto se pone al día al publicar la 3.2.0 (E1.10).
+
+La siguiente decisión es la **10.47**.
