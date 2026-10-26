@@ -35,6 +35,7 @@ class DepartureBaplieWriter {
         <({String position, String container, List<String> segments})>[];
     final seen = <String>{};
     final cells = <String>{};
+    final withoutRow = <String>[];
     for (final item in state.items.values) {
       if (item.state == ItemState.cancelled || item.position == null) continue;
       if (item.role == PlanRole.load && item.state != ItemState.moved) continue;
@@ -64,12 +65,37 @@ class DepartureBaplieWriter {
         group[0] = loc.join('+');
       } else {
         final row = rows[container];
-        if (row == null) {
-          throw StateError('El contenedor cargado $container no está en el '
-              'listado; faltan sus datos exactos. Importa el listado de la agencia '
-              'que lo incluye.');
+        if (row != null) {
+          group = _loaded(row, position, plan.portOfCall);
+        } else {
+          // T-122, corrección 1 (10.57): un lleno cargado por su número sin
+          // fila en el listado (H4) sale con el grupo de segmentos que el plan
+          // de carga le dio, en la celda donde quedó, como lo que sigue a
+          // bordo. Son los datos que la agencia transmitió (peso, puertos,
+          // línea, DGS y lo que el lector no modela), no inventados; lo que
+          // la fila añadiría (VGM y tara exactos, marchamo) no se adivina.
+          final current = loadingGroups[container];
+          if (current == null) {
+            // Un vacío asignado a una reserva no tiene grupo propio en el
+            // plan (la reserva va sin número): su fila sigue siendo la única
+            // fuente de su tara y su tipo exactos (H4: los vacíos esperan el
+            // listado).
+            throw StateError(item.kind == PlanItemKind.reservedSlot
+                ? 'El vacío asignado $container no está en el listado; su fila '
+                    'trae la tara y el tipo exactos. Importa el listado de la '
+                    'agencia que lo incluye.'
+                : 'El contenedor cargado $container no está en el listado ni '
+                    'trae su grupo en el plan de carga; faltan sus datos. Importa '
+                    'el listado de la agencia que lo incluye.');
+          }
+          group = [...current];
+          final loc = group.first.split('+');
+          final components = loc[2].split(':');
+          components[0] = position;
+          loc[2] = components.join(':');
+          group[0] = loc.join('+');
+          withoutRow.add(container);
         }
-        group = _loaded(row, position, plan.portOfCall);
       }
       cargo.add((position: position, container: container, segments: group));
     }
@@ -106,7 +132,8 @@ class DepartureBaplieWriter {
                 (i.role == PlanRole.discharge || i.restow) &&
                 i.state == ItemState.planned)
             .length,
-        cancelled: cancelledLines);
+        cancelled: cancelledLines,
+        withoutRow: withoutRow..sort());
   }
 
   /// Conserva los segmentos del plan, incluidos los que el lector no modela.
@@ -347,12 +374,18 @@ class DepartureBaplie {
   final int pendingLoads;
   final int pendingDischarges;
   final List<String> cancelled;
+
+  /// T-122, corrección 1 · Los llenos cargados sin fila en el listado, que
+  /// van con los datos del plan de carga (H4).
+  final List<String> withoutRow;
   DepartureBaplie(
       {required this.text,
       required this.containers,
       required this.pendingLoads,
       required this.pendingDischarges,
-      required Iterable<String> cancelled})
-      : cancelled = List.unmodifiable(cancelled);
+      required Iterable<String> cancelled,
+      Iterable<String> withoutRow = const []})
+      : cancelled = List.unmodifiable(cancelled),
+        withoutRow = List.unmodifiable(withoutRow);
   String get cancelledText => cancelled.join('\n');
 }

@@ -36,7 +36,8 @@ def segmento(position, pol, pod, number, iso, kind, weight, line='LNX'):
 
 
 def llegada():
-    cabecera = ("UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    cabecera = ("UNB+UNOA:2+T122+T122+261026:1200+T1221'"
+                "UNH+T1221M+BAPLIE:D:95B:UN:SMDG20'BGM++T1221+9'DTM+137:202610261200:203'"
                 "TDT+20+V1221+++NV2:172:20+++9001221:146:11:BUQUE PRUEBA T122'"
                 "LOC+5+PAMIT:139:6'LOC+61+CRPMN:139:6'")
     carga = []
@@ -48,7 +49,7 @@ def llegada():
                      ('0060082', 'GTSTC'), ('0060182', 'CRPMN')]:
         n += 1
         carga.append(segmento(pos, 'PAMIT', pod, box(f'TSTU0011{n:02d}'), '42G1', 5, 18000 + 500 * n))
-    return cabecera + ''.join(carga)
+    return cabecera + ''.join(carga) + "UNT+1+T1221M'UNZ+1+T1221'"
 
 
 # El plan de carga: (posición, número o None, ISO, lleno/reserva, peso)
@@ -68,10 +69,12 @@ CARGA.append(('0250082', box('TSTU000250'), '22G1', 5, 7700))
 
 
 def carga():
-    cabecera = ("UNH+1+BAPLIE:D:95B:UN:SMDG20'"
+    cabecera = ("UNB+UNOA:2+T122+T122+261026:1200+T1222'"
+                "UNH+T1222M+BAPLIE:D:95B:UN:SMDG20'BGM++T1222+9'DTM+137:202610261200:203'"
                 "TDT+20+V1222+++NV2:172:20+++9001221:146:11:BUQUE PRUEBA T122'"
                 "LOC+5+GTSTC:139:6'LOC+61+PAMIT:139:6'")
-    return cabecera + ''.join(segmento(p, 'GTSTC', 'PAMIT', n, iso, kind, w) for p, n, iso, kind, w in CARGA)
+    return (cabecera + ''.join(segmento(p, 'GTSTC', 'PAMIT', n, iso, kind, w) for p, n, iso, kind, w in CARGA)
+            + "UNT+1+T1222M'UNZ+1+T1222'")
 
 
 def numero(position):

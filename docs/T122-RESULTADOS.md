@@ -23,7 +23,7 @@ línea `LNX`. Nada del piloto entra al repositorio ni a las capturas. Evidencia 
 | H2 · el listado en una operación publicada | P1 | Diagnóstico y propuesta (sección 8); no se implementa | — | — |
 
 **Cifras:** la suite completa, **1396 de 1396** en una sola corrida, sin reintentos ni omitidas
-(el piso de `master` era 1371, 10.34; entran 26 pruebas nuevas y T-93 pasa a pedir la 3.1.1.0);
+(el piso de `master` era 1371, 10.34; entran 25 pruebas nuevas y T-93 pasa a pedir la 3.1.1.0);
 `flutter analyze lib test` en **cero**. Capturas: **80** PNG con datos sintéticos en los dos temas
 (Windows 22, Web 26, emulador 32), en `build/t122/capturas/`.
 
@@ -202,7 +202,7 @@ las mismas y las vecinas (T-68, T-73, T-74, T-76, T-78, T-105, T-107) en verde t
 
 | Prueba | Casos | Qué reproduce |
 |---|---|---|
-| `test/t122_hallazgos_test.dart` | 15 | H1 (3), H3 (2), H4 (4), H5 (3), H6 (2), con la API de la 3.1.0 |
+| `test/t122_hallazgos_test.dart` | 14 | H1 (3), H3 (2), H4 (4), H5 (3), H6 (2), con la API de la 3.1.0 |
 | `test/t122_arrastre_test.dart` | 3 | H7 con dedo, dedo con zoom al 125 % y mouse, a 360 dp |
 | `test/t122_dominio_test.dart` | 8 | la regla de la par, los puertos de descarga, la fila sin OR, los vacíos a bordo, la búsqueda en la página |
 
@@ -212,8 +212,8 @@ las mismas y las vecinas (T-68, T-73, T-74, T-76, T-78, T-105, T-107) en verde t
 (`build/t122/03-suite-completa.log`): **+1396 · 0 fallos · 0 omitidas · «All tests passed!»** en
 2:58 min. Una corrida anterior (de diagnóstico, antes de las capturas) dio 1395 con un solo rojo:
 `t93_msix_config_test.dart` pedía `msix_version` 3.1.0.0; se actualizó a 3.1.1.0, que es lo que
-10.56 manda. El piso de `master` era 1371 (10.34): las 25 de más son las 26 pruebas nuevas de T-122
-menos ninguna quitada, y T-68, T-76 y T-78 cambiaron de expectativa sin cambiar de número.
+10.56 manda. El piso de `master` era 1371 (10.34): las 25 de más son las 25 pruebas nuevas de T-122
+(14 + 3 + 8), y T-68, T-76 y T-78 cambiaron de expectativa sin cambiar de número.
 
 `flutter analyze lib test tool/t122_main.dart tool/t122_entradas.dart`: **No issues found**
 (`04-analyze-lib-test.log`). `flutter analyze` del proyecto entero arrastra 13 incidencias de
@@ -341,6 +341,87 @@ reemplazar** mientras la operación esté abierta, y viaja con **revisión**.
 **Mientras tanto, en el piloto:** importar el listado **antes** de publicar (el camino que
 funcionó el 25-oct a las 23:11, 10.52). Con H4, un listado que llega tarde ya no bloquea la
 carga de llenos.
+
+## 8bis. Corrección 1 (10.57): el BAPLIE de salida con un lleno cargado sin fila (P1)
+
+**El defecto.** Con H4, un lleno cargado por su número sin fila en el listado dejaba la operación
+sin BAPLIE de salida: `DepartureBaplieWriter` exigía la fila de cada lleno cargado que no venía en
+el plano de llegada y se detenía con «El contenedor cargado … no está en el listado…». En una
+operación publicada sin listado la oficina tampoco puede importarlo después (H2), así que la
+salida no se generaba nunca. Lo nombraba en 8.3, punto 4, sin prueba.
+
+**El arreglo (`departure_baplie_writer.dart`).** Un lleno cargado sin fila sale en la celda donde
+quedó con **el grupo de segmentos que el plan de carga le dio**, como ya salía lo que sigue a
+bordo: `LOC+147` con la posición real y, tal cual, los demás segmentos del plan (peso WT o VGM,
+tara si venía, puertos, línea, DGS y lo que el lector no modela, como FTX). Elegí esta vía y no la
+fila que arma `ExportListRow.fromPlan` porque **no inventa nada**: son los datos que la agencia
+transmitió, y `_loaded` con una fila armada exigiría un VGM que el plan muchas veces no trae (solo
+WT) y perdería los segmentos que el lector no modela. Lo que la fila añadiría (VGM y tara exactos,
+marchamo) no se adivina. Si hay fila, todo sigue como hoy: los datos exactos salen del listado.
+Un **vacío asignado** sin fila sigue pidiendo el listado, ahora con su aviso propio («El vacío
+asignado … no está en el listado; su fila trae la tara y el tipo exactos»): la reserva no tiene
+grupo con número en el plan y su tara y tipo exactos solo están en la fila (H4: los vacíos esperan
+el listado). `DepartureBaplie.withoutRow` lista esos llenos y la página (`departure_baplie_page.dart`)
+dice «n llenos van con los datos del plan de carga porque no tienen fila en el listado: …»
+(`departure-without-row`).
+
+**Prueba (roja antes).** `test/t122c1_salida_sin_fila_test.dart`, cinco casos:
+sin listado (H4) el lleno cargado por su número sale en 003-02-82 con `MEA+WT++KGM:7200`, los
+puertos y la línea del plan y `withoutRow == [TSTU0000014]`, y lo que sigue a bordo igual que
+antes; con un listado al que le falta esa fila, el lleno sale con el plan y el vacío asignado con
+su fila (tara 2185); con la fila, los datos exactos del listado (VGM 7266.59, tara 3900, dos ONU)
+y `withoutRow` vacío; un vacío asignado sin fila sigue deteniéndose con su aviso; un lleno cargado
+en otra celda que la planificada sale en la real. Antes del arreglo: 3 de 4 en rojo con «no está
+en el listado» (`build/t122/c1/01-rojo-antes-del-arreglo.log`). **T-82 cambió de expectativa**
+(«no inventa datos de un cargado ausente del listado»): ahora el cargado sale con el plan, sin VGM
+inventado, y el vacío asignado sin fila sigue lanzando.
+
+**Otras salidas que exijan la fila (revisión).** Ninguna la exige: la exportación CSV/JSON/PDF
+(`export_service.dart`, `pdf_report_service.dart`) y la comparación leen el viaje; la bitácora se
+exporta por `Operation.toJson(includeContent: false)` y sus movimientos, sin listado; el cierre de
+la operación (`FirestoreOperationSync.close`) no mira las fuentes; el avance (`operation_progress.dart`),
+la validación de carga (`load_check.dart`) y la bandeja de cambios (`change_requests_page.dart`)
+usan la fila solo si existe (OR y pesos exactos). El listado sigue siendo necesario únicamente para
+los vacíos (asignarlos y escribirlos en la salida).
+
+**Verificación.** `build/t122/c1/02-verde-tras-el-arreglo.log`: la prueba nueva, T-82 (escritor) y
+T-82 (página), 21 de 21. `03-suite-completa.log`: la suite completa, una sola corrida, **1401 de
+1401**, sin omitidas (1396 + las 5 de la corrección). `04-analyze-lib-test.log`: `flutter analyze
+lib test`, **No issues found**.
+
+**Captura.** `build/t122/c1/capturas/`, Web a 1920 × 1080 con `tool/t122_c1_captura_web.py`
+(datos sintéticos, sin listado, el lleno TSTU0220071 cargado por sus últimos dígitos):
+`web_claro_c1_salida_lleno_sin_fila.png` y `web_oscuro_c1_salida_lleno_sin_fila.png`, la página
+«BAPLIE de salida» con «1 contenedores a bordo en la salida · Pendientes: 28 de carga y 0 de
+descarga · 1 lleno va con los datos del plan de carga porque no tiene fila en el listado:
+TSTU0220071» y el botón «Guardar BAPLIE de salida» activo; y `web_<tema>_c1_h4_sin_listado_registrado.png`,
+el diálogo de esa carga. Antes del arreglo la misma página decía «El contenedor cargado … no está
+en el listado» y no generaba nada.
+
+**Archivos de la corrección:** `lib/features/vessel/domain/services/departure_baplie_writer.dart`,
+`lib/features/vessel/presentation/pages/departure_baplie_page.dart`,
+`test/t122c1_salida_sin_fila_test.dart` (nuevo), `test/t82_departure_baplie_test.dart`,
+`tool/t122_c1_captura_web.py` (nuevo), `tool/t122_entradas.py` y `tool/t122_entradas.dart` (los
+BAPLIE sintéticos del banco llevan ahora el sobre EDIFACT completo, UNB/UNH … UNT/UNZ, que la salida
+exige; las capturas de T-122 se tomaron sin él y por eso traen el aviso «faltan 4 segmentos»), este
+informe. Evidencia en `build/t122/c1/` (fuera de Git).
+
+**Git de la corrección (Carlos, en `master`):**
+
+```powershell
+Set-Location -LiteralPath C:\Proyectos\proyecto-baystream
+git add -- lib/features/vessel/domain/services/departure_baplie_writer.dart
+git add -- lib/features/vessel/presentation/pages/departure_baplie_page.dart
+git add -- test/t122c1_salida_sin_fila_test.dart
+git add -- test/t82_departure_baplie_test.dart
+git add -- tool/t122_c1_captura_web.py
+git add -- tool/t122_entradas.py
+git add -- tool/t122_entradas.dart
+git add -- docs/T122-RESULTADOS.md
+git commit -m "Sprint 4: T-122 correccion 1 (10.57), el BAPLIE de salida incluye los llenos cargados sin fila del listado con los datos del plan de carga" --trailer "Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git push origin master
+git log --oneline -1
+```
 
 ## 9. Archivos tocados
 
