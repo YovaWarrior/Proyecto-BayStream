@@ -1442,3 +1442,34 @@ La siguiente decisión es la **10.55**.
 - La meta sigue: la 3.2.0 publicada a más tardar el 4-nov. La lista del piloto se pone al día al publicarla (E1.10).
 
 La siguiente decisión es la **10.56**.
+
+### 10.56 · La 3.1.1 va (T-122), con dos hallazgos más del piloto: un vacío asignado que ninguna búsqueda encuentra y el arrastre en el teléfono (26-oct, 14:10)
+
+**Carlos aprobó la propuesta de 10.55 a las 13:50:**
+- **T-122 · La 3.1.1, con los hallazgos del piloto.** Timonel trabaja desde `master` y `v3.1`, en `proyecto-baystream`; es la excepción a «no cambies de carpeta». Codex la acepta. Entran H1, H3, H4, H5 y los dos hallazgos de abajo; H2 solo se diagnostica y se propone. Las versiones: la 3.1.1 con la compilación 5, y el MSIX 3.1.1.0.
+- **La regla de la bahía par es la de Carlos:** la par es la bahía de referencia. Una impar se cuenta con la par vecina que la cubre (21 y 23 con 22), y el grupo se rotula con la par. Se escribe una sola vez en el dominio, en la 3.1.1. Estadísticas la adopta en `sprint-4` cuando la 3.1.1 pase allá.
+
+**Hallazgo 6 (P1) — un vacío asignado a una celda reservada no aparece en ninguna búsqueda.** Carlos lo encontró hoy hacia las 11:17, en el Honor (muelle):
+- El supervisor de la portuaria buscaba el OR 48 en su plano de papel y creyó que no se había cargado: lo había anotado en la bahía 26 y lo olvidó. Para ayudarlo, Carlos lo buscó en la app.
+- El OR 48 es un vacío del listado que Carlos asignó a las 10:38 a la única celda reservada de la bahía 26. El plano lo muestra cargado, con su OR, y su detalle dice «Cargado», con su celda y su hora.
+- Pero la búsqueda general, con el número completo, dice «Sin resultados». «OR / últimos dígitos» tampoco lo ofrece, ni por su OR ni por sus dígitos: con «48» salen dos llenos cuyo número termina en 48. Fue el único contenedor que no apareció.
+- **La causa, en la 3.1.0:**
+  - la búsqueda general (`container_search_delegate.dart`) solo recorre `voyage.containers`, el BAPLIE, donde la celda reservada no trae número de contenedor (`vessel_overview_page.dart`, línea 462);
+  - `LoadingOperation.search` (`loading_operation.dart`, línea 81) solo da las filas del listado cuyo contenedor está numerado en el plan de carga (`numbered`); un vacío asignado a una reserva no lo está;
+  - el vacío vive solo como `assignedContainer` en el estado de la operación. De ahí lo leen el plano, su detalle y el BAPLIE de salida (`departure_baplie_writer.dart`); las búsquedas no.
+- Por eso fue el único: era el único vacío cargado en una celda reservada.
+- **La corrección:** las dos búsquedas encuentran el vacío asignado como a los demás, la general por su número y la de carga por su OR y sus últimos dígitos, con su celda y «Ya cargado». Timonel revisa qué otras vistas que listan contenedores lo pierden.
+
+**Hallazgo 7 (P2) — en el teléfono, el arrastre no llega al otro extremo de la bahía.**
+- Al mantener presionado un contenedor, se levanta y sigue al dedo, pero el plano no se desplaza cuando el dedo llega al borde. La celda de destino, fuera de la vista, no se alcanza.
+- **La causa:** `PlanDragCell` (`plan_drag_confirmation.dart`) es un `LongPressDraggable` dentro de los dos `SingleChildScrollView` de `PlanZoomViewport` (`bay_plan_view.dart`), y nada desplaza la vista durante el arrastre. Con dos dedos, el gesto se lo lleva el zoom.
+- Mientras tanto, el cambio se pide con el formulario de «Pedir cambio».
+- **La corrección:** durante el arrastre, el plano se desplaza solo, en los dos ejes, cuando el dedo o el mouse se acercan al borde, también con zoom. Al soltar, cuenta la celda que queda bajo el dedo.
+
+**Lo que sigue:**
+- Carlos sube esta decisión.
+- Timonel hace T-122 con Flutter, mientras la laptop siga en casa (10.47). Codex la acepta.
+- Carlos publica la 3.1.1 con la sección 4 de la lista del piloto cuando el ECO BORA termine, no durante la operación.
+- Después, la 3.1.1 pasa a `sprint-4`, y de ahí sale la 3.2.0, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.57**.
