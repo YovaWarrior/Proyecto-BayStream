@@ -1326,3 +1326,50 @@ Es la confirmación de los hallazgos 2 y 4: con el listado dentro antes de publi
 **La corrección que propone Yov (decide Carlos):** agrupar por la bahía par (21 y 23 → 22) en el avance y en la silueta, con su prueba. Toca `domain/`: en la 3.1.1 es un arreglo de un defecto, así que lo autoriza Carlos.
 
 La siguiente decisión es la **10.53**.
+
+### 10.53 · La aceptación de la entrega 2 no pasa por un P2: con pocas bahías, la silueta queda chica; Timonel corrige (26-oct, 09:40)
+
+**Codex la cerró hoy a las 07:22, sobre `f324499`** (`docs/t121/entrega2/aceptacion-codex.md`, con su evidencia en `build/t121-entrega2-aceptacion/` de `baystream-qa-r4`):
+- **H1 · P2 — con pocas bahías, la silueta no es la protagonista «en grande» de 0.9.5.** Con `T100_LLEGADA` (nueve bahías) a 1920, con la letra a 1.0, queda pegada a la izquierda y ocupa menos de la mitad del ancho del panel, en Contenedores y en Peso. Con 72 bahías sí llena el panel y se desplaza. La causa: `BsBuqueEnCorte` arma una fila de ancho intrínseco, con 56 dp por bahía por la escala de la letra, y no reparte el ancho que sobra. Es el primero de los tres puntos de Yov en 10.48.
+- **O1 · P3 — la muestra de «Cubierta» parece una casilla para marcar:** blanca, cuadrada, de 12 dp y con borde. En el árbol accesible es texto, no un control. Es el segundo punto de 10.48.
+- **Acepta las trece desviaciones de `DESIGN.md` 15.11,** una por una.
+- **Lo demás pasa, con pruebas propias:**
+  - la suite, 1773 aprobadas, sin fallidas ni omitidas, y `analyze` en cero en la copia limpia;
+  - 66 pruebas propias y una matriz de 60 casos: cinco tamaños, dos letras, dos temas y tres juegos de datos;
+  - las cifras cuadran con un conteo propio en los tres archivos sintéticos: el total, los llenos y vacíos, los puertos, las navieras, los tamaños y las bahías;
+  - en Windows, con UIA y MSAA, «Contenedores» y «Peso» se dicen una vez y con rol de botón, también cuando van solo con íconos (el tercer punto de 10.48). La Web pasa 60 de 60 en Chrome, y Android, seis condiciones en el emulador;
+  - la rampa pasa el script de la skill de dataviz en los cuatro fondos de 0.9.4, y la cifra protagonista mide 48.
+- **Una salvedad, declarada por Codex:** antes de la corrida válida hubo dos intentos de suite sobre copias mal hechas. A la primera le faltaba `lib/core/design/`; a la segunda, sus manifiestos, y ya llevaba el rótulo del banco. No son reintentos del producto.
+
+**Yov lo revisó:**
+- el informe coincide con la huella de su manifiesto, y las 811 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe;
+- los dos intentos son lo que dice Codex:
+  - el primero se cortó al compilar;
+  - el segundo falló solo en las pruebas que leen esos manifiestos (`t114_ilustraciones`) y el rótulo (`t88_privacy_policy`);
+  - la corrida válida fue sobre una copia cotejada con el árbol, 1 879 archivos, donde solo difiere el registrador de plugins que genera `pub get`.
+  
+  Vale, y queda una lección: la copia se coteja antes de la primera corrida;
+- la captura de la Web a 1920 lo muestra: la silueta de nueve bahías mide menos de 600 de los más de 1 400 px del panel, y a la derecha no hay nada. La muestra de «Cubierta» se ve como una casilla junto al selector.
+
+**La pregunta de 10.52, respondida.** Codex usó un viaje sintético con dos contenedores de 20 pies en la 21, tres de 40 en la 22 y uno de 20 en la 23:
+- Estadísticas cuenta cada número por separado: la 21 con 2, la 22 con 3 y la 23 con 1;
+- el avance junta la 22 con la 21 («21/22», 5) y deja la 23 sola;
+- ninguna de las dos sigue la regla de Carlos, que la bahía de referencia es la par.
+
+Se ve también en `T100_LLEGADA`: Estadísticas dibuja nueve columnas, seis de ellas en cero (las impares vecinas de los de 40). El planificador ahí ve tres bahías: la 02, la 06 y la 10.
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión, antes de mover `qa-r4` otra vez.
+- **Timonel corrige H1 y O1** en la corrección 1 de la entrega 2, con una prueba que reproduce cada uno, y pone al día `DESIGN.md` 15.4:
+  - cuando las bahías caben, la silueta ocupa el ancho útil del panel: cada bahía crece hasta un tope escrito en 15.4, y si aun así sobra ancho, el casco va centrado;
+  - no cambian la escala común de las pilas, el pie en el mismo eje, el desplazamiento cuando no caben ni la página en el teléfono;
+  - corre Flutter con la luz verde de Carlos mientras la laptop no vaya al muelle, como en 10.47.
+- **La regla de la bahía par no entra en esta corrección:** en Estadísticas, cada bahía sigue siendo su número. Yov propone una sola regla, con la par como referencia, para el avance (la página y la silueta del plano) y para Estadísticas:
+  - se escribe una vez en el dominio, en la 3.1.1 (10.52);
+  - cuando la 3.1.1 pase a `sprint-4`, Estadísticas la adopta en una tarea propia.
+  
+  Decide Carlos.
+- Codex reacepta H1 y O1, con la suite y `analyze`.
+- La meta sigue: la entrega 2 aceptada hacia el 3-nov, y la 3.2.0 a más tardar el 4-nov.
+
+La siguiente decisión es la **10.54**.
