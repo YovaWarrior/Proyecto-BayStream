@@ -1510,3 +1510,36 @@ La siguiente decisión es la **10.57**.
 - H2 espera la decisión de Carlos sobre las reglas; no va en la 3.1.1.
 
 La siguiente decisión es la **10.58**.
+
+### 10.58 · La corrección 1 de T-122, entregada y revisada: el BAPLIE de salida ya lleva los llenos sin fila; la 3.1.1 pasa a la aceptación de Codex (26-oct, 17:10)
+
+**Timonel la entregó a las 16:58, sobre `d05bacf`** (`docs/T122-RESULTADOS.md`, sección «8bis»):
+- **El arreglo:** un lleno cargado sin fila en el listado sale en la celda donde quedó, con el grupo de segmentos que le dio el plan de carga: `LOC+147` con la posición real y, tal cual, el peso, los puertos, la línea, la carga peligrosa y lo que el lector no modela. Así ya salía lo que sigue a bordo. Timonel no usó la fila armada desde el plan, porque exigiría un VGM que el plan muchas veces no trae y perdería segmentos: no se inventa nada.
+- Con fila, todo sigue igual: los datos exactos salen del listado. Un vacío asignado sin fila sigue pidiendo el listado, ahora con su aviso propio: su tara y su tipo exactos solo están en la fila.
+- La página dice «n llenos van con los datos del plan de carga porque no tienen fila en el listado: …».
+- **Otras salidas:** ninguna exige la fila. Las exportaciones CSV, JSON y PDF y la comparación leen el viaje; la bitácora se exporta sin listado; el cierre no mira las fuentes; el avance, la validación de carga y la bandeja de cambios usan la fila solo si existe.
+- **Cifras:**
+  - 5 pruebas nuevas: antes del arreglo, 3 fallan con «no está en el listado»;
+  - la suite, 1401 de 1401 en una corrida, y `analyze` de `lib/` y `test/` en cero;
+  - la captura de la página, en la Web y en los dos temas.
+- T-82 cambia de expectativa: el cargado ausente del listado sale con el plan, sin VGM inventado, y el vacío asignado sin fila sigue deteniéndose.
+- Los BAPLIE sintéticos del banco llevan ahora el sobre EDIFACT completo, que la salida exige. Las capturas de T-122 se tomaron sin él y traen el aviso «faltan 4 segmentos»; no cambian el resultado.
+- El informe corrige la cuenta de pruebas nuevas de T-122: 25, y 14 en el archivo de los hallazgos.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 8 rutas, 6 cambiadas y 2 nuevas. Lo demás de T-122 no cambia;
+- el escritor hace lo que dice:
+  - con fila, sale como antes;
+  - sin fila, sale el grupo del plan con la posición real, y el contenedor queda en la lista de los sin fila;
+  - sin grupo en el plan (un vacío asignado), se detiene con su aviso;
+- la prueba de T-82 no se afloja: pide el peso del plan, que no haya VGM y la lista de los sin fila, y sigue exigiendo la detención para el vacío;
+- la captura muestra la página con el aviso y «Guardar BAPLIE de salida» activo;
+- **una nota (P3, de antes):** la página dice «1 contenedores a bordo en la salida». Se corrige en `sprint-4`.
+
+**Lo que sigue:**
+- Carlos sube la corrección y esta decisión, y mueve `qa-r4` al commit de la corrección en `master`.
+- Codex acepta T-122 con su corrección, en los tres clientes y con datos sintéticos.
+- Si pasa, Carlos publica la 3.1.1 con la sección 4 de la lista del piloto cuando termine la operación del buque.
+- Después, la 3.1.1 pasa a `sprint-4`.
+
+La siguiente decisión es la **10.59**.
