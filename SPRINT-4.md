@@ -1405,3 +1405,40 @@ La siguiente decisión es la **10.54**.
 - La meta sigue: la entrega 2 aceptada hacia el 3-nov, y la 3.2.0 a más tardar el 4-nov.
 
 La siguiente decisión es la **10.55**.
+
+### 10.55 · La entrega 2 de T-121, aceptada: las estadísticas ya son «El buque en corte» (26-oct, 13:45)
+
+**Codex la reaceptó a las 13:27, sobre `004ccaa`** (`docs/t121/entrega2/reaceptacion-codex.md`, con su evidencia en `build/t121-entrega2-reaceptacion/` de `baystream-qa-r4`):
+- **H1 y O1 quedan cerrados:**
+  - con nueve bahías, la silueta se reparte el panel a 1920 (148 dp por bahía) y a 1366 (137), sin nada que desplazar y con zonas de 108 dp;
+  - con tres y con cuatro bahías, cada una mide su tope de 168 dp y el casco va centrado;
+  - con 72 bahías y en el teléfono, todo sigue como antes;
+  - la muestra de la leyenda se reconoce como pila y, en los tres clientes, sigue siendo texto.
+- **El punto de 10.54:** la franja vacía arriba del casco se ve, y la protagonista cumple igual con «en grande». Esa reserva dice que la cubierta va casi vacía.
+- **Cifras:**
+  - la suite, 1783 de 1783, en una sola corrida, sobre una copia cotejada antes de correrla (la lección de 10.53), y `analyze` en cero;
+  - su matriz, 80 de 80; Chrome, 60 de 60; Android, 6 de 6; Windows, con UIA y MSAA.
+- **Tres tropiezos de su instrumento, declarados y resueltos:**
+  - dos pruebas propias de O1 cerraban mal su manejador de semántica; repitió solo esas dos, no la suite;
+  - una lectura sin UTF-8 en su recorrido de Android;
+  - unas capturas con el puntero encima, que repuso.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 930 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1783 éxitos y ninguna omitida.
+
+**Con esto:**
+- **la entrega 2 de T-117 a T-121 queda aceptada,** una semana antes de la meta del 3-nov. El piso de `sprint-4` sube a **1783**;
+- lo que lleva la 3.2.0 ya está hecho: las entregas 1 y 2 (10.38). La entrega 3 va en una 3.2.1, porque la presentación final es el 7-nov. Son T-119 y T-120, con O1 y O2 de la entrega 1 y el arrastre entre dos monitores;
+- **siguen abiertas para Carlos** la 3.1.1, con los hallazgos del piloto (10.49 a 10.52), y la regla de la bahía par (10.53).
+
+**Yov propone hacer la 3.1.1 ahora, antes que la entrega 3.** Son defectos P1 de la primera operación real, y la 3.2.0 de la presentación tiene que llevarlos corregidos. La propuesta:
+- Timonel trabaja desde `master` y `v3.1`, en la carpeta `proyecto-baystream`, y Codex la acepta;
+- entran H1, H3, H4 y H5, con la regla de la par. Tocan `domain/`, y el sí de Carlos es la autorización (10.52);
+- H2, el listado que entra en una operación ya publicada, toca cómo viajan las fuentes por la nube y quizá las reglas publicadas: Timonel lo diagnostica y lo propone, y decide Carlos;
+- después, el arreglo pasa a `sprint-4`, y de ahí sale la 3.2.0.
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión.
+- Carlos decide la 3.1.1 y la regla de la par. Con su sí, Yov escribe el prompt de Timonel.
+- La meta sigue: la 3.2.0 publicada a más tardar el 4-nov. La lista del piloto se pone al día al publicarla (E1.10).
+
+La siguiente decisión es la **10.56**.
