@@ -164,7 +164,10 @@ class OperationProgress {
 }
 
 class BayOperationProgress {
+  /// La bahía de referencia del grupo: la par (T-122, H5; `reference_bay.dart`).
   final int bay;
+
+  /// Verdadero si el grupo cuenta también alguna impar vecina.
   bool paired = false;
   ProgressCount dischargeDeck = const ProgressCount();
   ProgressCount dischargeHold = const ProgressCount();
@@ -179,8 +182,9 @@ class BayOperationProgress {
   int coversReplaced = 0;
   Movement? last;
   BayOperationProgress(this.bay);
-  String get label => '${bay.toString().padLeft(2, '0')}'
-      '${paired ? '/${(bay + 1).toString().padLeft(2, '0')}' : ''}';
+
+  /// El grupo se rotula con su bahía de referencia, la par (H5).
+  String get label => bay.toString().padLeft(2, '0');
   int get dischargePending => dischargeDeck.pending + dischargeHold.pending;
   int get discharged => dischargeDeck.moved + dischargeHold.moved;
   int get fullPending => fullDeck.pending + fullHold.pending;

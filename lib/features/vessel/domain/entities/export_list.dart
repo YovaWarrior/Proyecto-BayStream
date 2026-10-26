@@ -134,6 +134,34 @@ class ExportListRow extends Equatable {
         line = line ?? listLine,
         unNumbers = List.unmodifiable(unNumbers);
 
+  /// T-122 (H4, 10.51) · La fila que el listado no trae: un lleno (o un
+  /// vacío con número) del plan de carga, armado desde el plan para cargarlo
+  /// por su número de contenedor. Sin OR: [order] y [sheetRow] valen 0 y
+  /// [unlisted] la distingue; su movimiento se registra sin `order`.
+  factory ExportListRow.fromPlan(ContainerUnit container) => ExportListRow(
+        sheetRow: 0,
+        order: 0,
+        containerId: container.containerId,
+        status: container.status,
+        listType: container.isoSizeType ?? '',
+        listPod: container.portOfDischarge ?? '',
+        listLine: container.operatorCode ?? '',
+        tareKg: container.tareWeight ?? 0,
+        vgmKg: container.vgmWeight,
+        imdgClass: container.imdgClass,
+        unNumbers: [if (container.unNumber != null) container.unNumber!],
+      );
+
+  /// Verdadero para una fila armada desde el plan ([ExportListRow.fromPlan]).
+  bool get unlisted => sheetRow == 0;
+
+  /// Cómo se nombra en un aviso: «OR 12» o, sin fila, el número.
+  String get name => unlisted ? containerId : 'OR $order';
+
+  /// Cómo se rotula en una lista o un diálogo.
+  String get label =>
+      unlisted ? '$containerId · sin OR en el listado' : 'OR $order · $containerId';
+
   bool get isFull => status == ContainerStatus.full;
   bool get isEmpty => status == ContainerStatus.empty;
   bool get isDangerous => imdgClass != null || unNumbers.isNotEmpty;

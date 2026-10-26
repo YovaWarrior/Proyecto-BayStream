@@ -4,6 +4,7 @@ import 'discharge_progress.dart';
 import 'load_check.dart';
 import 'loading_plan_progress.dart';
 import 'operation_state_deriver.dart';
+import 'reference_bay.dart';
 
 /// T-76: selección de carga y reservas sobre la misma bitácora de descarga.
 class LoadingOperation {
@@ -77,17 +78,56 @@ class LoadingOperation {
     return item?.role == PlanRole.load ? item : null;
   }
 
+  /// T-122 (H6, 10.56) · Si el vacío de la fila ya quedó asignado a una
+  /// reserva: vive solo como `assignedContainer` del estado, no en el plan.
+  bool assigned(ExportListRow row) => state.items.values.any((s) =>
+      s.state == ItemState.moved && s.assignedContainer == row.containerId);
+
+  /// T-122 (H4, 10.51) · Lo que el plan carga aquí con número y el listado no
+  /// trae, como filas sin OR, por número de contenedor.
+  List<ExportListRow> get unlistedRows => [
+        for (final item in plan.loading.values)
+          if (item.role == PlanRole.load &&
+              item.container != null &&
+              list?.byContainer(item.container!.containerId) == null)
+            ExportListRow.fromPlan(item.container!)
+      ]..sort((a, b) => a.containerId.compareTo(b.containerId));
+
+  /// La fila sin OR de un contenedor del plan; nula si el listado lo trae o
+  /// el plan no lo carga aquí.
+  ExportListRow? unlistedRow(String containerId) {
+    for (final row in unlistedRows) {
+      if (row.containerId == containerId) return row;
+    }
+    return null;
+  }
+
   /// OR exacto o sufijo del contenedor; nunca se elige una coincidencia ambigua.
+  ///
+  /// Entre los llenos salen las filas con número en el plan, los vacíos ya
+  /// asignados a una reserva (H6) y, después, los contenedores del plan sin
+  /// fila en el listado (H4). Los vacíos por asignar siguen saliendo solo
+  /// del listado.
   List<ExportListRow> search(String query, {bool empties = false}) {
     final value = query.trim().toUpperCase();
     final order = int.tryParse(value.replaceFirst(RegExp(r'^OR\s*'), ''));
-    return (list?.rows ?? const <ExportListRow>[]).where((row) {
-      if (empties ? !row.isEmpty : numbered(row) == null) return false;
+    final listed = (list?.rows ?? const <ExportListRow>[]).where((row) {
+      if (empties
+          ? !row.isEmpty
+          : numbered(row) == null && !assigned(row)) {
+        return false;
+      }
       return value.isEmpty ||
           row.order == order ||
           row.containerId.endsWith(value);
     }).toList()
       ..sort((a, b) => a.order.compareTo(b.order));
+    if (empties) return listed;
+    return [
+      ...listed,
+      for (final row in unlistedRows)
+        if (value.isEmpty || row.containerId.endsWith(value)) row,
+    ];
   }
 
   /// La nueva corrección sustituirá toda la cadena. La vista previa retira
@@ -149,9 +189,46 @@ class LoadingOperation {
     return result;
   }
 
-  int displayBay(int bay) =>
-      bay.isEven && loading.bays.containsKey(bay - 1) ? bay - 1 : bay;
+  /// La bahía con la que se cuenta y se rotula [bay] en el avance: la regla
+  /// de la par de referencia (`reference_bay.dart`), con las bahías que el
+  /// plan dibuja.
+  int displayBay(int bay) => referenceBay(bay, hasBay: loading.bays.containsKey);
   int bayOf(String position) => IsoCoordinateParser.parse(position).bay;
+
+  /// T-122 (H6, 10.56) · Los vacíos asignados a una reserva, como contenedores
+  /// a bordo: con su número, su celda, su tipo y su tara. El BAPLIE de salida
+  /// ya los escribe así (`departure_baplie_writer.dart`); la búsqueda general
+  /// y la Lista los toman de aquí, porque el plan los trae sin número.
+  List<ContainerUnit> get assignedEmpties {
+    final result = <ContainerUnit>[];
+    for (final item in state.items.values) {
+      final container = item.assignedContainer;
+      final at = item.position;
+      if (item.kind != PlanItemKind.reservedSlot ||
+          item.state != ItemState.moved ||
+          container == null ||
+          at == null) {
+        continue;
+      }
+      final slot = plan.loading[item.key]?.reservedSlot;
+      final row = list?.byContainer(container);
+      final tare = item.tareKg ?? row?.tareKg;
+      result.add(ContainerUnit(
+        id: 'assigned-$container',
+        containerId: container,
+        isoSizeType: row?.type ?? slot?.isoSizeType,
+        status: ContainerStatus.empty,
+        stowagePosition: IsoCoordinateParser.parse(at),
+        grossWeight: tare,
+        tareWeight: tare,
+        portOfLoading: slot?.portOfLoading ?? plan.portOfCall,
+        portOfDischarge: row?.pod ?? slot?.portOfDischarge,
+        operatorCode: row?.line ?? slot?.operatorCode,
+      ));
+    }
+    result.sort((a, b) => a.containerId.compareTo(b.containerId));
+    return result;
+  }
 
   Movement? movementOf(String key) {
     final id = state[key]?.movementId;
@@ -257,7 +334,14 @@ class LoadingOperation {
       throw StateError('La escala no tiene operación guardada: vuelve a abrir el '
           'plan de carga y confirma la escala.');
     }
-    if (list?.byOrder(row.order) != row) {
+    if (row.unlisted) {
+      // H4: un lleno del plan sin fila se carga por su número; la fila nace
+      // del plan, así que lo que se comprueba es que el plan lo cargue aquí.
+      if (numbered(row) == null) {
+        throw StateError('${row.containerId} no está en el plan de carga de '
+            '${plan.portOfCall}: revisa el número o importa el listado.');
+      }
+    } else if (list?.byOrder(row.order) != row) {
       throw StateError('El OR ya no está en el listado de la agencia: importa de '
           'nuevo el listado.');
     }
@@ -305,7 +389,7 @@ class LoadingOperation {
     }
     if (item != null) {
       return MovementDraft.loadFull(operationId!, row.containerId, position,
-          order: row.order,
+          order: row.unlisted ? null : row.order,
           seal: seal,
           operatedAt: operatedAt,
           corrects: correcting?.id,

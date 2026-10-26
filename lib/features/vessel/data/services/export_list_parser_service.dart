@@ -55,6 +55,11 @@ class ExportListParserService {
 
   static final _containerNumber = RegExp(r'^[A-Z]{4}\d{7}$');
 
+  /// T-122 (H3, 10.50) · La agencia agrega contenedores al final del Excel
+  /// bajo una fila «AGREGADOS». Es un encabezado de sección, como los de
+  /// «CODIGO», y no una fila sin entender.
+  static final _sectionHeader = RegExp(r'^AGREGADOS?$');
+
   /// Lee la primera hoja que tenga la fila de encabezados.
   ExportList parseXlsx(List<int> bytes, {String fileName = 'listado.xlsx'}) {
     final xlsx.Excel book;
@@ -197,9 +202,16 @@ class ExportListParserService {
       final order = _int(at('OR'));
       if (order == null) {
         final text = _rowText(row);
-        if (normalizeHeader(text).contains('CODIGO')) {
+        final name = normalizeHeader(text);
+        if (name.contains('CODIGO')) {
           agency = text.substring(0, _codigoStart(text)).trim();
           if (agency.isEmpty) agency = text.trim();
+          continue;
+        }
+        // H3: las filas de debajo de «AGREGADOS» se cuentan en esa sección,
+        // no en la última agencia, que es donde quedaban en la 3.1.0.
+        if (_sectionHeader.hasMatch(name)) {
+          agency = name;
           continue;
         }
         issues.add(ExportListIssue(sheetRow,

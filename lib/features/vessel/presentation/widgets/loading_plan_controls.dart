@@ -479,7 +479,7 @@ class _CompactPlanBar extends ConsumerWidget {
         actions,
         if (loadingMode)
           LoadingControls.busquedaDeCarga(context, ref, voyage, selectedBay,
-              conListado: data?.list != null),
+              disponible: data != null),
       ]);
     }
     // Con la letra del sistema muy grande (10.8: a 2.0 «Contenido» no cabe

@@ -165,6 +165,10 @@ void main() {
         StackWeightStatus.notEvaluated);
     expect(data.stacks.singleWhere((s) => s.bay == 4).knownKg, 6000);
     expect(data.stacks.singleWhere((s) => s.bay == 3 && !s.deck).knownKg, 4000);
-    expect(data.bays.singleWhere((b) => b.bay == 3).paired, isTrue);
+    // T-122 (H5): la par es la referencia. La 04 solo viene en el plano de
+    // llegada, no en el plan de carga que se dibuja, así que la 03 y la 05
+    // quedan solas y la 04 es su propia fila.
+    expect(data.bays.map((b) => b.label), ['03', '04', '05']);
+    expect(data.bays.any((b) => b.paired), isFalse);
   });
 }

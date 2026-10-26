@@ -59,3 +59,49 @@ final loadingOperationProvider = StreamProvider.autoDispose
     yield derive(records);
   }
 });
+
+/// Si en [voyage] se carga algo en la escala: entonces hay plan de carga y
+/// puede haber vacíos asignados a sus reservas. Es la condición con que el
+/// viaje ofrece «Listado de la agencia».
+bool _loadsAtCall(VesselVoyage voyage) {
+  final port = voyage.portOfCall;
+  return port != null &&
+      voyage.cargoCountsFor(port).loaded +
+              voyage.reservedCountsFor(port).loaded >
+          0;
+}
+
+/// T-122 (H6, 10.56) · Los contenedores a bordo que la Lista y la búsqueda
+/// general recorren: los del archivo y, en un plan de carga con operación,
+/// los vacíos que el muelle asignó a una reserva, que el archivo trae sin
+/// número y en la 3.1.0 ninguna búsqueda encontraba.
+final aboardContainersProvider = Provider<List<ContainerUnit>>((ref) {
+  final voyage = ref.watch(voyageNotifierProvider).value;
+  if (voyage == null) return const [];
+  if (!_loadsAtCall(voyage)) return voyage.containers;
+  final assigned =
+      ref.watch(loadingOperationProvider(voyage)).value?.assignedEmpties ??
+          const <ContainerUnit>[];
+  return [...voyage.containers, ...assigned];
+});
+
+/// Las navieras de lo que va a bordo, ordenadas.
+final carriersListProvider = Provider<List<String>>((ref) {
+  final carriers = ref
+      .watch(aboardContainersProvider)
+      .map((c) => c.operatorCode)
+      .where((code) => code != null && code.isNotEmpty)
+      .cast<String>()
+      .toSet()
+      .toList();
+  carriers.sort();
+  return carriers;
+});
+
+/// Lo que va a bordo, filtrado por la naviera elegida.
+final filteredContainersProvider = Provider<List<ContainerUnit>>((ref) {
+  final containers = ref.watch(aboardContainersProvider);
+  final selectedCarrier = ref.watch(selectedCarrierProvider);
+  if (selectedCarrier == null) return containers;
+  return containers.where((c) => c.operatorCode == selectedCarrier).toList();
+});
