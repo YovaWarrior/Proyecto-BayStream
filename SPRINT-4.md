@@ -1188,3 +1188,141 @@ La siguiente decisión es la **10.46**.
 - Las metas: la entrega 2 hacia el 3-nov, la 3.2.0 publicada a más tardar el 4-nov y la presentación final el 7-nov. La lista del piloto se pone al día al publicar la 3.2.0 (E1.10).
 
 La siguiente decisión es la **10.47**.
+
+### 10.47 · El piloto va hoy en el ECO BORA, con la Web y el Honor; Timonel sigue toda la noche con luz verde (25-oct, 18:55)
+
+**Carlos lo decidió a las 18:44:**
+- **El piloto es hoy, en su jornada en el buque ECO BORA,** con un plano real de descarga y uno de carga:
+  - la oficina, en la Web, desde su teléfono personal;
+  - el muelle, en el Honor, con la app de la prueba interna de Play;
+  - las dos con la 3.1.0. La laptop se queda en casa.
+- Lo que encuentre (mejoras, cambios y arreglos) se lo pasa a Yov al volver, y Yov lo convierte en tareas.
+- **Timonel sigue con la entrega 2 toda la noche, con Fable 5.1 en Ultracode y luz verde para todo lo que la entrega necesita:** Flutter cuantas veces haga falta, siempre un comando a la vez, y abrir y cerrar sus bancos, Chrome con perfil temporal y el emulador. Como la laptop no va al piloto, la regla de 10.39 no lo frena esta vez. Si una tarjeta de permiso no responde, aplica 10.41 o deja el paso anotado para mañana.
+- **No cambian:**
+  - Git solo de lectura;
+  - nada de Firebase ni de publicaciones;
+  - el Honor no se toca, porque está en el muelle; las apps instaladas, «PRUEBA T-105» y `baystream-demo17` tampoco;
+  - solo datos sintéticos: nada del ECO BORA entra al repositorio ni a las capturas.
+
+La siguiente decisión es la **10.48**.
+
+### 10.48 · La entrega 2, T-121, entregada y revisada: «El buque en corte»; pasa a la aceptación de Codex (25-oct, 20:25)
+
+**Timonel la entregó a las 20:13, con Fable 5.1 en Ultracode, en unas 2 h de reloj** (la fase 0 estimó de 11 a 13 h; `docs/T117-T121-RESULTADOS.md`, «Entrega 2 · T-121», y `DESIGN.md` 15). Corrió Flutter con la luz verde de Carlos (10.47):
+- **La página:**
+  - la silueta grande (`BsBuqueEnCorte`) con dos pilas por bahía, cubierta y bodega, cuyo alto dice los contenedores o el peso;
+  - encima, «N contenedores a bordo» a 48 (`BsEscala.cifraProtagonista`) y la fila de cifras; debajo de cada bahía, su número, su cuenta y su peso, en el mismo eje;
+  - cinco paneles: por puerto, llenos y vacíos, por tamaño, carga especial y por naviera;
+  - «Ver como tabla», que se cierra con Esc y con Atrás. Tocar una bahía la abre en el plano.
+- **La rampa nueva de 0.9.4** entra en `bs_paleta.dart` y sustituye la de `DESIGN.md` 5.5. Se volvió a validar con el script de la skill de dataviz.
+- **Cinco componentes nuevos** en `lib/core/design/componentes/`, y las cifras en `estadisticas_del_viaje.dart`, en la capa de presentación. Sale `vessel_profile_view.dart` con su prueba: su casco era otro buque, y lo sustituye la protagonista.
+- **Trece desviaciones de 0.9.5,** anotadas en `DESIGN.md` 15.11. Las más visibles:
+  - el peso por bahía va como cifra en el pie, no como columna;
+  - las pilas van en los dos colores de cubierta y bodega del ícono, con su leyenda;
+  - la bahía mide 56 dp por la escala de la letra;
+  - «Otros N» sale solo cuando sobran dos o más.
+- **Antes de la luz verde,** cuatro revisores sin compilar, con un escéptico por hallazgo, encontraron cinco defectos, ya corregidos: el foco de Esc, la tinta de las bahías bajo la hoja, el selector y la tabla que partían palabras a 360 dp, el anillo con la letra a 2.0 y una prueba de T-97 que buscaba «Total Contenedores».
+- **Cifras:**
+  - suite 1773 (piso 1685, más 88 netas: 92 nuevas, menos las 3 de la vista borrada, de las que una pasa a T-121, y la referencia de píxeles de T-109), sin fallidas ni omitidas, en una corrida;
+  - `analyze` en cero;
+  - capturas con datos sintéticos, sin textos cortados ni errores: Windows 58 (el sintético de 977 en 72 bahías y el plano de llegada), la Web 24 y el emulador 24.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 13 archivos cambiados, 10 nuevos y 2 borrados, 25 rutas. `SPRINT-4.md` trae la 10.47 de Yov y no va en el bloque de Timonel. No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto;
+- en las piezas nuevas no hay `Colors.*` ni naranja; la rampa de `bs_paleta.dart` es la validada, y la cifra protagonista mide 48;
+- las pruebas que cambian se ajustan a la vista nueva sin aflojarse:
+  - T-97 y T-107 buscan la protagonista en vez de «Total Contenedores»;
+  - T-109 deja la referencia de píxeles de la vista vieja y ya no lee el corpus;
+  - los censos de T-98c solo dejan de nombrar el archivo borrado;
+  - no queda ninguna referencia a `vessel_profile_view.dart`;
+- en las capturas, la página es coherente con «Puente de mando», en los dos temas y en los tres clientes;
+- **tres cosas para la aceptación:**
+  - con pocas bahías (el plano de llegada tiene nueve), la silueta ocupa menos de la mitad del panel, pegada a la izquierda, y la protagonista se ve chica. Con 72 bahías llena el panel y se desplaza;
+  - la muestra de «Cubierta» en la leyenda, blanca y con borde, parece una casilla para marcar;
+  - el selector «Contenedores / Peso» va solo con íconos cuando no caben los rótulos, y tiene que conservar su nombre en el árbol de Windows (la lección de H4).
+- `formatearToneladas` escribe «8366.1 t», sin separador de miles, como en todo el producto; los wireframes de la fase 0 decían «7 419.5 t». Yov recomienda dejarlo así.
+
+**Lo que sigue:**
+- Al volver del piloto, Carlos sube el bloque de Timonel y el de 10.47 y 10.48, y mueve `qa-r4` al commit de esta decisión.
+- Codex acepta la entrega 2.
+- La meta: la entrega 2 aceptada hacia el 3-nov, y la 3.2.0 publicada a más tardar el 4-nov.
+
+La siguiente decisión es la **10.49**.
+
+### 10.49 · Piloto en el ECO BORA, hallazgo 1 (P1): el plano de llegada no deja elegir GTSTC como escala (25-oct, 22:25)
+
+**Carlos lo encontró hoy a las 22:16, en el muelle, con la 3.1.0 en la Web de su teléfono (oficina).** Es el primer defecto del piloto, y lo detectó él mismo.
+
+**Lo que pasó:**
+- Abrió el plano de llegada real del ECO BORA. El archivo declara que el buque sale de HNPCR (`LOC+5`) rumbo a JMKWL (`LOC+61`), pero trae contenedores con descarga en GTSTC, el puerto donde opera Carlos.
+- La app propuso HNPCR como escala, y quedó confirmada. Con HNPCR, la cuenta dice «0 se descargan»: el menú del modo no ofrece «Descarga», y un contenedor que baja en GTSTC no se puede marcar.
+- En «Parámetros del buque» → «Puerto de esta escala», **GTSTC no aparece entre las opciones.** Solo están HNPCR, JMKWL, los puertos de carga (PAMIT, CRPMN, PAONX) y «Sin declarar».
+
+**La causa, en el código de la 3.1.0 (`master`, `v3.1`):**
+- `vessel_geometry_page.dart`, `_portOptions`: ofrece el puerto de salida, el siguiente, los puertos de carga de los contenedores y los de las celdas reservadas. **Los puertos de descarga no entran.**
+- `vessel_voyage.dart`, `suggestPortOfCall`: la última escala confirmada solo se propone si es la de salida o la siguiente.
+- `discharge_provider.dart`, `offersDischarge`: «Descarga» existe solo si algo baja en la escala elegida.
+- Resultado: con un archivo cuyo `LOC+61` no es el puerto donde se opera, la descarga, que es la función principal del muelle, no se puede hacer. Es el mismo terreno de T-68 («la escala mal propuesta en planos de llegada»); aquel arreglo se apoyó en `LOC+61`, y este archivo lo trae distinto.
+
+**Esta noche:** la descarga va en papel. Carlos prueba la carga con el `.edi` de carga, si declara GTSTC como salida, e informa cómo se comporta.
+
+**La corrección que propone Yov (decide Carlos):**
+- **Una 3.1.1 desde `master` y `v3.1`, no desde `sprint-4`, como dice 10.39:** los puertos de descarga de la carga entran en las opciones de la escala, con su cuenta («GTSTC (n)»). Si la última escala confirmada es uno de ellos, se propone esa.
+- La prueba, con un BAPLIE sintético que salga de un puerto A rumbo a C con carga para B: B se puede elegir y «Descarga» aparece. Nada del ECO BORA entra al repositorio.
+- El mismo arreglo pasa después a `sprint-4`, para la 3.2.0.
+
+La siguiente decisión es la **10.50**.
+
+### 10.50 · Piloto en el ECO BORA, hallazgos 2 y 3: el listado no entra en una operación publicada, y la fila «AGREGADOS» (25-oct, 22:45)
+
+**Carlos lo encontró a las 22:39, en la Web de su teléfono (oficina).** Con el plan de carga ya funciona la escala GTSTC: la operación quedó publicada en la nube. Después quiso importar el listado de la agencia para ver los números de orden en el plano.
+
+**Hallazgo 2 (P1) — el listado no entra en una operación publicada.**
+- La página del listado lo leyó bien (las filas de cada agencia, los llenos y los vacíos, con la equivalencia 40HC → 45G1), pero no lo guarda: «La operación de esta escala ya está publicada y sus fuentes no cambian. Abre la fuente publicada desde «Nube y cuenta»».
+- La causa: `operation_sources.dart`, `OperationSources.save`. Una operación publicada solo acepta la misma fuente que ya tiene, con el mismo texto. No acepta una fuente nueva, aunque falte, como el listado.
+- En la lista del piloto, el listado entra antes de publicar (1.4 y 1.5, antes de 1.7). Pero en la operación real el listado llega tarde o cambia mientras se carga, como muestra el hallazgo 3. Sin el listado no salen los números de orden en el plano, y «Asignar vacío», que trabaja con los vacíos del listado, no tiene con qué.
+
+**Hallazgo 3 (P2) — la fila «AGREGADOS».**
+- La agencia agrega contenedores al final del Excel, debajo de una fila «AGREGADOS». El lector la marca como «1 fila sin entender» y pide corregir el Excel.
+- Tiene que entenderla como un encabezado de sección. Falta revisar si las filas de debajo quedaron contadas en la última agencia.
+
+**Esta noche:** se descarta el listado. La carga de llenos sigue por los últimos dígitos del contenedor, y los números de orden y los vacíos van con el listado impreso.
+
+**La corrección que propone Yov para la 3.1.1 (decide Carlos), junto con el hallazgo 1:**
+- La oficina puede agregar o reemplazar el listado de una operación publicada, y el muelle lo recibe. Los movimientos registrados no se pierden. Antes hay que revisar cómo viajan las fuentes por la nube y si las reglas publicadas lo permiten, porque las reglas no se tocan sin Carlos.
+- El lector entiende «AGREGADOS» como encabezado de sección.
+- Las pruebas, con un listado sintético que traiga esa fila. Nada del listado real entra al repositorio.
+
+La siguiente decisión es la **10.51**.
+
+### 10.51 · Piloto en el ECO BORA, hallazgo 4 (P1): sin listado no se registra ninguna carga (25-oct, 22:50)
+
+**Carlos lo encontró a las 22:46, con la cuenta de oficina en la Web.** Al tocar una celda de carga, solo se abre el detalle («Pendiente», con su celda), y «OR / últimos dígitos» sale apagado.
+- Que la oficina no registre cargas es el diseño: registra el muelle, y la oficina mira y aprueba cambios.
+- **El defecto es otro:** en la 3.1.0, una carga solo se registra a través de su fila del listado. En `loading_controls.dart`, `onLoadingContainerTap`, sin fila la oficina ve el detalle y el muelle recibe «Este contenedor no tiene OR en el listado de la agencia: importa el listado actualizado». «OR / últimos dígitos» se apaga sin listado (`busquedaDeCarga`).
+- Con el hallazgo 2, la operación publicada sin listado no admite **ninguna** carga, ni en el Honor ni en la oficina. Un lleno que viene en el plan de carga se tendría que poder cargar por su número de contenedor aunque no haya listado: el número de orden ayuda, pero no es la llave.
+
+**Esta noche:** la carga va en papel. Para probar el flujo del muelle, Carlos puede abrir la Web en una pestaña de incógnito, sin cuenta, como muelle local: el plan de carga con GTSTC y el listado importado. Esas marcas no se sincronizan y se borran al cerrar la pestaña.
+
+**Para la 3.1.1 (decide Carlos), con los hallazgos 1 a 3:** cargar un lleno del plan por su número de contenedor, sin listado. Para los vacíos, sigue haciendo falta el listado (hallazgo 2).
+
+La siguiente decisión es la **10.52**.
+
+### 10.52 · Piloto en el ECO BORA: la carga ya corre; hallazgo 5 (P2), el avance de la bahía 22 sube en la 21 (26-oct, 05:35)
+
+**El camino que funcionó (25-oct, 23:11).** Carlos hizo una copia del plan de carga con otro número de viaje, para tener una operación nueva. En la Web (oficina), eligió GTSTC, importó el listado **antes** de publicar y después publicó; el Honor (muelle) se unió. Con eso:
+- salen los números de orden, y «OR / últimos dígitos» funciona;
+- se declararon las tapas («Sin tapa · bodega abierta»), y la nube queda al día;
+- la carga avanza desde el Honor; a las 05:26 seguía en marcha.
+
+Es la confirmación de los hallazgos 2 y 4: con el listado dentro antes de publicar, la carga funciona.
+
+**Hallazgo 5 (P2) — el avance de la carga se dibuja en la bahía impar.**
+- Cargando contenedores de 40 pies en la 22, la barra de avance de la silueta sube bajo la **21**, y la 22, que es la elegida, no muestra avance.
+- La causa: `loading_operation.dart`, `displayBay`: una bahía par se cuenta con la impar anterior si esta existe en el plan (22 → 21), y el avance la rotula «21/22» (`operation_progress.dart`).
+- En el buque es al revés, como dice Carlos: **la par es la bahía de referencia.** La 22 es la bahía de 40 pies, y la 21 y la 23 son sus dos mitades de 20 pies (lo mismo con 01, 02, 03 o con 17, 18, 19).
+- Los movimientos se guardan bien, con su posición en la 22. Lo que está mal es dónde se cuenta y se dibuja el avance.
+
+**La corrección que propone Yov (decide Carlos):** agrupar por la bahía par (21 y 23 → 22) en el avance y en la silueta, con su prueba. Toca `domain/`: en la 3.1.1 es un arreglo de un defecto, así que lo autoriza Carlos.
+
+La siguiente decisión es la **10.53**.
