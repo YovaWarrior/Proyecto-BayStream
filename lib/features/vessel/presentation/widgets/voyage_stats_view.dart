@@ -1,1156 +1,1018 @@
-import 'dart:math';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import '../../../../core/design/design.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
-import '../providers/vessel_providers.dart';
-import 'vessel_profile_view.dart';
+import '../formatters/estadisticas_del_viaje.dart';
+import 'navegacion_del_viaje.dart';
 
-/// Vista de estadísticas completas del viaje
-/// Incluye gráficos de distribución por naviera, tipo, tamaño y bahía
-class VoyageStatsView extends ConsumerWidget {
-  final VesselVoyage voyage;
-  final ValueChanged<int> onBaySelected;
-
+/// Las estadísticas del viaje, «El buque en corte» (`DESIGN.md`, 15; T-121,
+/// decisiones 10.36 a 10.38 y 10.46).
+///
+/// La protagonista es la silueta grande del buque con la carga de cada bahía
+/// en cubierta y en bodega ([BsBuqueEnCorte]); encima, «977 contenedores a
+/// bordo» a 48 y la fila de cifras; debajo, cinco paneles: por puerto de
+/// descarga (la caja del código, la barra y la cifra), llenos y vacíos (el
+/// anillo), por tamaño (la rampa), la carga especial (tarjetas de su rol) y
+/// por naviera. «Contenedores / Peso» cambia lo que dice la altura de la
+/// pila; tocar una bahía la abre en el plano ([onBaySelected]); «Ver como
+/// tabla» muestra los mismos números en tablas, y Esc y Atrás vuelven a los
+/// gráficos (se anota en `cerrablesDeAtrasProvider`). Ancho máximo de 1 440,
+/// centrado, sobre [BsFondoDePlano]; con menos de [anchoDeDosColumnas] todo
+/// apila. Las cifras salen de [EstadisticasDelViaje]; ningún color suelto de
+/// Material: todo sale del tema (15.3).
+class VoyageStatsView extends ConsumerStatefulWidget {
   const VoyageStatsView({
     super.key,
     required this.voyage,
     required this.onBaySelected,
   });
 
+  /// El viaje publicado o en previo.
+  final VesselVoyage voyage;
+
+  /// Abre una bahía en el plano.
+  final ValueChanged<int> onBaySelected;
+
+  /// Cuántos puertos van a la vista antes de «Otros N puertos».
+  static const int puertosALaVista = 7;
+
+  /// Cuántas navieras van a la vista antes de «Otras N navieras».
+  static const int navierasALaVista = 8;
+
+  /// Desde este ancho del contenido los paneles van en dos columnas.
+  static const double anchoDeDosColumnas = 720;
+
+  /// Desde este ancho del contenido los paneles van en tres columnas.
+  static const double anchoDeTresColumnas = 1100;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(voyageStatsProvider);
-    final carrierDist = ref.watch(carrierDistributionProvider);
-    final portDist = ref.watch(portDistributionProvider);
-    final specialCargo = ref.watch(specialCargoStatsProvider);
-    final bayStats = ref.watch(bayStatsProvider);
+  ConsumerState<VoyageStatsView> createState() => _VoyageStatsViewState();
+}
 
-    if (stats == null) {
-      return const Center(child: Text('No hay datos disponibles'));
+class _VoyageStatsViewState extends ConsumerState<VoyageStatsView> {
+  BsMagnitudDeLaPila _magnitud = BsMagnitudDeLaPila.contenedores;
+  bool _tabla = false;
+
+  /// El registro de Atrás donde se anotó la tabla (`DESIGN.md` 8 y 15.6),
+  /// guardado al abrirla: en `dispose` no se puede usar `ref`.
+  CerrablesDeAtras? _registro;
+  late final VoidCallback _cerrarLaTabla = _verGraficos;
+
+  /// El foco de la tabla, para que Esc la cierre. Se pide a propósito al
+  /// abrirla: `autofocus` se descarta si algo (el botón, activado con el
+  /// teclado) ya tiene el foco en la ruta.
+  final FocusNode _focoDeLaTabla =
+      FocusNode(debugLabel: 'estadisticas-tabla', skipTraversal: true);
+
+  VesselVoyage? _calculadoPara;
+  EstadisticasDelViaje? _calculadas;
+
+  EstadisticasDelViaje get _datos {
+    if (_calculadas == null || !identical(_calculadoPara, widget.voyage)) {
+      _calculadas = EstadisticasDelViaje.de(widget.voyage);
+      _calculadoPara = widget.voyage;
     }
+    return _calculadas!;
+  }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Resumen general en cards
-          _SummaryGrid(stats: stats, specialCargo: specialCargo),
-          const SizedBox(height: 24),
+  void _verTabla() {
+    if (_tabla) return;
+    final registro = ref.read(cerrablesDeAtrasProvider.notifier);
+    _registro = registro;
+    registro.anotar(_cerrarLaTabla);
+    setState(() => _tabla = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _tabla) _focoDeLaTabla.requestFocus();
+    });
+  }
 
-          // Distribución por tipo de carga
-          const _SectionTitle(title: 'Distribución por Estado', icon: Icons.pie_chart),
-          const SizedBox(height: 12),
-          _StatusPieChart(
-            fullCount: stats.fullContainers,
-            emptyCount: stats.emptyContainers,
-            total: stats.totalContainers,
-          ),
-          const SizedBox(height: 24),
+  void _verGraficos() {
+    if (!_tabla) return;
+    _registro?.olvidar(_cerrarLaTabla);
+    _registro = null;
+    if (mounted) setState(() => _tabla = false);
+  }
 
-          // Distribución por tamaño
-          const _SectionTitle(title: 'Distribución por Tamaño', icon: Icons.straighten),
-          const SizedBox(height: 12),
-          _SizeDistributionBar(specialCargo: specialCargo, total: stats.totalContainers),
-          const SizedBox(height: 24),
+  @override
+  void dispose() {
+    if (_tabla) _registro?.olvidar(_cerrarLaTabla);
+    _focoDeLaTabla.dispose();
+    super.dispose();
+  }
 
-          // Carga especial
-          if (specialCargo.reeferCount > 0 || specialCargo.dangerousCount > 0 || specialCargo.oogCount > 0) ...[
-            const _SectionTitle(title: 'Carga Especial', icon: BsIconos.peligrosa),
-            const SizedBox(height: 12),
-            _SpecialCargoCards(specialCargo: specialCargo),
-            const SizedBox(height: 24),
-          ],
-
-          // Distribución por naviera
-          if (carrierDist.isNotEmpty) ...[
-            const _SectionTitle(title: 'Distribución por Naviera', icon: Icons.business),
-            const SizedBox(height: 12),
-            _HorizontalBarChart(
-              data: carrierDist,
-              maxItems: 10,
-              color: Colors.indigo,
-              total: stats.totalContainers,
+  @override
+  Widget build(BuildContext context) {
+    final medidas = BsMedidas.de(context);
+    final datos = _datos;
+    return BsFondoDePlano(
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints restricciones) {
+          final anchoDelContenido = math.max(
+            0.0,
+            math.min(
+              restricciones.maxWidth - 2 * medidas.espacioL,
+              medidas.anchoMaximo,
             ),
-            const SizedBox(height: 24),
-          ],
-
-          // Distribución por puerto de descarga
-          if (portDist.isNotEmpty) ...[
-            const _SectionTitle(title: 'Distribución por Puerto de Descarga', icon: Icons.location_on),
-            const SizedBox(height: 12),
-            _HorizontalBarChart(
-              data: portDist,
-              maxItems: 10,
-              color: Colors.teal,
-              total: stats.totalContainers,
-            ),
-            const SizedBox(height: 24),
-          ],
-
-          // Vista panorámica del buque completo
-          if (voyage.bays.isNotEmpty) ...[
-            const _SectionTitle(
-              title: 'Perfil longitudinal',
-              icon: BsIconos.buque,
-            ),
-            const SizedBox(height: 12),
-            if (_compactStats(context))
-              LayoutBuilder(builder: (context, constraints) =>
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: max(constraints.maxWidth,
-                          320 * MediaQuery.textScalerOf(context).scale(12) / 12),
-                      child: VesselProfileView(
-                        voyage: voyage,
-                        onBaySelected: onBaySelected,
-                      ),
+          );
+          return SingleChildScrollView(
+            key: const ValueKey<String>('estadisticas-scroll'),
+            padding: EdgeInsets.all(medidas.espacioL),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: medidas.anchoMaximo),
+                child: Column(
+                  key: const ValueKey<String>('estadisticas'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    _Cabecera(
+                      datos: datos,
+                      tabla: _tabla,
+                      onVerTabla: _verTabla,
+                      onVerGraficos: _verGraficos,
                     ),
-                  ))
-            else
-              VesselProfileView(
-                voyage: voyage,
-                onBaySelected: onBaySelected,
+                    SizedBox(height: medidas.entreBloques),
+                    if (_tabla)
+                      Focus(
+                        focusNode: _focoDeLaTabla,
+                        onKeyEvent: (FocusNode _, KeyEvent evento) {
+                          if (evento is KeyDownEvent &&
+                              evento.logicalKey == LogicalKeyboardKey.escape) {
+                            _verGraficos();
+                            return KeyEventResult.handled;
+                          }
+                          return KeyEventResult.ignored;
+                        },
+                        child: _Tablas(datos: datos),
+                      )
+                    else
+                      _Graficos(
+                        datos: datos,
+                        anchoDelContenido: anchoDelContenido,
+                        magnitud: _magnitud,
+                        onMagnitud: (BsMagnitudDeLaPila m) =>
+                            setState(() => _magnitud = m),
+                        onBahia: widget.onBaySelected,
+                      ),
+                  ],
+                ),
               ),
-            const SizedBox(height: 24),
-          ],
-
-          // Ocupación por bahía
-          if (bayStats.isNotEmpty) ...[
-            const _SectionTitle(title: 'Contenedores por Bahía', icon: BsIconos.bahia),
-            const SizedBox(height: 12),
-            _BayOccupancyChart(bayStats: bayStats),
-            const SizedBox(height: 24),
-          ],
-
-          // Peso por bahía
-          if (bayStats.isNotEmpty) ...[
-            const _SectionTitle(title: 'Peso por Bahía (toneladas)', icon: Icons.scale),
-            const SizedBox(height: 12),
-            _BayWeightChart(bayStats: bayStats),
-            const SizedBox(height: 32),
-          ],
-        ],
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-// ============================================
-// COMPONENTES INTERNOS
-// ============================================
+/// La protagonista a 48, «Ver como tabla» y la fila de cifras (15.2).
+class _Cabecera extends StatelessWidget {
+  const _Cabecera({
+    required this.datos,
+    required this.tabla,
+    required this.onVerTabla,
+    required this.onVerGraficos,
+  });
 
-// T-109: los cambios de composición se limitan al teléfono.
-bool _compactStats(BuildContext context) => MediaQuery.sizeOf(context).width < 600;
-
-/// Título de sección
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  final IconData icon;
-
-  const _SectionTitle({required this.title, required this.icon});
+  final EstadisticasDelViaje datos;
+  final bool tabla;
+  final VoidCallback onVerTabla;
+  final VoidCallback onVerGraficos;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
+    final tema = Theme.of(context);
+    final medidas = BsMedidas.de(context);
+    final esquema = tema.colorScheme;
+    final textos = tema.textTheme;
+    final propios = tema.extension<BsTextos>();
+    final estiloProtagonista = (propios?.cifraProtagonista ?? textos.displayLarge)
+        ?.copyWith(color: esquema.onSurface);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.end,
+          runSpacing: medidas.espacioS,
+          spacing: medidas.espacioL,
+          children: <Widget>[
+            Semantics(
+              label: '${formatearCuenta(datos.total, 'contenedor', 'contenedores')} '
+                  'a bordo',
+              excludeSemantics: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    '${datos.total}',
+                    key: const ValueKey<String>('estadisticas-protagonista'),
+                    style: estiloProtagonista,
+                  ),
+                  Text(
+                    datos.total == 1
+                        ? 'contenedor a bordo'
+                        : 'contenedores a bordo',
+                    style: textos.bodyMedium
+                        ?.copyWith(color: esquema.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            OutlinedButton.icon(
+              key: const ValueKey<String>('estadisticas-ver-tabla'),
+              onPressed: tabla ? onVerGraficos : onVerTabla,
+              icon: Icon(tabla ? Icons.bar_chart : Icons.table_chart),
+              label: Text(tabla ? 'Ver como gráficos' : 'Ver como tabla'),
+            ),
+          ],
+        ),
+        SizedBox(height: medidas.espacioL),
+        Wrap(
+          spacing: medidas.espacioXxl,
+          runSpacing: medidas.espacioM,
+          children: <Widget>[
+            _Cifra(
+              rotulo: 'peso total',
+              valor: formatearToneladas(datos.pesoKg),
+            ),
+            _Cifra(
+              rotulo: 'bahías con carga',
+              valor: '${datos.bahiasConCarga}',
+            ),
+            _Cifra(rotulo: 'llenos', valor: '${datos.llenos}'),
+            _Cifra(rotulo: 'vacíos', valor: '${datos.vacios}'),
+            if (datos.sinEstado > 0)
+              _Cifra(rotulo: 'sin estado', valor: '${datos.sinEstado}'),
+          ],
         ),
       ],
     );
   }
 }
 
-/// Grid de resumen con 6 métricas
-class _SummaryGrid extends StatelessWidget {
-  final VoyageStats stats;
-  final SpecialCargoStats specialCargo;
+/// Una cifra de la fila: a 28 tabular con su rótulo debajo en tinta suave.
+class _Cifra extends StatelessWidget {
+  const _Cifra({required this.rotulo, required this.valor});
 
-  const _SummaryGrid({required this.stats, required this.specialCargo});
+  final String rotulo;
+  final String valor;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 600
-            ? 3
-            : MediaQuery.textScalerOf(context).scale(12) >
-                  (_compactStats(context) ? 14 : 18)
-            ? 1
-            : 2;
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio:
-              ((constraints.maxWidth - (crossAxisCount - 1) * 12) /
-                  crossAxisCount) /
-              (_compactStats(context) &&
-                        MediaQuery.textScalerOf(context).scale(12) > 14
-                    ? 100 + MediaQuery.textScalerOf(context).scale(40)
-                    : 76 + MediaQuery.textScalerOf(context).scale(32)),
-          children: [
-            _MetricCard(
-              label: 'Total Contenedores',
-              value: stats.totalContainers.toString(),
-              icon: Icons.inventory_2,
-              color: Colors.blue,
+    final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    final textos = tema.textTheme;
+    return Semantics(
+      label: '$rotulo: $valor',
+      excludeSemantics: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            valor,
+            style: textos.headlineLarge?.copyWith(
+              color: esquema.onSurface,
+              fontFeatures: cifrasTabulares,
             ),
-            _MetricCard(
-              label: 'Bahías Ocupadas',
-              value: stats.totalBays.toString(),
-              icon: BsIconos.bahia,
-              color: Colors.deepPurple,
+          ),
+          Text(
+            rotulo,
+            style: textos.labelMedium?.copyWith(color: esquema.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// El buque en corte y los cinco paneles (15.4 y 15.5), repartidos por el
+/// ancho del contenido (15.7).
+class _Graficos extends StatelessWidget {
+  const _Graficos({
+    required this.datos,
+    required this.anchoDelContenido,
+    required this.magnitud,
+    required this.onMagnitud,
+    required this.onBahia,
+  });
+
+  final EstadisticasDelViaje datos;
+  final double anchoDelContenido;
+  final BsMagnitudDeLaPila magnitud;
+  final ValueChanged<BsMagnitudDeLaPila> onMagnitud;
+  final ValueChanged<int> onBahia;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final medidas = BsMedidas.de(context);
+    final semanticos = BsColoresSemanticos.de(context);
+    final paleta = BsPaleta.de(tema.brightness);
+    final esquema = tema.colorScheme;
+    final textos = tema.textTheme;
+    final escala = MediaQuery.textScalerOf(context);
+    final entre = SizedBox(height: medidas.espacioL);
+    final lado = SizedBox(width: medidas.espacioL);
+    // Sin ningún peso en el archivo, la pila por peso no diría nada.
+    final conPesos = datos.bahias.any((BsBahiaEnCorte b) => b.pesoKg > 0);
+    SegmentedButton<BsMagnitudDeLaPila> selector({required bool conRotulos}) =>
+        SegmentedButton<BsMagnitudDeLaPila>(
+          key: conRotulos
+              ? const ValueKey<String>('estadisticas-magnitud')
+              : const ValueKey<String>('estadisticas-magnitud-iconos'),
+          segments: <ButtonSegment<BsMagnitudDeLaPila>>[
+            ButtonSegment<BsMagnitudDeLaPila>(
+              value: BsMagnitudDeLaPila.contenedores,
+              icon: const Icon(BsIconos.contenedor40),
+              label: conRotulos ? const Text('Contenedores') : null,
+              tooltip: conRotulos ? null : 'Contenedores',
             ),
-            _MetricCard(
-              label: 'Peso Total',
-              value: _formatTons(stats.totalWeight),
-              icon: Icons.scale,
-              color: Colors.orange,
-            ),
-            _MetricCard(
-              label: 'Llenos',
-              value: stats.fullContainers.toString(),
-              icon: Icons.check_box,
-              color: Colors.green,
-            ),
-            _MetricCard(
-              label: 'Vacíos',
-              value: stats.emptyContainers.toString(),
-              icon: BsIconos.vacio,
-              color: Colors.amber,
-            ),
-            _MetricCard(
-              label: 'Refrigerados',
-              value: specialCargo.reeferCount.toString(),
-              icon: BsIconos.refrigerado,
-              color: Colors.cyan,
+            ButtonSegment<BsMagnitudDeLaPila>(
+              value: BsMagnitudDeLaPila.peso,
+              icon: const Icon(Icons.scale),
+              label: conRotulos ? const Text('Peso') : null,
+              tooltip: conRotulos ? null : 'Peso',
+              enabled: conPesos,
             ),
           ],
+          selected: <BsMagnitudDeLaPila>{magnitud},
+          showSelectedIcon: false,
+          onSelectionChanged: (Set<BsMagnitudDeLaPila> elegido) =>
+              onMagnitud(elegido.first),
+        );
+
+    final buque = BsPanel(
+      key: const ValueKey<String>('estadisticas-carga-por-bahia'),
+      titulo: 'Carga por bahía, de proa a popa',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          BsBuqueEnCorte(
+            key: const ValueKey<String>('estadisticas-buque'),
+            bahias: datos.bahias,
+            magnitud: magnitud,
+            onSeleccion: onBahia,
+          ),
+          SizedBox(height: medidas.espacioM),
+          Wrap(
+            spacing: medidas.espacioL,
+            runSpacing: medidas.espacioS,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: <Widget>[
+              // Con los rótulos si caben enteros en el ancho que hay; si no,
+              // solo con los iconos y el nombre en la descripción emergente
+              // (en el teléfono, un segmento de media pantalla parte
+              // «Contenedores» a media palabra desde la letra a 1.1).
+              Semantics(
+                container: true,
+                label: 'Qué dice la altura de la pila',
+                child: BsPrimeraQueCabe(
+                  variantes: <Widget>[
+                    selector(conRotulos: true),
+                    selector(conRotulos: false),
+                  ],
+                ),
+              ),
+              _Muestra(
+                color: semanticos.porBajarCubierta.relleno,
+                rotulo: 'Cubierta',
+              ),
+              _Muestra(
+                color: semanticos.porBajarBodega.relleno,
+                rotulo: 'Bodega',
+              ),
+              Text(
+                'Toca una bahía para abrirla en el plano',
+                style:
+                    textos.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final puertos = BsPanel(
+      key: const ValueKey<String>('estadisticas-puertos'),
+      titulo: 'Por puerto de descarga',
+      child: _Barras(
+        filas: EstadisticasDelViaje.conElResto(
+          datos.puertos,
+          VoyageStatsView.puertosALaVista,
+          (int n) => 'Otros ${formatearCuenta(n, 'puerto', 'puertos')}',
+        ),
+        total: datos.total,
+        caja: (CuentaPorCodigo fila) =>
+            fila.codigo == null ? null : semanticos.categorico(fila.codigo!),
+      ),
+    );
+
+    final fraccionLlenos = datos.parte(datos.llenos);
+    final porcentajeLlenos = formatearPorcentaje(fraccionLlenos);
+    final estiloDelAnillo = textos.titleLarge?.copyWith(
+      color: esquema.onSurface,
+      fontFeatures: cifrasTabulares,
+    );
+    // El hueco del anillo tiene que dar para «100 %» con la letra del
+    // sistema: 112 con la letra a 1.0, y lo que pida el texto a 2.0.
+    const grosorDelAnillo = 12.0;
+    final tamanoDelAnillo = math.max(
+      112.0,
+      _anchoDelTexto('100$espacioDuro%', estiloDelAnillo, escala) +
+          2 * grosorDelAnillo +
+          2 * medidas.espacioS,
+    );
+    final llenos = BsPanel(
+      key: const ValueKey<String>('estadisticas-llenos'),
+      titulo: 'Llenos y vacíos',
+      child: Wrap(
+        spacing: medidas.espacioL,
+        runSpacing: medidas.espacioS,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: <Widget>[
+          Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              BsAnilloAvance(
+                fraccion: fraccionLlenos,
+                tamano: tamanoDelAnillo,
+                grosor: grosorDelAnillo,
+                color: esquema.primary,
+                etiqueta: '$porcentajeLlenos llenos',
+              ),
+              ExcludeSemantics(
+                child: Text(porcentajeLlenos, style: estiloDelAnillo),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _Linea(formatearCuenta(datos.llenos, 'lleno', 'llenos')),
+              _Linea(formatearCuenta(datos.vacios, 'vacío', 'vacíos')),
+              if (datos.sinEstado > 0)
+                _Linea('${datos.sinEstado} sin estado'),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final rampa = paleta.rampaDeMagnitud;
+    final tamano = BsPanel(
+      key: const ValueKey<String>('estadisticas-tamano'),
+      titulo: 'Por tamaño',
+      child: _Barras(
+        filas: <CuentaPorCodigo>[
+          CuentaPorCodigo(codigo: null, rotulo: '20 pies', cuenta: datos.de20),
+          CuentaPorCodigo(codigo: null, rotulo: '40 pies', cuenta: datos.de40),
+          CuentaPorCodigo(codigo: null, rotulo: '45 pies', cuenta: datos.de45),
+          if (datos.otroTamano > 0)
+            CuentaPorCodigo(
+                codigo: null, rotulo: 'Otro', cuenta: datos.otroTamano),
+        ],
+        total: datos.total,
+        colores: <Color>[rampa[1], rampa[2], rampa[3], rampa[0]],
+      ),
+    );
+
+    final tarjetas = <Widget>[
+      if (datos.peligrosas > 0)
+        BsTarjetaDeRol(
+          key: const ValueKey<String>('estadisticas-peligrosas'),
+          rol: semanticos.peligrosa,
+          icono: BsIconos.peligrosa,
+          valor: '${datos.peligrosas}',
+          rotulo: 'Peligrosa IMDG',
+        ),
+      if (datos.refrigerados > 0)
+        BsTarjetaDeRol(
+          key: const ValueKey<String>('estadisticas-refrigerados'),
+          rol: semanticos.refrigerado,
+          icono: BsIconos.refrigerado,
+          valor: '${datos.refrigerados}',
+          rotulo: 'Refrigerado',
+        ),
+      if (datos.fueraDeMedida > 0)
+        BsTarjetaDeRol(
+          key: const ValueKey<String>('estadisticas-fuera-de-medida'),
+          rol: semanticos.oog,
+          icono: BsIconos.fueraDeMedida,
+          valor: '${datos.fueraDeMedida}',
+          rotulo: 'Fuera de medida',
+        ),
+    ];
+    final especial = BsPanel(
+      key: const ValueKey<String>('estadisticas-especial'),
+      titulo: 'Carga especial',
+      child: tarjetas.isEmpty
+          ? Text(
+              'Sin carga especial',
+              style: textos.bodyMedium?.copyWith(color: esquema.onSurfaceVariant),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                for (var i = 0; i < tarjetas.length; i++) ...<Widget>[
+                  if (i > 0) SizedBox(height: medidas.espacioS),
+                  tarjetas[i],
+                ],
+              ],
+            ),
+    );
+
+    final navieras = BsPanel(
+      key: const ValueKey<String>('estadisticas-navieras'),
+      titulo: 'Por naviera',
+      child: _Barras(
+        filas: EstadisticasDelViaje.conElResto(
+          datos.navieras,
+          VoyageStatsView.navierasALaVista,
+          (int n) => 'Otras ${formatearCuenta(n, 'naviera', 'navieras')}',
+        ),
+        total: datos.total,
+        enMono: true,
+      ),
+    );
+
+    Widget columna(List<Widget> paneles) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            for (var i = 0; i < paneles.length; i++) ...<Widget>[
+              if (i > 0) entre,
+              paneles[i],
+            ],
+          ],
+        );
+
+    final Widget paneles;
+    if (anchoDelContenido >= VoyageStatsView.anchoDeTresColumnas) {
+      paneles = columna(<Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(flex: 2, child: puertos),
+            lado,
+            Expanded(child: llenos),
+            lado,
+            Expanded(child: especial),
+          ],
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(child: navieras),
+            lado,
+            Expanded(child: tamano),
+          ],
+        ),
+      ]);
+    } else if (anchoDelContenido >= VoyageStatsView.anchoDeDosColumnas) {
+      paneles = columna(<Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(child: puertos),
+            lado,
+            Expanded(child: columna(<Widget>[llenos, tamano])),
+          ],
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(child: especial),
+            lado,
+            Expanded(child: navieras),
+          ],
+        ),
+      ]);
+    } else {
+      paneles = columna(<Widget>[puertos, llenos, tamano, especial, navieras]);
+    }
+
+    return columna(<Widget>[buque, paneles]);
+  }
+}
+
+/// El ancho de [texto] con [estilo] y la [escala] de la letra del sistema.
+double _anchoDelTexto(String texto, TextStyle? estilo, TextScaler escala) {
+  final pintor = TextPainter(
+    text: TextSpan(text: texto, style: estilo),
+    textDirection: TextDirection.ltr,
+    textScaler: escala,
+  )..layout();
+  final ancho = pintor.width;
+  pintor.dispose();
+  return ancho;
+}
+
+/// Una línea de la leyenda de llenos y vacíos.
+class _Linea extends StatelessWidget {
+  const _Linea(this.texto);
+
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: BsMedidas.de(context).espacioXs / 2),
+      child: Text(
+        texto,
+        style: tema.textTheme.bodyMedium?.copyWith(
+          color: tema.colorScheme.onSurface,
+          fontFeatures: cifrasTabulares,
+        ),
+      ),
+    );
+  }
+}
+
+/// Una muestra de color con su rótulo, para la leyenda de las dos zonas.
+class _Muestra extends StatelessWidget {
+  const _Muestra({required this.color, required this.rotulo});
+
+  final Color color;
+  final String rotulo;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final medidas = BsMedidas.de(context);
+    return Semantics(
+      label: rotulo,
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+              border: Border.all(color: tema.colorScheme.outline),
+            ),
+          ),
+          SizedBox(width: medidas.espacioXs + 2),
+          Text(rotulo, style: tema.textTheme.labelMedium),
+        ],
+      ),
+    );
+  }
+}
+
+/// Las barras de un panel: una [BsBarraDeMagnitud] por fila, con la barra más
+/// larga llenando el ancho; opcionalmente con la caja del código por fila o
+/// un color por fila (la rampa).
+class _Barras extends StatelessWidget {
+  const _Barras({
+    required this.filas,
+    required this.total,
+    this.caja,
+    this.colores,
+    this.enMono = false,
+  });
+
+  final List<CuentaPorCodigo> filas;
+  final int total;
+  final BsRol? Function(CuentaPorCodigo fila)? caja;
+  final List<Color>? colores;
+  final bool enMono;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final medidas = BsMedidas.de(context);
+    if (filas.isEmpty) {
+      return Text(
+        'Sin contenedores',
+        style: tema.textTheme.bodyMedium
+            ?.copyWith(color: tema.colorScheme.onSurfaceVariant),
+      );
+    }
+    final maximo = filas.fold<int>(
+        0, (int m, CuentaPorCodigo f) => math.max(m, f.cuenta));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        for (var i = 0; i < filas.length; i++) ...<Widget>[
+          if (i > 0) SizedBox(height: medidas.espacioS),
+          BsBarraDeMagnitud(
+            rotulo: filas[i].rotulo,
+            valor: filas[i].cuenta,
+            total: total,
+            maximo: maximo,
+            caja: caja?.call(filas[i]),
+            color: colores == null || i >= colores!.length ? null : colores![i],
+            enMono: enMono && filas[i].codigo != null,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Las mismas cifras en tablas, un panel por sección (15.6).
+class _Tablas extends StatelessWidget {
+  const _Tablas({required this.datos});
+
+  final EstadisticasDelViaje datos;
+
+  @override
+  Widget build(BuildContext context) {
+    final medidas = BsMedidas.de(context);
+    String parte(int cuenta) => formatearPorcentaje(datos.parte(cuenta));
+    final secciones = <Widget>[
+      BsPanel(
+        titulo: 'Resumen',
+        child: _Tabla(
+          columnas: const <String>['Cifra', 'Valor'],
+          filas: <_Fila>[
+            _Fila(<String>['Contenedores a bordo', '${datos.total}']),
+            _Fila(<String>['Peso total', formatearToneladas(datos.pesoKg)]),
+            _Fila(<String>['Bahías con carga', '${datos.bahiasConCarga}']),
+            _Fila(<String>['Llenos', '${datos.llenos}']),
+            _Fila(<String>['Vacíos', '${datos.vacios}']),
+            _Fila(<String>['Sin estado', '${datos.sinEstado}']),
+          ],
+        ),
+      ),
+      BsPanel(
+        titulo: 'Por bahía',
+        child: _Tabla(
+          columnas: const <String>[
+            'Bahía',
+            'Contenedores',
+            'Cubierta',
+            'Bodega',
+            'Peso',
+          ],
+          filas: <_Fila>[
+            for (final bahia in datos.bahias)
+              _Fila(<String>[
+                bahia.rotulo,
+                '${bahia.contenedores}',
+                '${bahia.contenedoresCubierta}',
+                '${bahia.contenedoresBodega}',
+                formatearToneladas(bahia.pesoKg),
+              ], enMono: true),
+            if (datos.sinPosicion > 0)
+              _Fila(<String>[
+                'Sin posición',
+                '${datos.sinPosicion}',
+                '',
+                '',
+                formatearToneladas(datos.pesoSinPosicionKg),
+              ]),
+          ],
+        ),
+      ),
+      BsPanel(
+        titulo: 'Por puerto de descarga',
+        child: _Tabla(
+          columnas: const <String>['Puerto', 'Contenedores', 'Parte'],
+          filas: <_Fila>[
+            for (final puerto in datos.puertos)
+              _Fila(<String>[
+                puerto.rotulo,
+                '${puerto.cuenta}',
+                parte(puerto.cuenta),
+              ], enMono: puerto.codigo != null),
+          ],
+        ),
+      ),
+      BsPanel(
+        titulo: 'Llenos y vacíos',
+        child: _Tabla(
+          columnas: const <String>['Estado', 'Contenedores', 'Parte'],
+          filas: <_Fila>[
+            _Fila(<String>['Llenos', '${datos.llenos}', parte(datos.llenos)]),
+            _Fila(<String>['Vacíos', '${datos.vacios}', parte(datos.vacios)]),
+            _Fila(<String>[
+              'Sin estado',
+              '${datos.sinEstado}',
+              parte(datos.sinEstado),
+            ]),
+          ],
+        ),
+      ),
+      BsPanel(
+        titulo: 'Por tamaño',
+        child: _Tabla(
+          columnas: const <String>['Tamaño', 'Contenedores', 'Parte'],
+          filas: <_Fila>[
+            _Fila(<String>['20 pies', '${datos.de20}', parte(datos.de20)]),
+            _Fila(<String>['40 pies', '${datos.de40}', parte(datos.de40)]),
+            _Fila(<String>['45 pies', '${datos.de45}', parte(datos.de45)]),
+            if (datos.otroTamano > 0)
+              _Fila(<String>[
+                'Otro',
+                '${datos.otroTamano}',
+                parte(datos.otroTamano),
+              ]),
+          ],
+        ),
+      ),
+      BsPanel(
+        titulo: 'Carga especial',
+        child: _Tabla(
+          columnas: const <String>['Carga', 'Contenedores'],
+          filas: <_Fila>[
+            _Fila(<String>['Peligrosa IMDG', '${datos.peligrosas}']),
+            _Fila(<String>['Refrigerado', '${datos.refrigerados}']),
+            _Fila(<String>['Fuera de medida', '${datos.fueraDeMedida}']),
+          ],
+        ),
+      ),
+      BsPanel(
+        titulo: 'Por naviera',
+        child: _Tabla(
+          columnas: const <String>['Naviera', 'Contenedores', 'Parte'],
+          filas: <_Fila>[
+            for (final naviera in datos.navieras)
+              _Fila(<String>[
+                naviera.rotulo,
+                '${naviera.cuenta}',
+                parte(naviera.cuenta),
+              ], enMono: naviera.codigo != null),
+          ],
+        ),
+      ),
+    ];
+    return Column(
+      key: const ValueKey<String>('estadisticas-tabla'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        for (var i = 0; i < secciones.length; i++) ...<Widget>[
+          if (i > 0) SizedBox(height: medidas.espacioL),
+          secciones[i],
+        ],
+      ],
+    );
+  }
+}
+
+/// Una fila de la tabla; con [enMono], la primera celda es un código.
+class _Fila {
+  const _Fila(this.celdas, {this.enMono = false});
+
+  final List<String> celdas;
+  final bool enMono;
+}
+
+/// Una tabla accesible: las celdas de la cabecera son encabezados, las cifras
+/// van tabulares y a la derecha, y el texto envuelve. **Ninguna palabra se
+/// parte:** cada columna de cifras mide lo que su texto más ancho pide (la
+/// cabecera o una celda, con la letra del sistema) y la primera se queda con
+/// el resto; si ni así cabe (las cinco columnas de «Por bahía» a 360 dp con la
+/// letra a 2.0), la tabla se desplaza a lo ancho con su barra visible.
+class _Tabla extends StatefulWidget {
+  const _Tabla({required this.columnas, required this.filas});
+
+  final List<String> columnas;
+  final List<_Fila> filas;
+
+  /// Lo menos que se queda la primera columna antes de desplazar, con la
+  /// letra a 1.0: dos palabras cortas.
+  static const double anchoMinimoDeLaPrimera = 120;
+
+  @override
+  State<_Tabla> createState() => _TablaState();
+}
+
+class _TablaState extends State<_Tabla> {
+  final ScrollController _horizontal = ScrollController();
+
+  @override
+  void dispose() {
+    _horizontal.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final medidas = BsMedidas.de(context);
+    final esquema = tema.colorScheme;
+    final textos = tema.textTheme;
+    final escala = MediaQuery.textScalerOf(context);
+    final mono = tema.extension<BsTextos>()?.datoMono;
+    final estiloCabecera =
+        textos.labelMedium?.copyWith(color: esquema.onSurfaceVariant);
+    final estiloTexto = textos.bodyMedium?.copyWith(color: esquema.onSurface);
+    final estiloCifra = estiloTexto?.copyWith(fontFeatures: cifrasTabulares);
+    final estiloCodigo = (mono ?? textos.bodyMedium)
+        ?.copyWith(color: esquema.onSurface, fontWeight: FontWeight.w500);
+    final relleno = EdgeInsets.symmetric(
+      vertical: medidas.espacioS,
+      horizontal: medidas.espacioXs,
+    );
+    final columnas = widget.columnas;
+    final filas = widget.filas;
+
+    TextStyle? estiloDe(int columna, _Fila? fila) => columna == 0
+        ? (fila?.enMono ?? false ? estiloCodigo : estiloTexto)
+        : estiloCifra;
+
+    // Lo que pide cada columna: su texto más ancho, con el relleno.
+    final anchos = <double>[];
+    for (var i = 0; i < columnas.length; i++) {
+      var ancho = _anchoDelTexto(columnas[i], estiloCabecera, escala);
+      for (final fila in filas) {
+        if (i < fila.celdas.length) {
+          ancho = math.max(
+            ancho,
+            _anchoDelTexto(fila.celdas[i], estiloDe(i, fila), escala),
+          );
+        }
+      }
+      anchos.add(ancho + relleno.horizontal + 1);
+    }
+    final deCifras = anchos.skip(1).fold<double>(0, (double s, double a) => s + a);
+    final minimoDeLaPrimera =
+        math.min(anchos.first, escala.scale(_Tabla.anchoMinimoDeLaPrimera));
+
+    Widget tabla({required bool cabe}) => Table(
+          columnWidths: <int, TableColumnWidth>{
+            0: cabe ? const FlexColumnWidth() : FixedColumnWidth(anchos.first),
+            for (var i = 1; i < columnas.length; i++)
+              i: FixedColumnWidth(anchos[i]),
+          },
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          border: TableBorder(
+            horizontalInside: BorderSide(color: esquema.outlineVariant),
+          ),
+          children: <TableRow>[
+            TableRow(
+              children: <Widget>[
+                for (var i = 0; i < columnas.length; i++)
+                  Padding(
+                    padding: relleno,
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        columnas[i],
+                        style: estiloCabecera,
+                        textAlign: i == 0 ? TextAlign.start : TextAlign.end,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            for (final fila in filas)
+              TableRow(
+                children: <Widget>[
+                  for (var i = 0; i < columnas.length; i++)
+                    Padding(
+                      padding: relleno,
+                      child: Text(
+                        i < fila.celdas.length ? fila.celdas[i] : '',
+                        style: estiloDe(i, fila),
+                        textAlign: i == 0 ? TextAlign.start : TextAlign.end,
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        );
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints restricciones) {
+        final cabe = restricciones.hasBoundedWidth &&
+            minimoDeLaPrimera + deCifras <= restricciones.maxWidth;
+        if (cabe) return tabla(cabe: true);
+        // No cabe ni con la primera columna al mínimo: a lo ancho, con la
+        // barra a la vista, antes que partir una palabra.
+        return Scrollbar(
+          controller: _horizontal,
+          thumbVisibility: true,
+          scrollbarOrientation: ScrollbarOrientation.bottom,
+          child: SingleChildScrollView(
+            controller: _horizontal,
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.only(bottom: medidas.espacioM),
+            child: SizedBox(
+              width: anchos.first + deCifras,
+              child: tabla(cabe: false),
+            ),
+          ),
         );
       },
     );
   }
-
-  String _formatTons(double weightKg) {
-    if (weightKg >= 1000) {
-      return '${(weightKg / 1000).toStringAsFixed(1)} t';
-    }
-    return '${weightKg.toStringAsFixed(0)} kg';
-  }
-}
-
-/// Card individual de métrica
-class _MetricCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _MetricCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: Row(children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // T-66: a 360 px «6940.6 t» se cortaba en «6940....». Una
-                  // cifra cortada es otra cifra: se reduce hasta caber.
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      value,
-                      maxLines: 1,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ])),
-            Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Gráfico circular (pie chart) de estado lleno/vacío
-class _StatusPieChart extends StatelessWidget {
-  final int fullCount;
-  final int emptyCount;
-  final int total;
-
-  const _StatusPieChart({
-    required this.fullCount,
-    required this.emptyCount,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (total == 0) return const SizedBox.shrink();
-    final fullPct = (fullCount / total * 100).toStringAsFixed(1);
-    final emptyPct = (emptyCount / total * 100).toStringAsFixed(1);
-    final unknownCount = total - fullCount - emptyCount;
-
-    final chart = SizedBox(
-      width: 120,
-      height: 120,
-      child: CustomPaint(
-        painter: _PieChartPainter(
-          segments: [
-            _PieSegment(fullCount / total, Colors.green.shade600),
-            _PieSegment(emptyCount / total, Colors.orange.shade600),
-            if (unknownCount > 0)
-              _PieSegment(unknownCount / total, Colors.grey.shade400),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            '$total',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-    );
-    final legend = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _LegendItem(
-          color: Colors.green.shade600,
-          label: 'Llenos',
-          value: '$fullCount ($fullPct%)',
-        ),
-        const SizedBox(height: 8),
-        _LegendItem(
-          color: Colors.orange.shade600,
-          label: 'Vacíos',
-          value: '$emptyCount ($emptyPct%)',
-        ),
-        if (unknownCount > 0) ...[
-          const SizedBox(height: 8),
-          _LegendItem(
-            color: Colors.grey.shade400,
-            label: 'Sin estado',
-            value: '$unknownCount',
-          ),
-        ],
-      ],
-    );
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: _compactStats(context)
-            ? Column(
-                children: [
-                  Center(child: chart),
-                  const SizedBox(height: 16),
-                  legend,
-                ],
-              )
-            : Row(
-                children: [
-                  chart,
-                  const SizedBox(width: 24),
-                  Expanded(child: legend),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
-/// Item de leyenda
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String label;
-  final String value;
-
-  const _LegendItem({
-    required this.color,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (_compactStats(context) &&
-        MediaQuery.textScalerOf(context).scale(14) > 18) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                value,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-    return Row(
-      children: [
-        Container(
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(3),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-}
-
-/// Barra de distribución por tamaño (20ft / 40ft / 45ft)
-class _SizeDistributionBar extends StatelessWidget {
-  final SpecialCargoStats specialCargo;
-  final int total;
-
-  const _SizeDistributionBar({required this.specialCargo, required this.total});
-
-  @override
-  Widget build(BuildContext context) {
-    if (total == 0) return const SizedBox.shrink();
-
-    final items = <_SizeItem>[
-      _SizeItem("20'", specialCargo.twentyFtCount, Colors.blue.shade600),
-      _SizeItem("40'", specialCargo.fortyFtCount, Colors.indigo.shade600),
-      _SizeItem("45'", specialCargo.fortyFiveFtCount, Colors.purple.shade600),
-    ];
-    final other = total - specialCargo.twentyFtCount - specialCargo.fortyFtCount - specialCargo.fortyFiveFtCount;
-    if (other > 0) {
-      items.add(_SizeItem('Otro', other, Colors.grey.shade500));
-    }
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Barra proporcional
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: SizedBox(
-                height: 28,
-                child: Row(
-                  children: items
-                      .where((i) => i.count > 0)
-                      .map((item) => Expanded(
-                            flex: item.count,
-                            child: Container(
-                              color: item.color,
-                              alignment: Alignment.center,
-                              child: item.count / total > 0.08
-                                  ? Text(
-                                      '${item.count}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Leyenda
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              children: items.map((item) {
-                final pct = (item.count / total * 100).toStringAsFixed(1);
-                return _LegendItem(
-                  color: item.color,
-                  label: item.label,
-                  value: '${item.count} ($pct%)',
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SizeItem {
-  final String label;
-  final int count;
-  final Color color;
-  const _SizeItem(this.label, this.count, this.color);
-}
-
-/// Cards de carga especial (Reefer, IMO, OOG)
-class _SpecialCargoCards extends StatelessWidget {
-  final SpecialCargoStats specialCargo;
-
-  const _SpecialCargoCards({required this.specialCargo});
-
-  @override
-  Widget build(BuildContext context) {
-    if (_compactStats(context) &&
-        MediaQuery.textScalerOf(context).scale(12) > 14) {
-      final cards = [
-        if (specialCargo.reeferCount > 0)
-          _SpecialCard(
-            icon: BsIconos.refrigerado,
-            label: 'Refrigerado',
-            count: specialCargo.reeferCount,
-            color: Colors.cyan,
-          ),
-        if (specialCargo.dangerousCount > 0)
-          _SpecialCard(
-            icon: BsIconos.peligrosa,
-            label: 'IMO / DG',
-            count: specialCargo.dangerousCount,
-            color: Colors.red,
-          ),
-        if (specialCargo.oogCount > 0)
-          _SpecialCard(
-            icon: BsIconos.fueraDeMedida,
-            label: 'OOG',
-            count: specialCargo.oogCount,
-            color: Colors.deepOrange,
-          ),
-      ];
-      return Column(
-        children: [
-          for (var i = 0; i < cards.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12),
-            SizedBox(width: double.infinity, child: cards[i]),
-          ],
-        ],
-      );
-    }
-    return Row(
-      children: [
-        if (specialCargo.reeferCount > 0)
-          Expanded(
-            child: _SpecialCard(
-              icon: BsIconos.refrigerado,
-              label: 'Refrigerado',
-              count: specialCargo.reeferCount,
-              color: Colors.cyan,
-            ),
-          ),
-        if (specialCargo.reeferCount > 0 && specialCargo.dangerousCount > 0)
-          const SizedBox(width: 12),
-        if (specialCargo.dangerousCount > 0)
-          Expanded(
-            child: _SpecialCard(
-              icon: BsIconos.peligrosa,
-              label: 'IMO / DG',
-              count: specialCargo.dangerousCount,
-              color: Colors.red,
-            ),
-          ),
-        if ((specialCargo.reeferCount > 0 || specialCargo.dangerousCount > 0) &&
-            specialCargo.oogCount > 0)
-          const SizedBox(width: 12),
-        if (specialCargo.oogCount > 0)
-          Expanded(
-            child: _SpecialCard(
-              icon: BsIconos.fueraDeMedida,
-              label: 'OOG',
-              count: specialCargo.oogCount,
-              color: Colors.deepOrange,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _SpecialCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final int count;
-  final Color color;
-
-  const _SpecialCard({
-    required this.icon,
-    required this.label,
-    required this.count,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: color.withValues(alpha: 0.08),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              count.toString(),
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-            ),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Gráfico de barras horizontales genérico (para navieras, puertos, etc.)
-class _HorizontalBarChart extends StatelessWidget {
-  final Map<String, int> data;
-  final int maxItems;
-  final Color color;
-  final int total;
-
-  const _HorizontalBarChart({
-    required this.data,
-    required this.maxItems,
-    required this.color,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (data.isEmpty) return const SizedBox.shrink();
-
-    final entries = data.entries.take(maxItems).toList();
-    final maxValue = entries.first.value.toDouble();
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            for (int i = 0; i < entries.length; i++) ...[
-              _BarRow(
-                label: entries[i].key,
-                value: entries[i].value,
-                maxValue: maxValue,
-                total: total,
-                color: color.withValues(alpha: 1.0 - (i * 0.06).clamp(0.0, 0.5)),
-              ),
-              if (i < entries.length - 1) const SizedBox(height: 8),
-            ],
-            if (data.length > maxItems) ...[
-              const SizedBox(height: 8),
-              Text(
-                '+ ${data.length - maxItems} más',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BarRow extends StatelessWidget {
-  final String label;
-  final int value;
-  final double maxValue;
-  final int total;
-  final Color color;
-
-  const _BarRow({
-    required this.label,
-    required this.value,
-    required this.maxValue,
-    required this.total,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = (value / total * 100).toStringAsFixed(1);
-    final fraction = maxValue > 0 ? value / maxValue : 0.0;
-
-    if (_compactStats(context)) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _StatsLabel(
-                  label: label,
-                  maxLines: 2,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '$value ($pct%)',
-                    maxLines: 1,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: fraction,
-              minHeight: 20,
-              backgroundColor: color.withValues(alpha: 0.08),
-              valueColor: AlwaysStoppedAnimation(color),
-            ),
-          ),
-        ],
-      );
-    }
-    return Row(
-      children: [
-        SizedBox(
-          width: 80,
-          child: _StatsLabel(
-            label: label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontFamily: 'monospace',
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: fraction,
-              minHeight: 20,
-              backgroundColor: color.withValues(alpha: 0.08),
-              valueColor: AlwaysStoppedAnimation(color),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 70,
-          child: Text(
-            '$value ($pct%)',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-            textAlign: TextAlign.right,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Texto completo accesible y a un toque, aunque la etiqueta se abrevie.
-class _StatsLabel extends StatelessWidget {
-  final String label;
-  final TextStyle? style;
-  final int? maxLines;
-  const _StatsLabel({required this.label, this.style, this.maxLines});
-
-  @override
-  Widget build(BuildContext context) {
-    void showDetail() => showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Detalle'),
-        scrollable: true,
-        content: SelectableText(label),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-    return Semantics(
-      key: ValueKey('stats-label-$label'),
-      container: true,
-      label: label,
-      button: true,
-      excludeSemantics: true,
-      onTap: showDetail,
-      child: InkWell(
-        onTap: showDetail,
-        child: Tooltip(
-          message: label,
-          child: Text(
-            label,
-            style: style,
-            maxLines: maxLines,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Gráfico de barras verticales para ocupación por bahía
-class _BayOccupancyChart extends StatelessWidget {
-  final List<BayStat> bayStats;
-
-  const _BayOccupancyChart({required this.bayStats});
-
-  @override
-  Widget build(BuildContext context) {
-    final maxContainers = bayStats.fold<int>(0, (m, b) => max(m, b.containerCount));
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          height: _compactStats(context)
-              ? 200 + max(0.0, MediaQuery.textScalerOf(context).scale(9) - 9) * 4
-              : 180,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Eje Y labels
-              SizedBox(
-                width: _compactStats(context)
-                    ? 40 * max(1.0, MediaQuery.textScalerOf(context).scale(9) / 9)
-                    : 30,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('$maxContainers', style: _axisStyle(context)),
-                    Text('${(maxContainers / 2).round()}', style: _axisStyle(context)),
-                    Text('0', style: _axisStyle(context)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 4),
-              // Barras
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: bayStats.map((stat) {
-                      final height = maxContainers > 0 ? (stat.containerCount / maxContainers) * 150 : 0.0;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${stat.containerCount}',
-                              style: _axisStyle(context)?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Container(
-                              width: 22,
-                              height: max(height, 2),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade600,
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(3),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            RotatedBox(
-                              quarterTurns: -1,
-                              child: Text(
-                                '${stat.bayNumber}',
-                                style: _axisStyle(context),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  TextStyle? _axisStyle(BuildContext context) => Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9);
-}
-
-/// Gráfico de barras verticales para peso por bahía
-class _BayWeightChart extends StatelessWidget {
-  final List<BayStat> bayStats;
-
-  const _BayWeightChart({required this.bayStats});
-
-  @override
-  Widget build(BuildContext context) {
-    final maxWeight = bayStats.fold<double>(0, (m, b) => max(m, b.totalWeight));
-    final maxTons = maxWeight / 1000;
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          height: _compactStats(context)
-              ? 200 + max(0.0, MediaQuery.textScalerOf(context).scale(9) - 9) * 4
-              : 180,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Eje Y labels
-              SizedBox(
-                width: _compactStats(context)
-                    ? 50 * max(1.0, MediaQuery.textScalerOf(context).scale(9) / 9)
-                    : 36,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('${maxTons.toStringAsFixed(0)}t', style: _axisStyle(context)),
-                    Text('${(maxTons / 2).toStringAsFixed(0)}t', style: _axisStyle(context)),
-                    Text('0', style: _axisStyle(context)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 4),
-              // Barras
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: bayStats.map((stat) {
-                      final height = maxWeight > 0 ? (stat.totalWeight / maxWeight) * 150 : 0.0;
-                      final tons = stat.totalWeight / 1000;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              tons >= 1 ? tons.toStringAsFixed(0) : '',
-                              style: _axisStyle(context)?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Container(
-                              width: 22,
-                              height: max(height, 2),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade700,
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(3),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            RotatedBox(
-                              quarterTurns: -1,
-                              child: Text(
-                                '${stat.bayNumber}',
-                                style: _axisStyle(context),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  TextStyle? _axisStyle(BuildContext context) => Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9);
-}
-
-// ============================================
-// CUSTOM PAINTERS
-// ============================================
-
-class _PieSegment {
-  final double fraction;
-  final Color color;
-  const _PieSegment(this.fraction, this.color);
-}
-
-class _PieChartPainter extends CustomPainter {
-  final List<_PieSegment> segments;
-
-  _PieChartPainter({required this.segments});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = min(size.width, size.height) / 2;
-    const strokeWidth = 20.0;
-    final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
-
-    double startAngle = -pi / 2; // Empezar desde arriba
-
-    for (final segment in segments) {
-      if (segment.fraction <= 0) continue;
-      final sweepAngle = segment.fraction * 2 * pi;
-      final paint = Paint()
-        ..color = segment.color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.butt;
-
-      canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
-      startAngle += sweepAngle;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _PieChartPainter oldDelegate) => oldDelegate.segments != segments;
 }

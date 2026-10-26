@@ -27,6 +27,13 @@ abstract final class BsFuentes {
 /// Son los únicos tamaños de letra de la capa de presentación: todo
 /// `fontSize` del producto sale de aquí a través del tema.
 abstract final class BsEscala {
+  /// La cifra protagonista de Estadísticas, «977 contenedores a bordo»
+  /// (`DESIGN.md`, 15.2; decisión 10.38, P9): la única cifra que encabeza una
+  /// vista, una sola vez por vista. Por encima de la escala de razón 1.2, que
+  /// termina en [cifraGrande]; es el tamaño que la skill de dataviz pide para
+  /// la cifra que encabeza un tablero.
+  static const double cifraProtagonista = 48;
+
   /// KPI, contadores y totales.
   static const double cifraGrande = 34;
 
@@ -118,10 +125,20 @@ class BsTextos extends ThemeExtension<BsTextos> {
     required this.datoMono,
     required this.celda,
     required this.celdaLinea2,
+    required this.cifraProtagonista,
   });
 
   /// Los estilos para una [BsPaleta].
   factory BsTextos.de(BsPaleta paleta) => BsTextos(
+        cifraProtagonista: TextStyle(
+          fontFamily: BsFuentes.sans,
+          fontFamilyFallback: BsFuentes.respaldo,
+          fontSize: BsEscala.cifraProtagonista,
+          fontWeight: FontWeight.w600,
+          height: 1.05,
+          color: paleta.tinta,
+          fontFeatures: cifrasTabulares,
+        ),
         cifraGrande: TextStyle(
           fontFamily: BsFuentes.sans,
           fontFamilyFallback: BsFuentes.respaldo,
@@ -160,6 +177,10 @@ class BsTextos extends ThemeExtension<BsTextos> {
         ),
       );
 
+  /// La cifra protagonista de Estadísticas: 48, seminegrita, tabular, una
+  /// sola vez por vista (15.2).
+  final TextStyle cifraProtagonista;
+
   /// KPI, contadores y totales: 34, seminegrita, tabular.
   final TextStyle cifraGrande;
 
@@ -178,12 +199,14 @@ class BsTextos extends ThemeExtension<BsTextos> {
     TextStyle? datoMono,
     TextStyle? celda,
     TextStyle? celdaLinea2,
+    TextStyle? cifraProtagonista,
   }) =>
       BsTextos(
         cifraGrande: cifraGrande ?? this.cifraGrande,
         datoMono: datoMono ?? this.datoMono,
         celda: celda ?? this.celda,
         celdaLinea2: celdaLinea2 ?? this.celdaLinea2,
+        cifraProtagonista: cifraProtagonista ?? this.cifraProtagonista,
       );
 
   @override
@@ -194,6 +217,8 @@ class BsTextos extends ThemeExtension<BsTextos> {
       datoMono: TextStyle.lerp(datoMono, other.datoMono, t)!,
       celda: TextStyle.lerp(celda, other.celda, t)!,
       celdaLinea2: TextStyle.lerp(celdaLinea2, other.celdaLinea2, t)!,
+      cifraProtagonista:
+          TextStyle.lerp(cifraProtagonista, other.cifraProtagonista, t)!,
     );
   }
 }

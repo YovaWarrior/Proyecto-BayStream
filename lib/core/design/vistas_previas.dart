@@ -3,11 +3,14 @@ import 'package:flutter/widget_previews.dart';
 
 import 'bs_colores_semanticos.dart';
 import 'bs_iconos.dart';
+import 'bs_paleta.dart';
 import 'bs_tema.dart';
 import 'componentes/bs_anillo_avance.dart';
 import 'componentes/bs_banda.dart';
 import 'componentes/bs_banda_muelle.dart';
+import 'componentes/bs_barra_de_magnitud.dart';
 import 'componentes/bs_barra_de_operacion.dart';
+import 'componentes/bs_buque_en_corte.dart';
 import 'componentes/bs_cartela.dart';
 import 'componentes/bs_casco_bodega.dart';
 import 'componentes/bs_celda.dart';
@@ -17,10 +20,12 @@ import 'componentes/bs_fondo_de_plano.dart';
 import 'componentes/bs_hoja_de_detalle.dart';
 import 'componentes/bs_marca.dart';
 import 'componentes/bs_numero_de_contenedor.dart';
+import 'componentes/bs_panel.dart';
 import 'componentes/bs_panel_en_vivo.dart';
 import 'componentes/bs_selector_de_modo.dart';
 import 'componentes/bs_silueta_buque.dart';
 import 'componentes/bs_tarjeta_cifra.dart';
+import 'componentes/bs_tarjeta_de_rol.dart';
 import 'componentes/bs_tira_de_bahias.dart';
 import 'componentes/bs_travesia.dart';
 
@@ -740,4 +745,80 @@ Widget vistaPreviaFichasYTarjetasCortas() => _lienzo(Builder(
           ),
         ],
       ),
+    ));
+
+/// El buque en corte de Estadísticas (15.4), con las cifras de ejemplo de 9.5:
+/// las dos pilas por bahía y el pie con el número, la cuenta y el peso.
+@Preview(name: 'Buque en corte', group: 'Diseño', theme: bsTemaDeVistaPreviaOficina, size: Size(900, 320))
+Widget vistaPreviaBuqueEnCorte() => _lienzo(BsBuqueEnCorte(
+      bahias: const <BsBahiaEnCorte>[
+        BsBahiaEnCorte(numero: 2, contenedoresCubierta: 33, contenedoresBodega: 30, pesoCubiertaKg: 210000, pesoBodegaKg: 206800),
+        BsBahiaEnCorte(numero: 6, contenedoresCubierta: 30, contenedoresBodega: 28, pesoCubiertaKg: 190200, pesoBodegaKg: 190000),
+        BsBahiaEnCorte(numero: 10, contenedoresCubierta: 31, contenedoresBodega: 30, pesoCubiertaKg: 201100, pesoBodegaKg: 201000),
+        BsBahiaEnCorte(numero: 14, contenedoresCubierta: 24, contenedoresBodega: 20, pesoCubiertaKg: 150500, pesoBodegaKg: 140000),
+        BsBahiaEnCorte(numero: 18, contenedoresCubierta: 26, contenedoresBodega: 26, pesoCubiertaKg: 171500, pesoBodegaKg: 171500),
+        BsBahiaEnCorte(numero: 22, contenedoresCubierta: 25, contenedoresBodega: 24, pesoCubiertaKg: 161700, pesoBodegaKg: 161700),
+        BsBahiaEnCorte(numero: 26, contenedoresCubierta: 20, contenedoresBodega: 18, pesoCubiertaKg: 125400, pesoBodegaKg: 125400),
+        BsBahiaEnCorte(numero: 30, contenedoresCubierta: 21, contenedoresBodega: 20, pesoCubiertaKg: 135300, pesoBodegaKg: 135300),
+        BsBahiaEnCorte(numero: 34, contenedoresCubierta: 15, contenedoresBodega: 14, pesoCubiertaKg: 95700, pesoBodegaKg: 95700),
+        BsBahiaEnCorte(numero: 38, contenedoresCubierta: 11, contenedoresBodega: 10, pesoCubiertaKg: 69300, pesoBodegaKg: 69300),
+      ],
+      onSeleccion: (int _) {},
+    ));
+
+/// Los paneles de Estadísticas (15.5): las barras con la caja del código, la
+/// rampa de los tamaños y las tarjetas de rol de la carga especial.
+@Preview(name: 'Paneles de Estadísticas', group: 'Diseño', theme: bsTemaDeVistaPreviaOficina, size: Size(760, 560))
+Widget vistaPreviaPanelesDeEstadisticas() => _lienzo(Builder(
+      builder: (BuildContext context) {
+        final semanticos = BsColoresSemanticos.de(context);
+        final rampa = BsPaleta.de(Theme.of(context).brightness).rampaDeMagnitud;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            BsPanel(
+              titulo: 'Por puerto de descarga',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  BsBarraDeMagnitud(rotulo: 'GTSTC', valor: 520, total: 977, maximo: 520, caja: semanticos.categorico('GTSTC')),
+                  const SizedBox(height: 8),
+                  BsBarraDeMagnitud(rotulo: 'USHOU', valor: 245, total: 977, maximo: 520, caja: semanticos.categorico('USHOU')),
+                  const SizedBox(height: 8),
+                  BsBarraDeMagnitud(rotulo: 'PAMIT', valor: 130, total: 977, maximo: 520, caja: semanticos.categorico('PAMIT')),
+                  const SizedBox(height: 8),
+                  const BsBarraDeMagnitud(rotulo: 'Otros 3 puertos', valor: 82, total: 977, maximo: 520),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            BsPanel(
+              titulo: 'Por tamaño',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  BsBarraDeMagnitud(rotulo: '20 pies', valor: 410, total: 977, maximo: 487, color: rampa[1]),
+                  const SizedBox(height: 8),
+                  BsBarraDeMagnitud(rotulo: '40 pies', valor: 487, total: 977, maximo: 487, color: rampa[2]),
+                  const SizedBox(height: 8),
+                  BsBarraDeMagnitud(rotulo: '45 pies', valor: 80, total: 977, maximo: 487, color: rampa[3]),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            BsPanel(
+              titulo: 'Carga especial',
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: <Widget>[
+                  BsTarjetaDeRol(rol: semanticos.peligrosa, icono: BsIconos.peligrosa, valor: '3', rotulo: 'Peligrosa IMDG'),
+                  BsTarjetaDeRol(rol: semanticos.refrigerado, icono: BsIconos.refrigerado, valor: '12', rotulo: 'Refrigerado'),
+                  BsTarjetaDeRol(rol: semanticos.oog, icono: BsIconos.fueraDeMedida, valor: '1', rotulo: 'Fuera de medida'),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     ));

@@ -515,10 +515,6 @@ POR_ARCHIVO = {
     _P + 'widgets/reserved_slot_details.dart': {'*': PANTALLA},
     _P + 'widgets/reserved_slots_list_view.dart': {'*': PANTALLA},
     _P + 'widgets/sync_status_chip.dart': {'*': PANTALLA},
-    _P + 'widgets/vessel_profile_view.dart': {
-        '*': PANTALLA,
-        (203, 207): V('accesibilidad', 'etiqueta semántica del perfil longitudinal'),
-    },
     _P + 'widgets/voice_search_field.dart': {'*': PANTALLA},
     _P + 'widgets/voyage_call_summary.dart': {'*': PANTALLA},
     _P + 'widgets/voyage_stats_view.dart': {'*': PANTALLA},

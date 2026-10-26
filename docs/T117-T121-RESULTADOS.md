@@ -2097,3 +2097,309 @@ El último comando tiene que decir **6 files changed**. No cambian `pubspec.yaml
 > Son 6 rutas en el bloque; la evidencia no va a Git.
 
 **ALTO: Codex reacepta.**
+
+## Entrega 2 · T-121 (25-oct-2026)
+
+Timonel (Claude Code, Claude Fable 5.1), rama `sprint-4`, carpeta del rediseño, sobre `6be78e7`
+(decisión 10.46). Lo decidido está en 10.37 y 10.38: las estadísticas A, «El buque en corte»
+(P8), con la cifra protagonista a 48 dp escrita antes en `DESIGN.md` (P9), según la sección 0.9 de
+este informe; con lo que dejó la entrega 1 (cada control con su nombre en Windows, Esc y Atrás para
+lo que se abre sin ser ruta, la matriz angosta de 10.42). Tocar un puerto para ir a la Lista
+filtrada queda para T-120, en la entrega 3.
+
+### E2.1 Resultado en tres líneas
+
+- **Estadísticas es el mismo buque del plano, visto entero:** la protagonista es la silueta grande
+  (`BsBuqueEnCorte`) con dos pilas por bahía, cubierta y bodega, cuyo alto dice los contenedores o
+  el peso («Contenedores / Peso»); encima, «977 contenedores a bordo» a 48 y la fila de cifras;
+  debajo de cada bahía su número, su cuenta y su peso en el mismo eje; y cinco paneles: por puerto
+  (la caja del código, la barra y la cifra; «Otros N puertos»), llenos y vacíos (el anillo), por
+  tamaño (la rampa), la carga especial (tarjetas de su rol) y por naviera («Otras N navieras»).
+  Tocar una bahía la abre en el plano; «Ver como tabla» muestra los mismos números en tablas
+  accesibles, y Esc y Atrás vuelven a los gráficos.
+- **Lo común de 0.9.3, sin excepción:** ningún `Colors.*` (la prueba-censo lo vigila), el color del
+  puerto solo en la caja, el naranja ausente, el texto nunca con el color del dato, tipo oración,
+  «53 %» con espacio, `formatearToneladas`, Plex Mono para los códigos, mínimo 11 en el teléfono,
+  ancho máximo de 1 440 centrado sobre `BsFondoDePlano`, y a 360 dp con la letra a 2.0 todo apila
+  y la silueta se desplaza con su barra. La rampa nueva de 15.3 entra en `bs_paleta.dart`
+  (`#88B0F5` es un valor nuevo) y `DESIGN.md` 5.5 la sustituye.
+- **Suite 1773 (piso 1685, más 88), sin fallidas ni omitidas, en una corrida; `analyze` en cero.**
+  Capturas de los tres clientes en los dos temas con datos sintéticos: Windows (58), la Web (24)
+  y el emulador (24), sin textos cortados ni errores de Flutter (E2.5).
+
+### E2.2 Base, luz verde y lo que se corrió
+
+- Leí `AGENTS.md`, `CLAUDE.md`, las decisiones 10.36 a 10.38 y 10.46, la sección 0.9 completa, 0.10 y
+  0.11 de este informe, `DESIGN.md` (4.2, 5.1, 5.5, 9.5, 13.3, 13.4, 13.11 y la sección 14 entera),
+  el código de hoy (`voyage_stats_view.dart`, `vessel_profile_view.dart` y los cinco providers de
+  T-109 en `vessel_providers.dart`) y la skill de dataviz (la forma, la fórmula de color, las marcas
+  y los antipatrones).
+- **Primero `DESIGN.md`** (la sección 15, la fila de 4.2 y la nota de 5.5), después `bs_paleta.dart`
+  y `bs_tipografia.dart`, los componentes, la página, las pruebas y el escenario de capturas.
+- **Las dos rampas se volvieron a validar** con `validate_palette.js --ordinal` de la skill de
+  dataviz (Node 24), sobre la hoja y el papel de día y sobre el panel y la noche de noche: las
+  cuatro corridas pasan (el paso extremo a 2.19, 2.06, 2.62 y 2.86:1); también los tres pasos de los
+  tamaños (3.21:1 y 5.42:1 en su paso claro). Los contrastes compuestos de 15.3 se calcularon con
+  la fórmula WCAG de `tool/rediseno_contraste.py`.
+- **Sin Flutter, hasta la luz verde (10.39 y 10.46):** el código se escribió y se revisó sin
+  compilar, con cuatro revisores independientes (compilación contra las fuentes del SDK 3.38.9 y de
+  Riverpod 3.1.0, layout en tiempo de ejecución, reglas de diseño y pruebas) y un escéptico por
+  hallazgo (E2.7, `build/t121-entrega2/revision/hallazgos.md`).
+- **Con la luz verde de Carlos (10.47, «toda la noche»)**, un comando de Flutter a la vez y solo el
+  banco en `%TEMP%`: `analyze`; las pruebas nuevas (primera corrida: 88 de 92, cuatro fallos
+  propios, E2.5); `analyze` y las pruebas tocadas otra vez tras los hallazgos de la revisión;
+  **la suite completa, una vez**; el banco r4 (`tool/t99_copia.ps1 -Arbol -Sufijo r4` en
+  `%TEMP%\t99-r4-t121`, con el zip del SDK de Firebase enlazado del banco anterior: la compilación
+  de Windows tardó 122 s y no bajó nada) compilado dos veces (antes y después de la revisión);
+  las capturas de Windows con el conductor de T-99, de la Web con Playwright y del emulador con
+  uiautomator. El emulador `t99_api26` se arrancó con `tool/t99_emulador.ps1`.
+- No se usaron el Honor, la BayStream instalada, el corpus, «Nube y cuenta», «PRUEBA T-105» ni
+  `C:\Proyectos\baystream-demo17\`. Git solo de lectura. Nada se publicó: la 3.1.0 sigue siendo la
+  del piloto.
+
+### E2.3 Lo hecho
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| La cifra protagonista | `bs_tipografia.dart` (`BsEscala.cifraProtagonista`, `BsTextos.cifraProtagonista`) | 48 / 600 / 1.05 tabular, una sola vez por vista (15.2); `DESIGN.md` 4.2 la lista |
+| La rampa y su pista | `bs_paleta.dart` (`rampaDeMagnitud`, `pistaDeMagnitud`) | Día `#88B0F5 → #518FF1 → #1365E5 → #0D47A1`; noche `#2C5BA8 → #4F8EF7 → #95BBF6 → #D9E7FC`; la pista `#D9E7FC` de día y la línea de noche (15.3) |
+| El buque en corte | `componentes/bs_buque_en_corte.dart` (`BsBuqueEnCorte`, `BsBahiaEnCorte`, `BsMagnitudDeLaPila`) | El casco de la silueta en grande; dos pilas por bahía con separadores de nivel; el pie con número, cuenta y peso; un botón por bahía con su etiqueta, sobre un `Material` transparente para su tinta; 56 dp por la escala de la letra; `Scrollbar` abajo (15.4) |
+| La barra de magnitud | `componentes/bs_barra_de_magnitud.dart` | 12 dp sobre su pista, la cifra y el porcentaje; en una línea desde 400 dp por la escala de la letra, si no la etiqueta encima; etiqueta y descripción emergente con la misma frase (15.5) |
+| La caja del código | `componentes/bs_caja_de_codigo.dart` | El rol categórico del puerto con el código en Plex Mono |
+| La tarjeta de rol | `componentes/bs_tarjeta_de_rol.dart` | Relleno y contorno del rol, el icono del paquete, la cifra a 28 |
+| El panel | `componentes/bs_panel.dart` | Hoja, radio 18, borde en línea, el título como encabezado |
+| Las cifras | `presentation/formatters/estadisticas_del_viaje.dart` (`EstadisticasDelViaje.de`, `CuentaPorCodigo`) | Dart puro: total, llenos, vacíos, sin estado, peso, bahías con carga, cada bahía con sus zonas, puertos, navieras, tamaños, carga especial, sin posición; `conElResto` para «Otros N» |
+| La página | `presentation/widgets/voyage_stats_view.dart` (`VoyageStatsView`, misma firma) | La cabecera, el buque con su selector (rótulos o solo iconos, según quepan), los paneles en una, dos o tres columnas (720 y 1 100 dp), «Ver como tabla» con su foco propio para Esc y anotada para Atrás, la tabla con columnas medidas que se desplaza si no cabe, sobre `BsFondoDePlano` |
+| Las vistas previas | `vistas_previas.dart` | «Buque en corte» y «Paneles de Estadísticas» |
+| Los instrumentos | `tool/t99_conductor.dart` (`_escenarioEstadisticas`, `_posicionBajo`), `tool/t121_capturas_web.py`, `tool/t121_capturas_android.py` | Las capturas de Windows (por tema, letra y tamaño: la página, la pila por peso, la popa desplazada y la tabla), de la Web y del emulador |
+
+**Sale** `vessel_profile_view.dart` con su prueba: su casco era otro buque (0.9.1) y lo sustituye la
+protagonista. Su prueba de «tocar una bahía abre su rejilla en el plano» pasa a
+`t121_estadisticas_test.dart` con la clave nueva. Los providers de T-109 no cambian. Los censos de
+T-98c (`tool/t98c_idioma.py`, `tool/t98c_material3.py`) dejan de nombrar el archivo borrado.
+
+### E2.4 Lo que cambió respecto de la propuesta (también en `DESIGN.md` 15.11)
+
+1. El peso por bahía va como cifra en el pie, no como columna dibujada: la pila ya dice el peso al
+   elegir «Peso». Las tres filas del pie van siempre.
+2. Las pilas van en los colores del ícono (`porBajarCubierta`, `porBajarBodega` de la vista Estado,
+   verificados en los dos modos), con la leyenda de las dos zonas junto al selector.
+3. La bahía mide 56 dp por la escala de la letra: con 2.0 el peso no cabía en 56.
+4. «20 pies», «40 pies» y «45 pies», como la Lista; «Otro» solo si algún tipo ISO no dice el largo.
+5. «Sin estado», «Sin puerto», «Sin naviera» y «Sin posición» hacen que las cifras cuadren por
+   construcción y la tabla las muestra.
+6. La carga especial muestra solo las tarjetas con carga, y «Sin carga especial» si no hay.
+7. «Ver como tabla» es un estado de la página, no una ruta, anotado en `cerrablesDeAtrasProvider`.
+8. La fila de cifras va a 28 con el rótulo debajo, no en tarjetas.
+9. «Otros N puertos» solo cuando sobran dos o más: si sobra uno, se muestra él.
+10. En la variante apilada de la barra, la cifra y el porcentaje van a la derecha de la caja.
+11. La silueta va en un panel con título, como los demás, con la leyenda de las dos zonas.
+12. La tabla se desplaza a lo ancho cuando no cabe y el selector va solo con iconos cuando sus
+    rótulos no caben: lo encontró la revisión (E2.7); antes el texto se partía a media palabra.
+13. El anillo de llenos crece con la letra: fijo en 112, «53 %» a 2.0 se montaba sobre el arco.
+
+### E2.5 Validaciones y cifras
+
+**Suite y analizador.** Piso 1685 → **1773 aprobadas, 0 fallidas, 0 omitidas, en una corrida**
+(2:22 min). `flutter analyze --no-pub`: **No issues found**, sin `// ignore:`. Las 88 netas: 92 de
+`test/t121_estadisticas_test.dart`, menos las 3 de `vessel_profile_view_test.dart` (una pasa a
+T-121) y una de T-109 (la referencia de píxeles).
+
+**La primera corrida de las pruebas nuevas** (sin haber compilado nunca) dio 88 de 92: `45G1` es
+un 40 pies alto, no un 45, y mi conteo de la bahía 006 estaba mal; el `Align` del rótulo de la
+barra se estiraba a todo el alto acotado (en la página, con alto infinito, no se veía);
+el riel no lleva la clave `destino-…` de la barra inferior; y mi propio comentario contenía el
+literal que el censo busca. Los cuatro se corrigieron antes de la revisión.
+
+**Las capturas** (`build/t121-entrega2/capturas/`), con el conductor de T-99 pidiendo reducción de
+movimiento, el puntero del mouse apartado a la esquina y datos sintéticos:
+
+| Cliente | Instrumento | Datos | Tamaños, temas y letras | Pantallas | PNG |
+|---|---|---|---|---|---:|
+| Windows | `tool/t114_capturas_windows.ps1 -Escenario estadisticas -PorExplorer` | `T99_SINTETICO_977.edi` (977 contenedores en 72 bahías, sin escala) y `T100_LLEGADA.edi` (publicado en GTSTC, con cubierta y bodega) | 1920 × 1080 y 1366 × 768; claro y oscuro; letra 1.0 y 2.0 | la página, la pila por peso, la popa de la silueta desplazada, «Ver como tabla» | 32 + 26 |
+| Web | `tool/t121_capturas_web.py` (Playwright, el banco servido en 127.0.0.1:5899) | `T99_SINTETICO_977.edi`, publicado por la interfaz («No lo tengo», «Confirmar y ver») | 1920 × 1080, 1366 × 768 y 360 × 800; claro y oscuro | las mismas cuatro | 24 |
+| Android | `tool/t121_capturas_android.py` (emulador `t99_api26`, `emulator-5554`, 360 dp) | `T99_SINTETICO_977.edi`, publicado por la interfaz | 360 × 640; claro con la letra a 1.0, 1.45 y 2.0; oscuro a 1.0 | la página, la silueta a la vista (a 360 × 640 queda bajo el pliegue), la pila por peso, la popa, los paneles y la tabla | 24 |
+
+`pasos.jsonl` de las dos tandas de Windows: **0 textos que no caben, 0 errores de Flutter, 0 esperas
+de reposo vencidas**; los únicos desplazables horizontales con contenido oculto son la silueta
+(2 709 px ocultos a 1920 con la letra a 1.0; 7 412 a 1366 con 2.0), que es lo esperado. En el
+sintético de 977 todo va en bodega (el generador de T-99 llena la bodega primero), así que las
+pilas de cubierta salen vacías; la tanda con el plano de llegada muestra las dos zonas. Las 26 de
+la llegada son 32 menos las seis popas que no existen porque sus nueve bahías caben sin desplazar.
+
+**Lo que las capturas muestran y vale anotar:** `formatearToneladas` escribe «8366.1 t» sin
+separador de miles, como en todo el producto (los wireframes de la fase 0 escribían «7 419.5 t» a
+mano); a 1366 × 768 con el panel fijo el contenido mide unos 905 dp y los paneles van en dos
+columnas; con la letra a 2.0 «Ver como tabla» pasa debajo de la protagonista.
+
+### E2.6 Las pruebas (`test/t121_estadisticas_test.dart`, 92 pruebas)
+
+| Grupo | Qué comprueba |
+|---|---|
+| Las cifras cuadran (4) | El sintético de 977 en 72 bahías (total = llenos + vacíos + sin estado = Σ puertos = Σ navieras = Σ tamaños = Σ bahías + sin posición; el peso igual; 9 puertos y 10 navieras ordenados; hay 20, 40 y 45 pies); «Otros 2 puertos» y «Otras 2 navieras» y la regla de «Otros 1»; el plano de dos bahías de T-117 con cifras exactas (14, 13 llenos, 1 vacío, 239.0 t, GTSTC 9, USHOU 4, PAMIT 1, 6 de 20 y 8 de 40; la bahía 002 con 6 y 6 y 92.0 + 110.0 t); contenedores sin posición ni estado |
+| Los colores, compuestos (4) | En los dos temas: la rampa de un tono y ordenada, el paso extremo a 2:1 y los pasos 2 a 4 a 3:1 sobre la hoja y el papel, la marca en la rampa y a 3:1 sobre la pista; las pilas sobre la hoja y el casco, la tapa, las tres tintas a 4.5:1, las cajas de los quince puertos fijos (código 4.5:1, contorno 3:1), las tarjetas de rol (texto 4.5:1, contorno 3:1); ningún naranja |
+| La oficina a 1920 × 1000 (4) | Día y noche: la protagonista a 48 una sola vez, los seis paneles, «Otros 2 puertos», «Otras 2 navieras», las tres tarjetas, las siete cajas con su rol, la silueta de 72 bahías desplazable con su barra siempre visible y abajo, todo texto con color propio en una tinta o en el texto de su rol, el contenido a 1 440 o menos y centrado, sin textos cortados ni palabras partidas, `meetsGuideline` (contraste, objetivo táctil, etiqueta) y el recorrido entero de la página; «Contenedores / Peso» cambia la magnitud y el pie sigue entero; tocar una bahía la abre y la última (95) se alcanza entera |
+| «Ver como tabla» (2) | Las etiquetas de las barras; la tabla con todos los puertos y navieras, las 72 bahías, el resumen; las cabeceras como encabezados; Esc vuelve a los gráficos; Atrás (el registro) también; **abierta con el teclado** (Tab hasta el botón, Intro) Esc también la cierra; la página desmontada con la tabla abierta deja el registro en cero |
+| Con cualquier tamaño (18 + 1 + 54) | El muelle a 360 × 800, 360 × 640 y 600 × 960 con la letra a 1.0, 1.45 y 2.0 en los dos temas: nada se corta ni se parte, el selector entero, la silueta se desplaza con su barra, la bahía mide 56 por la letra, a 360 con 2.0 «Ver como tabla» envuelve debajo y los paneles apilan a todo el ancho, el recorrido entero en gráficos y en tabla; las pautas a 360 × 800 con 2.0; la oficina a 1920 × 1000, 1707 × 996, 1536 × 793, 1366 × 690, 1280 × 720, 960 × 1000, 800 × 600, 700 × 800 y 600 × 800 con las tres letras y los dos temas: la página entera dentro de `VesselOverviewPage`, sin selector de modo ni franja de cifras, a 1 440 o menos, sin textos cortados |
+| Los componentes (3) | La barra en una línea y con la etiqueta encima; la tarjeta de rol y el panel (etiqueta, encabezado, colores del rol, pautas); el buque sin bahías y con dos (claves, pie, etiqueta, pista, rol de botón, `anchoBahia`, `yTapa`, `yFondo`) |
+| La página completa (1) | Tocar una bahía en Estadísticas selecciona la bahía, vuelve al plano y muestra la rejilla |
+| El censo (1) | Ningún `Colors.*` en el código de `lib/features/vessel/presentation` (los comentarios no cuentan); `vessel_profile_view.dart` ya no existe |
+
+**Las pruebas que cambian:** `t109_stats_test.dart` se reescribe sobre la vista nueva (los mismos
+textos a 1280 y a 360 con las tres letras, salvo los rótulos del selector, que a 360 van solo con
+iconos; cada cifra en una línea; la etiqueta larga de una naviera queda entera en la semántica; la
+política con U+2011 sigue). La referencia de píxeles contra HEAD de T-109 ya no aplica: la vista
+cambió entera. `t107_tabs_test.dart` y `t97_text_test.dart` buscan la protagonista en vez de
+«Total Contenedores». `vessel_profile_view_test.dart` sale (E2.3).
+
+### E2.7 La revisión sin compilar
+
+Como el código se escribió sin luz verde, antes de la primera compilación pasó por **cuatro
+revisores independientes** (compilación contra las fuentes del SDK en `C:\flutter`, layout en
+tiempo de ejecución, reglas del brief y de `DESIGN.md`, y las pruebas) y **un escéptico por
+hallazgo**, que intentó refutarlo leyendo el código y el SDK: 29 hallazgos en bruto, 26 distintos,
+24 verificados (`build/t121-entrega2/revision/hallazgos.md`). El compilador no encontró nada que
+ellos no hubieran visto; ellos encontraron lo que el compilador y la primera corrida no ven:
+
+| Hallazgo confirmado | Qué se hizo |
+|---|---|
+| `Focus(autofocus: true)` se descarta si el botón «Ver como tabla», activado con el teclado, ya tiene el foco: Esc no cerraba la tabla | Un `FocusNode` propio que pide el foco tras el cuadro; la prueba abre la tabla con Tab e Intro y la cierra con Esc |
+| El `InkWell` de cada bahía pintaba su tinta (hover, pulsación, foco) en el `Material` del `Scaffold`, debajo de la hoja del panel | Un `Material(type: transparency)` sobre el casco, debajo de los botones |
+| El `SegmentedButton` reparte `maxWidth / 2` entre sus segmentos y a 360 dp partía «Contenedores» a media palabra desde la letra a 1.1 | `BsPrimeraQueCabe`: con rótulos si caben, si no solo con iconos y el nombre en la descripción emergente |
+| El porcentaje del anillo (22 por la letra) se montaba sobre el arco con la letra a 2.0 | El anillo crece con el ancho de «100 %» |
+| `FlexColumnWidth` partía «Contenedores» y las cifras a media palabra en la tabla de cinco columnas a 360 dp | Columnas medidas con `TextPainter`; la primera flexible; si no cabe, la tabla se desplaza a lo ancho con su barra |
+| El sintético nunca producía un 45 pies (`i % 9 == 0` es incompatible con las bahías pares) | `i % 9 == 1`, y la prueba lo exige |
+| «Nada se corta» no veía las palabras partidas (`didExceedMaxLines` es falso sin `maxLines`) | `t121PalabrasPartidas`: un texto sin espacio normal en más de una línea es un fallo |
+| `test/t97_text_test.dart` seguía buscando «Total Contenedores» | Busca la protagonista |
+| Con ancho no acotado la barra lanzaba «non-zero flex but incoming width constraints are unbounded» | Sin ancho acotado se da el de una línea |
+| «1 contenedores a bordo» | `formatearCuenta` |
+| Textos de `DESIGN.md` 15 que no decían lo que hace el código (los separadores de la pila, el margen, los 400 dp de la barra, las tres columnas, `#D9E7FC` de noche, el texto de los roles) y cuatro desviaciones de 0.9.5 sin anotar | Corregidos; 15.11 suma los puntos 10 a 13 |
+| Los censos de T-98c nombraban el archivo borrado | Quitados |
+
+Refutados con razón: `didUpdateWidget` del controlador (no rompe), el comentario con «Colors.*»
+(ya corregido en la primera corrida), «Peso» sin pesos (ahora el segmento va deshabilitado, igual).
+La pauta `textContrastGuideline` de Flutter no mide los textos con etiqueta compuesta (los que
+van en `Semantics(excludeSemantics)`), así que la prueba de 1920 exige además que todo texto con
+color propio sea una tinta o el texto de su rol.
+
+### E2.8 Archivos
+
+**Nuevos (10):** `lib/core/design/componentes/bs_buque_en_corte.dart`, `bs_barra_de_magnitud.dart`,
+`bs_caja_de_codigo.dart`, `bs_tarjeta_de_rol.dart`, `bs_panel.dart`;
+`lib/features/vessel/presentation/formatters/estadisticas_del_viaje.dart`;
+`test/support/t121_estadisticas_support.dart`, `test/t121_estadisticas_test.dart`;
+`tool/t121_capturas_web.py`, `tool/t121_capturas_android.py`.
+
+**Cambiados (13):** `DESIGN.md` (15, 4.2, 5.5); `lib/core/design/bs_paleta.dart`,
+`bs_tipografia.dart`, `design.dart`, `vistas_previas.dart`;
+`lib/features/vessel/presentation/widgets/voyage_stats_view.dart`; `test/t107_tabs_test.dart`,
+`test/t109_stats_test.dart`, `test/t97_text_test.dart`; `tool/t99_conductor.dart`,
+`tool/t98c_idioma.py`, `tool/t98c_material3.py`; y este informe.
+
+**Borrados (2):** `lib/features/vessel/presentation/widgets/vessel_profile_view.dart`,
+`test/vessel_profile_view_test.dart`.
+
+**No cambian:** `pubspec.yaml`, `pubspec.lock`, `lib/main.dart`, los congelados, Firebase, `domain/`,
+`data/`, la lista del piloto. Ninguna dependencia nueva (`CustomPainter` y widgets). Los cuatro
+archivos que solo difieren en el fin de línea (`test/t114_fase3_correccion_test.dart` y tres de
+`windows/flutter/`) no van en el bloque, ni la evidencia suelta de `docs/t117/entrega1/` que Git
+ve sin seguir. **La evidencia de esta entrega** está en `build/t121-entrega2/` y no va a Git:
+`pruebas/` (la suite y las corridas), `capturas/windows-977/`, `capturas/windows-llegada/`,
+`capturas/web/`, `capturas/android/`, `banco/` (los registros de compilación y las huellas) y
+`revision/hallazgos.md`.
+
+### E2.9 Lo que no se pudo y por qué
+
+- **RNF-002 no se midió:** T-121 no toca el inicio ni el plano; la primera visualización no cambia.
+- **El árbol accesible de Windows (UIA y MSAA) no se volcó** con el instrumento de la corrección 2:
+  los controles nuevos siguen el patrón que 10.44 fijó (etiqueta en `Semantics(button:)`, la
+  descripción emergente fuera de la semántica) y la suite lo comprueba por etiqueta; si Codex lo
+  pide, `tool/t117_correccion2_windows.ps1` sirve tal cual sobre el banco de `%TEMP%\t99-r4-t121`.
+- **La letra a 1.45 en Windows** no se capturó (1.0 y 2.0, los extremos); la matriz de pruebas sí
+  la cubre, y el emulador la trae.
+- **La Web no tiene escala de letra del sistema**: sus capturas van con 1.0.
+- **La rueda del mouse sobre la silueta** es T-119 (entrega 3); hoy la silueta se desplaza con la
+  barra, el arrastre y, en la Web, la rueda horizontal.
+
+### E2.10 Lo que cambia en la lista del piloto (`docs/piloto/LISTA-PILOTO.md`, de Yov)
+
+- Donde la lista mire Estadísticas (las seis tarjetas de resumen, la dona, las barras por naviera y
+  por puerto, el perfil longitudinal y las dos gráficas por bahía), ahora está la página de
+  `DESIGN.md` 15: la protagonista «N contenedores a bordo», la fila de cifras, el buque en corte con
+  «Contenedores / Peso» y los cinco paneles; «Ver como tabla» arriba a la derecha. Tocar una bahía
+  sigue abriendo el plano. Nada de esto afecta al piloto, que es con la 3.1.0.
+
+### E2.11 Horas
+
+Unas **2 h de reloj** (18:10 a 20:10), con la revisión de los agentes y las compilaciones corriendo en
+paralelo: la lectura y `DESIGN.md` con sus wireframes 0.5 h; los tokens, los cinco componentes, las
+cifras y la página 0.5 h; las pruebas 0.3 h; la revisión sin compilar y sus correcciones (con `analyze`
+y las pruebas tocadas dos veces, y la suite una) 0.4 h; el banco, las capturas de los tres clientes y
+sus instrumentos 0.3 h; el informe 0.1 h. La fase 0 estimó de 11 a 13 h para T-121; falta la aceptación.
+
+### E2.12 Git
+
+Para Carlos, un `git add` por ruta (los dos borrados también se registran con `git add`, que
+desde Git 2.0 anota la eliminación de una ruta que ya no está):
+
+```powershell
+git add -- DESIGN.md
+git add -- docs/T117-T121-RESULTADOS.md
+git add -- lib/core/design/bs_paleta.dart
+git add -- lib/core/design/bs_tipografia.dart
+git add -- lib/core/design/design.dart
+git add -- lib/core/design/vistas_previas.dart
+git add -- lib/core/design/componentes/bs_barra_de_magnitud.dart
+git add -- lib/core/design/componentes/bs_buque_en_corte.dart
+git add -- lib/core/design/componentes/bs_caja_de_codigo.dart
+git add -- lib/core/design/componentes/bs_panel.dart
+git add -- lib/core/design/componentes/bs_tarjeta_de_rol.dart
+git add -- lib/features/vessel/presentation/formatters/estadisticas_del_viaje.dart
+git add -- lib/features/vessel/presentation/widgets/voyage_stats_view.dart
+git add -- lib/features/vessel/presentation/widgets/vessel_profile_view.dart
+git add -- test/support/t121_estadisticas_support.dart
+git add -- test/t121_estadisticas_test.dart
+git add -- test/t107_tabs_test.dart
+git add -- test/t109_stats_test.dart
+git add -- test/t97_text_test.dart
+git add -- test/vessel_profile_view_test.dart
+git add -- tool/t99_conductor.dart
+git add -- tool/t121_capturas_web.py
+git add -- tool/t121_capturas_android.py
+git add -- tool/t98c_idioma.py
+git add -- tool/t98c_material3.py
+```
+
+```powershell
+git commit -m "Sprint 4: T-121, entrega 2, las estadisticas El buque en corte: la cifra protagonista a 48, la rampa nueva, la silueta grande con dos pilas por bahia, los cinco paneles y Ver como tabla" --trailer "Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+El último comando tiene que decir **25 files changed**. No cambian `pubspec.yaml` ni
+`pubspec.lock`, ni `domain/`, `data/`, `lib/main.dart`, los congelados o `docs/piloto/LISTA-PILOTO.md`.
+
+### E2.13 Mensaje para Yov
+
+> Yov: la entrega 2 de T-117 a T-121, **T-121, las estadísticas A «El buque en corte»** (10.46), está en
+> `docs/T117-T121-RESULTADOS.md`, sección «Entrega 2 · T-121», y en `DESIGN.md` 15 (con la fila de 4.2 y la
+> nota de 5.5). **Lo hecho:** la cifra protagonista a 48 (`BsEscala.cifraProtagonista`), la rampa nueva de
+> 0.9.4 en `bs_paleta.dart` (`#88B0F5` entra; `#D9E7FC` es la pista de día), cinco componentes nuevos
+> (`BsBuqueEnCorte`, `BsBarraDeMagnitud`, `BsCajaDeCodigo`, `BsTarjetaDeRol`, `BsPanel`), las cifras en Dart
+> puro (`EstadisticasDelViaje`) y la página reescrita: la silueta grande con dos pilas por bahía y el pie
+> (número, cuenta, peso) en el mismo eje, «Contenedores / Peso», tocar una bahía abre el plano, los cinco
+> paneles (la caja del puerto, el anillo, la rampa en los tamaños, las tarjetas de rol, las navieras) y
+> «Ver como tabla» con Esc y Atrás. `vessel_profile_view.dart` sale. **Lo que cambió respecto de 0.9.5:**
+> trece puntos en 15.11; los más visibles, el peso por bahía como cifra y no como columna, las pilas en los
+> colores del ícono, 56 dp por la escala de la letra y «Otros N» solo cuando sobran dos o más. **Cifras:**
+> suite 1773 (piso 1685), `analyze` en cero; 92 pruebas nuevas (las cifras cuadran, el contraste
+> compuesto en los dos temas, `meetsGuideline`, 360 × 2.0 sin cortes ni palabras partidas, la matriz de 12
+> tamaños, el censo sin `Colors.*`, la tabla con los mismos números, Esc también con el teclado, el sintético
+> de 977 en 72 bahías). **La revisión sin compilar** (cuatro agentes y un escéptico por hallazgo, antes de la
+> luz verde) encontró lo que el compilador no ve: el foco de la tabla, la tinta de las bahías bajo la hoja,
+> el segmento y la tabla que partían palabras a 360 dp, el anillo con la letra a 2.0; todo corregido y
+> anotado en E2.7. **Capturas** con datos sintéticos: Windows 32 + 26 (el 977 y la llegada), la Web 24 y el
+> emulador 24, en los dos temas, sin textos cortados ni errores; evidencia en `build/t121-entrega2/`.
+> Son 25 rutas en el bloque (dos borradas). Para la lista del piloto, una nota (E2.10); no la toqué.
+
+**ALTO: Codex acepta.**

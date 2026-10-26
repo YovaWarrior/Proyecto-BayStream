@@ -19,6 +19,10 @@
 //     carga) y lo cierra, para que el inicio tenga un reciente, y deja el
 //     historial de escala en T99_ESCALA_ANTERIOR, para que el archivo
 //     T99_ARCHIVO abra en previo; cada previo se descarta después.
+//   - `estadisticas` (T-121, DESIGN.md 15): publica T99_ARCHIVO con la escala
+//     anterior como `plano` y, por tema, letra y tamaño de T99_ANCHOS, captura
+//     Estadísticas con la pila por contenedores, por peso, la popa de la
+//     silueta desplazada y «Ver como tabla».
 //
 // Las definiciones se leen al compilar (--dart-define) y, si faltan, del
 // entorno del proceso al arrancar (Windows y Android): el mismo binario sirve
@@ -173,6 +177,8 @@ class T99Conductor {
           await _escenarioInicio();
         case 'plano':
           await _escenarioPlano();
+        case 'estadisticas':
+          await _escenarioEstadisticas();
         case 'piloto':
           await _escenarioPiloto();
         default:
@@ -415,6 +421,101 @@ class T99Conductor {
         .read(themePreferenceProvider.notifier)
         .select(AppThemePreference.system);
     await _asentar();
+  }
+
+  // --- Escenario de Estadísticas (T-121, DESIGN.md 15) ---------------------
+
+  /// Publica T99_ARCHIVO (con la escala anterior, como `plano`) y, por tema,
+  /// letra y tamaño, captura Estadísticas: la pila por contenedores, por peso,
+  /// la popa de la silueta desplazada hasta el final y «Ver como tabla». Deja
+  /// la app como la encontró.
+  Future<void> _escenarioEstadisticas() async {
+    final contenedor = _contenedorRiverpod();
+    final n = contenedor.read(voyageNotifierProvider.notifier);
+    if (_escalaAnterior.isNotEmpty) {
+      final local = await contenedor.read(localVesselRepositoryProvider.future);
+      await local.setLastConfirmedPortOfCall(_escalaAnterior);
+    }
+    final datos = await rootBundle.load('t99_inputs/$_archivo');
+    final error = await t99Publicar(
+        n, String.fromCharCodes(datos.buffer.asUint8List()), _archivo);
+    if (error != null) throw StateError(error);
+    await _asentar();
+    for (final tema in [AppThemePreference.light, AppThemePreference.dark]) {
+      await contenedor.read(themePreferenceProvider.notifier).select(tema);
+      await _asentar();
+      final nombreTema = tema == AppThemePreference.light ? 'claro' : 'oscuro';
+      for (final letra in _letras.split(',').map((s) => double.parse(s.trim()))) {
+        _letra.value = letra;
+        for (final especificacion in _anchos.split(',').map((s) => s.trim())) {
+          final partes = especificacion.split('x');
+          _tamano.value = especificacion == 'real'
+              ? null
+              : Size(double.parse(partes[0]), double.parse(partes[1]));
+          await _asentar();
+          final sufijo = '${especificacion}_${nombreTema}_letra$letra';
+          contenedor
+              .read(destinoDelViajeProvider.notifier)
+              .ir(DestinoDelViaje.estadisticas);
+          await _asentar();
+          _posicionBajo('estadisticas-scroll')?.jumpTo(0);
+          await _asentar();
+          await _capturar(sufijo, 'estadisticas');
+          // La pila por peso, con el selector a la vista.
+          await _tocarALaVista(
+              () => _textoEn('Peso', (w) => w is SegmentedButton));
+          await _asentar();
+          _posicionBajo('estadisticas-scroll')?.jumpTo(0);
+          await _asentar();
+          await _capturar(sufijo, 'estadisticas_peso');
+          // La popa: la silueta desplazada hasta el final.
+          final buque = _posicionBajo('buque-en-corte-scroll');
+          if (buque != null && buque.maxScrollExtent > 0) {
+            buque.jumpTo(buque.maxScrollExtent);
+            await _asentar();
+            await _capturar(sufijo, 'estadisticas_popa');
+            buque.jumpTo(0);
+            await _asentar();
+          }
+          await _tocarALaVista(
+              () => _textoEn('Contenedores', (w) => w is SegmentedButton));
+          await _asentar();
+          // Las mismas cifras en tablas, y de vuelta a los gráficos.
+          await _tocarALaVista(() => _conClave('estadisticas-ver-tabla'));
+          await _asentar();
+          _posicionBajo('estadisticas-scroll')?.jumpTo(0);
+          await _asentar();
+          await _capturar(sufijo, 'estadisticas_tabla');
+          await _tocarALaVista(() => _conClave('estadisticas-ver-tabla'));
+          await _asentar();
+        }
+      }
+    }
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
+    _letra.value = 1.0;
+    _tamano.value = null;
+    await contenedor
+        .read(themePreferenceProvider.notifier)
+        .select(AppThemePreference.system);
+    await _asentar();
+  }
+
+  /// La posición del primer desplazable debajo del control con [clave], o
+  /// `null` si no está a la vista.
+  ScrollPosition? _posicionBajo(String clave) {
+    final raiz = _buscarElemento((e) => e.widget.key == ValueKey(clave));
+    ScrollableState? estado;
+    void buscar(Element e) {
+      if (estado != null) return;
+      if (e is StatefulElement && e.state is ScrollableState) {
+        estado = e.state as ScrollableState;
+        return;
+      }
+      e.visitChildElements(buscar);
+    }
+
+    raiz?.visitChildElements(buscar);
+    return estado?.position;
   }
 
   /// T-117 (`DESIGN.md` 14): con el panel lateral fijo (desde 1200 dp), la
