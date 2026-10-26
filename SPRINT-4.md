@@ -1373,3 +1373,35 @@ Se ve también en `T100_LLEGADA`: Estadísticas dibuja nueve columnas, seis de e
 - La meta sigue: la entrega 2 aceptada hacia el 3-nov, y la 3.2.0 a más tardar el 4-nov.
 
 La siguiente decisión es la **10.54**.
+
+### 10.54 · La corrección 1 de la entrega 2, entregada y revisada: con pocas bahías, la silueta llena el panel; pasa a la reaceptación de Codex (26-oct, 11:15)
+
+**Timonel la entregó a las 11:05, con Opus 5.5** (`docs/T117-T121-RESULTADOS.md`, «Entrega 2 · corrección 1», y `DESIGN.md` 15.4):
+- **H1:** cuando las bahías caben, se reparten el ancho útil del panel (`BsBuqueEnCorte.repartir`):
+  - cada bahía crece hasta un tope de tres veces su mínimo: 168 dp con la letra a 1.0 y 336 a 2.0. Si aun así sobra ancho, el casco va centrado. Con ese tope, desde ocho bahías la silueta llena el panel de 1440;
+  - con 600 dp o más de ancho, el alto de las zonas crece en la misma proporción, hasta 1.5 veces: de 72 a 108 dp;
+  - no cambian las 72 bahías, el teléfono ni la letra a 2.0 cuando no caben: 56 dp por bahía, el alto base y el desplazamiento.
+- **O1:** la muestra de la leyenda es una pila pequeña de tres niveles, de 10 × 17 dp y sin borde. En el árbol accesible sigue siendo texto.
+- **Cifras:**
+  - 10 pruebas nuevas en `test/t121_entrega2_c1_test.dart`. Contra una copia de `a5dfc9f`, con solo la regla del reparto añadida para que compile, fallan las 8 de H1 y O1, y pasan la regla y la de las 72 bahías;
+  - la suite, 1783 de 1783 (antes 1773), sin fallidas ni omitidas, en una corrida, y `analyze` en cero;
+  - 154 capturas con datos sintéticos, sin textos cortados ni errores de Flutter: Windows 58, la Web 48 y el emulador 48. En E2C1.6 el informe dice 146; son 154 (26 + 32 + 4 × 24).
+- Tras la primera corrida en rojo, Timonel corrigió tres comprobaciones mal planteadas de su prueba: el redondeo de los anchos, las bahías del caso de tres y la medida de la muestra. Ninguna toca lo que miden H1 y O1; por eso el «antes» que cuenta es la corrida contra `a5dfc9f`.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 6 archivos cambiados y 1 nuevo, 7 rutas. No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto, y la regla de las bahías pares e impares no se tocó;
+- el código hace lo que dice: un `LayoutBuilder` da el ancho del panel y `repartir` lo divide. Si las bahías caben, la silueta va en una caja del ancho del panel, centrada; si no, se desplaza como antes;
+- las pruebas miden lo que importa:
+  - con nueve bahías, a 1920 y a 1366, las bahías ocupan más del 90 % del panel, sin nada que desplazar, y la proa y la popa quedan a 40 dp o menos del borde;
+  - con tres bahías, cada una mide su tope y el casco va centrado;
+  - las 72 bahías se desplazan como antes;
+- en las capturas, la silueta de nueve bahías va de borde a borde a 1920 y a 1366, en los dos temas. A 1366 con la letra a 2.0 no cabe y se desplaza, como dice la regla. El 977 y el teléfono se ven como antes. La leyenda ya no parece una casilla, y sin el borde la muestra de «Cubierta» se sigue viendo en el tema claro;
+- **una cosa para la reaceptación:** en el plano de llegada queda una franja vacía arriba del casco. La cubierta lleva un solo nivel, y su zona reserva el mismo alto que la bodega, ahora de 108 dp. Es la escala común de 15.4, no un defecto; Codex dice si la protagonista cumple con «en grande».
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y esta decisión, y mueve `qa-r4` al commit de esta decisión.
+- Codex reacepta H1 y O1 en los tres clientes, con la suite y `analyze`, y coteja su copia antes de la primera corrida (10.53). Corre Flutter con la luz verde de Carlos mientras la laptop no vaya al muelle (10.47).
+- Siguen abiertas para Carlos dos decisiones de 10.53: la regla de la bahía par y la 3.1.1.
+- La meta sigue: la entrega 2 aceptada hacia el 3-nov, y la 3.2.0 a más tardar el 4-nov.
+
+La siguiente decisión es la **10.55**.
