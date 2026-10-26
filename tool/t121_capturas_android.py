@@ -8,8 +8,10 @@ y, si abre en previo (sin perfil), confirma su perfil como lo haría la
 oficina, sin límite de apilamiento: queda publicado, sin escala, y la vez
 siguiente abre publicado por DESIGN.md 7.2. En Estadísticas (DESIGN.md 15)
 captura, con la letra del sistema a 1.0, 1.45 y 2.0 en claro y a 1.0 en
-oscuro (Parámetros → Tema): la página («977 contenedores a bordo»), la pila
-por peso, la popa de la silueta desplazada hasta el final y «Ver como tabla».
+oscuro (Parámetros → Tema; --letras y --letras-oscuro las cambian): la página
+(«977 contenedores a bordo»), la pila por peso, la popa de la silueta
+desplazada hasta el final y «Ver como tabla». Con --archivo, otro sintético de
+la misma carpeta (T100_LLEGADA.edi, nueve bahías).
 Deja la letra en 1.0 y el tema en «Seguir al sistema». Nunca el Honor; nunca
 «Nube y cuenta». Los PNG se guardan con `screencap`:
 emulador_360_<tema>_letra<escala>_<pantalla>.png.
@@ -141,6 +143,8 @@ def main():
     p.add_argument('--reiniciar-datos', action='store_true')
     p.add_argument('--archivo', default='T99_SINTETICO_977.edi',
                    help='el sintético de 977 en 72 bahías, en /sdcard/Download/t114/')
+    p.add_argument('--letras', default='1.0,1.45,2.0', help='las letras en claro')
+    p.add_argument('--letras-oscuro', default='1.0', help='las letras en oscuro')
     args = p.parse_args()
     if args.serial != 'emulator-5554' and not os.environ.get('T114_HONOR_AUTORIZADO'):
         raise ValueError('El Honor solo con el permiso de Carlos (T114_HONOR_AUTORIZADO=1).')
@@ -161,7 +165,7 @@ def main():
         tema('Seguir al sistema')
         publicar(args.archivo)
         a_estadisticas()
-        for letra in ('1.0', '1.45', '2.0'):
+        for letra in args.letras.split(','):
             adb('shell', 'settings', 'put', 'system', 'font_scale', letra)
             time.sleep(2.5)
             esperar(PROTAGONISTA, 40)
@@ -172,7 +176,13 @@ def main():
         tema('Oscuro')
         publicar(args.archivo)
         a_estadisticas()
-        recorrido(out, 'emulador_360_oscuro_letra1.0', registro)
+        for letra in args.letras_oscuro.split(','):
+            adb('shell', 'settings', 'put', 'system', 'font_scale', letra)
+            time.sleep(2.5)
+            esperar(PROTAGONISTA, 40)
+            recorrido(out, f'emulador_360_oscuro_letra{letra}', registro)
+        adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0')
+        time.sleep(2)
         cerrar_el_plano()
         tema('Seguir al sistema')
     finally:

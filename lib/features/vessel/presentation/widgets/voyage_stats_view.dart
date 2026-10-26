@@ -383,10 +383,12 @@ class _Graficos extends StatelessWidget {
                 ),
               ),
               _Muestra(
+                key: const ValueKey<String>('estadisticas-muestra-cubierta'),
                 color: semanticos.porBajarCubierta.relleno,
                 rotulo: 'Cubierta',
               ),
               _Muestra(
+                key: const ValueKey<String>('estadisticas-muestra-bodega'),
                 color: semanticos.porBajarBodega.relleno,
                 rotulo: 'Bodega',
               ),
@@ -640,9 +642,19 @@ class _Linea extends StatelessWidget {
   }
 }
 
-/// Una muestra de color con su rótulo, para la leyenda de las dos zonas.
+/// La muestra de una zona en la leyenda del buque en corte (15.4): una pila
+/// pequeña de tres niveles en el color de la zona, con su separador de 1 dp
+/// en el color de la hoja, como las pilas de la silueta. Es más alta que
+/// ancha y no lleva borde, para que no parezca una casilla para marcar
+/// (O1 de la aceptación, 10.53). En el árbol accesible es su rótulo, texto.
 class _Muestra extends StatelessWidget {
-  const _Muestra({required this.color, required this.rotulo});
+  const _Muestra({super.key, required this.color, required this.rotulo});
+
+  /// El ancho de la pila pequeña.
+  static const double ancho = 10;
+
+  /// El alto de cada nivel.
+  static const double nivel = 5;
 
   final Color color;
   final String rotulo;
@@ -651,20 +663,28 @@ class _Muestra extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final medidas = BsMedidas.de(context);
+    final bloque = DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(1),
+      ),
+      child: const SizedBox(width: ancho, height: nivel),
+    );
     return Semantics(
       label: rotulo,
       excludeSemantics: true,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
-              border: Border.all(color: tema.colorScheme.outline),
-            ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              bloque,
+              const SizedBox(height: 1),
+              bloque,
+              const SizedBox(height: 1),
+              bloque,
+            ],
           ),
           SizedBox(width: medidas.espacioXs + 2),
           Text(rotulo, style: tema.textTheme.labelMedium),

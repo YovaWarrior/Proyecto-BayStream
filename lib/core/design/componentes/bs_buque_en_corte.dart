@@ -77,10 +77,13 @@ class BsBahiaEnCorte {
 ///
 /// Debajo de cada bahía, en el mismo eje y nunca girado, el número, la cuenta
 /// y el peso. Cada bahía es un botón de la columna entera, con su etiqueta;
-/// la descripción emergente va fuera de la semántica. Cada bahía mide 56 dp
-/// por la escala de la letra ([anchoBahia]), y nunca menos que el rótulo más
-/// ancho del pie más 8: con la letra a 2.0, 112. La silueta se desplaza a lo
-/// ancho con su barra visible; si no cabe en la pantalla, se recorre.
+/// la descripción emergente va fuera de la semántica. Cada bahía mide al
+/// menos 56 dp por la escala de la letra ([anchoBahia]), y nunca menos que el
+/// rótulo más ancho del pie más 8: con la letra a 2.0, 112. Si las bahías
+/// caben, se reparten el ancho útil hasta [topeDeLaBahia] veces su mínimo y,
+/// si aun así sobra, el casco va centrado; fuera del teléfono las zonas
+/// crecen en la misma proporción hasta [crecimientoDelAlto] ([repartir]). Si
+/// no caben, la silueta se desplaza a lo ancho con su barra visible.
 ///
 /// Los colores salen del tema: las pilas son las de la vista Estado (13.2),
 /// `porBajarCubierta` y `porBajarBodega` (el buque se pinta como el ícono); el
@@ -112,7 +115,8 @@ class BsBuqueEnCorte extends StatefulWidget {
   /// El ancho de la columna de cada bahía con la letra a 1.0.
   static const double anchoBahiaBase = 56;
 
-  /// El alto de la pila más alta, en cubierta y en bodega.
+  /// El alto base de la pila más alta, en cubierta y en bodega: el de la
+  /// silueta que no cabe, la del teléfono y la que cabe sin crecer.
   static const double altoDeZona = 72;
 
   /// Cada cuánto va un separador de nivel en la pila: el paso de los niveles
@@ -134,14 +138,67 @@ class BsBuqueEnCorte extends StatefulWidget {
   /// El margen mínimo de la proa y de la popa.
   static const double margenBase = 28;
 
-  /// La línea de la tapa.
-  static double get yTapa => arriba + altoDeZona + holgura;
+  /// Hasta cuántas veces su ancho mínimo crece una bahía cuando las bahías
+  /// caben y sobra ancho (`DESIGN.md` 15.4): con 168 dp a la letra 1.0, la
+  /// pila mide 156 y no pasa de una vez y media el alto de su zona crecida;
+  /// sigue leyéndose como una pila de contenedores y no como una losa. Con
+  /// ese tope, desde ocho bahías la silueta llena un panel de 1440.
+  static const double topeDeLaBahia = 3;
 
-  /// El fondo del casco.
-  static double get yFondo => yTapa + holgura + altoDeZona + fondo;
+  /// Hasta cuántas veces crece el alto de cada zona cuando las bahías crecen:
+  /// en la misma proporción que la bahía, hasta 108 dp.
+  static const double crecimientoDelAlto = 1.5;
 
-  /// El alto del dibujo, sin el pie: el casco y la línea de flotación.
-  static double get altoDelDibujo => yFondo + 4;
+  /// Desde qué ancho disponible crece el alto de las zonas: por debajo es el
+  /// teléfono, donde la página no cambia.
+  static const double anchoParaCrecerElAlto = 600;
+
+  /// El reparto del ancho [disponible] entre [bahias] columnas
+  /// (`DESIGN.md` 15.4). Si no caben con [anchoMinimo] (o el ancho no está
+  /// acotado), cada una mide [anchoMinimo], la zona [altoDeZona] y la silueta
+  /// se desplaza. Si caben, cada una crece hasta llenar el ancho, sin pasar
+  /// de [topeDeLaBahia] veces su mínimo; y, si el ancho disponible no es el
+  /// de un teléfono, el alto de las zonas crece en la misma proporción, sin
+  /// pasar de [crecimientoDelAlto].
+  static ({double ancho, double altoDeZona}) repartir({
+    required int bahias,
+    required double anchoMinimo,
+    required double margen,
+    required double disponible,
+  }) {
+    if (bahias <= 0 || !disponible.isFinite) {
+      return (ancho: anchoMinimo, altoDeZona: altoDeZona);
+    }
+    final porBahia = (disponible - 2 * margen) / bahias;
+    if (porBahia <= anchoMinimo) {
+      return (ancho: anchoMinimo, altoDeZona: altoDeZona);
+    }
+    final ancho = math.min(porBahia, topeDeLaBahia * anchoMinimo);
+    final crece = disponible >= anchoParaCrecerElAlto
+        ? math.min(ancho / anchoMinimo, crecimientoDelAlto)
+        : 1.0;
+    return (ancho: ancho, altoDeZona: altoDeZona * crece);
+  }
+
+  /// La línea de la tapa, con el alto base de la zona.
+  static double get yTapa => yTapaCon(altoDeZona);
+
+  /// El fondo del casco, con el alto base de la zona.
+  static double get yFondo => yFondoCon(altoDeZona);
+
+  /// El alto del dibujo, sin el pie, con el alto base de la zona: el casco y
+  /// la línea de flotación.
+  static double get altoDelDibujo => altoDelDibujoCon(altoDeZona);
+
+  /// La línea de la tapa cuando cada zona mide [alto].
+  static double yTapaCon(double alto) => arriba + alto + holgura;
+
+  /// El fondo del casco cuando cada zona mide [alto].
+  static double yFondoCon(double alto) =>
+      yTapaCon(alto) + holgura + alto + fondo;
+
+  /// El alto del dibujo, sin el pie, cuando cada zona mide [alto].
+  static double altoDelDibujoCon(double alto) => yFondoCon(alto) + 4;
 
   /// El ancho de la columna de cada bahía: [anchoBahiaBase] por la escala de
   /// la letra, y nunca menos que [anchoDelPie] (el rótulo más ancho del pie)
@@ -230,7 +287,8 @@ class _BsBuqueEnCorteState extends State<BsBuqueEnCorte> {
         ),
       );
     }
-    final ancho = BsBuqueEnCorte.anchoBahia(escala, anchoDelPie: anchoDelPie);
+    final anchoMinimo =
+        BsBuqueEnCorte.anchoBahia(escala, anchoDelPie: anchoDelPie);
     final margen = math.max(
       BsBuqueEnCorte.margenBase,
       math.max(
@@ -266,76 +324,110 @@ class _BsBuqueEnCorteState extends State<BsBuqueEnCorte> {
       bodega: semanticos.porBajarBodega.relleno,
     );
 
-    final cuerpo = Stack(
-      children: <Widget>[
-        Positioned.fill(
-          child: ExcludeSemantics(
-            child: RepaintBoundary(
-              child: CustomPaint(
-                painter: _BuquePainter(
-                  bahias: bahias,
-                  magnitud: widget.magnitud,
-                  maximo: maximo,
-                  ancho: ancho,
-                  margen: margen,
-                  colores: colores,
+    // El cuerpo con el ancho de cada bahía y el alto de cada zona que da el
+    // reparto (15.4).
+    Widget cuerpoCon(double ancho, double altoDeZona) {
+      final altoDelDibujo = BsBuqueEnCorte.altoDelDibujoCon(altoDeZona);
+      return Stack(
+        children: <Widget>[
+          Positioned.fill(
+            child: ExcludeSemantics(
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: _BuquePainter(
+                    bahias: bahias,
+                    magnitud: widget.magnitud,
+                    maximo: maximo,
+                    ancho: ancho,
+                    altoDeZona: altoDeZona,
+                    margen: margen,
+                    colores: colores,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          left: medidas.espacioXs,
-          top: BsBuqueEnCorte.altoDelDibujo + medidas.espacioXs,
-          child: ExcludeSemantics(child: Text('Proa', style: estiloExtremo)),
-        ),
-        Positioned(
-          right: medidas.espacioXs,
-          top: BsBuqueEnCorte.altoDelDibujo + medidas.espacioXs,
-          child: ExcludeSemantics(child: Text('Popa', style: estiloExtremo)),
-        ),
-        // La tinta de los botones (el hover, la pulsación, el anillo de
-        // foco) se pinta en este Material transparente, por encima del
-        // casco y de la hoja del panel; sin él iría al Material del Scaffold,
-        // debajo de la hoja, y no se vería.
-        Material(
-          type: MaterialType.transparency,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: margen),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                for (final bahia in bahias)
-                  _ColumnaDeBahia(
-                    key: ValueKey<String>('buque-en-corte-bahia-${bahia.numero}'),
-                    bahia: bahia,
-                    ancho: ancho,
-                    estiloNumero: estiloNumero,
-                    estiloCuenta: estiloCuenta,
-                    estiloPeso: estiloPeso,
-                    onTap: () => widget.onSeleccion(bahia.numero),
-                  ),
-              ],
+          Positioned(
+            left: medidas.espacioXs,
+            top: altoDelDibujo + medidas.espacioXs,
+            child: ExcludeSemantics(child: Text('Proa', style: estiloExtremo)),
+          ),
+          Positioned(
+            right: medidas.espacioXs,
+            top: altoDelDibujo + medidas.espacioXs,
+            child: ExcludeSemantics(child: Text('Popa', style: estiloExtremo)),
+          ),
+          // La tinta de los botones (el hover, la pulsación, el anillo de
+          // foco) se pinta en este Material transparente, por encima del
+          // casco y de la hoja del panel; sin él iría al Material del Scaffold,
+          // debajo de la hoja, y no se vería.
+          Material(
+            type: MaterialType.transparency,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: margen),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  for (final bahia in bahias)
+                    _ColumnaDeBahia(
+                      key: ValueKey<String>(
+                          'buque-en-corte-bahia-${bahia.numero}'),
+                      bahia: bahia,
+                      ancho: ancho,
+                      altoDelDibujo: altoDelDibujo,
+                      estiloNumero: estiloNumero,
+                      estiloCuenta: estiloCuenta,
+                      estiloPeso: estiloPeso,
+                      onTap: () => widget.onSeleccion(bahia.numero),
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    }
 
     return Semantics(
       container: true,
       label: descripcion,
-      child: Scrollbar(
-        controller: _controlador,
-        thumbVisibility: true,
-        scrollbarOrientation: ScrollbarOrientation.bottom,
-        child: SingleChildScrollView(
-          key: const ValueKey<String>('buque-en-corte-scroll'),
-          controller: _controlador,
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.only(bottom: medidas.espacioM),
-          child: cuerpo,
-        ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints restricciones) {
+          final disponible = restricciones.maxWidth;
+          final reparto = BsBuqueEnCorte.repartir(
+            bahias: bahias.length,
+            anchoMinimo: anchoMinimo,
+            margen: margen,
+            disponible: disponible,
+          );
+          final cuerpo = cuerpoCon(reparto.ancho, reparto.altoDeZona);
+          // Si las bahías caben, la silueta ocupa el ancho útil del panel y,
+          // si las bahías ya llegaron a su tope, el casco va centrado. Si no
+          // caben, se desplaza como antes.
+          final cabe = disponible.isFinite &&
+              2 * margen + bahias.length * reparto.ancho <= disponible + 0.5;
+          return Scrollbar(
+            controller: _controlador,
+            thumbVisibility: true,
+            scrollbarOrientation: ScrollbarOrientation.bottom,
+            child: SingleChildScrollView(
+              key: const ValueKey<String>('buque-en-corte-scroll'),
+              controller: _controlador,
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.only(bottom: medidas.espacioM),
+              child: cabe
+                  ? SizedBox(
+                      width: disponible,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        heightFactor: 1,
+                        child: cuerpo,
+                      ),
+                    )
+                  : cuerpo,
+            ),
+          );
+        },
       ),
     );
   }
@@ -346,6 +438,7 @@ class _ColumnaDeBahia extends StatelessWidget {
     super.key,
     required this.bahia,
     required this.ancho,
+    required this.altoDelDibujo,
     required this.estiloNumero,
     required this.estiloCuenta,
     required this.estiloPeso,
@@ -354,6 +447,7 @@ class _ColumnaDeBahia extends StatelessWidget {
 
   final BsBahiaEnCorte bahia;
   final double ancho;
+  final double altoDelDibujo;
   final TextStyle? estiloNumero;
   final TextStyle? estiloCuenta;
   final TextStyle? estiloPeso;
@@ -379,7 +473,7 @@ class _ColumnaDeBahia extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                SizedBox(height: BsBuqueEnCorte.altoDelDibujo),
+                SizedBox(height: altoDelDibujo),
                 SizedBox(height: medidas.espacioXs),
                 Text(bahia.rotulo, style: estiloNumero, maxLines: 1),
                 SizedBox(height: medidas.espacioXs),
@@ -444,6 +538,7 @@ class _BuquePainter extends CustomPainter {
     required this.magnitud,
     required this.maximo,
     required this.ancho,
+    required this.altoDeZona,
     required this.margen,
     required this.colores,
   });
@@ -452,13 +547,14 @@ class _BuquePainter extends CustomPainter {
   final BsMagnitudDeLaPila magnitud;
   final double maximo;
   final double ancho;
+  final double altoDeZona;
   final double margen;
   final _Colores colores;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final yTapa = BsBuqueEnCorte.yTapa;
-    final yFondo = BsBuqueEnCorte.yFondo;
+    final yTapa = BsBuqueEnCorte.yTapaCon(altoDeZona);
+    final yFondo = BsBuqueEnCorte.yFondoCon(altoDeZona);
     final xProa = margen * 0.5;
     final xPopa = size.width - margen * 0.5;
     final curvaProa = math.min(margen * 1.6, (xPopa - xProa) / 3);
@@ -492,8 +588,7 @@ class _BuquePainter extends CustomPainter {
     );
 
     final anchoPila = ancho - 12;
-    final porUnidad =
-        maximo > 0 ? BsBuqueEnCorte.altoDeZona / maximo : 0.0;
+    final porUnidad = maximo > 0 ? altoDeZona / maximo : 0.0;
     const radio = Radius.circular(2);
     final pintaCubierta = Paint()..color = colores.cubierta;
     final pintaBodega = Paint()..color = colores.bodega;
@@ -503,13 +598,13 @@ class _BuquePainter extends CustomPainter {
     for (var i = 0; i < bahias.length; i++) {
       final bahia = bahias[i];
       final x = margen + i * ancho + 6;
-      final altoCubierta =
-          bahia.magnitud(magnitud, cubierta: true) * porUnidad;
+      final altoCubierta = bahia.magnitud(magnitud, cubierta: true) * porUnidad;
       final altoBodega = bahia.magnitud(magnitud, cubierta: false) * porUnidad;
 
       if (altoCubierta > 0) {
         final base = yTapa - BsBuqueEnCorte.holgura;
-        final rect = Rect.fromLTWH(x, base - altoCubierta, anchoPila, altoCubierta);
+        final rect =
+            Rect.fromLTWH(x, base - altoCubierta, anchoPila, altoCubierta);
         canvas.drawRRect(
           RRect.fromRectAndCorners(rect, topLeft: radio, topRight: radio),
           pintaCubierta,
@@ -524,8 +619,7 @@ class _BuquePainter extends CustomPainter {
 
       // La tapa de esta bahía.
       canvas.drawRect(
-        Rect.fromLTWH(
-            x, yTapa - BsBuqueEnCorte.grosorDeTapa, anchoPila,
+        Rect.fromLTWH(x, yTapa - BsBuqueEnCorte.grosorDeTapa, anchoPila,
             BsBuqueEnCorte.grosorDeTapa),
         pintaTapa,
       );
@@ -534,8 +628,7 @@ class _BuquePainter extends CustomPainter {
         final base = yTapa + BsBuqueEnCorte.holgura;
         final rect = Rect.fromLTWH(x, base, anchoPila, altoBodega);
         canvas.drawRRect(
-          RRect.fromRectAndCorners(rect,
-              bottomLeft: radio, bottomRight: radio),
+          RRect.fromRectAndCorners(rect, bottomLeft: radio, bottomRight: radio),
           pintaBodega,
         );
         for (var y = base + BsBuqueEnCorte.pasoDeNivel;
@@ -554,6 +647,7 @@ class _BuquePainter extends CustomPainter {
       anterior.magnitud != magnitud ||
       anterior.maximo != maximo ||
       anterior.ancho != ancho ||
+      anterior.altoDeZona != altoDeZona ||
       anterior.margen != margen ||
       anterior.colores != colores;
 }

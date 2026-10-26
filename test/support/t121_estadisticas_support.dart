@@ -129,6 +129,48 @@ VesselVoyage t121Sintetico977() {
   return viaje.withGeometry(VesselProfile.proposeFrom(viaje).geometry);
 }
 
+/// Las nueve bahías del plano de llegada de T-100 (`T100_LLEGADA.edi`): las
+/// tres de 40 (02, 06 y 10) y sus impares vecinas.
+const t121Bahias9 = <int>[1, 2, 3, 5, 6, 7, 9, 10, 11];
+
+/// Un viaje corto de [cuantos] contenedores repartidos por igual en
+/// [bahias], en bodega y en cubierta: 40 pies en las pares y 20 en las
+/// impares, tres puertos y dos navieras. Con [t121Bahias9] es la forma del
+/// plano de llegada (H1 de la aceptación, 10.53); es carga de prueba, no un
+/// viaje.
+VesselVoyage t121ViajeCorto(List<int> bahias, {int cuantos = 60}) {
+  final contenedores = <ContainerUnit>[];
+  for (var i = 0; i < cuantos; i++) {
+    final bahia = bahias[i % bahias.length];
+    final vuelta = i ~/ bahias.length;
+    final fila = 1 + vuelta % 7;
+    final nivel = vuelta < 4 ? 2 + 2 * vuelta : 82 + 2 * (vuelta - 4);
+    final raw = '${bahia.toString().padLeft(3, '0')}'
+        '${fila.toString().padLeft(2, '0')}${nivel.toString().padLeft(2, '0')}';
+    final diez = 'SNTU${(500000 + i).toString().padLeft(6, '0')}';
+    contenedores.add(ContainerUnit(
+      id: 'corto-$i',
+      containerId: '$diez${t121DigitoIso6346(diez)}',
+      isoSizeType: bahia.isOdd ? '22G1' : '42G1',
+      status: i % 10 == 3 ? ContainerStatus.empty : ContainerStatus.full,
+      stowagePosition:
+          IsoCoordinate(bay: bahia, row: fila, tier: nivel, rawCode: raw),
+      grossWeight: 9000.0 + (i % 13) * 1500,
+      portOfLoading: 'HNPCR',
+      portOfDischarge: t121Puertos[i % 3],
+      operatorCode: t121Navieras[i % 2],
+    ));
+  }
+  final viaje = VesselVoyage(
+    id: 't121-corto-${bahias.length}',
+    vessel: const Vessel(id: 'buque-sintetico', name: 'BUQUE SINTETICO'),
+    voyageNumber: 'S${bahias.length}',
+    portOfOrigin: 'HNPCR',
+    containers: contenedores,
+  );
+  return viaje.withGeometry(VesselProfile.proposeFrom(viaje).geometry);
+}
+
 /// La página de Estadísticas suelta, con el tema del muelle o de la oficina,
 /// las fuentes del producto y un `ProviderScope` (la tabla se anota en
 /// `cerrablesDeAtrasProvider`). Devuelve el contenedor de Riverpod.

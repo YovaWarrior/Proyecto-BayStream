@@ -1853,11 +1853,34 @@ contenedores y mide como una barra.
 
 - **Medidas** (dp, con la letra a 1.0): 8 de aire arriba; 72 la zona de cubierta; 4 de
   holgura; la tapa de 2 a la altura 84; 4 de holgura; 72 la zona de bodega; 10 de fondo; el
-  casco termina en 170 y la línea de flotación va 3 debajo. **Cada bahía mide 56 de ancho por
-  la escala de la letra** (`anchoBahia`), y nunca menos que el rótulo más ancho de su pie más
-  8: a 2.0 son 112, y con 72 bahías la silueta mide 8 064 y se desplaza. La pila mide 12
-  menos que la bahía. Los márgenes de proa y popa miden al menos 28: lo que midan «Proa» y
-  «Popa» con la letra del sistema, más 8.
+  casco termina en 170 y la línea de flotación va 3 debajo. **Cada bahía mide al menos 56 de
+  ancho por la escala de la letra** (`anchoBahia`), y nunca menos que el rótulo más ancho de
+  su pie más 8: a 2.0 son 112, y con 72 bahías la silueta mide 8 064 y se desplaza. La pila
+  mide 12 menos que la bahía. Los márgenes de proa y popa miden al menos 28: lo que midan
+  «Proa» y «Popa» con la letra del sistema, más 8.
+- **Cuando las bahías caben, la silueta ocupa el ancho útil del panel** (`repartir`; corrección
+  1 de la entrega 2, H1 de 10.53). Las bahías se reparten por igual lo que deja el panel
+  después de los dos márgenes, y **cada una crece hasta un tope de tres veces su mínimo**: 168
+  con la letra a 1.0, 336 a 2.0. Si aun así sobra ancho, **el casco va centrado** en el panel,
+  con la proa y la popa a la misma distancia de los bordes. Por qué tres veces:
+  - a 168 la pila mide 156, apenas una vez y media el alto de su zona crecida (108): sigue
+    leyéndose como una pila de contenedores y no como una losa. De costado, una bahía de 40
+    pies mide casi cinco veces el alto de un contenedor (12.2 m contra 2.6), y la pila de 56,
+    con niveles de 9, ya la dibuja más ancha de lo que es; más allá del triple, una sola bahía sería una barra y el casco un rectángulo;
+  - con ese tope, **desde ocho bahías la silueta llena el panel de 1440** (el de la página a
+    1920, 1 406 de ancho útil). El plano de llegada (nueve) lo llena a 1920 y a 1366; un
+    alimentador de tres o cuatro bahías va centrado, sin estirarse.
+- **En pantalla ancha, el alto de las zonas crece con la bahía:** en la misma proporción que
+  su ancho sobre el mínimo, hasta 1.5 veces (de 72 a 108 cada zona; el dibujo pasa de 174 a
+  246). El paso de los separadores sigue en 9: una zona crecida lleva más niveles dibujados,
+  no niveles más gruesos. **Solo crece si el ancho disponible es de 600 o más:** en el
+  teléfono la página no cambia. Allí, con los archivos reales, las bahías no caben y la
+  silueta se desplaza como antes; si un viaje trae tan pocas que caben, se reparten el ancho,
+  pero el alto queda en 72.
+- **Lo que no cambia:** la escala común de las pilas (la zona más cargada llena el alto de su
+  zona, el que sea), el pie en el mismo eje de su pila, el mínimo de 56 por la escala de la
+  letra, el desplazamiento con su barra cuando no caben (72 bahías, el teléfono, la letra a
+  2.0 en una ventana angosta), tocar una bahía y las etiquetas accesibles.
 - **El pie, en el mismo eje y nunca girado:** debajo de cada bahía, en columnas alineadas con
   su pila, el número (mono, 11, tinta tenue), **la cuenta** (12 / 500 tabular, tinta) y **el
   peso** («416.8 t», 11 tabular, tinta suave). Las tres van siempre, cualquiera que sea la
@@ -1868,7 +1891,11 @@ contenedores y mide como una barra.
   (`BsPrimeraQueCabe`), solo con los iconos y el nombre en la descripción emergente: en el
   teléfono, un segmento de media pantalla partía «Contenedores» a media palabra desde la letra
   a 1.1. Sin ningún peso en el archivo, «Peso» va deshabilitado: la pila no diría nada. Al lado, la leyenda de las dos zonas (una muestra y «Cubierta»,
-  «Bodega») y la frase «Toca una bahía para abrirla en el plano».
+  «Bodega») y la frase «Toca una bahía para abrirla en el plano». **La muestra es una pila
+  pequeña** en el color de su zona: tres niveles de 10 × 5 con un separador de 1 en el color
+  de la hoja, como las pilas de la silueta; mide 10 × 17, sin borde. Antes era un cuadro de
+  12 con borde, y la de «Cubierta», blanca de noche, parecía una casilla para marcar (O1 de
+  10.53). En el árbol accesible sigue siendo su rótulo, texto: ni botón ni casilla.
 - **Tocar una bahía la abre en el plano** (`_openBayPlan`, como antes): cada bahía es un
   botón de la columna entera, con la etiqueta «Bahía 14, 36 contenedores, 712.4 t, 18 en
   cubierta y 18 en bodega» y la pista «Abre la bahía en el plano»; la descripción emergente
@@ -2125,3 +2152,11 @@ tabla con los mismos números que los gráficos; el sintético de 977 contenedor
 sobre el sintético y sobre el plano de dos bahías de T-117; «Otros N puertos» y «Otras N
 navieras»; Esc y Atrás cierran la tabla, también abierta con el teclado (Tab e Intro); y tocar
 una bahía la abre en el plano, como la prueba de T-109 que sustituye.
+
+La corrección 1 de la entrega 2 añade `test/t121_entrega2_c1_test.dart`: con las nueve bahías
+del plano de llegada, a 1920 en los dos temas y en Contenedores y en Peso, a 1366 y con la
+letra a 2.0, la silueta ocupa el ancho útil del panel, sin nada que desplazar; con tres bahías,
+cada una en su tope y el casco centrado; el alto que crece 1.5 veces en pantalla ancha y no en
+el teléfono; con 72 bahías, 56 de ancho, el desplazamiento y la popa al alcance; la regla de
+`repartir`; y la muestra de la leyenda, una pila de tres niveles sin borde, más alta que ancha,
+que en el árbol accesible no es botón ni casilla.

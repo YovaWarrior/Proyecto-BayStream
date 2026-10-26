@@ -2403,3 +2403,201 @@ El último comando tiene que decir **25 files changed**. No cambian `pubspec.yam
 > Son 25 rutas en el bloque (dos borradas). Para la lista del piloto, una nota (E2.10); no la toqué.
 
 **ALTO: Codex acepta.**
+
+## Entrega 2 · corrección 1 (26-oct-2026)
+
+Timonel (Claude Code, Claude Opus 5.5), rama `sprint-4`, carpeta del rediseño, sobre `a5dfc9f`
+(decisión 10.53). La aceptación de Codex (`docs/t121/entrega2/aceptacion-codex.md`) no pasó por
+**H1 · P2**: con pocas bahías la silueta no era la protagonista «en grande». Dejó además **O1 · P3**:
+la muestra de «Cubierta» parecía una casilla para marcar. Esta corrección toca solo esos dos.
+
+### E2C1.1 Resultado en tres líneas
+
+- **Con pocas bahías, la silueta ocupa el ancho útil del panel.** Cada bahía crece hasta un tope de
+  tres veces su mínimo (168 dp con la letra a 1.0) y, si aun así sobra ancho, el casco va centrado.
+  En pantalla ancha las dos zonas crecen con la bahía, hasta 1.5 veces (de 72 a 108 dp). Con 72
+  bahías, en el teléfono y cuando no caben, todo sigue como antes.
+- **La muestra de la leyenda es una pila pequeña** de tres niveles con sus separadores, de
+  10 × 17 dp y sin borde. Ya no parece una casilla; en el árbol accesible sigue siendo texto.
+- **Suite 1783 (piso 1773, más 10)** y `analyze` en cero. Las 10 pruebas nuevas: 8 fallan contra `a5dfc9f` y pasan
+  después. Capturas: 146 con datos sintéticos en los tres clientes y los dos temas, sin textos cortados ni errores; en ellas la silueta de nueve bahías llena el panel a 1920 y a 1366.
+
+### E2C1.2 Lo que se corrió
+
+- Leí 10.48 y 10.53, la aceptación de Codex completa y su evidencia como lectura (las capturas de
+  nueve bahías a 1920 y la muestra), y `DESIGN.md` 15.4 y 15.11. Comprobé la base con
+  `git log --oneline -3`: `a5dfc9f`.
+- Con la luz verde de 10.47, uno a la vez:
+  1. la prueba nueva sobre el árbol con solo la regla del reparto, sin cablearla: 8 rojas;
+  2. el arreglo, y `t121_entrega2_c1_test.dart` con `t121_estadisticas_test.dart`: tres
+     comprobaciones de la prueba estaban mal planteadas (E2C1.5) y las corregí;
+  3. `analyze`: cero;
+  4. **la suite completa, una vez:** 1783 de 1783, sin fallidas ni omitidas;
+  5. la prueba final en una copia de `a5dfc9f` en `%TEMP%`, con solo la regla del reparto añadida
+     para que compile: 8 rojas, las de H1 y O1; pasan la regla y las 72 bahías;
+  6. el banco r4 de `%TEMP%` (`t99-r4-t121`) con `lib/` sincronizado y cotejado por huella, y sus
+     tres compilaciones: Windows, la Web y el APK;
+  7. las capturas: Windows abierto con `explorer.exe`, la Web en el Chrome de Playwright con perfil
+     temporal y el emulador (`-s emulator-5554`).
+- No usé el Honor, las apps instaladas, «PRUEBA T-105», `baystream-demo17`, Firebase ni la 3.1.0.
+  Datos sintéticos: `T100_LLEGADA` y `T99_SINTETICO_977`; nunca el corpus ni «Nube y cuenta». Nada
+  se publicó. El emulador quedó encendido, con la letra a 1.0; el servidor local de la Web, apagado.
+
+### E2C1.3 La causa
+
+`BsBuqueEnCorte` armaba una fila de ancho intrínseco (`mainAxisSize: MainAxisSize.min`) dentro de un
+`SingleChildScrollView` horizontal: cada bahía medía su mínimo, 56 dp por la escala de la letra o el
+pie más 8, y el ancho que sobraba en el panel quedaba vacío a la derecha. Con las nueve bahías del
+plano de llegada a 1920, el dibujo medía 9 × 56 + los dos márgenes, unos 575 dp, de 1 406 dp de
+ancho útil. Lo confirma la prueba roja: la popa quedaba a 866 dp del borde derecho del panel.
+
+### E2C1.4 El arreglo y el tope
+
+**El reparto** (`BsBuqueEnCorte.repartir`, `DESIGN.md` 15.4). La silueta lee el ancho que le da el
+panel (`LayoutBuilder`):
+- **si las bahías no caben** con su mínimo, o el ancho no está acotado, nada cambia: el mínimo, el
+  alto base de 72 y el desplazamiento con su barra;
+- **si caben**, se reparten por igual el ancho útil, menos los dos márgenes, **hasta un tope de tres
+  veces su mínimo**: 168 dp con la letra a 1.0 y 336 a 2.0. Si aun así sobra ancho, la silueta va
+  centrada, con la proa y la popa a la misma distancia de los bordes del panel;
+- **el alto de las dos zonas crece en la misma proporción que la bahía**, hasta 1.5 veces (de 72 a
+  108 dp; el dibujo pasa de 174 a 246). Solo si el ancho disponible es de 600 dp o más: en el
+  teléfono la página no cambia. El paso de los separadores sigue en 9 dp: una zona crecida lleva
+  más niveles dibujados, no niveles más gruesos.
+
+**Por qué tres veces el mínimo:**
+- a 168 dp la pila mide 156, poco más de una vez y media el alto de su zona crecida (108). Sigue
+  leyéndose como una pila de contenedores y no como una losa;
+- de costado, una bahía de 40 pies mide casi cinco veces el alto de un contenedor (12.2 m contra
+  2.6). Con niveles de 9 dp, la pila de 56 ya la dibuja más ancha de lo que es. Más allá del
+  triple, una sola bahía sería una barra y el casco un rectángulo;
+- con ese tope, **desde ocho bahías la silueta llena el panel de 1440**. El plano de llegada, con
+  nueve, lo llena a 1920 y a 1366. Un alimentador de tres o cuatro bahías va centrado, sin estirarse.
+
+**Lo que no cambia:** la escala común de las pilas, el pie en el mismo eje de su pila, el mínimo de
+56 dp por la escala de la letra, el desplazamiento con su barra cuando no caben, tocar una bahía, las
+etiquetas accesibles y la página en el teléfono. La regla de las bahías pares e impares no se toca:
+cada bahía sigue siendo su número (10.53).
+
+**O1.** La muestra de cada zona era un cuadro de 12 dp con borde. Ahora es una pila pequeña: tres
+niveles de 10 × 5 dp en el color de la zona, con un separador de 1 dp que deja ver la hoja, como las
+pilas de la silueta. Mide 10 × 17 dp, sin borde. El color y el rótulo no cambian, y en el árbol
+accesible sigue siendo el texto «Cubierta» o «Bodega».
+
+### E2C1.5 Las pruebas (`test/t121_entrega2_c1_test.dart`, 10)
+
+| Prueba | Antes (`a5dfc9f`) | Después |
+|---|---|---|
+| Nueve bahías a 1920, día: llenan el panel, en Contenedores y en Peso | roja: la popa a 866 dp del borde | verde |
+| Nueve bahías a 1920, noche: lo mismo | roja | verde |
+| Nueve bahías a 1366 × 768 | roja: 504 dp de 1 300 | verde |
+| Nueve bahías a 1920 con la letra a 2.0, nada se corta | roja: la popa a 337 dp | verde |
+| Tres bahías: cada una en su tope y el casco centrado | roja: 56 en vez de 168 | verde |
+| Pantalla ancha: las zonas crecen 1.5 veces; 72 bahías y el teléfono, alto base | roja: 234 en vez de 306 | verde |
+| 72 bahías a 1920: se desplazan como antes y la popa se toca | verde | verde |
+| La regla de `repartir` | verde (la regla ya estaba, sin cablear) | verde |
+| O1, día: la muestra es una pila de tres niveles, sin borde, más alta que ancha, y en el árbol es texto | roja: no existe | verde |
+| O1, noche | roja | verde |
+
+La prueba nueva se escribió antes del arreglo y se vio roja contra el árbol. Después corregí tres
+comprobaciones mal planteadas, ninguna sobre lo que mide H1 u O1:
+- los anchos de las nueve bahías se comparan redondeados a la centésima (diferían en 1e-13);
+- el caso de tres bahías usa la 01, la 05 y la 09: una de 40 en una par trae a sus dos vecinas
+  impares, y salían nueve columnas;
+- la proporción de la muestra se mide sobre la pila, no sobre la pila con su rótulo.
+
+Por eso la corrida que cuenta como «antes» es la de la prueba final contra `a5dfc9f`
+(`build/t121-entrega2-c1/pruebas/c1-contra-a5dfc9f.log`).
+
+El soporte (`test/support/t121_estadisticas_support.dart`) gana `t121Bahias9` y
+`t121ViajeCorto`: un viaje corto, por igual en cubierta y bodega, con 40 pies en las pares y 20 en
+las impares. Con las nueve bahías es la forma del plano de llegada.
+
+### E2C1.6 Las capturas
+
+| Cliente | Instrumento | Datos | Condiciones | PNG |
+|---|---|---|---|---:|
+| Windows | `tool/t114_capturas_windows.ps1 -Escenario estadisticas -PorExplorer` | `T100_LLEGADA` en GTSTC | 1920 × 1080 y 1366 × 768; claro y oscuro; letra 1.0 y 2.0 | 26 |
+| Windows | lo mismo | `T99_SINTETICO_977` | lo mismo | 32 |
+| Web | `tool/t121_capturas_web.py`, Chrome de Playwright con perfil temporal | `T100_LLEGADA` | 1920, 1366 y 360; claro y oscuro | 24 |
+| Web | lo mismo | `T99_SINTETICO_977` | lo mismo | 24 |
+| Android | `tool/t121_capturas_android.py`, `emulator-5554` | `T100_LLEGADA` | 360 dp; letra 1.0 y 2.0; claro y oscuro | 24 |
+| Android | lo mismo | `T99_SINTETICO_977` | lo mismo | 24 |
+
+**146 PNG** en `build/t121-entrega2-c1/capturas/`. En los 58 pasos de Windows, el conductor no
+encontró textos que no caben ni errores de Flutter.
+
+**Lo que se ve en la pantalla:**
+- **nueve bahías a 1920**, Windows y Web, en los dos temas y en Peso: la silueta va de borde a borde
+  del panel, con cada bahía de 148 dp y el dibujo de 246 dp de alto. Es la protagonista de la
+  página; los paneles de abajo ya no la superan en peso visual;
+- **a 1366 con la letra a 1.0**, igual. **Con la letra a 2.0**, el panel deja menos de 800 dp y las
+  nueve bahías de 112 no caben: la silueta se desplaza con su barra y conserva el alto base;
+- **el 977 en 72 bahías** se ve igual que en la entrega 2: 56 dp, alto base y desplazamiento;
+- **en el teléfono**, Web a 360 y emulador con la letra a 1.0 y 2.0, la página no cambia;
+- **la leyenda** son dos pilas pequeñas, blanca y acero de noche, azul oscuro y azul de día, con sus
+  separadores. Ya no parecen casillas.
+
+### E2C1.7 Archivos
+
+| Archivo | Cambio |
+|---|---|
+| `lib/core/design/componentes/bs_buque_en_corte.dart` | `repartir`, `topeDeLaBahia`, `crecimientoDelAlto`, `anchoParaCrecerElAlto`; el cuerpo dentro de un `LayoutBuilder`, centrado cuando sobra ancho; el alto de la zona por instancia (`yTapaCon`, `yFondoCon`, `altoDelDibujoCon`) en el pintor y en las columnas |
+| `lib/features/vessel/presentation/widgets/voyage_stats_view.dart` | `_Muestra`: la pila pequeña de tres niveles, sin borde, con su clave |
+| `test/t121_entrega2_c1_test.dart` | nuevo, 10 pruebas |
+| `test/support/t121_estadisticas_support.dart` | `t121Bahias9` y `t121ViajeCorto` |
+| `tool/t121_capturas_android.py` | `--letras` y `--letras-oscuro` |
+| `DESIGN.md` | 15.4, con el reparto, el tope y su porqué, el alto y la muestra; 15.12, las pruebas nuevas |
+| `docs/T117-T121-RESULTADOS.md` | esta sección |
+
+`dart format` reacomodó también el resto de `bs_buque_en_corte.dart`: el cuerpo cambió de sangría al
+entrar en la función, y cuatro líneas largas del pintor se partieron. No hay otro cambio ahí. No
+cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto.
+15.11 no cambia: el reparto cumple 0.9.5, no se aparta de ella.
+
+### E2C1.8 Horas
+
+Unas **0.75 h**, de ≈ 09:42 a 10:30: la lectura, las pruebas rojas, el arreglo, `analyze`, la suite y la
+prueba contra `a5dfc9f` 0.35 h; el banco, sus tres compilaciones y las 146 capturas 0.3 h; el
+informe 0.1 h.
+
+### E2C1.9 Git
+
+**Para Carlos.** Un `git add` por ruta, 7 rutas. `SPRINT-4.md` no va. La evidencia de
+`build/t121-entrega2-c1/` está ignorada.
+
+```powershell
+git add -- DESIGN.md
+git add -- docs/T117-T121-RESULTADOS.md
+git add -- lib/core/design/componentes/bs_buque_en_corte.dart
+git add -- lib/features/vessel/presentation/widgets/voyage_stats_view.dart
+git add -- test/support/t121_estadisticas_support.dart
+git add -- test/t121_entrega2_c1_test.dart
+git add -- tool/t121_capturas_android.py
+git commit -m "Sprint 4: T-121, correccion 1 de la entrega 2 (10.53), la silueta ocupa el ancho util del panel con pocas bahias y la muestra de la leyenda es una pila" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git push
+git show --stat --format="%h %s" HEAD | Select-Object -Last 1
+```
+
+El último comando tiene que decir **7 files changed**. No cambian `pubspec.yaml` ni `pubspec.lock`.
+
+### E2C1.10 Mensaje para Yov
+
+> Yov: la corrección 1 de la entrega 2 de T-121 (10.53) está en `docs/T117-T121-RESULTADOS.md`,
+> sección «Entrega 2 · corrección 1», y en `DESIGN.md` 15.4.
+>
+> **H1:** cuando las bahías caben, la silueta ocupa el ancho útil del panel. Cada bahía crece hasta
+> un tope de tres veces su mínimo (168 dp con la letra a 1.0): así la pila no pasa de una vez y
+> media el alto de su zona y sigue siendo una pila, y desde ocho bahías llena el panel de 1440. Si
+> aun así sobra ancho, el casco va centrado. En pantalla ancha las zonas crecen con la bahía, hasta
+> 1.5 veces; en el teléfono la página no cambia. Con 72 bahías y cuando no caben, todo sigue igual.
+>
+> **O1:** la muestra de la leyenda es una pila pequeña de tres niveles, sin borde. En el árbol
+> accesible sigue siendo texto.
+>
+> **Cifras:** 10 pruebas nuevas, 8 rojas contra `a5dfc9f`; suite 1783 (piso 1773) y `analyze` en
+> cero. 146 capturas sintéticas en Windows, la Web y el emulador, en los dos temas, sin cortes ni
+> errores. A 1920 la silueta de nueve bahías va de borde a borde. No toqué la regla de las bahías
+> pares e impares. Son 7 rutas en el bloque; la evidencia está en `build/t121-entrega2-c1/`.
+
+**ALTO: Codex reacepta.**
