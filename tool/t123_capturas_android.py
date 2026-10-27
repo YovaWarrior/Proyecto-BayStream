@@ -14,16 +14,19 @@ en Contenido y «El buque en corte» (15), como quedaron aceptados.
 python -X utf8 tool/t123_capturas_android.py build/t123/capturas/emulador
 """
 import argparse
+import io
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
+
+from PIL import Image, ImageChops, ImageStat
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import t122_capturas_android as t122  # noqa: E402
 from t122_capturas_android import (  # noqa: E402
     PAQUETE, adb, atras, bahia, captura, celda, cerrar_el_plano, confirmar_carga,
-    confirmar_plano, dedo_abajo, dedo_arriba, dedo_mueve, deslizar_hasta, esperar,
-    nodos, panel, tap, tema, tocar)
+    confirmar_plano, deslizar_hasta, esperar, nodos, panel, tap, tema, tocar)
 from t73_listado_sintetico import box  # noqa: E402
 
 BOTON_DEL_MENU = r'^Modo del plano: '
@@ -182,6 +185,61 @@ def h6(out, prefijo):
     captura(out, f'{prefijo}_h6_resaltado')
 
 
+# ------------------------------------------------- el dedo, por sendevent
+# T-124 (O1 de la aceptación de T-123, 10.65). El conductor de T-123 apoyaba
+# el dedo con el identificador 1 y, si algo fallaba antes de levantarlo, el
+# contacto quedaba activo; el siguiente arrastre reutilizaba el 1 y la celda
+# ya no se levantaba. Ahora cada gesto lleva un identificador nuevo, el dedo
+# se levanta siempre (finally) y el borde no se evalúa si la celda no se
+# levantó.
+_ULTIMO_CONTACTO = [int(time.time()) % 40000 + 1000]
+_SOLTAR = 4294967295  # ABS_MT_TRACKING_ID = -1
+
+
+def _contacto_nuevo():
+    _ULTIMO_CONTACTO[0] += 1
+    return _ULTIMO_CONTACTO[0]
+
+
+def _ev(tipo, codigo, valor):
+    return f'sendevent {t122._PANTALLA} {tipo} {codigo} {valor}'
+
+
+@contextmanager
+def dedo(x, y):
+    """El dedo apoyado en (x, y) mientras dura el bloque; al salir, aunque
+    sea por un error, se levanta."""
+    rx, ry = t122._crudo(x, y)
+    adb('shell', '; '.join([_ev(3, 47, 0), _ev(3, 57, _contacto_nuevo()), _ev(1, 330, 1),
+                            _ev(3, 53, rx), _ev(3, 54, ry), _ev(3, 58, 500), _ev(0, 0, 0)]))
+    try:
+        yield
+    finally:
+        adb('shell', '; '.join([_ev(3, 47, 0), _ev(3, 57, _SOLTAR), _ev(1, 330, 0),
+                                _ev(0, 0, 0)]))
+
+
+def dedo_mueve(puntos, pausa=0.1):
+    ordenes = []
+    for x, y in puntos:
+        rx, ry = t122._crudo(x, y)
+        ordenes += [_ev(3, 53, rx), _ev(3, 54, ry), _ev(0, 0, 0), f'sleep {pausa}']
+    adb('shell', '; '.join(ordenes))
+
+
+def _pantalla():
+    return Image.open(io.BytesIO(adb('exec-out', 'screencap', '-p'))).convert('L')
+
+
+def se_levanto(antes, despues, caja, umbral=8.0):
+    """Si la celda de [caja] cambió tras la pulsación larga: la que se levanta
+    queda atenuada (`childWhenDragging`, opacidad 0.35) y la copia flota
+    encima. La diferencia media en gris sobre la celda pasa de [umbral]."""
+    recorte = (caja[0], caja[1], caja[2], caja[3])
+    diferencia = ImageChops.difference(antes.crop(recorte), despues.crop(recorte))
+    return ImageStat.Stat(diferencia).mean[0] > umbral
+
+
 def h7(out, prefijo):
     panel(r'^Oficina$', r'^Publicar en este dispositivo$')
     time.sleep(1.5)
@@ -203,19 +261,21 @@ def h7(out, prefijo):
     x1 = (origen[0] + origen[2]) // 2
     y1 = (origen[1] + origen[3]) // 2
     borde = 1000  # a 27 px del borde: dentro de los 40 dp (120 px) del desplazador
-    dedo_abajo(x1, y1)
-    time.sleep(0.9)
-    pasos = 8
-    dedo_mueve([(x1 + (borde - x1) * i // pasos, y1) for i in range(1, pasos + 1)])
-    time.sleep(1.0)
-    captura(out, f'{prefijo}_h7_arrastre_en_marcha')
-    time.sleep(1.5)
-    destino = esperar(r'^Celda 022-09-84, libre$', 20)[0]
-    cx, cy = (destino[0] + destino[2]) // 2, (destino[1] + destino[3]) // 2
-    dedo_mueve([(borde, y1), (cx, cy)], pausa=0.3)
-    time.sleep(0.6)
-    captura(out, f'{prefijo}_h7_sobre_la_celda')
-    dedo_arriba()
+    antes = _pantalla()
+    with dedo(x1, y1):
+        time.sleep(0.9)  # la pulsación larga levanta la celda
+        if not se_levanto(antes, _pantalla(), origen):
+            raise RuntimeError(f'La celda {origen[4]} no se levantó: no se evalúa el borde.')
+        pasos = 8
+        dedo_mueve([(x1 + (borde - x1) * i // pasos, y1) for i in range(1, pasos + 1)])
+        time.sleep(1.0)
+        captura(out, f'{prefijo}_h7_arrastre_en_marcha')
+        time.sleep(1.5)
+        destino = esperar(r'^Celda 022-09-84, libre$', 20)[0]
+        cx, cy = (destino[0] + destino[2]) // 2, (destino[1] + destino[3]) // 2
+        dedo_mueve([(borde, y1), (cx, cy)], pausa=0.3)
+        time.sleep(0.6)
+        captura(out, f'{prefijo}_h7_sobre_la_celda')
     time.sleep(1.8)
     captura(out, f'{prefijo}_h7_al_soltar')
     if nodos(r'^Cancelar$'):

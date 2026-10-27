@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show immutable;
 
 import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/reference_bay.dart';
 
 /// Un código con su cuenta: un puerto de descarga o una naviera. Sin código,
 /// el rótulo dice que falta («Sin puerto», «Sin naviera») o junta el resto
@@ -36,6 +37,12 @@ class CuentaPorCodigo {
 /// La zona (cubierta o bodega) la decide la geometría declarada del viaje;
 /// sin geometría, la numeración ISO (la banda de los 80 es cubierta,
 /// `VesselGeometry.deckTierFloor`), como la silueta del plano.
+///
+/// T-124 (10.53, 10.56 y 10.65) · Las bahías siguen la regla de Carlos, la
+/// misma del avance: **la par es la bahía de referencia.** Cada impar se
+/// cuenta con la par vecina que la cubre, si esa par es una bahía del viaje
+/// (`referenceBay`), y el grupo lleva el número de la par: la 21 y la 23 van
+/// en la 22. Una impar sin par vecina en el viaje queda sola.
 @immutable
 class EstadisticasDelViaje {
   /// Crea las cifras.
@@ -129,17 +136,30 @@ class EstadisticasDelViaje {
 
     // Las bahías del viaje (con las reservas y las vecinas de los de 40, como
     // en la silueta del plano) y, si el viaje no las trae, las de las
-    // posiciones.
-    final numeros = <int>{...voyage.bays.keys, ...porBahia.keys}.toList()
-      ..sort();
+    // posiciones. Cada una se cuenta con su bahía de referencia (T-124): la
+    // impar, con la par vecina que la cubre.
+    final delViaje = <int>{...voyage.bays.keys, ...porBahia.keys};
+    final grupos = <int, _Zonas>{};
+    for (final numero in delViaje) {
+      final referencia = referenceBay(numero, hasBay: delViaje.contains);
+      final grupo = grupos.putIfAbsent(referencia, _Zonas.new);
+      final zonas = porBahia[numero];
+      if (zonas == null) continue;
+      grupo
+        ..cubierta += zonas.cubierta
+        ..bodega += zonas.bodega
+        ..pesoCubiertaKg += zonas.pesoCubiertaKg
+        ..pesoBodegaKg += zonas.pesoBodegaKg;
+    }
+    final numeros = grupos.keys.toList()..sort();
     final bahias = <BsBahiaEnCorte>[
       for (final numero in numeros)
         BsBahiaEnCorte(
           numero: numero,
-          contenedoresCubierta: porBahia[numero]?.cubierta ?? 0,
-          contenedoresBodega: porBahia[numero]?.bodega ?? 0,
-          pesoCubiertaKg: porBahia[numero]?.pesoCubiertaKg ?? 0,
-          pesoBodegaKg: porBahia[numero]?.pesoBodegaKg ?? 0,
+          contenedoresCubierta: grupos[numero]!.cubierta,
+          contenedoresBodega: grupos[numero]!.bodega,
+          pesoCubiertaKg: grupos[numero]!.pesoCubiertaKg,
+          pesoBodegaKg: grupos[numero]!.pesoBodegaKg,
         ),
     ];
 
@@ -182,10 +202,12 @@ class EstadisticasDelViaje {
   /// El peso de todo lo que va a bordo, en kilos (el efectivo: VGM o bruto).
   final double pesoKg;
 
-  /// Las bahías con algún contenedor propio.
+  /// Las bahías con algún contenedor, contadas por su bahía de referencia
+  /// (la 21, la 22 y la 23 son una).
   final int bahiasConCarga;
 
-  /// Cada bahía, de proa a popa, con sus dos zonas.
+  /// Cada bahía de referencia, de proa a popa, con sus dos zonas: la par con
+  /// las impares que cubre (T-124).
   final List<BsBahiaEnCorte> bahias;
 
   /// Los contenedores sin posición de estiba, que no están en ninguna bahía,

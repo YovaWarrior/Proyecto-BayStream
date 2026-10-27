@@ -82,7 +82,8 @@ List<String> _etiquetasDeBarras(WidgetTester tester, String panel) => tester
 
 void main() {
   group('EstadisticasDelViaje: las cifras cuadran', () {
-    test('el sintético de 977 en 72 bahías', () {
+    test('el sintético de 977 en 72 bahías, que son 24 con la regla de la par',
+        () {
       final d = _datos977;
       expect(d.total, 977);
       expect(d.llenos + d.vacios + d.sinEstado, d.total);
@@ -92,12 +93,14 @@ void main() {
       expect(d.navieras.fold<int>(0, (s, n) => s + n.cuenta), d.total);
       expect(d.de20 + d.de40 + d.de45 + d.otroTamano, d.total);
       expect(d.otroTamano, 0);
-      expect(d.bahias.length, 72);
-      expect(d.bahias.map((b) => b.numero).toList(), t121Bahias72());
+      // T-124: cada impar se cuenta con la par que la cubre (15.4).
+      expect(d.bahias.length, 24);
+      expect(d.bahias.map((b) => b.numero).toList(),
+          <int>[for (var b = 2; b <= 94; b += 4) b]);
       expect(d.bahias.fold<int>(0, (s, b) => s + b.contenedores) + d.sinPosicion,
           d.total);
       expect(d.sinPosicion, 0);
-      expect(d.bahiasConCarga, 72);
+      expect(d.bahiasConCarga, 24);
       expect(
           d.bahias.fold<double>(0, (s, b) => s + b.pesoKg) + d.pesoSinPosicionKg,
           closeTo(d.pesoKg, 0.001));
@@ -170,8 +173,9 @@ void main() {
       final bahia6 = d.bahias.singleWhere((b) => b.numero == 6);
       expect(bahia6.contenedores, 2);
       expect(bahia6.pesoKg, 37000);
-      // Las vecinas de los de 40 van en la silueta, vacías, como en el plano.
-      expect(d.bahias.map((b) => b.numero), containsAll(<int>[1, 3, 5, 7]));
+      // Las vecinas de los de 40 se cuentan con su par (T-124): la 01 y la
+      // 03 van en la 02, y la 05 y la 07 en la 06.
+      expect(d.bahias.map((b) => b.numero), <int>[2, 6]);
       expect(d.navieras.single.rotulo, EstadisticasDelViaje.sinNaviera);
     });
 
@@ -339,9 +343,10 @@ void main() {
         final cajas = tester.widgetList<BsCajaDeCodigo>(find.byType(BsCajaDeCodigo));
         expect(cajas.map((c) => c.codigo).toList(),
             _datos977.puertos.take(7).map((p) => p.codigo).toList());
-        // La silueta mide 72 bahías y se desplaza.
+        // La silueta mide las 24 bahías de referencia de las 72 (T-124) y,
+        // con el panel lateral a 1920 × 1000, todavía se desplaza.
         final buque = tester.widget<BsBuqueEnCorte>(_buque);
-        expect(buque.bahias.length, 72);
+        expect(buque.bahias.length, 24);
         expect(t121Buque(tester).position.maxScrollExtent, greaterThan(0));
         t121BarraVisible(tester);
         // El texto nunca lleva el color del dato: todo texto con color propio
@@ -403,7 +408,8 @@ void main() {
       await t121Pump(tester, voyage: _sintetico, onBahia: tocadas.add);
       await tester.tap(find.byKey(const ValueKey<String>('buque-en-corte-bahia-2')));
       expect(tocadas, <int>[2]);
-      final ultima = find.byKey(const ValueKey<String>('buque-en-corte-bahia-95'));
+      // La popa es la 94: la 95 se cuenta con ella (T-124).
+      final ultima = find.byKey(const ValueKey<String>('buque-en-corte-bahia-94'));
       await tester.ensureVisible(ultima);
       await tester.pumpAndSettle();
       final buque = tester.getRect(_buque);
@@ -412,7 +418,7 @@ void main() {
           reason: 'la popa entera a la vista');
       expect(rect.width, greaterThanOrEqualTo(BsBuqueEnCorte.anchoBahia(TextScaler.noScaling)));
       await tester.tap(ultima);
-      expect(tocadas, <int>[2, 95]);
+      expect(tocadas, <int>[2, 94]);
       expect(tester.takeException(), isNull);
     });
   });

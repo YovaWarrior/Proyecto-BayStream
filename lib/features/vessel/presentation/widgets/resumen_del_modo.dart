@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/loading_plan_progress.dart';
+import '../../domain/services/reference_bay.dart';
 import '../formatters/operation_text.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/discharge_provider.dart';
@@ -24,6 +27,12 @@ import 'loading_plan_controls.dart' show BayPlanMode;
 /// conservan las claves de las frases de T-107 (`loading-operation-totals`,
 /// `bay-discharge-pending`, `operation-discharge-totals`,
 /// `bay-loading-pending`).
+///
+/// T-124 (10.65, P2) · En Carga y en Contenido, lo pendiente es del grupo de
+/// la par que cubre la bahía (H5, `reference_bay.dart`). La ficha dice lo de
+/// la bahía que se ve con su número y lo del grupo con el rótulo de su par:
+/// «Bahía 21: 7 contenedores, …; grupo 22 (21, 22 y 23), por cargar cub. 27,
+/// bod. 0». Una bahía que no se cuenta con otra sigue como antes.
 List<Widget> fichasDelResumen(
   BuildContext context,
   WidgetRef ref, {
@@ -81,19 +90,23 @@ List<Widget> fichasDelResumen(
           data: (data) {
             final enLaBahia =
                 bahia == null ? null : data.progress.forBay(bahia);
+            final grupo = bahia == null || enLaBahia == null
+                ? null
+                : grupoDeLaPar(bahia, enLaBahia, data.progress.plan);
+            final pendiente =
+                'cub. ${enLaBahia?.deck}, bod. ${enLaBahia?.hold}';
             return <Widget>[
               if (bahia != null)
                 BsFichaDeCifra(
                   key: const ValueKey('loading-bay-pending'),
-                  rotulo: enLaBahia == null
-                      ? rotuloDeBahia(bahia)
-                      : 'Bahía ${enLaBahia.label}',
+                  rotulo: rotuloDeBahia(bahia),
                   valor: enLaBahia == null
                       ? conCifras('sin carga pendiente')
                       : cifrasDeLaBahia == null
-                          ? 'cub. ${enLaBahia.deck}, bod. ${enLaBahia.hold}'
-                          : conCifras('por cargar cub. ${enLaBahia.deck}, '
-                              'bod. ${enLaBahia.hold}'),
+                          ? (grupo == null ? pendiente : '$grupo, $pendiente')
+                          : conCifras(grupo == null
+                              ? 'por cargar $pendiente'
+                              : '$grupo, por cargar $pendiente'),
                 ),
               if (!soloLaBahia) ...<Widget>[
                 BsFichaDeCifra(
@@ -209,6 +222,10 @@ List<Widget> fichasDelResumen(
     ];
   }
   final enLaBahia = bahia == null ? null : data.forBay(bahia);
+  final grupo = bahia == null || enLaBahia == null
+      ? null
+      : grupoDeLaPar(bahia, enLaBahia, data.plan);
+  final deLaCarga = grupo == null ? 'carga' : 'carga del $grupo';
   final carga = enLaBahia == null
       ? 'nada pendiente'
       : 'cub. ${enLaBahia.deck} '
@@ -222,10 +239,13 @@ List<Widget> fichasDelResumen(
       BsFichaDeCifra(
         key: const ValueKey('bay-loading-pending'),
         // Con las cifras, la carga va detrás: «Bahía 02: 20 contenedores,
-        // 231.9 t; carga: cub. 3 (…)».
-        rotulo: '${enLaBahia == null ? rotuloDeBahia(bahia) : 'Bahía ${enLaBahia.label}'}'
-            '${cifrasDeLaBahia == null ? ', carga' : ''}',
-        valor: cifrasDeLaBahia == null ? carga : conCifras('carga: $carga'),
+        // 231.9 t; carga: cub. 3 (…)»; con el grupo de la par, «…; carga del
+        // grupo 22 (21, 22 y 23): cub. 27 (…)».
+        rotulo: '${rotuloDeBahia(bahia)}'
+            '${cifrasDeLaBahia == null ? ', $deLaCarga' : ''}',
+        valor: cifrasDeLaBahia == null
+            ? carga
+            : conCifras('$deLaCarga: $carga'),
       ),
     if (modo == BayPlanMode.order)
       if (data.list == null)
@@ -239,4 +259,34 @@ List<Widget> fichasDelResumen(
               'celdas de carga sin cruce'),
         ),
   ];
+}
+
+/// T-124 (10.65, P2) · El nombre del grupo de la par que cuenta [bahia], si
+/// es otro que la bahía sola: «grupo 22 (21, 22 y 23)». Es nulo si [grupo] es
+/// la propia [bahia] y no cuenta ninguna vecina, que es lo de siempre.
+///
+/// Las bahías del grupo son las del plan de carga que la regla de
+/// `reference_bay.dart` cuenta con su par (la misma de [LoadingPlanProgress]),
+/// más la que se ve: una mitad de 20 sin carga propia también es del grupo.
+String? grupoDeLaPar(int bahia, BayLoadingPending grupo, OperationPlan plan) {
+  if (grupo.bay == bahia && !grupo.paired) return null;
+  final delPlan = <int>{
+    for (final item in plan.loading.values)
+      IsoCoordinateParser.parse(item.plannedPosition).bay,
+    bahia,
+  };
+  final miembros = <int>[
+    for (final b in <int>[grupo.bay - 1, grupo.bay, grupo.bay + 1])
+      if (delPlan.contains(b) &&
+          referenceBay(b, hasBay: delPlan.contains) == grupo.bay)
+        b,
+  ];
+  if (!miembros.contains(bahia)) miembros.add(bahia);
+  final rotulos = <String>[
+    for (final b in miembros..sort()) b.toString().padLeft(2, '0'),
+  ];
+  final lista = rotulos.length == 1
+      ? rotulos.single
+      : '${rotulos.sublist(0, rotulos.length - 1).join(', ')} y ${rotulos.last}';
+  return 'grupo ${grupo.label} ($lista)';
 }

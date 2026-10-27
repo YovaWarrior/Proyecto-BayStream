@@ -133,6 +133,17 @@ VesselVoyage t121Sintetico977() {
 /// tres de 40 (02, 06 y 10) y sus impares vecinas.
 const t121Bahias9 = <int>[1, 2, 3, 5, 6, 7, 9, 10, 11];
 
+/// T-124 · Nueve bahías que no se cuentan con ninguna otra: pares, de cuatro
+/// en cuatro, sin impares vecinas. Con la regla de la par (15.4), la forma de
+/// [t121Bahias9] son tres bahías (02, 06 y 10); para medir nueve columnas
+/// hacen falta nueve bahías de referencia.
+const t121Bahias9Sueltas = <int>[2, 6, 10, 14, 18, 22, 26, 30, 34];
+
+/// T-124 · Setenta y dos bahías de referencia, para la silueta que no cabe y
+/// se desplaza: las 72 del sintético de 977 son 24 grupos con la regla de la
+/// par, y a 1920 caben.
+final t121Bahias72Sueltas = <int>[for (var b = 2; b <= 286; b += 4) b];
+
 /// Un viaje corto de [cuantos] contenedores repartidos por igual en
 /// [bahias], en bodega y en cubierta: 40 pies en las pares y 20 en las
 /// impares, tres puertos y dos navieras. Con [t121Bahias9] es la forma del

@@ -18,11 +18,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/t121_estadisticas_support.dart';
 
-final _nueve = t121ViajeCorto(t121Bahias9);
+// T-124: nueve bahías de referencia. La forma del plano de llegada
+// (`t121Bahias9`) son tres con la regla de la par: `t124_par_test.dart`.
+final _nueve = t121ViajeCorto(t121Bahias9Sueltas);
+// Setenta y dos bahías de referencia: el 977 son 24 y a 1920 caben.
+final _setentaYDos = t121ViajeCorto(t121Bahias72Sueltas, cuantos: 216);
 // Tres bahías impares: una de 40 en una par trae a sus dos vecinas.
 const _bahiasTres = <int>[1, 5, 9];
 final _tres = t121ViajeCorto(_bahiasTres, cuantos: 30);
-final _sintetico = t121Sintetico977();
 
 final _vista = find.byKey(const ValueKey<String>('buque-en-corte-scroll'));
 final _panel =
@@ -61,7 +64,7 @@ void main() {
         for (final magnitud in <String>['Contenedores', 'Peso']) {
           await tester.tap(find.text(magnitud));
           await tester.pumpAndSettle();
-          final tramo = _tramo(tester, t121Bahias9);
+          final tramo = _tramo(tester, t121Bahias9Sueltas);
           expect(
               tramo.izquierda - vista.left, lessThanOrEqualTo(_margenMaximo(1)),
               reason: '$magnitud: la proa al borde del panel, no un vacío');
@@ -76,7 +79,7 @@ void main() {
         // Todas las bahías miden lo mismo, más que la mínima y no más que su
         // tope.
         final anchos = <double>{
-          for (final b in t121Bahias9)
+          for (final b in t121Bahias9Sueltas)
             (tester.getRect(_bahia(b)).width * 100).round() / 100,
         };
         expect(anchos, hasLength(1));
@@ -93,7 +96,7 @@ void main() {
         (tester) async {
       await t121Pump(tester, voyage: _nueve, tamano: const Size(1366, 768));
       final vista = tester.getRect(_vista);
-      final tramo = _tramo(tester, t121Bahias9);
+      final tramo = _tramo(tester, t121Bahias9Sueltas);
       expect(t121Buque(tester).position.maxScrollExtent, 0);
       expect(tramo.derecha - tramo.izquierda, greaterThan(vista.width * 0.9));
       expect(tester.takeException(), isNull);
@@ -104,7 +107,7 @@ void main() {
       await t121Pump(tester,
           voyage: _nueve, tamano: const Size(1920, 1080), letra: 2.0);
       final vista = tester.getRect(_vista);
-      final tramo = _tramo(tester, t121Bahias9);
+      final tramo = _tramo(tester, t121Bahias9Sueltas);
       expect(t121Buque(tester).position.maxScrollExtent, 0);
       expect(tramo.izquierda - vista.left, lessThanOrEqualTo(_margenMaximo(2)));
       expect(vista.right - tramo.derecha, lessThanOrEqualTo(_margenMaximo(2)));
@@ -139,7 +142,7 @@ void main() {
         'teléfono, el alto base', (tester) async {
       // El alto de la columna de una bahía: el dibujo más el pie.
       await t121Pump(tester,
-          voyage: _sintetico, tamano: const Size(1920, 1080));
+          voyage: _setentaYDos, tamano: const Size(1920, 1080));
       final base = tester.getRect(_bahia(2)).height;
       expect(tester.getRect(_bahia(2)).width, BsBuqueEnCorte.anchoBahiaBase,
           reason: '72 bahías no caben: 56 dp, como antes');
@@ -170,18 +173,18 @@ void main() {
         (tester) async {
       final tocadas = <int>[];
       await t121Pump(tester,
-          voyage: _sintetico,
+          voyage: _setentaYDos,
           tamano: const Size(1920, 1080),
           onBahia: tocadas.add);
       final posicion = t121Buque(tester).position;
       expect(posicion.maxScrollExtent, greaterThan(0));
       posicion.jumpTo(posicion.maxScrollExtent);
       await tester.pumpAndSettle();
-      final ultima = _bahia(95);
+      final ultima = _bahia(286);
       expect(tester.getRect(ultima).right,
           lessThanOrEqualTo(tester.getRect(_vista).right + 0.5));
       await tester.tap(ultima);
-      expect(tocadas, <int>[95]);
+      expect(tocadas, <int>[286]);
       expect(tester.takeException(), isNull);
     });
 

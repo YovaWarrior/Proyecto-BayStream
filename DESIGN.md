@@ -1643,6 +1643,27 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
 | Contenido o Número de orden, con escala | «Bahía 10: 20 contenedores, 231.9 t; carga: cub. 2 (1 lleno, 1 vacío), bod. 7 (5 llenos, 2 vacíos)» (`bay-loading-pending`) | En Número de orden, «Listado: 3 celdas de carga sin cruce» o «Sin listado de la agencia» | — |
 | Sin escala | «Bahía 10: 20 contenedores, 231.9 t» (`cifras-de-la-bahia`) | «Viaje: 977 contenedores, 27 bahías, 7 419.5 t» | — |
 
+- **La bahía que se ve y el grupo de su par** (T-124, P2 de 10.65). En Carga y en Contenido
+  lo pendiente es del grupo de 40 pies (H5, `reference_bay.dart`: la 21 y la 23 se cuentan
+  con la 22). La ficha dice **lo de la bahía que se ve, con su número**, y **lo del grupo, con
+  el rótulo de su par** y las bahías que cuenta. Antes, con la 21 elegida, decía «Bahía 22: 7
+  contenedores, 1 celda reservada, 57.7 t…; por cargar cub. 27»: las cifras eran de la 21 y el
+  rótulo de la 22, que tiene 11.
+
+| Dónde | Bahía sola (no cuenta otra) | Bahía de un grupo (la 21, la 22 o la 23; el banco de T-122) |
+|---|---|---|
+| Oficina, Carga | «Bahía 10: 20 contenedores, 231.9 t; por cargar cub. 2, bod. 7» (como antes) | «Bahía 21: 7 contenedores, 1 celda reservada, 57.7 t, tapas sin declarar; grupo 22 (21, 22 y 23), por cargar cub. 27, bod. 0» |
+| Oficina, Contenido u Orden | «Bahía 10: …; carga: cub. 2 (1 lleno, 1 vacío), bod. 7 (…)» | «Bahía 23: …; carga del grupo 22 (21, 22 y 23): cub. 27 (…), bod. 0 (…)» |
+| Teléfono, Carga (sin las cifras) | «Bahía 10: cub. 2, bod. 7» | «Bahía 21: grupo 22 (21, 22 y 23), cub. 27, bod. 0» |
+| Teléfono, Contenido (sin las cifras) | «Bahía 10, carga: cub. 2 (…), bod. 7 (…)» | «Bahía 21, carga del grupo 22 (21, 22 y 23): cub. 27 (…), bod. 0 (…)» |
+
+  - El rótulo de la ficha es siempre la bahía elegida (`rotuloDeBahia`); el grupo se nombra
+    con «grupo» y el número de la par, entre paréntesis las bahías del plan de carga que
+    cuenta, más la elegida si es una mitad de 20 sin carga propia («grupo 02 (01 y 02)»).
+  - Se nombra cuando la bahía elegida no es la par o cuando la par cuenta alguna impar
+    (`BayLoadingPending.paired`); una bahía sola sigue como antes, sin «grupo».
+  - En Descarga no hay grupo: lo pendiente de bajar es de cada bahía (`DischargeProgress`).
+  - Las claves no cambian (`loading-bay-pending`, `bay-loading-pending`).
 - Las cifras de la bahía son las de antes: los contenedores, las celdas reservadas si hay, el peso y
   «tapas sin declarar» si faltan. Mientras se lee la operación, o si falla, van en su ficha propia
   (`cifras-de-la-bahia`) delante de la que lo dice. En el teléfono no cambian: el resumen no las
@@ -1851,6 +1872,16 @@ cada pila lleva un separador de 1 dp en el color de su fondo cada 9 dp (la hoja 
 cubierta, el casco en bodega), el paso de los niveles de la silueta: se lee como una pila de
 contenedores y mide como una barra.
 
+- **Cada columna es una bahía de referencia** (T-124; 10.53, 10.56 y 10.65): la regla de
+  Carlos, la misma del avance y de la silueta del plano. **La par es la bahía de
+  referencia**: cada impar se cuenta con la par vecina que la cubre si esa par es una bahía
+  del viaje (`referenceBay`, con las bahías de `voyage.bays` y las de las posiciones), y el
+  grupo lleva el número de la par. La 21 y la 23 van en la columna de la 22, zona por zona y en
+  peso; una impar sin par vecina en el viaje queda sola. **Tocar la columna abre la par en el
+  plano.** Con `T100_LLEGADA` son tres columnas (02, 06 y 10), cada una en su tope y con el casco
+  centrado; el sintético de 977, que trae 72 números de bahía, son 24 (de la 02 a la 94). Antes
+  cada número era una columna y la mitad de 20 sin carga salía en cero (seis de nueve en
+  `T100_LLEGADA`, 10.53).
 - **Medidas** (dp, con la letra a 1.0): 8 de aire arriba; 72 la zona de cubierta; 4 de
   holgura; la tapa de 2 a la altura 84; 4 de holgura; 72 la zona de bodega; 10 de fondo; el
   casco termina en 170 y la línea de flotación va 3 debajo. **Cada bahía mide al menos 56 de
@@ -1868,8 +1899,9 @@ contenedores y mide como una barra.
     pies mide casi cinco veces el alto de un contenedor (12.2 m contra 2.6), y la pila de 56,
     con niveles de 9, ya la dibuja más ancha de lo que es; más allá del triple, una sola bahía sería una barra y el casco un rectángulo;
   - con ese tope, **desde ocho bahías la silueta llena el panel de 1440** (el de la página a
-    1920, 1 406 de ancho útil). El plano de llegada (nueve) lo llena a 1920 y a 1366; un
-    alimentador de tres o cuatro bahías va centrado, sin estirarse.
+    1920, 1 406 de ancho útil). Con la regla de la par (T-124) el plano de llegada son tres
+    bahías de referencia y va centrado, cada una en su tope; un alimentador de tres o cuatro
+    bahías, igual, sin estirarse.
 - **En pantalla ancha, el alto de las zonas crece con la bahía:** en la misma proporción que
   su ancho sobre el mínimo, hasta 1.5 veces (de 72 a 108 cada zona; el dibujo pasa de 174 a
   246). El paso de los separadores sigue en 9: una zona crecida lleva más niveles dibujados,
@@ -1934,7 +1966,8 @@ para el lector de pantalla («GTSTC: 520 contenedores, 53 %»), la misma frase.
 
 El botón de la cabecera (`estadisticas-ver-tabla`, con el icono de tabla) cambia los
 gráficos por **las mismas cifras en tablas**, un panel por sección: el resumen, por bahía
-(número, contenedores, cubierta, bodega y peso; una fila «Sin posición» si el archivo trae
+(número de la bahía de referencia, contenedores, cubierta, bodega y peso, con la regla de la par
+de 15.4: la fila «22» suma la 21 y la 23; una fila «Sin posición» si el archivo trae
 contenedores sin estiba), por puerto (todos, no solo siete), llenos y vacíos, por tamaño,
 carga especial y por naviera (todas). Las celdas de la cabecera son encabezados para el
 lector de pantalla, las cifras van tabulares y alineadas a la derecha y el texto envuelve, pero
@@ -2136,6 +2169,9 @@ sale: su casco era otro buque (0.9.1) y lo sustituye la protagonista.
     anchos con la letra a 2.0 en 360 dp; antes el texto se partía a media palabra.
 13. **El anillo de llenos crece con la letra** (15.5): fijo en 112 dp, «53 %» a 2.0 se montaba
     sobre el arco.
+14. **Las bahías siguen la regla de la par** (T-124, 10.65; 15.4): la propuesta dibujaba cada
+    número de bahía, y con un plano de llegada la mitad de las columnas eran mitades de 20 en
+    cero. Ahora cuenta como el avance; «Bahías con carga» cuenta bahías de referencia.
 
 ### 15.12 Las pruebas (`test/t121_estadisticas_test.dart`)
 
@@ -2147,16 +2183,21 @@ temas, y además, porque la pauta de contraste no mide los textos con etiqueta c
 la letra a 2.0 sin desbordes, sin textos cortados y **sin palabras partidas** (un texto sin
 espacio normal, un código o una cifra, en más de una línea), con la silueta desplazable y su
 barra siempre a la vista; la matriz de tamaños y letras de 15.7; el censo sin `Colors.*`; la
-tabla con los mismos números que los gráficos; el sintético de 977 contenedores en 72 bahías
-(la silueta mide 72 bahías y se recorre entera sin cortarse); las cifras que cuadran entre sí
+tabla con los mismos números que los gráficos; el sintético de 977 contenedores en 72 bahías,
+que con la regla de la par son 24 (la silueta mide 24 y se recorre entera sin cortarse); las cifras que cuadran entre sí
 sobre el sintético y sobre el plano de dos bahías de T-117; «Otros N puertos» y «Otras N
 navieras»; Esc y Atrás cierran la tabla, también abierta con el teclado (Tab e Intro); y tocar
 una bahía la abre en el plano, como la prueba de T-109 que sustituye.
 
-La corrección 1 de la entrega 2 añade `test/t121_entrega2_c1_test.dart`: con las nueve bahías
-del plano de llegada, a 1920 en los dos temas y en Contenedores y en Peso, a 1366 y con la
+La corrección 1 de la entrega 2 añade `test/t121_entrega2_c1_test.dart`: con nueve bahías
+de referencia (desde T-124, nueve pares sueltas: las del plano de llegada son tres), a 1920 en los dos temas y en Contenedores y en Peso, a 1366 y con la
 letra a 2.0, la silueta ocupa el ancho útil del panel, sin nada que desplazar; con tres bahías,
 cada una en su tope y el casco centrado; el alto que crece 1.5 veces en pantalla ancha y no en
-el teléfono; con 72 bahías, 56 de ancho, el desplazamiento y la popa al alcance; la regla de
-`repartir`; y la muestra de la leyenda, una pila de tres niveles sin borde, más alta que ancha,
+el teléfono; con 72 bahías de referencia, 56 de ancho, el desplazamiento y la popa al
+alcance; la regla de `repartir`; y la muestra de la leyenda, una pila de tres niveles sin borde, más alta que ancha,
 que en el árbol accesible no es botón ni casilla.
+
+T-124 añade `test/t124_par_test.dart`: la forma del plano de llegada da tres bahías (02, 06 y
+10) con las tres de cada grupo sumadas, a 1920 en su tope y con el casco centrado, sin las
+impares en la silueta ni en la tabla, y tocar la 02 la abre; el 977 da 24; las impares vacías
+de T-117 van con su par; una impar sin par vecina queda sola.
