@@ -1686,3 +1686,32 @@ La siguiente decisión es la **10.63**.
 - Después: la regla de la par en Estadísticas y lo anotado en 10.61, y la 3.2.0 a más tardar el 4-nov.
 
 La siguiente decisión es la **10.64**.
+
+### 10.64 · T-123 entregada y revisada: la 3.1.1 ya está dentro del rediseño; pasa a la aceptación de Codex (26-oct, 21:35)
+
+**Timonel la entregó a las 21:22** (`docs/T123-RESULTADOS.md`), con la mezcla abierta sobre `e4156ad` y `master` en `34d8838`:
+- **Los dos conflictos:**
+  - en `vessel_overview_page.dart` quedan las dos importaciones;
+  - en `loading_controls.dart` se queda el diseño del rediseño (las fichas de 14.7 y la variante de solo icono de 10.40), con el comportamiento de H4: «OR / últimos dígitos» solo espera a que el plan esté leído, nunca al listado. El aviso de H4 pasa a una ficha de revisar en `resumen_del_modo.dart`: «Sin listado de agencia: los llenos se cargan por su número; los vacíos esperan el listado».
+- **Lo que se mezcló solo, revisado por dentro:** H6 cayó bien en la rejilla del rediseño, y H4 en la tira del teléfono bajo. H7 encaja con la columna que se desplaza: en la oficina, el desplazable vertical más cercano a la celda es la columna entera, y es lo que se desplaza. Ningún otro choque.
+- **Las pruebas:** las de T-122 pasan con un solo cambio. Las de pantalla montan el plano a 360 × 800, el teléfono del muelle, porque a 800 dp el plano suelto del rediseño se arma como oficina. Ninguna prueba del rediseño esperaba la regla vieja, y ninguna se afloja. Una prueba nueva, `t123_mezcla_test.dart`, con 5 casos: H4 en la oficina y en el teléfono, y H7 en la columna de la oficina, con dedo y con mouse.
+- **Cifras:**
+  - la suite, 1821 de 1821 en una corrida (1783, más 33 de la 3.1.1 y 5 de T-123), y `analyze` en cero;
+  - 103 capturas sintéticas en los dos temas: la Web 40, Windows 23 por UIA, sin mouse, y el emulador 40.
+- **Dos notas de Timonel:**
+  - en el emulador, H7 necesitó tres corridas: en las dos primeras no se levantó la celda, y no aisló la causa;
+  - con la 21 elegida, la ficha de la bahía dice «Bahía 22: 7 contenedores, 1 celda reservada, 57.7 t…; por cargar cub. 27». Las cifras son de la 21, y el rótulo y lo pendiente, del grupo de la 22. Lo deja para la tarea siguiente.
+
+**Yov la revisó contra el disco**, comparando la carpeta con la misma mezcla hecha en una copia aparte:
+- fuera de lo que la mezcla deja listo solo, cambian exactamente las 10 rutas del bloque: los dos conflictos, cuatro archivos ajustados y cuatro nuevos. No quedan marcas de conflicto, y `SPRINT-4.md` no se tocó;
+- la resolución hace lo que dice: el plano y la Lista usan lo que va a bordo con los vacíos asignados, «OR / últimos dígitos» espera solo al plan, y los rótulos de las filas sin OR usan el número;
+- el cambio de las pruebas de T-122 es solo el tamaño de la vista: siguen probando el muelle, y la oficina la prueba T-123;
+- al cerrarse, el commit de la mezcla tiene que dar, contra `e4156ad`, 45 archivos con 4882 líneas añadidas y 166 quitadas;
+- **la nota de la ficha es un P2 de presentación para antes de la 3.2.0:** el rótulo dice una bahía y las cifras son de otra. Va en la tarea siguiente, con la regla de la par en Estadísticas.
+
+**Lo que sigue:**
+- Carlos cierra la mezcla con el bloque de Timonel y sube esta decisión, y mueve `qa-r4` al commit de la mezcla.
+- Codex acepta T-123: la 3.1.1 dentro del rediseño, en los tres clientes, sin romper las entregas 1 y 2. Mira también si H7 en el emulador falla por el instrumento o por el producto.
+- Después, T-124: la regla de la par en Estadísticas y en la ficha de la bahía, y lo anotado en 10.61.
+
+La siguiente decisión es la **10.65**.
