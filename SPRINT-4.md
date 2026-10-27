@@ -1655,3 +1655,34 @@ La siguiente decisión es la **10.62**.
 - La 3.2.0 publicada a más tardar el 4-nov, con la lista del piloto al día, y la presentación final el 7-nov.
 
 La siguiente decisión es la **10.63**.
+
+### 10.63 · T-123: la 3.1.1 entra en `sprint-4` con una mezcla; Timonel resuelve dos conflictos (26-oct, 20:25)
+
+**Carlos lo decidió a las 20:11:** la 3.1.1 pasa a `sprint-4` ya, para que la 3.2.0 de la presentación lleve los arreglos del piloto. Es **T-123**.
+
+**Cómo:**
+- Carlos mezcla `master` en `sprint-4` con `git merge --no-ff --no-commit master`, en la carpeta del rediseño. Así la historia queda unida y, cuando la 3.2.0 vuelva a `master`, la 3.1.1 ya estará adentro.
+- Timonel resuelve los conflictos y adapta lo de T-122 al rediseño, con Flutter. No ejecuta git que escriba.
+- Carlos cierra la mezcla con el commit, y Codex la acepta.
+
+**Lo que Yov vio al simular la mezcla en una copia aparte**, fuera de las carpetas de Carlos:
+- la base común es `38965b8`. Desde ahí, `master` cambió 40 archivos y `sprint-4`, 79; los dos tocaron cinco;
+- **dos conflictos, de un trozo cada uno:**
+  - `vessel_overview_page.dart`: una importación. Cada lado agregó la suya, y quedan las dos;
+  - `loading_controls.dart`: el resumen del plan de carga y `busquedaDeCarga`. El rediseño lo hizo en fichas (14.7) y con la variante de solo icono (10.40); la 3.1.1 dejó «OR / últimos dígitos» disponible sin listado y agregó el aviso de que los vacíos esperan el listado. Se queda el diseño del rediseño, con el comportamiento de la 3.1.1;
+- **tres archivos se mezclaron solos, pero los dos lados los tocaron:** `bay_plan_view.dart` (H6), `loading_plan_controls.dart` (H4) y `plan_drag_confirmation.dart` (H7). Hay que revisarlos por dentro. En el rediseño la columna central se desplaza entera (T-117), así que H7 se comprueba en esa columna, en el teléfono y en la oficina.
+
+**Lo que no cambia:**
+- el comportamiento de la 3.1.1, el aceptado en 10.61, y el rediseño aceptado en 10.46 y 10.55;
+- lo de `domain/` y `data/` que entra es el de la 3.1.1, autorizado en 10.52 y 10.56. Nada más del dominio;
+- la regla de la par en Estadísticas, y lo demás anotado en 10.61, van en la tarea siguiente, no en esta mezcla.
+
+**Las cifras esperadas:** el piso de `sprint-4` es 1783, y la 3.1.1 trae 33 pruebas más. Se esperan unas 1816.
+
+**Lo que sigue:**
+- Carlos sube esta decisión y hace la mezcla.
+- Timonel hace T-123 en un chat nuevo en la carpeta del rediseño, con Fable 5.1.
+- Codex la acepta.
+- Después: la regla de la par en Estadísticas y lo anotado en 10.61, y la 3.2.0 a más tardar el 4-nov.
+
+La siguiente decisión es la **10.64**.
