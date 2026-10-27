@@ -1639,3 +1639,19 @@ La siguiente decisión es la **10.61**.
 - La meta sigue: la 3.2.0 publicada a más tardar el 4-nov, y la presentación final el 7-nov.
 
 La siguiente decisión es la **10.62**.
+
+### 10.62 · La 3.1.1, publicada en los tres clientes (26-oct, 20:15)
+
+**Carlos la publicó y avisó a las 20:09**, con la sección 4 de la lista del piloto y la versión nueva. Yov revisó la carpeta:
+- **Git:** `master` en `34d8838`, igual que `origin/master`, con la etiqueta `v3.1.1` («BayStream 3.1.1, los hallazgos del piloto (T-122)»).
+- **Windows:** `BayStream_3.1.1.0.msix`, de 25,3 MB, con la identidad 3.1.1.0 de `CN=BayStream` y el SHA-256 `7617CC8889BCDD44C46964772B2DF48D50D0D8C2EA1E335E5F7E134CCE20D73E`, el mismo de su `.sha256`. El MSIX 3.1.0.0 sigue en `build\t93`, para volver.
+- **Android:** el AAB de 51,1 MB, con `versionName` 3.1.1 (compilación 5), para la prueba interna de Play. El Honor se actualiza por el enlace de la prueba.
+- **Web:** la compilación dice 3.1.1 y 5 en `version.json`, con 57 archivos, como la 3.1.0.
+
+**Lo que sigue:**
+- Llevar la 3.1.1 a `sprint-4`, para la 3.2.0. Carlos mezcla `master` en `sprint-4`; Timonel resuelve lo que choque con el rediseño, y Codex lo acepta.
+- H2: decide Carlos, con la propuesta de la sección 8 de `docs/T122-RESULTADOS.md`.
+- Lo anotado para `sprint-4` en 10.61.
+- La 3.2.0 publicada a más tardar el 4-nov, con la lista del piloto al día, y la presentación final el 7-nov.
+
+La siguiente decisión es la **10.63**.
