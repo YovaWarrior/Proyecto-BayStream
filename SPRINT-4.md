@@ -1775,3 +1775,40 @@ La siguiente decisión es la **10.66**.
 - Después, T-125: la 3.2.0, a más tardar el 4-nov.
 
 La siguiente decisión es la **10.67**.
+
+### 10.67 · T-124 aceptada con observaciones: la regla de la par llega a la 3.2.0; sigue T-125 (27-oct, 13:00)
+
+**Codex la aceptó sobre `e3ce0fc`** (`docs/t124/aceptacion-codex.md`, con su evidencia en `build/t124-aceptacion/` de `baystream-qa-r4`):
+- **P2, la ficha de la bahía, pasa** en Carga y en Contenido, en la oficina y en el teléfono. Con la 21, la 22 y la 23 elegidas, la ficha empieza por la bahía que se ve y nombra «grupo 22 (21, 22 y 23)». Las cifras de cada bahía son las suyas: la 21 tiene 7 contenedores, y la 22, 11.
+- **La par sin carga propia también pasa:** en un caso sintético, con un 40 de paso en la 22 y carga en la 21 y la 23, el grupo nombra las tres bahías en las 12 escenas de release.
+- **Estadísticas pasa:** `T100_LLEGADA` da tres columnas (02, 06 y 10), con 964 950 kg en total, y el sintético de 977, 24 columnas que siguen sumando 977. Codex calculó los grupos esperados por su cuenta, sin el formateador de la app.
+- **P3 y O1 pasan:** «1 contenedor a bordo en la salida», y el plural con dos. El conductor nuevo suelta el contacto aunque el gesto falle, y en el emulador H7 levanta y suelta en la celda correcta.
+- **Sin regresiones** en los tres clientes: H4, H6 y H7 de T-123, las fichas, la variante de solo icono y «Acciones» con su nombre en Windows. Las siete pruebas de T-121 no se aflojaron.
+- **Cifras:** la suite, 1832 de 1832 en una sola corrida, sin omitidas; `analyze` en cero.
+
+**O-124-1 (P3, de antes de T-124):** en la vista de la par, todas las celdas tomadas por veintes de las impares vecinas llevan la misma clave, `ValueKey('neighbor-twenty')`, en `bay_plan_view.dart`. Con dos de esas celdas en la misma fila del dibujo, Flutter avisa en debug de claves duplicadas. Viene de T-106 (Sprint 3) y también está en la 3.1.1 publicada. En release, la escena de Codex pasa sus 12 comprobaciones, pero eso no prueba todas las combinaciones.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 675 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1832 éxitos y ninguna omitida.
+
+**Con esto:**
+- **T-124 queda aceptada.** El piso de `sprint-4` sube a **1832**.
+- **Sigue T-125 · La 3.2.0** (10.65), a más tardar el 4-nov. Yov recomienda sumarle O-124-1: una clave distinta por celda, con una prueba roja antes. Decide Carlos.
+- El punto 5 de T-124 (los vacíos asignados) sigue esperando la decisión de Carlos. Yov recomienda dejarlo para después de la 3.2.0.
+
+La siguiente decisión es la **10.68**.
+
+### 10.68 · Carlos decide: la 3.2.0 lleva los vacíos asignados en Estadísticas y O-124-1; T-125 va a Timonel (27-oct, 13:10)
+
+**Carlos lo decidió a las 13:05:**
+- **El punto 5 de T-124 entra en T-125, antes de publicar.** Estadísticas cuenta los vacíos asignados como la Lista y las búsquedas (`aboardContainersProvider`), con una ficha que dice cuántos incluye. Las alertas y la comparación de viajes no cambian, como propuso Timonel. Yov recomendaba dejarlo para después de la 3.2.0, porque mueve las cifras durante la operación.
+- **O-124-1 entra en T-125:** una clave distinta por celda, con una prueba roja antes.
+
+**T-125 · La 3.2.0**, con Timonel, en la carpeta del rediseño:
+1. Estadísticas con los vacíos asignados: la fila «Estadísticas» de la sección 5 de `docs/T124-RESULTADOS.md`.
+2. O-124-1.
+3. La versión 3.2.0, compilación 6, y el MSIX 3.2.0.0.
+4. La lista del piloto al día para la 3.2.0 (E1.10): la sección 4 con las versiones nuevas, la mezcla de `sprint-4` en `master` con la etiqueta `v3.2.0`, y la vuelta a la 3.1.1 en 4.5.
+
+**Después:** Codex acepta la candidata en los tres clientes; Carlos mezcla en `master`, etiqueta y publica con la sección 4, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.69**.
