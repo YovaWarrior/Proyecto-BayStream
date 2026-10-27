@@ -1715,3 +1715,31 @@ La siguiente decisión es la **10.64**.
 - Después, T-124: la regla de la par en Estadísticas y en la ficha de la bahía, y lo anotado en 10.61.
 
 La siguiente decisión es la **10.65**.
+
+### 10.65 · T-123 aceptada: la 3.1.1 ya vive en el rediseño; sigue T-124 y después la 3.2.0 (26-oct, 23:45)
+
+**Codex la aceptó a las 23:29, sobre `b6a8d95`** (`docs/t123/aceptacion-codex.md`, con su evidencia en `build/t123-aceptacion/` de `baystream-qa-r4`):
+- la 3.1.1 conserva en el rediseño H1, H3, H4 con sus dos correcciones, H5, H6 y H7, en los tres clientes, y el rediseño de las entregas 1 y 2 no se rompió: las fichas, la variante de solo icono y «Acciones» con su nombre en Windows;
+- **H7 pasa**, con y sin zoom. Las dos corridas de Timonel en que la celda no se levantó son del instrumento (O1, P3): su conductor del emulador puede dejar un contacto activo y reutilizar su identificador, y con eso la celda ya no se levanta. Con el contacto liberado, el producto la levanta y suelta en la celda correcta;
+- **la ficha de la bahía queda como P2 para T-124**, antes de la 3.2.0: con la 21 elegida dice «Bahía 22» con las cifras de la 21, y la 22 de verdad tiene 11 contenedores;
+- O2 (P3): el error de arranque es del panel del banco de T-122, como ya se sabía;
+- **cifras:** la suite, 1821 de 1821, en una sola corrida, sobre una copia cotejada; `analyze` en cero.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 704 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1821 éxitos.
+
+**Con esto:**
+- **T-123 queda aceptada.** El piso de `sprint-4` sube a **1821**.
+- **T-124 · La regla de la par en la presentación**, con Timonel:
+  - P2: la ficha de la bahía dice lo de la bahía que se ve con su número, y lo del grupo con el rótulo de su par;
+  - Estadísticas cuenta cada impar con la par que la cubre, con la regla de `reference_bay.dart`, como el avance (10.53 y 10.56);
+  - P3: «1 contenedores» en la página del BAPLIE de salida;
+  - O1: el conductor del arrastre del emulador suelta siempre el contacto;
+  - solo una propuesta, sin código: si las alertas, la comparación de viajes y las estadísticas deben contar los vacíos asignados, como ya lo hacen la Lista y las búsquedas.
+- **Después, T-125 · La 3.2.0:**
+  - la versión 3.2.0, compilación 6, y el MSIX 3.2.0.0;
+  - la lista del piloto al día (E1.10);
+  - la mezcla de `sprint-4` en `master`, con la aceptación de Codex;
+  - la publicación, a más tardar el 4-nov.
+- La entrega 3 (T-119 y T-120) va en la 3.2.1 (10.38), y H2 espera la decisión de Carlos.
+
+La siguiente decisión es la **10.66**.
