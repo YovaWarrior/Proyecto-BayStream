@@ -1743,3 +1743,35 @@ La siguiente decisión es la **10.65**.
 - La entrega 3 (T-119 y T-120) va en la 3.2.1 (10.38), y H2 espera la decisión de Carlos.
 
 La siguiente decisión es la **10.66**.
+
+### 10.66 · T-124 entregada y revisada: la regla de la par llega a la ficha de la bahía y a Estadísticas; pasa a la aceptación de Codex (27-oct, 01:00)
+
+**Timonel la entregó sobre `2cce28f`, y Carlos la pasó a las 00:49** (`docs/T124-RESULTADOS.md`, con la evidencia en `build/t124/`, fuera de Git):
+- **P2, la ficha de la bahía:** dice lo de la bahía que se ve con su número, y lo del grupo con el rótulo de su par. Con la 21 elegida: «Bahía 21: 7 contenedores, 1 celda reservada, 57.7 t, tapas sin declarar; grupo 22 (21, 22 y 23), por cargar cub. 27, bod. 0». Una bahía que no se cuenta con otra sigue como antes. El texto de cada caso, en la oficina y en el teléfono, en Carga y en Contenido, está en DESIGN 14.7.
+- **Estadísticas con la regla de la par:** cada impar se cuenta con la par vecina que la cubre, con `referenceBay`, como el avance. La silueta y «Ver como tabla» llevan el número de la par, y tocar una columna abre esa bahía en el plano. `T100_LLEGADA` da tres bahías (02, 06 y 10), cada una en su tope y con el casco centrado; el sintético de 977, 24. DESIGN 15 está al día.
+- **P3:** «1 contenedor a bordo en la salida».
+- **O1:** el conductor del arrastre del emulador usa un contacto nuevo en cada gesto, lo suelta siempre y comprueba que la celda se levantó antes de llevarla al borde.
+- **Cifras:**
+  - la suite, 1832 de 1832 en una corrida: las 1821 más 11 de `t124_par_test.dart`, 9 rojas antes del arreglo y 2 de guarda. `analyze` en cero;
+  - las 3 pruebas del conductor, rojas antes del arreglo;
+  - 65 capturas sintéticas en los dos temas: la Web 24, Windows 17 por UIA y el emulador 24.
+- **Siete pruebas de T-121 cambian de expectativa**, porque esperaban una columna por número de bahía. Las que medían el ancho y el desplazamiento usan ahora bahías pares sueltas, nueve y 72: con la regla nueva, la llegada son tres columnas y el 977, 24.
+
+**Yov la revisó contra el disco:**
+- contra `2cce28f` cambian exactamente las 15 rutas del bloque: 8 modificadas y 7 nuevas. No se tocaron `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.*` ni `SPRINT-4.md`;
+- lo que Timonel dejó fuera no tiene cambios de contenido: `test/t114_fase3_correccion_test.dart` y tres archivos de `windows/flutter/` son idénticos al commit, y `windows/flutter/CMakeLists.txt` solo difiere en los finales de línea. Se queda fuera;
+- las pruebas de T-121 no se aflojaron: siguen comprobando que las bahías suman todo el viaje, y la de T-117 ahora pide la lista exacta (02 y 06), no solo que contenga las vecinas;
+- el código hace lo que dice. Estadísticas agrupa con `referenceBay` sobre las bahías del viaje y de las posiciones, y «Bahías con carga» cuenta grupos. La lista del grupo en la ficha sale de las posiciones del plan de carga, que trae también lo que sigue a bordo y las reservas, así que coincide con el agrupamiento del avance.
+
+**El punto 5, la propuesta de los vacíos asignados, lo decide Carlos:**
+- Estadísticas: sí, en una tarea propia, con una ficha que diga cuántos vacíos asignados incluye;
+- las alertas: no así, porque sumar solo los vacíos mezcla lo planificado con lo hecho. Si se quiere, que evalúen el estado completo de la salida, en una vista aparte;
+- la comparación de viajes no cambia: la salida ya trae los vacíos asignados;
+- **Yov recomienda dejarlo para después de la 3.2.0**, porque cambia las cifras mientras dura la operación.
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y esta decisión, y mueve `qa-r4` al commit de esta decisión.
+- Codex acepta T-124 en los tres clientes, sin romper T-123 ni las entregas 1 y 2.
+- Después, T-125: la 3.2.0, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.67**.
