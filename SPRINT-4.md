@@ -1606,3 +1606,36 @@ La siguiente decisión es la **10.60**.
 - Si pasa, Carlos publica la 3.1.1 cuando termine la operación del buque.
 
 La siguiente decisión es la **10.61**.
+
+### 10.61 · T-122 aceptada: la 3.1.1 queda lista para publicar (26-oct, 20:00)
+
+**Codex la reaceptó a las 19:39, sobre `cf07a17`** (`docs/t122/reaceptacion-codex.md`, con su evidencia en `build/t122-reaceptacion/` de `baystream-qa-r4`):
+- **A1, cerrado en los tres clientes:**
+  - sin listado, ni el vacío con número ni el contenedor sin estado se ofrecen, y tocar su celda avisa que esperan el listado;
+  - el borrador los rechaza aunque se le pase una fila que diga «lleno»;
+  - el lleno sin fila se sigue cargando, sin la clave `order`, y su salida conserva el grupo del plan (corrección 1);
+  - con el listado importado, el vacío se carga como antes, con su OR y su tara de 3900 kg.
+- **O1, corregido:** 8.2 y 8.3 del informe de Timonel dicen lo que pasa en el código.
+- **O2, aislado:** el banco de T-99 compilado con la 3.1.1 y con la 3.1.0 arranca sin errores. El error es del panel del banco de T-122, no del producto.
+- **Cifras:**
+  - la suite, 1404 de 1404, en una sola corrida, sobre una copia cotejada antes de correrla;
+  - `analyze` en cero en la copia limpia;
+  - siete pruebas propias, aprobadas en su primera corrida, y la regresión de la aceptación anterior.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 198 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1404 éxitos y ninguna omitida.
+
+**Una corrección a 10.60:** el commit no habría cambiado las 1028 líneas de `loading_controls.dart`. La carpeta de Codex lo muestra: sus archivos salen con CRLF y en el repositorio están con LF, así que el Git de Carlos convierte el fin de línea al sacar los archivos y al guardarlos. El paso de normalizar no hizo daño: `cf07a17` cambió 9 archivos, con 465 líneas añadidas y 41 quitadas.
+
+**Con esto:**
+- **T-122 queda aceptada.** La 3.1.1 es `master` con el informe de Codex encima, y se etiqueta `v3.1.1`.
+- **Carlos la publica cuando termine la operación del buque**, con la sección 4 de la lista del piloto y la versión nueva:
+  - Windows: el MSIX 3.1.1.0;
+  - Android: el AAB 3.1.1 (5), en la prueba interna de Play;
+  - la Web: la 3.1.1 (5), con `firebase deploy --only hosting --project baystream-app`.
+- **Sigue abierto:**
+  - H2, que necesita tocar las reglas: decide Carlos con la propuesta de la sección 8;
+  - llevar la 3.1.1 a `sprint-4`, para la 3.2.0;
+  - lo anotado para `sprint-4`: la regla de la par en Estadísticas, los vacíos asignados en las alertas, la comparación y las estadísticas, y «1 contenedores» en la salida.
+- La meta sigue: la 3.2.0 publicada a más tardar el 4-nov, y la presentación final el 7-nov.
+
+La siguiente decisión es la **10.62**.
