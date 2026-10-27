@@ -165,10 +165,23 @@ void main() {
             ])),
         throwsStateError);
   });
-  test('T-82 no inventa datos de un cargado ausente del listado', () {
+  test('T-82 un cargado ausente del listado sale con el plan, sin inventar datos',
+      () {
+    // T-122, corrección 1 (10.57): antes se detenía; ahora el lleno va con su
+    // grupo del plan de carga y el vacío asignado sigue exigiendo su fila.
+    final sinListado = ExportList(fileName: 'vacío', rows: []);
+    final result = output(t82Loads.take(2), list: sinListado);
+    final full = BaplieParserService()
+        .parse(result.text)
+        .containers
+        .firstWhere((c) => c.containerId == 'TSTU0000014');
+    expect(full.grossWeight, 7200);
+    expect(full.vgmWeight, isNull);
+    expect(result.withoutRow, ['TSTU0000014']);
     expect(
-        () => output(t82Loads, list: ExportList(fileName: 'vacío', rows: [])),
-        throwsStateError);
+        () => output(t82Loads, list: sinListado),
+        throwsA(isA<StateError>().having((e) => e.message, 'message',
+            contains('El vacío asignado TSTU0000020 no está en el listado'))));
   });
   test('T-82 prioriza el plan completo y respalda solo lo que no declara', () {
     final primary = t82LoadingEdi

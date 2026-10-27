@@ -119,6 +119,16 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
         Text(
             '${data.state.conflicts.length} conflictos vigentes. Revisa el avance de la operación; '
             'la salida usa las posiciones físicas registradas.'),
+      // T-122, corrección 1 (10.57): los llenos cargados sin fila (H4).
+      if (output.withoutRow.isNotEmpty)
+        Text(
+            output.withoutRow.length == 1
+                ? '1 lleno va con los datos del plan de carga porque no tiene '
+                    'fila en el listado: ${output.withoutRow.single}.'
+                : '${output.withoutRow.length} llenos van con los datos del plan '
+                    'de carga porque no tienen fila en el listado: '
+                    '${output.withoutRow.join(', ')}.',
+            key: const ValueKey('departure-without-row')),
       const SizedBox(height: 16),
       Text('Cancelados vigentes (${output.cancelled.length})',
           style: Theme.of(context).textTheme.titleMedium),

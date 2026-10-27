@@ -198,7 +198,7 @@ class LoadValidator {
       final planned = plan.loadingItemAt(position);
       issues.add(LoadIssue(
           LoadIssueKind.outOfPlan,
-          'OR ${row.order} está planificado en ${_shown(numbered.plannedPosition)}; '
+          '${row.name} está planificado en ${_shown(numbered.plannedPosition)}; '
           'en $shown quedará «fuera de plan»'
           '${planned != null && planned.key != numbered.key ? ', y $shown es la celda de ${_name(planned)}' : ''}. '
           'Para cargarlo ahí, escribe el motivo; si no, usa la celda planificada.'));
@@ -214,7 +214,7 @@ class LoadValidator {
         issues.add(LoadIssue(
             LoadIssueKind.otherGroup,
             'La reserva $shown es de otro grupo (${differences.join(', ')}); '
-            'el OR ${row.order} es ${row.type} · ${row.pod} · ${row.line}. '
+            '${row.unlisted ? row.containerId : 'el OR ${row.order}'} es ${row.type} · ${row.pod} · ${row.line}. '
             'Para cargarlo ahí, escribe el motivo; si no, elige una reserva de su grupo.'));
       }
     }

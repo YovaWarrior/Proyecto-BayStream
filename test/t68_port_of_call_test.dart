@@ -68,7 +68,10 @@ void main() {
     expect(voyage.suggestPortOfCall(null), 'HNPCR');
     expect(voyage.suggestPortOfCall('GTSTC'), 'GTSTC');
     expect(voyage.suggestPortOfCall('HNPCR'), 'HNPCR');
-    expect(voyage.suggestPortOfCall('PAMIT'), 'HNPCR');
+    // T-122 (H1): PAMIT baja carga en este archivo y ya se propone; el
+    // puerto ajeno de la prueba es USLAX.
+    expect(voyage.suggestPortOfCall('PAMIT'), 'PAMIT');
+    expect(voyage.suggestPortOfCall('USLAX'), 'HNPCR');
     final withoutNext = parser.parse('$_header$_cargo');
     expect(withoutNext.suggestPortOfCall('GTSTC'), 'HNPCR');
   });
@@ -173,7 +176,7 @@ void main() {
     }
   });
 
-  for (final history in [null, 'GTSTC', 'PAMIT']) {
+  for (final history in [null, 'GTSTC', 'USLAX']) {
     testWidgets('T-68 diálogo a 360 dp con historial $history', (tester) async {
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1;

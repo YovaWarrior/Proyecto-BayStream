@@ -887,7 +887,10 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     );
   }
 
-  /// Primero salida y llegada declaradas, luego los puertos de carga.
+  /// Primero salida y llegada declaradas, luego los puertos de carga y, desde
+  /// T-122 (H1, 10.49), los puertos donde baja la carga: en el plano de
+  /// llegada del piloto, el puerto donde se operaba era uno de estos y no
+  /// se podía elegir.
   List<String> get _portOptions {
     final options = <String>[];
     final declared = widget.declaredPort;
@@ -897,11 +900,26 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     for (final port in widget.loadingPorts.keys) {
       if (!options.contains(port)) options.add(port);
     }
+    for (final port in _dischargePorts.keys) {
+      if (!options.contains(port)) options.add(port);
+    }
     for (final slot in widget.voyage?.reservedSlots ?? const <ReservedSlot>[]) {
       final port = slot.portOfLoading;
       if (port != null && !options.contains(port)) options.add(port);
     }
     return options;
+  }
+
+  Map<String, int> get _dischargePorts =>
+      widget.voyage?.dischargePortCounts ?? const {};
+
+  /// La ficha de un puerto: con cuántos contenedores se carga ahí o, si solo
+  /// se descarga, con cuántos bajan («GTSTC (n)», H1).
+  String _portLabel(String port) {
+    final loaded = widget.loadingPorts[port];
+    if (loaded != null) return '$port ($loaded)';
+    final discharged = _dischargePorts[port];
+    return discharged == null ? port : '$port ($discharged)';
   }
 
   /// Puerto de esta escala: el dato que separa la carga que se opera aquí de
@@ -929,7 +947,9 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
             Text(
               declared != null && next != null
                   ? 'El archivo se emitió al salir de $declared rumbo a $next: '
-                      'para la salida, la escala es $declared; para la llegada, $next.'
+                      'para la salida, la escala es $declared; para la llegada, $next. '
+                      'Los demás son los puertos donde se cargó o se descarga '
+                      'la mercancía que va a bordo; elige el de esta escala.'
                   : declared == null
                   ? 'El archivo no declara puerto de salida. Se propone el '
                       'puerto de carga más frecuente, que es una apuesta; '
@@ -949,11 +969,7 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
                 for (final port in _portOptions)
                   ChoiceChip(
                     key: ValueKey('port-$port'),
-                    label: Text(
-                      widget.loadingPorts.containsKey(port)
-                          ? '$port (${widget.loadingPorts[port]})'
-                          : port,
-                    ),
+                    label: Text(_portLabel(port)),
                     selected: _portOfCall == port,
                     onSelected: (_) => setState(() {
                       _portOfCall = port;

@@ -1607,8 +1607,13 @@ class _Rejilla extends StatelessWidget {
       if (loading != null &&
           loadKey != null &&
           loading.plan.loading[loadKey]?.role == PlanRole.load) {
-        final loadHighlighted =
-            isHighlighted || grid.highlightedContainerId == loadKey;
+        // T-122 (H6): la búsqueda general también resalta la reserva por el
+        // número del vacío que se le asignó.
+        final loadHighlighted = isHighlighted ||
+            grid.highlightedContainerId == loadKey ||
+            (grid.highlightedContainerId != null &&
+                loading.state[loadKey]?.assignedContainer ==
+                    grid.highlightedContainerId);
         // 13.3: lo recién movido también enciende la celda de carga, sea el
         // lleno del listado (C:) o la reserva con el vacío que se le asignó.
         final recien = grid.recienMovidoId;

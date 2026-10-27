@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +33,9 @@ class PlanZoomScope extends InheritedWidget {
 /// Amplía la rejilla y su área desplazable; conserva los gestos de cada celda.
 /// La escala vive en `planZoomProvider`: la pellizca aquí y la cambia el chip
 /// `ZoomDelPlano`, que desde 10.20 va fuera de la rejilla, en la línea de los
-/// controles, para no tapar ninguna celda.
+/// controles, para no tapar ninguna celda. Los dos desplazamientos de la
+/// rejilla van dentro; durante un arrastre los mueve `_PlanDragSource`
+/// (T-122, H7).
 class PlanZoomViewport extends ConsumerStatefulWidget {
   final Widget child;
 
@@ -245,6 +248,140 @@ class _PlanDrag {
   const _PlanDrag(this.operationId, this.target, this.from);
 }
 
+/// T-122 (H7, 10.56) · La marca de una celda que recibe arrastres, para
+/// saber al soltar cuál queda de verdad bajo el puntero.
+class _PlanDropSpot {
+  final String position;
+  const _PlanDropSpot(this.position);
+}
+
+/// La celda del plano bajo [point], en coordenadas de pantalla, o nula.
+String? _dropSpotAt(BuildContext context, Offset point) {
+  final result = HitTestResult();
+  WidgetsBinding.instance.hitTestInView(result, point, View.of(context).viewId);
+  for (final entry in result.path) {
+    final target = entry.target;
+    if (target is RenderMetaData && target.metaData is _PlanDropSpot) {
+      return (target.metaData as _PlanDropSpot).position;
+    }
+  }
+  return null;
+}
+
+/// T-122 (H7, 10.56) · La celda que se arrastra, con desplazamiento
+/// automático. En el piloto, al arrastrar un contenedor de un extremo de la
+/// bahía al otro en el teléfono, el plano no se movía cuando el dedo llegaba
+/// al borde: `PlanDragCell` era un `LongPressDraggable` dentro de los dos
+/// `SingleChildScrollView` de la rejilla, sin nada que los desplazara.
+///
+/// Ahora, mientras dura el arrastre, los dos desplazamientos que envuelven la
+/// celda (el vertical y el horizontal de `_BayGridWidget`, dentro de
+/// [PlanZoomViewport]) avanzan solos con [EdgeDraggingAutoScroller] en
+/// cuanto el puntero, dedo o mouse, queda a menos de `margen` del borde de la
+/// vista. Se mide en coordenadas de pantalla, así que vale también con zoom.
+/// Al soltar, cuenta la celda que queda bajo el puntero aunque el plano se
+/// haya movido bajo un dedo quieto: la decide [_dropSpotAt] en ese punto, y
+/// no el último `DragTarget` que el gesto alcanzó a visitar, que solo cambia
+/// cuando el puntero se mueve.
+class _PlanDragSource extends StatefulWidget {
+  final Key dragKey;
+  final _PlanDrag data;
+  final Widget feedback;
+  final Widget childWhenDragging;
+  final Widget child;
+
+  /// Qué hacer al soltar en ese punto de la pantalla.
+  final void Function(Offset point) onDrop;
+
+  const _PlanDragSource(
+      {required this.dragKey,
+      required this.data,
+      required this.feedback,
+      required this.childWhenDragging,
+      required this.child,
+      required this.onDrop});
+
+  @override
+  State<_PlanDragSource> createState() => _PlanDragSourceState();
+}
+
+class _PlanDragSourceState extends State<_PlanDragSource> {
+  /// A menos de esto del borde de la vista, el plano se desplaza.
+  static const margen = 40.0;
+
+  /// Un desplazador por eje, mientras dura el arrastre.
+  final _desplazadores = <(EdgeDraggingAutoScroller, Axis)>[];
+  Offset? _ultimo;
+
+  /// La franja que se mide: [margen] a cada lado del puntero en el eje del
+  /// desplazamiento y un punto en el otro, para no medir más que la vista.
+  static Rect _objetivo(Offset punto, Axis eje) => eje == Axis.horizontal
+      ? Rect.fromCenter(center: punto, width: margen * 2, height: 1)
+      : Rect.fromCenter(center: punto, width: 1, height: margen * 2);
+
+  void _empezar() {
+    _detener();
+    for (final eje in Axis.values) {
+      final scrollable = Scrollable.maybeOf(context, axis: eje);
+      if (scrollable == null) continue;
+      late final EdgeDraggingAutoScroller desplazador;
+      desplazador = EdgeDraggingAutoScroller(scrollable,
+          velocityScalar: 50,
+          // Con el puntero quieto el plano sigue moviéndose: el objetivo se
+          // vuelve a situar respecto al desplazamiento nuevo.
+          onScrollViewScrolled: () {
+            final punto = _ultimo;
+            if (punto != null) {
+              desplazador.startAutoScrollIfNecessary(_objetivo(punto, eje));
+            }
+          });
+      _desplazadores.add((desplazador, eje));
+    }
+  }
+
+  void _mover(DragUpdateDetails details) {
+    _ultimo = details.globalPosition;
+    for (final (desplazador, eje) in _desplazadores) {
+      desplazador.startAutoScrollIfNecessary(
+          _objetivo(details.globalPosition, eje));
+    }
+  }
+
+  void _detener() {
+    for (final (desplazador, _) in _desplazadores) {
+      desplazador.stopAutoScroll();
+    }
+    _desplazadores.clear();
+    _ultimo = null;
+  }
+
+  void _soltar(DraggableDetails details) {
+    _detener();
+    // Con `pointerDragAnchorStrategy`, `offset` es el puntero en pantalla.
+    widget.onDrop(details.offset);
+  }
+
+  @override
+  void dispose() {
+    _detener();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => LongPressDraggable<_PlanDrag>(
+        key: widget.dragKey,
+        data: widget.data,
+        maxSimultaneousDrags: 1,
+        dragAnchorStrategy: pointerDragAnchorStrategy,
+        feedback: widget.feedback,
+        childWhenDragging: widget.childWhenDragging,
+        onDragStarted: _empezar,
+        onDragUpdate: _mover,
+        onDragEnd: _soltar,
+        child: widget.child,
+      );
+}
+
 /// T-105: conserva la celda y sus gestos; el dominio decide si puede moverse.
 class PlanDragCell extends ConsumerWidget {
   final VesselVoyage voyage;
@@ -263,16 +400,19 @@ class PlanDragCell extends ConsumerWidget {
       required this.enableDrag,
       required this.child});
 
-  List<PositionChange> _changes(LoadingOperation current, _PlanDrag drag) {
-    final other = current.plan.loadingItemAt(position);
+  /// Los cambios de soltar [drag] en [destino]: el movimiento y, si la celda
+  /// la tiene otro objeto, el intercambio.
+  List<PositionChange> _changes(
+      LoadingOperation current, _PlanDrag drag, String destino) {
+    final other = current.plan.loadingItemAt(destino);
     return [
-      PositionChange(drag.target, drag.from, position),
+      PositionChange(drag.target, drag.from, destino),
       if (other != null && other.key != drag.target)
         PositionChange(other.key, other.plannedPosition, drag.from),
     ];
   }
 
-  ChangePreview _preview(WidgetRef ref, _PlanDrag drag) {
+  ChangePreview _preview(WidgetRef ref, _PlanDrag drag, String destino) {
     final operation = ref.read(activeOperationProvider).value;
     final current = ref.read(loadingOperationProvider(voyage)).value;
     if (operation == null ||
@@ -283,13 +423,35 @@ class PlanDragCell extends ConsumerWidget {
         current.operationId != drag.operationId) {
       return const ChangePreview.invalid(ChangeRequests.operationNotOpen);
     }
-    if (drag.from.substring(0, 3) != position.substring(0, 3)) {
+    if (drag.from.substring(0, 3) != destino.substring(0, 3)) {
       return const ChangePreview.invalid(
           'El arrastre solo mueve dentro de la bahía: para otra bahía utiliza '
           'el formulario.');
     }
-    return const ChangeRequests().preview(
-        current, ref.read(operatorProvider).value, _changes(current, drag));
+    return const ChangeRequests().preview(current,
+        ref.read(operatorProvider).value, _changes(current, drag, destino));
+  }
+
+  /// Al soltar [drag] en [destino]: explica el motivo si no se puede, y si se
+  /// puede abre la hoja que confirma el cambio, sin guardar todavía.
+  void _soltarEn(
+      BuildContext context, WidgetRef ref, _PlanDrag drag, String destino) {
+    final result = _preview(ref, drag, destino);
+    if (!result.valid) {
+      ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+          texto: result.error!, corto: 'Ese cambio no se puede hacer.'));
+      return;
+    }
+    final current = ref.read(loadingOperationProvider(voyage)).value!;
+    showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: false,
+        builder: (_) => PlanDragConfirmation(
+            voyage: voyage,
+            operationId: drag.operationId,
+            changes: _changes(current, drag, destino)));
   }
 
   @override
@@ -320,11 +482,14 @@ class PlanDragCell extends ConsumerWidget {
                   corto: 'Mover exige una cuenta autorizada.')),
           child: cell);
     } else if (enableDrag && pending && open && actor?.authorized == true) {
-      cell = LongPressDraggable<_PlanDrag>(
-        key: ValueKey('plan-drag-$itemKey'),
-        data: _PlanDrag(operation!.id, source.key, source.plannedPosition),
-        maxSimultaneousDrags: 1,
-        dragAnchorStrategy: pointerDragAnchorStrategy,
+      final drag = _PlanDrag(operation!.id, source.key, source.plannedPosition);
+      cell = _PlanDragSource(
+        dragKey: ValueKey('plan-drag-$itemKey'),
+        data: drag,
+        onDrop: (point) {
+          final destino = _dropSpotAt(context, point);
+          if (destino != null) _soltarEn(context, ref, drag, destino);
+        },
         feedback: Transform.translate(
             offset: Offset(-columna / 2 * zoom, -(fila + 16) * zoom),
             child: Transform.scale(
@@ -343,31 +508,19 @@ class PlanDragCell extends ConsumerWidget {
         r.status == ChangeRequestStatus.pending &&
         r.changes.any((c) => c.to == position));
     if (!enableDrag && !requested) return cell;
-    return DragTarget<_PlanDrag>(
-      key: ValueKey('plan-drop-$position'),
-      // Acepta también el rojo para explicar el motivo al soltar, sin guardar.
-      onWillAcceptWithDetails: (_) => enableDrag,
-      onAcceptWithDetails: (details) {
-        final result = _preview(ref, details.data);
-        if (!result.valid) {
-          ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
-              texto: result.error!, corto: 'Ese cambio no se puede hacer.'));
-          return;
-        }
-        final current = ref.read(loadingOperationProvider(voyage)).value!;
-        showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            isDismissible: false,
-            enableDrag: false,
-            builder: (_) => PlanDragConfirmation(
-                voyage: voyage,
-                operationId: details.data.operationId,
-                changes: _changes(current, details.data)));
-      },
-      builder: (context, candidates, rejected) {
-        final preview =
-            candidates.isEmpty ? null : _preview(ref, candidates.first!);
+    // La marca de la celda la lee `_dropSpotAt` al soltar (H7); el objetivo
+    // solo dibuja la vista previa del gesto, el verde, el ámbar o el rojo.
+    return MetaData(
+      metaData: _PlanDropSpot(position),
+      behavior: HitTestBehavior.translucent,
+      child: DragTarget<_PlanDrag>(
+        key: ValueKey('plan-drop-$position'),
+        // Acepta también el rojo para explicar el motivo al soltar, sin guardar.
+        onWillAcceptWithDetails: (_) => enableDrag,
+        builder: (context, candidates, rejected) {
+          final preview = candidates.isEmpty
+              ? null
+              : _preview(ref, candidates.first!, position);
         final scheme = Theme.of(context).colorScheme;
         // Los tonos semánticos conservan luminosidad y saturación del tema.
         final color = preview == null
@@ -412,7 +565,8 @@ class PlanDragCell extends ConsumerWidget {
               ),
             ))),
         ]);
-      },
+        },
+      ),
     );
   }
 }

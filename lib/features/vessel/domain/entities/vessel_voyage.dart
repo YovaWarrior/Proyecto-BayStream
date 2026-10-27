@@ -240,12 +240,30 @@ class VesselVoyage extends Equatable {
     return loadingPortCounts.keys.isEmpty ? null : loadingPortCounts.keys.first;
   }
 
-  /// El historial del dispositivo solo propone una de las dos escalas del
-  /// mensaje. Un puerto ajeno o un archivo sin LOC+61 conserva la propuesta.
+  /// Puertos de descarga del archivo (`LOC+11`) con su conteo, del más
+  /// frecuente al menos frecuente. Es la contraparte de [loadingPortCounts].
+  Map<String, int> get dischargePortCounts {
+    final counts = <String, int>{};
+    for (final container in containers) {
+      final port = container.portOfDischarge;
+      if (port == null || port.isEmpty) continue;
+      counts[port] = (counts[port] ?? 0) + 1;
+    }
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return Map.fromEntries(sorted);
+  }
+
+  /// El historial del dispositivo solo propone una escala que el mensaje
+  /// conoce: la salida, la llegada siguiente o un puerto donde baja carga
+  /// (T-122, H1: el plano del piloto salía de un puerto rumbo a otro, con la
+  /// carga que se descargaba en el puerto donde se opera, y ese no se podía
+  /// elegir). Un puerto ajeno o un archivo sin LOC+61 conserva la propuesta.
   String? suggestPortOfCall(String? lastConfirmedPort) {
     if (portOfNextCall != null && lastConfirmedPort != null &&
         (lastConfirmedPort == portOfOrigin ||
-            lastConfirmedPort == portOfNextCall)) {
+            lastConfirmedPort == portOfNextCall ||
+            dischargePortCounts.containsKey(lastConfirmedPort))) {
       return lastConfirmedPort;
     }
     return proposedPortOfCall;

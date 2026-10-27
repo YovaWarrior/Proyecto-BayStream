@@ -1,6 +1,7 @@
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../entities/entities.dart';
 import 'export_list_cross_checker.dart';
+import 'reference_bay.dart';
 
 /// Pendientes de carga: la bitácora decide el estado y el listado F/E.
 class LoadingPlanProgress {
@@ -39,18 +40,15 @@ class LoadingPlanProgress {
       }
     }
     final bays = <int, BayLoadingPending>{};
-    final plannedBays = plan.loading.values
-        .where((i) => i.role == PlanRole.load)
-        .map((i) => IsoCoordinateParser.parse(i.plannedPosition).bay)
-        .toSet();
     var unmatched = 0;
     for (final item
         in plan.loading.values.where((i) => i.role == PlanRole.load)) {
       if (list != null && !labels.containsKey(item.key)) unmatched++;
       final position = IsoCoordinateParser.parse(item.plannedPosition);
-      final key = position.bay.isEven && plannedBays.contains(position.bay - 1)
-          ? position.bay - 1
-          : position.bay;
+      // T-122 (H5): la par es la bahía de referencia, con las bahías que el
+      // plan dibuja, igual que `LoadingOperation.displayBay`.
+      final key =
+          referenceBay(position.bay, hasBay: voyage.bays.containsKey);
       final bay = bays.putIfAbsent(key, () => BayLoadingPending(key));
       if (key != position.bay) bay.paired = true;
       // Conserva también las filas de la tabla al terminar la carga.
@@ -95,14 +93,11 @@ class LoadingPlanProgress {
   }
 
   String label(String key) => labels[key] ?? '—';
-  BayLoadingPending? forBay(int number) {
-    for (final bay in bays.values) {
-      if (bay.bay == number || (bay.paired && bay.bay + 1 == number)) {
-        return bay;
-      }
-    }
-    return null;
-  }
+
+  /// El grupo de [number]: el suyo o, para una impar, el de la par que la
+  /// cubre si ese grupo existe (H5).
+  BayLoadingPending? forBay(int number) =>
+      bays[referenceBay(number, hasBay: bays.containsKey)];
 
   int get deck => bays.values.fold(0, (sum, bay) => sum + bay.deck);
   int get hold => bays.values.fold(0, (sum, bay) => sum + bay.hold);
@@ -113,14 +108,17 @@ class LoadingPlanProgress {
 
 class BayLoadingPending {
   final int bay;
+
+  /// Verdadero si el grupo cuenta también alguna impar vecina (H5).
   bool paired = false;
   int deckFull = 0;
   int deckEmpty = 0;
   int holdFull = 0;
   int holdEmpty = 0;
   BayLoadingPending(this.bay);
-  String get label => '${bay.toString().padLeft(2, '0')}'
-      '${paired ? '/${(bay + 1).toString().padLeft(2, '0')}' : ''}';
+
+  /// El grupo se rotula con su bahía de referencia, la par (H5).
+  String get label => bay.toString().padLeft(2, '0');
   int get deck => deckFull + deckEmpty;
   int get hold => holdFull + holdEmpty;
   int get full => deckFull + holdFull;

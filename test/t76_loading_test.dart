@@ -155,7 +155,10 @@ void main() {
           t76Unit('SHORT', '0030282'),
           t76Unit('LONG', '0040482').copyWith(isoSizeType: '45G1'),
         ]));
-    expect(data.displayBay(4), 3);
+    // T-122 (H5): la par es la referencia: la 03 se cuenta con la 04, que
+    // está en el plano y la cubre, y el grupo se rotula 04.
+    expect(data.displayBay(4), 4);
+    expect(data.displayBay(3), 4);
     expect(data.bayOf('0040482'), 4);
   });
   test('T-76 una segunda corrección permite dejar vigente el último marchamo',

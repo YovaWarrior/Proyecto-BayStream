@@ -113,9 +113,15 @@ List<Widget> fichasDelResumen(
                       '${operationCount(data.discharge.restows, 're‑estiba', 're‑estibas')}',
                 ),
               ],
+              // T-122 (H4, 10.51): sin listado, los llenos del plan se
+              // cargan por su número; los vacíos esperan su fila.
               if (data.list == null)
-                revisar('loading-sin-listado',
-                    'Importa el listado de agencia para operar por OR.'),
+                BsFichaDeCifra(
+                    key: const ValueKey('loading-sin-listado'),
+                    rotulo: 'Sin listado de agencia',
+                    valor: 'los llenos se cargan por su número; '
+                        'los vacíos esperan el listado',
+                    rol: semanticos.revisar),
             ];
           },
         );

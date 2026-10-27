@@ -711,41 +711,9 @@ class SelectedCarrierNotifier extends Notifier<String?> {
 }
 
 /// Provider para obtener lista de navieras únicas del viaje
-final carriersListProvider = Provider<List<String>>((ref) {
-  final voyageAsync = ref.watch(voyageNotifierProvider);
-
-  return voyageAsync.maybeWhen(
-    data: (voyage) {
-      if (voyage == null) return [];
-      final carriers = voyage.containers
-          .map((c) => c.operatorCode)
-          .where((code) => code != null && code.isNotEmpty)
-          .cast<String>()
-          .toSet()
-          .toList();
-      carriers.sort();
-      return carriers;
-    },
-    orElse: () => [],
-  );
-});
-
-/// Provider para contenedores filtrados por naviera
-final filteredContainersProvider = Provider<List<ContainerUnit>>((ref) {
-  final voyageAsync = ref.watch(voyageNotifierProvider);
-  final selectedCarrier = ref.watch(selectedCarrierProvider);
-
-  return voyageAsync.maybeWhen(
-    data: (voyage) {
-      if (voyage == null) return [];
-      if (selectedCarrier == null) return voyage.containers;
-      return voyage.containers
-          .where((c) => c.operatorCode == selectedCarrier)
-          .toList();
-    },
-    orElse: () => [],
-  );
-});
+// T-122 (H6): `carriersListProvider` y `filteredContainersProvider` viven en
+// `loading_operation_provider.dart`, junto a `aboardContainersProvider`, para
+// que la Lista cuente también los vacíos asignados a una reserva.
 
 /// Provider para estadísticas del viaje actual
 final voyageStatsProvider = Provider<VoyageStats?>((ref) {

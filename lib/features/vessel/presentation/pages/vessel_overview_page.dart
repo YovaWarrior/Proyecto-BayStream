@@ -18,6 +18,7 @@ import '../../domain/services/operation_progress.dart';
 import '../../domain/services/operation_sources.dart';
 import '../providers/vessel_providers.dart';
 import '../providers/discharge_provider.dart' show offersDischarge;
+import '../providers/loading_operation_provider.dart';
 import '../providers/oficina_providers.dart';
 import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
@@ -652,7 +653,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     showSearch<ContainerUnit?>(
       context: context,
       delegate: ContainerSearchDelegate(
-        containers: voyage.containers,
+        // T-122 (H6): también los vacíos asignados a una reserva.
+        containers: ref.read(aboardContainersProvider),
         ref: ref,
         onIrAlPlano: () => ref
             .read(destinoDelViajeProvider.notifier)
@@ -1103,6 +1105,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final carriers = ref.watch(carriersListProvider);
     final selectedCarrier = ref.watch(selectedCarrierProvider);
     final filteredContainers = ref.watch(filteredContainersProvider);
+    // T-122 (H6): lo que va a bordo, con los vacíos asignados a una reserva.
+    final aboard = ref.watch(aboardContainersProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1172,7 +1176,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: FilterChip(
-                      label: Text('Todas (${voyage.totalContainers})'),
+                      label: Text('Todas (${aboard.length})'),
                       selected: selectedCarrier == null,
                       onSelected: (_) {
                         ref.read(selectedCarrierProvider.notifier).clear();
@@ -1181,9 +1185,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
                   ),
                   // Chips por naviera
                   ...carriers.map((carrier) {
-                    final count = voyage.containers
-                        .where((c) => c.operatorCode == carrier)
-                        .length;
+                    final count =
+                        aboard.where((c) => c.operatorCode == carrier).length;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: FilterChip(

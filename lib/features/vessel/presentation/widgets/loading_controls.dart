@@ -34,16 +34,22 @@ Future<void> onLoadingContainerTap(BuildContext context, WidgetRef ref,
     openDetails();
     return;
   }
-  final row = data?.list?.byContainer(container.containerId);
+  final listed = data!.list?.byContainer(container.containerId);
+  // La oficina no registra cargas: mira y aprueba cambios (10.51).
+  if (listed == null &&
+      ref.read(operatorProvider).value?.role == OperatorRole.office) {
+    await showLoadingDetails(context, voyage, 'C:${container.containerId}');
+    return;
+  }
+  // T-122 (H4): en el muelle, un lleno del plan sin fila en el listado se
+  // carga por su número de contenedor; el OR ayuda, pero no es la llave. Un
+  // vacío con número, o uno sin estado, espera el listado (10.59).
+  final row = listed ?? data.unlistedRow(container.containerId);
   if (row == null) {
-    if (ref.read(operatorProvider).value?.role == OperatorRole.office) {
-      await showLoadingDetails(context, voyage, 'C:${container.containerId}');
-      return;
-    }
     ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
-        texto: 'Este contenedor no tiene OR en el listado de la agencia: '
-            'importa el listado actualizado.',
-        corto: 'Este contenedor no tiene OR.'));
+        texto: data.needsRow(container.containerId) ??
+            '${container.containerId} espera el listado de la agencia.',
+        corto: 'Espera el listado de la agencia.'));
     return;
   }
   await openLoadingRow(context, ref, voyage, row, selectedBay: selectedBay);
@@ -75,11 +81,13 @@ class LoadingControls extends ConsumerWidget {
   /// El botón de buscar por OR, el mismo de la línea del resumen, para la
   /// tira del pie del teléfono bajo y la franja de la bahía. Con [soloIcono]
   /// (la franja que no cabe en una línea, 10.40) queda el icono y el rótulo
-  /// pasa a la descripción emergente.
+  /// pasa a la descripción emergente. Desde T-122 (H4) no necesita el
+  /// listado: sin él busca los llenos del plan por sus últimos dígitos;
+  /// [disponible] solo espera a que el plan esté leído.
   static Widget busquedaDeCarga(BuildContext context, WidgetRef ref,
       VesselVoyage voyage, int? selectedBay,
-      {required bool conListado, bool soloIcono = false}) {
-    final VoidCallback? buscar = !conListado
+      {required bool disponible, bool soloIcono = false}) {
+    final VoidCallback? buscar = !disponible
         ? null
         : () => chooseLoadingRow(context, ref, voyage, selectedBay: selectedBay);
     const rotulo = 'OR / últimos dígitos';
@@ -106,8 +114,10 @@ class LoadingControls extends ConsumerWidget {
         modo: BayPlanMode.loading,
         bahia: selectedBay,
         soloLaBahia: soloLaBahia);
+    // H4: «OR / últimos dígitos» no se apaga sin listado; solo espera al
+    // plan. «Asignar vacío» sí lo necesita: los vacíos van con su fila.
     final search = busquedaDeCarga(context, ref, voyage, selectedBay,
-        conListado: data?.list != null);
+        disponible: data != null);
     if (compact) {
       return PlanSummaryLine(
           trailing: busquedaEnLaTira ? null : search,
@@ -328,9 +338,10 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
                                 : data.state[item.key];
                             final operated = current?.state == ItemState.moved;
                             return ListTile(
-                                key: ValueKey('loading-or-${row.order}'),
-                                title: Text(
-                                    'OR ${row.order} · ${row.containerId}'),
+                                key: ValueKey(row.unlisted
+                                    ? 'loading-id-${row.containerId}'
+                                    : 'loading-or-${row.order}'),
+                                title: Text(row.label),
                                 subtitle: Text(
                                     '${row.type} · ${row.pod} · ${row.line}'
                                     '${row.isEmpty ? '\nTara ${row.tareKg.toStringAsFixed(0)} kg' : ''}'
@@ -493,10 +504,10 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
             key: const ValueKey('loading-undo-snackbar'),
             duracion: const Duration(seconds: 6),
             texto:
-                '${discharged != null ? 'Descarga y carga registradas' : widget.correcting == null ? 'Carga registrada' : 'Carga corregida'} · OR ${row.order}',
+                '${discharged != null ? 'Descarga y carga registradas' : widget.correcting == null ? 'Carga registrada' : 'Carga corregida'} · ${row.name}',
             // Con la letra grande, si el entero no cabe sobre las cifras.
             corto:
-                '${discharged != null ? 'Descarga y carga' : widget.correcting == null ? 'Cargado' : 'Corregido'} · OR ${row.order}',
+                '${discharged != null ? 'Descarga y carga' : widget.correcting == null ? 'Cargado' : 'Corregido'} · ${row.name}',
             accion: 'Deshacer',
             onAccion: () async {
               var error = await annulMovement(repository,
@@ -567,7 +578,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  Text('OR ${row.order} · ${row.containerId}',
+                  Text(row.label,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text('${row.type} · ${row.pod} · ${row.line}'),
                   if (row.isEmpty)
@@ -821,13 +832,14 @@ Future<void> showLoadingDetails(
               final data = ref.watch(loadingOperationProvider(voyage)).value;
               final state = data?.state[key];
               final movement = data?.movementOf(key);
-              final row = data?.list?.byContainer(state?.assignedContainer ??
+              final container = state?.assignedContainer ??
                   (movement?.payload['container'] as String?) ??
-                  key.substring(2));
+                  key.substring(2);
+              // H4: un lleno cargado sin fila también se corrige, por número.
+              final row = data?.list?.byContainer(container) ??
+                  (key.startsWith('C:') ? data?.unlistedRow(container) : null);
               return AlertDialog(
-                  title: Text(row == null
-                      ? 'Carga'
-                      : 'OR ${row.order} · ${row.containerId}'),
+                  title: Text(row == null ? 'Carga' : row.label),
                   content: SingleChildScrollView(
                       child: Column(
                           mainAxisSize: MainAxisSize.min,

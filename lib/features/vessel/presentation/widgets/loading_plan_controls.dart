@@ -157,14 +157,16 @@ class LoadingPlanControls extends ConsumerWidget {
               children: _summaryArea(dischargeMode, soloLaBahia: conBarra)),
         );
       case ParteDeLosControles.franja:
-        final listado = loadingMode
-            ? ref.watch(loadingOperationProvider(voyage)).value?.list
+        // T-122 (H4): «OR / últimos dígitos» no necesita el listado; solo
+        // espera a que el plan esté leído.
+        final plan = loadingMode
+            ? ref.watch(loadingOperationProvider(voyage)).value
             : null;
         return Row(mainAxisSize: MainAxisSize.min, children: [
           if (zoom != null) zoom!,
           if (loadingMode)
             LoadingControls.busquedaDeCarga(context, ref, voyage, selectedBay,
-                conListado: listado != null, soloIcono: orSoloIcono),
+                disponible: plan != null, soloIcono: orSoloIcono),
           acciones,
         ]);
       case ParteDeLosControles.todo:
@@ -634,7 +636,7 @@ class _CompactPlanBar extends ConsumerWidget {
         actions,
         if (loadingMode)
           LoadingControls.busquedaDeCarga(context, ref, voyage, selectedBay,
-              conListado: data?.list != null),
+              disponible: data != null),
       ]);
     }
     // Con la letra del sistema muy grande (10.8: a 2.0 «Contenido» no cabe
