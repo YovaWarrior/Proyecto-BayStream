@@ -1543,3 +1543,40 @@ La siguiente decisión es la **10.58**.
 - Después, la 3.1.1 pasa a `sprint-4`.
 
 La siguiente decisión es la **10.59**.
+
+### 10.59 · La aceptación de T-122 no pasa por un P2: un vacío con número en el plan se carga sin listado y con tara 0; Timonel corrige (26-oct, 18:10)
+
+**Codex la cerró hoy a las 17:55, sobre `aa01c27`** (`docs/t122/aceptacion-codex.md`, con su evidencia en `build/t122-aceptacion/` de `baystream-qa-r4`):
+- **A1 · P2 — un vacío con número en el plan de carga se carga sin listado:**
+  - sin listado, «OR / últimos dígitos» ofrece un vacío que el plan de carga trae con su número, como «sin OR en el listado». El diálogo dice «Tara real: 0 kg» y deja confirmar, y queda cargado como `load_full`;
+  - va contra 10.51 y el encargo de T-122: la excepción sin listado es solo para los llenos, y los vacíos siguen necesitando su fila;
+  - la causa: `LoadingOperation.unlistedRows` no mira si el contenedor es lleno, y `ExportListRow.fromPlan` pone la tara en 0 cuando el plan no la trae.
+- **Lo demás pasa, con pruebas propias:**
+  - H1, H5 y H6;
+  - H3, y Codex acepta contar «AGREGADOS» aparte de la última agencia;
+  - H4 con los llenos: el movimiento sube sin la clave `order`, que las reglas publicadas aceptan. Pasa también la corrección 1: la salida conserva el grupo del plan y solo cambia `LOC+147`;
+  - H7, con dedo y con mouse, con y sin zoom, en los tres clientes;
+  - Codex acepta el P3 de 10.57: una bahía de 40 que solo viene en el plano de llegada no empareja las mitades del plan de carga.
+- **Cifras:**
+  - la suite, 1401 de 1401, en una sola corrida, sobre una copia cotejada antes de correrla;
+  - `analyze` en cero en la copia limpia;
+  - las compilaciones de Windows, la Web y Android salen bien, y el `version.json` de la Web dice 3.1.1 y 5;
+  - una regresión de lo que usa el piloto, con datos sintéticos y sin nube, pasa: descargar, cargar, deshacer, asignar un vacío, pedir un cambio y generar la salida.
+- **Dos observaciones (P3):**
+  - O1: el diagnóstico de H2 tiene dos matices. `join` ignora los trozos de un tipo que el manifiesto no declara, y la frase de 8.3 de que el escritor exige la fila quedó vieja después de 8bis. El fondo del diagnóstico sigue siendo correcto;
+  - O2: la Web del banco lanza un error al arrancar, que viene de leer el tamaño de un `RenderBox` todavía sin dibujar, en el recorrido del foco. La página se dibuja y todo funciona; falta saber si viene del producto o del panel del banco.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 304 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. A1 está en el código como dice Codex, y su captura de Windows lo muestra: «MNLU0000811 · sin OR en el listado», «Tara real: 0 kg» y «Confirmar carga» activo.
+
+**Yov propone mantener la regla de 10.51:** sin listado, solo se cargan los llenos. Un vacío necesita su fila: de ahí sale su tara exacta, y la salida la necesita. Cargarlo con el peso del plan sería una regla nueva, y la decide Carlos. Lo que de verdad resuelve el listado que llega tarde es H2.
+
+**Lo que sigue:**
+- Carlos mueve el informe de Codex a `proyecto-baystream` y lo sube en `master`. Después sube esta decisión.
+- Timonel hace la corrección 2 de T-122, en el mismo chat:
+  - A1: sin listado, solo se cargan los contenedores que el plan declara llenos. Los vacíos con número y los que no traen estado necesitan su fila, en la búsqueda, en el toque de la celda y en el borrador;
+  - O1: corrige 8.2 y 8.3 de su informe;
+  - O2: averigua si el error viene del producto y si es nuevo de la 3.1.1. Solo si lo es, lo corrige.
+- Codex reacepta A1, con la suite y `analyze`, y mira O2.
+- La 3.1.1 se publica cuando pase y la operación del buque haya terminado.
+
+La siguiente decisión es la **10.60**.
