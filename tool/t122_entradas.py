@@ -61,6 +61,10 @@ for row in range(0, 5):
 for row in range(0, 5):
     CARGA.append((f'021{row:02d}82', box(f'TSTU0210{row:02d}'), '22G1', 5, 9000 + 100 * row))
 CARGA.append(('0210084', None, '22G1', 4, 2185))
+# Correccion 2 (10.59): un vacio con numero y un contenedor sin estado (kind ''),
+# que sin listado no se cargan.
+CARGA.append(('0210284', box('TSTU021028'), '22G1', 4, 2200))
+CARGA.append(('0210484', box('TSTU021048'), '22G1', '', 9500))
 for row in range(0, 3):
     CARGA.append((f'023{row:02d}82', box(f'TSTU0230{row:02d}'), '22G1', 5, 8500 + 100 * row))
 for row in range(0, 3):

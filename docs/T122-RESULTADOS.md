@@ -289,13 +289,17 @@ y lo que haría falta tocar; decide Carlos.
 - `operations/{id}/sources/{sourceId}`: `create` para la oficina mientras la operación esté
   abierta, con `kind` en los tres tipos, `part < parts ≤ 20`, `sha256` hex de 64, `content`
   ≤ 900 000, `createdBy == uid`, `createdAt == request.time`; `update` y `delete` prohibidos.
-- Consecuencia: hoy la oficina **sí podría crear** trozos nuevos (por ejemplo `export_list-0`
-  en una operación que se publicó sin listado), pero el manifiesto no diría que existen, y
-  si existieran con otra huella, `join` los sumaría a los del tipo y **rechazaría la
-  operación entera** (`pieces.length != expected`, huellas distintas). Es decir: **sin tocar
-  las reglas no hay forma coherente** de agregar ni de reemplazar el listado después de
-  publicar. Tampoco cabe meter el listado en un movimiento: `validPayload` valida cada tipo
-  de movimiento con sus campos, y no es lo que un movimiento significa.
+- Consecuencia (corregida en la corrección 2, O1 de Codex): hoy la oficina **sí podría crear**
+  trozos nuevos (por ejemplo `export_list-0` en una operación que se publicó sin listado), pero
+  el manifiesto no diría que existen, y `join` **los ignoraría**: recorre solo los tipos que el
+  manifiesto declara (`for (final kind in OperationSourceKind.values) … if (entry is! Map)
+  continue`), así que un trozo de un tipo sin entrada no llega al muelle. Lo que `join` rechaza
+  (`source_mismatch`, la operación entera) es un tipo **declarado** cuyos trozos no cuadran en
+  número o en huella; por eso tampoco sirve crear trozos nuevos de un tipo ya declarado (un
+  `export_list` de reemplazo). Es decir: **sin tocar las reglas no hay forma coherente** de
+  agregar ni de reemplazar el listado después de publicar, porque el manifiesto es lo que
+  manda y no cambia. Tampoco cabe meter el listado en un movimiento: `validPayload` valida cada
+  tipo de movimiento con sus campos, y no es lo que un movimiento significa.
 
 ### 8.3 Propuesta (decide Carlos; las reglas no se tocan sin él)
 
@@ -328,11 +332,14 @@ reemplazar** mientras la operación esté abierta, y viaja con **revisión**.
    `R:posición`) que no dependen del listado; `OperationStateDeriver` los vuelve a aplicar con
    el listado nuevo. Lo único que el listado cambia es lo que ya cambia hoy al importarlo
    antes de publicar: los rótulos OR, los grupos de los vacíos (`plan.emptyGroups`, que
-   reevalúa los conflictos `otherGroup`) y las filas que el BAPLIE de salida necesita para
-   un lleno cargado (`departure_baplie_writer.dart` exige la fila). Por eso el cruce al
-   importar debe avisar antes de confirmar: «n contenedores ya cargados no están en el
-   listado nuevo» y «m vacíos asignados cambian de grupo», y la 3.1.1 ya deja cargar los
-   llenos sin fila (H4), así que un listado tardío solo cuesta los OR y los vacíos.
+   reevalúa los conflictos `otherGroup`) y los datos exactos con que el BAPLIE de salida
+   escribe lo cargado: con fila, el VGM y la tara del listado; sin fila, desde la corrección 1
+   (8bis), el grupo del plan de carga para un lleno, y para un vacío asignado la fila sigue
+   siendo necesaria (corregido en la corrección 2, O1 de Codex: el escritor ya no exige la
+   fila del lleno). Por eso el cruce al importar debe avisar antes de confirmar: «n
+   contenedores ya cargados no están en el listado nuevo» y «m vacíos asignados cambian de
+   grupo», y la 3.1.1 ya deja cargar los llenos sin fila (H4), así que un listado tardío solo
+   cuesta los OR, los pesos exactos de los llenos y los vacíos.
 5. **Pruebas:** el motor (`t79_fake_cloud.dart`) con una revisión 2 que llega al muelle con y
    sin movimientos previos; las reglas con `tool/t80_reglas.mjs` (una revisión por la oficina
    pasa, por el muelle no; un trozo con revisión distinta de la del manifiesto no pasa; la
@@ -419,6 +426,115 @@ git add -- tool/t122_entradas.py
 git add -- tool/t122_entradas.dart
 git add -- docs/T122-RESULTADOS.md
 git commit -m "Sprint 4: T-122 correccion 1 (10.57), el BAPLIE de salida incluye los llenos cargados sin fila del listado con los datos del plan de carga" --trailer "Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git push origin master
+git log --oneline -1
+```
+
+## 8ter. Corrección 2 (10.59): A1, O1 y O2 de la aceptación de Codex
+
+### A1 · P2 · Sin listado, un vacío con número se cargaba como lleno, con tara 0
+
+**La causa** (como la dio Codex): `LoadingOperation.unlistedRows` no miraba si el contenedor
+era lleno, y `ExportListRow.fromPlan` contemplaba «un vacío con número». Así, sin listado,
+«OR / últimos dígitos» ofrecía el MNLU0000811 de `T100_CARGA` «sin OR en el listado», con «Tara
+real: 0 kg», y quedaba cargado como `load_full`.
+
+**La regla (10.51, que no cambia):** sin fila en el listado solo se cargan los contenedores que el
+plan declara **llenos**. Un vacío con número, y uno que el plan no declara ni lleno ni vacío,
+necesitan su fila: de ahí salen su tara y su tipo exactos, que la salida necesita.
+
+**El arreglo.**
+- `LoadingOperation.unlistedRows` solo da los llenos (`status == ContainerStatus.full`), así que ni
+  «OR / últimos dígitos» ni `unlistedRow` ofrecen el vacío con número ni el sin estado.
+- `LoadingOperation.needsRow(id)` dice por qué un contenedor del plan no se carga sin su fila
+  («El vacío X espera el listado de la agencia: su fila trae la tara y el tipo exactos…», «X no
+  declara lleno ni vacío en el plan: espera el listado…», o «no está en el plan de carga»), y
+  `draft` rechaza con ese motivo una fila sin OR que no sea de un lleno, aunque alguien la pase.
+- En el muelle, tocar la celda de ese vacío sin fila no abre «Confirmar carga»: el aviso es el de
+  `needsRow`. Tocar un lleno sin fila sigue abriéndolo (H4).
+- El comentario de `ExportListRow.fromPlan` ya no habla de «un vacío con número».
+
+**Prueba (roja antes).** `test/t122c2_vacio_con_numero_test.dart`, tres casos, con un plan sin
+listado que trae un lleno, un vacío con número (como el MNLU0000811, `status: empty`) y un
+contenedor sin estado: `unlistedRows` y la búsqueda solo dan el lleno y «811»/«900» no devuelven
+nada; `draft` rechaza la fila armada del vacío y del sin estado y acepta la del lleno sin `order`;
+en el plano, con rol de muelle, tocar el vacío no abre «Confirmar carga», avisa que espera el
+listado y la bitácora queda vacía, y tocar el lleno sí lo abre. Antes del arreglo, los tres en
+rojo (`build/t122/c2/01-rojo-antes-del-arreglo.log`: el vacío se ofrecía, el borrador salía y el
+diálogo se abría).
+
+### O1 · P3 · Dos matices del diagnóstico de H2, corregidos en 8.2 y 8.3
+
+- 8.2: `join` recorre solo los tipos que el manifiesto declara, así que **ignora** los trozos de
+  un tipo sin entrada; lo que rechaza (`source_mismatch`) es un tipo declarado cuyos trozos no
+  cuadran. La conclusión no cambia: el manifiesto es inmutable y sin reglas nuevas no hay forma
+  coherente de agregar ni de reemplazar el listado.
+- 8.3, punto 4: desde la corrección 1 el escritor ya no exige la fila del lleno; la fila sigue
+  dando los pesos exactos, y sigue siendo necesaria para el vacío asignado.
+
+### O2 · P3 · El error de la Web del banco al arrancar
+
+**Viene del panel del banco, no del producto, y no se toca.** Lo aislé con
+`tool/t122_c2_error_web.py` (Playwright en un perfil temporal, sin tocar nada, 8 s escuchando
+`pageerror` y `console.error`) sobre tres compilaciones Web, las tres servidas en 127.0.0.1:
+
+| Compilación | Modo | Errores al arrancar | Evidencia |
+|---|---|---|---|
+| Banco de T-122 (`tool/t122_main.dart`, `master`) | release | 1 `pageerror` | `build/t122/c2/errores-banco-t122-master.json` |
+| El mismo banco | profile (nombres legibles) | 1, con pila: `WidgetsFlutterBinding.handleViewFocusChanged` → `_ViewState.didChangeViewFocus` → `ReadingOrderTraversalPolicy._findInitialFocus` → `FocusScopeNode.rect` → `RenderSemanticsAnnotations.size` (un `RenderBox` sin layout) | `errores-banco-t122-master-profile.json` |
+| Banco de T-99 (`tool/t99_main.dart`, el producto sin panel), `master` | profile | **0** | `errores-t99-master.json` |
+| Banco de T-99 en una copia limpia de `7488321` (la 3.1.0) en `%TEMP%\t122-c2-7488321` | profile | **0** | `errores-t99-7488321.json` |
+
+Es el mismo error que vio Codex. Lo dispara el navegador al dar el foco a la vista de Flutter en
+el primer cuadro, y el recorrido de foco por orden de lectura mide el `RenderBox` de un nodo con
+foco que todavía no tiene layout: el `InkWell` de la pestaña «Banco T122» que mi banco pone en un
+`Stack` encima de la app, en el `builder` de `BayStreamApp`. Con el producto sin ese panel (el
+banco de T-99) no aparece, ni en `master` ni en la 3.1.0. Conclusión: **no es del producto ni es
+nuevo de la 3.1.1**; es del panel del banco de capturas, y no lo corrijo (10.59: solo si fuera del
+producto). La página se dibuja y todo funciona después, como anotó Codex.
+
+### Verificación
+
+`build/t122/c2/01-rojo-antes-del-arreglo.log`: los tres casos de A1 en rojo sobre `6086bb5`.
+`02-verde-tras-el-arreglo.log` y `02b-widget.log`: la prueba nueva y las de T-122 (hallazgos,
+dominio, corrección 1) en verde. `03-suite-completa.log`: la suite completa, una sola corrida,
+**1404 de 1404**, sin omitidas (1401 + los 3 de A1). `04-analyze-lib-test.log`: `flutter analyze
+lib test`, **No issues found**. Sondas de O2: `errores-*.json`, con su PNG del arranque.
+
+### Captura
+
+`build/t122/c2/capturas/`, Web a 1920 × 1080 con `tool/t122_c2_captura_web.py`, datos sintéticos,
+muelle local sin listado, en los dos temas (12 PNG, `web_<tema>_c2_<paso>.png`):
+- `vacio_con_numero_espera_el_listado`: tocar el vacío con número TSTU0210284 en la bahía 21 da el
+  aviso «El vacío TSTU0210284 espera el listado de la agencia: su fila trae la tara y el tipo
+  exactos. Importa el listado para cargarlo», sin «Confirmar carga»;
+- `sin_estado_espera_el_listado`: igual con TSTU0210480, «no declara lleno ni vacío en el plan»;
+- `or_solo_ofrece_llenos` (la lista sin filtrar trae solo llenos «sin OR en el listado»),
+  `or_no_ofrece_el_vacio` («0284» → «No hay coincidencias disponibles») y `or_ofrece_el_lleno`
+  («0071» → «TSTU0220071 · sin OR en el listado»);
+- `lleno_sin_fila_registrado`: el lleno sí se carga (H4).
+
+**Archivos de la corrección:** `lib/features/vessel/domain/services/loading_operation.dart`,
+`lib/features/vessel/domain/entities/export_list.dart` (comentario),
+`lib/features/vessel/presentation/widgets/loading_controls.dart`,
+`test/t122c2_vacio_con_numero_test.dart` (nuevo), `tool/t122_entradas.py` y `tool/t122_entradas.dart`
+(el plan sintético trae ahora un vacío con número y uno sin estado), `tool/t122_c2_captura_web.py`
+y `tool/t122_c2_error_web.py` (nuevos), este informe. Evidencia en `build/t122/c2/` (fuera de Git).
+
+**Git de la corrección 2 (Carlos, en `master`):**
+
+```powershell
+Set-Location -LiteralPath C:\Proyectos\proyecto-baystream
+git add -- lib/features/vessel/domain/services/loading_operation.dart
+git add -- lib/features/vessel/domain/entities/export_list.dart
+git add -- lib/features/vessel/presentation/widgets/loading_controls.dart
+git add -- test/t122c2_vacio_con_numero_test.dart
+git add -- tool/t122_entradas.py
+git add -- tool/t122_entradas.dart
+git add -- tool/t122_c2_captura_web.py
+git add -- tool/t122_c2_error_web.py
+git add -- docs/T122-RESULTADOS.md
+git commit -m "Sprint 4: T-122 correccion 2 (10.59), sin listado solo se cargan los llenos del plan; 8.2 y 8.3 corregidos; diagnostico del error de la Web al arrancar" --trailer "Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 git push origin master
 git log --oneline -1
 ```

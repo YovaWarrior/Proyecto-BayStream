@@ -83,15 +83,37 @@ class LoadingOperation {
   bool assigned(ExportListRow row) => state.items.values.any((s) =>
       s.state == ItemState.moved && s.assignedContainer == row.containerId);
 
-  /// T-122 (H4, 10.51) · Lo que el plan carga aquí con número y el listado no
-  /// trae, como filas sin OR, por número de contenedor.
+  /// T-122 (H4, 10.51) · Los **llenos** que el plan carga aquí y el listado no
+  /// trae, como filas sin OR, por número de contenedor. Solo los que el plan
+  /// declara llenos (corrección 2, 10.59): un vacío con número, o un
+  /// contenedor sin estado, necesita su fila, que trae su tara y su tipo
+  /// exactos.
   List<ExportListRow> get unlistedRows => [
         for (final item in plan.loading.values)
           if (item.role == PlanRole.load &&
               item.container != null &&
+              item.container!.status == ContainerStatus.full &&
               list?.byContainer(item.container!.containerId) == null)
             ExportListRow.fromPlan(item.container!)
       ]..sort((a, b) => a.containerId.compareTo(b.containerId));
+
+  /// Por qué un contenedor del plan no se carga sin su fila, o nulo si sí
+  /// (es un lleno del plan). Para el aviso del muelle y del borrador.
+  String? needsRow(String containerId) {
+    final item = plan.loading['C:$containerId'];
+    if (item?.role != PlanRole.load || item?.container == null) {
+      return '$containerId no está en el plan de carga de ${plan.portOfCall}: '
+          'revisa el número o importa el listado.';
+    }
+    return switch (item!.container!.status) {
+      ContainerStatus.full => null,
+      ContainerStatus.empty => 'El vacío $containerId espera el listado de la '
+          'agencia: su fila trae la tara y el tipo exactos. Importa el listado '
+          'para cargarlo.',
+      _ => '$containerId no declara lleno ni vacío en el plan: espera el '
+          'listado de la agencia. Importa el listado para cargarlo.',
+    };
+  }
 
   /// La fila sin OR de un contenedor del plan; nula si el listado lo trae o
   /// el plan no lo carga aquí.
@@ -336,11 +358,11 @@ class LoadingOperation {
     }
     if (row.unlisted) {
       // H4: un lleno del plan sin fila se carga por su número; la fila nace
-      // del plan, así que lo que se comprueba es que el plan lo cargue aquí.
-      if (numbered(row) == null) {
-        throw StateError('${row.containerId} no está en el plan de carga de '
-            '${plan.portOfCall}: revisa el número o importa el listado.');
-      }
+      // del plan, así que lo que se comprueba es que el plan lo cargue aquí y
+      // que sea un lleno (10.59: un vacío con número o un contenedor sin
+      // estado necesita su fila, aunque alguien pase la fila armada).
+      final motivo = needsRow(row.containerId);
+      if (motivo != null) throw StateError(motivo);
     } else if (list?.byOrder(row.order) != row) {
       throw StateError('El OR ya no está en el listado de la agencia: importa de '
           'nuevo el listado.');

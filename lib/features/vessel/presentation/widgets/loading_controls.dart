@@ -41,13 +41,14 @@ Future<void> onLoadingContainerTap(BuildContext context, WidgetRef ref,
     return;
   }
   // T-122 (H4): en el muelle, un lleno del plan sin fila en el listado se
-  // carga por su número de contenedor; el OR ayuda, pero no es la llave.
+  // carga por su número de contenedor; el OR ayuda, pero no es la llave. Un
+  // vacío con número, o uno sin estado, espera el listado (10.59).
   final row = listed ?? data.unlistedRow(container.containerId);
   if (row == null) {
     ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
-        texto: '${container.containerId} no está en el plan de carga de esta '
-            'escala: revisa el plan o importa el listado.',
-        corto: 'No está en el plan de carga.'));
+        texto: data.needsRow(container.containerId) ??
+            '${container.containerId} espera el listado de la agencia.',
+        corto: 'Espera el listado de la agencia.'));
     return;
   }
   await openLoadingRow(context, ref, voyage, row, selectedBay: selectedBay);

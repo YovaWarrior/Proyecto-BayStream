@@ -134,10 +134,12 @@ class ExportListRow extends Equatable {
         line = line ?? listLine,
         unNumbers = List.unmodifiable(unNumbers);
 
-  /// T-122 (H4, 10.51) · La fila que el listado no trae: un lleno (o un
-  /// vacío con número) del plan de carga, armado desde el plan para cargarlo
-  /// por su número de contenedor. Sin OR: [order] y [sheetRow] valen 0 y
-  /// [unlisted] la distingue; su movimiento se registra sin `order`.
+  /// T-122 (H4, 10.51) · La fila que el listado no trae: **un lleno** del plan
+  /// de carga, armado desde el plan para cargarlo por su número de
+  /// contenedor. Sin OR: [order] y [sheetRow] valen 0 y [unlisted] la
+  /// distingue; su movimiento se registra sin `order`. Un vacío con número o
+  /// un contenedor sin estado no se carga así (10.59): su tara y su tipo
+  /// exactos solo están en su fila, y `LoadingOperation.draft` lo rechaza.
   factory ExportListRow.fromPlan(ContainerUnit container) => ExportListRow(
         sheetRow: 0,
         order: 0,
