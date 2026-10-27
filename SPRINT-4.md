@@ -1580,3 +1580,29 @@ La siguiente decisión es la **10.59**.
 - La 3.1.1 se publica cuando pase y la operación del buque haya terminado.
 
 La siguiente decisión es la **10.60**.
+
+### 10.60 · La corrección 2 de T-122, entregada y revisada: sin listado solo se cargan los llenos; pasa a la reaceptación de Codex (26-oct, 18:55)
+
+**Timonel la entregó a las 18:40, sobre `6086bb5`** (`docs/T122-RESULTADOS.md`, sección «8ter»):
+- **A1:** la regla de 10.51 sigue. Sin fila en el listado, solo se cargan los contenedores que el plan declara llenos:
+  - `unlistedRows` filtra los llenos;
+  - `LoadingOperation.needsRow` da el motivo: «El vacío … espera el listado de la agencia: su fila trae la tara y el tipo exactos», o «… no declara lleno ni vacío en el plan»;
+  - el borrador rechaza con ese motivo una fila sin OR que no sea de un lleno, aunque alguien la pase;
+  - en el muelle, tocar ese vacío no abre «Confirmar carga» y avisa que espera el listado. «OR / últimos dígitos» no lo ofrece.
+- **O1:** 8.2 y 8.3 del informe quedan corregidos como dijo Codex. La conclusión de H2 no cambia.
+- **O2:** el error de la Web al arrancar es del panel del banco de T-122, no del producto: con nombres legibles, la pila lleva al `InkWell` de la pestaña «Banco T122», que el banco pone encima de la app. El banco de T-99, el producto sin ese panel, da cero errores al arrancar en `master` y en una copia limpia de la 3.1.0. No se toca.
+- **Cifras:**
+  - 3 pruebas nuevas, las 3 rojas antes del arreglo;
+  - la suite, 1404 de 1404 en una corrida, y `analyze` de `lib/` y `test/` en cero;
+  - 12 capturas sintéticas de la Web, en los dos temas: el vacío con número y el sin estado dan el aviso, y el lleno se carga.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 9 rutas, 6 cambiadas y 3 nuevas. El código hace lo que dice;
+- **una cosa antes del commit:** `loading_controls.dart` quedó entero con fin de línea de Windows (CRLF), y el repositorio lo guarda con LF. El cambio real son 9 líneas, pero así el commit cambiaría las 1028. Carlos lo devuelve a LF con un comando antes de `git add`, y `git diff --stat` lo comprueba.
+
+**Lo que sigue:**
+- Carlos sube la corrección 2 y esta decisión, y mueve `qa-r4` al commit de la corrección.
+- Codex reacepta A1 en los tres clientes, con la suite, `analyze` y la regresión, y comprueba O2 con su propio banco.
+- Si pasa, Carlos publica la 3.1.1 cuando termine la operación del buque.
+
+La siguiente decisión es la **10.61**.
