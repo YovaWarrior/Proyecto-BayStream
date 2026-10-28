@@ -24,15 +24,23 @@ import 'navegacion_del_viaje.dart';
 /// centrado, sobre [BsFondoDePlano]; con menos de [anchoDeDosColumnas] todo
 /// apila. Las cifras salen de [EstadisticasDelViaje]; ningún color suelto de
 /// Material: todo sale del tema (15.3).
+///
+/// T-125 (10.68) · Con [vaciosAsignados], las cifras cuentan también los vacíos
+/// asignados a una reserva, como la Lista, y una ficha dice cuántos son.
 class VoyageStatsView extends ConsumerStatefulWidget {
   const VoyageStatsView({
     super.key,
     required this.voyage,
     required this.onBaySelected,
+    this.vaciosAsignados = const <ContainerUnit>[],
   });
 
   /// El viaje publicado o en previo.
   final VesselVoyage voyage;
+
+  /// Los vacíos asignados a una reserva (`assignedEmptiesProvider`), que el
+  /// archivo no trae.
+  final List<ContainerUnit> vaciosAsignados;
 
   /// Abre una bahía en el plano.
   final ValueChanged<int> onBaySelected;
@@ -69,12 +77,17 @@ class _VoyageStatsViewState extends ConsumerState<VoyageStatsView> {
       FocusNode(debugLabel: 'estadisticas-tabla', skipTraversal: true);
 
   VesselVoyage? _calculadoPara;
+  List<ContainerUnit>? _calculadoCon;
   EstadisticasDelViaje? _calculadas;
 
   EstadisticasDelViaje get _datos {
-    if (_calculadas == null || !identical(_calculadoPara, widget.voyage)) {
-      _calculadas = EstadisticasDelViaje.de(widget.voyage);
+    if (_calculadas == null ||
+        !identical(_calculadoPara, widget.voyage) ||
+        !identical(_calculadoCon, widget.vaciosAsignados)) {
+      _calculadas = EstadisticasDelViaje.de(widget.voyage,
+          asignados: widget.vaciosAsignados);
       _calculadoPara = widget.voyage;
+      _calculadoCon = widget.vaciosAsignados;
     }
     return _calculadas!;
   }
@@ -169,7 +182,8 @@ class _VoyageStatsViewState extends ConsumerState<VoyageStatsView> {
   }
 }
 
-/// La protagonista a 48, «Ver como tabla» y la fila de cifras (15.2).
+/// La protagonista a 48, «Ver como tabla», la ficha de los vacíos asignados
+/// si los hay y la fila de cifras (15.2).
 class _Cabecera extends StatelessWidget {
   const _Cabecera({
     required this.datos,
@@ -192,6 +206,7 @@ class _Cabecera extends StatelessWidget {
     final propios = tema.extension<BsTextos>();
     final estiloProtagonista = (propios?.cifraProtagonista ?? textos.displayLarge)
         ?.copyWith(color: esquema.onSurface);
+    final asignados = datos.fichaDeLosAsignados;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -233,6 +248,15 @@ class _Cabecera extends StatelessWidget {
             ),
           ],
         ),
+        // T-125: lo que va a bordo sin venir en el archivo (15.2).
+        if (asignados != null) ...<Widget>[
+          SizedBox(height: medidas.espacioS),
+          BsFichaDeCifra(
+            key: const ValueKey<String>('estadisticas-vacios-asignados'),
+            rotulo: EstadisticasDelViaje.rotuloDeLosAsignados,
+            valor: asignados,
+          ),
+        ],
         SizedBox(height: medidas.espacioL),
         Wrap(
           spacing: medidas.espacioXxl,
@@ -763,6 +787,8 @@ class _Tablas extends StatelessWidget {
           columnas: const <String>['Cifra', 'Valor'],
           filas: <_Fila>[
             _Fila(<String>['Contenedores a bordo', '${datos.total}']),
+            if (datos.vaciosAsignados > 0)
+              _Fila(<String>['Vacíos asignados', '${datos.vaciosAsignados}']),
             _Fila(<String>['Peso total', formatearToneladas(datos.pesoKg)]),
             _Fila(<String>['Bahías con carga', '${datos.bahiasConCarga}']),
             _Fila(<String>['Llenos', '${datos.llenos}']),

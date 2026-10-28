@@ -13,6 +13,7 @@
 import 'dart:io';
 
 import 'package:baystream/core/design/design.dart';
+import 'package:baystream/core/utils/iso_coordinate_parser.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/presentation/formatters/estadisticas_del_viaje.dart';
 import 'package:baystream/features/vessel/presentation/pages/vessel_overview_page.dart';
@@ -86,6 +87,10 @@ void main() {
         () {
       final d = _datos977;
       expect(d.total, 977);
+      // T-125: todo viene del archivo; sin vacíos asignados, ni la ficha.
+      expect(d.delArchivo, 977);
+      expect(d.vaciosAsignados, 0);
+      expect(d.fichaDeLosAsignados, isNull);
       expect(d.llenos + d.vacios + d.sinEstado, d.total);
       expect(d.sinEstado, 0);
       expect(d.vacios, 196);
@@ -150,6 +155,8 @@ void main() {
     test('el plano de dos bahías de T-117: cifras exactas', () {
       final d = EstadisticasDelViaje.de(t117SinEscala);
       expect(d.total, 14);
+      expect(d.delArchivo, 14);
+      expect(d.vaciosAsignados, 0);
       expect(d.llenos, 13);
       expect(d.vacios, 1);
       expect(d.sinEstado, 0);
@@ -193,6 +200,8 @@ void main() {
       );
       final d = EstadisticasDelViaje.de(suelto);
       expect(d.total, 2);
+      expect(d.delArchivo, 2);
+      expect(d.vaciosAsignados, 0);
       expect(d.sinEstado, 1);
       expect(d.llenos, 1);
       expect(d.otroTamano, 1);
@@ -202,6 +211,70 @@ void main() {
       expect(d.bahiasConCarga, 0);
       expect(d.puertos.single.rotulo, EstadisticasDelViaje.sinPuerto);
       expect(d.parte(1), 0.5);
+    });
+
+    test('con vacíos asignados (T-125): suman al total, cuadran y se distinguen '
+        'del archivo', () {
+      // Como los da `LoadingOperation.assignedEmpties`: vacíos con su celda,
+      // su tipo, su tara, su puerto y su naviera. La 01 va en la 02.
+      ContainerUnit asignado(String numero, String celda, String tipo,
+              double tara, String puerto) =>
+          ContainerUnit(
+            id: 'assigned-$numero',
+            containerId: numero,
+            isoSizeType: tipo,
+            status: ContainerStatus.empty,
+            stowagePosition: IsoCoordinateParser.parse(celda),
+            grossWeight: tara,
+            tareWeight: tara,
+            portOfDischarge: puerto,
+            operatorCode: 'TEST',
+          );
+      final asignados = <ContainerUnit>[
+        asignado('EMPTY0000012', '0010486', '22G1', 2185, 'PAMIT'),
+        asignado('EMPTY0000013', '0060204', '42G1', 3900, 'USHOU'),
+      ];
+      final archivo = EstadisticasDelViaje.de(t117SinEscala);
+      final d = EstadisticasDelViaje.de(t117SinEscala, asignados: asignados);
+      expect(d.delArchivo, 14);
+      expect(d.vaciosAsignados, 2);
+      expect(d.total, d.delArchivo + d.vaciosAsignados);
+      expect(d.fichaDeLosAsignados,
+          '2 vacíos asignados a celdas reservadas, que el archivo no trae');
+      expect(
+          EstadisticasDelViaje.de(t117SinEscala, asignados: asignados.take(1).toList())
+              .fichaDeLosAsignados,
+          '1 vacío asignado a una celda reservada, que el archivo no trae');
+      // Cada uno es un vacío más, con su tamaño, su puerto y su naviera.
+      expect(d.llenos, archivo.llenos);
+      expect(d.vacios, archivo.vacios + 2);
+      expect(d.llenos + d.vacios + d.sinEstado, d.total);
+      expect(d.de20, archivo.de20 + 1);
+      expect(d.de40, archivo.de40 + 1);
+      expect(d.de20 + d.de40 + d.de45 + d.otroTamano, d.total);
+      expect(d.puertos.map((p) => '${p.rotulo} ${p.cuenta}').toList(),
+          <String>['GTSTC 9', 'USHOU 5', 'PAMIT 2']);
+      expect(d.puertos.fold<int>(0, (s, p) => s + p.cuenta), d.total);
+      expect(d.navieras.map((n) => '${n.rotulo} ${n.cuenta}').toList(),
+          <String>['${EstadisticasDelViaje.sinNaviera} 14', 'TEST 2']);
+      expect(d.navieras.fold<int>(0, (s, n) => s + n.cuenta), d.total);
+      // En su bahía de referencia, en su zona y con su tara.
+      expect(d.bahias.map((b) => b.numero), <int>[2, 6]);
+      final bahia2 = d.bahias.singleWhere((b) => b.numero == 2);
+      expect(bahia2.contenedores, 13);
+      expect(bahia2.contenedoresCubierta, 7);
+      expect(bahia2.pesoKg, 202000 + 2185);
+      final bahia6 = d.bahias.singleWhere((b) => b.numero == 6);
+      expect(bahia6.contenedores, 3);
+      expect(bahia6.contenedoresBodega, archivo.bahias.last.contenedoresBodega + 1);
+      expect(bahia6.pesoKg, 37000 + 3900);
+      expect(d.bahias.fold<int>(0, (s, b) => s + b.contenedores) + d.sinPosicion,
+          d.total);
+      expect(d.pesoKg, archivo.pesoKg + 2185 + 3900);
+      expect(d.bahiasConCarga, 2);
+      // Sin asignados, todo como el archivo.
+      expect(EstadisticasDelViaje.de(t117SinEscala, asignados: const []).total,
+          archivo.total);
     });
   });
 

@@ -184,10 +184,12 @@ VesselVoyage t121ViajeCorto(List<int> bahias, {int cuantos = 60}) {
 
 /// La página de Estadísticas suelta, con el tema del muelle o de la oficina,
 /// las fuentes del producto y un `ProviderScope` (la tabla se anota en
-/// `cerrablesDeAtrasProvider`). Devuelve el contenedor de Riverpod.
+/// `cerrablesDeAtrasProvider`). Devuelve el contenedor de Riverpod. Con
+/// [vaciosAsignados], los de la operación (T-125).
 Future<ProviderContainer> t121Pump(
   WidgetTester tester, {
   required VesselVoyage voyage,
+  List<ContainerUnit> vaciosAsignados = const <ContainerUnit>[],
   Size tamano = const Size(1920, 1000),
   double letra = 1.0,
   bool oscuro = false,
@@ -214,6 +216,7 @@ Future<ProviderContainer> t121Pump(
         body: VoyageStatsView(
           voyage: voyage,
           onBaySelected: onBahia ?? (int _) {},
+          vaciosAsignados: vaciosAsignados,
         ),
       ),
     ),

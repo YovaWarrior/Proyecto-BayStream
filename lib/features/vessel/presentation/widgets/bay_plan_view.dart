@@ -1912,8 +1912,10 @@ class _Rejilla extends StatelessWidget {
     required BsCurvaDeCelda curva,
   }) {
     if (!ocupadaPorVecino && veintes > 0) {
+      // Una clave por celda (O-124-1): fuera de Carga las celdas no llevan el
+      // envoltorio del arrastre y dos sombras de la misma fila son hermanas.
       return KeyedSubtree(
-        key: const ValueKey('neighbor-twenty'),
+        key: ValueKey('neighbor-twenty-$position'),
         child: BsCelda(
           key: key,
           codigo: veintes == 1 ? "20′" : "2×20′",

@@ -43,11 +43,20 @@ class CuentaPorCodigo {
 /// cuenta con la par vecina que la cubre, si esa par es una bahía del viaje
 /// (`referenceBay`), y el grupo lleva el número de la par: la 21 y la 23 van
 /// en la 22. Una impar sin par vecina en el viaje queda sola.
+///
+/// T-125 (10.68) · En un plan de carga, lo que va a bordo es lo que leen la
+/// Lista y las búsquedas (`aboardContainersProvider`): el archivo más los
+/// vacíos que el muelle asignó a una reserva, que el archivo trae sin número.
+/// Cada vacío asignado suma un contenedor, con su tara y su tipo, en su bahía
+/// de referencia, su puerto y su naviera; [delArchivo] y [vaciosAsignados]
+/// dicen de dónde sale cada uno.
 @immutable
 class EstadisticasDelViaje {
   /// Crea las cifras.
   const EstadisticasDelViaje({
     required this.total,
+    required this.delArchivo,
+    required this.vaciosAsignados,
     required this.llenos,
     required this.vacios,
     required this.sinEstado,
@@ -67,8 +76,12 @@ class EstadisticasDelViaje {
     required this.fueraDeMedida,
   });
 
-  /// Las cifras de [voyage].
-  factory EstadisticasDelViaje.de(VesselVoyage voyage) {
+  /// Las cifras de [voyage] y, si los hay, de los [asignados]: los vacíos
+  /// asignados a una reserva (`LoadingOperation.assignedEmpties`).
+  factory EstadisticasDelViaje.de(
+    VesselVoyage voyage, {
+    List<ContainerUnit> asignados = const <ContainerUnit>[],
+  }) {
     final geometria = voyage.geometry;
     var llenos = 0;
     var vacios = 0;
@@ -87,7 +100,10 @@ class EstadisticasDelViaje {
     final puertos = <String?, int>{};
     final navieras = <String?, int>{};
 
-    for (final contenedor in voyage.containers) {
+    for (final contenedor in <ContainerUnit>[
+      ...voyage.containers,
+      ...asignados,
+    ]) {
       switch (contenedor.status) {
         case ContainerStatus.full:
           llenos++;
@@ -164,7 +180,9 @@ class EstadisticasDelViaje {
     ];
 
     return EstadisticasDelViaje(
-      total: voyage.totalContainers,
+      total: voyage.totalContainers + asignados.length,
+      delArchivo: voyage.totalContainers,
+      vaciosAsignados: asignados.length,
       llenos: llenos,
       vacios: vacios,
       sinEstado: sinEstado,
@@ -191,8 +209,26 @@ class EstadisticasDelViaje {
   /// El rótulo de los contenedores sin código de naviera.
   static const String sinNaviera = 'Sin naviera';
 
-  /// Los contenedores a bordo.
+  /// El rótulo de la ficha de los vacíos asignados (`DESIGN.md` 15.2).
+  static const String rotuloDeLosAsignados = 'Incluye';
+
+  /// Los contenedores a bordo: [delArchivo] más [vaciosAsignados].
   final int total;
+
+  /// Los que trae el archivo.
+  final int delArchivo;
+
+  /// Los vacíos asignados a una reserva, que el archivo no trae (T-125).
+  final int vaciosAsignados;
+
+  /// El dato de la ficha que dice cuántos vacíos asignados incluyen las
+  /// cifras, o `null` sin ninguno: entonces la ficha no sale.
+  String? get fichaDeLosAsignados => switch (vaciosAsignados) {
+        0 => null,
+        1 => '1 vacío asignado a una celda reservada, que el archivo no trae',
+        final n =>
+          '$n vacíos asignados a celdas reservadas, que el archivo no trae',
+      };
 
   /// Los llenos, los vacíos y los que el archivo no dice.
   final int llenos;

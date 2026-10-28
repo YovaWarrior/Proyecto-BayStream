@@ -282,6 +282,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
             DestinoDelViaje.estadisticas => VoyageStatsView(
                 voyage: voyage,
                 onBaySelected: _openBayPlan,
+                // T-125 (10.68): lo que va a bordo, como la Lista.
+                vaciosAsignados: ref.watch(assignedEmptiesProvider),
               ),
           },
         ),

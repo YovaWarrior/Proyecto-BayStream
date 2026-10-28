@@ -73,6 +73,12 @@ LoadingOperation _arriving([List<Movement> movements = const []]) =>
 Finder _inCell(String position, Finder matching) => find.descendant(
     of: find.byKey(ValueKey('plan-cell-$position')), matching: matching);
 
+/// Las sombras de los 20 de las impares vecinas: cada una con su clave, por
+/// su posición en la par (`neighbor-twenty-0040282`; O-124-1, T-125).
+final _neighborTwenties = find.byWidgetPredicate((w) =>
+    w.key is ValueKey<String> &&
+    (w.key! as ValueKey<String>).value.startsWith('neighbor-twenty-'));
+
 /// El título de la bahía («Bahía 03»): en el teléfono, sobre la rejilla, con
 /// las tapas si no están declaradas; en la oficina, en la franja de la bahía
 /// (T-117, DESIGN.md 14.8), que lo escribe aparte de sus cifras.
@@ -257,7 +263,7 @@ void main() {
     testWidgets('se dibujan como sombra, con cuántos 20 hay en la celda',
         (tester) async {
       await bay4(tester);
-      final shadow = find.byKey(const ValueKey('neighbor-twenty'));
+      final shadow = _neighborTwenties;
       expect(shadow, findsNWidgets(3));
       // Fila 02: el 20 de la 003 y la reserva de la 005. Fila 06: el 20 de la
       // 003 y la descarga pendiente de la 005. Fila 08: un 20 de la 005.
@@ -266,9 +272,11 @@ void main() {
         ('0040682', '2×20′'),
         ('0040882', '20′'),
       ]) {
+        final own = find.byKey(ValueKey('neighbor-twenty-$position'));
+        expect(own, findsOneWidget, reason: position);
         expect(
             find.descendant(
-                of: _inCell(position, shadow), matching: find.text(label)),
+                of: _inCell(position, own), matching: find.text(label)),
             findsOneWidget,
             reason: position);
       }
@@ -329,8 +337,7 @@ void main() {
         scope.read(selectedBayProvider.notifier).select(bay);
         await tester.pumpAndSettle();
         expect(_title(bay), findsOneWidget);
-        expect(find.byKey(const ValueKey('neighbor-twenty')), findsNothing,
-            reason: 'bahía $bay');
+        expect(_neighborTwenties, findsNothing, reason: 'bahía $bay');
         expect(find.text('Ocupado por 20 pies'), findsNothing,
             reason: 'bahía $bay');
       }

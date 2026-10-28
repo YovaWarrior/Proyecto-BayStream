@@ -1825,6 +1825,8 @@ encabeza un tablero, y Carlos lo aprobó en 10.38 (P9). **Una sola vez por vista
 cifras de la cabecera (el peso total, las bahías con carga, los llenos, los vacíos y, si los
 hay, los sin estado) van a 28 / 600 tabular, el titular de 4.2, con su rótulo debajo en
 tinta suave. La fila de cifras envuelve: a 360 dp con la letra a 2.0 van una por línea.
+En un plan de carga con vacíos asignados a una celda reservada, la protagonista los cuenta y
+**una ficha debajo dice cuántos son** (15.13).
 
 ### 15.3 La rampa de magnitudes y los demás colores
 
@@ -1965,7 +1967,8 @@ para el lector de pantalla («GTSTC: 520 contenedores, 53 %»), la misma frase.
 ### 15.6 «Ver como tabla»
 
 El botón de la cabecera (`estadisticas-ver-tabla`, con el icono de tabla) cambia los
-gráficos por **las mismas cifras en tablas**, un panel por sección: el resumen, por bahía
+gráficos por **las mismas cifras en tablas**, un panel por sección: el resumen (con la fila
+«Vacíos asignados» si los hay, 15.13), por bahía
 (número de la bahía de referencia, contenedores, cubierta, bodega y peso, con la regla de la par
 de 15.4: la fila «22» suma la 21 y la 23; una fila «Sin posición» si el archivo trae
 contenedores sin estiba), por puerto (todos, no solo siete), llenos y vacíos, por tamaño,
@@ -2122,8 +2125,9 @@ y 14.11. Son widgets y `CustomPainter`: ninguna dependencia nueva.
 | `BsPanel` | `BsPanel({titulo, child, accion?})` | El panel de Estadísticas: hoja, radio 18, borde en línea, el título como encabezado y, a la derecha, una acción opcional |
 
 Y en la presentación: la página (`voyage_stats_view.dart`, `VoyageStatsView`, con la misma
-firma de antes) y las cifras derivadas del viaje (`formatters/estadisticas_del_viaje.dart`,
-`EstadisticasDelViaje.de(voyage)`, Dart puro: el total, los llenos, los vacíos y los sin
+firma de antes y, desde T-125, `vaciosAsignados` opcional) y las cifras derivadas del viaje
+(`formatters/estadisticas_del_viaje.dart`, `EstadisticasDelViaje.de(voyage, asignados: …)`,
+Dart puro: el total, lo del archivo y los vacíos asignados, los llenos, los vacíos y los sin
 estado, el peso, las bahías con carga, cada bahía con sus dos zonas, los puertos, las
 navieras, los tamaños y la carga especial, con los contenedores sin posición aparte). Los
 providers de T-109 (`voyageStatsProvider` y los demás) no cambian. `vessel_profile_view.dart`
@@ -2172,6 +2176,9 @@ sale: su casco era otro buque (0.9.1) y lo sustituye la protagonista.
 14. **Las bahías siguen la regla de la par** (T-124, 10.65; 15.4): la propuesta dibujaba cada
     número de bahía, y con un plano de llegada la mitad de las columnas eran mitades de 20 en
     cero. Ahora cuenta como el avance; «Bahías con carga» cuenta bahías de referencia.
+15. **En un plan de carga, Estadísticas cuenta lo que va a bordo como la Lista** (T-125, 10.68;
+    15.13): la propuesta leía solo el archivo, y un vacío asignado a una celda reservada, que el
+    archivo trae sin número, no salía en ninguna cifra aunque la Lista lo trajera.
 
 ### 15.12 Las pruebas (`test/t121_estadisticas_test.dart`)
 
@@ -2201,3 +2208,45 @@ T-124 añade `test/t124_par_test.dart`: la forma del plano de llegada da tres ba
 10) con las tres de cada grupo sumadas, a 1920 en su tope y con el casco centrado, sin las
 impares en la silueta ni en la tabla, y tocar la 02 la abre; el 977 da 24; las impares vacías
 de T-117 van con su par; una impar sin par vecina queda sola.
+
+T-125 añade `test/t125_320_test.dart` (grupo 1): en la página de la oficina, con la operación
+en una bitácora en memoria, asignar el vacío OR 12 a la reserva 003‑08‑82 sube la protagonista
+de 2 a 3, la bahía, el puerto, la naviera y «vacíos», y saca la ficha; deshacerlo con
+«Marcado por error» devuelve las cifras del archivo, también el peso (su tara, 2 185 kg), y
+quita la ficha. La ficha se lee entera en los dos temas, a 360 con la letra a 2.0 y a 1920, y
+la tabla trae su fila; sin vacíos asignados no hay ni ficha ni fila. Las pruebas de «las cifras
+cuadran» de `t121_estadisticas_test.dart` distinguen lo del archivo (`delArchivo`) de lo
+asignado (`vaciosAsignados`), con un caso de dos vacíos asignados sobre el plano de T-117.
+
+### 15.13 Los vacíos asignados (T-125, 10.68)
+
+En un plan de carga con operación, **Estadísticas cuenta lo que va a bordo como la Lista y las
+búsquedas** (`aboardContainersProvider`, H6 de 10.56): lo que trae el archivo y los vacíos que el
+muelle asignó a una celda reservada (`LoadingOperation.assignedEmpties`), que el archivo trae
+sin número. La página los recibe de `assignedEmptiesProvider`, el mismo del que lee la Lista.
+
+- **Cada vacío asignado suma un contenedor:** a la protagonista, a «vacíos» y al anillo de
+  llenos, a su tamaño (el tipo de su fila del listado o, sin ella, el de la reserva), a su
+  puerto, a su naviera y a su bahía de referencia (15.4), en su zona y con su tara como peso.
+- **La ficha** (`BsFichaDeCifra`, clave `estadisticas-vacios-asignados`) va debajo de la
+  protagonista, antes de la fila de cifras, y dice cuántos vacíos asignados incluyen las cifras:
+
+| Vacíos asignados | La ficha |
+|---|---|
+| Ninguno | No sale. La página es la de antes |
+| 1 | «Incluye: 1 vacío asignado a una celda reservada, que el archivo no trae» |
+| 2 o más | «Incluye: 2 vacíos asignados a celdas reservadas, que el archivo no trae» |
+
+  «Incluye» es el rótulo, en tinta suave, y el resto el dato, en tinta (14.7). Sin rol: no es un
+  aviso ni algo que revisar, sino de dónde sale la cifra. Es de la cabecera, así que se queda con
+  «Ver como tabla».
+- **«Ver como tabla»:** el resumen lleva la fila «Vacíos asignados», con la cuenta, debajo de
+  «Contenedores a bordo»; solo si hay alguno.
+- **Las cifras se mueven mientras dura la operación:** al asignar un vacío suben y al deshacer la
+  asignación bajan, como en la Lista. Carlos lo decidió sabiéndolo (10.66, punto 5, y 10.68).
+- **Lo que no cambia:** las alertas de estiba (evalúan el viaje leído: sumar solo los vacíos
+  mezclaría lo planificado con lo hecho) y la comparación de viajes (el BAPLIE de salida ya
+  escribe los vacíos asignados). Un plano de llegada, o un plan de carga sin vacíos asignados,
+  queda como antes.
+- **Las cifras siguen cuadrando por construcción** (15.11, punto 5): `delArchivo` dice lo que trae
+  el archivo, `vaciosAsignados` lo asignado, y `total` es su suma.
