@@ -1812,3 +1812,71 @@ La siguiente decisión es la **10.68**.
 **Después:** Codex acepta la candidata en los tres clientes; Carlos mezcla en `master`, etiqueta y publica con la sección 4, a más tardar el 4-nov.
 
 La siguiente decisión es la **10.69**.
+
+### 10.69 · T-125 entregada y revisada: la candidata 3.2.0 pasa a la aceptación de Codex (27-oct, 19:50)
+
+**Timonel la entregó sobre `9738be1`, y Carlos la pasó a las 19:44** (`docs/T125-RESULTADOS.md`, con la evidencia en `build/t125/`, fuera de Git):
+- **Estadísticas cuenta los vacíos asignados** como la Lista. Las dos leen un provider nuevo, `assignedEmptiesProvider`, y `aboardContainersProvider` lo suma al archivo. Cada vacío asignado suma un contenedor, con su tara y su tipo, en su bahía de referencia, su puerto y su naviera.
+- **La ficha y la fila:** debajo de la protagonista sale «Incluye: 1 vacío asignado a una celda reservada, que el archivo no trae» (con más de uno, «Incluye: N vacíos asignados a celdas reservadas, que el archivo no trae»), y la tabla gana la fila «Vacíos asignados». Sin vacíos asignados, la página es la de antes. Las alertas y la comparación de viajes no cambian, y `domain/` no se tocó. El texto está en DESIGN 15.13.
+- **O-124-1:** la clave es `neighbor-twenty-<posición>`. La prueba con el caso de Codex fallaba antes del arreglo con «Duplicate keys found», en Contenido y en Carga.
+- **La versión:** `3.2.0+6` y el MSIX `3.2.0.0`. `pubspec.lock` no cambia.
+- **La lista del piloto (E1.10):**
+  - el encabezado dice qué lleva la 3.2.0;
+  - la sección 4 trae las versiones y la mezcla con `v3.2.0`;
+  - en 4.5, la vuelta a la 3.1.1: en Android, con un AAB 3.1.2 de `versionCode` 7, porque Play no deja bajar;
+  - los rótulos de las secciones 0 a 3 y 5 están cotejados con el código;
+  - el paso nuevo 1.16 mira Estadísticas durante la carga.
+- **Cifras:**
+  - la suite, 1841 de 1841 en una corrida: las 1832, 8 de `t125_320_test.dart` y 1 de T-121. `analyze` en cero;
+  - la candidata compila en release con 3.2.0 (6) en los tres clientes, sin la configuración privada;
+  - 30 capturas sintéticas: la Web 12 y el emulador 18. De Windows, solo la compilación.
+
+**Yov la revisó contra el disco:**
+- contra `9738be1` cambian exactamente las 16 rutas del bloque: 12 modificadas y 4 nuevas. No cambian `pubspec.lock`, `domain/`, `data/`, `lib/main.dart`, los congelados ni `SPRINT-4.md`;
+- lo que Timonel deja fuera ya estaba antes de la tarea: `test/t114_fase3_correccion_test.dart` y `windows/flutter/`, solo con finales de línea distintos, y los 129 archivos de evidencia de `docs/t117/entrega1/`, sin versionar;
+- el código hace lo que dice, y es corto. El provider nuevo devuelve lo mismo que antes sumaba la Lista. Estadísticas recorre el archivo y los asignados, y `total` es `delArchivo` más `vaciosAsignados`. La clave del plano lleva la posición;
+- las pruebas no se aflojaron. La de T-106 sigue pidiendo exactamente tres sombras en la 04, y ahora cada una con su clave y su rótulo. Las de «las cifras cuadran» de T-121 agregan `delArchivo` y `vaciosAsignados`, y un caso con dos vacíos asignados;
+- la evidencia cuadra:
+  - la última suite (1841, «All tests passed!») corrió después del último cambio de código;
+  - los registros rojos dicen «Expected: '3' Actual: '2'» y «Duplicate keys found»;
+  - `version.json` dice 3.2.0 y 6, el `.exe` dice 3.2.0+6 y el manifiesto del AAB dice `versionCode` 6 y `versionName` 3.2.0;
+  - las huellas coinciden con `build/t125/11-huellas-candidata.txt`;
+- **en la pantalla:** en la Web, con un vacío asignado, 26 a bordo y la ficha en singular; con dos, 27, la ficha en plural y la fila «Vacíos asignados» en la tabla. En el teléfono, la ficha cabe en dos líneas, en los dos temas;
+- la sección 4 de la lista se puede seguir tal cual:
+  - antes de mezclar comprueba la rama, `34d8838`, que `master` está dentro de `sprint-4` y la punta aceptada;
+  - la Web se publica solo con `--only hosting --project baystream-app`;
+  - la vuelta deja la carpeta en la etiqueta, sin commits.
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y esta decisión, y mueve `qa-r4` a la punta de `sprint-4`.
+- Codex acepta T-125 y la candidata 3.2.0 en los tres clientes: los vacíos asignados en Estadísticas, O-124-1 y las versiones, sin romper T-124, T-123 ni las entregas 1 y 2.
+- Después, Carlos mezcla en `master`, etiqueta `v3.2.0` y publica con la sección 4, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.70**.
+
+### 10.70 · La Expo de pruebas del curso va con la 3.2.0: T-126 a Timonel, en su propia rama (27-oct, 21:00)
+
+**La exposición del curso de Aseguramiento de la Calidad no se hizo el sábado 24: es el sábado 31-oct.** Carlos quiere hacerla mejor, y lo decidió poco antes de las 21:00:
+- la app que se ve moverse es la 3.2.0 rediseñada, no la v3.0 de `baystream-pruebas`;
+- Firebase en dos niveles: primero la prueba en memoria (`fake_cloud_firestore`) y después el emulador de Firestore con las reglas;
+- Yov arma las diapositivas, con los videos de Blender de fondo.
+
+**T-126 · La Expo de pruebas en la 3.2.0**, con Timonel:
+- **Dónde:** `C:\Proyectos\baystream-expo`, en la rama `expo-pruebas`, que Carlos crea desde `sprint-4` con T-125 y estas decisiones. Es una excepción a «no cambies de carpeta», como T-122. Nada de esa rama entra en `sprint-4` ni en `master`: es material del curso.
+- **1. Las 21 pruebas de T-116,** traídas de `pruebas-curso` a la 3.2.0 sin aflojarlas: `test/curso/` y `tool/cobertura_html.py`. `fake_cloud_firestore` 4.2.0 fija, con `equatable` 2.1.0, como en 10.12; si se mueve otro paquete, Timonel se detiene.
+- **2. La prueba que se ve moverse:** con `integration_test`, abre la 3.2.0 completa en Windows, sin nube y con datos sintéticos, y la maneja sola, con pausas que se puedan seguir. Abre el plano, recorre bahías, busca un contenedor, registra descargas, deshace una y mira el avance y Estadísticas. Comprueba cada paso y termina en verde.
+- **3. Rojo → verde:** una prueba que falla a propósito solo con un interruptor (`--dart-define`), sin editar archivos en vivo.
+- **4. Firebase en dos niveles:** las 3 pruebas de RF-032 en memoria, y el emulador de Firestore con su consola y las baterías de reglas (69 y 25 casos), en un proyecto `demo-` que no existe en la nube.
+- **5. Las cifras:** la suite completa, `analyze` y la cobertura con su reporte HTML, sobre la 3.2.0.
+- **6. El guion de la demo:** los comandos en orden, cuánto tarda cada uno, qué se ve y qué hacer si algo falla; y capturas para las diapositivas.
+- **Reglas:** no toca `lib/` ni `lib/main.dart`, ni Firebase de producción, y no se publica nada. Flutter solo con la luz verde de Carlos: Codex acepta T-125 en `qa-r4`, y en la máquina corre un Flutter a la vez.
+
+**Las diapositivas las arma Yov en PowerPoint**, porque así los videos de Blender corren de fondo sin internet. El guion de 14 diapositivas del 22-oct se pone al día con la 3.2.0 y estas demos.
+
+**El orden de la semana:**
+- Codex acepta T-125.
+- Timonel escribe T-126 desde ya y corre Flutter cuando Codex termine.
+- Carlos ensaya la Expo el viernes y expone el sábado 31-oct.
+- La 3.2.0 se publica igual, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.71**.
