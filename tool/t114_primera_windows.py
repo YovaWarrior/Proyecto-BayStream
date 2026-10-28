@@ -86,8 +86,11 @@ kernel32.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD,
                                                 ctypes.POINTER(wintypes.DWORD)]
 kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
 
+user32.keybd_event.argtypes = [wintypes.BYTE, wintypes.BYTE, wintypes.DWORD, ctypes.c_void_p]
+
 TITULO_APP = 'BayStream'
 SW_MAXIMIZE = 3
+KEYEVENTF_KEYUP = 0x0002
 WM_CLOSE = 0x0010
 GA_ROOT = 2
 # El botón «Seleccionar archivo» lleva la marca (la app sigue al tema del sistema,
@@ -163,6 +166,19 @@ def rectangulo(hwnd):
     rect = wintypes.RECT()
     user32.GetWindowRect(hwnd, ctypes.byref(rect))
     return rect.left, rect.top, rect.right, rect.bottom
+
+
+def al_frente(hwnd):
+    """Trae el banco al frente, como queda cuando una persona lo abre desde su
+    icono. Windows niega `SetForegroundWindow` a un proceso que no recibió la
+    última entrada si otra ventana tiene el foco: el 24-oct (T-117), con la
+    consola maximizada, el banco nació detrás y el detector vio la consola
+    durante 120 s. Una pulsación sin tecla (código 0), que ninguna app
+    atiende, cuenta como esa entrada. El registro dice si quedó al frente
+    (`alFrente`)."""
+    user32.keybd_event(0, 0, 0, None)
+    user32.keybd_event(0, 0, KEYEVENTF_KEYUP, None)
+    user32.SetForegroundWindow(hwnd)
 
 
 def capturar(rect):
@@ -302,7 +318,7 @@ def repeticion(args, numero, out):
     user32.SetCursorPos((rect[0] + rect[2]) // 2, rect[1] + 12)
     registro['cursorAparcado'] = [(rect[0] + rect[2]) // 2, rect[1] + 12]
     user32.ShowWindow(hwnd, SW_MAXIMIZE)
-    user32.SetForegroundWindow(hwnd)
+    al_frente(hwnd)
     # Maximizar es asíncrono: se espera a que la ventana esté maximizada y
     # el rectángulo se relee en cada cuadro.
     for _ in range(100):
@@ -310,6 +326,7 @@ def repeticion(args, numero, out):
             break
         time.sleep(0.02)
     rect = rectangulo(hwnd)
+    registro['alFrente'] = user32.GetForegroundWindow() == hwnd
     registro['ventana'] = {'pid': pid, 'rect': rect, 'maximizada': bool(user32.IsZoomed(hwnd))}
     pulsado = False
     confirmado = False
@@ -346,7 +363,7 @@ def repeticion(args, numero, out):
         else:
             guardar(f'reintento{intentos}', cuadro)
             # Al frente otra vez, por si el primer clic fue a otra ventana.
-            user32.SetForegroundWindow(hwnd)
+            al_frente(hwnd)
             time.sleep(0.25)
         registro['acciones'].append({'paso': 2, 'accion': 'pulsar «Seleccionar archivo»',
                                      't': round(reloj() - t0, 4), 'punto': [x, y],

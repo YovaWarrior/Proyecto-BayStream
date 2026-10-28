@@ -73,7 +73,15 @@ LoadingOperation _arriving([List<Movement> movements = const []]) =>
 Finder _inCell(String position, Finder matching) => find.descendant(
     of: find.byKey(ValueKey('plan-cell-$position')), matching: matching);
 
-/// El título de la rejilla («Bahía 03», con las tapas si no están declaradas).
+/// Las sombras de los 20 de las impares vecinas: cada una con su clave, por
+/// su posición en la par (`neighbor-twenty-0040282`; O-124-1, T-125).
+final _neighborTwenties = find.byWidgetPredicate((w) =>
+    w.key is ValueKey<String> &&
+    (w.key! as ValueKey<String>).value.startsWith('neighbor-twenty-'));
+
+/// El título de la bahía («Bahía 03»): en el teléfono, sobre la rejilla, con
+/// las tapas si no están declaradas; en la oficina, en la franja de la bahía
+/// (T-117, DESIGN.md 14.8), que lo escribe aparte de sus cifras.
 Finder _title(int bay) => find.textContaining(
     RegExp('^Bahía ${bay.toString().padLeft(2, '0')}(\$| ·)'));
 
@@ -88,11 +96,17 @@ void main() {
       final (log, _) = await start(tester, actor: null);
       await _zoomTo300(tester);
       // Sin desplazar: antes, la rejilla quedaba centrada en un lienzo tan
-      // ancho como la vista y la pantalla abría en blanco.
+      // ancho como la vista y la pantalla abría en blanco. En la oficina
+      // (T-117) el título va en la franja de la bahía, encima de la rejilla.
       final viewport =
           tester.getRect(find.byKey(const ValueKey('plan-zoom-gesture')));
-      expect(viewport.contains(tester.getCenter(_title(3))),
-          isTrue);
+      expect(
+          find.descendant(
+              of: find.byKey(const ValueKey('franja-de-la-bahia')),
+              matching: _title(3)),
+          findsOneWidget);
+      expect(tester.getRect(find.byKey(const ValueKey('franja-de-la-bahia'))).bottom,
+          lessThanOrEqualTo(viewport.top + .5));
       for (final position in _bay3) {
         final cell = find.byKey(ValueKey('plan-cell-$position'));
         expect(viewport.contains(tester.getCenter(cell)), isTrue,
@@ -110,20 +124,21 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await start(tester, actor: null);
+    // En la oficina (T-117, DESIGN.md 14.1) la rejilla va a su alto natural:
+    // el margen es un `Padding`, no el de un desplazable vertical propio.
     final viewport = find.byKey(const ValueKey('plan-zoom-gesture'));
-    final scroll = find
-        .descendant(of: viewport, matching: find.byType(SingleChildScrollView))
+    final relleno = find
+        .descendant(of: viewport, matching: find.byType(Padding))
         .first;
     final content =
-        find.descendant(of: scroll, matching: find.byType(Column)).first;
+        find.descendant(of: relleno, matching: find.byType(Column)).first;
     Offset margin() =>
         tester.getTopLeft(content) - tester.getTopLeft(viewport);
-    expect(tester.widget<SingleChildScrollView>(scroll).padding,
-        const EdgeInsets.all(16));
+    expect(tester.widget<Padding>(relleno).padding, const EdgeInsets.all(16));
     expect(margin().dx, closeTo(16, .5));
     expect(margin().dy, closeTo(16, .5));
     await _zoomTo300(tester);
-    expect(tester.widget<SingleChildScrollView>(scroll).padding,
+    expect(tester.widget<Padding>(relleno).padding,
         const EdgeInsets.all(16 / 3));
     expect(margin().dx, closeTo(16, .5));
     expect(margin().dy, closeTo(16, .5));
@@ -248,7 +263,7 @@ void main() {
     testWidgets('se dibujan como sombra, con cuántos 20 hay en la celda',
         (tester) async {
       await bay4(tester);
-      final shadow = find.byKey(const ValueKey('neighbor-twenty'));
+      final shadow = _neighborTwenties;
       expect(shadow, findsNWidgets(3));
       // Fila 02: el 20 de la 003 y la reserva de la 005. Fila 06: el 20 de la
       // 003 y la descarga pendiente de la 005. Fila 08: un 20 de la 005.
@@ -257,9 +272,11 @@ void main() {
         ('0040682', '2×20′'),
         ('0040882', '20′'),
       ]) {
+        final own = find.byKey(ValueKey('neighbor-twenty-$position'));
+        expect(own, findsOneWidget, reason: position);
         expect(
             find.descendant(
-                of: _inCell(position, shadow), matching: find.text(label)),
+                of: _inCell(position, own), matching: find.text(label)),
             findsOneWidget,
             reason: position);
       }
@@ -320,8 +337,7 @@ void main() {
         scope.read(selectedBayProvider.notifier).select(bay);
         await tester.pumpAndSettle();
         expect(_title(bay), findsOneWidget);
-        expect(find.byKey(const ValueKey('neighbor-twenty')), findsNothing,
-            reason: 'bahía $bay');
+        expect(_neighborTwenties, findsNothing, reason: 'bahía $bay');
         expect(find.text('Ocupado por 20 pies'), findsNothing,
             reason: 'bahía $bay');
       }

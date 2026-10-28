@@ -16,7 +16,8 @@ inicio (7 y 9.1). La Fase 1 bis escribe la dirección C (sección 13) y la Fase 
 lleva a `lib/core/design/` y a `lib/core/app.dart`: la noche, los estados de la vista
 Estado, las fichas y la tabla reordenada, el tema por omisión según el equipo y las
 piezas nuevas. Donde la sección 13 y las secciones 4 y 5 digan cosas distintas, manda
-la 13. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
+la 13. T-117 y T-118 (10.36 a 10.39) suman la sección 14: la oficina con más plano, el
+panel lateral que se oculta y el selector de modo único. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
 por `tool/rediseno_contraste.py`, y la del contraste compuesto de la celda en
 `test/t114_celda_contraste_test.dart` y `test/t114_fase2bis_test.dart`.
 Material 3 sigue siendo la base: el sistema son tokens, un `ColorScheme` ajustado,
@@ -154,10 +155,12 @@ License 1.1 (IBM). Empaquetadas en `assets/fonts/plex/` con `LICENSE-IBMPlex.txt
 `provenance.json` (sección 6).
 
 Escala: base 14, razón 1.2, redondeada a enteros (`BsEscala`, en
-`bs_tipografia.dart`). Son los únicos tamaños de letra del producto.
+`bs_tipografia.dart`), más la cifra protagonista de 48, fuera de la razón y una sola vez
+por vista (15.2). Son los únicos tamaños de letra del producto.
 
 | Rol | Tamaño / peso / interlínea | Dónde | En el tema |
 |---|---|---|---|
+| Cifra protagonista | 48 / 600 / 1.05, tabular | La única cifra que encabeza Estadísticas, una vez por vista (15.2; 10.38, P9) | `BsTextos.cifraProtagonista` |
 | Cifra grande | 34 / 600 / 1.1, tabular | KPI, contadores, totales | `displayLarge`, `BsTextos.cifraGrande` |
 | Titular | 28 / 600 / 1.2 | Nombre del buque en el inicio | `headlineLarge` |
 | Título de pantalla | 22 / 600 / 1.25 | Barra superior, cabecera de bahía | `titleLarge` |
@@ -312,9 +315,15 @@ cambiar el tono.
 
 ### 5.5 Estadísticas: monocromo
 
-Una sola escala secuencial de la marca (`#D9E7FC → #95BBF6 → #518FF1 → #1365E5 →
-#0D47A1`); las barras por puerto llevan una muestra pequeña del color categórico del
-puerto para enlazar con el plano. Ningún `Colors.*`.
+Una sola rampa de un tono, el azul de la marca, para las magnitudes, y ningún `Colors.*`.
+**La rampa de la Fase 1** (`#D9E7FC → #95BBF6 → #518FF1 → #1365E5 → #0D47A1`) **no pasaba
+el validador de la skill de dataviz en su paso claro** (1.25:1 sobre la hoja; 0.9.4 de
+`docs/T117-T121-RESULTADOS.md`) y queda sustituida por la de 15.3: de día `#88B0F5 →
+#518FF1 → #1365E5 → #0D47A1`, de noche `#2C5BA8 → #4F8EF7 → #95BBF6 → #D9E7FC`
+(`BsPaleta.rampaDeMagnitud`); `#D9E7FC` pasa a ser la pista de las barras de día
+(`BsPaleta.pistaDeMagnitud`). El puerto se enlaza con el plano por la caja de su código
+(su rol categórico, con el código escrito), no por una muestra en la barra: las barras de
+una sola serie van en la marca. Lo demás, en la sección 15.
 
 ## 6. La fuente: lo que se empaquetó y lo que se comprobó
 
@@ -448,9 +457,11 @@ dependía de cuándo se apagaba y el segundo toque intentaba cerrar un aviso que
 primero de la cola). El viaje publicado sigue guardado y se reabre desde los recientes
 con un toque. En el muelle, un toque por error no saca a nadie del plano. En el inicio,
 Atrás sale de la app como siempre. **La ventana es solo para dos toques seguidos en la
-raíz** (10.31, O1): si en medio se abre otra cosa (el menú del zoom, el detalle de una
-celda, una hoja, un diálogo) o Atrás cierra otra cosa, la ventana se cancela y la
-advertencia se va; el siguiente Atrás en la raíz vuelve a advertir.
+raíz** (10.31, O1): si en medio se abre otra cosa (el menú del zoom, el menú del modo o de
+«Colorear por», el detalle de una celda, una hoja, un diálogo) o Atrás cierra otra cosa, la
+ventana se cancela y la advertencia se va; el siguiente Atrás en la raíz vuelve a advertir.
+Los menús del modo y de «Colorear por» no son rutas: Atrás los cierra primero porque se
+anotan en `cerrablesDeAtrasProvider` (10.42, H2; 14.6).
 
 **Lo que la entrega 2 dejó en el código (22-oct, 10.16):** la barra de ocho acciones y su
 plegado (T-91) se retiran: Buscar va en la barra superior o en la cabecera de la oficina
@@ -467,6 +478,10 @@ más allá se recortarían); el nombre entero va en la descripción emergente y 
 pantalla. Atrás en Android se resolvió en la candidata del piloto (arriba). La preferencia de T-91
 (`planToolbarCollapsedProvider` y su almacén) queda sin lector; retirarla toca `domain/` y
 `data/` y se propone como tarea.
+
+**T-117 (24-oct, sección 14):** desde 1200 dp el panel lateral se puede ocultar con un botón de
+la cabecera y sale flotante por el borde derecho o al tocar una celda; de 600 a 1199 dp, donde no
+hay panel fijo, el detalle también sale en el panel flotante y no en la hoja de abajo (14.3).
 
 ## 9. Wireframes de las cinco pantallas clave
 
@@ -1319,7 +1334,7 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
 
 | Concepto | Ícono | Dónde | Lo que sigue en Material |
 |---|---|---|---|
-| Contenedor | `contenedor20`, `contenedor40`, `contenedor45` según `sizeInFeet`; `refrigerado`, `tanque`, `plataforma`, `techoAbierto` según el tipo ISO; `vacio` para el vacío; `peligrosa` y `fueraDeMedida` mandan sobre el tipo (`condicionDelContenedor`, que da el glifo y su nombre) | la tarjeta de la Lista, el resultado de la búsqueda, el detalle, los chips de carga especial, las tarjetas de Estadísticas, «Asignar vacío», «Vacío» en la leyenda | `inventory_2` para el total de contenedores y para «Lleno»; `check_box` para «Llenos» |
+| Contenedor | `contenedor20`, `contenedor40`, `contenedor45` según `sizeInFeet`; `refrigerado`, `tanque`, `plataforma`, `techoAbierto` según el tipo ISO; `vacio` para el vacío; `peligrosa` y `fueraDeMedida` mandan sobre el tipo (`condicionDelContenedor`, que da el glifo y su nombre) | la tarjeta de la Lista, el resultado de la búsqueda, el detalle, los chips de carga especial, las tarjetas de Estadísticas, «Asignar vacío», «Vacío» en la leyenda; el modo Contenido del selector lleva `contenedor40` (14.6) | `inventory_2` para el total de contenedores y para «Lleno»; `check_box` para «Llenos» |
 | Peligrosa (IMDG) | `peligrosa` | la insignia (como `insigniaPeligrosa`), los chips IMO / IMDG, el detalle, «Carga especial» | el aviso genérico sigue en `warning_amber` |
 | Buque | `buque` | «Paso» / sigue a bordo en la celda y en la marca de descarga, los recientes, «Perfiles guardados», el resumen del viaje, «Perfil longitudinal» | |
 | Bahía | `bahia` | el destino «Plano» (en reposo y activo), «Posición», «Bahías», «Contenedores por bahía», «Ocupación», «Ir a» | |
@@ -1329,7 +1344,8 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
 | Peso | `pesoPila` en la línea del peso por pila del panel de carga; `vgm` en «Peso (VGM)» de la tarjeta | | `scale` es el peso genérico |
 | Archivos | `baplie` («Seleccionar archivo», «Cargar archivo BAPLIE»), `compararBaplie`, `baplieSalida`, `listadoAgencia` («Listado de la agencia», «Elegir listado») | | el CSV de exportar sigue en `table_view`; PDF y JSON, en los suyos |
 | Nube | `alDia` (al día) y `soloAqui` (solo este dispositivo, sin conexión) | el chip de estado y la barra superior | `cloud` para «Nube y cuenta» sin cuenta; `cloud_sync`, `cloud_upload`, `lock_clock`, `block` y `warning_amber` para los demás estados |
-| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `orden`, `grua`, `muelle`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
+| Número de orden | `orden` | el modo Número de orden del selector (14.6); hasta T-118 no tenía sitio | |
+| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `grua`, `muelle`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
 
 **Reglas de uso.**
 1. Los íconos del dominio se dibujaron en la rejilla de 24 y se usan a **16, 20 o 24 px**; las
@@ -1402,3 +1418,835 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
      opacidad 0 al empezar y al terminar el cruce y 1 a la mitad; el buque pintado una sola vez en 60
      cuadros; sin desbordes ni empujones a 360, 600, 1280 × 720 y 1920 × 1080 con la letra a 1.0,
      1.45 y 2.0; y `meetsGuideline` igual que antes.
+
+## 14. La oficina con más plano (T-117) y el selector de modo (T-118)
+
+Decisiones 10.36 a 10.39 de `SPRINT-4.md`. La propuesta, con sus medidas y sus wireframes, está
+en `docs/T117-T121-RESULTADOS.md` (0.5, 0.6 y 0.5.9) y Carlos la aceptó con las recomendaciones
+de Yov (10.38). Esta sección manda sobre la propuesta donde dicen cosas distintas; 14.10 dice qué
+cambió y por qué. La regla: **el plano manda; lo demás cede y nunca se corta.**
+
+### 14.1 La columna central de la oficina
+
+Desde 600 dp (Windows, la Web y, con la densidad del muelle, una tableta Android), la columna
+central se arma así, de arriba abajo:
+
+| Pieza | Se queda o se desplaza | Alto con la letra a 1.0 | Clave |
+|---|---|---:|---|
+| La cabecera (14.8) | fija | 64 | `cabecera-de-oficina` |
+| El puente: la silueta y las tarjetas cortas (14.2) | se desplaza | 173, 98 o 0 | `puente-del-plano` |
+| El borde del puente | se desplaza con el puente | 12 | `borde-del-puente` |
+| La franja de la bahía (14.8) | fijada arriba al desplazar, si cabe | 56 | `franja-de-la-bahia` |
+| La rejilla, a su alto natural por el zoom | se desplaza | el de la bahía | `plan-zoom-NN` |
+| La leyenda, que envuelve | se desplaza | el que pida | `leyenda-del-plano` |
+| La franja de cifras (14.7), donde viven los avisos (14.5) | fija abajo | de 64 a un cuarto de la ventana | `franja-de-cifras` |
+
+- La columna es un `CustomScrollView` (`columna-del-plano`) y la franja de la bahía se fija arriba
+  (`FranjaFijadaSiCabe`, que hace lo de un `PinnedHeaderSliver`) **solo si mide un tercio de la
+  columna o menos**; si no (la letra a 2.0 en una ventana baja), se va con el panel del buque,
+  porque fijada taparía la rejilla entera: a 800 × 600 con la letra a 2.0 mide 224 dp y a la
+  columna le quedan 306. La rueda sobre cualquier parte de la columna la desplaza: la silueta y la
+  rejilla solo se desplazan en horizontal y no se la roban (la rueda en la silueta es T-119).
+- **La rejilla ya no tiene desplazamiento vertical propio:** `PlanZoomViewport(alturaNatural:
+  true)` la amplía y le dice a la columna su alto ampliado. Conserva el horizontal por dentro (su
+  barra es T-119) y el pellizco de dos dedos.
+- El título y el resumen de la bahía salen de la rejilla y van a la franja de la bahía.
+- Desplazar no cambia la altura elegida del puente: se va de la vista y vuelve al subir. Cambiar
+  de bahía no mueve la columna; si la bahía nueva es más baja, la columna se acomoda a su largo.
+- En el muelle operando (una tableta Android), el pie sigue siendo la barra de la operación con
+  las reglas de 13.8; la franja de cifras es de la oficina.
+- **El teléfono no cambia** (13.8): el `NestedScrollView` del teléfono bajo, la banda y la barra
+  de la operación. Solo cambian el selector de modo (14.6) y el resumen (14.7).
+- **Oficina o teléfono lo decide la página**, por el ancho de la ventana (600 dp): con la ventana
+  entre 600 y unos 720 dp el plano mide menos de 600, y si lo decidiera él se armaría como
+  teléfono dentro de la oficina, con un segundo selector de modo. El plano suelto (sin la
+  página) mide su ancho.
+
+### 14.2 El puente en tres alturas
+
+| Altura | Qué muestra | Alto (letra 1.0, 6 y 6 niveles) |
+|---|---|---:|
+| **Completo** (por omisión) | La silueta normal y, a su derecha, las tarjetas cortas en una fila o en dos (2 × 72 + 12 = 156, menos que la silueta) | 4 + 161 + 8 = 173 |
+| **Compacto** | La silueta compacta (`compacta: true`, 13.6) y las tarjetas cortas que quepan en una fila | 4 + 90 + 4 = 98 |
+| **Plegado** | Nada: quedan el borde y la franja de la bahía, y las cifras siguen en la franja de cifras | 0 |
+
+- **La tarjeta corta** es `BsTarjetaCifra(corta: true)`: 12 dp de aire, el anillo de 40 (grosor
+  7), el rótulo (`labelMedium`) y la cifra a **28 / 600 tabular**, el tamaño del titular de 4.2
+  (no hay tamaño nuevo). El detalle no se dibuja: va en su etiqueta y en su descripción
+  emergente. Mide 72 dp de alto (12 + 48 + 12: el rótulo y la cifra, más altos que el anillo) y
+  **224 dp de ancho por la escala de la letra**, lo que pide «120 de 150» junto al anillo.
+- **Cuántas caben:** junto a una silueta de al menos 400 dp. Caben por fila las que entren en el
+  ancho que queda; van en una fila si caben todas y, si no, en dos, repartidas. Más de dos filas
+  no: las que no caben se quedan en la franja de cifras, y si no caben dos por fila no va
+  ninguna. A 1920 × 1000 con el panel fijo van en una fila; en la laptop de Carlos (1707 × 996),
+  a 1536 × 793, a 1366 × 690 y a 960 × 1000, en dos; a 1280 × 720 y a 800 × 600, ninguna.
+- **El alto no se fija: se mide.** Cada altura mide lo que mide su contenido con la letra del
+  sistema, así que nada se recorta ni se estira. Por eso son tres alturas y no un alto libre (P1).
+- **El borde** (12 dp, debajo del puente): una línea en `outlineVariant` y una agarradera de 32 × 4
+  en línea fuerte, con el cursor de redimensionar fila.
+  - *Arrastrar:* el borde sigue al puntero entre 0 y el alto de «completo». Mientras dura, el
+    puente muestra **la altura más grande que cabe** en el alto arrastrado, arriba y entera
+    (nunca recortada ni encogida), con el hueco debajo. Al soltar, se queda en la altura más
+    cercana. El cambio no se anima: 4.5 solo anima `Transform` y opacidad.
+  - *Doble clic:* pliega, o devuelve la última altura abierta.
+  - *Teclado:* el borde recibe el foco, con el anillo de foco en marca; ↑ baja una altura, ↓ sube
+    una, Intro o Espacio pliega o despliega.
+  - *Lector de pantalla:* un control ajustable, «Alto del panel del buque», con su valor
+    («completo», «compacto» o «plegado») y las acciones de subir y bajar.
+- **El botón** de la franja de la bahía (`boton-del-puente`): «Plegar el panel del buque» (⌃) o
+  «Desplegar el panel del buque» (⌄), que devuelve la última altura abierta (completo si no hubo
+  otra).
+- La app recuerda la altura (14.4).
+
+### 14.3 El panel lateral: fijo, oculto o flotante
+
+- **Fijo** (por omisión desde 1200 dp): 360 dp a la derecha, como hasta ahora.
+- **El botón de la cabecera** (`boton-del-panel`, junto a Buscar y la nube): desde 1200 dp oculta
+  o muestra el panel fijo, y la app lo recuerda (14.4); de 600 a 1199 dp, donde no hay panel fijo,
+  abre o cierra el flotante. **Con el flotante abierto dice «Cerrar el panel lateral» y hace eso,
+  en cualquier ancho** (10.42, H1): cierra el flotante, el panel sigue oculto y la preferencia no
+  cambia. Para dejarlo fijo desde el flotante está «Fijar».
+- **El borde del panel guardado.** Con el panel oculto, y siempre de 600 a 1199 dp, queda en el
+  borde derecho de la ventana una franja de 12 dp (`borde-del-panel`) con una línea y una
+  agarradera. **Va fuera de la columna**, para no tapar la barra de desplazamiento de la columna,
+  que vive en su borde. Si el mouse se queda 250 ms en ella, el panel sale **flotante**; un clic o
+  un toque también lo abre. Lo del mouse viene encendido y se apaga en Parámetros con «Mostrar el
+  panel lateral al pasar el mouse por el borde» (P6); apagado, la franja no está y queda el botón.
+  Solo el mouse abre por el paso; un dedo, solo con el toque.
+- **El panel flotante** (`panel-flotante`): por encima de la rejilla, sin moverla, pegado a la
+  franja del borde; desde debajo de la cabecera hasta encima de la franja de cifras (así ni tapa
+  la franja ni lo tapa un aviso); 360 dp, o menos en una ventana angosta (la columna conserva 48).
+  Panel alto, borde en línea y radio de panel a la izquierda. En su cabecera, «Fijar» (desde 1200
+  dp: lo deja fijo y lo recuerda) y «Cerrar».
+  - Abierto por el mouse, se va 400 ms después de que el mouse sale de él y de la franja.
+  - Abierto por el botón, por la franja o por una celda, se va con «Cerrar», con Esc, con un clic
+    fuera o con Atrás en Android (lo anota en `cerrablesDeAtrasProvider`, 8).
+- **El detalle con el panel oculto** (P5): al tocar una celda, el panel sale flotante con el
+  detalle (`DetalleContenedor`, la única hoja de detalle, 3.6); al cerrarlo, la selección se
+  limpia. De 600 a 1199 dp pasa lo mismo: la hoja de abajo queda para el teléfono.
+- **«En vivo» no se corta:** el panel reparte su alto. Con una celda elegida, el detalle se queda
+  con lo que sobra y «En vivo» con hasta la mitad; sin celda, la frase «Toca una celda…» y «En
+  vivo» con el resto. «En vivo» se desplaza por dentro.
+- **Fuera del Plano** (Lista, Avance, Estadísticas) el panel lleva solo «En vivo», sin la frase de
+  la celda; sin escala no hay «En vivo» y el panel dice la frase.
+
+### 14.4 Las preferencias del equipo (0.5.7; 10.38, P2 y P3)
+
+| Preferencia | Clave en el almacén | Valores | Sin valor |
+|---|---|---|---|
+| El alto del puente | `ui.bridgeHeight` | `completo`, `compacto`, `plegado` | completo |
+| El panel lateral | `ui.sidePanel` | `visible`, `oculto` | visible |
+| Mostrar el panel al pasar el mouse | `ui.sidePanelOnHover` | `si`, `no` | sí |
+
+- Se guardan **por equipo**, en la caja de ajustes del almacén local: en Windows vive en el
+  `%LOCALAPPDATA%` de la cuenta y en la Web en el perfil del navegador. No viajan a la nube.
+- **Es la única excepción a «`domain/` y `data/` no se tocan»** (10.38): en `LocalVesselRepository`,
+  `enum UiPreference { bridgeHeight, sidePanel, sidePanelOnHover }` con
+  `getUiPreference(UiPreference key)` → `Either<Failure, String?>` y
+  `setUiPreference(UiPreference key, String? value)` (null la borra); en `HiveVesselDataSource`, la
+  clave `ui.<nombre>` en la caja de ajustes, por la misma cola de escrituras que el tema; en
+  `LocalVesselRepositoryImpl`, dos `_guard`. Sin migración: sin valor, la presentación usa el de
+  omisión. Tiene sus pruebas propias del almacén y del repositorio.
+- La presentación (`preferenciasDeLaOficinaProvider`) lee las tres al abrir la oficina; un fallo
+  de lectura cuenta como «sin valor». Un fallo al guardar deja la elección en memoria hasta cerrar
+  la app; en Parámetros, además, lo dice un aviso.
+
+### 14.5 Los avisos en la oficina (10.30 a 10.33; cierra O3)
+
+- **La franja de cifras se mide como la franja del muelle** (`MideLaFranja`), y la columna central
+  dice su ancho (`MideLosLados`); la página dice lo que tiene a la derecha (el panel fijo o el borde
+  del panel guardado). `AvisosSobreElPie` pone el aire de los avisos para que vivan **dentro de la
+  franja**: no pasan de su borde de arriba (`LugarDelAviso`) y a los lados no salen de la columna,
+  así que no cruzan el riel ni el panel. Se mide un ancho y no una posición: una transición de
+  página que escala la vista deja posiciones negativas, y el aire de un aviso no puede serlo. Pueden tapar sus cifras durante su plazo
+  (10.30); la rejilla, la franja de la bahía, la leyenda y los controles, nunca, y **por
+  construcción**, con el texto corto de `avisoDelViaje`.
+- La franja de cifras **no lleva controles**: el aviso no tapa nada que se toque, y debajo del
+  aviso queda solo el aire de 13.8 (8 dp).
+- **Mide al menos 64 dp:** el aviso compacto pide 48 + 4 + 4, más esos 8 de aire. Con la letra
+  grande crece con sus fichas, hasta **un cuarto del alto de la ventana**; si las fichas no caben,
+  se desplazan por dentro. El aviso elige el texto que cabe en lo que mida.
+- Fuera del Plano (Lista, Avance, Estadísticas) no hay franja: el aviso va al pie, como antes, pero
+  a lo ancho de la columna central.
+- El panel flotante termina encima de la franja: el aviso no lo tapa.
+- En el muelle y en el teléfono no cambia nada (13.8). La matriz de 18 casos del teléfono se
+  repite, la de avisos se extiende a la oficina y la guarda de `SnackBar(` sigue en todo `lib/`.
+
+### 14.6 El selector de modo, `BsSelectorDeModo`
+
+`BsSelectorDeModo<T>({required List<BsEntradaDeModo<T>> entradas, required T? elegido, required
+ValueChanged<T> onElegir, BsFormaDelSelector forma = BsFormaDelSelector.segunElAncho, String nombre
+= 'Modo del plano', ValueChanged<VoidCallback>? alAbrirElMenu, ValueChanged<VoidCallback>?
+alCerrarElMenu})`, con `BsEntradaDeModo<T>({required valor, required rotulo, rotuloCorto,
+icono, cuenta, cuentaCorta, ayuda})`, en `lib/core/design/componentes/bs_selector_de_modo.dart`.
+**Un solo selector:** sustituye al `DropdownButton` de Material 2 del plano y al `SegmentedButton`
+Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear por» (14.8).
+
+- **Segmentos:** un `SegmentedButton` con el icono, el rótulo corto («Orden») y, con operación,
+  la cuenta corta en tinta suave y cifras tabulares («Descarga 28»); el elegido va invertido
+  (13.1: tinta con texto noche de noche, marca tenue de día). Mide 40 dp en la oficina y 48 en el
+  muelle. El nombre entero y la ayuda van en la descripción emergente.
+- **Menú:** un botón con el icono, el nombre del elegido y ⌄, que abre un `MenuAnchor` de Material
+  3 con la superficie de panel, el borde en línea y el radio de hoja (10). Cada entrada mide 56 dp
+  o más: el icono, el nombre, una línea con su cuenta o su ayuda en tinta suave y, en la elegida,
+  la palomita en marca. Con flechas, Intro y Esc, y para el lector de pantalla, como todo
+  `MenuAnchor`; con la letra a 2.0 cada entrada crece con su texto y el menú se desplaza dentro de
+  la pantalla.
+- **Esc y Atrás cierran el menú** (10.42, H2). `MenuAnchor` atiende Esc solo con el foco dentro del
+  menú, y al abrirse con el mouse o el dedo el foco no entraba: al abrirse, el foco pasa a la
+  entrada elegida (o a la primera), como en un menú del sistema. En Windows y en la Web, Esc lo
+  cierra. Al cerrarse no se le devuelve el foco al botón a la fuerza: en el emulador, tras Atrás,
+  el botón quedaba con el sombreado del foco (Android pinta el foco después de una tecla); abierto
+  con el teclado, el foco vuelve a él por su cuenta. El menú no es una ruta, así que Atrás de Android no
+  lo cerraba: el selector da a quien lo usa lo que lo cierra (`alAbrirElMenu`, `alCerrarElMenu`) y,
+  del lado del viaje, `SelectorDelModo` y «Colorear por» lo anotan en `cerrablesDeAtrasProvider`
+  (8): el primer Atrás cierra el menú, el plano se queda y ese toque no cuenta como el primero del
+  doble Atrás. El componente no sabe nada del viaje.
+- **La forma la elige el ancho medido** (`segunElAncho`): los segmentos si caben enteros en el
+  ancho que hay; si no, el menú. Lo mide `BsPrimeraQueCabe` (14.11).
+- **Los modos:**
+
+| Modo | Icono | Cuenta en el menú | Ayuda |
+|---|---|---|---|
+| Contenido | `contenedor40` | — | El destino de cada contenedor |
+| Número de orden («Orden» en segmentos) | `orden` | «30 OR del listado» | Los OR del listado de la agencia |
+| Descarga | `descarga` | «28 por bajar en GTSTC» | Toca un contenedor para marcarlo como descargado |
+| Carga | `carga` | «29 pendientes: 20 llenos, 9 vacíos» | Toca un contenedor o busca su OR para cargarlo |
+
+  En segmentos, la cuenta corta es solo el número de pendientes.
+- **Dónde va:**
+  - en la oficina, en la cabecera (14.8), con el Plano a la vista: en la Lista, el Avance y las
+    estadísticas el modo no cambia nada;
+  - en el teléfono, como menú, en la línea de los controles del plano (o en la tira del pie del
+    teléfono bajo, 13.8). Con la banda del muelle (operando) el menú ofrece Contenido, Número de
+    orden y el modo vigente: Descarga y Carga ya están en la banda (0.6.2). En esa línea
+    «Acciones» va solo con su icono (⋮, como en la tira y en el wireframe de 0.6.2), y el nombre
+    del modo envuelve en dos líneas si no cabe: el menú con su icono es más ancho que el
+    desplegable de antes.
+- **Conserva** la clave `bay-plan-display-mode` (en el selector entero) y los textos «Contenido»,
+  «Número de orden», «Descarga» y «Carga».
+
+### 14.7 El resumen del modo en fichas
+
+- **La ficha** (`BsFichaDeCifra({required rotulo, required valor, rol})`): el rótulo en tinta suave
+  y el dato en tinta con cifras tabulares, en una línea que envuelve si no cabe, nunca con elipsis;
+  con `rol` (revisar), en el contorno del rol.
+- **En la oficina, en la franja de cifras,** tres fichas a lo sumo, en este orden: la bahía (lo que
+  las tarjetas no dicen), el modo y el otro modo. **La ficha de la bahía empieza por sus cifras**
+  (10.40: bajan de la franja de la bahía para que esta quepa en una línea) y sigue, tras un punto y
+  coma, con lo que la operación dice de la bahía:
+
+| Modo | La bahía | El modo | El otro modo |
+|---|---|---|---|
+| Carga | «Bahía 10: 20 contenedores, 231.9 t; por cargar cub. 2, bod. 7» | «Carga: 29 pendientes, 20 llenos, 9 vacíos» (`loading-operation-totals`) | «Descarga: 28 pendientes, 1 re‑estiba» |
+| Descarga | «Bahía 14: 36 contenedores, 712.4 t; 3 por bajar en cub., 5 en bod., 2 bajados» (`bay-discharge-pending`) | «GTSTC: 30 por bajar, 120 bajados, 3 re‑estibas» (`operation-discharge-totals`) | «Carga: 29 pendientes» |
+| Contenido o Número de orden, con escala | «Bahía 10: 20 contenedores, 231.9 t; carga: cub. 2 (1 lleno, 1 vacío), bod. 7 (5 llenos, 2 vacíos)» (`bay-loading-pending`) | En Número de orden, «Listado: 3 celdas de carga sin cruce» o «Sin listado de la agencia» | — |
+| Sin escala | «Bahía 10: 20 contenedores, 231.9 t» (`cifras-de-la-bahia`) | «Viaje: 977 contenedores, 27 bahías, 7 419.5 t» | — |
+
+- **La bahía que se ve y el grupo de su par** (T-124, P2 de 10.65). En Carga y en Contenido
+  lo pendiente es del grupo de 40 pies (H5, `reference_bay.dart`: la 21 y la 23 se cuentan
+  con la 22). La ficha dice **lo de la bahía que se ve, con su número**, y **lo del grupo, con
+  el rótulo de su par** y las bahías que cuenta. Antes, con la 21 elegida, decía «Bahía 22: 7
+  contenedores, 1 celda reservada, 57.7 t…; por cargar cub. 27»: las cifras eran de la 21 y el
+  rótulo de la 22, que tiene 11.
+
+| Dónde | Bahía sola (no cuenta otra) | Bahía de un grupo (la 21, la 22 o la 23; el banco de T-122) |
+|---|---|---|
+| Oficina, Carga | «Bahía 10: 20 contenedores, 231.9 t; por cargar cub. 2, bod. 7» (como antes) | «Bahía 21: 7 contenedores, 1 celda reservada, 57.7 t, tapas sin declarar; grupo 22 (21, 22 y 23), por cargar cub. 27, bod. 0» |
+| Oficina, Contenido u Orden | «Bahía 10: …; carga: cub. 2 (1 lleno, 1 vacío), bod. 7 (…)» | «Bahía 23: …; carga del grupo 22 (21, 22 y 23): cub. 27 (…), bod. 0 (…)» |
+| Teléfono, Carga (sin las cifras) | «Bahía 10: cub. 2, bod. 7» | «Bahía 21: grupo 22 (21, 22 y 23), cub. 27, bod. 0» |
+| Teléfono, Contenido (sin las cifras) | «Bahía 10, carga: cub. 2 (…), bod. 7 (…)» | «Bahía 21, carga del grupo 22 (21, 22 y 23): cub. 27 (…), bod. 0 (…)» |
+
+  - El rótulo de la ficha es siempre la bahía elegida (`rotuloDeBahia`); el grupo se nombra
+    con «grupo» y el número de la par, entre paréntesis las bahías del plan de carga que
+    cuenta, más la elegida si es una mitad de 20 sin carga propia («grupo 02 (01 y 02)»).
+  - Se nombra cuando la bahía elegida no es la par o cuando la par cuenta alguna impar
+    (`BayLoadingPending.paired`); una bahía sola sigue como antes, sin «grupo».
+  - En Descarga no hay grupo: lo pendiente de bajar es de cada bahía (`DischargeProgress`).
+  - Las claves no cambian (`loading-bay-pending`, `bay-loading-pending`).
+- Las cifras de la bahía son las de antes: los contenedores, las celdas reservadas si hay, el peso y
+  «tapas sin declarar» si faltan. Mientras se lee la operación, o si falla, van en su ficha propia
+  (`cifras-de-la-bahia`) delante de la que lo dice. En el teléfono no cambian: el resumen no las
+  lleva, y en la tableta del muelle operando, sin franja de cifras, siguen en la franja de la bahía.
+
+- Lo que el resumen avisaba sigue, como ficha en revisar: «Importa el listado de agencia para
+  operar por OR.» y «Esta escala todavía no tiene operación guardada: …». También «Leyendo el estado
+  de la operación…» y los errores con su causa.
+- **Las fichas envuelven:** lo que no cabe en la línea pasa a la siguiente y la franja crece, hasta
+  el tope de 14.5. No hay «⌄ más» (14.10).
+- **La instrucción** «Toca un contenedor para marcarlo como descargado» deja de estar fija: es la
+  ayuda de Descarga en el selector.
+- **Los botones del resumen** van a la franja de la bahía: «OR / últimos dígitos» a la vista en
+  Carga, y «Asignar vacío», «Pendientes…», «Avance de la operación», las solicitudes de cambio e
+  «Importar listado» en «Acciones». El chip de la nube del resumen sale: está en la cabecera.
+- **En el teléfono**, la misma línea de T-107 (`PlanSummaryLine`), con las mismas fichas una debajo
+  de otra; con la barra de la operación del muelle (13.8), solo la bahía y los avisos de arriba,
+  porque la barra ya cuenta el modo. Recogida sigue midiendo una línea: las medidas de los avisos
+  del teléfono no cambian.
+
+### 14.8 La cabecera y la franja de la bahía, medidas
+
+- **La cabecera** (`cabecera-de-oficina`): el buque y el viaje, el estado («Publicado» o «Sin
+  confirmar») y el selector de modo; siempre en el borde derecho, Buscar, la nube y el botón del
+  panel. Con `BsPrimeraQueCabe`: en una línea con los segmentos; si no caben, en una línea con el
+  menú; si tampoco, en dos líneas, el título arriba y el estado con el menú abajo (la regla de la
+  corrección de 10.21).
+- **La franja de la bahía** (`franja-de-la-bahia`): ‹ y › (la bahía anterior y la siguiente,
+  `bahia-anterior` y `bahia-siguiente`); el título «Bahía 10», que abre la lista de bahías
+  (`bahia-elegir`); a la derecha «Colorear por» (`colorear-por`), el zoom (`ZoomDelPlano`), «OR /
+  últimos dígitos» en Carga, «Acciones» (`bay-plan-actions`) y el botón del puente. Las cifras de
+  la bahía no van aquí: abren la franja de cifras (14.7, 10.40). En una línea con «Colorear por» en
+  segmentos; si no cabe, con el menú; si tampoco, con «OR / últimos dígitos» solo con su icono y el
+  rótulo en la descripción emergente; si tampoco, además con «Acciones» solo con su icono (⋮, como
+  en el teléfono, 14.6); si tampoco, envuelve en las líneas que pida: nada se corta.
+- **El botón del puente no queda solo en una línea** (10.42, H3). A 700 dp, sin el panel fijo, en
+  Contenido, la franja iba en dos líneas (108 dp) solo porque el botón no cabía al final de la
+  primera. Con «Acciones» solo con su icono va en una (56 dp), también en Descarga. En Carga, con
+  el OR, a 700 dp no cabe ni así y va en dos líneas, con el botón al final de la primera. Y cuando
+  la franja envuelve de verdad (la letra grande, o de 600 a 700 dp), el botón va fuera de lo que
+  envuelve, arriba a la derecha, al final de la primera línea: la franja no crece por él.
+- **Lo que envuelve no se desborda nunca** (10.42). Al medir la corrección, la matriz angosta (600,
+  700, 800 y 960 dp; letra 1.0, 1.45 y 2.0; los tres modos) encontró que con la letra a 2.0, en
+  Carga, los controles con sus rótulos no cabían en una línea entera y se desbordaban (35 dp a 700,
+  135 a 600), algo que ya pasaba antes y que la matriz de 0.5.5 no veía. En la variante que
+  envuelve, «Colorear por» puede partirse de su menú, y los controles van con rótulos solo si caben
+  en una línea entera; si no, el OR y después «Acciones» quedan solo con su icono.
+- **«Acciones» es un botón con su nombre, con el icono o con el rótulo** (10.44, H4). Para el
+  lector de pantalla es el botón «Acciones», dicho una vez, y con la cuenta del distintivo cuando
+  la muestra («Acciones, 2 solicitudes pendientes»). La descripción emergente sigue al pasar el
+  mouse, fuera de la semántica (la regla de los iconos del contenedor, 13.11): Windows toma el
+  nombre de la etiqueta y le suma la descripción emergente, en UIA y en MSAA. Por eso
+  `PopupMenuButton`, con un hijo propio, no basta: no da el rol de botón. Solo con el icono, el nodo
+  quedaba sin nombre y fuera del árbol; con el rótulo, salía «texto Acciones. Acciones». En el
+  teléfono, el resumen de una línea que se abre y se recoge (`PlanSummaryLine`) es también un
+  botón por la misma razón.
+- **Con el panel fijo y la letra a 1.0 va en una línea** a 1920 × 1000, 1707 × 996, 1536 × 793 y
+  1366 × 690, en los cuatro modos (56 dp, con «Colorear por» a la vista; la matriz lo comprueba a
+  1536 y a 1366). Medido con las fuentes reales: a 1536 caben los segmentos; a 1366, en Carga, el
+  menú. El icono solo del OR entra con la letra a 1.45 a 1366 × 690. Con la letra a 1.45 a 1280 y
+  con 2.0 puede ir en dos líneas (62 a 126 dp).
+- **En la tableta del muelle operando** no hay franja de cifras (va la barra de la operación,
+  13.8): ahí las cifras siguen junto al título, como antes.
+- **«Colorear por»** usa el mismo selector, sin iconos: Destino y Tipo de vacío siempre, y Estado
+  solo en Descarga, la única vista que lo pinta. La elección sigue en memoria por modo (5.4).
+- La franja de la bahía lleva el papel de fondo y una línea abajo: la rejilla pasa por debajo sin
+  verse a través.
+
+### 14.9 Con cualquier tamaño de ventana
+
+- La leyenda envuelve dentro de la columna y nunca va en un desplazamiento horizontal: a 1920 con
+  el panel abierto ya no se corta «Celda reservada».
+- El puente solo cambia con el ancho en cuántas tarjetas lleva, y nunca se corta por el alto: si la
+  ventana es más baja que lo que se ve a la vez, la columna se desplaza.
+- **La matriz de pruebas** (`test/t117_oficina_test.dart`): 1920 × 1000, 1707 × 996, 1536 × 793,
+  1366 × 690, 1280 × 720, 960 × 1000 y 800 × 600; letra 1.0, 1.45 y 2.0; panel fijo, flotante y
+  oculto; Contenido, Descarga y Carga. Sin desbordes, con la leyenda, las franjas y las tarjetas
+  enteras y la rejilla a la vista.
+- **En la ventana real:** maximizar, ajustar con Win + ← y →, redimensionar con el borde y, si hay
+  un segundo monitor, arrastrar de uno al otro.
+
+### 14.10 Lo que cambió respecto de la propuesta
+
+1. **Sin «⌄ más» en la franja de cifras** (0.6.2): la franja no lleva controles (0.5.6), porque el
+   aviso la tapa durante su plazo. Las fichas envuelven.
+2. **La franja de cifras mide al menos 64 dp, no 56** (0.5.6): el aviso compacto (56) más los 8 dp
+   de aire de abajo de 13.8.
+3. **La franja del borde del panel va fuera de la columna** (0.5.4): dentro tapaba la barra de
+   desplazamiento de la columna, que vive en su borde derecho.
+4. **El detalle de 600 a 1199 dp va al panel flotante** (0.5.4 lo decía del panel oculto, y ese
+   tamaño no tiene panel fijo): una sola forma del detalle en la oficina.
+5. **Sin escala, la franja de cifras dice el viaje** («977 contenedores, 27 bahías, 7 419.5 t»):
+   así siempre hay franja y los avisos tienen su lugar.
+6. **«Colorear por» usa el mismo selector**, sin iconos, con Estado solo en Descarga.
+7. **El cambio de altura del puente no se anima** (la propuesta decía 150 ms): 4.5 solo anima
+   `Transform` y opacidad, y animar un alto mueve el layout cuadro a cuadro.
+8. **El selector de modo de la cabecera solo va con el Plano a la vista:** en las demás pestañas el
+   modo no cambia nada de lo que se ve.
+9. **En el teléfono, «Acciones» va solo con su icono** en la línea de los controles (14.6).
+10. **Oficina o teléfono lo decide la página** y no el ancho del plano (14.1).
+11. **Las variantes de una línea no llevan `Wrap`** (14.11): el ancho intrínseco de un `Wrap` no
+    suma su `spacing`, y la cabecera medida así se desbordaba 7.4 dp a 1366 × 690.
+12. **La franja de la bahía se fija solo si cabe y la de cifras tiene tope** (14.1 y 14.5): con la
+    letra a 2.0, a 800 × 600 y a 1280 × 720, la franja fijada era más alta que el hueco de la
+    columna y la rejilla no llegaba a verse; la de cifras llegaba a 239 dp.
+13. **Las cifras de la bahía bajan a la franja de cifras** (10.40): con ellas en la franja de la
+    bahía, con el panel fijo y la letra a 1.0, la franja iba en dos líneas (108 dp) a 1536 × 793 y
+    a 1366 × 690. Ahora va en una (56 dp) y la ficha de la bahía empieza por ellas. Si aun así no
+    cabe, «OR / últimos dígitos» queda solo con su icono.
+14. **La corrección 1 de la entrega 1** (10.42): con el flotante abierto, el botón de la cabecera
+    cierra el flotante y no fija el panel (14.3); Esc y Atrás cierran el menú del selector, y ese
+    Atrás no cuenta como el primero del doble Atrás (14.6); y el botón del puente no queda solo en
+    una segunda línea de la franja de la bahía (14.8).
+15. **La corrección 2 de la entrega 1** (10.44): «Acciones» es un botón con su nombre para el
+    lector de pantalla, con el icono o con el rótulo, y el resumen de una línea del teléfono
+    también es un botón (14.8).
+
+### 14.11 Las piezas nuevas y su API
+
+Las de `lib/core/design/componentes/`, con documentación, vista previa y prueba, como las de 13.6.
+
+| Pieza | API | Qué hace |
+|---|---|---|
+| `BsSelectorDeModo` | 14.6 | El selector de modo, en segmentos o en menú |
+| `BsPrimeraQueCabe` | `BsPrimeraQueCabe({required List<Widget> variantes})` | Mide cada variante a su ancho natural y pone la primera que cabe en el ancho que hay; si ninguna cabe, la última, con el ancho que hay (se espera que envuelva). Solo la elegida se dibuja, se toca y se anuncia, como en un `IndexedStack`. «Cabe» es con la tolerancia con que `RenderFlex` avisa de un desborde (`precisionErrorTolerance`): con medio dp de gracia, a 960 dp con la letra a 2.0 entraba una variante 0.08 dp más ancha (10.42) |
+| `BsFichaDeCifra` | 14.7 | La ficha del resumen |
+| `BsTarjetaCifra` | nuevo `corta = false` | La tarjeta corta del puente (14.2) |
+
+Y en la presentación: `PuenteDelPlano` y su borde (`puente_del_plano.dart`), la columna de la
+oficina (`bay_plan_view.dart`), la franja de la bahía y la de cifras (`franjas_del_plano.dart`), el
+panel lateral y el flotante (`panel_lateral_del_viaje.dart`) y las preferencias
+(`providers/oficina_providers.dart`).
+
+## 15. Las estadísticas: «El buque en corte» (T-121)
+
+Decisiones 10.36 a 10.38 y 10.46 de `SPRINT-4.md`. La propuesta A, con su inventario, lo
+que se toma de cada referencia, lo común a las dos propuestas, la paleta validada y los
+wireframes de la fase 0, está en `docs/T117-T121-RESULTADOS.md` (0.9); Carlos la eligió en
+10.38 (P8) con la cifra protagonista a 48 (P9). Esta sección manda sobre la propuesta donde
+dicen cosas distintas; 15.11 dice qué cambió y por qué. La regla: **Estadísticas es el mismo
+buque del plano, visto entero, y todo número tiene su tabla.**
+
+### 15.1 Qué cambia y por qué
+
+La vista de T-109 era una columna de tarjetas iguales, con 27 `Colors.*`, violeta y naranja de
+adorno, la cifra en el color del dato, texto a 9 dp y girado, «62.6%» sin espacio y un casco
+que no era el de la silueta (0.9.1). Pasa a ser una sola página con una protagonista, la
+silueta grande del buque con la carga de cada bahía, y cinco paneles debajo; todo sale del tema
+y de `BsColoresSemanticos`, ningún texto lleva el color del dato, nada se gira y nada baja de
+11 en el teléfono. Es la cuarta pantalla clave de la Fase 3 (T-114).
+
+### 15.2 La cifra protagonista
+
+**«977 contenedores a bordo»**, la única cifra que encabeza la vista: **48 / 600 / 1.05,
+tabular**, en Plex Sans como todo lo demás (`BsEscala.cifraProtagonista`,
+`BsTextos.cifraProtagonista`). Está por encima de la escala de razón 1.2 de 4.2, que termina
+en los 34 de la cifra grande; es el tamaño que la skill de dataviz pide para la cifra que
+encabeza un tablero, y Carlos lo aprobó en 10.38 (P9). **Una sola vez por vista**: las demás
+cifras de la cabecera (el peso total, las bahías con carga, los llenos, los vacíos y, si los
+hay, los sin estado) van a 28 / 600 tabular, el titular de 4.2, con su rótulo debajo en
+tinta suave. La fila de cifras envuelve: a 360 dp con la letra a 2.0 van una por línea.
+En un plan de carga con vacíos asignados a una celda reservada, la protagonista los cuenta y
+**una ficha debajo dice cuántos son** (15.13).
+
+### 15.3 La rampa de magnitudes y los demás colores
+
+**La rampa de 5.5 de la Fase 1 no pasaba el validador** en su paso claro (`#D9E7FC` a 1.25:1
+sobre la hoja; 0.9.4). La sustituye esta, de un solo tono (el azul de la marca), validada con
+`validate_palette.js --ordinal` de la skill de dataviz sobre las tres superficies de cada modo
+(`BsPaleta.rampaDeMagnitud`):
+
+| | Paso 1 (menos) | Paso 2 | Paso 3 | Paso 4 (más) | Paso extremo sobre la hoja / el papel |
+|---|---|---|---|---|---|
+| Día | `#88B0F5` | `#518FF1` | `#1365E5` | `#0D47A1` (la marca) | 2.19:1 / 2.06:1 |
+| Noche | `#2C5BA8` | `#4F8EF7` (la selección) | `#95BBF6` | `#D9E7FC` | 2.62:1 (panel) / 2.86:1 (noche) |
+
+De noche la rampa se invierte: sobre la noche, «más» tiene que ser más luminoso. `#88B0F5` es
+un valor nuevo del producto y entra en `bs_paleta.dart` con la rampa. De día, `#D9E7FC` deja de
+ser dato y queda como **pista de las barras** (`BsPaleta.pistaDeMagnitud`); de noche sigue
+siendo dato, el paso 4 de la rampa, y la pista es la línea `#1E3457`: un paso más del mismo
+tono, para que la barra se lea entera.
+
+Dónde va cada color:
+
+| Qué | Color | Por qué |
+|---|---|---|
+| Una sola serie (las barras por puerto y por naviera) | `primary`: la marca de día, la selección de noche | Una serie, un color (0.9.3). El puerto no colorea la barra: lo identifica su caja |
+| Lo ordenado (20, 40 y 45 pies) | los pasos 2, 3 y 4 de la rampa; «Otro», si lo hay, el paso 1 | Van en orden, y la rampa lo dice; el paso 1 queda bajo 3:1 y por eso solo va con su rótulo al lado |
+| La caja del código de puerto | el rol categórico del puerto (5.3 y 13.4): relleno, código y contorno | Enlaza con el plano. Es el único sitio del color del puerto; el validador rechaza las fichas como relleno de serie (0.9.4) |
+| La pila de cubierta de cada bahía | `porBajarCubierta.relleno`: la marca de día, la cubierta del ícono de noche | El buque se pinta como el ícono (13.2): 8.6:1 sobre la hoja de día, 17.8:1 sobre el panel de noche |
+| La pila de bodega | `porBajarBodega.relleno`: `#1F5FD6` de día, el acero de noche | 5.7:1 sobre la hoja y 4.9:1 sobre el casco de día; 6.9:1 y 6.0:1 de noche. Es el azul de bodega de la vista Estado, no la pintura apagada de la silueta del plano, porque aquí la pila es el dato |
+| El anillo de llenos | `primary` sobre la pista en línea | Un medidor de una razón; el anillo de avance es de la operación, este no |
+| La carga especial | el rol de 5.1: peligrosa, refrigerado y OOG, con relleno, contorno e icono | El uva de OOG es su rol, no un adorno. El contorno sobre el relleno llega a 4.2:1 o más en los dos modos |
+| El texto | tinta, tinta suave o tinta tenue; dentro de la caja del código y de la tarjeta de rol, el texto del rol sobre su relleno (13.4), a 4.5:1 | El texto nunca lleva el color del dato: el texto de un rol es el que el rol define para leerse sobre su relleno (de día la tinta, de noche el tono vivo), no el color de la barra ni de la pila |
+
+**El naranja no aparece:** en Estadísticas no hay nada que se acabe de mover (13.3). Ningún
+`Colors.*` en la capa de presentación; una prueba-censo (`test/t121_estadisticas_test.dart`)
+falla si vuelve uno.
+
+### 15.4 El buque en corte, `BsBuqueEnCorte`
+
+La protagonista. El casco de `BsSiluetaBuque` (la proa a la izquierda, la línea de
+flotación, sin superestructura; 13.6) en grande, y en cada bahía **dos pilas que son el
+dato**: la de cubierta crece hacia arriba desde la tapa y la de bodega hacia abajo, dentro
+del casco; su alto dice los contenedores de esa zona o su peso, según el selector. Las dos
+pilas comparten la escala (la zona más cargada de todo el buque llena su alto de 72 dp), y
+cada pila lleva un separador de 1 dp en el color de su fondo cada 9 dp (la hoja del panel en
+cubierta, el casco en bodega), el paso de los niveles de la silueta: se lee como una pila de
+contenedores y mide como una barra.
+
+- **Cada columna es una bahía de referencia** (T-124; 10.53, 10.56 y 10.65): la regla de
+  Carlos, la misma del avance y de la silueta del plano. **La par es la bahía de
+  referencia**: cada impar se cuenta con la par vecina que la cubre si esa par es una bahía
+  del viaje (`referenceBay`, con las bahías de `voyage.bays` y las de las posiciones), y el
+  grupo lleva el número de la par. La 21 y la 23 van en la columna de la 22, zona por zona y en
+  peso; una impar sin par vecina en el viaje queda sola. **Tocar la columna abre la par en el
+  plano.** Con `T100_LLEGADA` son tres columnas (02, 06 y 10), cada una en su tope y con el casco
+  centrado; el sintético de 977, que trae 72 números de bahía, son 24 (de la 02 a la 94). Antes
+  cada número era una columna y la mitad de 20 sin carga salía en cero (seis de nueve en
+  `T100_LLEGADA`, 10.53).
+- **Medidas** (dp, con la letra a 1.0): 8 de aire arriba; 72 la zona de cubierta; 4 de
+  holgura; la tapa de 2 a la altura 84; 4 de holgura; 72 la zona de bodega; 10 de fondo; el
+  casco termina en 170 y la línea de flotación va 3 debajo. **Cada bahía mide al menos 56 de
+  ancho por la escala de la letra** (`anchoBahia`), y nunca menos que el rótulo más ancho de
+  su pie más 8: a 2.0 son 112, y con 72 bahías la silueta mide 8 064 y se desplaza. La pila
+  mide 12 menos que la bahía. Los márgenes de proa y popa miden al menos 28: lo que midan
+  «Proa» y «Popa» con la letra del sistema, más 8.
+- **Cuando las bahías caben, la silueta ocupa el ancho útil del panel** (`repartir`; corrección
+  1 de la entrega 2, H1 de 10.53). Las bahías se reparten por igual lo que deja el panel
+  después de los dos márgenes, y **cada una crece hasta un tope de tres veces su mínimo**: 168
+  con la letra a 1.0, 336 a 2.0. Si aun así sobra ancho, **el casco va centrado** en el panel,
+  con la proa y la popa a la misma distancia de los bordes. Por qué tres veces:
+  - a 168 la pila mide 156, apenas una vez y media el alto de su zona crecida (108): sigue
+    leyéndose como una pila de contenedores y no como una losa. De costado, una bahía de 40
+    pies mide casi cinco veces el alto de un contenedor (12.2 m contra 2.6), y la pila de 56,
+    con niveles de 9, ya la dibuja más ancha de lo que es; más allá del triple, una sola bahía sería una barra y el casco un rectángulo;
+  - con ese tope, **desde ocho bahías la silueta llena el panel de 1440** (el de la página a
+    1920, 1 406 de ancho útil). Con la regla de la par (T-124) el plano de llegada son tres
+    bahías de referencia y va centrado, cada una en su tope; un alimentador de tres o cuatro
+    bahías, igual, sin estirarse.
+- **En pantalla ancha, el alto de las zonas crece con la bahía:** en la misma proporción que
+  su ancho sobre el mínimo, hasta 1.5 veces (de 72 a 108 cada zona; el dibujo pasa de 174 a
+  246). El paso de los separadores sigue en 9: una zona crecida lleva más niveles dibujados,
+  no niveles más gruesos. **Solo crece si el ancho disponible es de 600 o más:** en el
+  teléfono la página no cambia. Allí, con los archivos reales, las bahías no caben y la
+  silueta se desplaza como antes; si un viaje trae tan pocas que caben, se reparten el ancho,
+  pero el alto queda en 72.
+- **Lo que no cambia:** la escala común de las pilas (la zona más cargada llena el alto de su
+  zona, el que sea), el pie en el mismo eje de su pila, el mínimo de 56 por la escala de la
+  letra, el desplazamiento con su barra cuando no caben (72 bahías, el teléfono, la letra a
+  2.0 en una ventana angosta), tocar una bahía y las etiquetas accesibles.
+- **El pie, en el mismo eje y nunca girado:** debajo de cada bahía, en columnas alineadas con
+  su pila, el número (mono, 11, tinta tenue), **la cuenta** (12 / 500 tabular, tinta) y **el
+  peso** («416.8 t», 11 tabular, tinta suave). Las tres van siempre, cualquiera que sea la
+  magnitud del selector: nada se esconde detrás del selector.
+- **«Contenedores / Peso»** (`BsSelectorDeModo` no: es un `SegmentedButton` de dos valores,
+  `estadisticas-magnitud`, con el nombre «Qué dice la altura de la pila») cambia lo que
+  dice el alto de la pila. Va con sus rótulos si caben enteros en el ancho que hay y, si no
+  (`BsPrimeraQueCabe`), solo con los iconos y el nombre en la descripción emergente: en el
+  teléfono, un segmento de media pantalla partía «Contenedores» a media palabra desde la letra
+  a 1.1. Sin ningún peso en el archivo, «Peso» va deshabilitado: la pila no diría nada. Al lado, la leyenda de las dos zonas (una muestra y «Cubierta»,
+  «Bodega») y la frase «Toca una bahía para abrirla en el plano». **La muestra es una pila
+  pequeña** en el color de su zona: tres niveles de 10 × 5 con un separador de 1 en el color
+  de la hoja, como las pilas de la silueta; mide 10 × 17, sin borde. Antes era un cuadro de
+  12 con borde, y la de «Cubierta», blanca de noche, parecía una casilla para marcar (O1 de
+  10.53). En el árbol accesible sigue siendo su rótulo, texto: ni botón ni casilla.
+- **Tocar una bahía la abre en el plano** (`_openBayPlan`, como antes): cada bahía es un
+  botón de la columna entera, con la etiqueta «Bahía 14, 36 contenedores, 712.4 t, 18 en
+  cubierta y 18 en bodega» y la pista «Abre la bahía en el plano»; la descripción emergente
+  («Abrir la bahía 14 en el plano») va fuera de la semántica (13.11, regla 3), para que
+  Windows no la diga dos veces (10.44).
+- **Se desplaza a lo ancho con su barra visible** (`Scrollbar` abajo, con el pulgar siempre
+  a la vista cuando no cabe), sobre la hoja del panel. La rueda del mouse sobre la silueta es
+  T-119 (entrega 3).
+- La silueta entera es un contenedor accesible: «El buque en corte, 27 bahías de proa a popa;
+  la altura de cada pila dice los contenedores en cubierta y en bodega».
+- Sin bahías con posición no se dibuja: en su lugar, la frase «El archivo no trae posiciones
+  de estiba».
+
+### 15.5 Los cinco paneles
+
+Todos son `BsPanel`: hoja, radio de panel (18) y borde en línea, con su título (`titleMedium`,
+tipo oración, encabezado para el lector de pantalla) y 16 dp de aire.
+
+| Panel | Qué lleva | Reglas |
+|---|---|---|
+| **Por puerto de descarga** | Una `BsBarraDeMagnitud` por puerto: **la caja del código** (`BsCajaDeCodigo`: el rol categórico, Plex Mono), la barra en `primary` sobre su pista, la cifra y «53 %» | Ordenados de más a menos; **pasados siete, «Otros N puertos»** con la suma (si sobra uno solo, se muestra él: 15.11, punto 9). Los contenedores sin puerto, «Sin puerto», sin caja. Tocar un puerto para ir a la Lista es T-120 (entrega 3) |
+| **Llenos y vacíos** | **El anillo de llenos** (`BsAnilloAvance` de 112 con la letra a 1.0, grosor 12, en `primary`) con «63 %» en el centro y, al lado, «612 llenos», «365 vacíos» y, si los hay, «N sin estado» | Un medidor de una razón, no una dona de dos porciones. El anillo lleva la etiqueta «63 % llenos». Su diámetro crece con la letra para que «100 %» quepa en el hueco: con 2.0 mide lo que pide el texto más el grosor y el aire |
+| **Por tamaño** | 20, 40 y 45 pies en los pasos 2, 3 y 4 de la rampa; «Otro» en el paso 1 si el tipo ISO no dice el largo | Van en orden; los rótulos dicen «20 pies», como la Lista |
+| **Carga especial** | Tarjetas de su rol (`BsTarjetaDeRol`): «Peligrosa IMDG» (`peligrosa`), «Refrigerado» (`refrigerado`) y «Fuera de medida» (`oog`), con el icono del paquete (13.11), la cifra a 28 y el rótulo en el texto del rol | Solo las que tienen carga; sin ninguna, «Sin carga especial». Los mismos nombres que el plano y la Lista: ya no «IMO / DG» ni «OOG» |
+| **Por naviera** | Barras en `primary`, el código en Plex Mono; **las ocho primeras y «Otras N navieras»** | Sin caja: las navieras no tienen rol de color. Los contenedores sin código, «Sin naviera» |
+
+**La barra de magnitud** (`BsBarraDeMagnitud`): 12 dp de alto (nunca más de 24), el extremo
+del dato redondeado (4) y la base cuadrada, sobre la pista; en una línea (el rótulo o la caja,
+la barra, la cifra y el porcentaje) si la barra dispone de 400 dp por la escala de la letra o
+más (un panel de 432, con sus 16 de aire a cada lado); si no, **la etiqueta va encima de su
+barra**, con la cifra y el porcentaje a la derecha, y la barra a todo el ancho. Sin un ancho
+acotado (una fila sin `Expanded`), la barra se da el de una línea. Cada barra lleva su descripción emergente con el mouse y su etiqueta
+para el lector de pantalla («GTSTC: 520 contenedores, 53 %»), la misma frase.
+
+### 15.6 «Ver como tabla»
+
+El botón de la cabecera (`estadisticas-ver-tabla`, con el icono de tabla) cambia los
+gráficos por **las mismas cifras en tablas**, un panel por sección: el resumen (con la fila
+«Vacíos asignados» si los hay, 15.13), por bahía
+(número de la bahía de referencia, contenedores, cubierta, bodega y peso, con la regla de la par
+de 15.4: la fila «22» suma la 21 y la 23; una fila «Sin posición» si el archivo trae
+contenedores sin estiba), por puerto (todos, no solo siete), llenos y vacíos, por tamaño,
+carga especial y por naviera (todas). Las celdas de la cabecera son encabezados para el
+lector de pantalla, las cifras van tabulares y alineadas a la derecha y el texto envuelve, pero
+**ninguna palabra se parte:** cada columna de cifras mide lo que su texto más ancho pide y la
+primera se queda con el resto; si ni con la primera al mínimo (120 dp por la escala de la
+letra) cabe, la tabla se desplaza a lo ancho con su barra visible (las cinco columnas de «Por
+bahía» a 360 dp con la letra a 2.0). Nada se corta. La cabecera con la protagonista se queda. El botón
+pasa a decir «Ver como gráficos».
+
+**La tabla no es una ruta, así que se cierra con Esc y con Atrás** (10.42, H2): mientras se
+ve, se anota en `cerrablesDeAtrasProvider` (8); el primer Atrás de Android vuelve a los
+gráficos y no cuenta como el primero del doble Atrás; Esc, con el foco dentro de la tabla,
+hace lo mismo: la tabla pide el foco a propósito al abrirse (`FocusNode.requestFocus` tras el
+cuadro), porque `autofocus` se descarta cuando el botón que la abrió, activado con el teclado,
+ya tiene el foco. Al volver a los gráficos el foco no se devuelve al
+botón a la fuerza (14.6).
+
+### 15.7 Con cualquier tamaño de ventana
+
+- **Ancho máximo de 1 440, centrado** (`BsMedidas.anchoMaximo`), sobre `BsFondoDePlano`: de
+  noche la rejilla de plano al 5 % detrás y los paneles encima (la referencia de Maestro,
+  0.9.2); de día, el papel. Es la primera pantalla que lleva el fondo.
+- **Los paneles se reparten por el ancho del contenido:** con 1 100 dp o más
+  (`anchoDeTresColumnas`), una fila en cuatro partes (por puerto a lo ancho de dos, llenos y
+  vacíos en la tercera y carga especial en la cuarta) y debajo por naviera y por tamaño a la
+  mitad cada uno; de 720 a 1 099 (`anchoDeDosColumnas`), dos columnas (por puerto junto a
+  llenos y vacíos con por tamaño debajo; después carga especial junto a por naviera); con menos,
+  **todo apila a todo el ancho**, en el orden por puerto, llenos y vacíos, por tamaño, carga
+  especial y por naviera.
+- **A 360 dp con la letra a 2.0:** la protagonista y «Ver como tabla» envuelven; las cifras
+  van una por línea; la silueta se desplaza a lo ancho con su barra visible y sus bahías de
+  112 dp; cada barra lleva su etiqueta encima; nada se corta ni se desborda. La matriz de
+  pruebas lo comprueba a 360 × 800, 360 × 640 y 600 × 960 con la letra a 1.0, 1.45 y 2.0,
+  y en la oficina a 1920 × 1000, 1707 × 996, 1536 × 793, 1366 × 690, 1280 × 720, 960 × 1000,
+  800 × 600 y, además, a 600, 700, 800 y 960 dp de ancho (10.42), en los dos temas.
+- **En la oficina, el panel lateral lleva solo «En vivo», o va oculto** (14.3): la
+  cabecera de la oficina no muestra el selector de modo en Estadísticas (14.10, punto 8).
+- El teléfono no cambia de barra: Estadísticas sigue siendo un destino de la barra inferior.
+
+### 15.8 Las reglas de texto, aplicadas
+
+Tipo oración en todo («Por puerto de descarga», «contenedores a bordo»); «53 %» con espacio
+duro (`formatearPorcentaje`); «7 419.5 t» con `formatearToneladas`; Plex Mono para los
+códigos de puerto y de naviera; `formatearCuenta` donde una palabra concuerda («1 contenedor»,
+«Otros 3 puertos»). Nada por debajo de 11 en el teléfono (`labelSmall`); nada girado; ningún
+«N/A» ni mayúsculas sostenidas («Sin puerto», «Sin naviera»).
+
+### 15.9 Wireframes
+
+**1920 × 1080 · la oficina de noche, el panel lateral oculto; contenido a 1 440, centrado**
+```
+┌─────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│[▣]  │ BUQUE MANUAL  (Publicado)   Viaje M100 · Escala GTSTC                            Buscar · Nube · Panel   │
+│ ⌂   ├──────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ ▦   │   977                                                                         [ ▦ Ver como tabla ]       │
+│ ☰   │   contenedores a bordo                                                                                   │
+│ ◔   │   7 419.5 t      27                 612           365                                                    │
+│ ⫶   │   peso total     bahías con carga   llenos        vacíos                                                 │
+│ ⚠   │ ┌ Carga por bahía, de proa a popa ─────────────────────────────────────────────────────────────────────┐ │
+│     │ │        ▌▌   ▌▌▌  ▌▌▌▌  ▌▌▌▌  ▌▌▌▌  ▌▌▌   ▌▌    ▌▌    ▌▌▌  ▌▌▌▌  ▌▌▌▌  ▌▌▌   ▌▌        (cubierta)     │ │
+│     │ │   ╭────▌▌───▌▌▌──▌▌▌▌──▌▌▌▌──▌▌▌▌──▌▌▌───▌▌────▌▌────▌▌▌──▌▌▌▌──▌▌▌▌──▌▌▌───▌▌────╮  (la tapa)       │ │
+│     │ │   │    ▓▓   ▓▓▓  ▓▓▓▓  ▓▓▓▓  ▓▓▓▓  ▓▓▓   ▓▓    ▓▓    ▓▓▓  ▓▓▓▓  ▓▓▓▓  ▓▓▓   ▓▓        │  (bodega)    │ │
+│     │ │   ╰─────────────────────────────────────────────────────────────────────────────────╯                │ │
+│     │ │ Proa   02   06    10    14    18    22    26    30    34    38    42    46    50     Popa            │ │
+│     │ │        63   58    61    44    52    49    38    41    29    21    33    40    18         (la cuenta) │ │
+│     │ │     416.8 380.2 402.1 290.5 343.0 323.4 250.8 270.6 191.4 138.6 217.8 264.0 118.8 t     (el peso)    │ │
+│     │ │ ══════════════════════════════════════════════════════════════════════════▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬    │ │
+│     │ │ [ ■ Contenedores | Peso ]    ▌ Cubierta   ▓ Bodega        Toca una bahía para abrirla en el plano    │ │
+│     │ └──────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+│     │ ┌ Por puerto de descarga ────────────────────────────┐ ┌ Llenos y vacíos ───┐ ┌ Carga especial ──┐       │
+│     │ │ [GTSTC] ████████████████████████████░░░  520  53 % │ │   ╭───╮            │ │ ◆  3  Peligrosa  │       │
+│     │ │ [USHOU] ████████████░░░░░░░░░░░░░░░░░░░  245  25 % │ │  │63 %│  612 llenos│ │       IMDG       │       │
+│     │ │ [PAMIT] ██████░░░░░░░░░░░░░░░░░░░░░░░░░  130  13 % │ │   ╰───╯  365 vacíos│ │ ❄ 12  Refrigerado│       │
+│     │ │ [JMKIN] ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   42   4 % │ │                    │ │ ⇔  1  Fuera de   │       │
+│     │ │ Otros 3 puertos ██░░░░░░░░░░░░░░░░░░░░░   40   4 % │ │                    │ │       medida     │       │
+│     │ └────────────────────────────────────────────────────┘ └────────────────────┘ └──────────────────┘       │
+│     │ ┌ Por naviera ───────────────────────────────────────┐  ┌ Por tamaño ──────────────────────────────┐     │
+│     │ │ LNA  ████████████████████░░░░░░░░░░░░░░  412  42 % │  │ 20 pies  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░  410  42 % │     │
+│ ☁   │ │ LNB  ███████████████░░░░░░░░░░░░░░░░░░░  301  31 % │  │ 40 pies  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░  487  50 % │     │
+│ ⚙   │ │ Otras 4 navieras ████░░░░░░░░░░░░░░░░░░  264  27 % │  │ 45 pies  ███░░░░░░░░░░░░░░░░░░   80   8 %│     │
+│     │ └────────────────────────────────────────────────────┘  └──────────────────────────────────────────┘     │
+└─────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+`[GTSTC]` es la caja del código con la ficha del puerto (13.4); `█` la barra en `primary`;
+`░` su pista; `▒ ▓ █` los pasos 2, 3 y 4 de la rampa; `▌` la pila de cubierta y `▓` la de
+bodega. Las cifras son las de ejemplo de 9.5 y cuadran (977 = 612 + 365 = la suma de los
+puertos = la suma de los tamaños).
+
+**360 × 800 · el muelle de día, con la letra a 2.0**
+```
+┌──────────────────────────────────────┐
+│ BUQUE MANUAL · M100     Buscar · Nube│
+├──────────────────────────────────────┤
+│ 977                                  │ la protagonista, a 96 dp
+│ contenedores a bordo                 │
+│ [ ▦ Ver como tabla ]                 │ envuelve debajo
+│ 7 419.5 t                            │ las cifras, una por
+│ peso total                           │ línea
+│ 27                                   │
+│ bahías con carga                     │
+│ 612                                  │
+│ llenos                               │
+│ 365                                  │
+│ vacíos                               │
+│ ┌ Carga por bahía, de proa a popa ─┐ │
+│ │      ▌▌    ▌▌▌    ▌▌▌▌    ▌▌▌▌   │ │ la silueta se
+│ │ ╭────▌▌────▌▌▌────▌▌▌▌────▌▌▌▌── │ │ desplaza a lo ancho:
+│ │ │    ▓▓    ▓▓▓    ▓▓▓▓    ▓▓▓▓   │ │ bahías de 112 dp
+│ │ ╰────────────────────────────────│ │
+│ │ Proa 02    06     10      14     │ │
+│ │      63    58     61      44     │ │
+│ │   416.8 380.2  402.1   290.5 t   │ │
+│ │ ═══════════▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬│ │ con su barra visible
+│ │ [ Contenedores | Peso ]          │ │
+│ │ ▌ Cubierta  ▓ Bodega             │ │
+│ │ Toca una bahía para abrirla en   │ │
+│ │ el plano                         │ │
+│ └──────────────────────────────────┘ │
+│ ┌ Por puerto de descarga ──────────┐ │
+│ │ [GTSTC]                520  53 % │ │ la caja arriba, la
+│ │ ████████████████████████████░░░░ │ │ cifra a la derecha y
+│ │ [USHOU]                245  25 % │ │ la barra a todo el
+│ │ ███████████████░░░░░░░░░░░░░░░░░ │ │ ancho
+│ │ [PAMIT]                130  13 % │ │
+│ │ ████████░░░░░░░░░░░░░░░░░░░░░░░░ │ │
+│ │ [JMKIN]                 42   4 % │ │
+│ │ ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ │
+│ │ Otros 3 puertos         40   4 % │ │
+│ │ ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ │
+│ └──────────────────────────────────┘ │
+│ ┌ Llenos y vacíos ─────────────────┐ │ y así los demás
+│ │   ╭───╮   612 llenos             │ │ paneles, apilados
+│ │  │63 %│   365 vacíos             │ │
+│ │   ╰───╯                          │ │
+│ └──────────────────────────────────┘ │
+├──────────────────────────────────────┤
+│  Plano   Lista   Avance  Estad.  Más │
+└──────────────────────────────────────┘
+```
+
+### 15.10 Las piezas nuevas y su API
+
+En `lib/core/design/componentes/`, con documentación, vista previa y prueba, como las de 13.6
+y 14.11. Son widgets y `CustomPainter`: ninguna dependencia nueva.
+
+| Pieza | API | Qué hace |
+|---|---|---|
+| `BsBuqueEnCorte` | `BsBuqueEnCorte({bahias: List<BsBahiaEnCorte>, onSeleccion, magnitud = BsMagnitudDeLaPila.contenedores, controlador?})` con `BsBahiaEnCorte({numero, contenedoresCubierta = 0, contenedoresBodega = 0, pesoCubiertaKg = 0, pesoBodegaKg = 0})` y `enum BsMagnitudDeLaPila { contenedores, peso }` | 15.4: el casco, las dos pilas por bahía con separadores de nivel, el pie en tres filas, el botón por bahía con su etiqueta y la barra de desplazamiento. `anchoBahia(TextScaler, …)` dice el ancho de la columna |
+| `BsBarraDeMagnitud` | `BsBarraDeMagnitud({rotulo, valor, total, maximo, color?, caja?, enMono = false, singular = 'contenedor', plural = 'contenedores'})` | 15.5: la barra de 12 dp con pista, la cifra y el porcentaje; en una línea o con la etiqueta encima; la etiqueta accesible y la descripción emergente, con la misma frase |
+| `BsCajaDeCodigo` | `BsCajaDeCodigo({codigo, rol})` | La caja del código de puerto: el relleno, el código en Plex Mono y el contorno del rol categórico |
+| `BsTarjetaDeRol` | `BsTarjetaDeRol({rol, icono, valor, rotulo})` | La tarjeta de carga especial: relleno y contorno del rol, el icono en el contorno, la cifra a 28 y el rótulo en el texto del rol. Etiqueta «Peligrosa IMDG: 3» |
+| `BsPanel` | `BsPanel({titulo, child, accion?})` | El panel de Estadísticas: hoja, radio 18, borde en línea, el título como encabezado y, a la derecha, una acción opcional |
+
+Y en la presentación: la página (`voyage_stats_view.dart`, `VoyageStatsView`, con la misma
+firma de antes y, desde T-125, `vaciosAsignados` opcional) y las cifras derivadas del viaje
+(`formatters/estadisticas_del_viaje.dart`, `EstadisticasDelViaje.de(voyage, asignados: …)`,
+Dart puro: el total, lo del archivo y los vacíos asignados, los llenos, los vacíos y los sin
+estado, el peso, las bahías con carga, cada bahía con sus dos zonas, los puertos, las
+navieras, los tamaños y la carga especial, con los contenedores sin posición aparte). Los
+providers de T-109 (`voyageStatsProvider` y los demás) no cambian. `vessel_profile_view.dart`
+sale: su casco era otro buque (0.9.1) y lo sustituye la protagonista.
+
+### 15.11 Lo que cambió respecto de la propuesta
+
+1. **El peso por bahía va como cifra, no como columna dibujada** (0.9.5 lo mostraba como
+   «▂▃▅»): la pila ya dice el peso al elegir «Peso», y una segunda columna debajo dibujaba el
+   mismo dato dos veces. Las tres filas del pie (número, cuenta y peso) van siempre, con
+   cualquier magnitud, para que el selector no esconda nada.
+2. **Las pilas van en los colores del ícono, no en «un solo color»** (0.9.3 lo decía de las
+   barras de una serie): cubierta y bodega son dos zonas de la misma bahía y se pintan como
+   la vista Estado (13.2), que ya está verificada en los dos modos; la silueta del plano las
+   pinta apagadas porque ahí la pila es un selector, y aquí es el dato. Por eso la leyenda de
+   las dos zonas va junto al selector.
+3. **La bahía mide 56 dp por la escala de la letra**, no 56 fijos: con la letra a 2.0 el peso
+   («416.8 t») no cabía en 56, y la regla es que nada se corte. La silueta del plano no
+   cambia (su pie es solo el número).
+4. **«20 pies», «40 pies» y «45 pies»**, no «20'»: es como la Lista nombra el contenedor
+   (13.11). «Otro» aparece solo si algún tipo ISO no dice el largo.
+5. **«Sin estado», «Sin puerto», «Sin naviera», «Sin posición»**: las cifras cuadran por
+   construcción (el total es la suma de los llenos, los vacíos y los sin estado; de los
+   puertos; de los tamaños; de las bahías más los sin posición) y la tabla las muestra.
+   Antes, «N/A» y «SIN NAVIERA».
+6. **La carga especial muestra solo las tarjetas con carga** y dice «Sin carga especial» si
+   no hay ninguna: una tarjeta de rol con un cero es color sin dato.
+7. **«Ver como tabla» es un estado de la página, no una ruta,** anotado en
+   `cerrablesDeAtrasProvider` para Esc y Atrás (15.6): una ruta encima taparía el riel y el
+   panel de la oficina.
+8. **La fila de cifras va a 28, no en tarjetas:** junto a la protagonista a 48, una tarjeta
+   por cifra competía con ella; las cifras con su rótulo debajo (ShipX) son más calladas.
+9. **«Otros N puertos» solo cuando sobran dos o más** (`EstadisticasDelViaje.conElResto`): con
+   ocho puertos se muestran los ocho, porque «Otros 1 puertos» no se escribe y «Otro puerto»
+   escondería un código que cabe. Lo mismo con «Otras N navieras» pasadas las ocho.
+10. **En la variante apilada de la barra, la cifra y el porcentaje van a la derecha de la caja,
+    en su misma línea** (el wireframe de 360 de 0.9.5 los ponía debajo): ahorra una línea por
+    barra con la letra a 2.0 y la cifra queda alineada con las demás.
+11. **La silueta va en un panel con título** («Carga por bahía, de proa a popa»), como los demás
+    paneles, y con la leyenda de las dos zonas junto al selector: el color nunca va solo.
+12. **La tabla se desplaza a lo ancho cuando no cabe** y el selector va solo con iconos cuando
+    sus rótulos no caben (15.4 y 15.6): lo encontró la revisión sin compilar, que calculó los
+    anchos con la letra a 2.0 en 360 dp; antes el texto se partía a media palabra.
+13. **El anillo de llenos crece con la letra** (15.5): fijo en 112 dp, «53 %» a 2.0 se montaba
+    sobre el arco.
+14. **Las bahías siguen la regla de la par** (T-124, 10.65; 15.4): la propuesta dibujaba cada
+    número de bahía, y con un plano de llegada la mitad de las columnas eran mitades de 20 en
+    cero. Ahora cuenta como el avance; «Bahías con carga» cuenta bahías de referencia.
+15. **En un plan de carga, Estadísticas cuenta lo que va a bordo como la Lista** (T-125, 10.68;
+    15.13): la propuesta leía solo el archivo, y un vacío asignado a una celda reservada, que el
+    archivo trae sin número, no salía en ninguna cifra aunque la Lista lo trajera.
+
+### 15.12 Las pruebas (`test/t121_estadisticas_test.dart`)
+
+El contraste compuesto de todo lo que se pinta, en los dos temas (la rampa y su pista, las
+pilas sobre la hoja y el casco, las cajas de los quince puertos fijos, las tarjetas de rol,
+el texto); `meetsGuideline` (contraste del texto, objetivos táctiles y etiquetas) en los dos
+temas, y además, porque la pauta de contraste no mide los textos con etiqueta compuesta, que
+**todo texto con color propio lleva una tinta o el texto de su rol**; la página a 360 dp con
+la letra a 2.0 sin desbordes, sin textos cortados y **sin palabras partidas** (un texto sin
+espacio normal, un código o una cifra, en más de una línea), con la silueta desplazable y su
+barra siempre a la vista; la matriz de tamaños y letras de 15.7; el censo sin `Colors.*`; la
+tabla con los mismos números que los gráficos; el sintético de 977 contenedores en 72 bahías,
+que con la regla de la par son 24 (la silueta mide 24 y se recorre entera sin cortarse); las cifras que cuadran entre sí
+sobre el sintético y sobre el plano de dos bahías de T-117; «Otros N puertos» y «Otras N
+navieras»; Esc y Atrás cierran la tabla, también abierta con el teclado (Tab e Intro); y tocar
+una bahía la abre en el plano, como la prueba de T-109 que sustituye.
+
+La corrección 1 de la entrega 2 añade `test/t121_entrega2_c1_test.dart`: con nueve bahías
+de referencia (desde T-124, nueve pares sueltas: las del plano de llegada son tres), a 1920 en los dos temas y en Contenedores y en Peso, a 1366 y con la
+letra a 2.0, la silueta ocupa el ancho útil del panel, sin nada que desplazar; con tres bahías,
+cada una en su tope y el casco centrado; el alto que crece 1.5 veces en pantalla ancha y no en
+el teléfono; con 72 bahías de referencia, 56 de ancho, el desplazamiento y la popa al
+alcance; la regla de `repartir`; y la muestra de la leyenda, una pila de tres niveles sin borde, más alta que ancha,
+que en el árbol accesible no es botón ni casilla.
+
+T-124 añade `test/t124_par_test.dart`: la forma del plano de llegada da tres bahías (02, 06 y
+10) con las tres de cada grupo sumadas, a 1920 en su tope y con el casco centrado, sin las
+impares en la silueta ni en la tabla, y tocar la 02 la abre; el 977 da 24; las impares vacías
+de T-117 van con su par; una impar sin par vecina queda sola.
+
+T-125 añade `test/t125_320_test.dart` (grupo 1): en la página de la oficina, con la operación
+en una bitácora en memoria, asignar el vacío OR 12 a la reserva 003‑08‑82 sube la protagonista
+de 2 a 3, la bahía, el puerto, la naviera y «vacíos», y saca la ficha; deshacerlo con
+«Marcado por error» devuelve las cifras del archivo, también el peso (su tara, 2 185 kg), y
+quita la ficha. La ficha se lee entera en los dos temas, a 360 con la letra a 2.0 y a 1920, y
+la tabla trae su fila; sin vacíos asignados no hay ni ficha ni fila. Las pruebas de «las cifras
+cuadran» de `t121_estadisticas_test.dart` distinguen lo del archivo (`delArchivo`) de lo
+asignado (`vaciosAsignados`), con un caso de dos vacíos asignados sobre el plano de T-117.
+
+### 15.13 Los vacíos asignados (T-125, 10.68)
+
+En un plan de carga con operación, **Estadísticas cuenta lo que va a bordo como la Lista y las
+búsquedas** (`aboardContainersProvider`, H6 de 10.56): lo que trae el archivo y los vacíos que el
+muelle asignó a una celda reservada (`LoadingOperation.assignedEmpties`), que el archivo trae
+sin número. La página los recibe de `assignedEmptiesProvider`, el mismo del que lee la Lista.
+
+- **Cada vacío asignado suma un contenedor:** a la protagonista, a «vacíos» y al anillo de
+  llenos, a su tamaño (el tipo de su fila del listado o, sin ella, el de la reserva), a su
+  puerto, a su naviera y a su bahía de referencia (15.4), en su zona y con su tara como peso.
+- **La ficha** (`BsFichaDeCifra`, clave `estadisticas-vacios-asignados`) va debajo de la
+  protagonista, antes de la fila de cifras, y dice cuántos vacíos asignados incluyen las cifras:
+
+| Vacíos asignados | La ficha |
+|---|---|
+| Ninguno | No sale. La página es la de antes |
+| 1 | «Incluye: 1 vacío asignado a una celda reservada, que el archivo no trae» |
+| 2 o más | «Incluye: 2 vacíos asignados a celdas reservadas, que el archivo no trae» |
+
+  «Incluye» es el rótulo, en tinta suave, y el resto el dato, en tinta (14.7). Sin rol: no es un
+  aviso ni algo que revisar, sino de dónde sale la cifra. Es de la cabecera, así que se queda con
+  «Ver como tabla».
+- **«Ver como tabla»:** el resumen lleva la fila «Vacíos asignados», con la cuenta, debajo de
+  «Contenedores a bordo»; solo si hay alguno.
+- **Las cifras se mueven mientras dura la operación:** al asignar un vacío suben y al deshacer la
+  asignación bajan, como en la Lista. Carlos lo decidió sabiéndolo (10.66, punto 5, y 10.68).
+- **Lo que no cambia:** las alertas de estiba (evalúan el viaje leído: sumar solo los vacíos
+  mezclaría lo planificado con lo hecho) y la comparación de viajes (el BAPLIE de salida ya
+  escribe los vacíos asignados). Un plano de llegada, o un plan de carga sin vacíos asignados,
+  queda como antes.
+- **Las cifras siguen cuadrando por construcción** (15.11, punto 5): `delArchivo` dice lo que trae
+  el archivo, `vaciosAsignados` lo asignado, y `total` es su suma.

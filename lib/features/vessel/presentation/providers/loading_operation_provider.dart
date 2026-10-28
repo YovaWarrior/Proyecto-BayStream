@@ -71,6 +71,16 @@ bool _loadsAtCall(VesselVoyage voyage) {
           0;
 }
 
+/// T-125 (10.68) · Los vacíos que el muelle asignó a una reserva en un plan de
+/// carga con operación (`LoadingOperation.assignedEmpties`), aparte de lo que
+/// trae el archivo: Estadísticas los cuenta y dice cuántos son.
+final assignedEmptiesProvider = Provider<List<ContainerUnit>>((ref) {
+  final voyage = ref.watch(voyageNotifierProvider).value;
+  if (voyage == null || !_loadsAtCall(voyage)) return const [];
+  return ref.watch(loadingOperationProvider(voyage)).value?.assignedEmpties ??
+      const <ContainerUnit>[];
+});
+
 /// T-122 (H6, 10.56) · Los contenedores a bordo que la Lista y la búsqueda
 /// general recorren: los del archivo y, en un plan de carga con operación,
 /// los vacíos que el muelle asignó a una reserva, que el archivo trae sin
@@ -79,10 +89,7 @@ final aboardContainersProvider = Provider<List<ContainerUnit>>((ref) {
   final voyage = ref.watch(voyageNotifierProvider).value;
   if (voyage == null) return const [];
   if (!_loadsAtCall(voyage)) return voyage.containers;
-  final assigned =
-      ref.watch(loadingOperationProvider(voyage)).value?.assignedEmpties ??
-          const <ContainerUnit>[];
-  return [...voyage.containers, ...assigned];
+  return [...voyage.containers, ...ref.watch(assignedEmptiesProvider)];
 });
 
 /// Las navieras de lo que va a bordo, ordenadas.

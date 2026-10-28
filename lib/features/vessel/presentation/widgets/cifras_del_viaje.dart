@@ -37,13 +37,22 @@ class CifrasDelViaje extends ConsumerWidget {
   final VoidCallback? onAlertas;
 
   /// Las tarjetas que hay con los datos de ahora; vacío si no hay operación.
+  /// Con [corta], las del panel del buque de la oficina (`DESIGN.md` 14.2):
+  /// el anillo de 40 y el detalle en la descripción emergente.
   static List<Widget> tarjetas(BuildContext context, WidgetRef ref,
       {required VesselVoyage voyage,
       required BayPlanMode modo,
       int? bahia,
-      VoidCallback? onAlertas}) {
+      VoidCallback? onAlertas,
+      bool corta = false}) {
     if (voyage.portOfCall == null) return const <Widget>[];
     final semanticos = BsColoresSemanticos.de(context);
+    BsAnilloAvance anillo(double fraccion) => BsAnilloAvance(
+          fraccion: fraccion,
+          etiqueta: formatearPorcentaje(fraccion),
+          tamano: corta ? BsTarjetaCifra.anilloCorta : 52,
+          grosor: corta ? 7 : 9,
+        );
     final alertas = ref.watch(cuentaDeAlertasProvider);
     final publicado = ref.watch(voyageUiStateProvider) is Publicado;
     final resultado = <Widget>[];
@@ -58,17 +67,17 @@ class CifrasDelViaje extends ConsumerWidget {
       final de = hechas + pendientes;
       if (de > 0) {
         resultado.add(BsTarjetaCifra(
+          corta: corta,
           key: const ValueKey('cifra-carga'),
           rotulo: 'Carga',
           valor: '$hechas de $de',
           detalle: formatearPorcentaje(hechas / de),
-          anillo: BsAnilloAvance(
-              fraccion: hechas / de,
-              etiqueta: formatearPorcentaje(hechas / de)),
+          anillo: anillo(hechas / de),
         ));
       }
       if (total.fullLoaded + total.fullPending > 0) {
         resultado.add(BsTarjetaCifra(
+          corta: corta,
           key: const ValueKey('cifra-llenos'),
           rotulo: 'Llenos',
           valor: '${total.fullLoaded} de ${total.fullLoaded + total.fullPending}',
@@ -77,6 +86,7 @@ class CifrasDelViaje extends ConsumerWidget {
       }
       if (total.emptyLoaded + total.emptyPending > 0) {
         resultado.add(BsTarjetaCifra(
+          corta: corta,
           key: const ValueKey('cifra-vacios'),
           rotulo: 'Vacíos',
           valor:
@@ -87,6 +97,7 @@ class CifrasDelViaje extends ConsumerWidget {
       }
       if (total.conflicts > 0) {
         resultado.add(BsTarjetaCifra(
+          corta: corta,
           key: const ValueKey('cifra-conflictos'),
           rotulo: 'Conflictos',
           valor: '${total.conflicts}',
@@ -100,16 +111,16 @@ class CifrasDelViaje extends ConsumerWidget {
       final de = descarga.pending + descarga.discharged;
       if (de > 0) {
         resultado.add(BsTarjetaCifra(
+          corta: corta,
           key: const ValueKey('cifra-descarga'),
           rotulo: 'Descarga',
           valor: '${descarga.discharged} de $de',
           detalle: formatearPorcentaje(descarga.discharged / de),
-          anillo: BsAnilloAvance(
-              fraccion: descarga.discharged / de,
-              etiqueta: formatearPorcentaje(descarga.discharged / de)),
+          anillo: anillo(descarga.discharged / de),
         ));
         final enBahia = bahia == null ? null : descarga.forBay(bahia);
         resultado.add(BsTarjetaCifra(
+          corta: corta,
           key: const ValueKey('cifra-por-bajar'),
           rotulo: 'Por bajar',
           valor: '${descarga.pending}',
@@ -120,6 +131,7 @@ class CifrasDelViaje extends ConsumerWidget {
       }
       if (descarga.restows > 0) {
         resultado.add(BsTarjetaCifra(
+          corta: corta,
           key: const ValueKey('cifra-reestibas'),
           rotulo: 'Re‑estibas',
           valor: '${descarga.restows}',
@@ -129,6 +141,7 @@ class CifrasDelViaje extends ConsumerWidget {
     }
     if (publicado && alertas > 0) {
       resultado.add(BsTarjetaCifra(
+          corta: corta,
         key: const ValueKey('cifra-alertas'),
         rotulo: 'Alertas',
         valor: '$alertas',

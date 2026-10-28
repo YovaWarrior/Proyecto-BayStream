@@ -33,7 +33,7 @@ void main() {
     expect(config['publisher'], 'CN=BayStream');
     expect(config['identity_name'], 'gt.cmartinez.baystream');
     expect(config['display_name'], 'BayStream');
-    expect(config['msix_version'], '3.1.1.0');
+    expect(config['msix_version'], '3.2.0.0');
     expect(config['capabilities'], 'internetClient');
     expect(config['logo_path'], 'web/icons/Icon-512.png');
   });

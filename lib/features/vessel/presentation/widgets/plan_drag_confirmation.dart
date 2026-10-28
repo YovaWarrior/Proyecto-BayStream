@@ -38,7 +38,14 @@ class PlanZoomScope extends InheritedWidget {
 /// (T-122, H7).
 class PlanZoomViewport extends ConsumerStatefulWidget {
   final Widget child;
-  const PlanZoomViewport({super.key, required this.child});
+
+  /// La oficina (`DESIGN.md` 14.1): la rejilla no tiene alto propio ni
+  /// desplazamiento vertical; se amplía a su alto natural y le dice a la
+  /// columna que la desplaza cuánto mide ampliada. Sin esto (el teléfono),
+  /// el lienzo ocupa el alto que le dan y la rejilla se desplaza por dentro.
+  final bool alturaNatural;
+  const PlanZoomViewport(
+      {super.key, required this.child, this.alturaNatural = false});
 
   @override
   ConsumerState<PlanZoomViewport> createState() => _PlanZoomViewportState();
@@ -63,6 +70,34 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
   @override
   Widget build(BuildContext context) {
     final scale = ref.watch(planZoomProvider);
+    Widget ampliado(Widget hijo) => ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+            physics: pointers.length >= 2
+                ? const NeverScrollableScrollPhysics()
+                : null),
+        child: PlanZoomScope(scale: scale, child: hijo));
+    if (widget.alturaNatural) {
+      return Listener(
+          key: const ValueKey('plan-zoom-gesture'),
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (event) {
+            setState(() => pointers[event.pointer] = event.localPosition);
+            beginPinch();
+          },
+          onPointerMove: (event) {
+            if (!pointers.containsKey(event.pointer)) return;
+            pointers[event.pointer] = event.localPosition;
+            if (pointers.length == 2 && span > 0) {
+              ref.read(planZoomProvider.notifier).fijar(gestureScale *
+                  (pointers.values.first - pointers.values.last).distance /
+                  span);
+            }
+          },
+          onPointerUp: (event) => endPointer(event.pointer),
+          onPointerCancel: (event) => endPointer(event.pointer),
+          child: ClipRect(
+              child: _AltoAmpliado(escala: scale, child: ampliado(widget.child))));
+    }
     return LayoutBuilder(builder: (context, constraints) {
       return Listener(
           key: const ValueKey('plan-zoom-gesture'),
@@ -106,6 +141,103 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
                               child: PlanZoomScope(
                                   scale: scale, child: widget.child)))))));
     });
+  }
+}
+
+/// La rejilla de la oficina ampliada a su alto natural (14.1): el hijo se
+/// arma al ancho de la vista lógica (el ancho entre la escala), con el alto
+/// que pida, y se dibuja ampliado; la caja mide el ancho que le dan y el alto
+/// del hijo por la escala, que es lo que la columna desplaza.
+class _AltoAmpliado extends SingleChildRenderObjectWidget {
+  const _AltoAmpliado({required this.escala, required super.child});
+
+  final double escala;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderAltoAmpliado(escala);
+
+  @override
+  void updateRenderObject(
+          BuildContext context, _RenderAltoAmpliado renderObject) =>
+      renderObject.escala = escala;
+}
+
+class _RenderAltoAmpliado extends RenderProxyBox {
+  _RenderAltoAmpliado(this._escala);
+
+  double _escala;
+  set escala(double valor) {
+    if (valor == _escala) return;
+    _escala = valor;
+    markNeedsLayout();
+  }
+
+  Matrix4 get _matriz => Matrix4.diagonal3Values(_escala, _escala, 1);
+
+  @override
+  void performLayout() {
+    final hijo = child;
+    final ancho = constraints.maxWidth;
+    if (hijo == null) {
+      size = constraints.smallest;
+      return;
+    }
+    if (!ancho.isFinite) {
+      hijo.layout(const BoxConstraints(), parentUsesSize: true);
+      size = constraints.constrain(hijo.size * _escala);
+      return;
+    }
+    final logico = ancho / _escala;
+    hijo.layout(BoxConstraints(minWidth: logico, maxWidth: logico),
+        parentUsesSize: true);
+    size = constraints.constrain(Size(ancho, hijo.size.height * _escala));
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      (child?.getMinIntrinsicHeight(width / _escala) ?? 0) * _escala;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      (child?.getMaxIntrinsicHeight(width / _escala) ?? 0) * _escala;
+
+  final LayerHandle<TransformLayer> _capa = LayerHandle<TransformLayer>();
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final hijo = child;
+    if (hijo == null) {
+      _capa.layer = null;
+      return;
+    }
+    _capa.layer = context.pushTransform(needsCompositing, offset, _matriz,
+        (PaintingContext context, Offset offset) =>
+            context.paintChild(hijo, offset),
+        oldLayer: _capa.layer);
+  }
+
+  @override
+  void dispose() {
+    _capa.layer = null;
+    super.dispose();
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final hijo = child;
+    if (hijo == null) return false;
+    return result.addWithPaintTransform(
+      transform: _matriz,
+      position: position,
+      hitTest: (BoxHitTestResult result, Offset position) =>
+          hijo.hitTest(result, position: position),
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.multiply(_matriz);
   }
 }
 

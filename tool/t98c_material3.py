@@ -79,7 +79,6 @@ PANTALLA_DE = {
     _P + 'widgets/sync_status_chip.dart': {'*': 'S02+S16+S18', (98, 116): 'S01'},
     _P + 'pages/change_requests_page.dart': {'*': 'S18', (26, 50): 'S02'},
     _P + 'widgets/voyage_stats_view.dart': {'*': 'S03'},
-    _P + 'widgets/vessel_profile_view.dart': {'*': 'S03'},
     _P + 'widgets/container_search_delegate.dart': {'*': 'S04'},
     _P + 'pages/recent_voyages_page.dart': {'*': 'S05'},
     _P + 'pages/vessel_profiles_page.dart': {'*': 'S06'},
@@ -140,9 +139,6 @@ IMPLICITOS = [
 
 # Juicios que la lectura agrega a la regla automática de color.
 OBSERVACIONES = {
-    (_P + 'widgets/vessel_profile_view.dart', 165):
-        'Material(color: Colors.transparent) solo deja ver el pintor, que usa colores del esquema '
-        '(baseColor, lowColor, outlineColor); transparente no aporta color',
     (_P + 'widgets/plan_drag_confirmation.dart', 114):
         'dentro de Material(color: colorScheme.surfaceContainerLow)',
     (_P + 'widgets/voyage_summary_card.dart', 345):

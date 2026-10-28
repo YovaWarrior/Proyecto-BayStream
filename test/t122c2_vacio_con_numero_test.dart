@@ -36,7 +36,13 @@ final _loading = t76Voyage([
 LoadingOperation _data([List<Movement> moves = const []]) =>
     LoadingOperation.build(operationId: 'op', loading: _loading, movements: moves);
 
+/// A 360 × 800 dp, el teléfono del muelle (T-123): en el rediseño, el plano
+/// suelto a 800 dp se arma como oficina (`DESIGN.md` 14.1) y el selector de
+/// modo vive en la cabecera de la página, que esta prueba no monta.
 Future<T75MemoryLog> _plano(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(360, 800);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
   final log = T75MemoryLog();
   LoadingOperation derive(List<MovementRecord> records) =>
       LoadingOperation.build(

@@ -9,6 +9,7 @@ import '../../domain/repositories/departure_export_repository.dart';
 import '../../domain/repositories/session_repository.dart';
 import '../../domain/services/departure_baplie_writer.dart';
 import '../../domain/services/loading_operation.dart';
+import '../formatters/operation_text.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/loading_operation_provider.dart';
 import '../providers/sync_providers.dart';
@@ -107,7 +108,9 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
           '${operation.vesselName} · ${voyageNumberLabel(operation.voyageNumber)} · ${operation.portOfCall}',
           style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: 16),
-      Text('${output.containers} contenedores a bordo en la salida.'),
+      // T-124 (10.65, P3): con su singular.
+      Text('${operationCount(output.containers, 'contenedor', 'contenedores')} '
+          'a bordo en la salida.'),
       Text(
           'Pendientes: ${output.pendingLoads} de carga y ${output.pendingDischarges} de descarga.',
           key: const ValueKey('departure-pending')),

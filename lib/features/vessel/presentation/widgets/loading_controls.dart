@@ -8,7 +8,6 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
 import '../../domain/services/loading_operation.dart';
 import '../formatters/vessel_error_message.dart';
-import '../formatters/operation_text.dart';
 import '../pages/change_requests_page.dart';
 import '../providers/discharge_provider.dart';
 import '../providers/loading_operation_provider.dart';
@@ -19,6 +18,8 @@ import 'avisos_del_viaje.dart';
 import 'discharge_controls.dart';
 import 'office_plan_controls.dart';
 import 'hatch_operation_controls.dart';
+import 'loading_plan_controls.dart' show BayPlanMode;
+import 'resumen_del_modo.dart';
 import 'voice_search_field.dart';
 
 String loadingPosition(String value) => value.length == 7
@@ -65,81 +66,80 @@ class LoadingControls extends ConsumerWidget {
   /// con los demás controles ([busquedaDeCarga]); aquí queda solo la línea
   /// del resumen.
   final bool busquedaEnLaTira;
+
+  /// Con la barra de la operación del muelle, que ya cuenta la carga, el
+  /// resumen dice solo la bahía (`DESIGN.md` 14.7).
+  final bool soloLaBahia;
   const LoadingControls(
       {super.key,
       required this.voyage,
       this.selectedBay,
       this.compact = false,
-      this.busquedaEnLaTira = false});
+      this.busquedaEnLaTira = false,
+      this.soloLaBahia = false});
 
   /// El botón de buscar por OR, el mismo de la línea del resumen, para la
-  /// tira del pie del teléfono bajo. Desde T-122 (H4) no necesita el
-  /// listado: sin él busca los llenos del plan por sus últimos dígitos.
+  /// tira del pie del teléfono bajo y la franja de la bahía. Con [soloIcono]
+  /// (la franja que no cabe en una línea, 10.40) queda el icono y el rótulo
+  /// pasa a la descripción emergente. Desde T-122 (H4) no necesita el
+  /// listado: sin él busca los llenos del plan por sus últimos dígitos;
+  /// [disponible] solo espera a que el plan esté leído.
   static Widget busquedaDeCarga(BuildContext context, WidgetRef ref,
-          VesselVoyage voyage, int? selectedBay,
-          {required bool disponible}) =>
-      TextButton.icon(
+      VesselVoyage voyage, int? selectedBay,
+      {required bool disponible, bool soloIcono = false}) {
+    final VoidCallback? buscar = !disponible
+        ? null
+        : () => chooseLoadingRow(context, ref, voyage, selectedBay: selectedBay);
+    const rotulo = 'OR / últimos dígitos';
+    if (soloIcono) {
+      return IconButton(
           key: const ValueKey('load-search'),
-          onPressed: !disponible
-              ? null
-              : () => chooseLoadingRow(context, ref, voyage,
-                  selectedBay: selectedBay),
-          icon: const Icon(Icons.search),
-          label: const Text('OR / últimos dígitos'));
+          tooltip: rotulo,
+          onPressed: buscar,
+          icon: const Icon(Icons.search));
+    }
+    return TextButton.icon(
+        key: const ValueKey('load-search'),
+        onPressed: buscar,
+        icon: const Icon(Icons.search),
+        label: const Text(rotulo));
+  }
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      ref.watch(loadingOperationProvider(voyage)).when(
-            loading: () => const Text('Leyendo el plan combinado…'),
-            error: (error, stack) => Text(vesselErrorMessage(
-                error, stack, 'leer el plan de carga de la operación')),
-            data: (data) {
-              final bay = selectedBay == null
-                  ? null
-                  : data.progress.forBay(selectedBay!);
-              final summary = [
-                Text(
-                    'Carga: ${operationCount(data.progress.total, 'pendiente', 'pendientes')} '
-                    '(${operationCount(data.progress.full, 'lleno', 'llenos')} / ${operationCount(data.progress.empty, 'vacío', 'vacíos')}).',
-                    key: const ValueKey('loading-operation-totals')),
-                if (bay != null)
-                  Text(
-                      'Bahía ${bay.label}: cubierta ${bay.deck} · bodega ${bay.hold}.'),
-                // T-107 · Con U+2011, «re‑estibas» no se parte en el guion.
-                Text('Descarga: ${operationCount(data.discharge.pending, 'pendiente', 'pendientes')} '
-                    '${pendingZones(data.discharge.deckPending, data.discharge.holdPending)} · '
-                    '${operationCount(data.discharge.restows, 're‑estiba', 're‑estibas')}.'),
-                if (data.list == null)
-                  const Text(
-                      'Sin listado de agencia: los llenos se cargan por su '
-                      'número; los vacíos esperan el listado.'),
-              ];
-              final search = busquedaDeCarga(context, ref, voyage, selectedBay,
-                  disponible: true);
-              if (compact) {
-                return PlanSummaryLine(
-                    trailing: busquedaEnLaTira ? null : search,
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: summary));
-              }
-              return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ...summary,
-                    Wrap(spacing: 8, children: [
-                      search,
-                      TextButton.icon(
-                          key: const ValueKey('empty-search'),
-                          onPressed: data.list == null
-                              ? null
-                              : () => chooseLoadingRow(context, ref, voyage,
-                                  selectedBay: selectedBay, empties: true),
-                          icon: const Icon(BsIconos.vacio),
-                          label: const Text('Asignar vacío')),
-                    ]),
-                  ]);
-            },
-          );
+  Widget build(BuildContext context, WidgetRef ref) {
+    // El resumen en fichas (`DESIGN.md` 14.7): la bahía, la carga y la
+    // descarga; mientras se lee el plan, lo dice, y los botones esperan.
+    final data = ref.watch(loadingOperationProvider(voyage)).value;
+    final summary = fichasDelResumen(context, ref,
+        voyage: voyage,
+        modo: BayPlanMode.loading,
+        bahia: selectedBay,
+        soloLaBahia: soloLaBahia);
+    // H4: «OR / últimos dígitos» no se apaga sin listado; solo espera al
+    // plan. «Asignar vacío» sí lo necesita: los vacíos van con su fila.
+    final search = busquedaDeCarga(context, ref, voyage, selectedBay,
+        disponible: data != null);
+    if (compact) {
+      return PlanSummaryLine(
+          trailing: busquedaEnLaTira ? null : search,
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: summary));
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      ...summary,
+      Wrap(spacing: 8, children: [
+        search,
+        TextButton.icon(
+            key: const ValueKey('empty-search'),
+            onPressed: data?.list == null
+                ? null
+                : () => chooseLoadingRow(context, ref, voyage,
+                    selectedBay: selectedBay, empties: true),
+            icon: const Icon(BsIconos.vacio),
+            label: const Text('Asignar vacío')),
+      ]),
+    ]);
+  }
 }
 
 /// T-107 · El resumen del modo en una sola línea, para pantallas angostas, con
@@ -174,12 +174,18 @@ class _PlanSummaryLineState extends State<PlanSummaryLine> {
     final icon = Icon(open ? Icons.expand_less : Icons.expand_more,
         size: line,
         semanticLabel: open ? 'Recoger el resumen' : 'Ver el resumen completo');
+    // Un botón (10.44): el `InkWell` con su hijo no da el rol, y Windows lo
+    // tomaba por texto. El nombre es lo que se lee dentro: el resumen y «Ver
+    // el resumen completo», o «Recoger el resumen».
+    Widget alternar({Key? key, required Widget child}) => Semantics(
+        container: true,
+        button: true,
+        child: InkWell(key: key, onTap: toggle, child: child));
     if (!open) {
       return Row(key: const ValueKey('plan-summary-line'), children: [
         Expanded(
-            child: InkWell(
+            child: alternar(
                 key: const ValueKey('plan-summary-toggle'),
-                onTap: toggle,
                 child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Expanded(
                       child: ClipRect(
@@ -209,19 +215,17 @@ class _PlanSummaryLineState extends State<PlanSummaryLine> {
           if (widget.trailing != null)
             Row(children: [
               Expanded(
-                  child: InkWell(
+                  child: alternar(
                       key: const ValueKey('plan-summary-toggle'),
-                      onTap: toggle,
                       child: Align(
                           alignment: AlignmentDirectional.centerEnd,
                           child: icon))),
               widget.trailing!,
             ]),
-          InkWell(
+          alternar(
               key: widget.trailing == null
                   ? const ValueKey('plan-summary-toggle')
                   : null,
-              onTap: toggle,
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Expanded(child: detail),
                 if (widget.trailing == null) icon,

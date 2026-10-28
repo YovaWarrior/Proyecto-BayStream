@@ -206,7 +206,16 @@ void main() {
           await tester.pumpAndSettle();
           expect(find.byKey(const ValueKey('reopen-kept-parameters')),
               findsOneWidget);
+          // T-117 (DESIGN.md 14.5): en la oficina el aviso vive en la franja
+          // de cifras, con su tope; el texto entero no cabe y sale el corto
+          // con «Ver», que abre el entero (la regla del muelle, 10.32).
+          await tester.tap(find.descendant(
+              of: find.byKey(const ValueKey('reopen-kept-parameters')),
+              matching: find.text('Ver')));
+          await tester.pumpAndSettle();
           expect(find.textContaining('fila 00 en bodega'), findsOneWidget);
+          await tester.tap(find.text('Cerrar'));
+          await tester.pumpAndSettle();
           expect(container.read(voyageNotifierProvider).value!.containers,
               hasLength(2));
           await tester.pump(const Duration(seconds: 11));

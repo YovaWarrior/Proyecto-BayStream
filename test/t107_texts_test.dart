@@ -1,3 +1,4 @@
+import 'package:baystream/core/design/design.dart';
 import 'package:baystream/core/utils/iso_coordinate_parser.dart';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
@@ -393,11 +394,12 @@ void main() {
         'T-107 Descarga a 360×780 dp con letra $scale: el resumen y la tabla '
         'dicen «re‑estibas» con U+2011 y sin partirse', (tester) async {
       await _discharge(tester, scale);
+      // T-118 (DESIGN.md 14.7): el resumen es una ficha de una línea.
       expect(
           tester
-              .widget<Text>(
+              .widget<BsFichaDeCifra>(
                   find.byKey(const ValueKey('operation-discharge-totals')))
-              .data,
+              .texto,
           endsWith('0 re‑estibas'));
       await _openActions(tester);
       await tester.tap(find.byKey(const ValueKey('discharge-table-button')));

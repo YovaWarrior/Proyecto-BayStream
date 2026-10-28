@@ -814,7 +814,7 @@ La siguiente decisión es la **10.33**.
 
 La siguiente decisión es la **10.34**.
 
-### 10.34 · La tercera reaceptación pasa: la candidata del piloto queda aceptada (24-oct, 05:07)
+### 10.34 · La tercera reaceptación pasa: la candidata del piloto queda aceptada (23-oct, 23:07)
 
 **Codex volvió a aceptar `cc24766`: PASA** (`docs/rediseno/fase3/candidata/reaceptacion3-codex.md`).
 - **H2-A y H2-B, cerrados.** Con su propia prueba, no con la de Yov, las tres rutas pasan a 360 × 640, 360 × 800 y 412 × 915 con la letra a 2.0: Comparar desde el plano, Parámetros al volver y la tapa con «Deshacer», que anota la anulación en la bitácora. Ningún aviso pisa celdas, resumen ni controles, y el texto elegido sale entero. A 360 × 640, con la franja desde y=346, Comparar y Parámetros van de y=392 a 492, y la tapa, de 350 a 492.
@@ -841,9 +841,1121 @@ La siguiente decisión es la **10.34**.
 - 4.1: la mezcla se cierra con `git commit` y las dos líneas de autoría, como los demás commits;
 - 5: la letra grande en los avisos y los dos P3, para no anotarlos como fallos nuevos.
 
-**Lo que sigue, hoy sábado:**
+**Lo que sigue, el sábado 24:**
 - Carlos sube `cc24766` y el bloque de esta decisión.
 - Después de la exposición, publica con la sección 4 de la lista: la mezcla, el MSIX 3.1.0.0, el AAB 3.1.0 (4) y la Web.
 - Después, el ensayo, secciones 0 a 2. Si falla en algo serio, el piloto del 25 y el 26 se hace con la v3.0.
 
 La siguiente decisión es la **10.35**.
+
+### 10.35 · La candidata del piloto, publicada en los tres clientes (24-oct, 09:42)
+
+**Carlos publicó la 3.1.0 con la sección 4 de la lista del piloto, de las 09:10 a las 09:40.** Yov revisó su terminal y la carpeta.
+- **La mezcla:** `7488321` en `master`, con la etiqueta `v3.1`. Une `sprint-3` (`063d2ae`) y `sprint-4` (`38965b8`), y su contenido es idéntico al de `sprint-4`. El commit salió sin las dos líneas de autoría; no se reescribe, porque ya está publicado con su etiqueta.
+- **Windows:** `BayStream_3.1.0.0.msix`, con la firma `Valid` de `CN=BayStream` y SHA-256 `E934097F552EC8166A566289535E40FD1DC821A00078DD9A01C07BD4AED69D95`. El MSIX 3.0.0.0 y su `.sha256` siguen en `build\t93`, para volver (4.5).
+- **Android:** el AAB 3.1.0 (4), de 51,1 MB, en la prueba interna de Play. Yov propuso el nombre de la versión («4 (3.1.0) · Candidata del piloto») y las notas en español.
+- **Web:** la compilación dice 3.1.0 y 4 en `version.json` y trae Firebase Auth. El verificador T-92 pasó con 57 archivos, los mismos que en la aceptación de Codex, y Hosting subió 56: no sube `.last_build_id`, porque `firebase.json` excluye los archivos ocultos. El aviso de `CupertinoIcons` es el conocido desde el Sprint 3 (T-102 y T-103); la app no usa esos íconos.
+- **Las compilaciones no cambiaron ningún archivo del repositorio:** la carpeta queda en `master`, con los documentos de Carlos como estaban.
+- **Corrección de la 10.34:** su título llevaba la hora UTC del reloj de Yov. Se escribió el 23-oct a las 23:07; quedan corregidos el título y la nota de 4.1 en la lista del piloto.
+
+**Falta comprobar, al empezar el ensayo (0.1):** `version.json` en una ventana de incógnito, Windows con la 3.1.0.0 instalada y el Honor actualizado por el enlace de la prueba.
+
+**Lo que sigue:**
+- hoy a las 14:00, la exposición del curso, con la demo en `C:\Proyectos\baystream-pruebas`;
+- el ensayo, secciones 0 a 2 de la lista; si falla en algo serio, el piloto se hace con la v3.0 (4.5);
+- el piloto con COMAR, el 25 y el 26 (sección 3 de la lista);
+- después de la exposición, `pruebas-curso` se mezcla en `sprint-4`, con la suite y `analyze` (10.12). La prueba de muestra de la clase (`test/muestra/`) está sin versionar en esa carpeta: se decide entonces si entra.
+
+La siguiente decisión es la **10.36**.
+
+### 10.36 · Carlos pide más espacio para el plano en la oficina y unas estadísticas de impacto (24-oct, 10:08)
+
+**Carlos lo pidió hoy a las 09:59 y a las 10:01, viendo la 3.1.0 en Windows.** Son cinco tareas nuevas, para Windows y la Web salvo donde se dice:
+- **T-117 · Más plano en la oficina:**
+  - la parte de arriba (cabecera, selector, resumen, silueta y cifras) se pliega con un botón y se ajusta arrastrando su borde, y la app recuerda cómo la dejó cada usuario;
+  - toda la columna central se desplaza, no solo la rejilla: al bajar, lo de arriba sube y el plano usa la pantalla;
+  - «En vivo» se oculta y se muestra con un botón y, además, al pasar el mouse por el borde; lo del mouse se apaga en Parámetros;
+  - con cualquier tamaño de ventana (maximizada, a media pantalla o arrastrada) nada se deforma ni se corta. Hoy, a 1920 con «En vivo» abierto, la leyenda de abajo no cabe y se corta a la derecha.
+- **T-118 · El selector de modo y su resumen, compactos:** el selector de Carga, Descarga y Contenido se ve plano, también al abrirlo; se rediseña, y las líneas de resumen de debajo ocupan menos. En los tres clientes.
+- **T-119 · El mouse y el touchpad:**
+  - en la silueta del buque, la rueda del mouse avanza a la derecha y regresa a la izquierda, no solo el touchpad;
+  - el touchpad acerca y aleja el plano con dos dedos; la rueda sigue moviendo arriba y abajo;
+  - el plano muestra también una barra de desplazamiento horizontal abajo, que se arrastra con el mouse, cuando la bahía no cabe a lo ancho.
+- **T-120 · Filtrar por destino en la Lista**, junto a «Filtrar por naviera»: cuántos contenedores van a cada puerto y cuáles son. En los tres clientes.
+- **T-121 · Las estadísticas, rediseñadas por completo** con la dirección «Puente de mando» (10.14) y lo que se tomó de sus referencias: las cifras grandes en tarjetas (ShipX), el azul profundo y el anillo de avance (OceanView), la silueta del buque y los códigos de puerto en caja (Shipping Logistics Dashboard). Hoy usan violeta y naranja de adorno, que la dirección prohíbe. En los tres clientes.
+
+**Lo que no cambia:**
+- La 3.1.0 publicada es la del piloto (10.35) y no se toca.
+- Estas tareas van en `sprint-4`, en la carpeta del rediseño, con las reglas de T-114: solo la capa de presentación, ninguna dependencia nueva, el piso de 1371 y `analyze` en cero, y Codex acepta cada entrega.
+- Si guardar las preferencias de T-117 exige tocar `domain/` o `data/`, se propone y decide Carlos.
+
+**Yov propone el orden, y lo confirma Carlos:**
+1. Ya: Timonel hace el diagnóstico y la propuesta, sin código y sin correr Flutter, para no estorbar al ensayo ni al piloto. Para con «ALTO: Carlos elige».
+2. Desde el 27-oct, después del piloto y con lo que diga COMAR, la implementación: T-117, T-118, T-119, T-120 y T-121.
+3. Se publica como 3.2.0 antes de la presentación final (7 o 14-nov).
+
+La siguiente decisión es la **10.37**.
+
+### 10.37 · La fase 0 de T-117 a T-121, entregada y revisada: Carlos responde once preguntas (24-oct, 10:57)
+
+**Timonel entregó el diagnóstico y la propuesta** (`docs/T117-T121-RESULTADOS.md`, Claude Opus 5.5 en Extra), sin código y sin correr Flutter.
+- **El diagnóstico, con archivo y línea:**
+  - lo de arriba ocupa del 40 al 63 % de la ventana, porque la columna central no se desplaza y la rejilla es lo único que cede. En la laptop de Carlos las tarjetas pasan a dos filas (262 dp contra los 161 de la silueta), aunque el código dice que nunca son más altas que ella;
+  - la leyenda se corta porque su `Wrap` vive dentro de un desplazamiento horizontal, que en escritorio no tiene barra;
+  - «En vivo» no se desplaza y se corta en ventanas de menos de unos 600 dp de alto;
+  - la rueda no mueve nada horizontal, el zoom solo escucha dos dedos sobre la pantalla y no hay barra horizontal;
+  - el selector de modo es un `DropdownButton` de Material 2 y está repetido en la cabecera;
+  - las estadísticas nunca se rediseñaron: 27 `Colors.*`, texto a 9 dp y girado, y el naranja de la grúa como color del peso.
+- **La propuesta:**
+  - la columna central se desplaza entera. El puente (la silueta y las cifras) tiene tres alturas, que se eligen arrastrando su borde o con un botón. La franja de la bahía queda fija arriba y una franja de cifras fija abajo, donde viven los avisos como en el muelle: eso cierra O3;
+  - el panel lateral se fija, se oculta o sale flotante por el borde;
+  - un solo selector de modo, en segmentos o en menú, y el resumen en fichas de una línea;
+  - la rueda en la silueta, el pellizco y Ctrl + rueda para el zoom, y una barra horizontal pegada abajo;
+  - «Filtrar por destino», con la ficha de cada puerto y cuentas cruzadas con la naviera;
+  - dos estadísticas: A, «El buque en corte», la que recomienda, y B, «Tablero de destinos». La rampa de azules está validada por script; la de `DESIGN.md` 5.5 no pasa en su paso claro.
+- **Horas:** de 47 a 57, en tres entregas: T-117 con T-118, después T-121 y al final T-119 con T-120.
+
+**Yov la revisó contra el código:**
+- seis afirmaciones comprobadas en su archivo y línea: el comentario de las tarjetas, la cartela dentro del desplazamiento horizontal, los 27 `Colors.*`, «Filtrar por Naviera», el `DropdownButton` y el zoom de dos dedos;
+- el árbol no cambió fuera del informe. Los cuatro archivos que `git diff --stat` marca (`test/t114_fase3_correccion_test.dart` y tres de `windows/flutter/`) solo difieren en el fin de línea y no entran en ningún bloque;
+- **una diferencia con lo que pidió Carlos:** él quería ajustar el alto «a su gusto», y Timonel propone tres alturas (P1). Con la columna que se desplaza, el puente sale de la vista tanto como se quiera; las tres alturas evitan que la silueta y las tarjetas se recorten.
+
+**Las once preguntas (sección 0.12), con lo que recomienda Yov:**
+- P1, tres alturas; P2, sí al cambio mínimo en `domain/` y `data/` para guardar las preferencias, con sus pruebas; P3, el usuario del equipo;
+- P4, Ctrl + rueda también con el mouse; P5, el panel flotante con el detalle; P6, lo del mouse encendido; P7, `web/index.html` solo si la prueba lo exige;
+- P8, las estadísticas A; P9, la cifra protagonista a 48 dp;
+- P10, cuentas cruzadas, y la Lista perezosa dentro de la tercera entrega, porque ataca la memoria de la Lista (RNF-001 y RNF-007: hoy sube de 190 a 510 MB, con un umbral de 200);
+- P11, depende de la fecha de la presentación final.
+
+**Lo que sigue:** Carlos responde, y la implementación arranca el 27-oct con la entrega 1.
+
+La siguiente decisión es la **10.38**.
+
+### 10.38 · Carlos acepta las recomendaciones de Yov para T-117 a T-121 (24-oct, 10:59)
+
+**Carlos lo decidió a las 10:58:**
+- **T-117:**
+  - el puente tiene tres alturas (P1);
+  - se autoriza el cambio mínimo en `domain/` y `data/` de la sección 0.5.7, con sus pruebas, para guardar las tres preferencias (P2). Es una excepción a la regla de T-114, solo para eso;
+  - se guardan por equipo, no por cuenta (P3);
+  - con el panel oculto, el detalle sale en el panel flotante (P5);
+  - mostrar el panel al pasar el mouse viene encendido y se apaga en Parámetros (P6).
+- **T-119:**
+  - Ctrl + rueda acerca y aleja también con el mouse (P4);
+  - si la prueba demuestra que en la Web el pellizco amplía la página, se autoriza tocar `web/index.html`, solo para el plano (P7).
+- **T-121:** las estadísticas A, «El buque en corte» (P8), con la cifra protagonista a 48 dp, escrita antes en `DESIGN.md` (P9).
+- **T-120:** cuentas cruzadas entre naviera y destino, y la Lista perezosa dentro de la tercera entrega, medida con T-99 (P10).
+- **El orden (P11):**
+  - entrega 1, T-117 con T-118; entrega 2, T-121; entrega 3, T-119 con T-120;
+  - las entregas 1 y 2 van en la 3.2.0. La 3 entra también si la presentación final es el 14-nov; si es el 7, va en una 3.2.1;
+  - falta la fecha de la presentación y saber si hay un segundo monitor para probar el arrastre entre pantallas.
+
+**Lo que sigue:** el 27-oct, después del piloto, Timonel arranca la entrega 1 con Claude Opus 5.5. Codex acepta cada entrega antes de la siguiente.
+
+La siguiente decisión es la **10.39**.
+
+### 10.39 · La entrega 1 de T-117 y T-118 empieza hoy, con pausas (24-oct, 11:04)
+
+**Carlos adelanta el arranque, del 27-oct a hoy.** El tiempo hasta la presentación final es corto (47 a 57 h de las tres entregas). Yov había propuesto el 27 solo para no estorbar la exposición, el ensayo y el piloto; con estas condiciones, no los estorba:
+- **Timonel no corre Flutter sin la luz verde de Carlos.** No hay luz verde durante la exposición de hoy y el rato antes, ni durante el ensayo, ni en las horas del piloto del 25 y el 26. Mientras tanto escribe `DESIGN.md` y código; las pruebas esperan.
+- **Antes de salir con la laptop**, Carlos pausa el chat de Timonel, para que no corra nada en clase ni en el muelle.
+- **Nada se publica hasta después del piloto:** la 3.1.0 es la del piloto (10.35). Si el piloto exige arreglar la 3.1.0, se hace aparte, desde `master` y `v3.1`, no desde `sprint-4`.
+- **Si COMAR pide algo que cambie esta entrega**, Carlos se lo dice a Timonel y Timonel ajusta.
+
+La siguiente decisión es la **10.40**.
+
+### 10.40 · La entrega 1 de T-117 y T-118, hecha y revisada; faltan RNF-002 y las capturas (24-oct, 15:00)
+
+**Timonel la entregó a las 12:45, con Claude Opus 5.5 en Extra, en unas 1.6 h** (`docs/T117-T121-RESULTADOS.md`, sección «Entrega 1», y `DESIGN.md` 14).
+- **T-117:**
+  - la columna central se desplaza entera, y el panel del buque tiene tres alturas, con el borde que se arrastra, doble clic, teclado y lector de pantalla;
+  - la franja de la bahía va arriba y la de cifras fija abajo, donde viven los avisos, que no salen de la columna: eso cierra O3;
+  - el panel lateral va fijo, oculto o flotante, y «En vivo» ya no se corta;
+  - las tres preferencias se guardan en el equipo.
+- **T-118:** un solo selector de modo (`BsSelectorDeModo`), en segmentos o en menú según el ancho, y el resumen en fichas de una línea. «Colorear por» usa el mismo selector.
+- **Cifras:**
+  - suite 1627 (piso 1371, más 256), sin fallidas ni omitidas, en una sola corrida, y `analyze` en cero;
+  - la matriz de 0.5.5 son 189 casos y pasa, y los avisos en la oficina, 22;
+  - la matriz de 18 casos del teléfono y la guarda de `SnackBar(` siguen pasando.
+- **La primera suite dio 78 fallos.** Cuatro eran del producto y se corrigieron en el código: un desborde de 44 dp en el teléfono, dos selectores a la vez a 600 dp, el aire negativo de los avisos en las transiciones y el título repetido sin geometría. Las medidas con las fuentes reales destaparon dos más: la franja de la bahía fijada tapaba la rejilla con la letra a 2.0 en ventanas bajas, y la franja de cifras crecía sin tope. Se reescribieron 15 archivos de pruebas, uno por uno en E1.7; ninguna prueba se borró ni se omitió.
+- **Falta:** RNF-002 en Windows, las capturas y la ventana real, que piden compilar y abrir la app (unas 3 a 4 h con Flutter).
+
+**Yov la revisó contra el disco:**
+- el bloque de git tiene 44 rutas y coincide una a una con lo cambiado: 32 archivos cambiados, 11 nuevos y el informe. Fuera quedan los cuatro que solo cambian el fin de línea;
+- `domain/` y `data/` suman 31 líneas, todas nuevas y solo para las preferencias, como autorizó la 10.38: el `enum UiPreference`, leer y guardar en el repositorio, sus dos `_guard` y la clave `ui.<nombre>` en la caja de ajustes;
+- no cambian `lib/main.dart`, los congelados, `pubspec.*` ni la lista del piloto.
+
+**Una decisión para Carlos.** Con el panel fijo, en Carga, la franja de la bahía ocupa dos líneas desde 1536 dp hacia abajo, y a la rejilla le quedan 372 dp a 1536 y 269 a 1366 (la fase 0 estimó 445 y 342). Yov recomienda dejarla en una línea con la letra a 1.0 sin esconder «Colorear por»: las cifras de la bahía bajan a la franja de cifras, que ya empieza por la bahía; si aun así no cabe, «OR / últimos dígitos» queda solo con su ícono y su descripción.
+
+**La presentación final es el 7-nov** (Carlos, a las 11:05). La 3.2.0 lleva las entregas 1 y 2, y la 3 va en una 3.2.1 (10.38). Las metas: la entrega 1 aceptada el 29 o el 30-oct, la 2 hacia el 3-nov y la 3.2.0 publicada a más tardar el 4-nov.
+
+**Lo que sigue:**
+- Carlos sube el bloque de la entrega 1 tal como está: es un punto seguro, porque la suite pasa.
+- Primero, el ensayo del piloto. Después, luz verde a Timonel para el ajuste de la franja, si Carlos lo aprueba, y para RNF-002, las capturas y la ventana real, con su `SEMÁFORO:`.
+- Después, Codex acepta la entrega 1.
+- La lista del piloto se actualiza al publicar la 3.2.0, no antes: el piloto es con la 3.1.0.
+
+La siguiente decisión es la **10.41**.
+
+### 10.41 · La entrega 1 de T-117 y T-118, completa y revisada: la franja de la bahía en una línea, RNF-002, las capturas y la ventana real; pasa a Codex (24-oct, 17:15)
+
+**Carlos cambió el orden de 10.40:** Timonel siguió primero, con la luz verde para Flutter, y el ensayo y el piloto van después (lo confirmó a las 15:06). Timonel trabajó de ≈ 14:55 a 16:50, un comando de Flutter a la vez (`docs/T117-T121-RESULTADOS.md`, E1.1 a E1.13):
+- **El ajuste de la franja (10.40):**
+  - las cifras de la bahía abren ahora la franja de cifras: «Bahía 02: 20 contenedores, 244.7 t, tapas sin declarar; …»;
+  - con el panel fijo y la letra a 1.0, la franja de la bahía va en una línea (56 dp) de 960 a 1920 dp, y la rejilla gana 52 dp a 1536 × 793 y a 1366 × 690;
+  - si aun así no cabe, «OR / últimos dígitos» queda solo con su ícono y su descripción emergente;
+  - en la tableta del muelle operando, que no tiene franja de cifras, las cifras siguen junto al título.
+- **Lo que se paga:** a 800 × 600 con la letra a 1.0, la franja de cifras pasa a dos líneas (de 64 a 88 dp) y la rejilla pierde 24 dp. Es el tamaño más chico de la matriz, y nada se corta.
+- **Cifras:** suite 1629 (piso 1371, más 258), sin fallidas ni omitidas, en una sola corrida, y `analyze` en cero. La matriz de 0.5.5 comprueba la línea única en seis casos, y hay dos pruebas nuevas.
+- **RNF-002 en Windows:** 5 de 5 válidas, tres pasos, mediana 2.26 s (de 2.17 a 2.68 s), con su `SEMÁFORO:` al empezar y al terminar. La última medida era 1.87 s (`REDISENO-RESULTADOS.md` 8.3): la oficina arma más piezas y el diálogo de Windows tarda más. Sigue lejos de los 30 s.
+  - El primer intento no contó: la ventana del banco nació detrás de la consola y el detector esperó 120 s. Timonel corrigió el instrumento (`al_frente`, en `tool/t114_primera_windows.py`), y el registro dice ahora si la ventana quedó al frente. La imagen final de ese intento no se guardó, porque mostraba la consola con los proyectos de Carlos.
+- **Capturas con datos sintéticos:** 72 de Windows (1920 × 1080 y 1366 × 768, claro y oscuro, letra 1.0 y 2.0), sin textos cortados ni errores de Flutter, y 24 de la Web. El conductor de T-99 se amplió para tomar la Carga, el panel del buque compacto y plegado, y el panel lateral oculto y flotante.
+- **La ventana real:** maximizar, Win + ← y →, y el borde a 1000, 700, 560 y 1280 dp: nada se corta. No hay segundo monitor, así que el arrastre entre pantallas queda sin probar.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 10 archivos cambiados y uno nuevo (`tool/t117_capturas_web.py`), más la evidencia: 129 archivos en `docs/t117/entrega1/`, ninguno ignorado;
+- el código es chico, unas 130 líneas nuevas en cinco archivos de presentación, y hace lo que dice `DESIGN.md` en 14.7, 14.8 y 14.10. La tarde no toca `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto;
+- la evidencia está limpia. Yov pasó las 119 imágenes por OCR y miró una por una las 23 que toman la pantalla o la ventana: solo se ve el banco con datos sintéticos (BUQUE MANUAL y el sintético de 977). No hay correos, ni «Nube y cuenta», ni nada del corpus;
+- **dos cosas para la aceptación:**
+  - a 700 dp, sin el panel fijo, la franja de la bahía envuelve y el botón del panel queda solo en la segunda línea (`ventana-real/06-borde-875px.png`). No se corta nada; Codex dice si es un defecto;
+  - T-118 es para los tres clientes, y Timonel no abrió Android: lo del teléfono solo está en las pruebas de widgets a 360 dp. Codex lo mira en el emulador.
+
+**Carlos decide (17:12):**
+- **La evidencia no va a Git.** Se queda sin versionar en `docs/t117/entrega1/`, en la carpeta del rediseño, y el commit lleva solo los 11 archivos.
+- **El mouse movido por script queda aceptado.** Para arrastrar el borde, la tarjeta de permiso del control del escritorio llevaba 33 minutos esperando, y Timonel movió el mouse real con un script (`mouse_event`). Carlos lo da por bueno: cuando la tarjeta no responde, un programador puede mover el mouse con un script, pero solo sobre la ventana del banco.
+
+**Entregables del curso de hoy:** los paquetes de los incrementos 2 y 3 están en `docs/` de `proyecto-baystream`, sin versionar. La presentación del Incremento 3 faltaba, y la hizo Yov: 15 diapositivas con notas, con el diseño de la del Incremento 2.
+
+**Lo que sigue:**
+- Carlos sube dos bloques: el de Timonel, con los 11 archivos, y el de esta decisión.
+- Codex acepta la entrega 1 en `baystream-qa-r4`, con HEAD separado en el commit de esta decisión, fuera de las horas del ensayo y del piloto. La meta no cambia: la entrega 1 aceptada el 29 o el 30-oct.
+- El ensayo y el piloto, con la 3.1.0, siguen las secciones 0 a 3 de la lista del piloto.
+- Carlos cree que la exposición del curso de SQA pasa a la próxima semana (14:57). La mezcla de `pruebas-curso` (10.35) espera a que pase.
+- Con la entrega 1 aceptada, sigue la entrega 2: T-121, las estadísticas A.
+
+La siguiente decisión es la **10.42**.
+
+### 10.42 · La aceptación de la entrega 1 no pasa por dos P2; Timonel corrige (25-oct, 11:25)
+
+**Codex la cerró hoy a las 11:13, sobre `f60d2a8`** (`docs/t117/entrega1/aceptacion-codex.md`, con su evidencia en `build/t117-entrega1-aceptacion/` de `baystream-qa-r4`):
+- **H1 · P2 — «Cerrar el panel lateral» lo fija.** Con el panel oculto y el flotante abierto por una celda, el botón de la cabecera dice «Cerrar el panel lateral», pero fija el panel y guarda `visible`. Lo esperado es cerrar el flotante y dejar el panel oculto. La causa está en `vessel_overview_page.dart` (líneas 364 a 382): desde 1200 dp, el botón siempre ejecuta `mostrarPanel(!panelFijo)`. `DESIGN.md` 14.3 no previó ese caso.
+- **H2 · P2 — Atrás no cierra el menú del modo en Android.** En el emulador, con el menú abierto, el primer Atrás deja el menú y muestra «Toca Atrás otra vez para volver al inicio»; el segundo saca del plano. El menú de «Acciones» sí se cierra. La causa: el menú de `BsSelectorDeModo` es un `MenuAnchor` que no se anota en `cerrablesDeAtrasProvider`.
+  - En la matriz, Esc tampoco lo cerró, aunque `DESIGN.md` 14.6 lo pide. Por eso fallaron dos casos de 800 × 600 con la letra a 2.0, en Descarga: el menú abierto tapaba «Deshacer».
+- **H3 · P3 — a 700 dp, el botón del puente queda solo en una segunda línea:** la franja mide 108 dp en vez de 56. Es la observación de Yov en 10.41.
+- **A 800 × 600 se puede trabajar,** desplazando la columna o plegando el puente.
+- **Lo demás pasa, con pruebas propias:**
+  - la suite, 1629 aprobadas, sin fallidas ni omitidas, en una corrida, y `analyze` en cero en una copia limpia;
+  - la matriz de 90 combinaciones;
+  - en Windows, las tres preferencias sobreviven al reabrir, y la ventana real pasa (el borde, con el script que autorizó la 10.41);
+  - la Web y, en el emulador, Android;
+  - RNF-002, 5 de 5 válidas, con mediana de 2.80 s; Timonel midió 2.26 s. Varía con el estado del equipo y sigue lejos de los 30 s.
+- **Dos salvedades de Codex, correctas:**
+  - `analyze` en `qa-r4` da 33 incidencias, todas bajo `build/`: 32 en pruebas guardadas como evidencia de aceptaciones anteriores y una en su propio instrumento, que corrigió. El producto da cero en la copia limpia, con las mismas fuentes, y ese método vale para la reaceptación;
+  - la lista del piloto sí difiere de `cc24766`, por 10.34 y 10.35, de antes de la entrega. La frase del prompt de Yov («no cambian contra la base») era inexacta: la entrega no la tocó.
+
+**Yov lo revisó:**
+- el informe coincide con la huella de su manifiesto, y las 224 huellas de la evidencia coinciden;
+- el árbol de `qa-r4` está intacto: solo se agregó el informe;
+- H1 y H2 están en el código como dice Codex, y sus capturas los muestran: el menú sigue abierto tras el primer Atrás, y el panel queda fijo tras «Cerrar».
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión. Tiene que ser antes de mover `qa-r4` otra vez: si el informe queda ahí sin versionar, el cambio de commit se detiene.
+- Timonel corrige H1, H2 (con Esc) y H3 en la corrección 1 de la entrega 1, con una prueba que reproduce cada uno, y pone al día `DESIGN.md` 14.3, 14.6 y 14.8. Corre Flutter solo con la luz verde de Carlos, fuera del ensayo y del piloto (10.39).
+- Codex reacepta lo corregido, con la suite y `analyze`, H2 en el emulador y los dos casos de 800 × 600 que fallaron.
+- La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
+
+La siguiente decisión es la **10.43**.
+
+### 10.43 · La corrección 1 de la entrega 1, entregada y revisada: pasa a la reaceptación de Codex (25-oct, 12:25)
+
+**Timonel la entregó a las 12:18, con la luz verde de Carlos para Flutter** (`docs/T117-T121-RESULTADOS.md`, «Corrección 1 de la entrega 1», C1.1 a C1.11):
+- **H1:** con el panel oculto y el flotante abierto, el botón de la cabecera solo cierra el flotante, en cualquier ancho. El panel sigue oculto y la preferencia no cambia; para fijarlo está «Fijar».
+- **H2:**
+  - Esc no cerraba el menú porque el foco no entraba en él. Ahora, al abrirse, el foco pasa a la entrada elegida;
+  - el menú se anota en `cerrablesDeAtrasProvider` desde el lado del viaje (`SelectorDelModo` y «Colorear por»): el primer Atrás lo cierra, el plano se queda y ese toque no cuenta como el primero del doble Atrás. `BsSelectorDeModo` sigue sin saber nada del viaje;
+  - al cerrarse, el foco ya no vuelve al botón a la fuerza, porque en el emulador el botón quedaba sombreado tras Atrás. Según `DESIGN.md` 14.6, si el menú se abrió con el teclado, el foco vuelve solo.
+- **H3:** hay una cuarta variante de una línea, con «Acciones» solo con su ícono. A 700 dp, en Contenido y Descarga, la franja va en una línea (56 dp; antes 108). Cuando envuelve, el botón del puente queda al final de la primera línea.
+- **Lo que encontró la medida, ya corregido:**
+  - con la letra a 2.0, en Carga, un desborde que ya existía y que la matriz de 0.5.5 no veía: 135 dp a 600 y 35 dp a 700;
+  - uno de 0.08 dp de la variante nueva a 960 dp. `BsPrimeraQueCabe` mide ahora con la tolerancia de `RenderFlex` y no con medio dp.
+- **Cifras:**
+  - suite 1677 (piso 1629, más 48), sin fallidas ni omitidas, en una corrida con el código final, y `analyze` en cero. Antes hubo otra suite completa, también 1677, con la versión que devolvía el foco: no es un reintento, porque el código cambió entre las dos;
+  - corridas contra `80ae18b`, 38 de las pruebas fallan antes del arreglo, y después pasan todas. Los dos casos de Codex (800 × 600, letra 2.0, Descarga) pasan;
+  - en el emulador, H2 pasa en claro y en oscuro.
+- **Queda anotado, fuera de 10.42:** a 700 dp en Carga la franja sigue en dos líneas, con el botón en la primera, y a 600 dp va en dos líneas en los tres modos.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 10 archivos cambiados y 2 nuevos (`test/t117_correccion1_test.dart` y `tool/t117_correccion1_android.py`). No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto;
+- el código hace lo que dice el informe. El cambio en `test/t114_candidata_atras_test.dart` solo agrega una prueba y pone al día el comentario: ninguna prueba vieja se aflojó;
+- el instrumento del emulador no corre con otro aparato que `emulator-5554`;
+- las capturas del emulador muestran el menú abierto, el menú cerrado sin advertencia tras el primer Atrás y la advertencia con el segundo;
+- **dos cosas para la reaceptación:**
+  - el foco con el teclado, en Windows y en la Web: si el menú se abrió con el teclado, tras Esc el foco debe volver al botón del modo;
+  - `BsPrimeraQueCabe` cambió de tolerancia, y lo usan la cabecera y la franja de la bahía: la matriz de Codex dice si alguna elección cambió.
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y el de esta decisión, y mueve `qa-r4` al commit de esta decisión.
+- Codex reacepta H1, H2 (Atrás en el emulador y Esc con el teclado) y H3, con su matriz de 92 casos, la suite y `analyze`. RNF-002 no se repite: la corrección no toca la apertura de un plano.
+- La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
+
+La siguiente decisión es la **10.44**.
+
+### 10.44 · La reaceptación de la entrega 1 no pasa por H4: «Acciones» sin nombre accesible en Windows; Timonel corrige (25-oct, 16:40)
+
+**Codex la cerró hoy a las 16:32, sobre `916bf2b`** (`docs/t117/entrega1/reaceptacion-codex.md`, con su evidencia en `build/t117-entrega1-reaceptacion/` de `baystream-qa-r4`):
+- **H1 pasa:** el botón cierra el flotante, el panel sigue oculto y la preferencia no cambia, también al cerrar y abrir la app en Windows. Sin flotante, el botón muestra y oculta el fijo, y «Fijar» lo fija.
+- **H2 pasa:**
+  - en el emulador, en claro y en oscuro, el primer Atrás cierra el menú sin advertencia y el siguiente es el primero del doble Atrás;
+  - Esc cierra el menú en Windows y en la Web, abierto con el mouse y con el teclado;
+  - abierto con el teclado, tras Esc el foco vuelve al botón del modo: Intro lo reabre y Tab sigue a «Buscar contenedor».
+- **La geometría de H3 pasa:** a 700 dp, en Contenido y Descarga, la franja mide 56 dp; cuando envuelve, el botón queda al final de la primera línea. Lo comprobó también en Windows nativo, con el borde a 700 y a 600 dp.
+- **H4 · P2 — «Acciones» solo con su ícono no tiene nombre accesible en Windows.** A 700 dp desaparece del árbol accesible, aunque la descripción emergente sí sale. La causa: `_PlanActions` (`loading_plan_controls.dart`) es un `PopupMenuButton` con un hijo propio, que no da nombre ni rol de botón; el motor de Windows toma el nombre de la etiqueta, no de la descripción. En la Web, Chrome sí lo anuncia como botón «Acciones».
+- **O1 · P3 — a 800 × 600 con la letra a 2.0, en Contenido, la franja pasa de 126 a 178 dp** y la rejilla pierde 52 dp al abrir. Es el costo del nuevo reparto de la variante que envuelve. Se trabaja desplazando la columna o plegando el puente.
+- **El cambio de tolerancia de `BsPrimeraQueCabe` no movió nada más:** solo cambia la elección a 960 × 1000 con la letra a 2.0, en Descarga, donde una variante se pasaba 0.08 dp. Ninguna elección de la cabecera cambia y no hay desbordes nuevos.
+- **Cifras:**
+  - la suite, 1677 aprobadas, sin fallidas ni omitidas, en una corrida;
+  - `analyze` en cero en la copia limpia;
+  - la matriz, 92 de 92: los dos casos de 800 × 600 que fallaron cierran el menú con Esc y «Deshacer» responde;
+  - la prueba propia de H4, roja.
+
+**Yov lo revisó:**
+- el informe coincide con la huella de su manifiesto, y las 238 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe;
+- H4 está en el código como dice Codex. El árbol accesible de Windows lo muestra: a 700 dp no hay «Acciones» entre «100 %» y «Plegar el panel del buque», y los demás botones de la oficina sí tienen nombre («Mostrar el panel lateral», «Bahía anterior»…);
+- **Es más ancho de lo que dice el informe:** a 600 dp, con su rótulo, «Acciones» tampoco es un botón. Windows lo muestra como «texto Acciones. Acciones»: el nombre repetido, sin rol de botón. Viene de antes de T-117; con el ícono solo, el nombre desaparece del todo.
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión.
+- Timonel corrige H4 en la corrección 2: «Acciones» como botón con su nombre, en las dos variantes y en los tres clientes, y busca el mismo patrón en lo que tocaron T-117 y T-118.
+- **O1 queda anotado como P3 y no se toca ahora.** Arreglarlo cambia otra vez el reparto de la franja y arriesga otra vuelta de aceptación; se puede ver en la entrega 3.
+- Codex reacepta solo H4, con la suite y `analyze`.
+- La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
+
+La siguiente decisión es la **10.45**.
+
+### 10.45 · La corrección 2 de la entrega 1, entregada y revisada: «Acciones» ya es un botón con su nombre; pasa a la reaceptación (25-oct, 17:35)
+
+**Timonel la entregó a las 17:27** (`docs/T117-T121-RESULTADOS.md`, «Corrección 2 de la entrega 1»):
+- **H4:** «Acciones» es un botón con la etiqueta «Acciones», con el ícono y con el rótulo. Con solicitudes pendientes, el nombre lleva la cuenta («Acciones, 1 solicitud pendiente»). La descripción emergente sigue con el mouse, fuera de la semántica, para que el nombre no se repita.
+  - La causa: en Windows, el nombre es la etiqueta más la descripción emergente, y un nodo de texto sin etiqueta se ignora.
+- **El mismo patrón, una vez más:** el resumen de una línea del teléfono (`PlanSummaryLine`) era un `InkWell` sin rol de botón; ahora es un botón. No hay otro caso en lo que tocaron T-117 y T-118.
+- **El árbol accesible de Windows**, en bancos propios abiertos con `explorer.exe`, antes y después:
+  - a 700 dp, «Acciones» no aparecía, y ahora dice «botón Acciones»;
+  - a 600 dp decía «texto Acciones. Acciones», y ahora «botón Acciones»;
+  - a 560 dp, en el teléfono, igual que a 700.
+  En MSAA sale como «botón de comando Acciones», y activado por UIA abre su menú. Nada más cambia en los árboles.
+- **Cifras:** suite 1685 (piso 1677, más 8), sin fallidas ni omitidas, en una corrida, y `analyze` en cero. Las 8 pruebas nuevas fallan contra `41f458d` y pasan después.
+- **Un tropiezo del instrumento:** al cerrar el menú, activó el «Cerrar» de la barra de título y cerró el banco. El instrumento solo actúa dentro de la ventana del proceso que se le da, así que no podía tocar otra ventana. Timonel repitió 600 y 560 dp.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 4 archivos cambiados y 2 nuevos (`test/t117_correccion2_test.dart` y `tool/t117_correccion2_windows.ps1`). No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto;
+- el código hace lo que dice el informe: cambia solo la semántica, y las capturas de antes y de después son iguales;
+- la comparación de los árboles de Windows coincide: solo cambian «Acciones» y el resumen del teléfono.
+
+**Queda anotado, y no bloquea esta aceptación:**
+- **La prueba de Codex que pide la descripción emergente dentro del nodo queda superada.** Con la descripción en la semántica, Windows repite el nombre. Para un botón de ícono se acepta esto: su etiqueta, el rol de botón, que se pueda tocar y la descripción emergente con el mouse.
+- **O2 · P3 — los segmentos de `BsSelectorDeModo` repiten el nombre en Windows:** «botón Destino. Destino. El puerto de descarga…». Tienen nombre y rol, pero el lector de pantalla lo dice dos veces.
+- **O3 · límite de Flutter:** las entradas de los menús de Flutter se leen como texto y no se activan desde UIA (Invoke); sí se activan con la acción por omisión de MSAA, la que usan los lectores de pantalla. Es del motor, no del producto.
+- O1 y O2 se ven en la entrega 3, con lo demás de accesibilidad de la oficina.
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y el de esta decisión, y mueve `qa-r4` al commit de esta decisión.
+- Codex reacepta solo H4 y el resumen del teléfono, con el árbol de Windows, la suite y `analyze`.
+- La meta sigue: la entrega 1 aceptada el 29 o el 30-oct.
+
+La siguiente decisión es la **10.46**.
+
+### 10.46 · La entrega 1 de T-117 y T-118, aceptada; sigue la entrega 2, T-121 (25-oct, 18:10)
+
+**Codex la aceptó hoy a las 17:56, en la segunda reaceptación, sobre `0949488`** (`docs/t117/entrega1/reaceptacion2-codex.md`, con su evidencia en `build/t117-entrega1-reaceptacion2/` de `baystream-qa-r4`):
+- **H4 queda cerrado.** En UIA y en MSAA, «Acciones» es un botón con un solo nombre, con el ícono y con el rótulo, y con la cuenta del distintivo en singular y en plural. Invoke abre su menú. El resumen del teléfono también es un botón.
+- Sus árboles de Windows, comparados con los de la reaceptación anterior, solo cambian en «Acciones».
+- **Cifras:** la suite, 1685 de 1685 en una corrida, sin omitidas; sus pruebas propias, 9 de 9; `analyze` en cero en la copia limpia. No hay hallazgos nuevos.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, las 85 huellas de la evidencia coinciden, y el árbol de `qa-r4` está intacto.
+
+**La entrega 1 queda aceptada, cuatro días antes de la meta del 29 o el 30-oct.** Pasó por tres rondas de Codex: la aceptación (H1, H2 y H3), la reaceptación (H4) y la segunda reaceptación, que pasa. **El piso de la suite sube a 1685.**
+
+**Queda anotado para la entrega 3:** O1 y O2 (P3), y el arrastre entre dos monitores, que no se pudo probar. O3 es un límite de Flutter.
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión.
+- **La entrega 2, T-121: las estadísticas A, «El buque en corte»** (10.37 y 10.38), según la sección 0.9 del informe de la fase 0:
+  - Timonel escribe primero `DESIGN.md` (la cifra protagonista a 48 dp y la rampa nueva) y después el código;
+  - lleva lo que dejó la entrega 1: cada control con su nombre en el árbol de Windows, y Esc y Atrás para lo que se abre sin ser una ruta;
+  - tocar una bahía la abre en el plano. Tocar un puerto para ir a la Lista filtrada va con T-120, en la entrega 3;
+  - corre Flutter solo con la luz verde de Carlos.
+- Para el ensayo y el piloto con la 3.1.0 sigue la regla de 10.39: no hay Flutter en esas horas, y Carlos pausa a Timonel antes de salir con la laptop.
+- Las metas: la entrega 2 hacia el 3-nov, la 3.2.0 publicada a más tardar el 4-nov y la presentación final el 7-nov. La lista del piloto se pone al día al publicar la 3.2.0 (E1.10).
+
+La siguiente decisión es la **10.47**.
+
+### 10.47 · El piloto va hoy en el ECO BORA, con la Web y el Honor; Timonel sigue toda la noche con luz verde (25-oct, 18:55)
+
+**Carlos lo decidió a las 18:44:**
+- **El piloto es hoy, en su jornada en el buque ECO BORA,** con un plano real de descarga y uno de carga:
+  - la oficina, en la Web, desde su teléfono personal;
+  - el muelle, en el Honor, con la app de la prueba interna de Play;
+  - las dos con la 3.1.0. La laptop se queda en casa.
+- Lo que encuentre (mejoras, cambios y arreglos) se lo pasa a Yov al volver, y Yov lo convierte en tareas.
+- **Timonel sigue con la entrega 2 toda la noche, con Fable 5.1 en Ultracode y luz verde para todo lo que la entrega necesita:** Flutter cuantas veces haga falta, siempre un comando a la vez, y abrir y cerrar sus bancos, Chrome con perfil temporal y el emulador. Como la laptop no va al piloto, la regla de 10.39 no lo frena esta vez. Si una tarjeta de permiso no responde, aplica 10.41 o deja el paso anotado para mañana.
+- **No cambian:**
+  - Git solo de lectura;
+  - nada de Firebase ni de publicaciones;
+  - el Honor no se toca, porque está en el muelle; las apps instaladas, «PRUEBA T-105» y `baystream-demo17` tampoco;
+  - solo datos sintéticos: nada del ECO BORA entra al repositorio ni a las capturas.
+
+La siguiente decisión es la **10.48**.
+
+### 10.48 · La entrega 2, T-121, entregada y revisada: «El buque en corte»; pasa a la aceptación de Codex (25-oct, 20:25)
+
+**Timonel la entregó a las 20:13, con Fable 5.1 en Ultracode, en unas 2 h de reloj** (la fase 0 estimó de 11 a 13 h; `docs/T117-T121-RESULTADOS.md`, «Entrega 2 · T-121», y `DESIGN.md` 15). Corrió Flutter con la luz verde de Carlos (10.47):
+- **La página:**
+  - la silueta grande (`BsBuqueEnCorte`) con dos pilas por bahía, cubierta y bodega, cuyo alto dice los contenedores o el peso;
+  - encima, «N contenedores a bordo» a 48 (`BsEscala.cifraProtagonista`) y la fila de cifras; debajo de cada bahía, su número, su cuenta y su peso, en el mismo eje;
+  - cinco paneles: por puerto, llenos y vacíos, por tamaño, carga especial y por naviera;
+  - «Ver como tabla», que se cierra con Esc y con Atrás. Tocar una bahía la abre en el plano.
+- **La rampa nueva de 0.9.4** entra en `bs_paleta.dart` y sustituye la de `DESIGN.md` 5.5. Se volvió a validar con el script de la skill de dataviz.
+- **Cinco componentes nuevos** en `lib/core/design/componentes/`, y las cifras en `estadisticas_del_viaje.dart`, en la capa de presentación. Sale `vessel_profile_view.dart` con su prueba: su casco era otro buque, y lo sustituye la protagonista.
+- **Trece desviaciones de 0.9.5,** anotadas en `DESIGN.md` 15.11. Las más visibles:
+  - el peso por bahía va como cifra en el pie, no como columna;
+  - las pilas van en los dos colores de cubierta y bodega del ícono, con su leyenda;
+  - la bahía mide 56 dp por la escala de la letra;
+  - «Otros N» sale solo cuando sobran dos o más.
+- **Antes de la luz verde,** cuatro revisores sin compilar, con un escéptico por hallazgo, encontraron cinco defectos, ya corregidos: el foco de Esc, la tinta de las bahías bajo la hoja, el selector y la tabla que partían palabras a 360 dp, el anillo con la letra a 2.0 y una prueba de T-97 que buscaba «Total Contenedores».
+- **Cifras:**
+  - suite 1773 (piso 1685, más 88 netas: 92 nuevas, menos las 3 de la vista borrada, de las que una pasa a T-121, y la referencia de píxeles de T-109), sin fallidas ni omitidas, en una corrida;
+  - `analyze` en cero;
+  - capturas con datos sintéticos, sin textos cortados ni errores: Windows 58 (el sintético de 977 en 72 bahías y el plano de llegada), la Web 24 y el emulador 24.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 13 archivos cambiados, 10 nuevos y 2 borrados, 25 rutas. `SPRINT-4.md` trae la 10.47 de Yov y no va en el bloque de Timonel. No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto;
+- en las piezas nuevas no hay `Colors.*` ni naranja; la rampa de `bs_paleta.dart` es la validada, y la cifra protagonista mide 48;
+- las pruebas que cambian se ajustan a la vista nueva sin aflojarse:
+  - T-97 y T-107 buscan la protagonista en vez de «Total Contenedores»;
+  - T-109 deja la referencia de píxeles de la vista vieja y ya no lee el corpus;
+  - los censos de T-98c solo dejan de nombrar el archivo borrado;
+  - no queda ninguna referencia a `vessel_profile_view.dart`;
+- en las capturas, la página es coherente con «Puente de mando», en los dos temas y en los tres clientes;
+- **tres cosas para la aceptación:**
+  - con pocas bahías (el plano de llegada tiene nueve), la silueta ocupa menos de la mitad del panel, pegada a la izquierda, y la protagonista se ve chica. Con 72 bahías llena el panel y se desplaza;
+  - la muestra de «Cubierta» en la leyenda, blanca y con borde, parece una casilla para marcar;
+  - el selector «Contenedores / Peso» va solo con íconos cuando no caben los rótulos, y tiene que conservar su nombre en el árbol de Windows (la lección de H4).
+- `formatearToneladas` escribe «8366.1 t», sin separador de miles, como en todo el producto; los wireframes de la fase 0 decían «7 419.5 t». Yov recomienda dejarlo así.
+
+**Lo que sigue:**
+- Al volver del piloto, Carlos sube el bloque de Timonel y el de 10.47 y 10.48, y mueve `qa-r4` al commit de esta decisión.
+- Codex acepta la entrega 2.
+- La meta: la entrega 2 aceptada hacia el 3-nov, y la 3.2.0 publicada a más tardar el 4-nov.
+
+La siguiente decisión es la **10.49**.
+
+### 10.49 · Piloto en el ECO BORA, hallazgo 1 (P1): el plano de llegada no deja elegir GTSTC como escala (25-oct, 22:25)
+
+**Carlos lo encontró hoy a las 22:16, en el muelle, con la 3.1.0 en la Web de su teléfono (oficina).** Es el primer defecto del piloto, y lo detectó él mismo.
+
+**Lo que pasó:**
+- Abrió el plano de llegada real del ECO BORA. El archivo declara que el buque sale de HNPCR (`LOC+5`) rumbo a JMKWL (`LOC+61`), pero trae contenedores con descarga en GTSTC, el puerto donde opera Carlos.
+- La app propuso HNPCR como escala, y quedó confirmada. Con HNPCR, la cuenta dice «0 se descargan»: el menú del modo no ofrece «Descarga», y un contenedor que baja en GTSTC no se puede marcar.
+- En «Parámetros del buque» → «Puerto de esta escala», **GTSTC no aparece entre las opciones.** Solo están HNPCR, JMKWL, los puertos de carga (PAMIT, CRPMN, PAONX) y «Sin declarar».
+
+**La causa, en el código de la 3.1.0 (`master`, `v3.1`):**
+- `vessel_geometry_page.dart`, `_portOptions`: ofrece el puerto de salida, el siguiente, los puertos de carga de los contenedores y los de las celdas reservadas. **Los puertos de descarga no entran.**
+- `vessel_voyage.dart`, `suggestPortOfCall`: la última escala confirmada solo se propone si es la de salida o la siguiente.
+- `discharge_provider.dart`, `offersDischarge`: «Descarga» existe solo si algo baja en la escala elegida.
+- Resultado: con un archivo cuyo `LOC+61` no es el puerto donde se opera, la descarga, que es la función principal del muelle, no se puede hacer. Es el mismo terreno de T-68 («la escala mal propuesta en planos de llegada»); aquel arreglo se apoyó en `LOC+61`, y este archivo lo trae distinto.
+
+**Esta noche:** la descarga va en papel. Carlos prueba la carga con el `.edi` de carga, si declara GTSTC como salida, e informa cómo se comporta.
+
+**La corrección que propone Yov (decide Carlos):**
+- **Una 3.1.1 desde `master` y `v3.1`, no desde `sprint-4`, como dice 10.39:** los puertos de descarga de la carga entran en las opciones de la escala, con su cuenta («GTSTC (n)»). Si la última escala confirmada es uno de ellos, se propone esa.
+- La prueba, con un BAPLIE sintético que salga de un puerto A rumbo a C con carga para B: B se puede elegir y «Descarga» aparece. Nada del ECO BORA entra al repositorio.
+- El mismo arreglo pasa después a `sprint-4`, para la 3.2.0.
+
+La siguiente decisión es la **10.50**.
+
+### 10.50 · Piloto en el ECO BORA, hallazgos 2 y 3: el listado no entra en una operación publicada, y la fila «AGREGADOS» (25-oct, 22:45)
+
+**Carlos lo encontró a las 22:39, en la Web de su teléfono (oficina).** Con el plan de carga ya funciona la escala GTSTC: la operación quedó publicada en la nube. Después quiso importar el listado de la agencia para ver los números de orden en el plano.
+
+**Hallazgo 2 (P1) — el listado no entra en una operación publicada.**
+- La página del listado lo leyó bien (las filas de cada agencia, los llenos y los vacíos, con la equivalencia 40HC → 45G1), pero no lo guarda: «La operación de esta escala ya está publicada y sus fuentes no cambian. Abre la fuente publicada desde «Nube y cuenta»».
+- La causa: `operation_sources.dart`, `OperationSources.save`. Una operación publicada solo acepta la misma fuente que ya tiene, con el mismo texto. No acepta una fuente nueva, aunque falte, como el listado.
+- En la lista del piloto, el listado entra antes de publicar (1.4 y 1.5, antes de 1.7). Pero en la operación real el listado llega tarde o cambia mientras se carga, como muestra el hallazgo 3. Sin el listado no salen los números de orden en el plano, y «Asignar vacío», que trabaja con los vacíos del listado, no tiene con qué.
+
+**Hallazgo 3 (P2) — la fila «AGREGADOS».**
+- La agencia agrega contenedores al final del Excel, debajo de una fila «AGREGADOS». El lector la marca como «1 fila sin entender» y pide corregir el Excel.
+- Tiene que entenderla como un encabezado de sección. Falta revisar si las filas de debajo quedaron contadas en la última agencia.
+
+**Esta noche:** se descarta el listado. La carga de llenos sigue por los últimos dígitos del contenedor, y los números de orden y los vacíos van con el listado impreso.
+
+**La corrección que propone Yov para la 3.1.1 (decide Carlos), junto con el hallazgo 1:**
+- La oficina puede agregar o reemplazar el listado de una operación publicada, y el muelle lo recibe. Los movimientos registrados no se pierden. Antes hay que revisar cómo viajan las fuentes por la nube y si las reglas publicadas lo permiten, porque las reglas no se tocan sin Carlos.
+- El lector entiende «AGREGADOS» como encabezado de sección.
+- Las pruebas, con un listado sintético que traiga esa fila. Nada del listado real entra al repositorio.
+
+La siguiente decisión es la **10.51**.
+
+### 10.51 · Piloto en el ECO BORA, hallazgo 4 (P1): sin listado no se registra ninguna carga (25-oct, 22:50)
+
+**Carlos lo encontró a las 22:46, con la cuenta de oficina en la Web.** Al tocar una celda de carga, solo se abre el detalle («Pendiente», con su celda), y «OR / últimos dígitos» sale apagado.
+- Que la oficina no registre cargas es el diseño: registra el muelle, y la oficina mira y aprueba cambios.
+- **El defecto es otro:** en la 3.1.0, una carga solo se registra a través de su fila del listado. En `loading_controls.dart`, `onLoadingContainerTap`, sin fila la oficina ve el detalle y el muelle recibe «Este contenedor no tiene OR en el listado de la agencia: importa el listado actualizado». «OR / últimos dígitos» se apaga sin listado (`busquedaDeCarga`).
+- Con el hallazgo 2, la operación publicada sin listado no admite **ninguna** carga, ni en el Honor ni en la oficina. Un lleno que viene en el plan de carga se tendría que poder cargar por su número de contenedor aunque no haya listado: el número de orden ayuda, pero no es la llave.
+
+**Esta noche:** la carga va en papel. Para probar el flujo del muelle, Carlos puede abrir la Web en una pestaña de incógnito, sin cuenta, como muelle local: el plan de carga con GTSTC y el listado importado. Esas marcas no se sincronizan y se borran al cerrar la pestaña.
+
+**Para la 3.1.1 (decide Carlos), con los hallazgos 1 a 3:** cargar un lleno del plan por su número de contenedor, sin listado. Para los vacíos, sigue haciendo falta el listado (hallazgo 2).
+
+La siguiente decisión es la **10.52**.
+
+### 10.52 · Piloto en el ECO BORA: la carga ya corre; hallazgo 5 (P2), el avance de la bahía 22 sube en la 21 (26-oct, 05:35)
+
+**El camino que funcionó (25-oct, 23:11).** Carlos hizo una copia del plan de carga con otro número de viaje, para tener una operación nueva. En la Web (oficina), eligió GTSTC, importó el listado **antes** de publicar y después publicó; el Honor (muelle) se unió. Con eso:
+- salen los números de orden, y «OR / últimos dígitos» funciona;
+- se declararon las tapas («Sin tapa · bodega abierta»), y la nube queda al día;
+- la carga avanza desde el Honor; a las 05:26 seguía en marcha.
+
+Es la confirmación de los hallazgos 2 y 4: con el listado dentro antes de publicar, la carga funciona.
+
+**Hallazgo 5 (P2) — el avance de la carga se dibuja en la bahía impar.**
+- Cargando contenedores de 40 pies en la 22, la barra de avance de la silueta sube bajo la **21**, y la 22, que es la elegida, no muestra avance.
+- La causa: `loading_operation.dart`, `displayBay`: una bahía par se cuenta con la impar anterior si esta existe en el plan (22 → 21), y el avance la rotula «21/22» (`operation_progress.dart`).
+- En el buque es al revés, como dice Carlos: **la par es la bahía de referencia.** La 22 es la bahía de 40 pies, y la 21 y la 23 son sus dos mitades de 20 pies (lo mismo con 01, 02, 03 o con 17, 18, 19).
+- Los movimientos se guardan bien, con su posición en la 22. Lo que está mal es dónde se cuenta y se dibuja el avance.
+
+**La corrección que propone Yov (decide Carlos):** agrupar por la bahía par (21 y 23 → 22) en el avance y en la silueta, con su prueba. Toca `domain/`: en la 3.1.1 es un arreglo de un defecto, así que lo autoriza Carlos.
+
+La siguiente decisión es la **10.53**.
+
+### 10.53 · La aceptación de la entrega 2 no pasa por un P2: con pocas bahías, la silueta queda chica; Timonel corrige (26-oct, 09:40)
+
+**Codex la cerró hoy a las 07:22, sobre `f324499`** (`docs/t121/entrega2/aceptacion-codex.md`, con su evidencia en `build/t121-entrega2-aceptacion/` de `baystream-qa-r4`):
+- **H1 · P2 — con pocas bahías, la silueta no es la protagonista «en grande» de 0.9.5.** Con `T100_LLEGADA` (nueve bahías) a 1920, con la letra a 1.0, queda pegada a la izquierda y ocupa menos de la mitad del ancho del panel, en Contenedores y en Peso. Con 72 bahías sí llena el panel y se desplaza. La causa: `BsBuqueEnCorte` arma una fila de ancho intrínseco, con 56 dp por bahía por la escala de la letra, y no reparte el ancho que sobra. Es el primero de los tres puntos de Yov en 10.48.
+- **O1 · P3 — la muestra de «Cubierta» parece una casilla para marcar:** blanca, cuadrada, de 12 dp y con borde. En el árbol accesible es texto, no un control. Es el segundo punto de 10.48.
+- **Acepta las trece desviaciones de `DESIGN.md` 15.11,** una por una.
+- **Lo demás pasa, con pruebas propias:**
+  - la suite, 1773 aprobadas, sin fallidas ni omitidas, y `analyze` en cero en la copia limpia;
+  - 66 pruebas propias y una matriz de 60 casos: cinco tamaños, dos letras, dos temas y tres juegos de datos;
+  - las cifras cuadran con un conteo propio en los tres archivos sintéticos: el total, los llenos y vacíos, los puertos, las navieras, los tamaños y las bahías;
+  - en Windows, con UIA y MSAA, «Contenedores» y «Peso» se dicen una vez y con rol de botón, también cuando van solo con íconos (el tercer punto de 10.48). La Web pasa 60 de 60 en Chrome, y Android, seis condiciones en el emulador;
+  - la rampa pasa el script de la skill de dataviz en los cuatro fondos de 0.9.4, y la cifra protagonista mide 48.
+- **Una salvedad, declarada por Codex:** antes de la corrida válida hubo dos intentos de suite sobre copias mal hechas. A la primera le faltaba `lib/core/design/`; a la segunda, sus manifiestos, y ya llevaba el rótulo del banco. No son reintentos del producto.
+
+**Yov lo revisó:**
+- el informe coincide con la huella de su manifiesto, y las 811 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe;
+- los dos intentos son lo que dice Codex:
+  - el primero se cortó al compilar;
+  - el segundo falló solo en las pruebas que leen esos manifiestos (`t114_ilustraciones`) y el rótulo (`t88_privacy_policy`);
+  - la corrida válida fue sobre una copia cotejada con el árbol, 1 879 archivos, donde solo difiere el registrador de plugins que genera `pub get`.
+  
+  Vale, y queda una lección: la copia se coteja antes de la primera corrida;
+- la captura de la Web a 1920 lo muestra: la silueta de nueve bahías mide menos de 600 de los más de 1 400 px del panel, y a la derecha no hay nada. La muestra de «Cubierta» se ve como una casilla junto al selector.
+
+**La pregunta de 10.52, respondida.** Codex usó un viaje sintético con dos contenedores de 20 pies en la 21, tres de 40 en la 22 y uno de 20 en la 23:
+- Estadísticas cuenta cada número por separado: la 21 con 2, la 22 con 3 y la 23 con 1;
+- el avance junta la 22 con la 21 («21/22», 5) y deja la 23 sola;
+- ninguna de las dos sigue la regla de Carlos, que la bahía de referencia es la par.
+
+Se ve también en `T100_LLEGADA`: Estadísticas dibuja nueve columnas, seis de ellas en cero (las impares vecinas de los de 40). El planificador ahí ve tres bahías: la 02, la 06 y la 10.
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión, antes de mover `qa-r4` otra vez.
+- **Timonel corrige H1 y O1** en la corrección 1 de la entrega 2, con una prueba que reproduce cada uno, y pone al día `DESIGN.md` 15.4:
+  - cuando las bahías caben, la silueta ocupa el ancho útil del panel: cada bahía crece hasta un tope escrito en 15.4, y si aun así sobra ancho, el casco va centrado;
+  - no cambian la escala común de las pilas, el pie en el mismo eje, el desplazamiento cuando no caben ni la página en el teléfono;
+  - corre Flutter con la luz verde de Carlos mientras la laptop no vaya al muelle, como en 10.47.
+- **La regla de la bahía par no entra en esta corrección:** en Estadísticas, cada bahía sigue siendo su número. Yov propone una sola regla, con la par como referencia, para el avance (la página y la silueta del plano) y para Estadísticas:
+  - se escribe una vez en el dominio, en la 3.1.1 (10.52);
+  - cuando la 3.1.1 pase a `sprint-4`, Estadísticas la adopta en una tarea propia.
+  
+  Decide Carlos.
+- Codex reacepta H1 y O1, con la suite y `analyze`.
+- La meta sigue: la entrega 2 aceptada hacia el 3-nov, y la 3.2.0 a más tardar el 4-nov.
+
+La siguiente decisión es la **10.54**.
+
+### 10.54 · La corrección 1 de la entrega 2, entregada y revisada: con pocas bahías, la silueta llena el panel; pasa a la reaceptación de Codex (26-oct, 11:15)
+
+**Timonel la entregó a las 11:05, con Opus 5.5** (`docs/T117-T121-RESULTADOS.md`, «Entrega 2 · corrección 1», y `DESIGN.md` 15.4):
+- **H1:** cuando las bahías caben, se reparten el ancho útil del panel (`BsBuqueEnCorte.repartir`):
+  - cada bahía crece hasta un tope de tres veces su mínimo: 168 dp con la letra a 1.0 y 336 a 2.0. Si aun así sobra ancho, el casco va centrado. Con ese tope, desde ocho bahías la silueta llena el panel de 1440;
+  - con 600 dp o más de ancho, el alto de las zonas crece en la misma proporción, hasta 1.5 veces: de 72 a 108 dp;
+  - no cambian las 72 bahías, el teléfono ni la letra a 2.0 cuando no caben: 56 dp por bahía, el alto base y el desplazamiento.
+- **O1:** la muestra de la leyenda es una pila pequeña de tres niveles, de 10 × 17 dp y sin borde. En el árbol accesible sigue siendo texto.
+- **Cifras:**
+  - 10 pruebas nuevas en `test/t121_entrega2_c1_test.dart`. Contra una copia de `a5dfc9f`, con solo la regla del reparto añadida para que compile, fallan las 8 de H1 y O1, y pasan la regla y la de las 72 bahías;
+  - la suite, 1783 de 1783 (antes 1773), sin fallidas ni omitidas, en una corrida, y `analyze` en cero;
+  - 154 capturas con datos sintéticos, sin textos cortados ni errores de Flutter: Windows 58, la Web 48 y el emulador 48. En E2C1.6 el informe dice 146; son 154 (26 + 32 + 4 × 24).
+- Tras la primera corrida en rojo, Timonel corrigió tres comprobaciones mal planteadas de su prueba: el redondeo de los anchos, las bahías del caso de tres y la medida de la muestra. Ninguna toca lo que miden H1 y O1; por eso el «antes» que cuenta es la corrida contra `a5dfc9f`.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 6 archivos cambiados y 1 nuevo, 7 rutas. No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados ni la lista del piloto, y la regla de las bahías pares e impares no se tocó;
+- el código hace lo que dice: un `LayoutBuilder` da el ancho del panel y `repartir` lo divide. Si las bahías caben, la silueta va en una caja del ancho del panel, centrada; si no, se desplaza como antes;
+- las pruebas miden lo que importa:
+  - con nueve bahías, a 1920 y a 1366, las bahías ocupan más del 90 % del panel, sin nada que desplazar, y la proa y la popa quedan a 40 dp o menos del borde;
+  - con tres bahías, cada una mide su tope y el casco va centrado;
+  - las 72 bahías se desplazan como antes;
+- en las capturas, la silueta de nueve bahías va de borde a borde a 1920 y a 1366, en los dos temas. A 1366 con la letra a 2.0 no cabe y se desplaza, como dice la regla. El 977 y el teléfono se ven como antes. La leyenda ya no parece una casilla, y sin el borde la muestra de «Cubierta» se sigue viendo en el tema claro;
+- **una cosa para la reaceptación:** en el plano de llegada queda una franja vacía arriba del casco. La cubierta lleva un solo nivel, y su zona reserva el mismo alto que la bodega, ahora de 108 dp. Es la escala común de 15.4, no un defecto; Codex dice si la protagonista cumple con «en grande».
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y esta decisión, y mueve `qa-r4` al commit de esta decisión.
+- Codex reacepta H1 y O1 en los tres clientes, con la suite y `analyze`, y coteja su copia antes de la primera corrida (10.53). Corre Flutter con la luz verde de Carlos mientras la laptop no vaya al muelle (10.47).
+- Siguen abiertas para Carlos dos decisiones de 10.53: la regla de la bahía par y la 3.1.1.
+- La meta sigue: la entrega 2 aceptada hacia el 3-nov, y la 3.2.0 a más tardar el 4-nov.
+
+La siguiente decisión es la **10.55**.
+
+### 10.55 · La entrega 2 de T-121, aceptada: las estadísticas ya son «El buque en corte» (26-oct, 13:45)
+
+**Codex la reaceptó a las 13:27, sobre `004ccaa`** (`docs/t121/entrega2/reaceptacion-codex.md`, con su evidencia en `build/t121-entrega2-reaceptacion/` de `baystream-qa-r4`):
+- **H1 y O1 quedan cerrados:**
+  - con nueve bahías, la silueta se reparte el panel a 1920 (148 dp por bahía) y a 1366 (137), sin nada que desplazar y con zonas de 108 dp;
+  - con tres y con cuatro bahías, cada una mide su tope de 168 dp y el casco va centrado;
+  - con 72 bahías y en el teléfono, todo sigue como antes;
+  - la muestra de la leyenda se reconoce como pila y, en los tres clientes, sigue siendo texto.
+- **El punto de 10.54:** la franja vacía arriba del casco se ve, y la protagonista cumple igual con «en grande». Esa reserva dice que la cubierta va casi vacía.
+- **Cifras:**
+  - la suite, 1783 de 1783, en una sola corrida, sobre una copia cotejada antes de correrla (la lección de 10.53), y `analyze` en cero;
+  - su matriz, 80 de 80; Chrome, 60 de 60; Android, 6 de 6; Windows, con UIA y MSAA.
+- **Tres tropiezos de su instrumento, declarados y resueltos:**
+  - dos pruebas propias de O1 cerraban mal su manejador de semántica; repitió solo esas dos, no la suite;
+  - una lectura sin UTF-8 en su recorrido de Android;
+  - unas capturas con el puntero encima, que repuso.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 930 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1783 éxitos y ninguna omitida.
+
+**Con esto:**
+- **la entrega 2 de T-117 a T-121 queda aceptada,** una semana antes de la meta del 3-nov. El piso de `sprint-4` sube a **1783**;
+- lo que lleva la 3.2.0 ya está hecho: las entregas 1 y 2 (10.38). La entrega 3 va en una 3.2.1, porque la presentación final es el 7-nov. Son T-119 y T-120, con O1 y O2 de la entrega 1 y el arrastre entre dos monitores;
+- **siguen abiertas para Carlos** la 3.1.1, con los hallazgos del piloto (10.49 a 10.52), y la regla de la bahía par (10.53).
+
+**Yov propone hacer la 3.1.1 ahora, antes que la entrega 3.** Son defectos P1 de la primera operación real, y la 3.2.0 de la presentación tiene que llevarlos corregidos. La propuesta:
+- Timonel trabaja desde `master` y `v3.1`, en la carpeta `proyecto-baystream`, y Codex la acepta;
+- entran H1, H3, H4 y H5, con la regla de la par. Tocan `domain/`, y el sí de Carlos es la autorización (10.52);
+- H2, el listado que entra en una operación ya publicada, toca cómo viajan las fuentes por la nube y quizá las reglas publicadas: Timonel lo diagnostica y lo propone, y decide Carlos;
+- después, el arreglo pasa a `sprint-4`, y de ahí sale la 3.2.0.
+
+**Lo que sigue:**
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión.
+- Carlos decide la 3.1.1 y la regla de la par. Con su sí, Yov escribe el prompt de Timonel.
+- La meta sigue: la 3.2.0 publicada a más tardar el 4-nov. La lista del piloto se pone al día al publicarla (E1.10).
+
+La siguiente decisión es la **10.56**.
+
+### 10.56 · La 3.1.1 va (T-122), con dos hallazgos más del piloto: un vacío asignado que ninguna búsqueda encuentra y el arrastre en el teléfono (26-oct, 14:10)
+
+**Carlos aprobó la propuesta de 10.55 a las 13:50:**
+- **T-122 · La 3.1.1, con los hallazgos del piloto.** Timonel trabaja desde `master` y `v3.1`, en `proyecto-baystream`; es la excepción a «no cambies de carpeta». Codex la acepta. Entran H1, H3, H4, H5 y los dos hallazgos de abajo; H2 solo se diagnostica y se propone. Las versiones: la 3.1.1 con la compilación 5, y el MSIX 3.1.1.0.
+- **La regla de la bahía par es la de Carlos:** la par es la bahía de referencia. Una impar se cuenta con la par vecina que la cubre (21 y 23 con 22), y el grupo se rotula con la par. Se escribe una sola vez en el dominio, en la 3.1.1. Estadísticas la adopta en `sprint-4` cuando la 3.1.1 pase allá.
+
+**Hallazgo 6 (P1) — un vacío asignado a una celda reservada no aparece en ninguna búsqueda.** Carlos lo encontró hoy hacia las 11:17, en el Honor (muelle):
+- El supervisor de la portuaria buscaba el OR 48 en su plano de papel y creyó que no se había cargado: lo había anotado en la bahía 26 y lo olvidó. Para ayudarlo, Carlos lo buscó en la app.
+- El OR 48 es un vacío del listado que Carlos asignó a las 10:38 a la única celda reservada de la bahía 26. El plano lo muestra cargado, con su OR, y su detalle dice «Cargado», con su celda y su hora.
+- Pero la búsqueda general, con el número completo, dice «Sin resultados». «OR / últimos dígitos» tampoco lo ofrece, ni por su OR ni por sus dígitos: con «48» salen dos llenos cuyo número termina en 48. Fue el único contenedor que no apareció.
+- **La causa, en la 3.1.0:**
+  - la búsqueda general (`container_search_delegate.dart`) solo recorre `voyage.containers`, el BAPLIE, donde la celda reservada no trae número de contenedor (`vessel_overview_page.dart`, línea 462);
+  - `LoadingOperation.search` (`loading_operation.dart`, línea 81) solo da las filas del listado cuyo contenedor está numerado en el plan de carga (`numbered`); un vacío asignado a una reserva no lo está;
+  - el vacío vive solo como `assignedContainer` en el estado de la operación. De ahí lo leen el plano, su detalle y el BAPLIE de salida (`departure_baplie_writer.dart`); las búsquedas no.
+- Por eso fue el único: era el único vacío cargado en una celda reservada.
+- **La corrección:** las dos búsquedas encuentran el vacío asignado como a los demás, la general por su número y la de carga por su OR y sus últimos dígitos, con su celda y «Ya cargado». Timonel revisa qué otras vistas que listan contenedores lo pierden.
+
+**Hallazgo 7 (P2) — en el teléfono, el arrastre no llega al otro extremo de la bahía.**
+- Al mantener presionado un contenedor, se levanta y sigue al dedo, pero el plano no se desplaza cuando el dedo llega al borde. La celda de destino, fuera de la vista, no se alcanza.
+- **La causa:** `PlanDragCell` (`plan_drag_confirmation.dart`) es un `LongPressDraggable` dentro de los dos `SingleChildScrollView` de `PlanZoomViewport` (`bay_plan_view.dart`), y nada desplaza la vista durante el arrastre. Con dos dedos, el gesto se lo lleva el zoom.
+- Mientras tanto, el cambio se pide con el formulario de «Pedir cambio».
+- **La corrección:** durante el arrastre, el plano se desplaza solo, en los dos ejes, cuando el dedo o el mouse se acercan al borde, también con zoom. Al soltar, cuenta la celda que queda bajo el dedo.
+
+**Lo que sigue:**
+- Carlos sube esta decisión.
+- Timonel hace T-122 con Flutter, mientras la laptop siga en casa (10.47). Codex la acepta.
+- Carlos publica la 3.1.1 con la sección 4 de la lista del piloto cuando el ECO BORA termine, no durante la operación.
+- Después, la 3.1.1 pasa a `sprint-4`, y de ahí sale la 3.2.0, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.57**.
+
+### 10.57 · T-122, la 3.1.1, entregada y revisada: seis hallazgos corregidos y una corrección antes de Codex, por el BAPLIE de salida (26-oct, 16:45)
+
+**Timonel la entregó a las 16:32** (`docs/T122-RESULTADOS.md`, en `master` sobre `7488321`):
+- **H1:** los puertos de descarga entran en las opciones de la escala con su cuenta («GTSTC (7)»), y se proponen si fueron la última escala confirmada. «Descarga» aparece sola.
+- **H3:** «AGREGADOS» es un encabezado de sección. Sus filas se cuentan en «AGREGADOS: n» y no en la última agencia, como pasaba en la 3.1.0.
+- **H4:** en el muelle, un lleno del plan sin fila en el listado se carga por su número, tocando su celda o con «OR / últimos dígitos», que ya no se apaga sin listado. La oficina sigue sin registrar cargas, y los vacíos siguen necesitando el listado.
+- **H5:** la regla de la par vive en `reference_bay.dart`. La impar va con la par vecina que está en el plano, no con la convención de 02, 06, 10…, porque A01 trae una 044. El avance y la silueta del plano ya suben bajo la 22.
+- **H6:** el vacío asignado sale en «OR / últimos dígitos» («Ya cargado»), en la búsqueda general con su celda, y en la Lista. Las alertas, la comparación de viajes y las estadísticas leen el BAPLIE; quedan para `sprint-4`.
+- **H7:** durante el arrastre, el plano se desplaza solo en los dos ejes cuando el dedo o el mouse se acercan al borde, también con zoom (`EdgeDraggingAutoScroller`), y al soltar cuenta la celda que queda bajo el dedo.
+- **H2, solo diagnóstico** (sección 8): las reglas publicadas no dejan cambiar el manifiesto de las fuentes, y `join` rechazaría trozos nuevos. Hace falta tocar las reglas: el listado con revisión, `replaceSource` en la oficina y el muelle escuchando el documento de la operación. Los movimientos no se pierden. Decide Carlos.
+- **La versión:** 3.1.1, compilación 5, y el MSIX 3.1.1.0. `pubspec.lock` no cambia.
+- **Cifras:**
+  - 25 pruebas nuevas: 14 de los hallazgos, 3 del arrastre y 8 del dominio. El informe dice 26 y 15 en dos lugares; son 25 y 14;
+  - contra la 3.1.0, 16 de las 17 de los hallazgos y el arrastre fallan, y una ya pasaba (la impar sola);
+  - la suite, 1396 de 1396 en una corrida (el piso de `master` es 1371), y `analyze` de `lib/` y `test/` en cero. El proyecto entero arrastra 13 avisos de copias viejas en `build/t112acc`, fuera de Git;
+  - 80 capturas sintéticas en los tres clientes y los dos temas.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 30 rutas, 20 cambiadas y 10 nuevas. Los documentos de Carlos en `docs/` no se tocaron. No cambian `lib/main.dart`, las reglas, los congelados, la lista del piloto ni `pubspec.lock`. En lo cambiado no hay datos del piloto;
+- las pruebas viejas que cambian de expectativa siguen la regla nueva, no se aflojan:
+  - T-68 cambia su puerto ajeno: PAMIT ahora es puerto de descarga en su archivo;
+  - T-76 y T-78 pasan a la par de referencia;
+  - T-93 pide el MSIX 3.1.1.0;
+- una carga sin OR sube a la nube: el borrador quita los campos vacíos, y las reglas publicadas aceptan `load_full` sin `order`;
+- «AGREGADOS» como sección propia no cambia los grupos de los vacíos, que van por tipo, puerto y línea. Yov recomienda dejarlo así: es lo que dice el Excel;
+- las capturas del teléfono muestran cada arreglo: las fichas de la escala, «AGREGADOS: 2», «sin OR en el listado», el avance bajo la 22, el vacío en la búsqueda general con su celda y el arrastre que llega al borde;
+- **un defecto (P1) que abre H4:** el BAPLIE de salida (`departure_baplie_writer.dart`, líneas 64 a 71) exige la fila del listado de cada lleno cargado que no venía en el plano de llegada. Si falta, se detiene: «El contenedor cargado … no está en el listado». Con H4, un lleno cargado sin fila deja la operación sin BAPLIE de salida, y mientras H2 siga abierto, la oficina tampoco puede importar el listado después. El informe lo nombra en 8.3, pero ninguna prueba lo cubre;
+- **una nota (P3):** la par se busca en el plano que se dibuja, el de carga. Si una bahía de 40 solo viene en el plano de llegada, sus mitades de 20 van en filas propias en el avance de la descarga (T-78). No es un error; se vuelve a ver con Estadísticas en `sprint-4`.
+
+**Lo que sigue:**
+- Carlos sube T-122 y esta decisión.
+- Timonel hace la corrección 1 de T-122 en el mismo chat: el BAPLIE de salida con los llenos cargados sin fila, con los datos del plan de carga y una prueba roja antes.
+- Después, Codex acepta T-122 con su corrección, y Carlos publica la 3.1.1 cuando termine la operación del buque.
+- H2 espera la decisión de Carlos sobre las reglas; no va en la 3.1.1.
+
+La siguiente decisión es la **10.58**.
+
+### 10.58 · La corrección 1 de T-122, entregada y revisada: el BAPLIE de salida ya lleva los llenos sin fila; la 3.1.1 pasa a la aceptación de Codex (26-oct, 17:10)
+
+**Timonel la entregó a las 16:58, sobre `d05bacf`** (`docs/T122-RESULTADOS.md`, sección «8bis»):
+- **El arreglo:** un lleno cargado sin fila en el listado sale en la celda donde quedó, con el grupo de segmentos que le dio el plan de carga: `LOC+147` con la posición real y, tal cual, el peso, los puertos, la línea, la carga peligrosa y lo que el lector no modela. Así ya salía lo que sigue a bordo. Timonel no usó la fila armada desde el plan, porque exigiría un VGM que el plan muchas veces no trae y perdería segmentos: no se inventa nada.
+- Con fila, todo sigue igual: los datos exactos salen del listado. Un vacío asignado sin fila sigue pidiendo el listado, ahora con su aviso propio: su tara y su tipo exactos solo están en la fila.
+- La página dice «n llenos van con los datos del plan de carga porque no tienen fila en el listado: …».
+- **Otras salidas:** ninguna exige la fila. Las exportaciones CSV, JSON y PDF y la comparación leen el viaje; la bitácora se exporta sin listado; el cierre no mira las fuentes; el avance, la validación de carga y la bandeja de cambios usan la fila solo si existe.
+- **Cifras:**
+  - 5 pruebas nuevas: antes del arreglo, 3 fallan con «no está en el listado»;
+  - la suite, 1401 de 1401 en una corrida, y `analyze` de `lib/` y `test/` en cero;
+  - la captura de la página, en la Web y en los dos temas.
+- T-82 cambia de expectativa: el cargado ausente del listado sale con el plan, sin VGM inventado, y el vacío asignado sin fila sigue deteniéndose.
+- Los BAPLIE sintéticos del banco llevan ahora el sobre EDIFACT completo, que la salida exige. Las capturas de T-122 se tomaron sin él y traen el aviso «faltan 4 segmentos»; no cambian el resultado.
+- El informe corrige la cuenta de pruebas nuevas de T-122: 25, y 14 en el archivo de los hallazgos.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 8 rutas, 6 cambiadas y 2 nuevas. Lo demás de T-122 no cambia;
+- el escritor hace lo que dice:
+  - con fila, sale como antes;
+  - sin fila, sale el grupo del plan con la posición real, y el contenedor queda en la lista de los sin fila;
+  - sin grupo en el plan (un vacío asignado), se detiene con su aviso;
+- la prueba de T-82 no se afloja: pide el peso del plan, que no haya VGM y la lista de los sin fila, y sigue exigiendo la detención para el vacío;
+- la captura muestra la página con el aviso y «Guardar BAPLIE de salida» activo;
+- **una nota (P3, de antes):** la página dice «1 contenedores a bordo en la salida». Se corrige en `sprint-4`.
+
+**Lo que sigue:**
+- Carlos sube la corrección y esta decisión, y mueve `qa-r4` al commit de la corrección en `master`.
+- Codex acepta T-122 con su corrección, en los tres clientes y con datos sintéticos.
+- Si pasa, Carlos publica la 3.1.1 con la sección 4 de la lista del piloto cuando termine la operación del buque.
+- Después, la 3.1.1 pasa a `sprint-4`.
+
+La siguiente decisión es la **10.59**.
+
+### 10.59 · La aceptación de T-122 no pasa por un P2: un vacío con número en el plan se carga sin listado y con tara 0; Timonel corrige (26-oct, 18:10)
+
+**Codex la cerró hoy a las 17:55, sobre `aa01c27`** (`docs/t122/aceptacion-codex.md`, con su evidencia en `build/t122-aceptacion/` de `baystream-qa-r4`):
+- **A1 · P2 — un vacío con número en el plan de carga se carga sin listado:**
+  - sin listado, «OR / últimos dígitos» ofrece un vacío que el plan de carga trae con su número, como «sin OR en el listado». El diálogo dice «Tara real: 0 kg» y deja confirmar, y queda cargado como `load_full`;
+  - va contra 10.51 y el encargo de T-122: la excepción sin listado es solo para los llenos, y los vacíos siguen necesitando su fila;
+  - la causa: `LoadingOperation.unlistedRows` no mira si el contenedor es lleno, y `ExportListRow.fromPlan` pone la tara en 0 cuando el plan no la trae.
+- **Lo demás pasa, con pruebas propias:**
+  - H1, H5 y H6;
+  - H3, y Codex acepta contar «AGREGADOS» aparte de la última agencia;
+  - H4 con los llenos: el movimiento sube sin la clave `order`, que las reglas publicadas aceptan. Pasa también la corrección 1: la salida conserva el grupo del plan y solo cambia `LOC+147`;
+  - H7, con dedo y con mouse, con y sin zoom, en los tres clientes;
+  - Codex acepta el P3 de 10.57: una bahía de 40 que solo viene en el plano de llegada no empareja las mitades del plan de carga.
+- **Cifras:**
+  - la suite, 1401 de 1401, en una sola corrida, sobre una copia cotejada antes de correrla;
+  - `analyze` en cero en la copia limpia;
+  - las compilaciones de Windows, la Web y Android salen bien, y el `version.json` de la Web dice 3.1.1 y 5;
+  - una regresión de lo que usa el piloto, con datos sintéticos y sin nube, pasa: descargar, cargar, deshacer, asignar un vacío, pedir un cambio y generar la salida.
+- **Dos observaciones (P3):**
+  - O1: el diagnóstico de H2 tiene dos matices. `join` ignora los trozos de un tipo que el manifiesto no declara, y la frase de 8.3 de que el escritor exige la fila quedó vieja después de 8bis. El fondo del diagnóstico sigue siendo correcto;
+  - O2: la Web del banco lanza un error al arrancar, que viene de leer el tamaño de un `RenderBox` todavía sin dibujar, en el recorrido del foco. La página se dibuja y todo funciona; falta saber si viene del producto o del panel del banco.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 304 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. A1 está en el código como dice Codex, y su captura de Windows lo muestra: «MNLU0000811 · sin OR en el listado», «Tara real: 0 kg» y «Confirmar carga» activo.
+
+**Yov propone mantener la regla de 10.51:** sin listado, solo se cargan los llenos. Un vacío necesita su fila: de ahí sale su tara exacta, y la salida la necesita. Cargarlo con el peso del plan sería una regla nueva, y la decide Carlos. Lo que de verdad resuelve el listado que llega tarde es H2.
+
+**Lo que sigue:**
+- Carlos mueve el informe de Codex a `proyecto-baystream` y lo sube en `master`. Después sube esta decisión.
+- Timonel hace la corrección 2 de T-122, en el mismo chat:
+  - A1: sin listado, solo se cargan los contenedores que el plan declara llenos. Los vacíos con número y los que no traen estado necesitan su fila, en la búsqueda, en el toque de la celda y en el borrador;
+  - O1: corrige 8.2 y 8.3 de su informe;
+  - O2: averigua si el error viene del producto y si es nuevo de la 3.1.1. Solo si lo es, lo corrige.
+- Codex reacepta A1, con la suite y `analyze`, y mira O2.
+- La 3.1.1 se publica cuando pase y la operación del buque haya terminado.
+
+La siguiente decisión es la **10.60**.
+
+### 10.60 · La corrección 2 de T-122, entregada y revisada: sin listado solo se cargan los llenos; pasa a la reaceptación de Codex (26-oct, 18:55)
+
+**Timonel la entregó a las 18:40, sobre `6086bb5`** (`docs/T122-RESULTADOS.md`, sección «8ter»):
+- **A1:** la regla de 10.51 sigue. Sin fila en el listado, solo se cargan los contenedores que el plan declara llenos:
+  - `unlistedRows` filtra los llenos;
+  - `LoadingOperation.needsRow` da el motivo: «El vacío … espera el listado de la agencia: su fila trae la tara y el tipo exactos», o «… no declara lleno ni vacío en el plan»;
+  - el borrador rechaza con ese motivo una fila sin OR que no sea de un lleno, aunque alguien la pase;
+  - en el muelle, tocar ese vacío no abre «Confirmar carga» y avisa que espera el listado. «OR / últimos dígitos» no lo ofrece.
+- **O1:** 8.2 y 8.3 del informe quedan corregidos como dijo Codex. La conclusión de H2 no cambia.
+- **O2:** el error de la Web al arrancar es del panel del banco de T-122, no del producto: con nombres legibles, la pila lleva al `InkWell` de la pestaña «Banco T122», que el banco pone encima de la app. El banco de T-99, el producto sin ese panel, da cero errores al arrancar en `master` y en una copia limpia de la 3.1.0. No se toca.
+- **Cifras:**
+  - 3 pruebas nuevas, las 3 rojas antes del arreglo;
+  - la suite, 1404 de 1404 en una corrida, y `analyze` de `lib/` y `test/` en cero;
+  - 12 capturas sintéticas de la Web, en los dos temas: el vacío con número y el sin estado dan el aviso, y el lleno se carga.
+
+**Yov la revisó contra el disco:**
+- el árbol coincide con el bloque: 9 rutas, 6 cambiadas y 3 nuevas. El código hace lo que dice;
+- **una cosa antes del commit:** `loading_controls.dart` quedó entero con fin de línea de Windows (CRLF), y el repositorio lo guarda con LF. El cambio real son 9 líneas, pero así el commit cambiaría las 1028. Carlos lo devuelve a LF con un comando antes de `git add`, y `git diff --stat` lo comprueba.
+
+**Lo que sigue:**
+- Carlos sube la corrección 2 y esta decisión, y mueve `qa-r4` al commit de la corrección.
+- Codex reacepta A1 en los tres clientes, con la suite, `analyze` y la regresión, y comprueba O2 con su propio banco.
+- Si pasa, Carlos publica la 3.1.1 cuando termine la operación del buque.
+
+La siguiente decisión es la **10.61**.
+
+### 10.61 · T-122 aceptada: la 3.1.1 queda lista para publicar (26-oct, 20:00)
+
+**Codex la reaceptó a las 19:39, sobre `cf07a17`** (`docs/t122/reaceptacion-codex.md`, con su evidencia en `build/t122-reaceptacion/` de `baystream-qa-r4`):
+- **A1, cerrado en los tres clientes:**
+  - sin listado, ni el vacío con número ni el contenedor sin estado se ofrecen, y tocar su celda avisa que esperan el listado;
+  - el borrador los rechaza aunque se le pase una fila que diga «lleno»;
+  - el lleno sin fila se sigue cargando, sin la clave `order`, y su salida conserva el grupo del plan (corrección 1);
+  - con el listado importado, el vacío se carga como antes, con su OR y su tara de 3900 kg.
+- **O1, corregido:** 8.2 y 8.3 del informe de Timonel dicen lo que pasa en el código.
+- **O2, aislado:** el banco de T-99 compilado con la 3.1.1 y con la 3.1.0 arranca sin errores. El error es del panel del banco de T-122, no del producto.
+- **Cifras:**
+  - la suite, 1404 de 1404, en una sola corrida, sobre una copia cotejada antes de correrla;
+  - `analyze` en cero en la copia limpia;
+  - siete pruebas propias, aprobadas en su primera corrida, y la regresión de la aceptación anterior.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 198 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1404 éxitos y ninguna omitida.
+
+**Una corrección a 10.60:** el commit no habría cambiado las 1028 líneas de `loading_controls.dart`. La carpeta de Codex lo muestra: sus archivos salen con CRLF y en el repositorio están con LF, así que el Git de Carlos convierte el fin de línea al sacar los archivos y al guardarlos. El paso de normalizar no hizo daño: `cf07a17` cambió 9 archivos, con 465 líneas añadidas y 41 quitadas.
+
+**Con esto:**
+- **T-122 queda aceptada.** La 3.1.1 es `master` con el informe de Codex encima, y se etiqueta `v3.1.1`.
+- **Carlos la publica cuando termine la operación del buque**, con la sección 4 de la lista del piloto y la versión nueva:
+  - Windows: el MSIX 3.1.1.0;
+  - Android: el AAB 3.1.1 (5), en la prueba interna de Play;
+  - la Web: la 3.1.1 (5), con `firebase deploy --only hosting --project baystream-app`.
+- **Sigue abierto:**
+  - H2, que necesita tocar las reglas: decide Carlos con la propuesta de la sección 8;
+  - llevar la 3.1.1 a `sprint-4`, para la 3.2.0;
+  - lo anotado para `sprint-4`: la regla de la par en Estadísticas, los vacíos asignados en las alertas, la comparación y las estadísticas, y «1 contenedores» en la salida.
+- La meta sigue: la 3.2.0 publicada a más tardar el 4-nov, y la presentación final el 7-nov.
+
+La siguiente decisión es la **10.62**.
+
+### 10.62 · La 3.1.1, publicada en los tres clientes (26-oct, 20:15)
+
+**Carlos la publicó y avisó a las 20:09**, con la sección 4 de la lista del piloto y la versión nueva. Yov revisó la carpeta:
+- **Git:** `master` en `34d8838`, igual que `origin/master`, con la etiqueta `v3.1.1` («BayStream 3.1.1, los hallazgos del piloto (T-122)»).
+- **Windows:** `BayStream_3.1.1.0.msix`, de 25,3 MB, con la identidad 3.1.1.0 de `CN=BayStream` y el SHA-256 `7617CC8889BCDD44C46964772B2DF48D50D0D8C2EA1E335E5F7E134CCE20D73E`, el mismo de su `.sha256`. El MSIX 3.1.0.0 sigue en `build\t93`, para volver.
+- **Android:** el AAB de 51,1 MB, con `versionName` 3.1.1 (compilación 5), para la prueba interna de Play. El Honor se actualiza por el enlace de la prueba.
+- **Web:** la compilación dice 3.1.1 y 5 en `version.json`, con 57 archivos, como la 3.1.0.
+
+**Lo que sigue:**
+- Llevar la 3.1.1 a `sprint-4`, para la 3.2.0. Carlos mezcla `master` en `sprint-4`; Timonel resuelve lo que choque con el rediseño, y Codex lo acepta.
+- H2: decide Carlos, con la propuesta de la sección 8 de `docs/T122-RESULTADOS.md`.
+- Lo anotado para `sprint-4` en 10.61.
+- La 3.2.0 publicada a más tardar el 4-nov, con la lista del piloto al día, y la presentación final el 7-nov.
+
+La siguiente decisión es la **10.63**.
+
+### 10.63 · T-123: la 3.1.1 entra en `sprint-4` con una mezcla; Timonel resuelve dos conflictos (26-oct, 20:25)
+
+**Carlos lo decidió a las 20:11:** la 3.1.1 pasa a `sprint-4` ya, para que la 3.2.0 de la presentación lleve los arreglos del piloto. Es **T-123**.
+
+**Cómo:**
+- Carlos mezcla `master` en `sprint-4` con `git merge --no-ff --no-commit master`, en la carpeta del rediseño. Así la historia queda unida y, cuando la 3.2.0 vuelva a `master`, la 3.1.1 ya estará adentro.
+- Timonel resuelve los conflictos y adapta lo de T-122 al rediseño, con Flutter. No ejecuta git que escriba.
+- Carlos cierra la mezcla con el commit, y Codex la acepta.
+
+**Lo que Yov vio al simular la mezcla en una copia aparte**, fuera de las carpetas de Carlos:
+- la base común es `38965b8`. Desde ahí, `master` cambió 40 archivos y `sprint-4`, 79; los dos tocaron cinco;
+- **dos conflictos, de un trozo cada uno:**
+  - `vessel_overview_page.dart`: una importación. Cada lado agregó la suya, y quedan las dos;
+  - `loading_controls.dart`: el resumen del plan de carga y `busquedaDeCarga`. El rediseño lo hizo en fichas (14.7) y con la variante de solo icono (10.40); la 3.1.1 dejó «OR / últimos dígitos» disponible sin listado y agregó el aviso de que los vacíos esperan el listado. Se queda el diseño del rediseño, con el comportamiento de la 3.1.1;
+- **tres archivos se mezclaron solos, pero los dos lados los tocaron:** `bay_plan_view.dart` (H6), `loading_plan_controls.dart` (H4) y `plan_drag_confirmation.dart` (H7). Hay que revisarlos por dentro. En el rediseño la columna central se desplaza entera (T-117), así que H7 se comprueba en esa columna, en el teléfono y en la oficina.
+
+**Lo que no cambia:**
+- el comportamiento de la 3.1.1, el aceptado en 10.61, y el rediseño aceptado en 10.46 y 10.55;
+- lo de `domain/` y `data/` que entra es el de la 3.1.1, autorizado en 10.52 y 10.56. Nada más del dominio;
+- la regla de la par en Estadísticas, y lo demás anotado en 10.61, van en la tarea siguiente, no en esta mezcla.
+
+**Las cifras esperadas:** el piso de `sprint-4` es 1783, y la 3.1.1 trae 33 pruebas más. Se esperan unas 1816.
+
+**Lo que sigue:**
+- Carlos sube esta decisión y hace la mezcla.
+- Timonel hace T-123 en un chat nuevo en la carpeta del rediseño, con Fable 5.1.
+- Codex la acepta.
+- Después: la regla de la par en Estadísticas y lo anotado en 10.61, y la 3.2.0 a más tardar el 4-nov.
+
+La siguiente decisión es la **10.64**.
+
+### 10.64 · T-123 entregada y revisada: la 3.1.1 ya está dentro del rediseño; pasa a la aceptación de Codex (26-oct, 21:35)
+
+**Timonel la entregó a las 21:22** (`docs/T123-RESULTADOS.md`), con la mezcla abierta sobre `e4156ad` y `master` en `34d8838`:
+- **Los dos conflictos:**
+  - en `vessel_overview_page.dart` quedan las dos importaciones;
+  - en `loading_controls.dart` se queda el diseño del rediseño (las fichas de 14.7 y la variante de solo icono de 10.40), con el comportamiento de H4: «OR / últimos dígitos» solo espera a que el plan esté leído, nunca al listado. El aviso de H4 pasa a una ficha de revisar en `resumen_del_modo.dart`: «Sin listado de agencia: los llenos se cargan por su número; los vacíos esperan el listado».
+- **Lo que se mezcló solo, revisado por dentro:** H6 cayó bien en la rejilla del rediseño, y H4 en la tira del teléfono bajo. H7 encaja con la columna que se desplaza: en la oficina, el desplazable vertical más cercano a la celda es la columna entera, y es lo que se desplaza. Ningún otro choque.
+- **Las pruebas:** las de T-122 pasan con un solo cambio. Las de pantalla montan el plano a 360 × 800, el teléfono del muelle, porque a 800 dp el plano suelto del rediseño se arma como oficina. Ninguna prueba del rediseño esperaba la regla vieja, y ninguna se afloja. Una prueba nueva, `t123_mezcla_test.dart`, con 5 casos: H4 en la oficina y en el teléfono, y H7 en la columna de la oficina, con dedo y con mouse.
+- **Cifras:**
+  - la suite, 1821 de 1821 en una corrida (1783, más 33 de la 3.1.1 y 5 de T-123), y `analyze` en cero;
+  - 103 capturas sintéticas en los dos temas: la Web 40, Windows 23 por UIA, sin mouse, y el emulador 40.
+- **Dos notas de Timonel:**
+  - en el emulador, H7 necesitó tres corridas: en las dos primeras no se levantó la celda, y no aisló la causa;
+  - con la 21 elegida, la ficha de la bahía dice «Bahía 22: 7 contenedores, 1 celda reservada, 57.7 t…; por cargar cub. 27». Las cifras son de la 21, y el rótulo y lo pendiente, del grupo de la 22. Lo deja para la tarea siguiente.
+
+**Yov la revisó contra el disco**, comparando la carpeta con la misma mezcla hecha en una copia aparte:
+- fuera de lo que la mezcla deja listo solo, cambian exactamente las 10 rutas del bloque: los dos conflictos, cuatro archivos ajustados y cuatro nuevos. No quedan marcas de conflicto, y `SPRINT-4.md` no se tocó;
+- la resolución hace lo que dice: el plano y la Lista usan lo que va a bordo con los vacíos asignados, «OR / últimos dígitos» espera solo al plan, y los rótulos de las filas sin OR usan el número;
+- el cambio de las pruebas de T-122 es solo el tamaño de la vista: siguen probando el muelle, y la oficina la prueba T-123;
+- al cerrarse, el commit de la mezcla tiene que dar, contra `e4156ad`, 45 archivos con 4882 líneas añadidas y 166 quitadas;
+- **la nota de la ficha es un P2 de presentación para antes de la 3.2.0:** el rótulo dice una bahía y las cifras son de otra. Va en la tarea siguiente, con la regla de la par en Estadísticas.
+
+**Lo que sigue:**
+- Carlos cierra la mezcla con el bloque de Timonel y sube esta decisión, y mueve `qa-r4` al commit de la mezcla.
+- Codex acepta T-123: la 3.1.1 dentro del rediseño, en los tres clientes, sin romper las entregas 1 y 2. Mira también si H7 en el emulador falla por el instrumento o por el producto.
+- Después, T-124: la regla de la par en Estadísticas y en la ficha de la bahía, y lo anotado en 10.61.
+
+La siguiente decisión es la **10.65**.
+
+### 10.65 · T-123 aceptada: la 3.1.1 ya vive en el rediseño; sigue T-124 y después la 3.2.0 (26-oct, 23:45)
+
+**Codex la aceptó a las 23:29, sobre `b6a8d95`** (`docs/t123/aceptacion-codex.md`, con su evidencia en `build/t123-aceptacion/` de `baystream-qa-r4`):
+- la 3.1.1 conserva en el rediseño H1, H3, H4 con sus dos correcciones, H5, H6 y H7, en los tres clientes, y el rediseño de las entregas 1 y 2 no se rompió: las fichas, la variante de solo icono y «Acciones» con su nombre en Windows;
+- **H7 pasa**, con y sin zoom. Las dos corridas de Timonel en que la celda no se levantó son del instrumento (O1, P3): su conductor del emulador puede dejar un contacto activo y reutilizar su identificador, y con eso la celda ya no se levanta. Con el contacto liberado, el producto la levanta y suelta en la celda correcta;
+- **la ficha de la bahía queda como P2 para T-124**, antes de la 3.2.0: con la 21 elegida dice «Bahía 22» con las cifras de la 21, y la 22 de verdad tiene 11 contenedores;
+- O2 (P3): el error de arranque es del panel del banco de T-122, como ya se sabía;
+- **cifras:** la suite, 1821 de 1821, en una sola corrida, sobre una copia cotejada; `analyze` en cero.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 704 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1821 éxitos.
+
+**Con esto:**
+- **T-123 queda aceptada.** El piso de `sprint-4` sube a **1821**.
+- **T-124 · La regla de la par en la presentación**, con Timonel:
+  - P2: la ficha de la bahía dice lo de la bahía que se ve con su número, y lo del grupo con el rótulo de su par;
+  - Estadísticas cuenta cada impar con la par que la cubre, con la regla de `reference_bay.dart`, como el avance (10.53 y 10.56);
+  - P3: «1 contenedores» en la página del BAPLIE de salida;
+  - O1: el conductor del arrastre del emulador suelta siempre el contacto;
+  - solo una propuesta, sin código: si las alertas, la comparación de viajes y las estadísticas deben contar los vacíos asignados, como ya lo hacen la Lista y las búsquedas.
+- **Después, T-125 · La 3.2.0:**
+  - la versión 3.2.0, compilación 6, y el MSIX 3.2.0.0;
+  - la lista del piloto al día (E1.10);
+  - la mezcla de `sprint-4` en `master`, con la aceptación de Codex;
+  - la publicación, a más tardar el 4-nov.
+- La entrega 3 (T-119 y T-120) va en la 3.2.1 (10.38), y H2 espera la decisión de Carlos.
+
+La siguiente decisión es la **10.66**.
+
+### 10.66 · T-124 entregada y revisada: la regla de la par llega a la ficha de la bahía y a Estadísticas; pasa a la aceptación de Codex (27-oct, 01:00)
+
+**Timonel la entregó sobre `2cce28f`, y Carlos la pasó a las 00:49** (`docs/T124-RESULTADOS.md`, con la evidencia en `build/t124/`, fuera de Git):
+- **P2, la ficha de la bahía:** dice lo de la bahía que se ve con su número, y lo del grupo con el rótulo de su par. Con la 21 elegida: «Bahía 21: 7 contenedores, 1 celda reservada, 57.7 t, tapas sin declarar; grupo 22 (21, 22 y 23), por cargar cub. 27, bod. 0». Una bahía que no se cuenta con otra sigue como antes. El texto de cada caso, en la oficina y en el teléfono, en Carga y en Contenido, está en DESIGN 14.7.
+- **Estadísticas con la regla de la par:** cada impar se cuenta con la par vecina que la cubre, con `referenceBay`, como el avance. La silueta y «Ver como tabla» llevan el número de la par, y tocar una columna abre esa bahía en el plano. `T100_LLEGADA` da tres bahías (02, 06 y 10), cada una en su tope y con el casco centrado; el sintético de 977, 24. DESIGN 15 está al día.
+- **P3:** «1 contenedor a bordo en la salida».
+- **O1:** el conductor del arrastre del emulador usa un contacto nuevo en cada gesto, lo suelta siempre y comprueba que la celda se levantó antes de llevarla al borde.
+- **Cifras:**
+  - la suite, 1832 de 1832 en una corrida: las 1821 más 11 de `t124_par_test.dart`, 9 rojas antes del arreglo y 2 de guarda. `analyze` en cero;
+  - las 3 pruebas del conductor, rojas antes del arreglo;
+  - 65 capturas sintéticas en los dos temas: la Web 24, Windows 17 por UIA y el emulador 24.
+- **Siete pruebas de T-121 cambian de expectativa**, porque esperaban una columna por número de bahía. Las que medían el ancho y el desplazamiento usan ahora bahías pares sueltas, nueve y 72: con la regla nueva, la llegada son tres columnas y el 977, 24.
+
+**Yov la revisó contra el disco:**
+- contra `2cce28f` cambian exactamente las 15 rutas del bloque: 8 modificadas y 7 nuevas. No se tocaron `domain/`, `data/`, `lib/main.dart`, los congelados, `pubspec.*` ni `SPRINT-4.md`;
+- lo que Timonel dejó fuera no tiene cambios de contenido: `test/t114_fase3_correccion_test.dart` y tres archivos de `windows/flutter/` son idénticos al commit, y `windows/flutter/CMakeLists.txt` solo difiere en los finales de línea. Se queda fuera;
+- las pruebas de T-121 no se aflojaron: siguen comprobando que las bahías suman todo el viaje, y la de T-117 ahora pide la lista exacta (02 y 06), no solo que contenga las vecinas;
+- el código hace lo que dice. Estadísticas agrupa con `referenceBay` sobre las bahías del viaje y de las posiciones, y «Bahías con carga» cuenta grupos. La lista del grupo en la ficha sale de las posiciones del plan de carga, que trae también lo que sigue a bordo y las reservas, así que coincide con el agrupamiento del avance.
+
+**El punto 5, la propuesta de los vacíos asignados, lo decide Carlos:**
+- Estadísticas: sí, en una tarea propia, con una ficha que diga cuántos vacíos asignados incluye;
+- las alertas: no así, porque sumar solo los vacíos mezcla lo planificado con lo hecho. Si se quiere, que evalúen el estado completo de la salida, en una vista aparte;
+- la comparación de viajes no cambia: la salida ya trae los vacíos asignados;
+- **Yov recomienda dejarlo para después de la 3.2.0**, porque cambia las cifras mientras dura la operación.
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y esta decisión, y mueve `qa-r4` al commit de esta decisión.
+- Codex acepta T-124 en los tres clientes, sin romper T-123 ni las entregas 1 y 2.
+- Después, T-125: la 3.2.0, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.67**.
+
+### 10.67 · T-124 aceptada con observaciones: la regla de la par llega a la 3.2.0; sigue T-125 (27-oct, 13:00)
+
+**Codex la aceptó sobre `e3ce0fc`** (`docs/t124/aceptacion-codex.md`, con su evidencia en `build/t124-aceptacion/` de `baystream-qa-r4`):
+- **P2, la ficha de la bahía, pasa** en Carga y en Contenido, en la oficina y en el teléfono. Con la 21, la 22 y la 23 elegidas, la ficha empieza por la bahía que se ve y nombra «grupo 22 (21, 22 y 23)». Las cifras de cada bahía son las suyas: la 21 tiene 7 contenedores, y la 22, 11.
+- **La par sin carga propia también pasa:** en un caso sintético, con un 40 de paso en la 22 y carga en la 21 y la 23, el grupo nombra las tres bahías en las 12 escenas de release.
+- **Estadísticas pasa:** `T100_LLEGADA` da tres columnas (02, 06 y 10), con 964 950 kg en total, y el sintético de 977, 24 columnas que siguen sumando 977. Codex calculó los grupos esperados por su cuenta, sin el formateador de la app.
+- **P3 y O1 pasan:** «1 contenedor a bordo en la salida», y el plural con dos. El conductor nuevo suelta el contacto aunque el gesto falle, y en el emulador H7 levanta y suelta en la celda correcta.
+- **Sin regresiones** en los tres clientes: H4, H6 y H7 de T-123, las fichas, la variante de solo icono y «Acciones» con su nombre en Windows. Las siete pruebas de T-121 no se aflojaron.
+- **Cifras:** la suite, 1832 de 1832 en una sola corrida, sin omitidas; `analyze` en cero.
+
+**O-124-1 (P3, de antes de T-124):** en la vista de la par, todas las celdas tomadas por veintes de las impares vecinas llevan la misma clave, `ValueKey('neighbor-twenty')`, en `bay_plan_view.dart`. Con dos de esas celdas en la misma fila del dibujo, Flutter avisa en debug de claves duplicadas. Viene de T-106 (Sprint 3) y también está en la 3.1.1 publicada. En release, la escena de Codex pasa sus 12 comprobaciones, pero eso no prueba todas las combinaciones.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 675 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1832 éxitos y ninguna omitida.
+
+**Con esto:**
+- **T-124 queda aceptada.** El piso de `sprint-4` sube a **1832**.
+- **Sigue T-125 · La 3.2.0** (10.65), a más tardar el 4-nov. Yov recomienda sumarle O-124-1: una clave distinta por celda, con una prueba roja antes. Decide Carlos.
+- El punto 5 de T-124 (los vacíos asignados) sigue esperando la decisión de Carlos. Yov recomienda dejarlo para después de la 3.2.0.
+
+La siguiente decisión es la **10.68**.
+
+### 10.68 · Carlos decide: la 3.2.0 lleva los vacíos asignados en Estadísticas y O-124-1; T-125 va a Timonel (27-oct, 13:10)
+
+**Carlos lo decidió a las 13:05:**
+- **El punto 5 de T-124 entra en T-125, antes de publicar.** Estadísticas cuenta los vacíos asignados como la Lista y las búsquedas (`aboardContainersProvider`), con una ficha que dice cuántos incluye. Las alertas y la comparación de viajes no cambian, como propuso Timonel. Yov recomendaba dejarlo para después de la 3.2.0, porque mueve las cifras durante la operación.
+- **O-124-1 entra en T-125:** una clave distinta por celda, con una prueba roja antes.
+
+**T-125 · La 3.2.0**, con Timonel, en la carpeta del rediseño:
+1. Estadísticas con los vacíos asignados: la fila «Estadísticas» de la sección 5 de `docs/T124-RESULTADOS.md`.
+2. O-124-1.
+3. La versión 3.2.0, compilación 6, y el MSIX 3.2.0.0.
+4. La lista del piloto al día para la 3.2.0 (E1.10): la sección 4 con las versiones nuevas, la mezcla de `sprint-4` en `master` con la etiqueta `v3.2.0`, y la vuelta a la 3.1.1 en 4.5.
+
+**Después:** Codex acepta la candidata en los tres clientes; Carlos mezcla en `master`, etiqueta y publica con la sección 4, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.69**.
+
+### 10.69 · T-125 entregada y revisada: la candidata 3.2.0 pasa a la aceptación de Codex (27-oct, 19:50)
+
+**Timonel la entregó sobre `9738be1`, y Carlos la pasó a las 19:44** (`docs/T125-RESULTADOS.md`, con la evidencia en `build/t125/`, fuera de Git):
+- **Estadísticas cuenta los vacíos asignados** como la Lista. Las dos leen un provider nuevo, `assignedEmptiesProvider`, y `aboardContainersProvider` lo suma al archivo. Cada vacío asignado suma un contenedor, con su tara y su tipo, en su bahía de referencia, su puerto y su naviera.
+- **La ficha y la fila:** debajo de la protagonista sale «Incluye: 1 vacío asignado a una celda reservada, que el archivo no trae» (con más de uno, «Incluye: N vacíos asignados a celdas reservadas, que el archivo no trae»), y la tabla gana la fila «Vacíos asignados». Sin vacíos asignados, la página es la de antes. Las alertas y la comparación de viajes no cambian, y `domain/` no se tocó. El texto está en DESIGN 15.13.
+- **O-124-1:** la clave es `neighbor-twenty-<posición>`. La prueba con el caso de Codex fallaba antes del arreglo con «Duplicate keys found», en Contenido y en Carga.
+- **La versión:** `3.2.0+6` y el MSIX `3.2.0.0`. `pubspec.lock` no cambia.
+- **La lista del piloto (E1.10):**
+  - el encabezado dice qué lleva la 3.2.0;
+  - la sección 4 trae las versiones y la mezcla con `v3.2.0`;
+  - en 4.5, la vuelta a la 3.1.1: en Android, con un AAB 3.1.2 de `versionCode` 7, porque Play no deja bajar;
+  - los rótulos de las secciones 0 a 3 y 5 están cotejados con el código;
+  - el paso nuevo 1.16 mira Estadísticas durante la carga.
+- **Cifras:**
+  - la suite, 1841 de 1841 en una corrida: las 1832, 8 de `t125_320_test.dart` y 1 de T-121. `analyze` en cero;
+  - la candidata compila en release con 3.2.0 (6) en los tres clientes, sin la configuración privada;
+  - 30 capturas sintéticas: la Web 12 y el emulador 18. De Windows, solo la compilación.
+
+**Yov la revisó contra el disco:**
+- contra `9738be1` cambian exactamente las 16 rutas del bloque: 12 modificadas y 4 nuevas. No cambian `pubspec.lock`, `domain/`, `data/`, `lib/main.dart`, los congelados ni `SPRINT-4.md`;
+- lo que Timonel deja fuera ya estaba antes de la tarea: `test/t114_fase3_correccion_test.dart` y `windows/flutter/`, solo con finales de línea distintos, y los 129 archivos de evidencia de `docs/t117/entrega1/`, sin versionar;
+- el código hace lo que dice, y es corto. El provider nuevo devuelve lo mismo que antes sumaba la Lista. Estadísticas recorre el archivo y los asignados, y `total` es `delArchivo` más `vaciosAsignados`. La clave del plano lleva la posición;
+- las pruebas no se aflojaron. La de T-106 sigue pidiendo exactamente tres sombras en la 04, y ahora cada una con su clave y su rótulo. Las de «las cifras cuadran» de T-121 agregan `delArchivo` y `vaciosAsignados`, y un caso con dos vacíos asignados;
+- la evidencia cuadra:
+  - la última suite (1841, «All tests passed!») corrió después del último cambio de código;
+  - los registros rojos dicen «Expected: '3' Actual: '2'» y «Duplicate keys found»;
+  - `version.json` dice 3.2.0 y 6, el `.exe` dice 3.2.0+6 y el manifiesto del AAB dice `versionCode` 6 y `versionName` 3.2.0;
+  - las huellas coinciden con `build/t125/11-huellas-candidata.txt`;
+- **en la pantalla:** en la Web, con un vacío asignado, 26 a bordo y la ficha en singular; con dos, 27, la ficha en plural y la fila «Vacíos asignados» en la tabla. En el teléfono, la ficha cabe en dos líneas, en los dos temas;
+- la sección 4 de la lista se puede seguir tal cual:
+  - antes de mezclar comprueba la rama, `34d8838`, que `master` está dentro de `sprint-4` y la punta aceptada;
+  - la Web se publica solo con `--only hosting --project baystream-app`;
+  - la vuelta deja la carpeta en la etiqueta, sin commits.
+
+**Lo que sigue:**
+- Carlos sube el bloque de Timonel y esta decisión, y mueve `qa-r4` a la punta de `sprint-4`.
+- Codex acepta T-125 y la candidata 3.2.0 en los tres clientes: los vacíos asignados en Estadísticas, O-124-1 y las versiones, sin romper T-124, T-123 ni las entregas 1 y 2.
+- Después, Carlos mezcla en `master`, etiqueta `v3.2.0` y publica con la sección 4, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.70**.
+
+### 10.70 · La Expo de pruebas del curso va con la 3.2.0: T-126 a Timonel, en su propia rama (27-oct, 21:00)
+
+**La exposición del curso de Aseguramiento de la Calidad no se hizo el sábado 24: es el sábado 31-oct.** Carlos quiere hacerla mejor, y lo decidió poco antes de las 21:00:
+- la app que se ve moverse es la 3.2.0 rediseñada, no la v3.0 de `baystream-pruebas`;
+- Firebase en dos niveles: primero la prueba en memoria (`fake_cloud_firestore`) y después el emulador de Firestore con las reglas;
+- Yov arma las diapositivas, con los videos de Blender de fondo.
+
+**T-126 · La Expo de pruebas en la 3.2.0**, con Timonel:
+- **Dónde:** `C:\Proyectos\baystream-expo`, en la rama `expo-pruebas`, que Carlos crea desde `sprint-4` con T-125 y estas decisiones. Es una excepción a «no cambies de carpeta», como T-122. Nada de esa rama entra en `sprint-4` ni en `master`: es material del curso.
+- **1. Las 21 pruebas de T-116,** traídas de `pruebas-curso` a la 3.2.0 sin aflojarlas: `test/curso/` y `tool/cobertura_html.py`. `fake_cloud_firestore` 4.2.0 fija, con `equatable` 2.1.0, como en 10.12; si se mueve otro paquete, Timonel se detiene.
+- **2. La prueba que se ve moverse:** con `integration_test`, abre la 3.2.0 completa en Windows, sin nube y con datos sintéticos, y la maneja sola, con pausas que se puedan seguir. Abre el plano, recorre bahías, busca un contenedor, registra descargas, deshace una y mira el avance y Estadísticas. Comprueba cada paso y termina en verde.
+- **3. Rojo → verde:** una prueba que falla a propósito solo con un interruptor (`--dart-define`), sin editar archivos en vivo.
+- **4. Firebase en dos niveles:** las 3 pruebas de RF-032 en memoria, y el emulador de Firestore con su consola y las baterías de reglas (69 y 25 casos), en un proyecto `demo-` que no existe en la nube.
+- **5. Las cifras:** la suite completa, `analyze` y la cobertura con su reporte HTML, sobre la 3.2.0.
+- **6. El guion de la demo:** los comandos en orden, cuánto tarda cada uno, qué se ve y qué hacer si algo falla; y capturas para las diapositivas.
+- **Reglas:** no toca `lib/` ni `lib/main.dart`, ni Firebase de producción, y no se publica nada. Flutter solo con la luz verde de Carlos: Codex acepta T-125 en `qa-r4`, y en la máquina corre un Flutter a la vez.
+
+**Las diapositivas las arma Yov en PowerPoint**, porque así los videos de Blender corren de fondo sin internet. El guion de 14 diapositivas del 22-oct se pone al día con la 3.2.0 y estas demos.
+
+**El orden de la semana:**
+- Codex acepta T-125.
+- Timonel escribe T-126 desde ya y corre Flutter cuando Codex termine.
+- Carlos ensaya la Expo el viernes y expone el sábado 31-oct.
+- La 3.2.0 se publica igual, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.71**.
+
+### 10.71 · T-125 aceptada con observaciones: la 3.2.0 queda lista para la sección 4 de la lista del piloto (28-oct, 03:10)
+
+**Codex la aceptó a las 02:58, sobre `d41ad8c`** (`docs/t125/aceptacion-codex.md`, con su evidencia en `build/t125-aceptacion/` de `baystream-qa-r4`):
+- **P1, Estadísticas con los vacíos asignados, pasa** en los tres clientes, en release. Con la entrada de T-122, a bordo pasa de 25 a 26 y a 27, y vuelve a 26 al deshacer la OR 12; la Lista y Estadísticas dicen lo mismo en cada paso. Codex calculó por su cuenta los pesos (380 000, 382 185, 386 085 y 383 900 kg) y los grupos 22 y 26, sin el formateador de la app. La ficha sale en singular y en plural, la fila «Vacíos asignados» dice 1, 2 y 1, y sin asignados no aparece ninguna de las dos. Las dos alertas y la comparación de viajes no cambian.
+- **P2, O-124-1, pasa:** en su caso propio, las dos sombras de la 22 llevan cada una su clave (`neighbor-twenty-0220282` y `neighbor-twenty-0220482`), sin «Duplicate keys» en debug ni en release. La prueba de T-106 sigue pidiendo exactamente tres sombras en la 04.
+- **P3, las versiones, pasa:** la Web dice 3.2.0 y 6, y T-92 aprueba sus 57 archivos; el `.exe` dice 3.2.0+6, y el manifiesto del AAB, `versionCode` 6 y `versionName` 3.2.0. Las tres se compilaron desde el `lib/main.dart` original, sin la configuración privada. `pubspec.*` no cambia.
+- **P4, la lista del piloto, pasa:** Codex revisó la sección 4 comando por comando, sin ejecutarla, y no encontró nada que corregir. `master`, `origin/master` y `v3.1.1` siguen en `34d8838`, y `master` está dentro de `sprint-4`. Los cinco documentos de Carlos no están en lo que entra. Para volver atrás, Windows tiene el MSIX 3.1.1.0 con su huella, y Android pide un AAB 3.1.2 con `versionCode` 7.
+- **Sin regresiones** en los tres clientes: T-124, `T100_LLEGADA` (964 950 kg), el sintético de 977 (24 columnas), H4, H6, H7 y las entregas 1 y 2.
+- **Cifras:** la suite, 1841 de 1841 en una sola corrida, sin omitidas; `analyze` en cero; y 109 sondas propias más, aprobadas.
+
+**Las dos observaciones son P3:**
+- **O1:** el error de arranque del banco de la Web de T-122, el mismo de T-123 y T-124. Es del banco, no del producto.
+- **O2:** el alcance de lo nativo. La matriz completa de anchos, temas y letra se corrió en widgets y en Chrome; Windows y Android aportan muestras y las secuencias completas. H7 en Windows lo hizo Carlos con la mano, porque la herramienta no sostiene la pulsación larga: soltó en el nivel 82, y el intercambio se canceló. En el emulador, `altoDp: 800` es una etiqueta vieja del conductor: la pantalla fue de 360 × 640 dp.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 795 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: los 1917 archivos de `d41ad8c` siguen iguales y solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1841 éxitos y ninguna omitida.
+
+**Con esto:**
+- **T-125 queda aceptada, y con ella la candidata 3.2.0.** El piso de `sprint-4` sube a **1841**.
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión, antes de mover `qa-r4` otra vez.
+- **La 3.2.0 se publica con la sección 4 de `docs/piloto/LISTA-PILOTO.md`**, a más tardar el 4-nov: primero la mezcla y la etiqueta `v3.2.0` desde `C:\Proyectos\proyecto-baystream` (4.1), y después Windows, Android y la Web (4.2 a 4.4). Las compilaciones son de Flutter, así que van cuando Timonel no esté corriendo T-126.
+- O1 queda para una tarea del banco, después de la 3.2.0.
+
+La siguiente decisión es la **10.72**.
+
+### 10.72 · Una limpieza de disco borró evidencias de `%TEMP%` (28-oct, 03:10)
+
+**Qué pasó.** Para hacer espacio para T-126, Yov le pasó a Carlos una limpieza de `%TEMP%`: borrar lo que tuviera más de 7 días. Carlos la corrió el 27-oct a las 22:41. Además de carpetas viejas, borró los archivos viejos de dentro de carpetas nuevas. Yov no revisó antes qué había ahí. `Remove-Item` no pasa por la papelera, así que no se recupera.
+
+**Lo que se perdió:**
+- **T-99, Fase B:** los 404 archivos originales de Timonel en `%TEMP%\t99-fase-b-33404a5\` (20,4 MB): `ram`, `ram-android`, `rendimiento-b`, `anchos-windows`, `anchos-web`, `reconstrucciones`, `capas`, `codigo`, `modulos` y `documentacion-resumen`. Solo quedó el zip del SDK de Firebase.
+- **T-98, Fase B:** de `%TEMP%\t98-b-33404a5-20oct\`, lo anterior al 20-oct a las 22:41: `censos\`, `sintetico-tanda\` y el `.etl` original de `tanda\tls-01\`. Quedan el `t98-tls.pcapng` que salió de ese `.etl` y las rondas `sin-red-*` y `tls-02`, que no se tocaron.
+- **T-100:** de `%TEMP%\t100-33404a5-20oct\`, los archivos de trabajo del 20-oct. El manual y sus 103 capturas están en el repo.
+- Objetos viejos del `.git` de la copia limpia de la aceptación de T-113, que no eran evidencia.
+- No se sabe si quedaban carpetas más viejas, del Sprint 3: si las había, se borraron enteras. La limpieza liberó 0,1 GB en total.
+
+**Lo que no cambia:**
+- Las cifras, los dictámenes y las aceptaciones de T-98, T-99 y T-100: están en el repo.
+- La auditoría de Codex de T-99, en `%TEMP%\t99acc-33404a5-21oct\`: tiene la huella SHA-256 de cada uno de los 404 archivos (`evidencias-timonel-inventario.json`), las lecturas de RAM por corrida, los tiempos recalculados y su repetición de una fila de cada RNF, que también está en `build\t99acc` de `proyecto-baystream`.
+- El producto, el repo, las pruebas y los archivos H5 no se tocaron.
+- Varias rutas de `%TEMP%` que citan esos informes ya no existen o están incompletas; esta decisión dice por qué.
+
+**Desde ahora:**
+- en `%TEMP%` no se borra por fecha: solo lo que se revisó y se sabe qué es;
+- Yov propone sacar de `%TEMP%` las evidencias que quedan a `C:\Proyectos\evidencia\`, fuera del repo y con los mismos nombres, cuando termine T-126. Decide Carlos.
+
+La siguiente decisión es la **10.73**.
+
+### 10.73 · T-126 entregada y revisada: la Expo de pruebas corre en la 3.2.0 (28-oct, 10:55)
+
+**Timonel la entregó a las 10:40, sobre `d41ad8c`** (`docs/T126-RESULTADOS.md`, con la evidencia y las capturas en `build/expo/` de `baystream-expo`, fuera de Git):
+- **Las 21 pruebas de T-116 corren en la 3.2.0 sin adaptarlas:** los tres archivos de `test/curso/` y `tool/cobertura_html.py` son byte por byte los de `pruebas-curso`. Con la de rojo → verde son 22 de 22.
+- **Rojo → verde con un interruptor,** sin editar nada en vivo: con `EXPO_ROJO=true`, la prueba de CSQU305438 falla con «Expected: <4> Actual: <3>» y un motivo que dice que es a propósito; sin él, pasa.
+- **La prueba que se ve moverse:** `integration_test/expo_recorrido_test.dart` abre la app del producto en Windows, sin nube y con `T100_LLEGADA.edi` (byte por byte el de `tool/t100_sintetico.dart`), y recorre 8 pasos con `expect`: abrir el plano, confirmar la escala, recorrer bahías, buscar y resaltar, dos descargas, deshacer una, el Avance y Estadísticas. Pasa a 1266 × 682, 1366 × 768 y 1536 × 794. Con `EXPO_PAUSA_MS=1200`, el recorrido tarda unos 50 s, más 20 a 30 de compilación.
+- **Firebase en dos niveles:** las 3 de RF-032 con `fake_cloud_firestore`, y el emulador de Firestore con su consola, en el proyecto `demo-expo`: 69 de 69 y 25 de 25 con las reglas de `docs/T80-firestore.rules.propuesta`.
+- **Cifras:** la suite, 1863 de 1863 en una corrida (las 1841 de T-125 y las 22 del curso), en 2 min 26 s; la cobertura de líneas, 90.79 %, con ISO 6346 al 100 %, la sincronización al 62.02 % y el buscador al 94.62 %; `analyze`, en cero en `lib/`, `test/`, `integration_test/` y `tool/`, salvo el banco de T-124.
+- `fake_cloud_firestore` 4.2.0 entra fija en `dev_dependencies`. El lock suma 9 paquetes y sube `equatable` a 2.1.0, con los mismos bloques que `pruebas-curso` (10.12). `lib/` y `lib/main.dart` no cambian.
+- El extra del emulador Android no se hizo.
+
+**Dos hallazgos para el guion:**
+- sin historial, el previo propone PAMIT, el puerto de salida, y la escala de llegada se cambia en los parámetros: con PAMIT, «0 se descargan»; con GTSTC, «30 se descargan». Es el mejor momento para la sala;
+- la ventana se dibuja corrida si se cambia de tamaño ya visible (10.97 de `SPRINT-3.md`). `expo_ventana.dart` la fija antes del primer cuadro, y en la Expo no se toca la ventana mientras corre.
+
+**O-126-1 (P3, de antes de T-126):** `tool/t124_main.dart` importa `build/t124/entradas/t124_entradas.dart`, que se genera fuera de Git a partir de un sintético que sale del corpus, y solo existe en la carpeta del rediseño. En una copia limpia de `sprint-4` (`qa-r4`, `baystream-expo`), `flutter analyze` completo da 3 errores en ese banco. Las aceptaciones miden `flutter analyze lib test`, que da cero. No toca la app, pero la mezcla lo lleva a `master`.
+
+**Yov lo revisó contra el disco:**
+- contra `d41ad8c` cambian exactamente las 13 rutas: 3 modificadas y 10 nuevas. `lib/`, `lib/main.dart` y las opciones de Firebase no cambian;
+- los tres archivos del curso y `tool/cobertura_html.py` son iguales byte por byte a `pruebas-curso`. Los 10 bloques nuevos o cambiados del lock son iguales a los de `pruebas-curso`, y la sección `sdks` no cambia;
+- los registros dicen lo que dice el informe: 22 de 22, el rojo con su motivo, el verde, 69 de 69 y 25 de 25, «+1863: All tests passed!», los 3 errores de `tool/t124_main.dart` y «No issues found!» sin ese banco, y «8 de 8 pasos comprobados», con pausa y sin ella. La cobertura, recalculada desde `coverage/lcov.info`, da 16 853 de 18 562 líneas: 90.79 %;
+- el recorrido usa la sesión local y un almacén nuevo en `%TEMP%\expo`, y el emulador no arranca con un proyecto que no empiece con `demo-`.
+
+**Con esto:**
+- **T-126 queda terminada.** Carlos sube el bloque de Timonel en `expo-pruebas`, que no entra en `sprint-4` ni en `master`.
+- **La compilación de Windows de `baystream-expo` (11 GB en `build\windows`) se queda hasta el sábado.**
+- Yov pasa las cifras y las capturas a las diapositivas. Carlos ensaya el viernes, con el guion de la sección 7 del informe, y expone el sábado 31-oct.
+- La punta de `sprint-4` que se mezcla en 4.1 de la lista del piloto es la de esta decisión: después de `d41ad8c` solo cambian `SPRINT-4.md` y el informe de Codex.
+- O-126-1 va con O1 de T-125 a una tarea del banco, después de la 3.2.0. Yov propone que el banco lea sus entradas al correr, en vez de importar un archivo generado, para que `analyze` dé cero en una copia limpia.
+
+La siguiente decisión es la **10.74**.

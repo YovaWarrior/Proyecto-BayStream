@@ -63,7 +63,10 @@ void main() {
         await _destino(tester, DestinoDelViaje.estadisticas, kind);
         expect(scope.read(destinoDelViajeProvider), DestinoDelViaje.estadisticas,
             reason: 'destinos vistos: $visited');
-        expect(find.text('Total Contenedores').hitTestable(), findsOneWidget);
+        // T-121 (DESIGN.md 15.2): la protagonista de Estadísticas.
+        expect(
+            find.byKey(const ValueKey('estadisticas-protagonista')).hitTestable(),
+            findsOneWidget);
         // «Más» no cambia de destino: abre la hoja y la deja cerrar.
         await _destino(tester, DestinoDelViaje.mas, kind);
         expect(find.byKey(const ValueKey('hoja-mas')), findsOneWidget);

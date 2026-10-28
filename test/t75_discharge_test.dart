@@ -1,3 +1,4 @@
+import 'package:baystream/core/design/design.dart';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/domain/services/discharge_progress.dart';
@@ -168,9 +169,11 @@ void main() {
       // escritorio y a 360 dp se mira en el Honor, con la fuente real.
       void wide(bool on) =>
           tester.view.physicalSize = Size(on ? 900 : 360, 800);
+      // T-118 (DESIGN.md 14.7): el resumen es una ficha de una línea.
       String summary() => tester
-          .widget<Text>(find.byKey(const ValueKey('bay-discharge-pending')))
-          .data!;
+          .widget<BsFichaDeCifra>(
+              find.byKey(const ValueKey('bay-discharge-pending')))
+          .texto;
 
       // Fuera del modo, tocar abre el detalle: no registra nada.
       wide(true);
@@ -190,7 +193,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Descarga').last);
       await tester.pumpAndSettle();
-      expect(summary(), contains('cubierta 2 · bodega 1 · descargados 0'));
+      expect(summary(), contains('2 por bajar en cub., 1 en bod., 0 bajados'));
       // Fase 3: en la oficina la vista Estado deja el código a la vista; la
       // marca de T-75 se reconoce por su clave (en el muelle dice «Baja»).
       expect(find.byKey(const ValueKey('discharge-pending')), findsNWidgets(3));
@@ -198,12 +201,12 @@ void main() {
       // Un toque marca; el «Deshacer» inmediato lo anula con motivo.
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
       await tester.pumpAndSettle();
-      expect(summary(), contains('cubierta 1 · bodega 1 · descargado 1'));
+      expect(summary(), contains('1 por bajar en cub., 1 en bod., 1 bajado'));
       expect(find.byKey(const ValueKey('discharge-discharged')), findsOneWidget);
       expect(find.textContaining('Descargado · TEST0000011'), findsOneWidget);
       await tester.tap(find.text('Deshacer'));
       await tester.pumpAndSettle();
-      expect(summary(), contains('cubierta 2 · bodega 1 · descargados 0'));
+      expect(summary(), contains('2 por bajar en cub., 1 en bod., 0 bajados'));
       final undo = log.of('op-t75').last.movement;
       expect((undo.type, undo.reason), (MovementType.annul, markedByMistake));
 
@@ -234,7 +237,7 @@ void main() {
       await tester.pumpAndSettle();
       wide(false);
       await tester.pumpAndSettle();
-      expect(summary(), contains('cubierta 2 · bodega 1 · descargados 0'));
+      expect(summary(), contains('2 por bajar en cub., 1 en bod., 0 bajados'));
 
       // Una celda vacía no registra nada en el modo Descarga.
       final before = log.of('op-t75').length;
@@ -246,7 +249,7 @@ void main() {
       // Bahía 14: el de paso pide confirmar la re-estiba.
       scope.read(selectedBayProvider.notifier).select(14);
       await tester.pumpAndSettle();
-      expect(summary(), contains('cubierta 0 · bodega 1 · descargados 0'));
+      expect(summary(), contains('0 por bajar en cub., 1 en bod., 0 bajados'));
       expect(find.byKey(const ValueKey('discharge-transit')), findsOneWidget);
       await tester.ensureVisible(find.byKey(const ValueKey('cell-2-82')));
       await tester.tap(find.byKey(const ValueKey('cell-2-82')));
@@ -264,13 +267,13 @@ void main() {
       // La celda escribe «Re‑est.» (no cabe entera, 10.28); la etiqueta
       // accesible y el resumen dicen «re‑estiba».
       expect(find.text('Re‑est.'), findsWidgets);
+      // T-118 (DESIGN.md 14.7): la escala, en una ficha de una línea.
       expect(
           tester
-              .widget<Text>(
+              .widget<BsFichaDeCifra>(
                   find.byKey(const ValueKey('operation-discharge-totals')))
-              .data,
-          contains(
-              '4 por descargar (2 pendientes en cubierta / 2 pendientes en bodega) · 0 descargados · 1 re‑estiba'));
+              .texto,
+          'GTSTC: 4 por bajar, 0 bajados, 1 re‑estiba');
 
       // La tabla de la operación.
       // T-107 · A 360 dp la acción está en «Acciones».

@@ -174,7 +174,10 @@ void main() {
       // En la barra inferior el destino se escribe «Estad.» (DESIGN.md 9.2).
       await tester.tap(find.byKey(const ValueKey('destino-estadisticas')));
       await tester.pumpAndSettle();
-      completeText(tester, find.text('Total Contenedores'));
+      // T-121 (DESIGN.md 15.2): la protagonista, «977» a 48, sustituye a la
+      // tarjeta «Total Contenedores».
+      completeText(tester, find.byKey(const ValueKey('estadisticas-protagonista')));
+      completeText(tester, find.text('contenedor a bordo'));
       expect(tester.takeException(), isNull);
     });
     testWidgets(

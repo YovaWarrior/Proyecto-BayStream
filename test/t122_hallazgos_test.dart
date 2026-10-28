@@ -63,11 +63,17 @@ class _Viaje extends VoyageNotifier {
 }
 
 /// El plano por bahía en Carga, con una bitácora en memoria, como en T-105.
+/// A 360 × 800 dp, el teléfono del muelle (T-123): en el rediseño, el plano
+/// suelto a 800 dp se arma como oficina (`DESIGN.md` 14.1) y el selector de
+/// modo vive en la cabecera de la página, que esta prueba no monta.
 Future<(T75MemoryLog, ProviderContainer)> _plano(WidgetTester tester,
     {required VesselVoyage loading,
     ExportList? list,
     Operator? actor = f.dock,
     List<MovementDraft> initial = const []}) async {
+  tester.view.physicalSize = const Size(360, 800);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
   final log = T75MemoryLog();
   for (final draft in initial) {
     await log.append(draft, f.dock.author);

@@ -40,6 +40,8 @@ class BsPaleta {
     required this.grua,
     required this.gruaRelleno,
     required this.sobreGrua,
+    required this.rampaDeMagnitud,
+    required this.pistaDeMagnitud,
   });
 
   /// Claro u oscuro.
@@ -121,6 +123,21 @@ class BsPaleta {
   /// Texto sobre [gruaRelleno]: siempre tinta oscura, en los dos modos.
   final Color sobreGrua;
 
+  /// La rampa de magnitudes de Estadísticas (`DESIGN.md`, 15.3): cuatro
+  /// pasos de un solo tono, el azul de la marca, de menos a más. De día de
+  /// claro a oscuro; de noche se invierte, de oscuro a claro, porque sobre la
+  /// noche «más» tiene que ser más luminoso. Validada con el script de la
+  /// skill de dataviz (`validate_palette.js --ordinal`): el paso extremo
+  /// queda a 2:1 o más de la hoja y del papel, los pasos son visibles y es un
+  /// solo tono. Va en lo ordenado (20, 40 y 45 pies); una sola serie va en
+  /// [marca], no en la rampa. Nunca colorea texto.
+  final List<Color> rampaDeMagnitud;
+
+  /// La pista de las barras de Estadísticas: un paso más claro (de día) o
+  /// más oscuro (de noche) del mismo tono que la rampa, para que la barra se
+  /// lea entera, también donde no llega. No es un dato.
+  final Color pistaDeMagnitud;
+
   /// La paleta del día (el muelle): la de la Fase 2, sin cambios.
   static const BsPaleta claro = BsPaleta(
     brillo: Brightness.light,
@@ -145,6 +162,15 @@ class BsPaleta {
     grua: Color(0xFFC2410C),
     gruaRelleno: Color(0xFFFF7A1A),
     sobreGrua: Color(0xFF10243F),
+    // 2.19:1 sobre la hoja y 2.06:1 sobre el papel en el paso claro
+    // (0.9.4 de docs/T117-T121-RESULTADOS.md); el último paso es la marca.
+    rampaDeMagnitud: <Color>[
+      Color(0xFF88B0F5),
+      Color(0xFF518FF1),
+      Color(0xFF1365E5),
+      Color(0xFF0D47A1),
+    ],
+    pistaDeMagnitud: Color(0xFFD9E7FC),
   );
 
   /// La paleta de la noche (la oficina), de 10.14.
@@ -171,6 +197,15 @@ class BsPaleta {
     grua: Color(0xFFFF9A4D),
     gruaRelleno: Color(0xFFFF7A1A),
     sobreGrua: Color(0xFF07111F),
+    // 2.62:1 sobre el panel y 2.86:1 sobre la noche en el paso oscuro; el
+    // segundo paso es la selección de noche (la marca de este modo).
+    rampaDeMagnitud: <Color>[
+      Color(0xFF2C5BA8),
+      Color(0xFF4F8EF7),
+      Color(0xFF95BBF6),
+      Color(0xFFD9E7FC),
+    ],
+    pistaDeMagnitud: Color(0xFF1E3457),
   );
 
   /// La paleta que corresponde a un brillo.

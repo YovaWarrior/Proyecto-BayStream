@@ -62,6 +62,80 @@ class FranjaDelPlano extends Notifier<double?> {
   }
 }
 
+/// El ancho de la columna central de la oficina (`DESIGN.md` 14.5). Con él
+/// y lo que la página tiene a la derecha (el panel fijo o el borde del panel)
+/// los avisos de la oficina no salen de la columna: no cruzan el riel ni el
+/// panel lateral (O3, 10.31). Es un ancho de layout, no una posición: una
+/// transición de página que escala la vista no lo cambia. Sin valor fuera de
+/// la oficina.
+final anchoDeLaColumnaProvider =
+    NotifierProvider<AnchoDeLaColumna, double?>(AnchoDeLaColumna.new);
+
+class AnchoDeLaColumna extends Notifier<double?> {
+  @override
+  double? build() => null;
+
+  /// La columna se armó con [ancho].
+  void medir(double ancho) {
+    if (ref.mounted && state != ancho) state = ancho;
+  }
+}
+
+/// Envuelve la columna central de la oficina y anota su ancho en
+/// [anchoDeLaColumnaProvider] después de cada cuadro en que cambia. No dibuja
+/// nada.
+class MideLosLados extends ConsumerStatefulWidget {
+  const MideLosLados({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<MideLosLados> createState() => _MideLosLadosState();
+}
+
+class _MideLosLadosState extends ConsumerState<MideLosLados> {
+  @override
+  Widget build(BuildContext context) => _MideAncho(
+        onAncho: (double ancho) {
+          if (mounted) ref.read(anchoDeLaColumnaProvider.notifier).medir(ancho);
+        },
+        child: widget.child,
+      );
+}
+
+/// Avisa, después del cuadro, cada vez que el ancho de su hijo cambia.
+class _MideAncho extends SingleChildRenderObjectWidget {
+  const _MideAncho({required this.onAncho, required super.child});
+
+  final ValueChanged<double> onAncho;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderMideAncho(onAncho);
+
+  @override
+  void updateRenderObject(
+          BuildContext context, _RenderMideAncho renderObject) =>
+      renderObject.onAncho = onAncho;
+}
+
+class _RenderMideAncho extends RenderProxyBox {
+  _RenderMideAncho(this.onAncho);
+
+  ValueChanged<double> onAncho;
+  double? _ultimo;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final ancho = size.width;
+    if (_ultimo == ancho) return;
+    _ultimo = ancho;
+    SchedulerBinding.instance
+        .addPostFrameCallback((Duration _) => onAncho(ancho));
+  }
+}
+
 /// Envuelve lo que los avisos no deben tapar y anota su alto, más [ajuste],
 /// en [pieDelPlanoProvider] después de cada cuadro en que cambia. No dibuja
 /// nada.
@@ -102,8 +176,15 @@ class _MideElPieDelPlanoState extends ConsumerState<MideElPieDelPlano> {
 /// Envuelve la franja de la operación y anota su alto en
 /// [franjaDelPlanoProvider] después de cada cuadro en que cambia. No dibuja
 /// nada.
+///
+/// Con [sinControles] es la franja de cifras de la oficina (`DESIGN.md`
+/// 14.5): no lleva nada que se toque, así que el aviso puede ocupar toda la
+/// franja y debajo solo queda su aire ([pieDelPlanoProvider] en cero).
 class MideLaFranja extends ConsumerStatefulWidget {
-  const MideLaFranja({super.key, required this.child});
+  const MideLaFranja({super.key, this.sinControles = false, required this.child});
+
+  /// La franja no lleva controles: nada que proteger debajo del aviso.
+  final bool sinControles;
 
   final Widget child;
 
@@ -115,7 +196,12 @@ class _MideLaFranjaState extends ConsumerState<MideLaFranja> {
   @override
   Widget build(BuildContext context) => _MideAlto(
         onAlto: (double alto) {
-          if (mounted) ref.read(franjaDelPlanoProvider.notifier).medir(alto);
+          if (mounted) {
+            ref.read(franjaDelPlanoProvider.notifier).medir(alto);
+            if (widget.sinControles) {
+              ref.read(pieDelPlanoProvider.notifier).medir(0);
+            }
+          }
         },
         child: widget.child,
       );
@@ -168,10 +254,23 @@ class _RenderMideAlto extends RenderProxyBox {
 /// además cuánto alto tiene un aviso ([LugarDelAviso]): el que hay entre el
 /// borde de arriba de la franja y su aire sobre los controles.
 class AvisosSobreElPie extends ConsumerWidget {
-  const AvisosSobreElPie({super.key, this.conPlano = true, required this.child});
+  const AvisosSobreElPie(
+      {super.key,
+      this.conPlano = true,
+      this.oficina = false,
+      this.derechaDeLaColumna = 0,
+      required this.child});
 
   /// Si el plano, con su pie, está a la vista. Si no, la medida no aplica.
   final bool conPlano;
+
+  /// La oficina (`DESIGN.md` 14.5): los avisos no salen a lo ancho de la
+  /// columna central ([anchoDeLaColumnaProvider]), en todas las pestañas.
+  final bool oficina;
+
+  /// Lo que la oficina tiene a la derecha de la columna central: el panel
+  /// fijo con su división, o el borde del panel guardado.
+  final double derechaDeLaColumna;
 
   final Widget child;
 
@@ -183,9 +282,21 @@ class AvisosSobreElPie extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final alto = conPlano ? ref.watch(pieDelPlanoProvider) : 0.0;
     final franja = conPlano ? ref.watch(franjaDelPlanoProvider) : null;
+    final anchoDeLaColumna =
+        oficina ? ref.watch(anchoDeLaColumnaProvider) : null;
     final tema = Theme.of(context);
     final medidas = BsMedidas.de(context);
-    final margen = aire(medidas, alto);
+    final anchoDeLaVentana = MediaQuery.sizeOf(context).width;
+    var margen = aire(medidas, alto);
+    if (anchoDeLaColumna != null) {
+      // La columna va entre el riel (a la izquierda) y lo de la derecha.
+      final izquierda = math.max(
+          0.0, anchoDeLaVentana - derechaDeLaColumna - anchoDeLaColumna);
+      margen = margen.copyWith(
+        left: izquierda + medidas.espacioL,
+        right: math.max(0.0, derechaDeLaColumna) + medidas.espacioL,
+      );
+    }
     // La franja va del borde de arriba (donde termina la rejilla) al pie del
     // plano; el aire de abajo del aviso ya cubre los controles.
     final lugar = franja == null ? null : franja - margen.bottom;
@@ -200,8 +311,9 @@ class AvisosSobreElPie extends ConsumerWidget {
 }
 
 /// El alto que tiene un aviso de la página del viaje: del borde de arriba de
-/// la franja de la operación a su aire sobre los controles (13.8). Sin valor,
-/// no hay tope (la Lista, la oficina, la leyenda).
+/// la franja de la operación a su aire sobre los controles (13.8), o en la
+/// franja de cifras de la oficina (14.5). Sin valor, no hay tope (la Lista,
+/// el Avance, la leyenda del teléfono).
 class LugarDelAviso extends InheritedWidget {
   const LugarDelAviso({super.key, required this.alto, required super.child});
 
