@@ -1959,3 +1959,39 @@ La siguiente decisión es la **10.73**.
 - O-126-1 va con O1 de T-125 a una tarea del banco, después de la 3.2.0. Yov propone que el banco lea sus entradas al correr, en vez de importar un archivo generado, para que `analyze` dé cero en una copia limpia.
 
 La siguiente decisión es la **10.74**.
+
+### 10.74 · La numeración va en 0.x hasta la 1.0.0 del examen final: la de hoy es la 0.4.0 (28-oct, 12:50)
+
+**Carlos lo decidió a las 12:34, con la mezcla de 4.1 hecha y antes de compilar nada.** Un 3 dice que el producto ya está establecido, y todavía no lo está. La 1.0.0 queda para la prueba final con el ingeniero, o para más adelante si para entonces no está al 100 %; hasta ahí, todo es 0.x.
+
+**Cómo se leen las versiones.** Lo ya publicado conserva su número en Git y en los paquetes, y los documentos lo leen con esta tabla:
+
+| Antes | En 0.x |
+|---|---|
+| 3.0 (`v3.0`) | 0.3.0 |
+| 3.1 (`v3.1`) | 0.3.1 |
+| 3.1.1 (`v3.1.1`, la publicada el 26-oct, 10.62) | 0.3.2 |
+| 3.2.0, la de hoy | **0.4.0** |
+| la de la entrega 3 | 0.4.1 |
+| la del examen final | 1.0.0 |
+
+**Lo que cambia:**
+- `pubspec.yaml`: `version: 0.4.0+6` y `msix_version: 0.4.0.0`. Son las dos únicas líneas del código con la versión: la app no la lee ni la muestra.
+- **Android:** `versionName` 0.4.0 con el `versionCode` 6. Play solo exige que el código suba; el nombre puede bajar.
+- **Windows:** 0.4.0.0 es menor que el 3.1.1.0 instalado, y Windows no instala una versión menor encima. **Una sola vez,** se desinstala la 3.1.1 antes de instalar la 0.4.0.0, con una copia de `%LOCALAPPDATA%\BayStream` antes (4.2 de la lista del piloto). Los datos no se pierden: la app los guarda en esa carpeta, fuera del paquete, y Yov comprobó que las carpetas del paquete (`LocalCache\Local` y `LocalCache\Roaming`) solo tienen la de Microsoft. Desde ahí, la 0.4.x se instala encima.
+- **Web:** `version.json` dirá 0.4.0 y 6.
+- **Git:** `master` quedó en `5fe823a` con la etiqueta `v3.2.0`, con la que no se publicó nada. Una segunda mezcla trae a `master` el commit de esta decisión; `v3.2.0` se borra, local y en `origin`, y se crea `v0.4.0`. `v3.0`, `v3.1` y `v3.1.1` se quedan.
+- **`docs/piloto/LISTA-PILOTO.md`:** las secciones 0, 4 y 5 dicen 0.4.0; 4.1 cuenta la mezcla en dos pasos; 4.2 trae la desinstalación de una vez; y la vuelta de Android de 4.5 se llama 0.3.3, con el `versionCode` 7. Además, los bloques de 4.1, 4.2 y 4.4 van dentro de `& { … }`: según cómo se peguen, PowerShell puede correr cada línea por su cuenta, y un `throw` no detiene las que siguen. En 4.4, eso podía dejar pasar `firebase deploy` después de una comprobación fallida.
+
+**Lo que no cambia:**
+- El código de la candidata: entre `56c66c2` y el commit de esta decisión solo cambian las dos líneas del pubspec, la lista del piloto y este archivo. `pubspec.lock` no cambia.
+- La aceptación de T-125 vale para la 0.4.0, porque es el mismo código: Codex no la repite. 4.2 a 4.4 comprueban el número en cada cliente.
+- Lo ya escrito: 10.65 a 10.73 y los informes de T-123, T-125 y T-126 dicen 3.2.0, y se leen como 0.4.0. No se reescriben.
+- La rama `expo-pruebas` sigue con `3.2.0+6` en su pubspec: no se publica, y la app no muestra el número. El deck de la Expo pasa a 0.4.0 en su borrador 3.
+
+**Lo que sigue, en orden:**
+1. Carlos cambia las dos líneas del pubspec y sube este bloque a `sprint-4`, con el comando que le pasa Yov.
+2. La segunda mezcla y la etiqueta `v0.4.0`, con el bloque de 4.1.
+3. Windows, Android y la Web, con 4.2 a 4.4.
+
+La siguiente decisión es la **10.75**.

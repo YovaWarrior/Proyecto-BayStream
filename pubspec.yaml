@@ -1,7 +1,7 @@
 name: baystream
 description: Aplicación de gestión de carga marítima - Parser BAPLIE 2.2.1
 publish_to: 'none'
-version: 3.2.0+6
+version: 0.4.0+6
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -118,7 +118,7 @@ msix_config:
   identity_name: gt.cmartinez.baystream
   # Exactamente el sujeto del certificado autofirmado de Carlos.
   publisher: CN=BayStream
-  msix_version: 3.2.0.0
+  msix_version: 0.4.0.0
   # Solo red saliente. Sin microfono: en Windows no hay voz (T-94).
   capabilities: internetClient
   # T-88 (10.50): el PNG de 512; msix lee del .ico solo el cuadro de 16 px.
