@@ -1927,3 +1927,35 @@ La siguiente decisión es la **10.72**.
 - Yov propone sacar de `%TEMP%` las evidencias que quedan a `C:\Proyectos\evidencia\`, fuera del repo y con los mismos nombres, cuando termine T-126. Decide Carlos.
 
 La siguiente decisión es la **10.73**.
+
+### 10.73 · T-126 entregada y revisada: la Expo de pruebas corre en la 3.2.0 (28-oct, 10:55)
+
+**Timonel la entregó a las 10:40, sobre `d41ad8c`** (`docs/T126-RESULTADOS.md`, con la evidencia y las capturas en `build/expo/` de `baystream-expo`, fuera de Git):
+- **Las 21 pruebas de T-116 corren en la 3.2.0 sin adaptarlas:** los tres archivos de `test/curso/` y `tool/cobertura_html.py` son byte por byte los de `pruebas-curso`. Con la de rojo → verde son 22 de 22.
+- **Rojo → verde con un interruptor,** sin editar nada en vivo: con `EXPO_ROJO=true`, la prueba de CSQU305438 falla con «Expected: <4> Actual: <3>» y un motivo que dice que es a propósito; sin él, pasa.
+- **La prueba que se ve moverse:** `integration_test/expo_recorrido_test.dart` abre la app del producto en Windows, sin nube y con `T100_LLEGADA.edi` (byte por byte el de `tool/t100_sintetico.dart`), y recorre 8 pasos con `expect`: abrir el plano, confirmar la escala, recorrer bahías, buscar y resaltar, dos descargas, deshacer una, el Avance y Estadísticas. Pasa a 1266 × 682, 1366 × 768 y 1536 × 794. Con `EXPO_PAUSA_MS=1200`, el recorrido tarda unos 50 s, más 20 a 30 de compilación.
+- **Firebase en dos niveles:** las 3 de RF-032 con `fake_cloud_firestore`, y el emulador de Firestore con su consola, en el proyecto `demo-expo`: 69 de 69 y 25 de 25 con las reglas de `docs/T80-firestore.rules.propuesta`.
+- **Cifras:** la suite, 1863 de 1863 en una corrida (las 1841 de T-125 y las 22 del curso), en 2 min 26 s; la cobertura de líneas, 90.79 %, con ISO 6346 al 100 %, la sincronización al 62.02 % y el buscador al 94.62 %; `analyze`, en cero en `lib/`, `test/`, `integration_test/` y `tool/`, salvo el banco de T-124.
+- `fake_cloud_firestore` 4.2.0 entra fija en `dev_dependencies`. El lock suma 9 paquetes y sube `equatable` a 2.1.0, con los mismos bloques que `pruebas-curso` (10.12). `lib/` y `lib/main.dart` no cambian.
+- El extra del emulador Android no se hizo.
+
+**Dos hallazgos para el guion:**
+- sin historial, el previo propone PAMIT, el puerto de salida, y la escala de llegada se cambia en los parámetros: con PAMIT, «0 se descargan»; con GTSTC, «30 se descargan». Es el mejor momento para la sala;
+- la ventana se dibuja corrida si se cambia de tamaño ya visible (10.97 de `SPRINT-3.md`). `expo_ventana.dart` la fija antes del primer cuadro, y en la Expo no se toca la ventana mientras corre.
+
+**O-126-1 (P3, de antes de T-126):** `tool/t124_main.dart` importa `build/t124/entradas/t124_entradas.dart`, que se genera fuera de Git a partir de un sintético que sale del corpus, y solo existe en la carpeta del rediseño. En una copia limpia de `sprint-4` (`qa-r4`, `baystream-expo`), `flutter analyze` completo da 3 errores en ese banco. Las aceptaciones miden `flutter analyze lib test`, que da cero. No toca la app, pero la mezcla lo lleva a `master`.
+
+**Yov lo revisó contra el disco:**
+- contra `d41ad8c` cambian exactamente las 13 rutas: 3 modificadas y 10 nuevas. `lib/`, `lib/main.dart` y las opciones de Firebase no cambian;
+- los tres archivos del curso y `tool/cobertura_html.py` son iguales byte por byte a `pruebas-curso`. Los 10 bloques nuevos o cambiados del lock son iguales a los de `pruebas-curso`, y la sección `sdks` no cambia;
+- los registros dicen lo que dice el informe: 22 de 22, el rojo con su motivo, el verde, 69 de 69 y 25 de 25, «+1863: All tests passed!», los 3 errores de `tool/t124_main.dart` y «No issues found!» sin ese banco, y «8 de 8 pasos comprobados», con pausa y sin ella. La cobertura, recalculada desde `coverage/lcov.info`, da 16 853 de 18 562 líneas: 90.79 %;
+- el recorrido usa la sesión local y un almacén nuevo en `%TEMP%\expo`, y el emulador no arranca con un proyecto que no empiece con `demo-`.
+
+**Con esto:**
+- **T-126 queda terminada.** Carlos sube el bloque de Timonel en `expo-pruebas`, que no entra en `sprint-4` ni en `master`.
+- **La compilación de Windows de `baystream-expo` (11 GB en `build\windows`) se queda hasta el sábado.**
+- Yov pasa las cifras y las capturas a las diapositivas. Carlos ensaya el viernes, con el guion de la sección 7 del informe, y expone el sábado 31-oct.
+- La punta de `sprint-4` que se mezcla en 4.1 de la lista del piloto es la de esta decisión: después de `d41ad8c` solo cambian `SPRINT-4.md` y el informe de Codex.
+- O-126-1 va con O1 de T-125 a una tarea del banco, después de la 3.2.0. Yov propone que el banco lea sus entradas al correr, en vez de importar un archivo generado, para que `analyze` dé cero en una copia limpia.
+
+La siguiente decisión es la **10.74**.
