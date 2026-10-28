@@ -1,12 +1,15 @@
-# Lista de comprobación · Ensayo y prueba piloto con COMAR (la 3.2.0, 10.68)
+# Lista de comprobación · Ensayo y prueba piloto con COMAR (la 0.4.0, 10.68 y 10.74)
 
-**Para quién.** Carlos publica la 3.2.0 y corre el ensayo y el piloto; Yov revisa esta
+**Para quién.** Carlos publica la 0.4.0 y corre el ensayo y el piloto; Yov revisa esta
 lista y los comandos antes. La lista va por rol: **el muelle con el Honor** y **la oficina con la
 laptop**. Cada paso dice qué hay que ver en pantalla y qué hacer si algo falla. Los textos
 entre comillas son los rótulos exactos de la app.
 
-**Qué es la 3.2.0.** La versión de la presentación final del 7-nov, publicada a más tardar
-el 4-nov (10.65 y 10.68). Es `sprint-4` mezclado en `master` (4.1), y lleva, encima de la
+**Qué es la 0.4.0.** La versión de la presentación final del 7-nov, publicada a más tardar
+el 4-nov (10.65 y 10.68). Hasta el 28-oct se llamó 3.2.0: desde 10.74, la numeración va en
+0.x hasta la 1.0.0 del examen final. Lo ya publicado conserva su número en Git y en los
+paquetes, y en la numeración nueva se lee así: la 3.0 es la 0.3.0, la 3.1 es la 0.3.1 y la
+3.1.1 es la 0.3.2. Es `sprint-4` mezclado en `master` (4.1), y lleva, encima de la
 candidata del piloto (la 3.1.0, 10.35):
 - **la 3.1.1** (T-122, publicada el 26-oct, 10.62; dentro del rediseño desde T-123, 10.65):
   la escala de un plano de llegada (H1), la sección «AGREGADOS» del listado (H3), la carga
@@ -39,11 +42,11 @@ ni un nombre de cuenta.
 
 | # | Qué hacer | Qué hay que ver | Si falla |
 |---|---|---|---|
-| 0.1 | Mezclar `sprint-4` en `master` y publicar los tres clientes con los comandos de la sección 4 | La Web en `https://baystream-app.web.app/version.json` dice `"version": "3.2.0"` y `"build_number": "6"`; Windows instaló `BayStream_3.2.0.0.msix` (Configuración → Aplicaciones → BayStream 3.2.0.0); Play tiene el AAB 6 (3.2.0) en la prueba interna y el Honor lo actualizó por el enlace de prueba | No sigas con una versión a medias: los tres clientes tienen que ser la 3.2.0. Si una compilación no sale, el ensayo se hace con la 3.1.1 y se anota |
+| 0.1 | Mezclar `sprint-4` en `master` y publicar los tres clientes con los comandos de la sección 4 | La Web en `https://baystream-app.web.app/version.json` dice `"version": "0.4.0"` y `"build_number": "6"`; Windows instaló `BayStream_0.4.0.0.msix` (Configuración → Aplicaciones → BayStream 0.4.0.0); Play tiene el AAB 6 (0.4.0) en la prueba interna y el Honor lo actualizó por el enlace de prueba | No sigas con una versión a medias: los tres clientes tienen que ser la 0.4.0. Si una compilación no sale, el ensayo se hace con la 3.1.1 y se anota |
 | 0.2 | Guardar lo de la 3.1.1 para poder volver: `build\t93\BayStream_3.1.1.0.msix` (y su `.sha256`) en `C:\Proyectos\proyecto-baystream`, y la etiqueta `v3.1.1` en Git | Los dos existen antes de instalar nada nuevo (`git tag --list v3.1.1` la muestra) | Sin el MSIX, volver a Windows 3.1.1 exige recompilarlo desde `v3.1.1` con 4.2 |
 | 0.3 | Comprobar las cuentas en Firebase (consola, no desde la app): la de oficina y la de muelle existen y están **autorizadas**; las reglas publicadas son las de 10.108 (no se vuelve a publicar nada) | En la app, al iniciar sesión, «Cuenta autorizada» y el rol correcto («Oficina» o «Muelle») | «Cuenta sin autorizar: …»: el responsable la activa en la consola; la app no lo puede hacer |
-| 0.4 | En el Honor: letra del sistema en 1.0 (o la que use el planificador, pero anotada), brillo alto, Wi-Fi o datos encendidos, la app actualizada | El inicio con «Abre un plano de estiba» y «Seleccionar archivo»; la travesía no se dibuja en el teléfono (no sobra sitio): es lo esperado. Con un plano abierto, «Estad.» muestra «contenedores a bordo» y «Carga por bahía, de proa a popa» (la 3.2.0) | Si «Estad.» muestra la vista de tarjetas de antes, no se actualizó: Play → prueba interna → actualizar |
-| 0.5 | En la laptop: Windows con el MSIX 3.2.0.0 abierto una vez (tema «Seguir al sistema» o «Oscuro» en Parámetros; la oficina trabaja de noche) | El inicio con la marca, «Abre un plano de estiba» y, si sobra alto debajo, el buque navegando al pie | Si el instalador dice «Publisher: Unknown» o `0x800B010A`, el MSIX no se firmó con `CN=BayStream`: repetir 4.2 con la huella |
+| 0.4 | En el Honor: letra del sistema en 1.0 (o la que use el planificador, pero anotada), brillo alto, Wi-Fi o datos encendidos, la app actualizada | El inicio con «Abre un plano de estiba» y «Seleccionar archivo»; la travesía no se dibuja en el teléfono (no sobra sitio): es lo esperado. Con un plano abierto, «Estad.» muestra «contenedores a bordo» y «Carga por bahía, de proa a popa» (la 0.4.0) | Si «Estad.» muestra la vista de tarjetas de antes, no se actualizó: Play → prueba interna → actualizar |
+| 0.5 | En la laptop: Windows con el MSIX 0.4.0.0 abierto una vez (tema «Seguir al sistema» o «Oscuro» en Parámetros; la oficina trabaja de noche) | El inicio con la marca, «Abre un plano de estiba» y, si sobra alto debajo, el buque navegando al pie | Si el instalador dice «Publisher: Unknown» o `0x800B010A`, el MSIX no se firmó con `CN=BayStream`: repetir 4.2 con la huella |
 | 0.6 | Tener a mano en la laptop el plan de carga, el listado de la agencia (`.xlsx`) y el plano de llegada de la escala; en el Honor no hace falta ningún archivo: se une a la operación publicada | | |
 
 ---
@@ -118,70 +121,106 @@ franja de la bahía (`DESIGN.md` 14).
 
 ## 4. Compilación y publicación (Carlos; Yov revisa antes)
 
-Las versiones de la 3.2.0 (una por cliente, por encima de la 3.1.1 publicada en 10.62:
-Web 3.1.1+5, MSIX 3.1.1.0, AAB 5):
+Las versiones de la 0.4.0, una por cliente (hasta el 28-oct se llamaba 3.2.0; 10.74). Lo
+publicado antes, la 3.1.1 de 10.62, es Web 3.1.1+5, MSIX 3.1.1.0 y AAB 5:
 
 | Cliente | Versión | Por qué |
 |---|---|---|
-| Android (AAB, prueba interna de Play) | `3.2.0`, `versionCode` **6** | Play rechaza un número repetido: el 5 ya se usó |
-| Windows (MSIX) | **3.2.0.0** | Windows solo instala encima si la versión sube |
-| Web (Hosting) | `3.2.0`, compilación **6** | `version.json` lo deja visible |
+| Android (AAB, prueba interna de Play) | `0.4.0`, `versionCode` **6** | Play solo exige que el `versionCode` suba (el 5 ya se usó); el nombre puede «bajar» |
+| Windows (MSIX) | **0.4.0.0** | Windows solo instala encima si la versión sube, y 0.4.0.0 es menor que 3.1.1.0: **una sola vez**, se desinstala la 3.1.1 antes (4.2). Después, la 0.4.x actualiza normal |
+| Web (Hosting) | `0.4.0`, compilación **6** | `version.json` lo deja visible |
 
-`pubspec.yaml` ya dice `version: 3.2.0+6` y `msix_version: 3.2.0.0` (T-125); los comandos
+`pubspec.yaml` dice `version: 0.4.0+6` y `msix_version: 0.4.0.0` (10.74); los comandos
 lo repiten en la línea de comandos para no depender de ello. `pubspec.lock` no cambia.
+
+**Los bloques con comprobaciones van dentro de `& { … }`** (4.1, la instalación de 4.2 y
+4.4). Según cómo se peguen, PowerShell puede correr cada línea por su cuenta, y entonces un
+`throw` no detiene las que siguen. Dentro de las llaves, el bloque entero se detiene en la
+primera comprobación que falle: en 4.4, por ejemplo, ya no llega a `firebase deploy`.
 
 ### 4.1 La mezcla (desde `C:\Proyectos\proyecto-baystream`, la carpeta de siempre)
 
-Codex acepta la candidata de T-125 y Carlos sube antes a `sprint-4` el bloque de esa
-decisión. Esa carpeta está en `master`, en `34d8838` (`v3.1.1`), igual que `origin/master`
-(10.62). `C:\Proyectos\baystream-rediseno` es otro árbol de trabajo del mismo repositorio,
-así que `sprint-4` es la misma rama local: no hace falta traerla ni mover `master`. Y
-`master` ya está dentro de `sprint-4` desde la mezcla de T-123 (10.63), así que la mezcla
-no puede tener conflictos: **si Git marca alguno, parar y avisar antes de resolver nada.**
-Los documentos de Carlos modificados en esa carpeta (hoy, cuatro `.docx` y un `.pdf` de
-`docs/`) no los toca `sprint-4` y se quedan como están.
+**Se hizo en dos pasos el 28-oct.** La primera mezcla, con el nombre de entonces, dejó
+`master` en `5fe823a` («Sprint 4: la 3.2.0, mezcla de sprint-4 a master»), con la etiqueta
+`v3.2.0`; antes se comprobó que `master` estaba en `34d8838` (`v3.1.1`) y dentro de
+`sprint-4`. Con 10.74 cambió el número: `sprint-4` lleva el commit de la numeración, y una
+segunda mezcla lo trae a `master`. La etiqueta `v3.2.0` se borra, porque no se publicó nada
+con ella, y queda `v0.4.0`. `C:\Proyectos\baystream-rediseno` es otro árbol de trabajo del
+mismo repositorio, así que `sprint-4` es la misma rama local. La mezcla no puede tener
+conflictos: **si Git marca alguno, parar y avisar antes de resolver nada.** Los documentos
+de Carlos modificados en esa carpeta (hoy, cuatro `.docx` y un `.pdf` de `docs/`) no los toca
+`sprint-4` y se quedan como están.
 
 ```powershell
+& {
 Set-Location -LiteralPath C:\Proyectos\proyecto-baystream
-git branch --show-current
-git log --oneline -1
-git merge-base --is-ancestor master sprint-4; $LASTEXITCODE
-git log --oneline -1 sprint-4
+if ((git branch --show-current) -ne 'master') { throw 'Parar: la carpeta no esta en master' }
+if ((git rev-parse HEAD) -notlike '5fe823a*') { throw 'Parar: master no esta en 5fe823a' }
+if (-not (git show sprint-4:pubspec.yaml | Select-String -Pattern '^version: 0\.4\.0\+6' -Quiet)) { throw 'Parar: sprint-4 todavia no trae la 0.4.0' }
 git merge --no-ff --no-commit sprint-4
-git commit -m "Sprint 4: la 3.2.0, mezcla de sprint-4 a master" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
-git tag -a v3.2.0 -m "BayStream 3.2.0, el rediseno con la 3.1.1 (Sprint 4)"
+if ($LASTEXITCODE -ne 0) { throw 'Parar: la mezcla no salio limpia; no resolver nada' }
+git commit -m "Sprint 4: la 0.4.0, mezcla de sprint-4 a master"
+if ($LASTEXITCODE -ne 0) { throw 'Parar: el commit de la mezcla no salio' }
+git tag -d v3.2.0
+git push origin :refs/tags/v3.2.0
+git tag -a v0.4.0 -m "BayStream 0.4.0, el rediseno con los arreglos del piloto (Sprint 4)"
 git push origin master
-git push origin v3.2.0
+git push origin v0.4.0
 git log --oneline -1
+}
 ```
 
-Antes de mezclar, las cuatro primeras líneas tienen que dar: `master`; `34d8838 Sprint 4:
-reaceptacion de T-122, la 3.1.1 (pasa)`; `0` (`master` está dentro de `sprint-4`); y el
-commit de `sprint-4` que Codex aceptó. Si alguna da otra cosa, parar y avisar. La mezcla se
+Las tres comprobaciones del principio detienen el bloque si la carpeta no está en `master`,
+si `master` no está en `5fe823a` o si `sprint-4` todavía no trae la 0.4.0. La mezcla se
 detiene antes del commit («stopped before committing as requested»): es lo esperado, y el
-`git commit` la cierra con su mensaje y su línea de autoría. La última línea tiene que
-mostrar «Sprint 4: la 3.2.0, mezcla de sprint-4 a master». Después, la carpeta queda en
-`master` con la 3.2.0; `v3.1.1` sigue en Git para volver (4.5). El rediseño sigue en
-`C:\Proyectos\baystream-rediseno`, en `sprint-4`.
+`git commit` la cierra. La última línea tiene que mostrar «Sprint 4: la 0.4.0, mezcla de
+sprint-4 a master». Después, la carpeta queda en `master` con la 0.4.0; `v3.1.1` sigue en
+Git para volver (4.5). El rediseño sigue en `C:\Proyectos\baystream-rediseno`, en
+`sprint-4`.
 
 ### 4.2 Windows (MSIX), desde esa carpeta en `master`
 
 ```powershell
 $h = @(Get-ChildItem Cert:\CurrentUser\My | Where-Object Subject -eq 'CN=BayStream')
 $h.Count   # tiene que dar 1
-powershell -NoProfile -ExecutionPolicy Bypass -File tool\t93_msix.ps1 -Huella $h[0].Thumbprint -Version 3.2.0.0
+powershell -NoProfile -ExecutionPolicy Bypass -File tool\t93_msix.ps1 -Huella $h[0].Thumbprint -Version 0.4.0.0
 ```
 
-Sale `build\t93\BayStream_3.2.0.0.msix` con su `.sha256`; el script compila Release con la
+Sale `build\t93\BayStream_0.4.0.0.msix` con su `.sha256`; el script compila Release con la
 configuración privada (`-Opciones` apunta a `C:\Proyectos\baystream-privado\firebase-prod.json`
 por omisión, sin abrirla) y termina verificando la firma `Valid` y la huella. No borra los
-paquetes anteriores: `BayStream_3.1.1.0.msix` sigue en `build\t93`. Instalarlo encima del
-3.1.1.0 y abrir la app una vez.
+paquetes anteriores: `BayStream_3.1.1.0.msix` sigue en `build\t93`.
+
+**Instalarlo, esta vez quitando antes la 3.1.1:** 0.4.0.0 es menor que 3.1.1.0 y Windows no
+lo instala encima. Los datos no se pierden, porque la app los guarda en
+`%LOCALAPPDATA%\BayStream`, fuera del paquete; igual se copian antes, con la app cerrada:
+
+```powershell
+& {
+if (Get-Process -Name baystream -ErrorAction SilentlyContinue) { throw 'Parar: cierra BayStream antes de seguir' }
+$respaldo = "C:\Proyectos\respaldo-almacen-$(Get-Date -Format yyyyMMdd-HHmm)"
+robocopy "$env:LOCALAPPDATA\BayStream" $respaldo /E /R:1 /W:1 /NFL /NDL /NJH
+if ($LASTEXITCODE -ge 8) { throw 'Parar: la copia del almacen fallo; no se desinstalo nada' }
+$app = @(Get-AppxPackage | Where-Object Name -like '*baystream*')
+if ($app.Count -ne 1) { throw "Parar: hay $($app.Count) paquetes de BayStream instalados y tiene que haber 1" }
+"Se desinstala $($app[0].Name) $($app[0].Version); la copia del almacen esta en $respaldo"
+try { Remove-AppxPackage -Package $app[0].PackageFullName -ErrorAction Stop } catch { throw "Parar: no se desinstalo ($_)" }
+try { Add-AppxPackage -Path C:\Proyectos\proyecto-baystream\build\t93\BayStream_0.4.0.0.msix -ErrorAction Stop } catch { throw "Parar: no se instalo la 0.4.0.0 ($_)" }
+Get-AppxPackage | Where-Object Name -like '*baystream*' | Select-Object Name, Version
+}
+```
+
+La última línea tiene que decir `0.4.0.0`. Si el bloque para antes de «Se desinstala…», no
+se tocó nada; si para al instalar, BayStream quedó desinstalado: instalar otra vez
+`BayStream_3.1.1.0.msix` (4.5) y avisar. Si la copia no encuentra `%LOCALAPPDATA%\BayStream`,
+el bloque para ahí, y es lo correcto: los datos estarían en otro lado y no se desinstala.
+Abrir la app una vez: tiene que abrir con los datos de siempre; si pide iniciar sesión otra
+vez, es normal. Desde aquí, la 0.4.x se instala encima.
 
 ### 4.3 Android (prueba interna de Play)
 
 ```powershell
-flutter build appbundle --release --build-name=3.2.0 --build-number=6 --dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json
+flutter build appbundle --release --build-name=0.4.0 --build-number=6 --dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json
 ```
 
 Sin `--no-pub` (10.86). Firma con la clave de subida de `android\key.properties` (T-49),
@@ -193,23 +232,25 @@ Honor, actualizar por el enlace de la prueba interna.
 ### 4.4 La Web (Hosting), el bloque de la guía del cierre con la versión nueva
 
 ```powershell
+& {
 Set-Location -LiteralPath C:\Proyectos\proyecto-baystream
 $viejo = '.dart_tool\flutter_build\c00f0219d5d4c3dd1d45ce8ba5ce2f45'
 if (Test-Path -LiteralPath $viejo) { Rename-Item -LiteralPath $viejo -NewName 'c00f0219d5d4c3dd1d45ce8ba5ce2f45-viejo-2oct' }
 $destino = [IO.Path]::GetFullPath('C:\Proyectos\proyecto-baystream\build\web')
 if ($destino -ne 'C:\Proyectos\proyecto-baystream\build\web') { throw 'Destino de Hosting inesperado' }
 if (Test-Path -LiteralPath $destino) { Remove-Item -LiteralPath $destino -Recurse -Force }
-flutter build web --release --output=build/web --build-name=3.2.0 --build-number=6 --dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json
+flutter build web --release --output=build/web --build-name=0.4.0 --build-number=6 --dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json
 if ($LASTEXITCODE -ne 0) { throw 'No publicar: build fallido' }
 if (-not (Select-String -LiteralPath build\web\main.dart.js -Pattern 'flutter-fire-auth' -SimpleMatch -Quiet)) { throw 'No publicar: la Web salio sin Firebase Auth' }
 dart run tool/t92_verify.dart build/web
 if ($LASTEXITCODE -ne 0) { throw 'No publicar: verificacion fallida' }
 firebase deploy --only hosting --project baystream-app
+}
 ```
 
 **Nunca `firebase deploy` a secas** (publicaría las reglas de H5 sobre producción).
 Después, abrir `https://baystream-app.web.app` en una ventana de incógnito, comprobar
-`version.json` (3.2.0, 6) e iniciar sesión con la cuenta de oficina. Quien ya visitó el
+`version.json` (0.4.0, 6) e iniciar sesión con la cuenta de oficina. Quien ya visitó el
 sitio puede ver una vez la versión anterior por el *service worker*: recargar. La primera
 línea con `$viejo` ya no hace nada: esa caché se apartó el 2-oct y no ha vuelto (T-125 lo
 comprobó); se queda porque es la guía del cierre.
@@ -219,8 +260,9 @@ comprobó); se queda porque es la guía del cierre.
 La 3.1.1 es `v3.1.1` (`34d8838`), la publicada el 26-oct (10.62). Se vuelve cliente por
 cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`.
 
-- **Windows:** desinstalar BayStream y volver a instalar `build\t93\BayStream_3.1.1.0.msix`
-  (y comprobar su `.sha256`): Windows no instala una versión menor encima.
+- **Windows:** instalar `build\t93\BayStream_3.1.1.0.msix` (y comprobar su `.sha256`). Como
+  3.1.1.0 es mayor que 0.4.0.0, se instala encima; desinstalar antes también sirve. Para
+  volver después a la 0.4.x, hay que desinstalar otra vez la 3.1.1, como en 4.2.
 - **Web:** con `git checkout v3.1.1`, el bloque completo de 4.4, sin quitarle ninguna
   comprobación y cambiando solo `--build-name=3.1.1 --build-number=5`. Termina igual que
   4.4, con `firebase deploy --only hosting --project baystream-app`, y se publica una sola
@@ -229,10 +271,11 @@ cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`
   con `git checkout v3.1.1`,
 
   ```powershell
-  flutter build appbundle --release --build-name=3.1.2 --build-number=7 --dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json
+  flutter build appbundle --release --build-name=0.3.3 --build-number=7 --dart-define-from-file=C:\Proyectos\baystream-privado\firebase-prod.json
   ```
 
-  y se sube ese AAB, el código de la 3.1.1 con el nombre 3.1.2 y el `versionCode` 7, a la
+  y se sube ese AAB, el código de la 3.1.1 (la 0.3.2 en la numeración nueva) con el nombre
+  0.3.3 y el `versionCode` 7, a la
   prueba interna; el Honor lo actualiza por el enlace. Después, `git checkout master`. Desde
   ahí, la siguiente versión de Android lleva el `versionCode` 8 o más.
 - `git checkout v3.1.1` deja la carpeta en la etiqueta, sin rama («detached HEAD»): es lo
@@ -241,7 +284,7 @@ cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`
 
 ---
 
-## 5. Lo que la 3.2.0 no cubre y hay que mirar en el ensayo
+## 5. Lo que la 0.4.0 no cubre y hay que mirar en el ensayo
 
 - **Lo que necesita Firebase** no se recorrió con los bancos (10.28, y T-125 tampoco): unirse,
   publicar, pedir y decidir cambios, sincronizar. Está probado en memoria
