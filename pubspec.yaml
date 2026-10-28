@@ -59,6 +59,9 @@ dev_dependencies:
   # propio SDK y solo de desarrollo: no entra en la app compilada.
   integration_test:
     sdk: flutter
+  # Pruebas del curso (T-116, decision 10.12 del Sprint 4; T-126, 10.70). Fija
+  # y solo de desarrollo; exige equatable 2.1.0, cambio autorizado por Carlos.
+  fake_cloud_firestore: 4.2.0
   flutter_lints: ^6.0.0
   # Instalador MSIX de Windows (T-93, autorizado en 2.7 de SPRINT-3). Fija y
   # solo de desarrollo: no entra en la app compilada.
