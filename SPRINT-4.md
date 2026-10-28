@@ -1880,3 +1880,50 @@ La siguiente decisión es la **10.70**.
 - La 3.2.0 se publica igual, a más tardar el 4-nov.
 
 La siguiente decisión es la **10.71**.
+
+### 10.71 · T-125 aceptada con observaciones: la 3.2.0 queda lista para la sección 4 de la lista del piloto (28-oct, 03:10)
+
+**Codex la aceptó a las 02:58, sobre `d41ad8c`** (`docs/t125/aceptacion-codex.md`, con su evidencia en `build/t125-aceptacion/` de `baystream-qa-r4`):
+- **P1, Estadísticas con los vacíos asignados, pasa** en los tres clientes, en release. Con la entrada de T-122, a bordo pasa de 25 a 26 y a 27, y vuelve a 26 al deshacer la OR 12; la Lista y Estadísticas dicen lo mismo en cada paso. Codex calculó por su cuenta los pesos (380 000, 382 185, 386 085 y 383 900 kg) y los grupos 22 y 26, sin el formateador de la app. La ficha sale en singular y en plural, la fila «Vacíos asignados» dice 1, 2 y 1, y sin asignados no aparece ninguna de las dos. Las dos alertas y la comparación de viajes no cambian.
+- **P2, O-124-1, pasa:** en su caso propio, las dos sombras de la 22 llevan cada una su clave (`neighbor-twenty-0220282` y `neighbor-twenty-0220482`), sin «Duplicate keys» en debug ni en release. La prueba de T-106 sigue pidiendo exactamente tres sombras en la 04.
+- **P3, las versiones, pasa:** la Web dice 3.2.0 y 6, y T-92 aprueba sus 57 archivos; el `.exe` dice 3.2.0+6, y el manifiesto del AAB, `versionCode` 6 y `versionName` 3.2.0. Las tres se compilaron desde el `lib/main.dart` original, sin la configuración privada. `pubspec.*` no cambia.
+- **P4, la lista del piloto, pasa:** Codex revisó la sección 4 comando por comando, sin ejecutarla, y no encontró nada que corregir. `master`, `origin/master` y `v3.1.1` siguen en `34d8838`, y `master` está dentro de `sprint-4`. Los cinco documentos de Carlos no están en lo que entra. Para volver atrás, Windows tiene el MSIX 3.1.1.0 con su huella, y Android pide un AAB 3.1.2 con `versionCode` 7.
+- **Sin regresiones** en los tres clientes: T-124, `T100_LLEGADA` (964 950 kg), el sintético de 977 (24 columnas), H4, H6, H7 y las entregas 1 y 2.
+- **Cifras:** la suite, 1841 de 1841 en una sola corrida, sin omitidas; `analyze` en cero; y 109 sondas propias más, aprobadas.
+
+**Las dos observaciones son P3:**
+- **O1:** el error de arranque del banco de la Web de T-122, el mismo de T-123 y T-124. Es del banco, no del producto.
+- **O2:** el alcance de lo nativo. La matriz completa de anchos, temas y letra se corrió en widgets y en Chrome; Windows y Android aportan muestras y las secuencias completas. H7 en Windows lo hizo Carlos con la mano, porque la herramienta no sostiene la pulsación larga: soltó en el nivel 82, y el intercambio se canceló. En el emulador, `altoDp: 800` es una etiqueta vieja del conductor: la pantalla fue de 360 × 640 dp.
+
+**Yov lo revisó:** el informe coincide con la huella de su manifiesto, y las 795 huellas de la evidencia coinciden. El árbol de `qa-r4` está intacto: los 1917 archivos de `d41ad8c` siguen iguales y solo se agregó el informe. El resumen de la suite dice una sola ejecución, con 1841 éxitos y ninguna omitida.
+
+**Con esto:**
+- **T-125 queda aceptada, y con ella la candidata 3.2.0.** El piso de `sprint-4` sube a **1841**.
+- Carlos mueve el informe a la carpeta del rediseño y lo sube con esta decisión, antes de mover `qa-r4` otra vez.
+- **La 3.2.0 se publica con la sección 4 de `docs/piloto/LISTA-PILOTO.md`**, a más tardar el 4-nov: primero la mezcla y la etiqueta `v3.2.0` desde `C:\Proyectos\proyecto-baystream` (4.1), y después Windows, Android y la Web (4.2 a 4.4). Las compilaciones son de Flutter, así que van cuando Timonel no esté corriendo T-126.
+- O1 queda para una tarea del banco, después de la 3.2.0.
+
+La siguiente decisión es la **10.72**.
+
+### 10.72 · Una limpieza de disco borró evidencias de `%TEMP%` (28-oct, 03:10)
+
+**Qué pasó.** Para hacer espacio para T-126, Yov le pasó a Carlos una limpieza de `%TEMP%`: borrar lo que tuviera más de 7 días. Carlos la corrió el 27-oct a las 22:41. Además de carpetas viejas, borró los archivos viejos de dentro de carpetas nuevas. Yov no revisó antes qué había ahí. `Remove-Item` no pasa por la papelera, así que no se recupera.
+
+**Lo que se perdió:**
+- **T-99, Fase B:** los 404 archivos originales de Timonel en `%TEMP%\t99-fase-b-33404a5\` (20,4 MB): `ram`, `ram-android`, `rendimiento-b`, `anchos-windows`, `anchos-web`, `reconstrucciones`, `capas`, `codigo`, `modulos` y `documentacion-resumen`. Solo quedó el zip del SDK de Firebase.
+- **T-98, Fase B:** de `%TEMP%\t98-b-33404a5-20oct\`, lo anterior al 20-oct a las 22:41: `censos\`, `sintetico-tanda\` y el `.etl` original de `tanda\tls-01\`. Quedan el `t98-tls.pcapng` que salió de ese `.etl` y las rondas `sin-red-*` y `tls-02`, que no se tocaron.
+- **T-100:** de `%TEMP%\t100-33404a5-20oct\`, los archivos de trabajo del 20-oct. El manual y sus 103 capturas están en el repo.
+- Objetos viejos del `.git` de la copia limpia de la aceptación de T-113, que no eran evidencia.
+- No se sabe si quedaban carpetas más viejas, del Sprint 3: si las había, se borraron enteras. La limpieza liberó 0,1 GB en total.
+
+**Lo que no cambia:**
+- Las cifras, los dictámenes y las aceptaciones de T-98, T-99 y T-100: están en el repo.
+- La auditoría de Codex de T-99, en `%TEMP%\t99acc-33404a5-21oct\`: tiene la huella SHA-256 de cada uno de los 404 archivos (`evidencias-timonel-inventario.json`), las lecturas de RAM por corrida, los tiempos recalculados y su repetición de una fila de cada RNF, que también está en `build\t99acc` de `proyecto-baystream`.
+- El producto, el repo, las pruebas y los archivos H5 no se tocaron.
+- Varias rutas de `%TEMP%` que citan esos informes ya no existen o están incompletas; esta decisión dice por qué.
+
+**Desde ahora:**
+- en `%TEMP%` no se borra por fecha: solo lo que se revisó y se sabe qué es;
+- Yov propone sacar de `%TEMP%` las evidencias que quedan a `C:\Proyectos\evidencia\`, fuera del repo y con los mismos nombres, cuando termine T-126. Decide Carlos.
+
+La siguiente decisión es la **10.73**.
