@@ -2063,3 +2063,57 @@ La siguiente decisión es la **10.76**.
 **Las demos de la Expo:** en vivo van la 3 (`integration_test`) y la 2 (el emulador). El emulador se arranca antes de empezar, con la consola abierta en Firestore → Requests, para no esperar sus 33 s en la sala. La demo 1 tarda unos 20 s: va en vivo si sobra tiempo, y si no se muestra con su diapositiva y el respaldo de la 20.
 
 La siguiente decisión es la **10.77**.
+
+### 10.77 · T-119 entregada y revisada: la rueda, el zoom y la barra; y una prueba que rompió 10.74 (29-oct, 00:45)
+
+**Timonel la entregó a las 00:20, sobre `9ef19f0`.** Está en `docs/T119-RESULTADOS.md` y `DESIGN.md` 16, con la evidencia en `build/t119/`.
+- **La rueda en la silueta:**
+  - hacia abajo avanza a la popa y hacia arriba regresa, con 100 ms de animación, o sin ella si el sistema reduce el movimiento;
+  - en un extremo, la rueda pasa a la columna;
+  - un pestillo de 300 ms evita que la silueta se robe la rueda al bajar la página;
+  - Mayús + rueda sigue siendo del desplazable.
+- **El zoom:**
+  - el pellizco del touchpad y Ctrl + rueda, también con el mouse (P4), amplían entre 75 y 300 %;
+  - mientras dura el pellizco, nada se desplaza;
+  - la celda bajo el puntero se queda quieta, también cuando la bahía pasa de caber centrada a no caber;
+  - el chip sigue ampliando desde la esquina, y en el teléfono el zoom del touchpad también.
+- **La barra horizontal:**
+  - va abajo de la columna, encima de la franja de cifras, y solo aparece cuando la bahía no cabe;
+  - se arrastra, un clic en la pista avanza una página y deja 14 dp de aire;
+  - en la oficina, el desplazamiento horizontal de la rejilla va ahora por fuera del zoom.
+- **La Web (P7):** no tocó `web/index.html`. Según el código del motor web de Flutter 3.38.9 (una lectura, no una medida), Ctrl + rueda llega como escala y el motor cancela el evento del navegador. Lo confirma Carlos en Chrome y Edge.
+- **Siete diferencias con el diseño de 0.7.2,** explicadas en la sección 4 del informe y en `DESIGN.md` 16.6. Tres salieron de errores que destaparon sus propias pruebas.
+- **Cifras:**
+  - 11 pruebas nuevas, que fallan las 11 contra el código de antes, cada una en su comprobación;
+  - la suite, 1852 en una corrida: 1851 en verde, ninguna omitida y una fallida;
+  - `analyze`, en cero.
+
+**La fallida la causó 10.74, no T-119:**
+- `test/t93_msix_config_test.dart` fija `msix_version` en `3.2.0.0`, y la numeración nueva cambió el pubspec sin cambiar la prueba. Falla igual en `9ef19f0`.
+- 10.74 dijo que no hacía falta repetir nada porque solo cambiaba el pubspec, y esa prueba lee el pubspec: fue un error de Yov.
+- Lo publicado no cambia, porque es una prueba y no código de la app. Pero desde `7647741` la suite no cumplía el piso de 1841 sin fallas.
+- **El arreglo:** que la prueba compruebe que `msix_version` es la versión del pubspec con `.0` al final, en vez de fijar un número. Así la 0.4.1 no la rompe. Lo hace Timonel, en un commit aparte.
+
+**Yov lo revisó contra el disco:**
+- cambian exactamente las 11 rutas del bloque: 7 modificadas y 4 nuevas. No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, las opciones de Firebase ni `web/index.html`;
+- los registros dicen lo que dice el informe:
+  - `analyze` da «No issues found!» en los tres directorios;
+  - la suite da «+1851 -1», con la única falla en `t93_msix_config_test.dart` («Expected: '3.2.0.0' · Actual: '0.4.0.0'»);
+  - las pruebas nuevas contra el código de antes dan «-11»;
+- el código hace lo que dice el informe:
+  - la rueda se registra en el resolvedor solo cuando la silueta puede moverse en ese sentido;
+  - el pestillo distingue el evento original del que toma la silueta;
+  - el pellizco se apaga al terminar y al desmontarse el plano.
+
+**Para la aceptación de Codex:**
+- Con el desplazamiento horizontal de la oficina fuera del zoom, H7 (el arrastre que desplaza el plano al acercarse al borde, también con zoom) y la prueba de T-105 merecen una pasada a mano en Windows a 200 %.
+- Un pellizco que no termina, por ejemplo si la ventana pierde el foco a la mitad, no debería dejar quieta la columna.
+
+**Lo que sigue:**
+1. Carlos sube el bloque de Timonel y el de esta decisión.
+2. Timonel arregla la prueba de T-93 y corre la suite: 1852 de 1852.
+3. Carlos hace la prueba de la sección 7 del informe: unos 10 minutos en Windows y 10 en Chrome y Edge, después del repaso técnico de la Expo.
+4. Codex acepta T-119.
+5. Con el ok de Carlos al diseño de 8.3, Yov escribe el prompt de T-127.
+
+La siguiente decisión es la **10.78**.
