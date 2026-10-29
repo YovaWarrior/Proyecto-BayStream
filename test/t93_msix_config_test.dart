@@ -33,7 +33,13 @@ void main() {
     expect(config['publisher'], 'CN=BayStream');
     expect(config['identity_name'], 'gt.cmartinez.baystream');
     expect(config['display_name'], 'BayStream');
-    expect(config['msix_version'], '3.2.0.0');
+    // El MSIX lleva la versión del pubspec con «.0» al final (10.77): fijar
+    // el número rompía la prueba en cada versión nueva.
+    final version = RegExp(r'^version:\s*(\d+\.\d+\.\d+)\+\d+\s*$',
+            multiLine: true)
+        .firstMatch(pubspec);
+    expect(version, isNotNull, reason: 'falta la línea version: x.y.z+n');
+    expect(config['msix_version'], '${version!.group(1)}.0');
     expect(config['capabilities'], 'internetClient');
     expect(config['logo_path'], 'web/icons/Icon-512.png');
   });
