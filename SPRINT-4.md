@@ -2149,3 +2149,52 @@ La siguiente decisión es la **10.78**.
 4. Carlos prueba T-119 con su mouse y su touchpad, y después Codex la acepta.
 
 La siguiente decisión es la **10.79**.
+
+### 10.79 · T-127 entregada y revisada: el listado entra en una operación publicada; Yov propone cerrar la 0.4.1 con una sola aceptación (29-oct, 12:30)
+
+**Timonel la entregó con Fable 5.1, sobre `cf7cf3f`.** Está en `docs/T127-RESULTADOS.md`, con la evidencia en `build/t127/`. Es el diseño de 8.3 de T-122, tal cual:
+- **La oficina** agrega o reemplaza el listado en una operación publicada y abierta, con `replaceSource`: los trozos de la revisión nueva y el manifiesto van en un solo lote. Si la nube no acepta, nada local cambia. Antes de confirmar, el cruce dice cuántos cargados no están en el listado nuevo y cuántos vacíos asignados cambian de grupo.
+- **El muelle** escucha el manifiesto, baja solo la revisión nueva, comprueba las huellas y avisa «Listado actualizado por la oficina: n filas». Sin red, sigue con el anterior hasta reconectar.
+- **Lo demás:** los BAPLIE y los movimientos no cambian, y el estado se vuelve a derivar. `join` toma la última revisión, y lo ya publicado se sigue uniendo.
+- **Las reglas** van en `docs/T127-firestore.rules.propuesta`: T-80 más las dos cláusulas, con huella `FC17842C…`. Las de T-80 siguen siendo las publicadas.
+- **Compatibilidad (sección 4):**
+  - un cliente 0.4.0 que se une a una operación revisada falla con `source_mismatch` y un mensaje claro, sin guardar nada;
+  - uno que ya estaba unido sigue con el listado viejo, y sus movimientos se aceptan igual;
+  - una oficina 0.4.0 no puede revisar.
+  - Ninguno daña la operación.
+- **Cifras:**
+  - 19 pruebas nuevas en verde;
+  - la suite, 1871 de 1871 en una corrida, sin omitidas: el piso sube de 1852 a 1871;
+  - `analyze`, cero;
+  - en el emulador (`demo-t127`, puerto 8282, sin internet): contra las reglas nuevas, 69 de 69, 25 de 25 y 31 de 31; contra las de T-80, 69, 25 y 27 de 31, porque caen justo los cuatro casos que la revisión permite.
+- **Para Carlos:** la sección 7 dice cómo publicar las reglas desde la consola, cómo cotejarlas con `tool/t113_reglas.mjs` y el archivo nuevo como tercer argumento, y cómo volver atrás. La sección 8 trae una prueba de punta a punta de 14 pasos con la laptop y el Honor, con los sintéticos de T-100.
+
+**Yov lo revisó contra el disco:**
+- **El árbol:** cambian exactamente las 22 rutas del bloque, 14 modificadas y 8 nuevas. No cambian `pubspec.*`, `lib/main.dart`, las opciones de Firebase ni `docs/T80-firestore.rules.propuesta`.
+- **Las reglas:** sin contar el fin de línea, el archivo nuevo difiere del de T-80 solo en el encabezado y en las dos cláusulas. En la segunda, `validSource` se parte en el trozo publicado, que es el texto de T-80, y el de revisión.
+  - Revisar exige la oficina, la operación abierta y que solo cambie `sources.export_list`, sin poder quitarlo.
+  - La revisión sube, o empieza en 1 si no había listado.
+  - Cada trozo de revisión lleva la revisión, la huella y el número de trozos del manifiesto, con el tope de tamaño y el autor.
+  - Los trozos siguen sin `update` ni `delete`.
+- **La vuelta a la 0.4.0:** lo único nuevo que se guarda en el almacén local es el campo `revision` del listado, y la 0.4.0 lo ignora al leer. Si hubiera que volver a la 0.4.0, los datos locales se leen igual.
+- **Los registros dicen lo que dice el informe:** «No issues found!» al empezar y al terminar, «+1871: All tests passed!» y las seis baterías con sus resultados.
+
+**Dos observaciones, P3:**
+- **O-127-1:** contra `cf7cf3f`, las 19 pruebas nuevas «fallan» porque no compilan: usan el contrato nuevo. No muestran qué comportamiento faltaba, como sí lo mostraron las de T-119. Lo cubre la aceptación, con la app real en el emulador.
+- **O-127-2:** el lanzador de las baterías deja que el concentrador del emulador tome el puerto 4400, el mismo de la Expo. Nunca corre a la vez que el emulador de la Expo.
+
+**Primero va la Expo.** El repaso técnico de los diez comandos del guion, en `baystream-expo`, sigue pendiente, y va antes que cualquier cosa de la 0.4.1. Mientras dura, y en el ensayo del viernes y la Expo del sábado, ningún agente corre Flutter ni el emulador.
+
+**Yov propone cerrar la 0.4.1 con una sola aceptación de Codex, como la 3.2.0 en T-125.** 10.76 aceptaba T-119 y T-127 por separado, pero la de T-119 no empezó, y una sola sobre la candidata ahorra una corrida:
+1. Carlos sube el bloque de T-127 y el de esta decisión.
+2. Después del repaso, Carlos mueve `qa-r4` a la punta de `sprint-4` y hace ahí su prueba de T-119 (sección 7 de su informe).
+3. **T-128, la candidata,** con Timonel en Opus 5.5: `version: 0.4.1+7` y `msix_version: 0.4.1.0`, con la suite y `analyze`. Yov pone al día la sección 4 de la lista del piloto: las reglas de T-127 antes que los clientes, la 0.4.1 encima de la 0.4.0 y la vuelta atrás.
+4. **Codex acepta la 0.4.1 entera** en `qa-r4`:
+   - T-119, con la prueba de Carlos y las dos pasadas de 10.77;
+   - T-127, con sus baterías y una prueba de punta a punta en el emulador con la app real: la oficina, el muelle y un cliente 0.4.0 frente a una operación revisada;
+   - la candidata, con la lista del piloto.
+5. Con la aceptación, Carlos publica las reglas de T-127 y las coteja (sección 7). Después van los tres clientes, con la sección 4 de la lista, a más tardar el 4-nov, y al final la prueba de punta a punta de la sección 8, ya en la nube.
+
+**Decide Carlos.**
+
+La siguiente decisión es la **10.80**.
