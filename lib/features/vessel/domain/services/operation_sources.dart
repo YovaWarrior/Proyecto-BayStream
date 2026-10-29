@@ -4,6 +4,7 @@ import '../../../../core/errors/failures.dart';
 import '../entities/operation.dart';
 import '../entities/vessel_voyage.dart';
 import '../repositories/movement_log_repository.dart';
+import '../repositories/operation_sync_repository.dart';
 
 /// Identidad y reemplazo de una fuente de la escala, sin perder las demás.
 class OperationSources {
@@ -38,19 +39,44 @@ class OperationSources {
     return local;
   }
 
-  /// Las fuentes de una operación publicada no cambian: lanza un
+  /// Los BAPLIE de una operación publicada no cambian: lanza un
   /// [ValidationFailure] si el archivo es otro. Volver a abrir la misma
   /// fuente, con el mismo texto, no cambia nada.
+  ///
+  /// T-127 (10.78) · El listado de la agencia es la única fuente que la
+  /// oficina puede agregar o reemplazar después de publicar, mientras la
+  /// operación siga abierta: viaja por la nube con una revisión
+  /// ([OperationSyncRepository.replaceSource]) y el muelle lo recibe solo.
+  /// Si la nube no lo acepta, se lanza su [Failure] y nada local cambia.
   static Future<Operation> save(MovementLogRepository repository,
       VesselVoyage voyage, String port, OperationSource source,
-      {DateTime Function()? clock}) async {
+      {OperationSyncRepository? sync, DateTime Function()? clock}) async {
     final existing = await find(repository, voyage, port);
     if (existing != null && existing.published) {
       if (existing.source(source.kind)?.content == source.content) return existing;
-      throw const ValidationFailure(
-          field: 'source',
-          message: 'La operación de esta escala ya está publicada y sus fuentes '
-              'no cambian. Abre la fuente publicada desde «Nube y cuenta».');
+      if (source.kind != OperationSourceKind.exportList) {
+        throw const ValidationFailure(
+            field: 'source',
+            message: 'La operación de esta escala ya está publicada y sus '
+                'BAPLIE no cambian; solo el listado de la agencia se puede '
+                'reemplazar. Abre la fuente publicada desde «Nube y cuenta».');
+      }
+      if (existing.closed) {
+        throw const ValidationFailure(
+            field: 'source',
+            message: 'La operación de esta escala ya está cerrada y su listado '
+                'no cambia. Para trabajar con otro listado, abre el plan de '
+                'carga como una operación nueva.');
+      }
+      if (sync == null) {
+        throw const ValidationFailure(
+            field: 'source',
+            message: 'El listado de una operación publicada se reemplaza por '
+                'la nube, y esta compilación no la tiene configurada. Pide al '
+                'responsable una compilación con la nube.');
+      }
+      return (await sync.replaceSource(existing, source))
+          .fold((failure) => throw failure, (updated) => updated);
     }
     final operation = Operation(
       id: existing?.id ?? const Uuid().v4(),

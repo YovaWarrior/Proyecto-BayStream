@@ -14,7 +14,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const port = Number(process.argv[2] ?? 8181);
@@ -24,7 +24,11 @@ if (!project.startsWith('demo-')) {
   process.exit(2);
 }
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const rulesFile = join(root, 'docs', 'T80-firestore.rules.propuesta');
+// T-127: un tercer argumento prueba otro archivo de reglas (la propuesta de
+// T-127); por omisión siguen siendo las de T-80, las publicadas.
+const rulesFile = process.argv[4]
+  ? resolve(process.argv[4])
+  : join(root, 'docs', 'T80-firestore.rules.propuesta');
 const host = `http://127.0.0.1:${port}`;
 const dbPath = `projects/${project}/databases/(default)/documents`;
 const base = `${host}/v1/${dbPath}`;

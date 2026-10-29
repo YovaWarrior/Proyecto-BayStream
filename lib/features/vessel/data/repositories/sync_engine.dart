@@ -5,6 +5,7 @@ import '../../domain/entities/operation.dart';
 import '../../domain/repositories/movement_log_repository.dart';
 import '../../domain/repositories/operation_sync_repository.dart';
 import '../../domain/repositories/session_repository.dart';
+import 'source_revisions.dart';
 
 /// Clase de error remoto, ya clasificada por el adaptador (T-79a 4.5).
 enum RemoteErrorKind { unauthenticated, permissionDenied, unavailable, invalid }
@@ -42,6 +43,16 @@ abstract class RemoteMovementStore {
 
   /// Cuándo se cerró la operación en la nube; null si sigue abierta.
   Future<DateTime?> closedAt(String operationId);
+
+  /// T-127 · La entrada del listado en el manifiesto de la operación
+  /// (`sources.export_list`): al suscribirse y cada vez que cambia; null si
+  /// la operación no tiene listado. Solo lo que el servidor ya tiene: una
+  /// escritura propia todavía pendiente no cuenta.
+  Stream<SourceManifestEntry?> watchList(String operationId);
+
+  /// T-127 · Los trozos de esa revisión del listado, del servidor. Sin red
+  /// falla con [RemoteStoreException] y el motor lo vuelve a intentar.
+  Future<List<SourcePart>> listParts(String operationId, int revision);
 }
 
 /// T-79 · El motor de la cola (T-79a 4.1 a 4.6), en Dart puro: no sabe que
@@ -73,7 +84,8 @@ class SyncEngine {
     this.unconfirmedAfter = const Duration(minutes: 5),
     this.tick = const Duration(seconds: 15),
   })  : _clock = clock ?? DateTime.now,
-        _closed = operation.closed;
+        _closed = operation.closed,
+        _localListRevision = operation.exportListRevision;
 
   final _status = StreamController<SyncStatus>.broadcast();
   SyncStatus _current = SyncStatus.local;
@@ -91,6 +103,19 @@ class SyncEngine {
   StreamSubscription<List<MovementRecord>>? _local;
   Timer? _timer;
 
+  // T-127 · El listado de la agencia con revisión (8.3 de T-122; 10.78).
+  StreamSubscription<SourceManifestEntry?>? _list;
+  SourceManifestEntry? _remoteList;
+
+  /// La revisión del listado que la operación local ya tiene.
+  int _localListRevision;
+  bool _fetchingList = false;
+
+  /// Una revisión cuyos trozos no cuadraron con el manifiesto: no se vuelve
+  /// a bajar; el dispositivo se queda con el listado anterior, como `join`.
+  int? _rejectedListRevision;
+  ListArrival? _listArrival;
+
   SyncStatus get current => _current;
   Stream<SyncStatus> get status => _status.stream;
 
@@ -103,6 +128,7 @@ class SyncEngine {
     _timer = Timer.periodic(tick, (_) {
       evaluate();
       unawaited(flush());
+      unawaited(_syncList());
     });
     await setOperator(operator);
   }
@@ -140,11 +166,14 @@ class SyncEngine {
   void _listen(bool on) {
     unawaited(_remote?.cancel());
     _remote = null;
+    unawaited(_list?.cancel());
+    _list = null;
     _fromServer = false;
     _connectionKnown = false;
     _onlineSince = null;
     if (!on || _stopped) return;
     _remote = remote.watch(operation.id).listen(_onSnapshot, onError: _onWatchError);
+    _list = remote.watchList(operation.id).listen(_onList, onError: _onWatchError);
   }
 
   Future<void> _onSnapshot(RemoteSnapshot snapshot) async {
@@ -158,6 +187,8 @@ class SyncEngine {
     await log.acceptRemote(snapshot.movements);
     _emit();
     await flush();
+    // T-127: con el servidor de vuelta, el listado que no se pudo bajar.
+    if (snapshot.fromServer) unawaited(_syncList());
   }
 
   Future<void> _onWatchError(Object error) async {
@@ -170,6 +201,69 @@ class SyncEngine {
     }
     _emit();
   }
+
+  /// T-127 · El manifiesto de la operación cambió, o se acaba de escuchar.
+  Future<void> _onList(SourceManifestEntry? entry) async {
+    _remoteList = entry;
+    await _syncList();
+  }
+
+  /// T-127 · Si el manifiesto trae una revisión del listado mayor que la
+  /// local, baja solo sus trozos, los comprueba como `join` y guarda la
+  /// fuente en la operación local, con los movimientos intactos: el estado
+  /// se vuelve a derivar con el listado nuevo. Sin red, el dispositivo sigue
+  /// con el listado que tenía y lo reintenta al siguiente contacto con el
+  /// servidor (8.3, punto 3).
+  Future<void> _syncList() async {
+    final entry = _remoteList;
+    final revision = entry?.revision ?? 0;
+    if (entry == null ||
+        _stopped ||
+        _fetchingList ||
+        revision <= _localListRevision ||
+        revision == _rejectedListRevision) {
+      return;
+    }
+    _fetchingList = true;
+    try {
+      // Lo que el dispositivo ya guardó manda: la oficina que acaba de
+      // revisar el listado lo tiene en local antes de que llegue el eco.
+      final before = await _localOperation();
+      if (before != null && before.exportListRevision > _localListRevision) {
+        _localListRevision = before.exportListRevision;
+      }
+      if (_stopped || revision <= _localListRevision) return;
+      final parts = await remote.listParts(operation.id, revision);
+      if (_stopped) return;
+      final source = assembleSource(entry, parts);
+      final rows = source == null ? null : exportListRows(source.content);
+      if (source == null || rows == null) {
+        _rejectedListRevision = revision;
+        return;
+      }
+      final current = await _localOperation();
+      if (_stopped || current == null || current.exportListRevision >= revision) {
+        return;
+      }
+      final saved = await log.saveOperation(current.copyWith(sources: [
+        ...current.sources.where((s) => s.kind != OperationSourceKind.exportList),
+        source,
+      ]));
+      if (saved.isLeft()) return;
+      _localListRevision = revision;
+      _listArrival = ListArrival(revision: revision, rows: rows);
+      _emit();
+    } on RemoteStoreException catch (_) {
+      // Sin red o sin respuesta: se queda el listado anterior hasta reconectar.
+    } catch (_) {
+      // Un error que no se sabe clasificar tampoco toca el listado local.
+    } finally {
+      _fetchingList = false;
+    }
+  }
+
+  Future<Operation?> _localOperation() async =>
+      (await log.getOperation(operation.id)).fold((_) => null, (o) => o);
 
   /// Emite `set()` de cada pendiente propio que no esté ya en vuelo, en orden
   /// de secuencia y sin esperar entre uno y otro: el SDK aplica las
@@ -323,7 +417,8 @@ class SyncEngine {
         rejected: rejected,
         localOnly: local,
         since: since,
-        closed: _closed);
+        closed: _closed,
+        listArrival: _listArrival);
     if (next == _current) return;
     _current = next;
     _status.add(next);
@@ -333,6 +428,7 @@ class SyncEngine {
     _stopped = true;
     _timer?.cancel();
     await _remote?.cancel();
+    await _list?.cancel();
     await _local?.cancel();
     await _status.close();
   }

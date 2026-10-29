@@ -18,13 +18,17 @@
 
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const published = process.argv[2];
 const outDir = process.argv[3] ?? join(root, 'build', 't113');
-const proposal = join(root, 'docs', 'T80-firestore.rules.propuesta');
+// T-127: un tercer argumento coteja contra otra propuesta (la de T-127); por
+// omisión sigue siendo la de T-80.
+const proposal = process.argv[4]
+  ? resolve(process.argv[4])
+  : join(root, 'docs', 'T80-firestore.rules.propuesta');
 
 if (!published || !existsSync(published)) {
   console.error(`No está el texto publicado: ${published ?? '(sin ruta)'}`);

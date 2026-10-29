@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:baystream/features/vessel/data/repositories/source_revisions.dart';
 import 'package:baystream/features/vessel/data/repositories/sync_engine.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
 
 /// T-79 · El servidor falso, compartido por los dispositivos. Imita lo que
 /// importa de Firestore y de las reglas propuestas (T-79a 5.2): crear una
 /// vez, el reenvío idéntico del autor no duplica, la lista de autorizados y
-/// el cierre.
+/// el cierre. T-127: el manifiesto del listado y sus trozos por revisión.
 class FakeServer {
   FakeServer({DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
   final DateTime Function() _clock;
@@ -23,6 +24,42 @@ class FakeServer {
   final denied = <String>{};
   DateTime? closedAtValue;
   final _clients = <FakeCloud>[];
+
+  /// T-127 · La entrada `sources.export_list` del manifiesto y los trozos de
+  /// todas las revisiones, como quedan en `sources/`: los viejos no se borran.
+  SourceManifestEntry? listManifest;
+  final sourceParts = <SourcePart>[];
+
+  /// T-127 · Un listado publicado junto con la operación, sin revisión, como
+  /// lo escribe `publish` (también en la 0.4.0).
+  void publishList(String content, {String fileName = 'listado.xlsx'}) {
+    final packed = packSource(OperationSource(
+        kind: OperationSourceKind.exportList,
+        fileName: fileName,
+        content: content));
+    sourceParts.addAll(packed.parts);
+    listManifest = packed.entry;
+  }
+
+  /// T-127 · La oficina agrega o reemplaza el listado en un lote, como
+  /// `replaceSource`: los trozos con la revisión siguiente (o [revision]) y
+  /// el manifiesto. Los dispositivos con red reciben el manifiesto nuevo.
+  SourceManifestEntry reviseList(String content,
+      {String fileName = 'listado.xlsx', int? revision}) {
+    final next = revision ?? (listManifest?.revision ?? 0) + 1;
+    final packed = packSource(
+        OperationSource(
+            kind: OperationSourceKind.exportList,
+            fileName: fileName,
+            content: content),
+        revision: next);
+    sourceParts.addAll(packed.parts);
+    listManifest = packed.entry;
+    for (final client in List.of(_clients)) {
+      client._emitList();
+    }
+    return packed.entry;
+  }
 
   RemoteStoreException? _check(Movement movement) {
     if (authorization[movement.author.uid] != RemoteAuthorization.active) {
@@ -77,6 +114,16 @@ class FakeCloud implements RemoteMovementStore {
 
   final _queued = <(Movement, Completer<void>)>[];
   final _listeners = <StreamController<RemoteSnapshot>>[];
+  final _listListeners = <StreamController<SourceManifestEntry?>>[];
+
+  /// T-127 · Lo último que este dispositivo vio del manifiesto: su caché, lo
+  /// que el SDK entrega sin red.
+  SourceManifestEntry? _seenList;
+
+  /// T-127 · Cuántas bajadas de trozos fallarán antes de responder, y
+  /// cuántas se pidieron.
+  int listPartsFailures = 0;
+  int listPartsRequests = 0;
 
   Map<String, Movement> get docs => server.docs;
   List<String> get writes => server.writes;
@@ -129,6 +176,7 @@ class FakeCloud implements RemoteMovementStore {
       _apply(movement, done);
     }
     _emit();
+    _emitList();
   }
 
   /// Lo que estaba en la cola del SDK se pierde, como al forzar el cierre.
@@ -166,4 +214,48 @@ class FakeCloud implements RemoteMovementStore {
 
   @override
   Future<DateTime?> closedAt(String operationId) async => server.closedAtValue;
+
+  /// T-127 · Con red, el manifiesto del servidor; sin red, nada nuevo.
+  void _emitList() {
+    if (!online) return;
+    _seenList = server.listManifest;
+    for (final listener in List.of(_listListeners)) {
+      listener.add(server.listManifest);
+    }
+  }
+
+  /// T-127 · Al suscribirse, con red, lo que tiene el servidor; sin red, lo
+  /// último visto (la caché del SDK).
+  @override
+  Stream<SourceManifestEntry?> watchList(String operationId) {
+    late final StreamController<SourceManifestEntry?> controller;
+    controller = StreamController<SourceManifestEntry?>(
+      onListen: () {
+        _listListeners.add(controller);
+        if (online) _seenList = server.listManifest;
+        controller.add(_seenList);
+      },
+      onCancel: () {
+        _listListeners.remove(controller);
+        return controller.close();
+      },
+    );
+    return controller.stream;
+  }
+
+  @override
+  Future<List<SourcePart>> listParts(String operationId, int revision) async {
+    listPartsRequests++;
+    if (!online) {
+      throw const RemoteStoreException(RemoteErrorKind.unavailable, 'unavailable');
+    }
+    if (listPartsFailures > 0) {
+      listPartsFailures--;
+      throw const RemoteStoreException(RemoteErrorKind.unavailable, 'unavailable');
+    }
+    return [
+      for (final part in server.sourceParts)
+        if (part.revision == revision) part
+    ];
+  }
 }

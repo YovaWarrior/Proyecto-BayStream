@@ -35,6 +35,7 @@ import '../widgets/en_vivo_del_viaje.dart';
 import '../widgets/hatch_operation_controls.dart';
 import '../widgets/loading_plan_controls.dart'
     show BayPlanMode, SelectorDelModo;
+import '../widgets/aviso_del_listado.dart';
 import '../widgets/avisos_del_viaje.dart';
 import '../widgets/navegacion_del_viaje.dart';
 import '../widgets/voyage_stats_view.dart';
@@ -256,6 +257,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final contenido = Column(
       children: [
         const RelojDelNaranja(),
+        // T-127: si la oficina cambia el listado de la operación publicada,
+        // el muelle lo recibe solo, avisa y vuelve a derivar el plano.
+        const AvisoDelListado(),
         // Sin panel lateral a la vista, el movimiento se anuncia igual al
         // lector de pantalla (13.3, punto 5; 10.21, H3): solo el anuncio.
         if (!panelFijo && _flota == null) AnuncioDelMovimiento(voyage: voyage),

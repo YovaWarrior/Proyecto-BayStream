@@ -45,6 +45,11 @@ class Operation extends Equatable {
 
   bool get closed => closedAt != null;
 
+  /// T-127 · La revisión del listado de la agencia que tiene esta operación:
+  /// 0 sin listado, o con el que se publicó junto con ella.
+  int get exportListRevision =>
+      source(OperationSourceKind.exportList)?.revision ?? 0;
+
   OperationSource? source(OperationSourceKind kind) {
     for (final s in sources) {
       if (s.kind == kind) return s;
@@ -131,21 +136,37 @@ class OperationSource extends Equatable {
   /// Texto del archivo. Vacío en la exportación de la bitácora.
   final String content;
 
-  const OperationSource({required this.kind, required this.fileName, this.content = ''});
+  /// T-127 · Revisión del listado en la nube (1, 2, 3…): la oficina lo agregó
+  /// o lo reemplazó después de publicar la operación (10.78). Nula en los
+  /// BAPLIE, que no cambian, y en un listado publicado junto con la
+  /// operación. Las operaciones guardadas antes la leen como nula.
+  final int? revision;
+
+  const OperationSource(
+      {required this.kind,
+      required this.fileName,
+      this.content = '',
+      this.revision});
+
+  /// La misma fuente con la revisión que la nube le dio.
+  OperationSource withRevision(int revision) => OperationSource(
+      kind: kind, fileName: fileName, content: content, revision: revision);
 
   @override
-  List<Object?> get props => [kind, fileName, content];
+  List<Object?> get props => [kind, fileName, content, revision];
 
   Map<String, dynamic> toJson({bool includeContent = true}) => {
         'kind': kind.wire,
         'fileName': fileName,
         if (includeContent) 'content': content,
+        if (revision != null) 'revision': revision,
       };
 
   factory OperationSource.fromJson(Map<String, dynamic> json) => OperationSource(
         kind: OperationSourceKind.values.firstWhere((k) => k.wire == json['kind']),
         fileName: json['fileName'] as String,
         content: json['content'] as String? ?? '',
+        revision: (json['revision'] as num?)?.toInt(),
       );
 }
 
