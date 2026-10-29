@@ -2198,3 +2198,34 @@ La siguiente decisión es la **10.79**.
 **Decide Carlos.**
 
 La siguiente decisión es la **10.80**.
+
+### 10.80 · Carlos probó T-119 a mano y pasa todo; Codex la repite en los navegadores; Carlos aprueba cerrar la 0.4.1 con una sola aceptación (29-oct, 16:30)
+
+**La prueba de T-119 de Carlos** (sección 7 de `docs/T119-RESULTADOS.md`) fue la tarde del 29-oct, en `qa-r4` a `65db312`, con su mouse y su touchpad, en Windows, Chrome y Edge: «todo pasó».
+- Compiló Windows y la Web con `tool/t100_main.dart`, sin Firebase, con el plano sintético de T-100 y un almacén aparte en `%TEMP%`. Nada tocó el almacén real.
+- Al mover `qa-r4`, Git marcó tres archivos de `windows/flutter/` que Flutter regenera al compilar. Después de las dos compilaciones quedaron idénticos a los del repositorio.
+
+**T-127 quedó en `cce3c4c`,** encima de `65db312` (10.79): Carlos subió primero el bloque de la decisión y después el de Timonel, con las 22 rutas que revisó Yov. La prueba de Carlos no llevaba T-127, pero T-127 no toca ningún archivo de T-119.
+
+**Codex repite T-119 en Chrome y en Edge, con un conductor.** Es la parte Web de la aceptación de T-119, adelantada:
+- los pasos 1 a 9 de la Web, con eventos sintéticos y con números, en `qa-r4` a `cce3c4c`;
+- un instrumento calibrado en una página de control: donde no logre el efecto, el paso queda «no concluyente» y rige la prueba de Carlos;
+- el rojo: el mismo conductor, contra la Web sin T-119, tiene que fallar en los pasos 1, 2, 3, 4 y 6;
+- el informe en `docs/t119/navegadores-codex.md` y la evidencia en `build/t119-navegadores/`.
+
+**Carlos aprueba la propuesta de 10.79 (16:22):** la 0.4.1 se cierra con una sola aceptación de Codex.
+1. **T-128, la candidata,** con Timonel en Claude Opus 5.5, en Alto: `version: 0.4.1+7` y `msix_version: 0.4.1.0`, con la prueba de T-93, `analyze` y la suite.
+2. **La lista del piloto, al día para la 0.4.1,** por Yov, en el mismo commit que esta decisión:
+   - las reglas de T-127 antes que los clientes, en una sección 4.0 nueva;
+   - la 0.4.1 encima de la 0.4.0 en Windows, sin desinstalar;
+   - el listado en una operación publicada, en la oficina (1.17) y en el muelle (2.15);
+   - la vuelta a la 0.4.0.
+3. **Codex acepta la 0.4.1 entera** en `qa-r4`, sobre la punta con T-128:
+   - T-119, con la prueba de Carlos, su conductor de los navegadores otra vez y las dos pasadas de 10.77;
+   - T-127, con sus baterías y una prueba de punta a punta en el emulador con la app real, que incluye un cliente 0.4.0 frente a una operación revisada (O-127-1);
+   - la candidata y la lista del piloto.
+4. Con la aceptación, Carlos publica las reglas (4.0 de la lista) y los tres clientes, a más tardar el 4-nov, y hace la prueba de punta a punta de la sección 8 de T-127.
+
+**Flutter va de a un comando y con la luz verde de Carlos.** La suite de T-128 nunca corre a la vez que el conductor de Codex, porque el pestillo de 300 ms se mide con tiempos. Y nada corre durante el repaso técnico de la Expo, que sigue pendiente, el ensayo del viernes ni la Expo del sábado.
+
+La siguiente decisión es la **10.81**.
