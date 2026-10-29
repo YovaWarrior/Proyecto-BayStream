@@ -2229,3 +2229,37 @@ La siguiente decisión es la **10.80**.
 **Flutter va de a un comando y con la luz verde de Carlos.** La suite de T-128 nunca corre a la vez que el conductor de Codex, porque el pestillo de 300 ms se mide con tiempos. Y nada corre durante el repaso técnico de la Expo, que sigue pendiente, el ensayo del viernes ni la Expo del sábado.
 
 La siguiente decisión es la **10.81**.
+
+### 10.81 · La parte Web de T-119, aceptada por Codex; T-128 entregada y revisada; la aceptación de la 0.4.1 va a Codex (29-oct, 17:30)
+
+**La parte Web de T-119, adelantada** (Codex, `docs/t119/navegadores-codex.md`, en `af87dd6`), sobre `cce3c4c`, con Chrome 156 y Edge 156:
+- **Cumple en los dos navegadores:** la rueda en la silueta, el pestillo, los dos dedos y la barra. En el pestillo, los intervalos medidos quedaron a los dos lados de los 300 ms.
+- **Ctrl + rueda amplía el plano** entre 75 y 300 %, con la celda quieta a menos de 0,43 dp. Queda no concluyente que el navegador no amplíe la página con Ctrl + rueda, y lo mismo los atajos Ctrl + «+» y «−»: el instrumento no logró ampliar ni la página de control. Ahí rige la prueba de Carlos (10.80).
+- **El pellizco no amplía la página,** ni sobre el plano ni fuera de él. Ya era así antes de T-119: lo hace el motor de Flutter (sección 6 de T-119).
+- **El rojo:** el mismo conductor, contra la Web sin T-119, falla en 1, 2, 3, 4 y 6, cada uno en su comprobación.
+- **Yov lo revisó contra la evidencia:** la huella del informe y la del conductor coinciden con el manifiesto, y también 80 de sus 1139 archivos, tomados al azar. Los 624 originales siguen intactos, y la matriz final dice lo mismo que el informe.
+
+**Tres observaciones, P3:**
+- **O-119-1:** al pellizcar desde el 100 %, justo cuando la bahía deja de caber centrada, la celda se corre hasta 1,9 dp en Chrome y 1,4 en Edge. Ya desbordada, se corre 0,06, y con Ctrl + rueda en el mismo cruce, 0,43. La prueba de T-119 solo cubría el pellizco con la bahía ya desbordada.
+  - **Yov propone aceptarla en la 0.4.1 y corregirla en T-120**, con una prueba que pellizque justo en ese cruce. Son unos 2 píxeles que la prueba de Carlos no vio, y corregirla ahora pediría otra entrega y otra aceptación antes del 4-nov.
+  - Decide Carlos.
+- **O-119-2:** el instrumento no logra el zoom del navegador ni con Ctrl + rueda ni con los atajos (arriba). No es del producto.
+- **O-119-3:** las precauciones del instrumento. Entre ellas va una pista para O-040-1: al armar el conductor, la rueda horizontal que se pasaba del borde regresó la pestaña a la página anterior. Codex no lo da por reproducido.
+
+**T-128, la candidata, entregada y revisada** (Timonel, en Claude Opus 5.5; `docs/T128-RESULTADOS.md`):
+- `pubspec.yaml` cambia solo dos líneas: `version: 0.4.1+7` y `msix_version: 0.4.1.0`. `pubspec.lock` conserva su huella.
+- La prueba de T-93 da 5 de 5; `analyze`, cero; y la suite, 1871 de 1871 en una corrida, sin omitidas. Corrió después de que Codex cerró sus navegadores.
+- Fuera de `docs/`, nada más fija la versión: Gradle y el runner de Windows la toman del pubspec, y `version.json` lo genera la compilación.
+- **Yov lo revisó contra el disco:** el diff del pubspec, la huella del lock y los tres registros.
+- **O-128-1, P3:** `tool/t93_msix.ps1` trae `-Version '1.0.0.0'` por omisión, y eso manda sobre el pubspec.
+  - Sin `-Version` sale un `BayStream_1.0.0.0.msix`, y una vez instalado, Windows ya no deja poner una 0.4.x encima.
+  - La lista del piloto siempre pasa `-Version`, así que en la 0.4.1 no hace daño.
+  - **Yov propone que el script lea `msix_version` del pubspec por omisión**, en la tarea del banco, después de la Expo. Decide Carlos.
+
+**Lo que sigue:**
+1. Carlos sube el bloque de T-128 y el de esta decisión, y mueve `qa-r4` a la punta.
+2. Codex acepta la 0.4.1 entera (10.80, punto 3) en `docs/t128/aceptacion-codex.md`. Además de lo de 10.80, hace una prueba de punta a punta con la app real contra el emulador, la primera que escribe de verdad contra las reglas de T-127, y compila la candidata en los tres clientes.
+3. El repaso técnico de la Expo, que sigue pendiente, va antes de la luz verde de esa aceptación. Mientras tanto, Codex solo lee y prepara.
+4. Con la aceptación, la sección 4 de la lista: las reglas (4.0), la mezcla y los tres clientes, a más tardar el 4-nov, y después 0.7.
+
+La siguiente decisión es la **10.82**.
