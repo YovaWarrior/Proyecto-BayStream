@@ -180,42 +180,43 @@ Git para volver (4.5). El rediseño sigue en `C:\Proyectos\baystream-rediseno`, 
 
 ### 4.2 Windows (MSIX), desde esa carpeta en `master`
 
-```powershell
-$h = @(Get-ChildItem Cert:\CurrentUser\My | Where-Object Subject -eq 'CN=BayStream')
-$h.Count   # tiene que dar 1
-powershell -NoProfile -ExecutionPolicy Bypass -File tool\t93_msix.ps1 -Huella $h[0].Thumbprint -Version 0.4.0.0
-```
-
-Sale `build\t93\BayStream_0.4.0.0.msix` con su `.sha256`; el script compila Release con la
-configuración privada (`-Opciones` apunta a `C:\Proyectos\baystream-privado\firebase-prod.json`
-por omisión, sin abrirla) y termina verificando la firma `Valid` y la huella. No borra los
-paquetes anteriores: `BayStream_3.1.1.0.msix` sigue en `build\t93`.
-
-**Instalarlo, esta vez quitando antes la 3.1.1:** 0.4.0.0 es menor que 3.1.1.0 y Windows no
-lo instala encima. Los datos no se pierden, porque la app los guarda en
-`%LOCALAPPDATA%\BayStream`, fuera del paquete; igual se copian antes, con la app cerrada:
+**Así se hizo el 28-oct, en un solo bloque.** Compila, verifica la firma, copia los datos y solo
+entonces quita la 3.1.1 e instala la 0.4.0.0; si algo falla antes de desinstalar, no toca nada.
+Va con la app cerrada:
 
 ```powershell
 & {
+Set-Location -LiteralPath C:\Proyectos\proyecto-baystream
 if (Get-Process -Name baystream -ErrorAction SilentlyContinue) { throw 'Parar: cierra BayStream antes de seguir' }
-$respaldo = "C:\Proyectos\respaldo-almacen-$(Get-Date -Format yyyyMMdd-HHmm)"
-robocopy "$env:LOCALAPPDATA\BayStream" $respaldo /E /R:1 /W:1 /NFL /NDL /NJH
-if ($LASTEXITCODE -ge 8) { throw 'Parar: la copia del almacen fallo; no se desinstalo nada' }
+$h = @(Get-ChildItem Cert:\CurrentUser\My | Where-Object Subject -eq 'CN=BayStream')
+if ($h.Count -ne 1) { throw "Parar: hay $($h.Count) certificados CN=BayStream y tiene que haber 1" }
+powershell -NoProfile -ExecutionPolicy Bypass -File tool\t93_msix.ps1 -Huella $h[0].Thumbprint -Version 0.4.0.0
+if ($LASTEXITCODE -ne 0) { throw 'Parar: el MSIX no salio o no paso la verificacion; no se desinstalo nada' }
+$msix = 'C:\Proyectos\proyecto-baystream\build\t93\BayStream_0.4.0.0.msix'
 $app = @(Get-AppxPackage | Where-Object Name -like '*baystream*')
 if ($app.Count -ne 1) { throw "Parar: hay $($app.Count) paquetes de BayStream instalados y tiene que haber 1" }
-"Se desinstala $($app[0].Name) $($app[0].Version); la copia del almacen esta en $respaldo"
+$respaldo = "C:\Proyectos\respaldo-almacen-$(Get-Date -Format yyyyMMdd-HHmm)"
+robocopy "$env:LOCALAPPDATA\BayStream" "$respaldo\BayStream" /E /R:1 /W:1 /NFL /NDL /NJH
+if ($LASTEXITCODE -ge 8) { throw 'Parar: la copia del almacen fallo; no se desinstalo nada' }
+$cache = Join-Path $env:LOCALAPPDATA "Packages\$($app[0].PackageFamilyName)\LocalCache"
+if (Test-Path -LiteralPath $cache) { robocopy $cache "$respaldo\LocalCache" /E /XJ /R:1 /W:1 /NFL /NDL /NJH; if ($LASTEXITCODE -ge 8) { throw 'Parar: la copia de LocalCache fallo; no se desinstalo nada' } }
+"Se desinstala $($app[0].Name) $($app[0].Version); la copia esta en $respaldo"
 try { Remove-AppxPackage -Package $app[0].PackageFullName -ErrorAction Stop } catch { throw "Parar: no se desinstalo ($_)" }
-try { Add-AppxPackage -Path C:\Proyectos\proyecto-baystream\build\t93\BayStream_0.4.0.0.msix -ErrorAction Stop } catch { throw "Parar: no se instalo la 0.4.0.0 ($_)" }
+try { Add-AppxPackage -Path $msix -ErrorAction Stop } catch { throw "Parar: no se instalo la 0.4.0.0 ($_); reinstalar BayStream_3.1.1.0.msix" }
 Get-AppxPackage | Where-Object Name -like '*baystream*' | Select-Object Name, Version
 }
 ```
 
-La última línea tiene que decir `0.4.0.0`. Si el bloque para antes de «Se desinstala…», no
-se tocó nada; si para al instalar, BayStream quedó desinstalado: instalar otra vez
-`BayStream_3.1.1.0.msix` (4.5) y avisar. Si la copia no encuentra `%LOCALAPPDATA%\BayStream`,
-el bloque para ahí, y es lo correcto: los datos estarían en otro lado y no se desinstala.
-Abrir la app una vez: tiene que abrir con los datos de siempre; si pide iniciar sesión otra
-vez, es normal. Desde aquí, la 0.4.x se instala encima.
+El script de T-93 compila Release con la configuración privada (`-Opciones` apunta a
+`C:\Proyectos\baystream-privado\firebase-prod.json` por omisión, sin abrirla) y termina
+verificando la firma `Valid`, la huella y el `.sha256`. No borra los paquetes anteriores:
+`BayStream_3.1.1.0.msix` sigue en `build\t93` para volver (4.5). El 28-oct, la copia quedó en
+`C:\Proyectos\respaldo-almacen-20261028-1300` (592 archivos del almacén; la carpeta del
+paquete no tenía ninguno), Windows quedó con la 0.4.0.0 y la app abrió con los datos de
+siempre (10.75).
+
+**Desde la 0.4.1, la versión se instala encima, sin desinstalar:** el mismo bloque hasta la
+verificación del MSIX, con la versión nueva, y después `Add-AppxPackage` de ese paquete.
 
 ### 4.3 Android (prueba interna de Play)
 

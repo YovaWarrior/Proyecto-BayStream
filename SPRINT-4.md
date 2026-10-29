@@ -1995,3 +1995,71 @@ La siguiente decisión es la **10.74**.
 3. Windows, Android y la Web, con 4.2 a 4.4.
 
 La siguiente decisión es la **10.75**.
+
+### 10.75 · La 0.4.0, publicada en los tres clientes, y lo que dejó el día (28-oct, 19:30)
+
+**Carlos la publicó con la sección 4 de la lista del piloto:**
+- **Windows:** `BayStream_0.4.0.0.msix`. Por dentro dice versión 0.4.0.0 y firmante `CN=BayStream`, con firma `Valid`, y su SHA-256 (`03AA5A42…71A17F7`) coincide con el `.sha256`. Un solo bloque compiló, verificó, copió los datos y solo entonces quitó la 3.1.1 e instaló la 0.4.0.0. La copia quedó en `C:\Proyectos\respaldo-almacen-20261028-1300`: 592 archivos del almacén (35 MB) y la carpeta del paquete, con 8 carpetas vacías y ningún archivo. Los datos nunca estuvieron dentro del paquete. La app abrió con los datos de siempre (Carlos).
+- **Android:** el AAB 6 (0.4.0), firmado con la clave de subida, en la prueba interna como «0.4.0 · Rediseño». El Honor lo actualizó y dice 0.4.0.
+- **Web:** la compilación 0.4.0+6. T-92 aprueba 57 archivos y Firebase publica 56: falta `.last_build_id`, que es oculto y Hosting no sube. El `version.json` publicado dice 0.4.0 y 6, y en incógnito la app abre la operación publicada.
+- La compilación no tocó el repositorio: `pubspec.lock` y lo que Flutter regenera en `windows/flutter/` siguen iguales a `be532ab`.
+
+**Play muestra un nombre temporal:**
+- Hasta la primera revisión de Google, la tienda dice «gt.cmartinez.baystream (unreviewed)», con un ícono genérico. En el teléfono, la app se llama BayStream y lleva su ícono, porque los dos van en el AAB. La prueba interna no pasa por esa revisión.
+- **Hoy quedó la ficha de Play Store en borrador:** el nombre, las dos descripciones, el ícono de 512 y el gráfico de 1024 × 500 de `design/icono/play/`, que se hicieron en T-88 y nunca se subieron.
+- **La primera revisión va con la prueba cerrada, después de la Expo.** Necesita las dos decisiones de 10.49 (cómo entra el revisor y un archivo de muestra sintético), las declaraciones de `docs/T88-DECLARACIONES-PLAY.md` y dos capturas de teléfono con un plano sintético.
+
+**Lo que Carlos encontró en la Web:**
+- **O-040-1:** en la silueta del buque, el deslizamiento horizontal del touchpad hace que Chrome vuelva a la página anterior. Según reportes de otros desarrolladores, la línea de CSS habitual puede no bastar en Chrome de Windows.
+- **O-040-2:** la rueda del mouse sobre la silueta no mueve las bahías. Es la primera línea de T-119, que está en la entrega 3 y todavía no se hace.
+- **Mientras tanto:** en la oficina, la app de Windows, que no tiene el «atrás» del navegador; en la silueta, Mayús + rueda.
+
+**Dos observaciones más, P3:**
+- `test/t102_weight_display_test.dart` crea una carpeta `t102-synthetic-*` en `%TEMP%` en cada corrida y nunca la borra: van 86. Va a la tarea del banco, con O1 de T-125 y O-126-1.
+- `build\t93` guarda un `BayStream_1.0.0.0.msix` del 15-oct (T-93). La compilación de la 1.0.0 lo sobrescribiría: ese día, se aparta antes.
+
+**El deck de la Expo:**
+- **El borrador 2 no abría en PowerPoint:** al repararlo, dejó en blanco las diapositivas de contenido.
+- **La causa:** cuando una línea mezcla dos colores, pptxgenjs repite el formato del párrafo (`a:pPr`) antes de cada parte. Eran 117 errores de esquema en las diapositivas; LibreOffice los tolera y PowerPoint no.
+- **La corrección:** `post.py` deja un solo formato por párrafo. Las copias que quita eran iguales a la primera, así que no cambia nada de lo que se ve.
+- **El borrador 3 pasa el esquema de PresentationML sin errores en las diapositivas.** Queda uno en `presentation.xml`: el orden que escribe pptxgenjs, que PowerPoint lee bien.
+- El borrador 3 dice 0.4.0 donde decía 3.2.0, con el video de la terminal grabado de nuevo. Carlos lo abrió en PowerPoint y se ve bien. Está en `C:\Proyectos\baystream-presentacion\expo\`, y su huella coincide.
+
+**La mudanza de `%TEMP%`, hecha:**
+- **75 de 75 entradas,** con 15.99 GB y 65 377 archivos, ya están en `C:\Proyectos\evidencia\`, con los mismos nombres. Se movieron por renombre en el mismo disco, sin copiar ni borrar. El manifiesto es `C:\Proyectos\evidencia\MANIFIESTO-28oct.csv`, y ahí están también el script y su lista.
+- Son 45 entradas citadas por nombre en los documentos y 30 del proyecto sin cita exacta. Una ruta de `%TEMP%\<nombre>` en un informe se lee ahora como `C:\Proyectos\evidencia\<nombre>`.
+- **No se movieron:** `expo`, que usa el recorrido de la Expo, y las 86 `t102-synthetic-*`. El script cuenta 86 porque su patrón no incluye `expo`.
+- De los 173 nombres de `%TEMP%` que citan los documentos, 127 ya no estaban. La limpieza de 10.72 liberó solo 0.1 GB, así que la mayoría se había ido antes; no se puede saber cuáles se llevó.
+
+La siguiente decisión es la **10.76**.
+
+### 10.76 · Carlos decide la 0.4.1: T-119 y el listado en una operación publicada (H2) (28-oct, 19:30)
+
+**Lo decidió a las 19:17:**
+- **T-119 va en la 0.4.1,** con el diseño de la sección 0.7 de `docs/T117-T121-RESULTADOS.md` y las respuestas P4 y P7 de 10.38. Son cuatro cosas:
+  - la rueda en la silueta, que arregla O-040-2;
+  - el pellizco del touchpad y Ctrl + rueda para el zoom;
+  - el punto bajo el puntero quieto al ampliar;
+  - la barra horizontal.
+- **El gesto del touchpad que regresa el navegador (O-040-1) queda para después.** T-119 no toca `web/index.html` por eso; solo por el pellizco, si la prueba lo exige (P7).
+- **H2 también va en la 0.4.1, como T-127:** que publicar una operación sin el listado no la deje sin poder importarlo después. Yov propone el diseño de la sección 8.3 de `docs/T122-RESULTADOS.md`, tal cual:
+  - los BAPLIE no cambian;
+  - el listado se agrega o se reemplaza mientras la operación esté abierta, con un número de revisión;
+  - el muelle lo recibe solo y avisa;
+  - antes de confirmar, el cruce dice qué contenedores ya cargados no están en el listado nuevo y qué vacíos cambian de grupo.
+  - Toca `domain/`, `data/` y las reglas. Las reglas nuevas las redacta Timonel y las prueba en el emulador: las 69, los 25 casos de abuso y los nuevos. Las publica Carlos desde la consola, antes que los clientes de la 0.4.1.
+  - **Carlos confirma el diseño antes del prompt de T-127.**
+- **T-120 queda para después,** con O1 y O2 de la entrega 1 y el arrastre entre dos monitores.
+
+**El orden:**
+1. T-119, con Timonel. Codex la acepta.
+2. T-127, con Timonel, mientras Codex acepta T-119. Codex acepta T-127.
+3. La candidata: `version: 0.4.1+7`, `msix_version: 0.4.1.0` y el AAB 7. Carlos publica las reglas y los tres clientes, a más tardar el 4-nov.
+
+**Lo que no cambia:**
+- `lib/`, `test/` y `pubspec.*` son de una tarea a la vez.
+- Flutter corre de a un comando, con la luz verde de Carlos, y nunca durante el repaso técnico, el ensayo del viernes ni la Expo del sábado.
+
+**Las demos de la Expo:** en vivo van la 3 (`integration_test`) y la 2 (el emulador). El emulador se arranca antes de empezar, con la consola abierta en Firestore → Requests, para no esperar sus 33 s en la sala. La demo 1 tarda unos 20 s: va en vivo si sobra tiempo, y si no se muestra con su diapositiva y el respaldo de la 20.
+
+La siguiente decisión es la **10.77**.
