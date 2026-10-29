@@ -2117,3 +2117,35 @@ La siguiente decisión es la **10.77**.
 5. Con el ok de Carlos al diseño de 8.3, Yov escribe el prompt de T-127.
 
 La siguiente decisión es la **10.78**.
+
+### 10.78 · El arreglo de T-93, revisado; Carlos aprueba el diseño de T-127 y la pone en Fable 5.1 (29-oct, 01:00)
+
+**El arreglo de la prueba de T-93 (10.77), revisado:**
+- `test/t93_msix_config_test.dart` lee la línea `version: x.y.z+n` del pubspec y exige que `msix_version` sea `x.y.z.0`. Es lo único que cambió en ese archivo.
+- La prueba da 5 de 5; la suite, 1852 de 1852 en una corrida, sin omitidas; y `analyze`, cero. La evidencia está en `build/t119/`.
+- Timonel metió `git status` en un comando, por error. La regla de `.claude/settings.json` lo bloqueó y no corrió, y no quedó ningún `index.lock`.
+
+**Carlos aprueba el diseño de T-127 (00:40).** H2 se hace con la sección 8.3 de `docs/T122-RESULTADOS.md`, tal cual:
+- **Qué hace:**
+  - los BAPLIE de una operación publicada no cambian;
+  - el listado se agrega o se reemplaza mientras la operación esté abierta, con un número de revisión;
+  - el muelle lo recibe solo y avisa;
+  - antes de confirmar, el cruce dice qué contenedores ya cargados no están en el listado nuevo y qué vacíos cambian de grupo.
+- **Autoriza** tocar `domain/`, `data/` y `presentation/` para eso, sin dependencias nuevas.
+- **Las reglas nuevas** van en un archivo nuevo, `docs/T127-firestore.rules.propuesta`, que Timonel puede incluir en su bloque de Git. `docs/T80-firestore.rules.propuesta` sigue siendo lo publicado hasta que Carlos publique el archivo nuevo desde la consola, después de la aceptación de Codex y antes de los clientes de la 0.4.1. Lo publicado se coteja con el archivo, como en 10.108 de `SPRINT-3.md`.
+- **Las baterías** de 69 reglas y 25 abusos tienen que pasar también contra las reglas nuevas, más los casos nuevos de T-127.
+- **Compatibilidad:** un cliente 0.4.0 nunca daña una operación con revisión, y el informe dice qué le pasa. La regla de uso: la laptop y el Honor pasan a la 0.4.1 antes de usar la función.
+- **El emulador** de T-127 usa un proyecto `demo-` y el puerto 8282, para no chocar con el de la Expo (8181 y 4000).
+
+**Los modelos, desde ahora.** Carlos tiene el semanal de Fable en cero.
+- **Fable 5.1** para lo que toca reglas, sincronización o `domain/`, y para los diagnósticos difíciles. T-127 va con Fable 5.1 en Max, en un chat nuevo.
+- **Claude Opus 5.5** para lo de presentación y los arreglos chicos, en Extra o en Alto.
+- **Codex** sigue con GPT-6.1 Sol, en high, para las aceptaciones.
+
+**Lo que sigue:**
+1. Carlos sube T-119, el arreglo de T-93 y esta decisión.
+2. T-127 va a Timonel, con Fable 5.1, al despertar. Mientras no haya luz verde, lee, diseña y escribe código.
+3. Flutter y el emulador corren con la luz verde de Carlos, y nunca durante el repaso técnico de la Expo, el ensayo del viernes ni la Expo del sábado.
+4. Carlos prueba T-119 con su mouse y su touchpad, y después Codex la acepta.
+
+La siguiente decisión es la **10.79**.
