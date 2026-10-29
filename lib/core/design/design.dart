@@ -38,6 +38,7 @@ export 'componentes/bs_numero_de_contenedor.dart';
 export 'componentes/bs_panel.dart';
 export 'componentes/bs_panel_en_vivo.dart';
 export 'componentes/bs_primera_que_cabe.dart';
+export 'componentes/bs_rueda_horizontal.dart';
 export 'componentes/bs_selector_de_modo.dart';
 export 'componentes/bs_silueta_buque.dart';
 export 'componentes/bs_tarjeta_cifra.dart';

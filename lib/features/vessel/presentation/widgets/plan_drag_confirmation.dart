@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design.dart';
@@ -33,19 +34,45 @@ class PlanZoomScope extends InheritedWidget {
 /// Amplía la rejilla y su área desplazable; conserva los gestos de cada celda.
 /// La escala vive en `planZoomProvider`: la pellizca aquí y la cambia el chip
 /// `ZoomDelPlano`, que desde 10.20 va fuera de la rejilla, en la línea de los
-/// controles, para no tapar ninguna celda. Los dos desplazamientos de la
-/// rejilla van dentro; durante un arrastre los mueve `_PlanDragSource`
-/// (T-122, H7).
+/// controles, para no tapar ninguna celda. Durante un arrastre, los
+/// desplazamientos de la rejilla los mueve `_PlanDragSource` (T-122, H7).
+///
+/// T-119 (`DESIGN.md` 16.2 y 16.3): además de los dos dedos sobre la
+/// pantalla, amplían el pellizco del touchpad (`PointerPanZoom…`, en Windows
+/// con touchpad de precisión), Ctrl + rueda, también con el mouse (P4), y el
+/// pellizco que el motor web entrega como `PointerScaleEvent`. En la oficina,
+/// el punto bajo el puntero se queda quieto.
 class PlanZoomViewport extends ConsumerStatefulWidget {
   final Widget child;
 
   /// La oficina (`DESIGN.md` 14.1): la rejilla no tiene alto propio ni
   /// desplazamiento vertical; se amplía a su alto natural y le dice a la
-  /// columna que la desplaza cuánto mide ampliada. Sin esto (el teléfono),
-  /// el lienzo ocupa el alto que le dan y la rejilla se desplaza por dentro.
+  /// columna que la desplaza cuánto mide ampliada. Su desplazamiento
+  /// horizontal va por fuera de la escala, con [horizontal] (16.4). Sin esto
+  /// (el teléfono), el lienzo ocupa el alto que le dan y los dos
+  /// desplazamientos de la rejilla van por dentro.
   final bool alturaNatural;
+
+  /// En la oficina, el controlador del desplazamiento horizontal de la
+  /// rejilla: el de la barra de abajo de la columna (`BarraDeLaRejilla`).
+  final ScrollController? horizontal;
   const PlanZoomViewport(
-      {super.key, required this.child, this.alturaNatural = false});
+      {super.key,
+      required this.child,
+      this.alturaNatural = false,
+      this.horizontal});
+
+  /// El aire alrededor de la rejilla, en dp de pantalla: la rejilla lo pone
+  /// entre la escala, para que no se amplíe.
+  static const double margen = 16;
+
+  /// Cuánto se aparta el pellizco del touchpad de 1.0 antes de ampliar: por
+  /// debajo, los dos dedos solo desplazan.
+  static const double umbralDelPellizco = 0.01;
+
+  /// Ctrl + rueda: la escala se multiplica por e^(−dy / [pasoDeLaRueda]), la
+  /// misma cuenta con que el motor web convierte el pellizco.
+  static const double pasoDeLaRueda = 200;
 
   @override
   ConsumerState<PlanZoomViewport> createState() => _PlanZoomViewportState();
@@ -55,6 +82,20 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
   double gestureScale = 1;
   double span = 1;
   final pointers = <int, Offset>{};
+
+  /// La escala al empezar el gesto del touchpad, mientras dura.
+  double? _escalaDelTouchpad;
+
+  /// Si el gesto del touchpad ya es un pellizco: la rejilla y la columna no
+  /// se desplazan hasta que termina.
+  bool _pellizcando = false;
+
+  /// Quien apaga el pellizco en la columna; guardado al empezar, porque en
+  /// `dispose` no se puede usar `ref`.
+  PellizcoDelPlanoNotifier? _pellizco;
+
+  /// El ancho natural de la rejilla, que mide [PlanZoomContenido].
+  final _AnchoNatural _ancho = _AnchoNatural();
 
   void beginPinch() {
     if (pointers.length != 2) return;
@@ -67,58 +108,180 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
     beginPinch();
   }
 
+  /// Fija la escala en [escala] (acotada por el proveedor) y, en la oficina,
+  /// deja quieto el punto que está bajo [foco], en coordenadas de este lienzo.
+  void _ampliar(double escala, Offset foco) {
+    final antes = ref.read(planZoomProvider);
+    ref.read(planZoomProvider.notifier).fijar(escala);
+    final despues = ref.read(planZoomProvider);
+    if (despues == antes || !widget.alturaNatural) return;
+    _dejarQuieto(foco, antes, despues);
+  }
+
+  /// La rejilla empieza a [PlanZoomViewport.margen] del borde del lienzo (o
+  /// centrada, si no llena la vista) y crece de [antes] a [despues]: el punto
+  /// bajo [foco] queda donde estaba si los dos desplazamientos se corren lo
+  /// que él se corre (16.3). Se mueven antes del cuadro con la escala nueva,
+  /// así que los dos cambios se ven juntos; si la cuenta pasa del borde nuevo,
+  /// la física lo acota al medirse.
+  void _dejarQuieto(Offset foco, double antes, double despues) {
+    const margen = PlanZoomViewport.margen;
+    final razon = despues / antes;
+    final horizontal = widget.horizontal;
+    if (horizontal != null && horizontal.positions.length == 1) {
+      final posicion = horizontal.position;
+      if (posicion.hasContentDimensions) {
+        final ancho = posicion.viewportDimension;
+        // El ancho natural de la rejilla, sin el aire; sin medida, el que
+        // dice el desplazamiento (exacto si la rejilla no cabe).
+        final natural = _ancho.valor ??
+            (posicion.maxScrollExtent + ancho - 2 * margen) / antes;
+        // Dónde empieza la rejilla con cada escala: centrada si no llena.
+        double inicio(double escala) =>
+            margen + math.max(0.0, (ancho - 2 * margen - natural * escala) / 2);
+        final punto = (posicion.pixels + foco.dx - inicio(antes)) / antes;
+        final tope = math.max(0.0, natural * despues + 2 * margen - ancho);
+        final destino = (inicio(despues) + punto * despues - foco.dx)
+            .clamp(0.0, tope)
+            .toDouble();
+        if (destino != posicion.pixels) posicion.jumpTo(destino);
+      }
+    }
+    final columna = Scrollable.maybeOf(context, axis: Axis.vertical)?.position;
+    final alto = context.size?.height;
+    if (columna != null && columna.hasContentDimensions && alto != null) {
+      // La columna crece lo que crece la rejilla; lo de arriba no cambia.
+      final crece = (alto - 2 * margen) * (razon - 1);
+      final destino = (columna.pixels + (foco.dy - margen) * (razon - 1))
+          .clamp(columna.minScrollExtent,
+              math.max(columna.minScrollExtent, columna.maxScrollExtent + crece))
+          .toDouble();
+      if (destino != columna.pixels) columna.jumpTo(destino);
+    }
+  }
+
+  /// Dónde está [evento] en este lienzo, ahora. No es `localPosition`: el
+  /// gesto del touchpad guarda la posición del lienzo al empezar, y el lienzo
+  /// se mueve con la columna mientras se pellizca.
+  Offset _foco(PointerEvent evento) {
+    final caja = context.findRenderObject();
+    return caja is RenderBox && caja.hasSize
+        ? caja.globalToLocal(evento.position)
+        : evento.localPosition;
+  }
+
+  /// Ctrl + rueda y el pellizco de la Web. Se registran en el resolvedor
+  /// aunque la escala ya esté en su tope, para que la columna no se mueva.
+  void _senal(PointerSignalEvent evento) {
+    final foco = _foco(evento);
+    if (evento is PointerScaleEvent) {
+      if (evento.scale == 1) return;
+      final factor = evento.scale;
+      GestureBinding.instance.pointerSignalResolver.register(evento,
+          (_) => _ampliar(ref.read(planZoomProvider) * factor, foco));
+    } else if (evento is PointerScrollEvent &&
+        evento.scrollDelta.dy != 0 &&
+        HardwareKeyboard.instance.isControlPressed) {
+      final factor =
+          math.exp(-evento.scrollDelta.dy / PlanZoomViewport.pasoDeLaRueda);
+      GestureBinding.instance.pointerSignalResolver.register(evento,
+          (_) => _ampliar(ref.read(planZoomProvider) * factor, foco));
+    }
+  }
+
+  void _empiezaElTouchpad(PointerPanZoomStartEvent evento) =>
+      _escalaDelTouchpad = ref.read(planZoomProvider);
+
+  void _sigueElTouchpad(PointerPanZoomUpdateEvent evento) {
+    final base = _escalaDelTouchpad;
+    if (base == null) return;
+    if (!_pellizcando &&
+        (evento.scale - 1).abs() <= PlanZoomViewport.umbralDelPellizco) {
+      return;
+    }
+    if (!_pellizcando) {
+      setState(() => _pellizcando = true);
+      final pellizco = ref.read(pellizcoDelPlanoProvider.notifier);
+      _pellizco = pellizco;
+      pellizco.empezar();
+    }
+    _ampliar(base * evento.scale, _foco(evento));
+  }
+
+  void _terminaElTouchpad(PointerPanZoomEndEvent evento) {
+    _escalaDelTouchpad = null;
+    if (!_pellizcando) return;
+    setState(() => _pellizcando = false);
+    _pellizco?.terminar();
+    _pellizco = null;
+  }
+
+  @override
+  void dispose() {
+    _pellizco?.terminar();
+    super.dispose();
+  }
+
+  /// Mientras dura un pellizco, ningún desplazamiento de la rejilla se mueve.
+  ScrollPhysics? get _fisica => pointers.length >= 2 || _pellizcando
+      ? const NeverScrollableScrollPhysics()
+      : null;
+
+  /// Los gestos: dos contactos sobre la pantalla, el touchpad y la rueda.
+  /// Observar dos contactos evita competir con los scrolls y
+  /// LongPressDraggable por el gesto de un solo dedo.
+  Widget _gestos({required Widget child}) => Listener(
+      key: const ValueKey('plan-zoom-gesture'),
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (event) {
+        setState(() => pointers[event.pointer] = event.localPosition);
+        beginPinch();
+      },
+      onPointerMove: (event) {
+        if (!pointers.containsKey(event.pointer)) return;
+        pointers[event.pointer] = event.localPosition;
+        if (pointers.length == 2 && span > 0) {
+          ref.read(planZoomProvider.notifier).fijar(gestureScale *
+              (pointers.values.first - pointers.values.last).distance /
+              span);
+        }
+      },
+      onPointerUp: (event) => endPointer(event.pointer),
+      onPointerCancel: (event) => endPointer(event.pointer),
+      onPointerSignal: _senal,
+      onPointerPanZoomStart: _empiezaElTouchpad,
+      onPointerPanZoomUpdate: _sigueElTouchpad,
+      onPointerPanZoomEnd: _terminaElTouchpad,
+      child: child);
+
   @override
   Widget build(BuildContext context) {
     final scale = ref.watch(planZoomProvider);
     Widget ampliado(Widget hijo) => ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(
-            physics: pointers.length >= 2
-                ? const NeverScrollableScrollPhysics()
-                : null),
+        behavior: ScrollConfiguration.of(context).copyWith(physics: _fisica),
         child: PlanZoomScope(scale: scale, child: hijo));
     if (widget.alturaNatural) {
-      return Listener(
-          key: const ValueKey('plan-zoom-gesture'),
-          behavior: HitTestBehavior.opaque,
-          onPointerDown: (event) {
-            setState(() => pointers[event.pointer] = event.localPosition);
-            beginPinch();
-          },
-          onPointerMove: (event) {
-            if (!pointers.containsKey(event.pointer)) return;
-            pointers[event.pointer] = event.localPosition;
-            if (pointers.length == 2 && span > 0) {
-              ref.read(planZoomProvider.notifier).fijar(gestureScale *
-                  (pointers.values.first - pointers.values.last).distance /
-                  span);
-            }
-          },
-          onPointerUp: (event) => endPointer(event.pointer),
-          onPointerCancel: (event) => endPointer(event.pointer),
+      // El desplazamiento horizontal va por fuera de la escala (16.4): su
+      // barra no se amplía con la rejilla y vive abajo de la columna.
+      return _gestos(
           child: ClipRect(
-              child: _AltoAmpliado(escala: scale, child: ampliado(widget.child))));
+              child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                      key: const ValueKey('rejilla-horizontal'),
+                      controller: widget.horizontal,
+                      scrollDirection: Axis.horizontal,
+                      physics: _fisica,
+                      child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minWidth: constraints.maxWidth),
+                          child: _TamanoAmpliado(
+                              escala: scale,
+                              child: _MedidaDelContenido(
+                                  ancho: _ancho,
+                                  child: ampliado(widget.child))))))));
     }
     return LayoutBuilder(builder: (context, constraints) {
-      return Listener(
-          key: const ValueKey('plan-zoom-gesture'),
-          behavior: HitTestBehavior.opaque,
-          // Observar dos contactos evita competir con los scrolls y
-          // LongPressDraggable por el gesto de un solo dedo.
-          onPointerDown: (event) {
-            setState(() => pointers[event.pointer] = event.localPosition);
-            beginPinch();
-          },
-          onPointerMove: (event) {
-            if (!pointers.containsKey(event.pointer)) return;
-            pointers[event.pointer] = event.localPosition;
-            if (pointers.length == 2 && span > 0) {
-              ref.read(planZoomProvider.notifier).fijar(gestureScale *
-                  (pointers.values.first - pointers.values.last).distance /
-                  span);
-            }
-          },
-          onPointerUp: (event) => endPointer(event.pointer),
-          onPointerCancel: (event) => endPointer(event.pointer),
+      return _gestos(
           child: ClipRect(
               // El viewport lógico disminuye al ampliar: los scrolls
               // conservan acceso a TODA la rejilla, también a sus bordes.
@@ -132,39 +295,82 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
                       child: Transform.scale(
                           alignment: Alignment.topLeft,
                           scale: scale,
-                          child: ScrollConfiguration(
-                              behavior: ScrollConfiguration.of(context)
-                                  .copyWith(
-                                      physics: pointers.length >= 2
-                                          ? const NeverScrollableScrollPhysics()
-                                          : null),
-                              child: PlanZoomScope(
-                                  scale: scale, child: widget.child)))))));
+                          child: ampliado(widget.child))))));
     });
   }
 }
 
-/// La rejilla de la oficina ampliada a su alto natural (14.1): el hijo se
-/// arma al ancho de la vista lógica (el ancho entre la escala), con el alto
-/// que pida, y se dibuja ampliado; la caja mide el ancho que le dan y el alto
-/// del hijo por la escala, que es lo que la columna desplaza.
-class _AltoAmpliado extends SingleChildRenderObjectWidget {
-  const _AltoAmpliado({required this.escala, required super.child});
+/// T-119 (16.3) · Mide el ancho natural de la rejilla de la oficina, sin el
+/// aire ni el mínimo de la vista: con una bahía que no llena la vista, la
+/// rejilla va centrada, y el punto fijo del zoom necesita saber dónde empieza.
+/// Va alrededor de la rejilla, con restricciones sueltas, dentro de
+/// [PlanZoomViewport]; fuera de él no mide nada.
+class PlanZoomContenido extends SingleChildRenderObjectWidget {
+  const PlanZoomContenido({super.key, required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderPlanZoomContenido(_MedidaDelContenido.de(context));
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) =>
+      (renderObject as _RenderPlanZoomContenido).ancho =
+          _MedidaDelContenido.de(context);
+}
+
+class _RenderPlanZoomContenido extends RenderProxyBox {
+  _RenderPlanZoomContenido(this.ancho);
+
+  _AnchoNatural? ancho;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    ancho?.valor = size.width;
+  }
+}
+
+/// Lo que mide [PlanZoomContenido], en unidades de la rejilla sin ampliar.
+class _AnchoNatural {
+  double? valor;
+}
+
+class _MedidaDelContenido extends InheritedWidget {
+  const _MedidaDelContenido({required this.ancho, required super.child});
+
+  final _AnchoNatural ancho;
+
+  static _AnchoNatural? de(BuildContext context) => context
+      .getInheritedWidgetOfExactType<_MedidaDelContenido>()
+      ?.ancho;
+
+  @override
+  bool updateShouldNotify(_MedidaDelContenido oldWidget) =>
+      !identical(ancho, oldWidget.ancho);
+}
+
+/// La rejilla de la oficina ampliada (14.1 y 16.4): el hijo se arma con el
+/// ancho que le dan entre la escala (dentro del desplazamiento horizontal:
+/// al menos el de la vista lógica, sin tope), con el alto que pida, y se
+/// dibuja ampliado; la caja mide lo que el hijo por la escala, en los dos
+/// ejes, que es lo que desplazan la columna y la barra de abajo.
+class _TamanoAmpliado extends SingleChildRenderObjectWidget {
+  const _TamanoAmpliado({required this.escala, required super.child});
 
   final double escala;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderAltoAmpliado(escala);
+      _RenderTamanoAmpliado(escala);
 
   @override
   void updateRenderObject(
-          BuildContext context, _RenderAltoAmpliado renderObject) =>
+          BuildContext context, _RenderTamanoAmpliado renderObject) =>
       renderObject.escala = escala;
 }
 
-class _RenderAltoAmpliado extends RenderProxyBox {
-  _RenderAltoAmpliado(this._escala);
+class _RenderTamanoAmpliado extends RenderProxyBox {
+  _RenderTamanoAmpliado(this._escala);
 
   double _escala;
   set escala(double valor) {
@@ -178,20 +384,16 @@ class _RenderAltoAmpliado extends RenderProxyBox {
   @override
   void performLayout() {
     final hijo = child;
-    final ancho = constraints.maxWidth;
     if (hijo == null) {
       size = constraints.smallest;
       return;
     }
-    if (!ancho.isFinite) {
-      hijo.layout(const BoxConstraints(), parentUsesSize: true);
-      size = constraints.constrain(hijo.size * _escala);
-      return;
-    }
-    final logico = ancho / _escala;
-    hijo.layout(BoxConstraints(minWidth: logico, maxWidth: logico),
+    hijo.layout(
+        BoxConstraints(
+            minWidth: constraints.minWidth / _escala,
+            maxWidth: constraints.maxWidth / _escala),
         parentUsesSize: true);
-    size = constraints.constrain(Size(ancho, hijo.size.height * _escala));
+    size = constraints.constrain(hijo.size * _escala);
   }
 
   @override

@@ -17,7 +17,7 @@ lleva a `lib/core/design/` y a `lib/core/app.dart`: la noche, los estados de la 
 Estado, las fichas y la tabla reordenada, el tema por omisión según el equipo y las
 piezas nuevas. Donde la sección 13 y las secciones 4 y 5 digan cosas distintas, manda
 la 13. T-117 y T-118 (10.36 a 10.39) suman la sección 14: la oficina con más plano, el
-panel lateral que se oculta y el selector de modo único. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
+panel lateral que se oculta y el selector de modo único. T-119 (10.76) suma la sección 16: la rueda en la silueta, el zoom con el touchpad y Ctrl + rueda, y la barra horizontal de la rejilla. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
 por `tool/rediseno_contraste.py`, y la del contraste compuesto de la celda en
 `test/t114_celda_contraste_test.dart` y `test/t114_fase2bis_test.dart`.
 Material 3 sigue siendo la base: el sistema son tokens, un `ColorScheme` ajustado,
@@ -2250,3 +2250,130 @@ sin número. La página los recibe de `assignedEmptiesProvider`, el mismo del qu
   queda como antes.
 - **Las cifras siguen cuadrando por construcción** (15.11, punto 5): `delArchivo` dice lo que trae
   el archivo, `vaciosAsignados` lo asignado, y `total` es su suma.
+
+## 16. El mouse y el touchpad (T-119)
+
+Decisiones 10.36, 10.38 (P4 y P7) y 10.76 de `SPRINT-4.md`. El diagnóstico y el diseño están en
+`docs/T117-T121-RESULTADOS.md` (0.7 y la tabla de 0.5.3); esta sección manda donde dicen cosas
+distintas, y 16.6 dice qué cambió. En Windows y en la Web. **El teléfono y la tableta conservan el
+pellizco de dos dedos sobre la pantalla**, que no cambia.
+
+| Dónde está el puntero | Rueda | Mayús + rueda | Ctrl + rueda o pellizco | Touchpad, dos dedos |
+|---|---|---|---|---|
+| Silueta | Avanza o regresa la silueta; en un extremo, la columna | La silueta, como antes | Como antes (16.6, punto 2) | Horizontal: la silueta; vertical: la columna |
+| Rejilla | La columna | La rejilla en horizontal | El zoom, con el punto bajo el puntero quieto | Desplazar: la columna y la rejilla; pellizco: el zoom |
+| La barra de abajo | La rejilla en horizontal | — | — | — |
+| Lo demás de la columna | La columna | — | Como antes | La columna |
+
+### 16.1 La rueda en la silueta, `BsRuedaHorizontal`
+
+- `BsRuedaHorizontal({ScrollController? controlador, required constructor})`, en
+  `lib/core/design/componentes/bs_rueda_horizontal.dart`, va **alrededor** del desplazable horizontal
+  de `BsSiluetaBuque`, que arma `constructor(context, controlador)` con el controlador de la
+  pantalla o, si no hay, con uno propio. Dentro no sirve: mientras el desplazable anima, su
+  contenido no recibe el puntero, y el segundo paso de la rueda se iba a la columna.
+- Con la rueda vertical se registra en `GestureBinding.instance.pointerSignalResolver`, donde gana el
+  primero que se registra: está más adentro que la columna, así que la columna no se mueve a la vez.
+  Hacia abajo avanza hacia la popa y hacia arriba regresa hacia la proa, con
+  **`BsMovimiento.rueda` (100 ms, nuevo)** y `BsMovimiento.entrada`; cero si el sistema reduce el
+  movimiento. Cada paso suma al destino del anterior, aunque la animación no haya llegado.
+- **En un extremo,** si la silueta no puede moverse en ese sentido, no se registra y la rueda pasa
+  a la columna.
+- **No toma lo que ya tiene dueño:** la rueda con más componente horizontal que vertical (el
+  touchpad en la Web) es del desplazable; Mayús + rueda también, porque invierte los ejes del
+  mouse; y Ctrl + rueda no es de la silueta.
+- **El pestillo,** `BsPestilloDeLaRueda`, envuelve la columna de la oficina: anota la hora de cada
+  paso de la rueda vertical que llega a la columna sin que nadie de dentro lo tome (Ctrl + rueda no
+  cuenta). Si el último fue hace menos de **300 ms** (`BsPestilloDeLaRueda.plazo`), la silueta no
+  toma la rueda y la columna sigue: al bajar, la silueta llega bajo el mouse y no se la roba. Lo que
+  toma la silueta no alarga el pestillo. Usa la hora del evento, no la del reloj.
+
+### 16.2 El zoom con el touchpad y con Ctrl + rueda
+
+En `PlanZoomViewport`, además de los dos contactos de la pantalla:
+
+- **El pellizco del touchpad** (`PointerPanZoomStart`, `Update` y `End`; en Windows, el touchpad de
+  precisión): la escala del inicio por `event.scale`, en cuanto se aparta más de un 1 % de 1.0
+  (`PlanZoomViewport.umbralDelPellizco`); antes, los dos dedos solo desplazan. **Mientras dura el
+  pellizco no se desplaza nada:** la rejilla, como con dos dedos en la pantalla, y la columna, que
+  lee `pellizcoDelPlanoProvider` y queda con `NeverScrollableScrollPhysics` hasta que el gesto
+  termina.
+- **Ctrl + rueda, también con el mouse** (P4): la escala por e^(−dy/200)
+  (`PlanZoomViewport.pasoDeLaRueda`), registrado en el resolvedor para que la columna no se mueva.
+  Se registra aunque la escala ya esté en su tope: Ctrl + rueda sobre la rejilla nunca desplaza.
+- **El pellizco de la Web:** el motor web de Flutter 3.38 entrega el pellizco y Ctrl + rueda como
+  `PointerScaleEvent` con escala e^(−dy/200) (`pointer_binding.dart`); se multiplica por su escala.
+- La escala sigue acotada entre **75 y 300 %** por `planZoomProvider`, y el chip del zoom no cambia.
+- En el teléfono (el lienzo sin `alturaNatural`) también amplían Ctrl + rueda y el touchpad, desde
+  la esquina, como el chip: ahí no hay punto fijo ni barra.
+
+### 16.3 El punto bajo el puntero se queda quieto
+
+En la oficina, al ampliar con el touchpad o con Ctrl + rueda, se corren los dos desplazamientos
+para que lo que está bajo el puntero quede donde estaba:
+
+- **En vertical** (la columna): nuevo = actual + (foco − 16) × (escala nueva ÷ escala vieja − 1),
+  con el foco medido desde el borde de arriba de la rejilla y los 16 dp de su aire
+  (`PlanZoomViewport.margen`), que no se amplían. Lo de arriba de la rejilla no cambia de alto.
+- **En horizontal** (la rejilla): si la bahía no llena la vista, va centrada, y su ancho natural lo
+  mide `PlanZoomContenido`. Con *inicio(e)* = 16 + máx(0, (vista − 32 − ancho × e) ÷ 2), el punto
+  bajo el foco es (actual + foco − inicio(vieja)) ÷ vieja, y el desplazamiento nuevo, inicio(nueva) +
+  punto × nueva − foco, acotado a lo que se puede desplazar.
+- Los dos se mueven **antes** del cuadro que dibuja la escala nueva, así que se ven juntos. Si una
+  cuenta pasa del borde nuevo, la física lo acota al medirse.
+- Cuando la bahía vuelve a caber, la centra el ancho mínimo y el punto ya no puede quedarse:
+  la bahía entera está a la vista.
+- Con el chip, el zoom sigue ampliando desde la esquina de arriba a la izquierda.
+
+### 16.4 La barra horizontal de la rejilla, `BarraDeLaRejilla`
+
+- **El desplazamiento horizontal va por fuera de la escala:** en la oficina, `PlanZoomViewport` lleva
+  un `SingleChildScrollView` horizontal (`rejilla-horizontal`) con la rejilla ampliada dentro
+  (`_TamanoAmpliado`, que mide lo que el hijo por la escala en los dos ejes); la rejilla ya no lleva
+  el suyo. Así la barra no se amplía con la rejilla.
+- `BarraDeLaRejilla` (`barra_de_la_rejilla.dart`, clave `barra-de-la-rejilla`) envuelve la columna:
+  es la `Scrollbar` de Material con el controlador de la rejilla, que la rejilla toma con
+  `BarraDeLaRejilla.controladorDe`, `scrollbarOrientation: bottom` y un `notificationPredicate` que
+  solo escucha ese controlador (la silueta y la columna llevan los suyos).
+- **Va pegada al borde de abajo de la columna, encima de la franja de cifras,** aunque el pie de la
+  rejilla esté más abajo, como en una hoja de cálculo.
+- **Solo aparece cuando la bahía no cabe a lo ancho.** Entonces se ve siempre, con su pista
+  (`thumbVisibility` y `trackVisibility`), y la columna deja **14 dp de aire** abajo
+  (`BarraDeLaRejilla.aire`: los 12 de la barra de escritorio con pista y sus 2 de margen): la barra
+  vive en ese aire y nunca tapa celdas. Sin barra, sin aire.
+- **El pulgar se arrastra** con el mouse y **un clic en la pista avanza una página**: el 80 % de la
+  vista, lo que hace cualquier barra de Flutter. La rueda sobre la barra mueve la rejilla.
+- En la tableta del muelle, la columna es la misma: la barra sale igual cuando la bahía no cabe.
+
+### 16.5 La Web y la página entera
+
+- **La prueba de P7 la hace Carlos** con su touchpad, en Chrome y en Edge: si el pellizco o
+  Ctrl + rueda amplían la página entera sobre el plano. Lo que dice el código del motor (no es una
+  medida): con Ctrl, la rueda llega a Flutter como `PointerScaleEvent`, y el motor cancela el
+  evento del navegador (`preventDefault`) en todo lo que dibuja Flutter. Si la prueba lo confirma,
+  `web/index.html` no se toca.
+- Si la página se amplía, P7 autoriza en `web/index.html` un escucha no pasivo que cancele
+  Ctrl + rueda **solo con el puntero sobre el plano**. Ctrl + «+» y Ctrl + «−» nunca se tocan.
+- **O-040-1,** el gesto del touchpad que regresa el navegador al deslizar sobre la silueta, queda
+  para después (10.76).
+
+### 16.6 Lo que cambió respecto de la propuesta (0.7.2)
+
+1. **La rueda va alrededor del desplazable, como decía la propuesta, y le da el controlador:**
+   `BsSiluetaBuque` no siempre recibe uno, así que `BsRuedaHorizontal` pone el suyo. Una primera
+   versión iba dentro, sin controlador, y la prueba de dos pasos seguidos la tumbó: durante la
+   animación el contenido ignora el puntero.
+2. **Mayús + rueda sigue siendo del desplazable,** y Ctrl + rueda fuera de la rejilla hace lo de
+   antes (en Windows desplaza la columna; en la Web no hace nada, porque llega como escala): la
+   silueta solo toma la rueda vertical sin modificadores. La propuesta decía «nada».
+3. **El punto fijo cuenta el centrado y mira el lienzo de ahora:** la propuesta daba nuevo = (actual + foco) × razón − foco,
+   que solo vale si la rejilla llena la vista y no tiene aire. Con el aire de 16 dp y una bahía que
+   cabe centrada, `PlanZoomContenido` mide su ancho natural (16.3). Y el foco se calcula desde la
+   posición en la pantalla en cada evento, no con `localPosition`: el gesto del touchpad guarda
+   la posición del lienzo al empezar, y el lienzo sube o baja con la columna mientras se pellizca.
+4. **La columna se congela durante el pellizco** con un proveedor (`pellizcoDelPlanoProvider`): la
+   columna está fuera de `PlanZoomViewport`, y la `ScrollConfiguration` de dentro no la alcanza.
+5. **Ctrl + rueda se registra también en el tope:** si no, al llegar a 300 % la rueda con Ctrl
+   desplazaba la columna.
+6. **La barra de Material sirvió fuera de su desplazable**, como pedía la propuesta probarlo: no hizo
+   falta una propia.

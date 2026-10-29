@@ -25,6 +25,7 @@ import 'franjas_del_plano.dart';
 import 'hatch_cover_diagram.dart';
 import 'hatch_operation_controls.dart';
 import 'avisos_del_viaje.dart';
+import 'barra_de_la_rejilla.dart';
 import 'iconos_del_dominio.dart';
 import 'loading_controls.dart';
 import 'loading_plan_controls.dart';
@@ -447,16 +448,29 @@ class _BayPlanViewState extends ConsumerState<BayPlanView> {
             modo: mode,
             bahia: _selectedBayNumber,
             cifrasDeLaBahia: cifras);
+    final partes = <Widget>[
+      SliverToBoxAdapter(child: puente),
+      FranjaFijadaSiCabe(child: franja),
+      SliverToBoxAdapter(child: rejilla),
+      SliverToBoxAdapter(child: leyenda),
+    ];
+    // T-119 (16.1 a 16.4): la barra horizontal de la rejilla va abajo de la
+    // columna; el pestillo deja la rueda con la columna mientras se desplaza;
+    // y la columna no se mueve mientras dura un pellizco del touchpad.
     return Column(children: [
       Expanded(
-        child: CustomScrollView(
-          key: const ValueKey('columna-del-plano'),
-          slivers: [
-            SliverToBoxAdapter(child: puente),
-            FranjaFijadaSiCabe(child: franja),
-            SliverToBoxAdapter(child: rejilla),
-            SliverToBoxAdapter(child: leyenda),
-          ],
+        child: BarraDeLaRejilla(
+          child: BsPestilloDeLaRueda(
+            child: Consumer(
+              builder: (context, ref, _) => CustomScrollView(
+                key: const ValueKey('columna-del-plano'),
+                physics: ref.watch(pellizcoDelPlanoProvider)
+                    ? const NeverScrollableScrollPhysics()
+                    : null,
+                slivers: partes,
+              ),
+            ),
+          ),
         ),
       ),
       pie,
@@ -1190,19 +1204,26 @@ class _Rejilla extends StatelessWidget {
     }
 
     // Scroll vertical y horizontal para conservar la alineación en pantallas
-    // angostas; en la oficina, solo el horizontal: la columna desplaza.
+    // angostas; en la oficina, la columna desplaza en vertical y el
+    // horizontal va por fuera del zoom, con la barra de la columna (16.4).
     return LayoutBuilder(
       builder: (context, outer) => PlanZoomViewport(
         key: ValueKey('plan-zoom-${bay.bayNumber}'),
         alturaNatural: grid.alturaNatural,
+        horizontal: grid.alturaNatural
+            ? BarraDeLaRejilla.controladorDe(context)
+            : null,
         // T-106: dentro del zoom el ancho es el de la vista lógica. A 300 % la
         // rejilla queda a la vista, sin un lienzo en blanco tan ancho como la
-        // pantalla, y el margen de 16 dp se compensa para no ampliarse.
+        // pantalla, y el margen de 16 dp se compensa para no ampliarse. En la
+        // oficina el ancho no tiene tope (el desplazamiento está fuera) y la
+        // vista lógica llega como el ancho mínimo.
         child: LayoutBuilder(builder: (context, constraints) {
-          final margin = 16 / PlanZoomScope.of(context);
-          final inner = constraints.maxWidth > 2 * margin
-              ? constraints.maxWidth - 2 * margin
-              : 0.0;
+          final margin = PlanZoomViewport.margen / PlanZoomScope.of(context);
+          final vista = constraints.hasBoundedWidth
+              ? constraints.maxWidth
+              : constraints.minWidth;
+          final inner = vista > 2 * margin ? vista - 2 * margin : 0.0;
           // C-7 · Peso de cada pila, como el plano impreso: dos líneas
           // alineadas con las columnas. Van arriba, donde el límite de
           // apilamiento aplica de verdad; en el teléfono bajo, debajo de la
@@ -1273,71 +1294,68 @@ class _Rejilla extends StatelessWidget {
                     height:
                         grid.compacta ? medidas.espacioXs : medidas.espacioS),
               ],
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: inner),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Carga que la geometría declarada no alcanza a representar
-                      if (outsideGeometry.isNotEmpty) ...[
-                        _buildOutsideGeometryNotice(context, outsideGeometry),
-                        SizedBox(height: medidas.espacioL),
-                      ],
-                      if (outsideReserved.isNotEmpty) ...[
-                        _buildOutsideReservedNotice(context, outsideReserved),
-                        SizedBox(height: medidas.espacioL),
-                      ],
+              _horizontalSiHaceFalta(
+                minimo: inner,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Carga que la geometría declarada no alcanza a representar
+                    if (outsideGeometry.isNotEmpty) ...[
+                      _buildOutsideGeometryNotice(context, outsideGeometry),
+                      SizedBox(height: medidas.espacioL),
+                    ],
+                    if (outsideReserved.isNotEmpty) ...[
+                      _buildOutsideReservedNotice(context, outsideReserved),
+                      SizedBox(height: medidas.espacioL),
+                    ],
 
-                      if (!grid.compacta) ...pesosPorPila,
+                    if (!grid.compacta) ...pesosPorPila,
 
-                      // Header de rows
-                      _buildRowHeader(context, rows),
-                      SizedBox(height: medidas.espacioXs),
+                    // Header de rows
+                    _buildRowHeader(context, rows),
+                    SizedBox(height: medidas.espacioXs),
 
-                      // Cubierta: los niveles sobre la tapa. La zona la dicen
-                      // la tapa y el casco (13.2), no un rótulo.
-                      if (deckTiers.isNotEmpty) bloque(deckTiers, bodega: false),
+                    // Cubierta: los niveles sobre la tapa. La zona la dicen
+                    // la tapa y el casco (13.2), no un rótulo.
+                    if (deckTiers.isNotEmpty) bloque(deckTiers, bodega: false),
 
-                      // La tapa de escotilla: la línea de 2 dp entre cubierta y
-                      // bodega (13.2), en tinta.
-                      if (deckTiers.isNotEmpty && holdTiers.isNotEmpty) ...[
-                        SizedBox(height: medidas.espacioS),
-                        Container(
-                          key: const ValueKey('linea-de-tapa'),
-                          width: anchoDeFilas,
-                          height: 2,
-                          margin: EdgeInsets.only(
+                    // La tapa de escotilla: la línea de 2 dp entre cubierta y
+                    // bodega (13.2), en tinta.
+                    if (deckTiers.isNotEmpty && holdTiers.isNotEmpty) ...[
+                      SizedBox(height: medidas.espacioS),
+                      Container(
+                        key: const ValueKey('linea-de-tapa'),
+                        width: anchoDeFilas,
+                        height: 2,
+                        margin: EdgeInsets.only(
+                            left: medidas.anchoEtiquetaNivel,
+                            right: medidas.anchoColumnaPesos),
+                        decoration: BoxDecoration(
+                          color: esquema.onSurface,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                      SizedBox(height: medidas.espacioS),
+                    ],
+
+                    // Las tapas declaradas, con el ancho de las columnas.
+                    if (grid.hatchCovers != null) ...[
+                      Padding(
+                          padding: EdgeInsets.only(
                               left: medidas.anchoEtiquetaNivel,
                               right: medidas.anchoColumnaPesos),
-                          decoration: BoxDecoration(
-                            color: esquema.onSurface,
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                        SizedBox(height: medidas.espacioS),
-                      ],
-
-                      // Las tapas declaradas, con el ancho de las columnas.
-                      if (grid.hatchCovers != null) ...[
-                        Padding(
-                            padding: EdgeInsets.only(
-                                left: medidas.anchoEtiquetaNivel,
-                                right: medidas.anchoColumnaPesos),
-                            child: HatchCoverDiagram(
-                                declaration: grid.hatchCovers,
-                                rows: rows,
-                                columnWidth: columna)),
-                        SizedBox(height: medidas.espacioS),
-                      ],
-
-                      // Bodega: dentro del casco (13.2)
-                      if (holdTiers.isNotEmpty) bloque(holdTiers, bodega: true),
+                          child: HatchCoverDiagram(
+                              declaration: grid.hatchCovers,
+                              rows: rows,
+                              columnWidth: columna)),
                       SizedBox(height: medidas.espacioS),
-                      if (grid.compacta) ...pesosPorPila,
                     ],
-                  ),
+
+                    // Bodega: dentro del casco (13.2)
+                    if (holdTiers.isNotEmpty) bloque(holdTiers, bodega: true),
+                    SizedBox(height: medidas.espacioS),
+                    if (grid.compacta) ...pesosPorPila,
+                  ],
                 ),
               ),
             ]);
@@ -1355,6 +1373,24 @@ class _Rejilla extends StatelessWidget {
       ),
     );
   }
+
+  /// La rejilla, al menos tan ancha como la vista y centrada en ella. En el
+  /// teléfono, dentro de su desplazamiento horizontal, que va en el zoom; en
+  /// la oficina el desplazamiento va por fuera (`PlanZoomViewport`, 16.4) y
+  /// la rejilla dice su ancho natural, para el punto fijo del zoom (16.3).
+  /// Centrarla con `Align` mide lo mismo que la columna con ancho mínimo.
+  Widget _horizontalSiHaceFalta(
+          {required double minimo, required Widget child}) =>
+      grid.alturaNatural
+          ? ConstrainedBox(
+              constraints: BoxConstraints(minWidth: minimo),
+              child: Align(
+                  alignment: Alignment.topCenter,
+                  child: PlanZoomContenido(child: child)))
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: minimo), child: child));
 
   Widget _buildOutsideReservedNotice(
       BuildContext context, List<ReservedSlot> outside) {

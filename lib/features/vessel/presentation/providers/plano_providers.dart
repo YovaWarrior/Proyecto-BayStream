@@ -103,6 +103,23 @@ class PlanZoomNotifier extends Notifier<double> {
   void restablecer() => fijar(1);
 }
 
+/// Verdadero mientras dura un pellizco del touchpad sobre la rejilla de la
+/// oficina (T-119, `DESIGN.md` 16.2): la columna que desplaza la rejilla no se
+/// mueve con el gesto, como no se mueve la rejilla con dos dedos en la
+/// pantalla. Lo enciende y lo apaga `PlanZoomViewport`.
+final pellizcoDelPlanoProvider =
+    NotifierProvider<PellizcoDelPlanoNotifier, bool>(
+        PellizcoDelPlanoNotifier.new);
+
+class PellizcoDelPlanoNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void empezar() => state = true;
+
+  void terminar() => state = false;
+}
+
 /// El contenedor cuyo detalle se ve en el panel lateral de la oficina
 /// (`DESIGN.md` 8 y 13.8). En pantallas angostas el detalle abre como hoja y
 /// este provider no se usa.
