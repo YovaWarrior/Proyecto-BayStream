@@ -2263,3 +2263,56 @@ La siguiente decisión es la **10.81**.
 4. Con la aceptación, la sección 4 de la lista: las reglas (4.0), la mezcla y los tres clientes, a más tardar el 4-nov, y después 0.7.
 
 La siguiente decisión es la **10.82**.
+
+### 10.82 · Carlos aprueba las dos propuestas de 10.81 (29-oct, 17:19)
+
+- **O-119-1** queda como conocida en la 0.4.1 y va a T-120, con una prueba que pellizque justo cuando la bahía deja de caber centrada.
+- **O-128-1** va a la tarea del banco, después de la Expo: `tool/t93_msix.ps1` leerá `msix_version` del pubspec cuando no se le pase `-Version`. Hasta entonces, la lista del piloto lo llama siempre con la versión.
+- Esta decisión se sube junto con la revisión de la aceptación de la 0.4.1. Así la punta de `sprint-4` no se mueve mientras Codex acepta en `qa-r4`, porque su Paso 0 la fija en `c893687`.
+
+La siguiente decisión es la **10.83**.
+
+### 10.83 · Codex acepta la 0.4.1 con dos reservas (29-oct, 23:50)
+
+**Codex aceptó la 0.4.1 con reservas** (`docs/t128/aceptacion-codex.md`), sobre `c893687`:
+- **P1 · T-119:**
+  - el código, cotejado; 11 de 11 pruebas en verde, y las 11 en rojo contra `83d7b85`, por comportamiento;
+  - en Chrome y en Edge, lo mismo que en la parte Web adelantada (10.81);
+  - en Windows a 200 %, el arrastre de T-105 y H7 cumple: Carlos lo hizo y el plano se desplazó hasta el borde.
+- **P2 · T-127:**
+  - 19 de 19 pruebas, y las seis baterías como se esperaba;
+  - los 14 pasos de la sección 8 de T-127, con la app real contra el emulador. La oficina y el muelle fueron dos contextos de Chrome, el muelle a 360 × 800: no cubre el Honor ni Android, que van en 0.7;
+  - la compatibilidad con la 0.4.0 en sus cinco casos, también la vuelta del almacén local.
+- **P3 · T-128:** la candidata compila en los tres clientes, y cada uno dice 0.4.1 (7). El AAB lleva la firma de depuración: acredita la compilación, pero no es el que va a Play.
+- **P4 · La lista del piloto:**
+  - los rótulos que cita existen;
+  - los ocho bloques de PowerShell pasan el analizador;
+  - cuadran las huellas, la mezcla y el `.sha256`.
+- **La suite:** 1871 de 1871 en una sola corrida, sobre una copia limpia, y `analyze` en cero. Las regresiones con el banco de T-100 cumplen en los tres clientes.
+
+**El paso 6 necesitó una reserva.** `T100_CARGA.edi` no trae ninguna, porque sus diez vacíos llevan número.
+- Con el visto bueno de Carlos, Codex usó una copia en la que el OR 16, que es un vacío, pierde su número: `EQD+CN+MNLU0000827+45R1++2+4` pasa a `EQD+CN++45R1++2+4`. Su celda, 010-01-04, queda como reserva.
+- Lo mismo les pasa a 0.7 y 2.6 de la lista del piloto: Yov los corrige.
+
+**Las dos reservas, P2:**
+- **O-128-2:** después de revisar el listado, el primer «Cerrar operación» de la oficina cierra la operación en la nube, pero dice «No se encontró la operación para cerrarla en este dispositivo o en la nube…» y deja la copia local abierta.
+  - Al volver a abrir «Nube y cuenta» y repetirlo, dice «Operación cerrada.» y la cierra también en el dispositivo.
+  - No se pierde ningún movimiento, y la nube rechaza otra revisión de la operación cerrada.
+  - `close` no cambió en T-127, y la causa no está aislada. Se vio con la oficina en Chrome.
+- **O-128-4:** no se logró provocar a mano un pellizco que pierda el foco sin su evento final, porque los pellizcos de Carlos terminaron antes de perderlo. Es una prueba que falta, no un defecto visto.
+
+**Dos más, P3:** O-128-3, un error al arrancar el banco Web en el navegador integrado, sin atribuir; y O-128-1, ya decidida en 10.82.
+
+**Yov lo revisó contra la evidencia:**
+- la huella del informe es la del manifiesto y la del bloque de Codex;
+- 100 de los 1189 archivos del manifiesto, tomados al azar, coinciden;
+- la suite registra 1871 pruebas aprobadas, sin fallas ni omitidas, y `analyze` dice «No issues found!».
+
+**Yov propone; decide Carlos:**
+1. Aceptar las dos reservas y publicar la 0.4.1 después de la Expo. El paso 1.15 de la lista dirá qué hacer si el cierre falla: la nube ya quedó cerrada, y basta repetirlo.
+2. **T-129, después de la Expo:** Timonel diagnostica O-128-2 con una prueba roja, en Fable 5.1 porque toca la sincronización.
+   - Si el arreglo es chico, entra antes de publicar, con una revisión corta de Codex.
+   - Si no, va a la 0.4.2.
+3. **O-128-4 va a T-120:** que el plano suelte el pellizco cuando pierda el foco, con su prueba.
+
+La siguiente decisión es la **10.84**.
