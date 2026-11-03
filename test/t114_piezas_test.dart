@@ -7,6 +7,8 @@ import 'package:baystream/core/design/vistas_previas.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/t117_oficina_support.dart' show t117CargarFuentes;
+
 // Los temas se construyen una sola vez: un `ThemeData` nuevo en cada `pump`
 // (aunque sea igual) hace que `AnimatedTheme` interpole 200 ms y confunde las
 // comprobaciones de «nada se mueve».
@@ -67,6 +69,10 @@ List<BsEventoEnVivo> _eventos({VoidCallback? onRevisar}) => <BsEventoEnVivo>[
     ];
 
 void main() {
+  // T-133: las fuentes del producto, para que el rótulo de la marca se mida
+  // como en el equipo y no con la fuente cuadrada de las pruebas, con la que
+  // no cabría junto al código.
+  setUpAll(t117CargarFuentes);
   group('BsMarca', () {
     testWidgets('se pinta en sus tres variantes y dice quién es', (tester) async {
       final semantica = tester.ensureSemantics();
@@ -210,7 +216,7 @@ void main() {
       expect(pinturas(), isEmpty, reason: 'de día no hay punteado ni CustomPaint');
     });
 
-    testWidgets('recién movido sale de su celda, dice «Bajando» y cambia su etiqueta',
+    testWidgets('recién movido sale de su celda, deja el código y cambia su etiqueta',
         (tester) async {
       final semantica = tester.ensureSemantics();
       await tester.pumpWidget(_envuelve(BsCelda(
@@ -220,7 +226,12 @@ void main() {
         etiqueta: 'TSTU 004218 0, 014-01-86',
         onTap: () {},
       )));
-      expect(find.text('Bajando'), findsOneWidget);
+      // T-133: el código sigue a la vista y la marca va debajo. En el
+      // muelle, «Bajando» a 11 no cabe junto al icono en la celda de 56: queda
+      // la flecha (en la oficina sí cabe, `test/t133_marca_test.dart`).
+      expect(find.text('GTSTC'), findsOneWidget);
+      expect(find.byIcon(BsIconos.descarga), findsOneWidget);
+      expect(find.text('Bajando'), findsNothing);
       expect(
           tester
               .widgetList<CustomPaint>(find.byType(CustomPaint))
@@ -313,7 +324,11 @@ void main() {
         ),
         sinMovimiento: true,
       ));
-      expect(find.text('Subiendo'), findsOneWidget);
+      // T-133: «Subiendo» no cabe con el icono en ninguna celda; quedan el
+      // código y la flecha.
+      expect(find.text('GTSTC'), findsOneWidget);
+      expect(find.byIcon(BsIconos.carga), findsOneWidget);
+      expect(find.text('Subiendo'), findsNothing);
       expect(find.descendant(of: find.byType(BsCelda), matching: find.byType(CustomPaint)),
           findsNothing, reason: 'sin hueco punteado: no sale de su sitio');
       final contenedor = tester.widget<Container>(find.byType(Container).first);

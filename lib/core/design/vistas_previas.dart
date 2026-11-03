@@ -355,6 +355,41 @@ Widget vistaPreviaCeldasEstadoMuelle() => _lienzo(Wrap(
       ],
     ));
 
+/// La marca no tapa el código (T-133): las reservas de la bahía 10 del
+/// piloto con su OR y «Revisar» debajo, un cancelado y una recién movida.
+@Preview(name: 'Celdas · la marca debajo del código', group: 'Diseño', theme: bsTemaDeVistaPrevia)
+Widget vistaPreviaCeldasConMarca() => _lienzo(Builder(
+      builder: (BuildContext context) {
+        final semanticos = BsColoresSemanticos.de(context);
+        return Wrap(
+          children: <Widget>[
+            for (final orden in const <int>[142, 148, 67, 62])
+              BsCelda(
+                codigo: 'OR $orden',
+                marca: BsMarcaDeCelda.revisar,
+                categoria: semanticos.hecho,
+                etiqueta: 'Reserva 010, OR $orden, revisar',
+                onTap: () {},
+              ),
+            BsCelda(
+              codigo: 'OR 49',
+              marca: BsMarcaDeCelda.cancelado,
+              categoria: semanticos.pendiente,
+              etiqueta: 'OR 49, cancelado',
+              onTap: () {},
+            ),
+            BsCelda(
+              codigo: 'OR 1',
+              marca: BsMarcaDeCelda.revisar,
+              estado: BsEstadoDeCelda.recienMovido,
+              etiqueta: 'OR 1, revisar',
+              onTap: () {},
+            ),
+          ],
+        );
+      },
+    ));
+
 /// La marca: con recuadro, sin recuadro, monocroma y en espera.
 @Preview(name: 'Marca', group: 'Diseño', theme: bsTemaDeVistaPrevia)
 Widget vistaPreviaMarca() => _lienzo(const Wrap(

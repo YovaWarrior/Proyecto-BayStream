@@ -1,3 +1,4 @@
+import 'package:baystream/core/design/design.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/domain/services/loading_operation.dart';
 import 'package:baystream/features/vessel/presentation/providers/loading_operation_provider.dart';
@@ -196,7 +197,10 @@ void main() {
         find.descendant(
             of: pending, matching: find.byKey(const ValueKey('discharge-pending'))),
         findsOneWidget);
-    expect(find.descendant(of: pending, matching: find.text('Baja')),
+    // La marca «Baja» va debajo del código con su icono (T-133); con la
+    // fuente cuadrada de las pruebas el rótulo no cabe y queda el icono.
+    expect(
+        find.descendant(of: pending, matching: find.byIcon(BsIconos.descarga)),
         findsOneWidget);
     expect(find.byKey(const ValueKey('plan-drag-C:ARRIVAL0')), findsNothing);
     expect(find.byKey(const ValueKey('plan-drag-C:FULL0001234')), findsOneWidget);

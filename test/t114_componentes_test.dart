@@ -3,6 +3,8 @@ import 'package:baystream/core/design/design.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/t117_oficina_support.dart' show t117CargarFuentes;
+
 Widget _envuelve(Widget hijo, {bool oscuro = false, bool muelle = true}) =>
     MaterialApp(
       theme: BayStreamTema.claro(muelle: muelle),
@@ -12,6 +14,10 @@ Widget _envuelve(Widget hijo, {bool oscuro = false, bool muelle = true}) =>
     );
 
 void main() {
+  // T-133: las fuentes del producto, para que el rótulo de la marca se mida
+  // como en el equipo y no con la fuente cuadrada de las pruebas, con la que
+  // no cabría junto al código.
+  setUpAll(t117CargarFuentes);
   group('BsCelda', () {
     testWidgets('muestra el código, mide al menos 56 × 48 y responde al toque',
         (tester) async {
@@ -45,7 +51,8 @@ void main() {
       )));
       expect(find.text('Baja'), findsOneWidget);
       expect(find.byIcon(BsIconos.descarga), findsOneWidget);
-      expect(find.text('GTSTC'), findsNothing);
+      // T-133: la marca ya no tapa el código.
+      expect(find.text('GTSTC'), findsOneWidget);
       await tester.pumpWidget(_envuelve(const BsCelda(
         codigo: 'GTSTC',
         marca: BsMarcaDeCelda.reestiba,
@@ -167,7 +174,7 @@ void main() {
       }
     });
 
-    testWidgets('con la letra a 2.0 ninguna marca desborda y el rótulo queda',
+    testWidgets('con la letra a 2.0 ninguna marca desborda y el código queda',
         (tester) async {
       for (final muelle in [true, false]) {
         for (final marca in BsMarcaDeCelda.values) {
@@ -188,7 +195,18 @@ void main() {
             ));
             expect(tester.takeException(), isNull,
                 reason: '${marca.name}, resaltada $resaltada, muelle $muelle');
+            // T-133: a 2.0 no caben el código y el rótulo; gana el código, y
+            // la marca queda en su color y en su icono.
             expect(find.byType(Text), findsOneWidget);
+            expect(find.text('GTSTC'), findsOneWidget);
+            if (marca != BsMarcaDeCelda.ninguna) {
+              expect(
+                  find.descendant(
+                      of: find.byType(BsCelda),
+                      matching: find.byType(Icon)),
+                  findsNWidgets(2),
+                  reason: 'la insignia y el icono de ${marca.name}');
+            }
           }
         }
       }

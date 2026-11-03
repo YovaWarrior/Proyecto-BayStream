@@ -176,7 +176,8 @@ por vista (15.2). Son los únicos tamaños de letra del producto.
 Nada por debajo de 10; en el muelle, nada por debajo de 11: la segunda línea de la celda
 (10) se dibuja solo en la oficina, con zoom de 100 % o más (`BsCelda.zoom`) y si cabe con
 la escala de letra del sistema; en el muelle no se dibuja aunque la celda la reciba
-(10.7). Las cifras van siempre tabulares; Plex ya trae los dígitos de ancho fijo de serie.
+(10.7). La marca de la operación va en ese lugar, debajo del código: a 10 en la oficina y a 11
+en el muelle (13.13). Las cifras van siempre tabulares; Plex ya trae los dígitos de ancho fijo de serie.
 
 ### 4.3 Tokens (`BsMedidas`, en `bs_medidas.dart`)
 
@@ -202,7 +203,7 @@ las tres pautas de accesibilidad de Flutter.
 
 | Componente | Archivo | Qué es |
 |---|---|---|
-| `BsCelda` | `bs_celda.dart` | La celda del plano: relleno por categoría, código de cinco letras en condensada, insignia de carga especial siempre, marca de operación con icono y rótulo, resaltada, atenuada (relleno al 35 % sin `Opacity`, código en tinta suave y contorno en línea fuerte: 5.1), reservada (solo contorno), hueco; la segunda línea solo en la oficina con `zoom` ≥ 1.0; con la letra a 2.0 nada desborda, lo que no cabe no se dibuja |
+| `BsCelda` | `bs_celda.dart` | La celda del plano: relleno por categoría, código de cinco letras en condensada, insignia de carga especial siempre, marca de operación con icono y rótulo debajo del código, que no tapa (13.13), resaltada, atenuada (relleno al 35 % sin `Opacity`, código en tinta suave y contorno en línea fuerte: 5.1), reservada (solo contorno), hueco; la segunda línea solo en la oficina con `zoom` ≥ 1.0; con la letra a 2.0 nada desborda, lo que no cabe no se dibuja |
 | `BsTiraDeBahias` | `bs_tira_de_bahias.dart` | La silueta del buque como selector: una casilla de 48 × 64 por bahía, barra por ocupación o peso, casco pintado detrás |
 | `BsCartela` | `bs_cartela.dart` | El cajetín: título, cifras tabulares, leyenda en `Wrap` (nunca scroll horizontal), nota |
 | `BsBanda` | `bs_banda.dart` | El aviso que se queda: información, aviso, error o confirmación, con icono, texto que crece y acción con el mismo nombre que lo que hace |
@@ -236,7 +237,7 @@ vista Estado (13.2).
 |---|---|---|---|
 | Pendiente | flecha abajo o arriba, «Baja» / «Sube» | `#DCE7F8` / `#0D47A1` | `#1E3A66` / `#8FB4F2` |
 | Hecho | palomita, «Hecho» | `#D3EFDB` / `#1E6B43` | `#1D4A33` / `#6FCF97` |
-| Cancelado | bloqueo, «Cancelado», texto en tinta suave | `#E4E8EE` / `#6D809F` | `#2A3850` / `#8A9DB8` |
+| Cancelado | bloqueo, «Cancel.» (13.13), texto en tinta suave | `#E4E8EE` / `#6D809F` | `#2A3850` / `#8A9DB8` |
 | Revisar (conflicto, aviso) | aviso, «Revisar» | `#FBE7B5` / `#8A5A00` | `#5C4300` / `#E0B23F` |
 | Error | error y mensaje con causa y acción | `#F9D9D6` / `#B3261E` | `#601410` / `#F2B8B5` |
 | Peligrosa (IMO) | rombo y la clase | `#F9D9D6` / `#B3261E` | `#601410` / `#F2B8B5` |
@@ -1167,7 +1168,8 @@ con las fichas de la vista y su cuenta más «Resaltar» (RF-011), debajo de la 
 muelle operando, en su lugar va `BsBarraDeOperacion`. Las tarjetas de cifra van a la derecha
 de la silueta desde 1040 dp de ancho útil y debajo con menos; sin operación no hay tarjetas.
 La celda de carga lleva el OR como código y el estado como rol y segunda línea, porque
-`BsCelda` no dibuja icono y código a la vez. El peso de la celda y de las pilas se escribe
+`BsCelda` no dibujaba icono y código a la vez (desde T-133 sí: el conflicto y la cancelación
+van debajo del OR, 13.13). El peso de la celda y de las pilas se escribe
 como el plano impreso («28.7», sin unidad); el total de la bahía, con `formatearToneladas`.
 La celda se ensancha con la letra del sistema para que el código de cinco letras quepa
 entero a 2.0 (`BsMedidas.copyWith(anchoCelda:)`). El detalle es una sola hoja
@@ -1563,6 +1565,64 @@ porque la línea del resumen del plano («Bahía 02, carga: nada pendiente»), a
 21 dp de alto; y el contraste, en la pantalla entera, donde de día solo falla el peso por pila
 «110.0+?» (11 px en tinta suave, 4.33:1), que falla igual sin cuenta. Las capturas, con datos
 sintéticos, en `build/t131/` (`test/t131_capturas_test.dart`).
+
+### 13.13 La marca no tapa el número de orden (T-133; 10.85, hallazgo 7)
+
+**Por qué.** En la tercera prueba piloto (1-nov), 8 celdas de la bahía 10 decían «Revisar» y no
+dejaban ver el OR, y eran justo las que había que comparar con el papel: un intercambio de 4 por 4
+vacíos entre dos líneas, correcto, que se queda marcado. Hasta T-133, con marca, `BsCelda`
+cambiaba el código por el rótulo de la marca, y la segunda línea solo se dibujaba sin marca. La
+propuesta de Carlos: el OR sigue siendo el texto grande, y la marca va pequeña, con su ícono, como
+segunda línea.
+
+**La regla.**
+1. **Con marca, el texto grande es el de siempre:** el OR, el destino, el tipo o lo que la celda
+   muestre sin marca, en `BsTextos.celda` (12).
+2. **La marca va debajo, en el lugar de la segunda línea:** su ícono (`BsCelda.tamanoIconoDeMarca`,
+   12 dp, la rejilla de las insignias de 13.11) y, a 2 dp, su rótulo corto en
+   `BsTextos.celdaLinea2`, **a 10 en la oficina y a 11 en el muelle**, donde nada baja de 11 (4.2;
+   decisión de Carlos del 3-nov). El ícono y el rótulo van en el color del texto del rol, el mismo
+   del código. Con marca, la `linea2` (el peso, «OR», «Sube») no se dibuja: su lugar es de la marca.
+3. **El relleno y el borde son los de la marca,** como antes: la celda conserva su color para que
+   salte a la vista. El estado de la vista Estado sigue mandando en el relleno (13.2), y la celda
+   recién movida sigue en naranja (13.3).
+4. **Si no caben las dos, gana el código:** la marca queda en su color y en su ícono, sin rótulo.
+   El rótulo se mide como lo dibuja `Text` (con la letra del sistema y el estilo heredado) y se
+   dibuja solo si el ícono, el aire y el rótulo caben en el ancho interior de la celda y el código y
+   la línea de la marca caben en su alto interior; con el zoom por debajo de 100 % tampoco va, como
+   la segunda línea (10.7, H2). Si ni el ícono cabe debajo del código, queda solo el color.
+5. **La etiqueta accesible no cambia:** dice el código y la marca, como hoy (T-107 en Carga), y la
+   recién movida le añade «se acaba de mover». El código y el rótulo no se leen por separado.
+6. **Vale en Descarga y en Carga, y en las tres vistas de «Colorear por».** En Carga, el conflicto
+   y la cancelación son las dos marcas (`LoadingCell`); el estado sigue como rol y segunda línea
+   («Sube», «Cargado») cuando no hay marca.
+
+**Los rótulos.** «Cancelado» pasa a **«Cancel.»**, como «Re‑est.» (10.28; decisión de Carlos del
+3-nov): con el ícono pide 58 dp en la oficina (hay 50) y 62 en el muelle (hay 52), y ya salía
+cortado como «Cancela…». «Cancel.» mide 31 dp a 10 y 34 a 11. La etiqueta accesible dice
+«cancelado» entera. Lo que se ve a 1.0, en la celda sin ensanchar:
+
+| Marca | Rótulo | Oficina (52, rótulo a 10) | Muelle (56, rótulo a 11) |
+|---|---|---|---|
+| Revisar, Cancelado, Hecho, Paso, Re‑estiba, Baja, Sube | «Revisar», «Cancel.», «Hecho», «Paso», «Re‑est.», «Baja», «Sube» | ícono y rótulo | ícono y rótulo |
+| Baja, recién movida | «Bajando» | ícono y rótulo | solo el ícono |
+| Sube, recién movida | «Subiendo» | solo el ícono | solo el ícono |
+
+Con la letra a 2.0 no cabe ningún rótulo (el código mide 26 dp de alto y la línea de la marca 22 o
+24 en un alto interior de 46 o 44): queda el código, entero, y el ícono. A 1.45 caben los dos en la
+celda que la rejilla ensancha con la letra.
+
+**Las pruebas**: `test/t133_marca_test.dart`, con las fuentes del producto: la pieza (cada marca
+debajo del código en las dos densidades, el relleno y el borde de su rol, la letra a 2.0 y el zoom
+a 75 %, la etiqueta accesible, las combinaciones con «recién movido»), el contraste compuesto del
+código, del rótulo y del ícono sobre cada relleno de marca (sola, sobre la categoría, atenuada y
+recién movida; sobre el papel, la cubierta y la bodega; en claro y en oscuro; 4.5:1 y 3:1) y
+`meetsGuideline` (`textContrastGuideline`, `androidTapTargetGuideline`, `iOSTapTargetGuideline` y
+`labeledTapTargetGuideline`); y el caso del piloto con datos sintéticos
+(`test/support/t133_marca_support.dart`): las 8 reservas de la bahía 10 con los vacíos cruzados de
+dos líneas, cada una con su OR y «Revisar», un cancelado, el plano de carga a 360 × 640 con la letra
+a 1.0 y a 2.0 y en la oficina a 1280 × 720, y el de descarga con el conflicto y el cancelado en las
+tres vistas. Las capturas del antes y del después, en `build/t133/` (`test/t133_capturas_test.dart`).
 
 ## 14. La oficina con más plano (T-117) y el selector de modo (T-118)
 
