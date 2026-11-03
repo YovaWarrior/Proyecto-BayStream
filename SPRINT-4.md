@@ -2581,3 +2581,45 @@ La siguiente decisión es la **10.91**.
 - **Para después del 7-nov:** `flutter analyze` lee los `.dart` de `build/`. Timonel vio 129 avisos falsos y Codex tuvo que analizar una copia preparada. Conviene excluir `build/` en `analysis_options.yaml`.
 
 La siguiente decisión es la **10.92**.
+
+### 10.92 · La corrección de T-129 y tres definiciones de T-131 (2-nov, 23:20)
+
+**El P2 de T-129 quedó corregido** (10.91), sobre `733a8ab`:
+- **El arreglo.** En `_afterOwnWrite`, el filtro va antes del plazo (`where(criterio).timeout(45 s).first`). Las instantáneas descartadas ya no reinician los 45 s, y la escucha se suelta al llegar la buena o al vencer el plazo. Yov lo comprobó en el código.
+- **Las pruebas nuevas.** Son dos, con el reloj simulado: una en silencio y otra con rechazos a los 40, 80, 120 y 160 s. En las dos, `timeout` a los 46 s, ninguna escucha abierta y la copia local abierta.
+- **La falsa** gana `holdEcho` y `emitRejected`, y las cinco pruebas de siempre no cambian. Carlos autorizó tocarla: el encargo pedía usar la falsa y a la vez no tocar ese archivo, una contradicción de Yov.
+- **Las cifras.**
+  - El rojo, contra el `lib/` de `2d98f23`: +6 −1, con la falla en la de rechazos sostenidos.
+  - El verde, 7 de 7.
+  - La suite, 1914 de 1914 sin omitidas, y `analyze` en cero.
+  - `pubspec.*` no cambia.
+- **El reloj simulado.** La cancelación de `Stream.timeout` termina en la zona raíz, que el reloj simulado no corre. Las pruebas le dan vueltas reales con `tester.runAsync` (6.4 del informe de T-129).
+
+Codex la vuelve a revisar sobre la punta nueva. La fase 2 de T-130 empieza sobre 1914.
+
+**T-131: tres definiciones de Carlos** (23:12 a 23:15):
+1. **El distintivo va a la derecha del bloque nombre + viaje**, centrado en su alto, y no en la línea del nombre.
+   - Con la zona táctil de 48 dp, el título pasaba de 38 a 65 dp: la barra del teléfono (56) lo recortaba y la cabecera de la oficina crecía de 64 a 81.
+   - Así nada crece. Si el viaje es más largo que el nombre, el distintivo queda después del viaje.
+2. **El contraste sobre la banda del muelle** (#0D47A1). Ahí el relleno no separa (1.2 a 1.8:1).
+   - La prueba exige 3:1 al filo en su tono central (cobre 3.25, oro 5.30) y en el claro.
+   - El extremo oscuro (cobre 1.56, oro 2.25) se informa sin exigirse: es la sombra del metal, y el distintivo se reconoce por su ícono (5.5:1) y su rótulo (9.9:1).
+   - Corrige la especificación del distintivo (10.86), que daba el filo a 3:1 en toda la banda. En el papel claro y en la noche pasa entero.
+3. **El reporte de `tool/rediseno_contraste.py`**, `docs/rediseno/fase2bis/contraste.md`, se regenera con los pares nuevos y va en el bloque por su ruta exacta. Carlos autorizó ese archivo de `docs/`, y solo cambia la sección del distintivo.
+
+**Pendiente:** la versión de BayStream de la laptop (10.89).
+
+La siguiente decisión es la **10.93**.
+
+### 10.93 · T-129 pasa la segunda revisión de Codex y queda cerrada; T-130 arranca sobre 1914 (2-nov, 23:40)
+
+**Codex volvió a revisar T-129 sobre `a18d2d3` (sección 9 de `docs/t129/revision-codex.md`). PASA:** el P2 queda cerrado y no hay hallazgos P1, P2 ni P3 nuevos.
+- El cierre responde entre los 44 y los 46 s y cancela la escucha, también con rechazos sostenidos.
+- Las 7 pruebas de T-129 y las 3 sondas de Codex salen en verde. La suite da 1914 de 1914 sin omitidas, y `analyze` en cero sobre la copia preparada con fuentes idénticos.
+- El emulador quedó fuera; el caso de O-128-2 en Chrome pasa a la aceptación de la candidata.
+
+T-129 entra en la candidata que se presenta el 7-nov (10.84).
+
+**T-130 empezó su fase 2 (23:28).** Su base dio `analyze` en cero y la suite 1914 de 1914. Esa suite corrió a la vez que la ventana exclusiva de Codex, porque el «Listo» de Yov no le recordó pedir la luz verde; Codex repitió sus sondas y `analyze` en otra ventana. Desde ahora, cada programador pide la luz verde a Carlos antes de cada comando de Flutter. El orden de la luz verde es T-130 primero, porque es la tarea que más tiempo necesita para llegar al 7-nov, y después T-131.
+
+La siguiente decisión es la **10.94**.
