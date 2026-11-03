@@ -63,6 +63,10 @@ dev_dependencies:
   # Instalador MSIX de Windows (T-93, autorizado en 2.7 de SPRINT-3). Fija y
   # solo de desarrollo: no entra en la app compilada.
   msix: 3.18.0
+  # Nube falsa de T-129 en la capa de plataforma de Firestore (autorizado por
+  # Carlos el 2-nov, T-129 6.2): las clases de cloud_firestore son @sealed.
+  # Fija en la versión que ya traía el lock como transitiva; solo de pruebas.
+  cloud_firestore_platform_interface: 8.0.6
 
 flutter:
   uses-material-design: true

@@ -73,6 +73,23 @@ class FirestoreOperationSync implements OperationSyncRepository {
           DocumentReference<Map<String, dynamic>> ref) =>
       ref.get(const GetOptions(source: Source.server)).timeout(_networkTimeout);
 
+  /// T-129 (O-128-2) · El documento como quedó en el servidor después de una
+  /// escritura propia con `FieldValue.serverTimestamp()`. Leerlo «del
+  /// servidor» no basta: si el documento ya se escucha (el motor lo sigue
+  /// desde T-127), el SDK resuelve esa lectura con la última vista de la
+  /// escucha, que todavía lleva la hora pendiente y la lee como nula, hasta
+  /// que llega el eco del servidor. Aquí se espera ese eco: la primera
+  /// instantánea del servidor sin escrituras pendientes. Si no llega en
+  /// [_networkTimeout], falla como las demás lecturas.
+  Future<DocumentSnapshot<Map<String, dynamic>>> _afterOwnWrite(
+          DocumentReference<Map<String, dynamic>> ref) =>
+      ref
+          .snapshots(includeMetadataChanges: true)
+          .timeout(_networkTimeout)
+          .firstWhere((snapshot) =>
+              !snapshot.metadata.hasPendingWrites &&
+              !snapshot.metadata.isFromCache);
+
   @override
   Future<Either<Failure, Operation>> publish(
       Operation operation, VesselProfile profile) async {
@@ -262,7 +279,7 @@ class FirestoreOperationSync implements OperationSyncRepository {
           'closedBy': uid,
           'closedAt': FieldValue.serverTimestamp(),
         }).timeout(_networkTimeout);
-        snapshot = await _serverGet(ref);
+        snapshot = await _afterOwnWrite(ref);
       }
       final closedAt = (snapshot.data()?['closedAt'] as Timestamp?)?.toDate();
       final local = (await _log.getOperation(operationId)).getOrElse(() => null);
