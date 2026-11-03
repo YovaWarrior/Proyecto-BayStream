@@ -16,6 +16,11 @@ el 4-nov (10.76 y 10.80). Es `sprint-4` mezclado en `master` (4.1): la 0.4.0, pu
   solo (2.15). Cierra H2 (10.50). Necesita las reglas de T-127, que se publican antes que los
   clientes (4.0).
 
+Codex la aceptó con dos reservas (10.83 y 10.84): O-128-2, el cierre después de revisar el
+listado (1.15), y O-128-4, un pellizco que pierde el foco. Las dos están en la sección 5.
+
+**El piloto del 1-nov (10.85) cambió el orden de 1.7 y 1.8:** el plano de llegada se carga antes de publicar, porque en la 0.4.0 y la 0.4.1 una operación publicada no acepta otro BAPLIE. Lo resuelve T-130.
+
 **Lo que ya traía la 0.4.0.** Hasta el 28-oct se llamó 3.2.0: desde 10.74, la numeración va
 en 0.x hasta la 1.0.0 del examen final. Lo ya publicado conserva su número en Git y en los
 paquetes, y en la numeración nueva se lee así: la 3.0 es la 0.3.0, la 3.1 es la 0.3.1 y la
@@ -39,13 +44,38 @@ serio, se vuelve a la 0.4.0** (4.5), que sigue en Git como `v0.4.0` y con su MSI
 `build\t93`. Las reglas de T-127 no le estorban: la 0.4.0 trabaja igual con ellas.
 
 **Datos.** En el ensayo, los sintéticos de T-100 (`T100_CARGA.edi`, `T100_LISTADO.xlsx`
-y `T100_LLEGADA.edi`: BUQUE MANUAL, viaje M100, escala GTSTC; se generan con
-`dart tool/t100_sintetico.dart <salida en %TEMP%>` y `python -I tool/t100_listado.py
-<esa salida>`). Para 1.17 y 2.15, una copia del listado con la fila del OR 1 borrada en
-Excel y guardada como `T100_LISTADO_v2.xlsx` (sección 8 de `docs/T127-RESULTADOS.md`). En el
-piloto, los archivos reales de la escala, que **no salen de la laptop ni del teléfono y no
-entran al repositorio**. Ninguna captura muestra «Nube y cuenta», un correo ni un nombre
-de cuenta.
+y `T100_LLEGADA.edi`: BUQUE MANUAL, viaje M100, escala GTSTC). Se generan desde la carpeta
+del repositorio con `dart tool/t100_sintetico.dart "$env:TEMP\t100-ensayo"` y
+`python -I tool/t100_listado.py "$env:TEMP\t100-ensayo"`. En el piloto, los archivos reales de
+la escala, que **no salen de la laptop ni del teléfono y no entran al repositorio**. Ninguna
+captura muestra «Nube y cuenta», un correo ni un nombre de cuenta.
+
+**Dos copias para el ensayo** (10.83 y 10.84), en la misma carpeta que los sintéticos:
+- `T100_LISTADO_v2.xlsx`: el listado con la fila del OR 1 borrada en Excel (sección 8 de
+  `docs/T127-RESULTADOS.md`), para 1.17 y 2.15.
+- `T100_CARGA_RESERVA.edi`: el plan de carga con una celda reservada. `T100_CARGA.edi` no
+  trae ninguna, porque sus diez vacíos llevan número, y «Asignar vacío» (2.6) solo asigna a
+  una reserva. En la copia, el OR 16, que es un vacío, pierde su número, y su celda, 010-01-04,
+  queda reservada. Es la misma copia que usó Codex en su aceptación, y el bloque comprueba
+  las dos huellas. En el ensayo y en 0.7, la oficina abre esta copia en vez de `T100_CARGA.edi`:
+
+  ```powershell
+  & {
+  $carpeta = "$env:TEMP\t100-ensayo"
+  $origen = Join-Path $carpeta 'T100_CARGA.edi'
+  $copia = Join-Path $carpeta 'T100_CARGA_RESERVA.edi'
+  if ((Get-FileHash -LiteralPath $origen -Algorithm SHA256).Hash -ne '4ACF7539A1F26F25A73D56F368C979B2DA29DC9A435EF5414C93DACA2AB99E68') { throw 'Parar: T100_CARGA.edi no es el de la aceptacion; avisar' }
+  $latin1 = [Text.Encoding]::GetEncoding(28591)
+  $texto = [IO.File]::ReadAllText($origen, $latin1)
+  $viejo = 'EQD+CN+MNLU0000827+45R1++2+4'
+  if ([regex]::Matches($texto, [regex]::Escape($viejo)).Count -ne 1) { throw 'Parar: no esta una sola vez el EQD del OR 16' }
+  [IO.File]::WriteAllText($copia, $texto.Replace($viejo, 'EQD+CN++45R1++2+4'), $latin1)
+  if ((Get-FileHash -LiteralPath $copia -Algorithm SHA256).Hash -ne '95D925927D4344E97D00897C01278E6EDC3DBD32A88661C199C782DFBB3097FE') { throw 'Parar: la copia no salio igual a la de la aceptacion' }
+  "Listo: $copia, con la reserva del OR 16"
+  }
+  ```
+
+  La línea de `$carpeta` dice dónde están los sintéticos: si los generaste en otra carpeta, cámbiala.
 
 ---
 
@@ -59,7 +89,7 @@ de cuenta.
 | 0.4 | En el Honor: letra del sistema en 1.0 (o la que use el planificador, pero anotada), brillo alto, Wi-Fi o datos encendidos, la app actualizada | El inicio con «Abre un plano de estiba» y «Seleccionar archivo»; la travesía no se dibuja en el teléfono (no sobra sitio): es lo esperado. Con un plano abierto, «Estad.» muestra «contenedores a bordo» y «Carga por bahía, de proa a popa» (desde la 0.4.0), y en Ajustes → Aplicaciones → BayStream la versión es la 0.4.1 | Si la versión no es la 0.4.1, no se actualizó: Play → prueba interna → actualizar |
 | 0.5 | En la laptop: Windows con el MSIX 0.4.1.0 abierto una vez (tema «Seguir al sistema» o «Oscuro» en Parámetros; la oficina trabaja de noche) | El inicio con la marca, «Abre un plano de estiba» y, si sobra alto debajo, el buque navegando al pie | Si el instalador dice «Publisher: Unknown» o `0x800B010A`, el MSIX no se firmó con `CN=BayStream`: repetir 4.2 con la huella |
 | 0.6 | Tener a mano en la laptop el plan de carga, el listado de la agencia (`.xlsx`) y el plano de llegada de la escala; en el Honor no hace falta ningún archivo: se une a la operación publicada | | |
-| 0.7 | Después de 0.1, la prueba de punta a punta de la sección 8 de `docs/T127-RESULTADOS.md`: la oficina en la laptop y el muelle en el Honor, con los sintéticos de T-100 y `T100_LISTADO_v2.xlsx`. Es una operación de prueba, el viaje M100, que se cierra al terminar | Los 14 pasos dan lo que dice su tabla: el listado llega al muelle en la revisión 1 y en la 2, sin red el muelle espera, y los movimientos no cambian | Si un paso falla, anotar cuál y con qué texto, y en el piloto no usar 1.17: el listado se importa antes de publicar (1.5), como en la 0.4.0 |
+| 0.7 | Después de 0.1, la prueba de punta a punta de la sección 8 de `docs/T127-RESULTADOS.md`: la oficina en la laptop y el muelle en el Honor, con los sintéticos de T-100 y las dos copias de «Datos»: en el paso 1, la oficina abre `T100_CARGA_RESERVA.edi`, porque el paso 6 necesita una reserva (el OR 16 va a 010-01-04). Es una operación de prueba, el viaje M100, que se cierra al terminar | Los 14 pasos dan lo que dice su tabla: el listado llega al muelle en la revisión 1 y en la 2, sin red el muelle espera, y los movimientos no cambian | Si en el paso 13 el cierre dice «No se encontró la operación…», es O-128-2: repetirlo como en 1.15. Si falla otro paso, anotar cuál y con qué texto, y en el piloto no usar 1.17: el listado se importa antes de publicar (1.5), como en la 0.4.0 |
 
 ---
 
@@ -75,17 +105,17 @@ franja de la bahía (`DESIGN.md` 14).
 | 1.2 | «Confirmar» en la banda | Si el equipo ya guarda perfiles de otros buques, primero «Perfil del buque nuevo»: elegir «Proponer desde el archivo». Si ya hay uno con el mismo nombre, «Confirma la identidad del buque»; si la carga excede el perfil guardado, «Revisar ampliación». Después se abre «Parámetros del buque»: filas y niveles propuestos, la escala en «Puerto de esta escala» (la propuesta y, con un plano de llegada, los puertos de descarga con su cuenta, «GTSTC (7)»), el límite de apilamiento. **«No lo tengo» no viene marcado**: hay que escribir el límite del manual de estabilidad o marcarlo a mano | Si la escala propuesta no es la de la operación, elegir la correcta en «Puerto de esta escala» antes de confirmar |
 | 1.3 | «Confirmar y ver el plano» | Vuelve al **Plano** (no a la Lista), la cabecera dice «Publicado» y, a su lado, el selector de modo con «Contenido», «Orden» y «Carga» (el plan de carga no ofrece «Descarga»). Si no caben, van en el menú «Modo del plano: …» | Si vuelve a «Parámetros del buque», algo no cuadra (un mensaje en rojo dice qué): corregir y confirmar otra vez |
 | 1.4 | «Lista» → «Listado de la agencia» → «Elegir listado (.xlsx)» → el listado | La página muestra el archivo, «N filas en M agencias · X llenos · Y vacíos», las equivalencias propuestas («Tipo 40ST → 42G1»…) y el cruce «X de X llenos cruzan con el plan». La fila «TOTAL» sale bajo «1 fila sin entender:»: es normal. Las filas bajo «AGREGADOS» se cuentan aparte, como la agencia «AGREGADOS» (H3) | Si a una equivalencia le falta el código («→ ?»), elegirla con el lápiz («Corregir <código>»); el botón lo pide con «Falta elegir N equivalencias antes de importar…». Si «N contenedores del plan no están en el listado» es alto, revisar el listado con la agencia antes de importar |
-| 1.5 | «Confirmar e importar», en el pie fijo de la página. No hace falta esperar a que se apague el aviso «Archivo "<nombre>" cargado correctamente»: flota por encima del pie. **Lo normal es antes de publicar (1.7)**; después, ver 1.17 | «Listado guardado en la operación de <escala>: N filas.» y el aviso «Listado importado.» En el Plano, en «Orden» y en «Carga», cada celda de carga lleva su OR | Si el botón está apagado, falta una equivalencia: ver 1.4. Si dice «Fila N: …», corregir el Excel y volver a importar. Con la operación ya publicada, el listado también entra: ver 1.17 |
+| 1.5 | «Confirmar e importar», en el pie fijo de la página. No hace falta esperar a que se apague el aviso «Archivo "<nombre>" cargado correctamente»: flota por encima del pie. **Lo normal es antes de publicar (1.8)**; después, ver 1.17 | «Listado guardado en la operación de <escala>: N filas.» y el aviso «Listado importado.» En el Plano, en «Orden» y en «Carga», cada celda de carga lleva su OR | Si el botón está apagado, falta una equivalencia: ver 1.4. Si dice «Fila N: …», corregir el Excel y volver a importar. Con la operación ya publicada, el listado también entra: ver 1.17 |
 | 1.6 | Icono de la nube → **«Nube y cuenta»** → iniciar sesión con la cuenta de oficina | Nombre, rol «Oficina» y «Cuenta autorizada». «Operación de la escala abierta» con buque, viaje y puerto, estado «Solo en este dispositivo» | «Sesión vencida: …» o «Tu cuenta no está autorizada…»: ver 0.3. Sin red: «Sin conexión», esperar la red |
-| 1.7 | «Publicar operación» | El estado pasa a «Publicada»; la nube de la cabecera, a «Nube y cuenta · Al día» (su descripción) y la cabecera de «En vivo», a «Al día». Desde aquí todo lo registrado antes se queda local y lo nuevo sube | Si dice «La nube no aceptó la publicación: revisa que la cuenta sea de oficina y esté activa.», las reglas o la cuenta: consola. **No publicar reglas con `firebase deploy` a secas** (guía del cierre) |
-| 1.8 | «Más» → «Cargar archivo BAPLIE» → el **plano de llegada** | Con la misma escala confirmada, **abre publicado sin previo** (regla 7.2 de `DESIGN.md`): «Publicado», y el selector de modo ofrece «Descarga» y «Carga». La Lista resume «N se descargan · M se cargan · K de paso» | Si abre en previo con «El archivo sale de X rumbo a Y: confirma la escala.», la escala propuesta no es la confirmada: «Confirmar» y elegir la escala de la operación |
+| 1.7 | «Más» → «Cargar archivo BAPLIE» → el **plano de llegada**, antes de publicar | Con la misma escala confirmada, **abre publicado sin previo** (regla 7.2 de `DESIGN.md`): «Publicado», y el selector de modo ofrece «Descarga» y «Carga». La Lista resume «N se descargan · M se cargan · K de paso» | Si abre en previo con «El archivo sale de X rumbo a Y: confirma la escala.», la escala propuesta no es la confirmada: «Confirmar» y elegir la escala de la operación. **Va antes de publicar (1.8):** en la 0.4.0 y la 0.4.1, una operación publicada no acepta otro BAPLIE («La operación de esta escala ya está publicada y sus fuentes no cambian…»). Pasó en el piloto del 1-nov (10.85); lo resuelve T-130 |
+| 1.8 | «Publicar operación», con los dos planos y el listado ya cargados | El estado pasa a «Publicada»; la nube de la cabecera, a «Nube y cuenta · Al día» (su descripción) y la cabecera de «En vivo», a «Al día». Desde aquí todo lo registrado antes se queda local y lo nuevo sube | Si dice «La nube no aceptó la publicación: revisa que la cuenta sea de oficina y esté activa.», las reglas o la cuenta: consola. **No publicar reglas con `firebase deploy` a secas** (guía del cierre) |
 | 1.9 | «Avance» (en el riel) | Descarga, carga de llenos y vacíos, cancelados, conflictos y el último movimiento, por bahía y total; las impares van con su par (la 21 y la 23, en la 22); se actualiza solo cuando el muelle registra | Si no cambia cuando el muelle registra (paso 2.3), mirar el estado de la nube: «Enviando N» o «Sin conexión» en «En vivo» o en la nube de la cabecera, en alguno de los dos |
 | 1.10 | «Plano», con la ventana a 1200 de ancho o más | El panel «En vivo» a la derecha, con el estado de la nube arriba («Al día») y una fila por movimiento: «Bajado · Muelle», debajo el contenedor y la celda, y «ahora». Lo que acaba de llegar sale en **naranja** 1.5 s y la bahía destella en la silueta | Con menos ancho no hay panel fijo: el botón del panel lateral de la cabecera («Mostrar el panel lateral») o el borde derecho lo abren flotante. Sin panel a la vista, el anuncio lo da el lector de pantalla. No es un fallo |
-| 1.11 | Cuando el muelle pida un cambio (2.10): en el Plano, «Acciones» (⋮) → «Bandeja de cambios (1)» | La solicitud «Pendiente» con quién la pide («Solicita <nombre> · <fecha>»), «OR N · contenedor: celda → celda» y «Motivo: …». «Aprobar» y «Rechazar» piden «Motivo obligatorio» | «Se necesita una cuenta autorizada y una operación publicada.»: la sesión o la publicación (1.6, 1.7) |
+| 1.11 | Cuando el muelle pida un cambio (2.10): en el Plano, «Acciones» (⋮) → «Bandeja de cambios (1)» | La solicitud «Pendiente» con quién la pide («Solicita <nombre> · <fecha>»), «OR N · contenedor: celda → celda» y «Motivo: …». «Aprobar» y «Rechazar» piden «Motivo obligatorio» | «Se necesita una cuenta autorizada y una operación publicada.»: la sesión o la publicación (1.6, 1.8) |
 | 1.12 | «Aprobar» (o «Rechazar») con motivo | La tarjeta pasa a «Aprobada» (el contenedor cambia de celda en el plan) o «Rechazada»; el muelle lo ve sin recargar | Si queda «En conflicto», la celda ya está ocupada: rechazar y pedir otro cambio |
 | 1.13 | Al final de la escala: «Lista» → «Generar BAPLIE de salida» | «N contenedores a bordo en la salida.» («1 contenedor…» si es uno) y «Pendientes: X de carga y Y de descarga.», los cancelados vigentes y «Comparar con la llegada». Si se cargaron llenos sin fila en el listado (2.8), «N llenos van con los datos del plan de carga porque no tienen fila en el listado: …» | Si dice «La escala no tiene una operación guardada…», volver a abrir el plan de carga y confirmar la escala |
 | 1.14 | «Guardar BAPLIE de salida» | Windows: el diálogo «Guardar BAPLIE de salida» con `BayStream_<buque>_<viaje>_salida.edi`; al guardar, «Exportación BAPLIE completada». En la Web, el navegador lo descarga | Guardar en una carpeta de la laptop; el archivo no se sube a ningún lado |
-| 1.15 | «Nube y cuenta» → «Cerrar operación»; en el diálogo «Cerrar la operación», «Cerrar operación» | «Publicada y cerrada»; ya no admite movimientos | Solo al terminar de verdad: una operación cerrada no se reabre |
+| 1.15 | «Nube y cuenta» → «Cerrar operación»; en el diálogo «Cerrar la operación», «Cerrar operación» | «Publicada y cerrada»; ya no admite movimientos | Solo al terminar de verdad: una operación cerrada no se reabre. Si dice «No se encontró la operación para cerrarla en este dispositivo o en la nube. Vuelve a abrir «Nube y cuenta» e inténtalo de nuevo.», la nube ya la cerró: cerrar «Nube y cuenta», volver a abrirla y repetir «Cerrar operación» hasta «Operación cerrada.» No se pierde nada (O-128-2; se vio después de revisar el listado, 1.17) |
 | 1.16 | Cuando el muelle asigne un vacío (2.6 y 2.7): «Estadísticas» (en el riel) | «N contenedores a bordo» y, debajo, «Incluye: 1 vacío asignado a una celda reservada, que el archivo no trae» (con más, «Incluye: N vacíos asignados a celdas reservadas, …»); la cifra, «vacíos» y la bahía suben con cada vacío asignado. «Carga por bahía, de proa a popa» cuenta cada impar con su par. En «Ver como tabla», la fila «Vacíos asignados». Es lo que cuenta la Lista (T-125) | Si un vacío asignado no sube la cifra o la ficha no sale, anotarlo con la hora. Que las cifras se muevan durante la operación es lo esperado (10.68) |
 | 1.17 | Con la operación ya publicada y abierta, si la agencia manda el listado tarde o corregido: «Lista» → «Listado de la agencia» → «Elegir listado (.xlsx)» (o «Importar otro listado (.xlsx)») → el listado nuevo. Las equivalencias y el cruce, como en 1.4 | Si ya hay movimientos, antes de confirmar sale la tarjeta «Lo ya operado con el listado nuevo»: «N contenedores ya cargados no están en el listado nuevo» y «M vacíos asignados cambian de grupo», con la lista de cada uno. Los movimientos no se pierden ni cambian. «Confirmar e importar» → «Listado guardado en la operación publicada de <escala>: N filas, revisión R. El muelle lo recibe solo.» (T-127) | «La nube no aceptó el listado: …» no cambia nada local: revisar la cuenta (0.3) y que las reglas sean las de T-127 (4.0), y volver a intentar. «Sin conexión con la nube: …»: esperar la red. Con la operación cerrada (1.15), el listado ya no cambia |
 
@@ -96,15 +126,15 @@ franja de la bahía (`DESIGN.md` 14).
 | # | Qué hacer | Qué hay que ver | Si falla |
 |---|---|---|---|
 | 2.1 | Icono de la nube → «Nube y cuenta» → iniciar sesión con la cuenta de muelle | Rol «Muelle», «Cuenta autorizada». En el inicio, «Operaciones abiertas en la nube (1)» | Ver 0.3. Sin red: «Sin conexión con la nube: unirse requiere red. Conéctate e inténtalo de nuevo.» |
-| 2.2 | «Operaciones abiertas en la nube» → «Unirse» → «Abrir plano de llegada» | El plano **sin elegir ningún archivo**: la banda azul de la marca arriba con el buque, «Viaje <n> · <escala>», el chip «Al día» y los segmentos «Descarga / Carga»; abajo la barra Plano · Lista · Avance · Estad. · Más | Si no aparece la operación, la oficina no publicó (1.7). Si el plano abre en previo, la operación trae un perfil distinto: anotar y usar «Confirmar» |
+| 2.2 | «Operaciones abiertas en la nube» → «Unirse» → «Abrir plano de llegada» | El plano **sin elegir ningún archivo**: la banda azul de la marca arriba con el buque, «Viaje <n> · <escala>», el chip «Al día» y los segmentos «Descarga / Carga»; abajo la barra Plano · Lista · Avance · Estad. · Más | Si no aparece la operación, la oficina no publicó (1.8). Si el plano abre en previo, la operación trae un perfil distinto: anotar y usar «Confirmar» |
 | 2.3 | «Descarga» → tocar una celda que dice **«Baja»** | La celda sale de su sitio en **naranja** («Bajando») y abajo, sobre las cifras de la franja, el aviso «Descargado · <contenedor> · <celda>» con «Deshacer» durante 6 s (con la letra grande, «Descargado · <contenedor>»); después la celda queda «Hecho» con la palomita. En la laptop, «Avance» y «En vivo» lo muestran en segundos | Si no registra: «No se registró: …» dice la causa (operación cerrada, sesión); con la letra grande sale «No se registró.» y «Ver» la muestra. Si el aviso pisa una celda o un control, anotarlo como fallo (que tape las cifras es lo esperado, 10.30). Si la celda no es «Baja» sino «Paso», es carga de paso: ver 2.5 |
 | 2.4 | Tocar «Deshacer» en el aviso | La celda vuelve a «Baja»; el movimiento queda anulado «Marcado por error» (no se borra). Pasado el aviso: tocar la celda → «Deshacer la descarga» en el detalle | |
 | 2.5 | Tocar una celda **«Paso»** | La pregunta «Re‑estiba»: «<contenedor> no se descarga en <escala>: va a <puerto>…» con «Registrar re‑estiba». Al confirmar, la celda queda «Re‑est.» y el aviso «Re‑estiba registrada · …» | Si fue un toque por error: «Cancelar» |
-| 2.6 | «Carga» → «Acciones» (⋮) → «Asignar vacío» | «Vacíos del listado»: «OR N · <contenedor>» con tipo, destino, línea y tara. Al tocar uno, el formulario «Asignar vacío» propone la celda (primero las de su grupo en la bahía) y pide tara real, hora y marchamo opcionales | Sin listado, «Asignar vacío» está apagado y la línea del resumen dice «Sin listado de agencia: los llenos se cargan por su número; los vacíos esperan el listado»: falta el listado en la oficina, 1.5 antes de publicar o 1.17 después, y llega solo (2.15) |
+| 2.6 | «Carga» → «Acciones» (⋮) → «Asignar vacío» | «Vacíos del listado»: «OR N · <contenedor>» con tipo, destino, línea y tara. Al tocar uno, el formulario «Asignar vacío» propone la celda (primero las de su grupo en la bahía) y pide tara real, hora y marchamo opcionales. En el ensayo con `T100_CARGA_RESERVA.edi`, el vacío que se asigna es el OR 16, a la reserva 010-01-04: los otros vacíos traen número en el plan | Sin listado, «Asignar vacío» está apagado y la línea del resumen dice «Sin listado de agencia: los llenos se cargan por su número; los vacíos esperan el listado»: falta el listado en la oficina, 1.5 antes de publicar o 1.17 después, y llega solo (2.15) |
 | 2.7 | «Confirmar carga» | «Carga registrada · OR N» con «Deshacer»; la celda sale en naranja y queda cargada con su OR | Si la celda sigue ocupada por el de llegada: «Marcar su descarga y cargar» → «Descarga y carga registradas · OR N» |
 | 2.8 | Cargar un lleno: «OR / últimos dígitos» (en la tira del pie) → escribir el OR o los últimos dígitos → «Confirmar carga» | La búsqueda «Confirmar carga por OR o contenedor»; después, igual que 2.7. Un lleno del plan sin fila en el listado sale como «<contenedor> · sin OR en el listado» y se carga por su número («Carga registrada · <contenedor>», H4). El detalle de una celda cargada ofrece «Deshacer carga» con motivo | «No hay coincidencias disponibles.»: el OR no está en el listado o ya se cargó. Un vacío sin fila no se ofrece: espera el listado |
 | 2.9 | «Deshacer» en el aviso de una carga | El OR vuelve a estar pendiente y la celda, vacía con su contorno | |
-| 2.10 | «Acciones» (⋮) → «Solicitudes de cambio (0)» → «Pedir cambio» | El formulario: «Objeto 1: OR, contenedor o reserva», «Intercambiar dos contenedores» (viene activado) o «Destino BBB-RR-TT», y «Motivo obligatorio» → «Enviar solicitud». La solicitud queda «Pendiente» y la celda destino lleva un borde punteado con el icono de pedir cambio (el lector dice «Solicitud pendiente en <celda>») | «Se necesita una cuenta autorizada y una operación publicada.»: la sesión del teléfono o la publicación (1.7). El objeto sigue en su celda hasta que la oficina apruebe |
+| 2.10 | «Acciones» (⋮) → «Solicitudes de cambio (0)» → «Pedir cambio» | El formulario: «Objeto 1: OR, contenedor o reserva», «Intercambiar dos contenedores» (viene activado) o «Destino BBB-RR-TT», y «Motivo obligatorio» → «Enviar solicitud». La solicitud queda «Pendiente» y la celda destino lleva un borde punteado con el icono de pedir cambio (el lector dice «Solicitud pendiente en <celda>») | «Se necesita una cuenta autorizada y una operación publicada.»: la sesión del teléfono o la publicación (1.8). El objeto sigue en su celda hasta que la oficina apruebe |
 | 2.11 | Cuando la oficina decida (1.12) | La solicitud pasa a «Aprobada» o «Rechazada» sin recargar; si se aprobó, el OR cambia de celda en «Carga» | |
 | 2.12 | Atrás (el botón del sistema) en el plano | **Un toque**: arriba, sobre el plano, la advertencia «Toca Atrás otra vez para volver al inicio.» durante 2 s, aunque abajo siga el aviso de un movimiento; el plano sigue. **Dos toques seguidos**, dentro de esos 2 s: el inicio, con el viaje en los recientes. Tocar el reciente lo reabre publicado, con la operación | Un toque nunca saca del plano: si sale, anotarlo como fallo. Con una hoja abierta («Más», el detalle), Atrás solo la cierra, y el siguiente Atrás vuelve a advertir |
 | 2.13 | Sin red: modo avión **con el Wi-Fi apagado** (10.39) → registrar una descarga | El chip de la banda pasa a «Sin conexión» y la app sigue registrando. Al volver la red, «Enviando» y después «Al día»; la oficina lo recibe. Cuántos esperan lo dice «Nube y cuenta» | Si al volver la red el chip dice «Revisar», mirar «Nube y cuenta»: con «Sesión vencida: …», iniciar sesión otra vez; la cola se envía sola |
@@ -377,7 +407,7 @@ cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`
   publicar, pedir y decidir cambios, sincronizar y, desde la 0.4.1, agregar o reemplazar el
   listado. Está probado en memoria (`t80_requests_widget_test`, `t81_office_widget_test`,
   `t79_sync_engine_test` y las de T-127), con las reglas de T-127 en el emulador, en la v3.0
-  en campo y en el piloto del ECO BORA con la 3.1.0 (10.47). El ensayo (1.6, 1.7, 1.11,
+  en campo y en el piloto del ECO BORA con la 3.1.0 (10.47). El ensayo (1.6, 1.8, 1.11,
   1.12, 1.17, 2.1, 2.2, 2.10, 2.11, 2.13 y 2.15) y la prueba de 0.7 lo comprueban contra
   Firebase de verdad.
 - **Un cliente 0.4.0 frente a un listado revisado** (sección 4 de `docs/T127-RESULTADOS.md`):
@@ -390,6 +420,12 @@ cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`
   (10.80). **O-040-1** sigue abierto: en la Web, deslizar dos dedos de lado sobre la silueta
   puede regresar el navegador a la página anterior. Sobre la silueta bastan la rueda o los dos
   dedos hacia arriba y abajo; en la oficina, la app de Windows no tiene ese gesto.
+- **El cierre después de revisar el listado (O-128-2, P2):** el primer «Cerrar operación» puede
+  decir «No se encontró la operación…» aunque la nube ya la cerró. Se repite desde «Nube y
+  cuenta» (1.15), y no se pierde nada. T-129 lo diagnostica después de la Expo.
+- **Un pellizco que pierde el foco sin terminar (O-128-4)** no se pudo provocar en la
+  aceptación. Si después de un pellizco la columna ya no se desplaza con dos dedos, otro
+  pellizco corto, o cerrar y abrir el plano, la sueltan. Va a T-120.
 - **Las cifras de Estadísticas se mueven durante la operación** (10.68): cuentan los vacíos
   asignados, como la Lista, y lo dice su ficha (1.16). No es un fallo. Las alertas de estiba
   y la comparación de viajes no los suman.

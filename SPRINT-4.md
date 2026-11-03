@@ -2316,3 +2316,191 @@ La siguiente decisión es la **10.83**.
 3. **O-128-4 va a T-120:** que el plano suelte el pellizco cuando pierda el foco, con su prueba.
 
 La siguiente decisión es la **10.84**.
+
+### 10.84 · Carlos acepta las reservas: la 0.4.1 se publica después de la Expo, y T-129 diagnostica el cierre (29-oct, 23:55)
+
+**Carlos aprueba las tres propuestas de 10.83 (23:49):**
+1. **La 0.4.1 se publica después de la Expo, con las dos reservas a la vista.** El paso 1.15 de la lista dice qué hacer si el cierre falla (O-128-2): la nube ya la cerró, y basta repetirlo desde «Nube y cuenta». La sección 5 anota O-128-2 y O-128-4, con lo que hay que hacer mientras tanto.
+2. **T-129, después de la Expo:** Timonel diagnostica O-128-2 con una prueba roja, en Fable 5.1. Si el arreglo es chico, entra antes de publicar, con una revisión corta de Codex; si no, va a la 0.4.2.
+3. **O-128-4 va a T-120.**
+
+**La lista del piloto queda al día,** en el mismo commit que esta decisión:
+- **«Datos»** trae dos copias para el ensayo:
+  - `T100_LISTADO_v2.xlsx`, el listado sin la fila del OR 1;
+  - `T100_CARGA_RESERVA.edi`, el plan de carga con la reserva del OR 16. Va con un bloque que la deriva de `T100_CARGA.edi` y comprueba las dos huellas. Yov comprobó que el cambio da, byte a byte, la copia de la aceptación de Codex.
+  - Los sintéticos se generan en `%TEMP%\t100-ensayo`.
+- **0.7:** la oficina abre `T100_CARGA_RESERVA.edi`, porque el paso 6 necesita una reserva. Si en el paso 13 el cierre falla, es O-128-2.
+- **2.6:** en el ensayo, el vacío que se asigna es el OR 16, a la reserva 010-01-04.
+- **1.15:** qué hacer si el cierre dice «No se encontró la operación…».
+- **El encabezado y la sección 5:** la aceptación con sus dos reservas.
+
+**Lo que sigue:**
+1. Mañana, primero la Expo: el repaso técnico y el ensayo, sin agentes con Flutter.
+2. Después de la Expo:
+   - T-129;
+   - con lo que salga, la publicación de la 0.4.1 con la sección 4 de la lista (primero las reglas, en 4.0);
+   - y la prueba de 0.7, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.85**.
+
+### 10.85 · La tercera prueba piloto, con un buque real: la descarga sale completa, la carga corre con un rodeo y el papel cuadra con la app (1 y 2-nov)
+
+**El piloto (domingo 1-nov):** el MAGELLAN STAR, viaje 26043S, escala GTSTC, con la 0.4.0. La oficina, en la Web del iPhone de Carlos (tema oscuro); el muelle, en el Honor. Los archivos reales (el reporte de MACS3, el plan de carga y el listado de la agencia) no entran al repositorio: aquí van solo números de orden, posiciones, códigos y conteos. El registro hora por hora está en el proyecto de Yov (`BayStream_Piloto3_MAGELLAN_STAR_1nov.md`).
+- **La descarga salió completa en la app.** H1 de la 3.1.1 (GTSTC como escala en un plano de llegada) quedó confirmado en una operación real.
+- **La carga tropezó tres veces y después corrió:**
+  - el plan abierto era el de otro viaje, el 26039S del 5-oct. El cruce con el listado lo avisó antes de cargar nada: 0 de 104 llenos;
+  - la operación ya publicada no acepta un plan nuevo (`OperationSources.save`); la 0.4.1 abre esa puerta solo para el listado (T-127);
+  - dos equivalencias guardadas en el iPhone desviaban el listado, «Puerto PAMIT → JMKCT» y «Línea CRL → COS», elegidas al importar en el plan equivocado.
+- **El rodeo:** otra operación, con una copia del plan de carga que dice 26043X en `TDT` (`RFF+VON` sigue en 26043S), el listado importado antes de publicar y las dos equivalencias corregidas. Desde ahí, el Honor cargó con los números de orden.
+- **Al 2-nov, las dos terminaron y siguen abiertas:** la 26043S (descarga) y la 26043X (carga). La 26039S no se usó.
+
+**El cotejo del papel con la app (2-nov).** Carlos mandó seis hojas del plano impreso, anotadas en el muelle (bahías 01/02, 09/10, 11, 14, 18 y 22), y ocho capturas del Honor (bahías 01, 02, 03, 10, 14, 18, 26 y 30). Yov las cruzó con el plan de carga y el listado, con un script que solo lee. Las 145 cargas del plan salen en al menos una foto: 70 en las dos, 32 solo en el papel y 43 solo en la app.
+- **Las seis hojas cuentan lo mismo que el plan:** 4, 37, 5, 12, 21 y 23 movimientos.
+- **Donde están los dos no hay ninguna contradicción:**
+  - 59 celdas iguales, con el OR a la vista;
+  - el 17 y el 123 de la bahía 14 cambiaron de celda: el papel lo marca con una flecha, y la app los tiene donde quedaron;
+  - 8 celdas de la bahía 10 dicen «Revisar» y no dejan ver el OR (hallazgo 7). Según el papel, son un intercambio de 4 por 4 entre líneas: el 142, el 148, el 138 y el 130 (CRLY) en reservas de ONE, y el 67, el 62, el 63 y el 69 (ONE) en reservas de CRLY. Es lo que el muelle anotó como «30 × 40' HC vacíos (Crowley + ONE)»: el mismo tipo y el mismo destino, PAMIT. Todas las reservas quedaron llenas;
+  - en una celda se equivoca el papel y no la app. El papel tiene el OR 136 dos veces, en la 010-04-84 y en la 010-02-08, y el 135 en ninguna; la app tiene el 136 en la 010-04-84 y el 135 en la 010-02-08. Un OR no puede estar en dos celdas: un BAPLIE digitado desde el papel habría repetido un contenedor y dejado fuera otro.
+- **En la 010-06-06, el papel tiene el 144 escrito sobre otro número:** se corrigió hasta coincidir con la app, que a las 19:25 del 1-nov ya lo tenía ahí.
+- **Lo que sale en una sola foto también cuadra con el plan:** en el papel, las bahías 09, 11 y 22; en la app, la 03, la 26 y la 30.
+
+**Los hallazgos:**
+1. **P1 · El plan de carga no entra en una operación ya publicada.** En el buque, la descarga y la carga van a la vez, y el plan de carga llega o se corrige después de publicar. Va a **T-130**: que una operación publicada acepte el plan que le falta, con el mecanismo de T-127. Reemplazar un plan que ya tiene movimientos se decide en el diseño. Plazo de Carlos: antes del 7-nov.
+2. **P2 · La lista del piloto cargaba el plano de llegada (1.8) después de publicar (1.7).** Se corrige en este mismo commit: los dos pasos cambian de lugar.
+3. **P2 · Una equivalencia elegida en un plan equivocado contamina las importaciones siguientes,** porque lo guardado manda aunque los contenedores la contradigan. Sin la corrección, el BAPLIE de salida habría mandado 40 vacíos a JMKCT con la línea COS. Propuesta: no guardar lo elegido sin respaldo, o atarlo al buque y al viaje, y pedir confirmación cuando el plan dice otra cosa.
+4. **P3 · Avisar cuando el viaje del listado no es el del plan.**
+5. **Corregido · Un vacío en la reserva de otro grupo ya estaba previsto:** pide un motivo, lo deja cargar y lo marca «Revisar» (`ConflictKind.otherGroup`).
+6. **P2 (era P3) · La oficina no tiene cómo dar por buena una desviación justificada.** Solo tiene «Deshacer carga» y «Corregir». El cotejo lo muestra: los 8 «Revisar» de la bahía 10 son correctos y se quedan marcados. Propuesta: «Aceptar con motivo», también para varios a la vez, o declarar antes de operar que los vacíos de dos líneas son intercambiables para el mismo tipo y destino.
+7. **P2 · La marca tapa el número de orden.** Los 8 «Revisar» son justo las celdas que había que comparar con el papel. Propuesta de Carlos: el OR sigue siendo el texto grande y la marca va pequeña, con su icono, como segunda línea.
+8. **P3 · En un teléfono, la oficina y el muelle se ven iguales.** Va a la 10.86.
+
+**Para la tesis, lo que atrapó el cruce:** el plan de otro viaje (0 de 104); las dos equivalencias (3 llenos con datos distintos y 40 vacíos sin grupo); tres peligrosas con el número ONU distinto en el listado y en el plan (OR 79, 122 y 126: UN 2903 contra 2902); los cancelados del listado (OR 49 y 50, reemplazados por el 149 y el 150); y el OR repetido del papel.
+
+**El cierre, como se lo explicó Yov a Carlos el 2-nov:**
+- **El muelle:** «0 pendientes» en su modo y el punto verde «Al día» en cada teléfono. Si dice «Enviando», «Sin conexión» o «Revisar», «Nube y cuenta» → «Reintentar», con red. Avisa a la oficina que terminó. No cierra el plano ni borra nada, y guarda el impreso.
+- **La oficina, en este orden, porque cerrar no se deshace:**
+  1. confirma con el muelle que todos sus equipos están «Al día»;
+  2. en «Avance», 0 pendientes; toca cada conflicto y lee su motivo;
+  3. «Lista» → «Generar BAPLIE de salida»: lee el resumen, «Copiar cancelados» y «Guardar BAPLIE de salida»;
+  4. «Comparar con otro BAPLIE…» con el archivo guardado. Con el plan de carga abierto, «Cargados» son los vacíos de las reservas, «Descargados» lo que el plan traía y no salió, en «Permanentes» aparecen los que cambiaron de celda, y «Reservas sin número» baja a 0 en el segundo;
+  5. en la 26043X, antes de enviarlo, `TDT` vuelve a 26043S;
+  6. manda a la línea el BAPLIE de salida y los cancelados;
+  7. «Nube y cuenta» → «Cerrar operación». Si dice «No se encontró la operación…», es O-128-2: repetir.
+- **Del resultado, la app exporta hoy dos cosas:** el BAPLIE de salida y la lista de cancelados. «Exportar PDF», «CSV» y «JSON» (en «Más») exportan el plan como llegó, sin los OR ni lo cargado.
+
+**Yov propone; decide Carlos:**
+1. Antes del 7-nov, solo T-130 y T-131 (10.86). El hallazgo 7, si alcanza el tiempo, en la misma versión; si no, después.
+2. Después del 7-nov, hacia la 1.0.0:
+   - el informe de cierre en PDF: el plano final por bahía con los OR, los movimientos por bahía, los cancelados, los conflictos con su motivo, las horas y la huella del BAPLIE de salida. Reemplaza las fotos del papel;
+   - el cierre guiado: una lista en la oficina antes de «Cerrar operación», y un «Terminé» desde el muelle;
+   - exportar los movimientos en CSV: OR, contenedor, celda, hora, quién y motivo;
+   - «Aceptar con motivo» (hallazgo 6), y los hallazgos 3 y 4;
+   - que las exportaciones del plan digan que son del plan («PDF del plan recibido»), para que nadie las confunda con el resultado.
+3. Hoy, Carlos genera el BAPLIE de salida de la 26043X sin cerrar todavía, y Yov lo cruza con el plan, el listado y el papel. La 010-02-08 se verifica con el número del contenedor en el registro de la terminal.
+
+La siguiente decisión es la **10.86**.
+
+### 10.86 · El rol, a la vista: el distintivo B, «Filo de metal», va en T-131 (1-nov, 23:41)
+
+**El hallazgo 8 de la 10.85:** en un teléfono, la oficina y el muelle se ven iguales. El aspecto lo decide el equipo (`bayStreamEsMuelle`), no el rol de la cuenta.
+- **Carlos (23:09):** los permisos no cambian; el rol va en la cabecera como un distintivo con diseño, no como texto plano.
+- **Yov publicó el lienzo «Distintivo de rol · BayStream»** (artefacto privado de Carlos: https://claude.ai/artifact/L9ajRePXVuWAuXcUPV1V9H), con dos variantes en el Honor, en la Web del iPhone y en la laptop: A, «Ficha», con la paleta actual, y B, «Filo de metal», con el cobre y el oro de la presentación del 7-nov, solo en el filo y en el ícono.
+- **Carlos eligió B (23:41).** Es el primer cambio visual del rediseño que viene después y entra ya, en la versión que se presenta el 7-nov. Es la única pieza de la app con los metales antes de esa fecha: la decisión del 27-oct, que deja el 3D y el brillo para después de entregar, sigue para todo lo demás.
+
+**La especificación:**
+
+| | Muelle | Oficina |
+|---|---|---|
+| Fondo, de arriba abajo | #0B3E93 → #082F70 | #16305C → #0E2244 |
+| Filo de 1.5 dp, a 135° | cobre: #F8D2B6 → #E0895A (55 %) → #9E5530 | oro: #FFF0C4 → #F2C46D (55 %) → #A87A2C |
+| Ícono | `muelle` (U+E017) en #F4B48E | `oficina` (U+E023, nuevo) en #F2C46D |
+| Rótulo | «Muelle» en #FFFFFF | «Oficina» en #F4F6FB |
+
+- Los colores no cambian con el tema y van a `BsPaleta`.
+- Es una píldora de `alturaChip` (40 en el muelle, 32 en la oficina) con zona táctil de 48 dp, el rótulo en IBM Plex Sans Condensed 600 y sin animación. La forma compacta es solo el ícono, en un círculo con el mismo relleno y el mismo filo.
+- **El metal va solo en el filo y en el ícono, nunca de relleno:** así no se confunde con el naranja de «recién movido» ni con el ámbar de «Revisar». Es la única excepción a la escala de un solo tono y a «sin degradados».
+- **El rol sale de `operatorProvider`:** con una cuenta autorizada, también la de la caché; sin cuenta o sin autorizar, no hay distintivo. Al tocarlo se abre «Nube y cuenta».
+- **Dónde va:** en la banda del muelle, en la segunda fila, a la izquierda de Descarga / Carga; y en el título del viaje, junto al nombre del buque, que cubre la barra superior del teléfono y la cabecera de la oficina. En la laptop no va a la derecha, como en el lienzo: así es una sola regla.
+- **Cómo cabe:** primero completo; si no, compacto; y solo después el nombre se encoge, como hoy.
+
+**El orden:**
+1. Nube dibuja el ícono `oficina` (U+E023): primero tres conceptos, Carlos elige y después el paquete v3, con los 35 glifos de antes sin cambios. Carlos lo guarda en `C:\Proyectos\baystream-iconos-paquete-v3.zip`.
+2. T-131 va a Timonel, en un chat nuevo con Claude Opus 5.5 en Extra, cuando estén el v3 y `lib/` libre. Puede correr mientras T-130 está en su fase de diseño, que solo escribe en `docs/`; si el diseño de T-130 se aprueba antes, su código espera a que T-131 se entregue.
+3. Propuesta: Codex acepta T-130 y T-131 juntas, en la candidata que se publica antes del 7-nov.
+
+Los dos prompts están en el proyecto de Yov (`BayStream_Distintivo_de_rol_T131.md`).
+
+La siguiente decisión es la **10.87**.
+
+### 10.87 · La 26043X, cerrada: el BAPLIE de salida cuadra en contenido, y el cotejo encuentra cinco defectos del archivo (2-nov, 18:31)
+
+**Carlos cerró la carga en la laptop, con la cuenta de oficina:**
+- «Avance» y el Plano: «Carga 145 de 145», «Llenos 99 de 99», «Vacíos 46 de 46», 8 conflictos y 0 cancelados. El último movimiento fue una carga, el 2-nov a las 03:11.
+- «Generar BAPLIE de salida»: «503 contenedores a bordo en la salida.», «Pendientes: 0 de carga y 0 de descarga.», «8 conflictos vigentes.» y «Cancelados vigentes (0)». Después, «Guardar BAPLIE de salida».
+- «Cerrar operación»: «Operación cerrada.» al primer intento. O-128-2 no salió; aquí el listado no se revisó después de publicar, lo que sirve a T-129.
+
+**El cotejo de Yov** cruzó el BAPLIE de salida con el plan de carga, el listado, el papel (102 celdas) y las capturas (113 celdas), con scripts que solo leen.
+- **La sintaxis cuadra:**
+  - UNT cuenta 4262 segmentos, y las referencias de UNH, UNT, UNB y UNZ coinciden;
+  - hay 503 celdas y 503 contenedores, sin repetir;
+  - ningún grupo queda sin tipo, POL, POD ni línea.
+- **El contenido es correcto:**
+  - los 358 que siguen a bordo salen idénticos al plan, byte a byte, salvo tres textos (defecto 2);
+  - las 145 cargas, 99 llenos y 46 vacíos, salen cada una en su celda física, con el tipo, el destino, la línea y el peso del listado traducidos con las 15 equivalencias, sin una sola diferencia;
+  - los 8 «Revisar» de la bahía 10 son los OR que decía el papel: un intercambio de 4 por 4 entre CRLY y ONE, con el que cada línea conserva sus espacios;
+  - el 17 y el 123 salen donde quedaron;
+  - el peso, 6868.7 t, es el del plan (6708.6 t) más la tara real de los 45 vacíos (157.4 t) más los VGM del listado (2.7 t).
+- **El papel tenía un error que la salida confirma:** en la 010-02-08 va el 135, no el 136, que está en la 010-04-84. Se confirma con el registro de la terminal.
+- **Del listado no cargaron cinco llenos:** el 49 y el 50 («REEMPLAZO - CANCEL»), y el 75, el 106 y el 150, que no tenían celda en el plan. Falta confirmar que el 75, el 106 y el 150 no subieron. La página del BAPLIE de salida no los menciona.
+
+**Los defectos del archivo, todos del escritor:**
+1. **P1 · Las peligrosas pierden datos.** Un lleno con fila en el listado sale armado solo con la fila (`_loaded`), y el DGS queda en clase y número ONU:
+   - el 76 pierde el punto de inflamación y el grupo de embalaje;
+   - el 79, el 122 y el 126 pierden el grupo de embalaje y la etiqueta, y su número ONU pasa del 2902 del plan al 2903 del listado sin aviso.
+2. **P2 · La codificación.** El plan se lee como Latin-1 (`String.fromCharCodes`) y la salida se escribe en UTF-8 (`utf8.encode`), así que las tildes del FTX de tres contenedores de la bahía 26 salen dobles.
+3. **P2 · Los pesos.** `weight()` escribe el número tal cual: 21 VGM salen con decimales, y 3 con restos de coma flotante («18837.129999999997»).
+4. **P3 · LOC+13 repite el destino en las 145 cargas.** Sale del POT del listado, que es igual al POD en sus 150 filas, y el archivo dice trasbordo donde no lo hay.
+5. **P1, latente · Los refrigerados llenos saldrían sin temperatura.** El mismo `_loaded` no escribe TMP: ni la del plan ni la que trae el listado («REEFER TEMP»). También perdería el LOC+83 y los FTX del plan. En este piloto no pasó, porque el único refrigerado que cargó fue un vacío, el OR 45; en una exportación con refrigerados llenos, la salida no llevaría sus temperaturas.
+
+Aparte de los cinco, `TDT` dice 26043X por el rodeo, y eso lo resuelve T-130.
+
+**La copia corregida y las evidencias:**
+- Yov preparó una copia del BAPLIE de salida para enviar:
+  - corrige el viaje, las tildes, los pesos al kilo, los DGS completos del plan y los LOC+13; lo demás queda igual;
+  - lo que sigue a bordo queda idéntico al plan en sus 358 grupos;
+  - en el 79, el 122 y el 126 deja el UN 2902 del plan hasta que la declaración de peligrosas diga cuál es.
+- Las evidencias del piloto están en un zip que no va a ningún repositorio: las fuentes, los dos BAPLIE de salida, el informe y el CSV del cotejo, los scripts, y las 40 fotos y capturas, con su LEEME y sus huellas.
+
+**Yov propone; decide Carlos:**
+1. **T-132 · El BAPLIE de salida, fiel:**
+   - cada carga con fila parte del grupo del plan, con los datos del listado encima;
+   - si el listado y el plan no coinciden en una peligrosa, la página lo muestra y no elige sola;
+   - la salida se escribe con los mismos bytes que se leyeron;
+   - los pesos van al kilo, y LOC+13 solo si el POT no es el POD;
+   - la página lista las filas del listado que no cargaron.
+   - la temperatura de cada refrigerado lleno: la del plan, o la del listado si el plan no la trae.
+   Es P1 por las peligrosas y por los refrigerados. Hasta que esté, un BAPLIE de salida con peligrosas o con refrigerados llenos se revisa a mano.
+2. **Carlos confirma tres cosas:** si el 150, el 75 y el 106 subieron; el número ONU del 79, el 122 y el 126; y el contenedor de la 010-02-08.
+3. **Cerrar la 26043S.** En la nube siguen abiertas también ECO BORA 26042SB y BUQUE PRUEBA T98.
+
+La siguiente decisión es la **10.88**.
+
+### 10.88 · El orden para empezar los cambios del piloto (2-nov, 18:50)
+
+**Carlos pide los prompts para empezar todos los cambios de la tercera prueba piloto.** Yov los deja en este orden. En la carpeta del rediseño, `lib/`, `test/` y `pubspec.*` siguen siendo de una tarea a la vez.
+1. **T-129, las corridas** (Timonel, el mismo chat, en Fable 5.1): las seis de la sección 6 de su informe. Con todo en verde, Carlos confirma su bloque de Git.
+2. **La revisión corta de T-129** (Codex, en `baystream-qa-r4`), como manda la 10.84.
+3. **El ícono `oficina`** (Nube), en paralelo con todo, porque no toca el repositorio.
+4. **T-130, fase 1: el diseño** (Timonel, Fable 5.1). Puede ir en paralelo con los pasos 1 a 3, porque solo escribe en `docs/`. Carlos lo aprueba.
+5. **T-131** (Timonel, Opus 5.5), cuando T-129 esté en commits y el paquete v3 de Nube esté en `C:\Proyectos\`.
+6. **T-130, fase 2: el código**, cuando T-131 se entregue y Carlos haya aprobado el diseño.
+7. **T-132 · El BAPLIE de salida, fiel** (Codex), en su propia carpeta y rama: `C:\Proyectos\baystream-t132`, rama `t132-salida`, desde `sprint-4`, si Carlos la abre. Así corre en paralelo y se mezcla después, como T-126. Si no, va después de T-130, en la carpeta del rediseño.
+8. **Nace T-133 · La marca no tapa el número de orden** (el hallazgo 7; Timonel). Va después de T-131, si alcanza antes del 7-nov.
+
+**El semáforo:** un comando de Flutter a la vez en la máquina, también con dos carpetas abiertas. Carlos da la luz verde.
+
+**Lo que escribe Yov cuando lleguen los informes:** las aceptaciones de T-131, T-130, T-132 y T-133, y la candidata que se publica antes del 7-nov, con la 0.4.1 adentro.
+
+Los prompts están en el proyecto de Yov (`BayStream_Prompts_Sprint4_3nov.md`).
+
+La siguiente decisión es la **10.89**.
