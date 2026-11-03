@@ -1,4 +1,4 @@
-# Lista de comprobación · Ensayo y prueba piloto con COMAR (la 0.4.2, 10.96)
+# Lista de comprobación · Ensayo y prueba piloto con COMAR (la 0.4.2, 10.96 y 10.97)
 
 **Para quién.** Carlos publica la 0.4.2 y corre el ensayo y el piloto; Yov revisa esta
 lista y los comandos antes. La lista va por rol: **el muelle con el Honor** y **la oficina con la
@@ -31,11 +31,22 @@ entre comillas son los rótulos exactos de la app.
   diciendo en grande su OR, su destino o su tipo, y la marca va debajo, con su ícono y su rótulo
   corto («Baja», «Hecho», «Revisar», «Cancel.»…; 2.3).
 
-**Codex la acepta antes de publicarla** (10.96), sin el Honor: el Honor tiene la app de Play, y
-una compilación local no se instala encima sin borrar su almacén. La prueba de punta a punta de
-T-130 va contra el emulador de Firebase, con la oficina en Chrome y el muelle en una tablet del
-emulador de Android. El Honor se prueba aquí, con la 0.4.2 de Play: en 0.8 y en el ensayo. Lo
-que Codex encuentre se anota en esta lista antes de publicar.
+**Codex la aceptó con reservas** (10.97; `docs/t134/aceptacion-codex.md`), sin el Honor: el
+Honor tiene la app de Play, y una compilación local no se instala encima sin borrar su almacén.
+Pasan la suite (2097 de 2097), `analyze`, las baterías de las reglas y los tres clientes, que
+compilan y dicen 0.4.2 (8). Con los datos reales del piloto, la salida de T-132 deja las 503
+celdas y los 358 grupos de paso idénticos, y es igual a la copia que Yov corrigió a mano. La
+prueba de punta a punta de T-130 y el cierre de T-129 pasan contra el emulador, en Chrome. Lo
+que no se pudo probar antes de publicar se prueba aquí, en 0.8 y en el ensayo:
+- **Android con la nube.** El banco del emulador no llegó a sincronizar en la tablet (O-134-2):
+  el primer Android contra Firebase es el Honor, en 0.8.
+- **La banda del muelle con su distintivo** solo sale en un teléfono Android (2.2), y RNF-002
+  con las marcas de T-133 se mide en el Honor (3).
+- **Las esperas.** En la aceptación, el aviso de un plan agregado y el chip «Sin conexión»
+  tardaron más de medio minuto (O-134-5): esta lista espera un minuto antes de «Reintentar».
+- **El aviso «Archivo "null" cargado correctamente»** (O-134-4, P3, viene de la 3.1.0) sale al
+  confirmar un plano en previo desde «Parámetros». No se pierde nada, y el plano se confirma con
+  «Confirmar» en la banda (1.2).
 
 **El piloto del 1-nov (10.85)** encontró que una operación publicada no aceptaba el plan que
 llegó después, y la carga se hizo con otra operación. Desde la 0.4.2, el plan que falta entra
@@ -148,7 +159,7 @@ Tiene que terminar con cuatro líneas «Listo».
 | 0.5 | En la laptop: Windows con el MSIX 0.4.2.0 abierto una vez (tema «Seguir al sistema» o «Oscuro» en Parámetros; la oficina trabaja de noche) | El inicio con la marca, «Abre un plano de estiba» y, si sobra alto debajo, el buque navegando al pie | Si el instalador dice «Publisher: Unknown» o `0x800B010A`, el MSIX no se firmó con `CN=BayStream`: repetir 4.2 con la huella |
 | 0.6 | Tener a mano en la laptop el plan de carga, el listado de la agencia (`.xlsx`) y el plano de llegada de la escala (en el ensayo y en 0.8, las copias de «Datos»); en el Honor no hace falta ningún archivo: se une a la operación publicada | | |
 | 0.7 | Con la cuenta de oficina, en el inicio o en «Nube y cuenta», «Operaciones abiertas en la nube»: anotar cuáles hay y cerrar las de pruebas y pilotos anteriores (10.87, punto 3). Cada una se cierra desde el equipo que la tiene, o con «Unirse» desde la laptop, y después «Cerrar operación» (1.15). Las conocidas: MAGELLAN STAR · 26043S · GTSTC (la descarga del 1-nov; la de la carga, la 26043X, ya está cerrada), ECO BORA · 26042SB y BUQUE PRUEBA · T98 | No queda ninguna de un buque y una escala que se vayan a usar, salvo la de hoy. **Desde la 0.4.2 importa:** con una operación abierta de un buque en una escala, de cualquier viaje, la oficina no publica otra. Al abrir el plano nuevo, la banda propone agregarlo a la abierta («La escala GTSTC ya tiene una operación publicada (viaje 26043S) sin plan de carga: confirma para agregarlo.») o pide cerrar una (1.18) | Una operación cerrada no se reabre: si una no se reconoce, no cerrarla y avisar |
-| 0.8 | Después de 0.1 y 0.7, la prueba de punta a punta de T-130 contra Firebase de verdad: la tabla de abajo, con la laptop de oficina y el Honor de muelle | Lo que dice cada paso de la tabla | Si en el paso 1 el plano abre en previo con «La escala GTSTC ya tiene una operación publicada…», o «Publicar operación» dice «Ya hay una operación publicada y abierta…», queda una de BUQUE MANUAL de antes: 0.7. Si en el paso 5 sale «La nube no aceptó el plan: …», las reglas publicadas no son las de T-130: 4.0. Si en el paso 7 el aviso no llega en medio minuto, «Nube y cuenta» → «Reintentar», y se anota. Si falla otro paso, anotar cuál y con qué texto, y en el piloto no usar 1.18: los dos planos van antes de publicar (1.7), como en la 0.4.0 |
+| 0.8 | Después de 0.1 y 0.7, la prueba de punta a punta de T-130 contra Firebase de verdad: la tabla de abajo, con la laptop de oficina y el Honor de muelle | Lo que dice cada paso de la tabla | Si en el paso 1 el plano abre en previo con «La escala GTSTC ya tiene una operación publicada…», o «Publicar operación» dice «Ya hay una operación publicada y abierta…», queda una de BUQUE MANUAL de antes: 0.7. Si en el paso 5 sale «La nube no aceptó el plan: …», las reglas publicadas no son las de T-130: 4.0. Si en el paso 7 el aviso no llega en un minuto, «Nube y cuenta» → «Reintentar», y se anota (en la aceptación tardó más de medio minuto, O-134-5). Si falla otro paso, anotar cuál y con qué texto, y en el piloto no usar 1.18: los dos planos van antes de publicar (1.7), como en la 0.4.0 |
 
 ### 0.8 · La prueba de punta a punta de T-130, contra Firebase de verdad
 
@@ -161,7 +172,7 @@ operación cerrada) los cubre la aceptación de Codex en el emulador, y aquí no
 |---|---|---|---|
 | 1 | Laptop | «Seleccionar archivo» → `P130_LLEGADA.edi`; confirmar el perfil y la escala GTSTC; «Nube y cuenta» → «Publicar operación» | «Publicada» y «Al día» |
 | 2 | Honor | Con la sesión de muelle (2.1): «Operaciones abiertas en la nube» → «Unirse» → «Abrir plano de llegada» → «Descarga» → descargar dos contenedores | «Hecho» en las dos celdas; en la laptop, «Avance» las cuenta |
-| 3 | Honor | Modo avión **con el Wi-Fi apagado** (10.39) | «Sin conexión» en la banda |
+| 3 | Honor | Modo avión **con el Wi-Fi apagado** (10.39) | «Sin conexión» en la banda; puede tardar más de medio minuto (O-134-5) |
 | 4 | Laptop | «Más» → «Cargar archivo BAPLIE» → `P130N_CARGA.edi` | En previo, la banda: «La escala GTSTC ya tiene una operación publicada (viaje P130) sin plan de carga: confirma para agregarlo.» |
 | 5 | Laptop | «Confirmar» → «Parámetros del buque» (escala GTSTC) → «Confirmar y ver el plano» | El diálogo «Agregar el plan de carga a la operación publicada», con «BUQUE MANUAL · P130 · GTSTC, publicada el <fecha del paso 1>, abierta, sin plan de carga.», ««P130N_CARGA.edi» declara el viaje P130N. La operación publicada es el viaje P130.» y «Se cargan 30 contenedores y 0 celdas reservadas; se descargan 0.» → «Agregar a la operación P130» → el aviso «Plan de carga agregado a la operación publicada de GTSTC: 30 contenedores y 0 reservas. El muelle lo recibe solo.» |
 | 6 | Honor, sin red | Mirar «Carga» y «Nube y cuenta» | Sin aviso; «Carga» sin plan; en «Nube y cuenta», solo «Abrir plano de llegada» |
@@ -184,7 +195,7 @@ distintivo «Oficina» (1.6).
 | # | Qué hacer | Qué hay que ver | Si falla |
 |---|---|---|---|
 | 1.1 | «Seleccionar archivo» → el **plan de carga** (en el ensayo, `ENSAYO_CARGA.edi`) | El plano abre **en previo**: arriba la banda «Plano sin confirmar: perfil propuesto desde el archivo. Escala propuesta <puerto>.» con «Confirmar», y debajo «Peso por pila y tomas de refrigerado: sin evaluar hasta confirmar el perfil.» Son tres pasos y la rejilla ya se ve | Si sale «Este archivo no parece un BAPLIE: …» o «Versión BAPLIE no admitida: …», pedir la exportación 2.x a la agencia. Si no abre nada en 30 s, anotar y reintentar. Si la banda dice «La escala … ya tiene una operación publicada…», hay otra operación abierta de este buque en esta escala: 0.7 |
-| 1.2 | «Confirmar» en la banda | Si el equipo ya guarda perfiles de otros buques, primero «Perfil del buque nuevo»: elegir «Proponer desde el archivo». Si ya hay uno con el mismo nombre, «Confirma la identidad del buque»; si la carga excede el perfil guardado, «Revisar ampliación». Después se abre «Parámetros del buque»: filas y niveles propuestos, la escala en «Puerto de esta escala» (la propuesta y, con un plano de llegada, los puertos de descarga con su cuenta, «GTSTC (7)»), el límite de apilamiento. **«No lo tengo» no viene marcado**: hay que escribir el límite del manual de estabilidad o marcarlo a mano | Si la escala propuesta no es la de la operación, elegir la correcta en «Puerto de esta escala» antes de confirmar |
+| 1.2 | «Confirmar» en la banda | Si el equipo ya guarda perfiles de otros buques, primero «Perfil del buque nuevo»: elegir «Proponer desde el archivo». Si ya hay uno con el mismo nombre, «Confirma la identidad del buque»; si la carga excede el perfil guardado, «Revisar ampliación». Después se abre «Parámetros del buque»: filas y niveles propuestos, la escala en «Puerto de esta escala» (la propuesta y, con un plano de llegada, los puertos de descarga con su cuenta, «GTSTC (7)»), el límite de apilamiento. **«No lo tengo» no viene marcado**: hay que escribir el límite del manual de estabilidad o marcarlo a mano | Si la escala propuesta no es la de la operación, elegir la correcta en «Puerto de esta escala» antes de confirmar. Se confirma desde la banda: si se entra por «Parámetros» (el ícono de la regla), al final el aviso dice «Archivo "null" cargado correctamente» (O-134-4, P3, desde la 3.1.0), aunque el archivo sí se cargó |
 | 1.3 | «Confirmar y ver el plano» | Vuelve al **Plano** (no a la Lista), la cabecera dice «Publicado» y, a su lado, el selector de modo con «Contenido», «Orden» y «Carga» (el plan de carga no ofrece «Descarga»). Si no caben, van en el menú «Modo del plano: …» | Si vuelve a «Parámetros del buque», algo no cuadra (un mensaje en rojo dice qué): corregir y confirmar otra vez |
 | 1.4 | «Lista» → «Listado de la agencia» → «Elegir listado (.xlsx)» → el listado (en el ensayo, `T100_LISTADO.xlsx`) | La página muestra el archivo, «N filas en M agencias · X llenos · Y vacíos», las equivalencias propuestas («Tipo 40ST → 42G1»…) y el cruce «X de X llenos cruzan con el plan». La fila «TOTAL» sale bajo «1 fila sin entender:»: es normal. Las filas bajo «AGREGADOS» se cuentan aparte, como la agencia «AGREGADOS» (H3) | Si a una equivalencia le falta el código («→ ?»), elegirla con el lápiz («Corregir <código>»); el botón lo pide con «Falta elegir N equivalencias antes de importar…». Si «N contenedores del plan no están en el listado» es alto, revisar el listado con la agencia antes de importar |
 | 1.5 | «Confirmar e importar», en el pie fijo de la página. No hace falta esperar a que se apague el aviso «Archivo "<nombre>" cargado correctamente»: flota por encima del pie. **Lo normal es antes de publicar (1.8)**; después, ver 1.17 | «Listado guardado en la operación de <escala>: N filas.» y el aviso «Listado importado.» En el Plano, en «Orden» y en «Carga», cada celda de carga lleva su OR | Si el botón está apagado, falta una equivalencia: ver 1.4. Si dice «Fila N: …», corregir el Excel y volver a importar. Con la operación ya publicada, el listado también entra: ver 1.17 |
@@ -200,7 +211,7 @@ distintivo «Oficina» (1.6).
 | 1.15 | «Nube y cuenta» → «Cerrar operación»; en el diálogo «Cerrar la operación», «Cerrar operación» | «Operación cerrada.» al primer intento, y el estado «Publicada y cerrada»; ya no admite movimientos | Solo al terminar de verdad: una operación cerrada no se reabre. Sin red, a los 45 s, «Sin respuesta de la nube: cerrar requiere red. Revisa la red e inténtalo de nuevo.»: repetir con red. Si dice «No se encontró la operación para cerrarla en este dispositivo o en la nube. Vuelve a abrir «Nube y cuenta» e inténtalo de nuevo.», es O-128-2, que la 0.4.2 corrige (T-129): anotarlo con la hora y repetir como antes, cerrando y abriendo «Nube y cuenta» hasta «Operación cerrada.» No se pierde nada |
 | 1.16 | Cuando el muelle asigne un vacío (2.6 y 2.7): «Estadísticas» (en el riel) | «N contenedores a bordo» y, debajo, «Incluye: 1 vacío asignado a una celda reservada, que el archivo no trae» (con más, «Incluye: N vacíos asignados a celdas reservadas, …»); la cifra, «vacíos» y la bahía suben con cada vacío asignado. «Carga por bahía, de proa a popa» cuenta cada impar con su par. En «Ver como tabla», la fila «Vacíos asignados». Es lo que cuenta la Lista (T-125) | Si un vacío asignado no sube la cifra o la ficha no sale, anotarlo con la hora. Que las cifras se muevan durante la operación es lo esperado (10.68) |
 | 1.17 | Con la operación ya publicada y abierta, si la agencia manda el listado tarde o corregido: «Lista» → «Listado de la agencia» → «Elegir listado (.xlsx)» (o «Importar otro listado (.xlsx)») → el listado nuevo (en el ensayo, `T100_LISTADO_v2.xlsx`). Las equivalencias y el cruce, como en 1.4 | Si ya hay movimientos, antes de confirmar sale la tarjeta «Lo ya operado con el listado nuevo»: «N contenedores ya cargados no están en el listado nuevo» y «M vacíos asignados cambian de grupo», con la lista de cada uno. Los movimientos no se pierden ni cambian. «Confirmar e importar» → «Listado guardado en la operación publicada de <escala>: N filas, revisión R. El muelle lo recibe solo.» (T-127) | «La nube no aceptó el listado: …» no cambia nada local: revisar la cuenta (0.3) y que las reglas sean las de T-130 (4.0), y volver a intentar. «Sin conexión con la nube: …»: esperar la red. Con la operación cerrada (1.15), el listado ya no cambia |
-| 1.18 | Con la operación ya publicada y abierta, si el plano de llegada o el plan de carga llega después: «Más» → «Cargar archivo BAPLIE» → el plan que falta | Abre **en previo**, con la banda «La escala <escala> ya tiene una operación publicada (viaje <n>) sin <plan de carga o plano de llegada>: confirma para agregarlo.» → «Confirmar» → «Parámetros del buque», con la escala de la operación (y «Tipo de BAPLIE», si lo pregunta) → «Confirmar y ver el plano» → el diálogo «Agregar el <plan> a la operación publicada»: «<buque> · <viaje> · <escala>, publicada el <fecha>, abierta, sin <plan>.», las cifras («Se cargan N contenedores y M celdas reservadas; se descargan K.») y, si el archivo declara otro viaje, ««<archivo>» declara el viaje X. La operación publicada es el viaje Y.» → «Agregar a la operación <viaje>» → el aviso «<Plan> agregado a la operación publicada de <escala>: … El muelle lo recibe solo.» Los movimientos ya registrados no cambian, y «Nube y cuenta» dice las fuentes, con el viaje del plan agregado si difiere («Fuentes: llegada · carga (viaje X) · listado r1») | «Cancelar» no agrega nada, y el plano sigue en previo. La llegada y la carga pueden traer viajes distintos: si la operación del diálogo es la de esta escala, «Agregar a la operación <viaje>»; si es de una escala anterior, «Cancelar» y 0.7. Si la banda dice «…que este equipo no tiene. Únete en «Nube y cuenta» y vuelve a abrir el plan para agregarlo.», unirse y repetir; si dice «Hay N operaciones publicadas y abiertas…», cerrar la que no corresponde (0.7) y repetir. «La operación publicada de esta escala ya tiene el <plan> («<archivo>»)…»: ese plan ya está, y un BAPLIE publicado no se reemplaza. «La nube no aceptó el plan: …»: la cuenta (0.3) o las reglas (4.0); nada local cambió |
+| 1.18 | Con la operación ya publicada y abierta, si el plano de llegada o el plan de carga llega después: «Más» → «Cargar archivo BAPLIE» → el plan que falta | Abre **en previo**, con la banda «La escala <escala> ya tiene una operación publicada (viaje <n>) sin <plan de carga o plano de llegada>: confirma para agregarlo.» Si este equipo todavía no tiene el perfil del buque, la banda es la de siempre («Plano sin confirmar…»), y la operación se busca al confirmar los parámetros. → «Confirmar» → «Parámetros del buque», con la escala de la operación (y «Tipo de BAPLIE», si lo pregunta) → «Confirmar y ver el plano» → el diálogo «Agregar el <plan> a la operación publicada»: «<buque> · <viaje> · <escala>, publicada el <fecha>, abierta, sin <plan>.», las cifras («Se cargan N contenedores y M celdas reservadas; se descargan K.») y, si el archivo declara otro viaje, ««<archivo>» declara el viaje X. La operación publicada es el viaje Y.» → «Agregar a la operación <viaje>» → el aviso «<Plan> agregado a la operación publicada de <escala>: … El muelle lo recibe solo.» Los movimientos ya registrados no cambian, y «Nube y cuenta» dice las fuentes, con el viaje del plan agregado si difiere («Fuentes: llegada · carga (viaje X) · listado r1») | «Cancelar» no agrega nada, y el plano sigue en previo. La llegada y la carga pueden traer viajes distintos: si la operación del diálogo es la de esta escala, «Agregar a la operación <viaje>»; si es de una escala anterior, «Cancelar» y 0.7. Si la banda dice «…que este equipo no tiene. Únete en «Nube y cuenta» y vuelve a abrir el plan para agregarlo.», unirse y repetir; si dice «Hay N operaciones publicadas y abiertas…», cerrar la que no corresponde (0.7) y repetir. «La operación publicada de esta escala ya tiene el <plan> («<archivo>»)…»: ese plan ya está, y un BAPLIE publicado no se reemplaza. «La nube no aceptó el plan: …»: la cuenta (0.3) o las reglas (4.0); nada local cambió |
 | 1.19 | «Publicar operación» cuando ya hay otra abierta del mismo buque, viaje y escala (la publicó otro equipo, o quedó de un ensayo) | No publica: «Ya hay una operación publicada y abierta de <buque> · <viaje> · <escala>, publicada el <fecha>. No se publica otra: únete a ella desde «Operaciones abiertas en la nube».» La nube sigue con una sola | Si es la de hoy, «Unirse» a ella en «Operaciones abiertas en la nube» y seguir ahí (1.18 si le falta un plan). Si es de un ensayo, cerrarla (0.7) y publicar otra vez. Una oficina con la 0.4.0 no lo comprueba (5) |
 
 ---
@@ -221,10 +232,10 @@ distintivo «Oficina» (1.6).
 | 2.10 | «Acciones» (⋮) → «Solicitudes de cambio (0)» → «Pedir cambio» | El formulario: «Objeto 1: OR, contenedor o reserva», «Intercambiar dos contenedores» (viene activado) o «Destino BBB-RR-TT», y «Motivo obligatorio» → «Enviar solicitud». La solicitud queda «Pendiente» y la celda destino lleva un borde punteado con el icono de pedir cambio (el lector dice «Solicitud pendiente en <celda>») | «Se necesita una cuenta autorizada y una operación publicada.»: la sesión del teléfono o la publicación (1.8). El objeto sigue en su celda hasta que la oficina apruebe |
 | 2.11 | Cuando la oficina decida (1.12) | La solicitud pasa a «Aprobada» o «Rechazada» sin recargar; si se aprobó, el OR cambia de celda en «Carga» | |
 | 2.12 | Atrás (el botón del sistema) en el plano | **Un toque**: arriba, sobre el plano, la advertencia «Toca Atrás otra vez para volver al inicio.» durante 2 s, aunque abajo siga el aviso de un movimiento; el plano sigue. **Dos toques seguidos**, dentro de esos 2 s: el inicio, con el viaje en los recientes. Tocar el reciente lo reabre publicado, con la operación | Un toque nunca saca del plano: si sale, anotarlo como fallo. Con una hoja abierta («Más», el detalle), Atrás solo la cierra, y el siguiente Atrás vuelve a advertir |
-| 2.13 | Sin red: modo avión **con el Wi-Fi apagado** (10.39) → registrar una descarga | El chip de la banda pasa a «Sin conexión» y la app sigue registrando. Al volver la red, «Enviando» y después «Al día»; la oficina lo recibe. Cuántos esperan lo dice «Nube y cuenta» | Si al volver la red el chip dice «Revisar», mirar «Nube y cuenta»: con «Sesión vencida: …», iniciar sesión otra vez; la cola se envía sola |
+| 2.13 | Sin red: modo avión **con el Wi-Fi apagado** (10.39) → registrar una descarga | El chip de la banda pasa a «Sin conexión» (puede tardar más de medio minuto, O-134-5) y la app sigue registrando. Al volver la red, «Enviando» y después «Al día»; la oficina lo recibe. Cuántos esperan lo dice «Nube y cuenta» | Si al volver la red el chip dice «Revisar», mirar «Nube y cuenta»: con «Sesión vencida: …», iniciar sesión otra vez; la cola se envía sola |
 | 2.14 | «Más» | «Alertas de estiba» (con su cuenta), «Tapas en la operación», «Orden de descarga», «Listado de la agencia», «Comparar con otro BAPLIE…», «Exportar PDF», «Exportar CSV» y «Exportar JSON», «Nube y cuenta», «Parámetros», «Cargar archivo BAPLIE», «Viajes recientes», «Perfiles guardados» y «Cerrar el plano» | «Cerrar el plano» con el viaje publicado limpia este dispositivo; se vuelve a entrar desde los recientes o uniéndose |
-| 2.15 | Cuando la oficina agregue o reemplace el listado (1.17), con red y sin tocar nada | El aviso «Listado actualizado por la oficina: N filas.» durante 6 s; los OR aparecen en las celdas y «OR / últimos dígitos» los ofrece. Lo ya cargado sigue en su celda: un lleno cuya fila ya no está se queda cargado, sin OR, y en la salida va con los datos del plan (1.13) | Sin red, el muelle sigue con el listado anterior y lo baja al volver la red (2.13). Si en medio minuto no llega, «Nube y cuenta» → «Reintentar», o cerrar y abrir el plano, y anotarlo. Un muelle con la 0.4.0 no lo recibe (5) |
-| 2.16 | Cuando la oficina agregue el plan que faltaba (1.18), con red y sin tocar nada | El aviso «Plan de carga agregado por la oficina: N contenedores y M reservas.» durante 6 s; «Carga» muestra lo pendiente del plan, «OR / últimos dígitos» lo ofrece y, con listado, «Asignar vacío» también. Lo ya descargado sigue «Hecho». Si lo agregado es el plano de llegada: «Plano de llegada agregado por la oficina: N se descargan.» con «Abrir», que abre ese plano para «Descarga». En «Nube y cuenta», «Abrir plan de carga» o «Abrir plano de llegada» | Sin red, llega al volver la red (2.13). Si en medio minuto no llega, «Nube y cuenta» → «Reintentar», y anotarlo. Un muelle con la 0.4.0 no se entera: sigue con su plano, y sus movimientos se aceptan (5) |
+| 2.15 | Cuando la oficina agregue o reemplace el listado (1.17), con red y sin tocar nada | El aviso «Listado actualizado por la oficina: N filas.» durante 6 s; los OR aparecen en las celdas y «OR / últimos dígitos» los ofrece. Lo ya cargado sigue en su celda: un lleno cuya fila ya no está se queda cargado, sin OR, y en la salida va con los datos del plan (1.13) | Sin red, el muelle sigue con el listado anterior y lo baja al volver la red (2.13). Si en un minuto no llega, «Nube y cuenta» → «Reintentar», o cerrar y abrir el plano, y anotarlo. Un muelle con la 0.4.0 no lo recibe (5) |
+| 2.16 | Cuando la oficina agregue el plan que faltaba (1.18), con red y sin tocar nada | El aviso «Plan de carga agregado por la oficina: N contenedores y M reservas.» durante 6 s; «Carga» muestra lo pendiente del plan, «OR / últimos dígitos» lo ofrece y, con listado, «Asignar vacío» también. Lo ya descargado sigue «Hecho». Si lo agregado es el plano de llegada: «Plano de llegada agregado por la oficina: N se descargan.» con «Abrir», que abre ese plano para «Descarga». En «Nube y cuenta», «Abrir plan de carga» o «Abrir plano de llegada» | Sin red, llega al volver la red (2.13). Si en un minuto no llega, «Nube y cuenta» → «Reintentar», y anotarlo. Un muelle con la 0.4.0 no se entera: sigue con su plano, y sus movimientos se aceptan (5) |
 
 ---
 
@@ -350,6 +361,8 @@ Set-Location -LiteralPath C:\Proyectos\proyecto-baystream
 if ((git branch --show-current) -ne 'master') { throw 'Parar: la carpeta no esta en master' }
 if ((git rev-parse HEAD) -notlike 'be532ab*') { throw 'Parar: master no esta en be532ab' }
 if (-not (git show sprint-4:pubspec.yaml | Select-String -Pattern '^version: 0\.4\.2\+8' -Quiet)) { throw 'Parar: sprint-4 todavia no trae la 0.4.2' }
+git diff --quiet 15ef04b sprint-4 -- lib test integration_test tool android windows web assets pubspec.yaml pubspec.lock
+if ($LASTEXITCODE -ne 0) { throw 'Parar: sprint-4 trae codigo que Codex no acepto (10.97); avisar' }
 git merge --no-ff --no-commit sprint-4
 if ($LASTEXITCODE -ne 0) { throw 'Parar: la mezcla no salio limpia; no resolver nada' }
 git commit -m "Sprint 4: la 0.4.2, mezcla de sprint-4 a master"
@@ -361,8 +374,10 @@ git log --oneline -1
 }
 ```
 
-Las tres comprobaciones del principio detienen el bloque si la carpeta no está en `master`,
-si `master` no está en `be532ab` o si `sprint-4` todavía no trae la 0.4.2. La mezcla se
+Las cuatro comprobaciones del principio detienen el bloque si la carpeta no está en `master`,
+si `master` no está en `be532ab`, si `sprint-4` todavía no trae la 0.4.2 o si trae código que
+Codex no aceptó: desde `15ef04b`, el commit de la 10.96 que aceptó (10.97), solo pueden cambiar
+documentos. La mezcla se
 detiene antes del commit («stopped before committing as requested»): es lo esperado, y el
 `git commit` la cierra. La última línea tiene que mostrar «Sprint 4: la 0.4.2, mezcla de
 sprint-4 a master». Después, la carpeta queda en `master` con la 0.4.2, y `v0.4.0` sigue en
@@ -527,10 +542,11 @@ cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`
   agregar el plan que falta (T-130). Está probado en memoria (`t80_requests_widget_test`,
   `t81_office_widget_test`, `t79_sync_engine_test`, las de T-127 y las de T-130, con las nubes
   falsas de T-79 y de T-129), con las reglas de T-130 en el emulador (sus cuatro baterías, 10.94,
-  y la aceptación de Codex), en la v3.0 en campo y en los pilotos del ECO BORA con la 3.1.0
-  (10.47) y del MAGELLAN STAR con la 0.4.0 (10.85). El ensayo (1.6, 1.8, 1.11, 1.12, 1.17 a
-  1.19, 2.1, 2.2, 2.10, 2.11, 2.13, 2.15 y 2.16) y la prueba de 0.8 lo comprueban contra
-  Firebase de verdad.
+  y la prueba de punta a punta de la aceptación, en Chrome, 10.97), en la v3.0 en campo y en los
+  pilotos del ECO BORA con la 3.1.0 (10.47) y del MAGELLAN STAR con la 0.4.0 (10.85). El ensayo
+  (1.6, 1.8, 1.11, 1.12, 1.17 a 1.19, 2.1, 2.2, 2.10, 2.11, 2.13, 2.15 y 2.16) y la prueba de
+  0.8 lo comprueban contra Firebase de verdad. **En Android, la 0.4.2 contra la nube se prueba
+  por primera vez en 0.8**: en la aceptación, el banco no sincronizó en la tablet (O-134-2).
 - **La regla de uso** (3.8 de `docs/T130-RESULTADOS.md`): la laptop, el teléfono de la oficina
   (la Web, recargada hasta la 0.4.2) y el Honor pasan a la 0.4.2 antes de revisar el listado
   (1.17) o de agregar un plan (1.18). Un cliente viejo no daña la operación, pero:
@@ -552,10 +568,18 @@ cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`
 - **Un pellizco que pierde el foco sin terminar (O-128-4)** no se pudo provocar en la
   aceptación de la 0.4.1. Si después de un pellizco la columna ya no se desplaza con dos dedos,
   otro pellizco corto, o cerrar y abrir el plano, la sueltan. Va a T-120.
-- **El cierre de T-129** está probado contra una nube falsa al nivel del SDK y, en la
-  aceptación, contra el emulador en Chrome; en Windows y contra Firebase de verdad lo prueba el
-  paso 11 de 0.8. Si ahí o en el ensayo vuelve a decir «No se encontró la operación…», 1.15 lo
-  resuelve como antes, y se anota.
+- **El cierre de T-129** está probado contra una nube falsa al nivel del SDK, y pasó en la
+  aceptación contra el emulador, en Chrome, al primer intento (10.97); en Windows y contra
+  Firebase de verdad lo prueba el paso 11 de 0.8. Si ahí o en el ensayo vuelve a decir «No se
+  encontró la operación…», 1.15 lo resuelve como antes, y se anota.
+- **El aviso «Archivo "null" cargado correctamente»** (O-134-4, P3, desde la 3.1.0) sale al
+  confirmar un plano en previo desde «Parámetros» en vez de la banda: ese camino no le pasa el
+  nombre del archivo al aviso. El archivo sí se cargó. Se anota solo si sale confirmando desde
+  la banda.
+- **Las esperas de la nube** (O-134-5): en la aceptación, con un corte de red simulado, el chip
+  tardó más de medio minuto en pasar a «Sin conexión», y el plan agregado llegó solo, pero
+  después de medio minuto de vuelta la red. Esta lista espera un minuto antes de «Reintentar»
+  (0.8, 2.15 y 2.16); tardar no es un fallo, no llegar sí.
 - **Las marcas de T-133** miden su rótulo cada vez que se dibuja la bahía a la vista; Timonel no
   midió el costo (RNF-002, 10.95), y la aceptación no tiene el Honor. En el ensayo y en el
   piloto, si una bahía con muchas marcas tarda en dibujarse o se traba al desplazarla, anotar la

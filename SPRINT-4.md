@@ -2752,3 +2752,46 @@ El informe es `docs/t134/aceptacion-codex.md`, como el de la 0.4.1.
 **Después:** Yov anota en la lista lo que encuentre Codex. Carlos publica las reglas de T-130 desde la consola (4.0), mezcla (4.1) y publica los clientes (4.2 a 4.4). Al final hace 0.7, 0.8 y el ensayo.
 
 La siguiente decisión es la **10.97**.
+
+### 10.97 · Codex acepta la 0.4.2 con reservas; la lista, al día; falta decidir T-135 (3-nov, 13:15)
+
+**Codex aceptó la candidata con reservas** (`docs/t134/aceptacion-codex.md`), sobre `15ef04b` (10.96):
+- **Lo que pasa:**
+  - la suite da 2097 de 2097 en una corrida, sin omitidas, y `analyze` cero, en una copia limpia de 809 archivos que siguió idéntica a HEAD;
+  - las baterías: 69, 25, 31 y 38 contra las reglas de T-130, y la de T-130 cae en sus 11 contra las de T-127;
+  - los tres clientes compilan y dicen 0.4.2 (8). El AAB lleva la firma de depuración: acredita la compilación, pero no es el que va a Play;
+  - **T-132 con los datos reales del piloto:** 503 de 503 celdas, 358 de 358 grupos de paso byte a byte, 4 de 4 DGS completos, ningún peso con decimales, ningún LOC+13 con el POT igual al POD y UNT con 4117. Contra la copia corregida de Yov no hay ninguna diferencia en los grupos: la única es la de `TDT`, que Yov cambió a mano. La página pidió 3 decisiones, todas de peligrosas (UN 2902 contra 2903), y guardó una vez;
+  - **T-130 y T-129:** los 15 pasos de 3.10 y las dos variantes contra el emulador, con la oficina y el muelle en Chrome. El cierre sale al primer intento, después de revisar el listado. Las cifras y los textos de 0.8 son los de la lista, con M100 en vez de P130;
+  - **T-131 y T-133:** el distintivo dorado de la oficina a 1280 y a 1920 y, en la Web a 360, el compacto de cobre en la barra de arriba. En la tablet, las marcas con la densidad del muelle: 56 × 48 y el rótulo a 11;
+  - los diez bloques de PowerShell pasan el analizador sintáctico (PSScriptAnalyzer no está instalado), y el bloque de «Datos» da sus cuatro «Listo»;
+  - Carlos probó a mano el pellizco y Ctrl + rueda en el `.exe`, en Chrome y en Edge, con el namespace `r4`: pasan.
+- **Las reservas** son de validación: no hay ningún P1 ni P2 del producto.
+  - **O-134-1:** al preparar la prueba de Windows, el ayudante de Codex abrió la app instalada (0.4.0.0) en vez del `.exe` del banco. Codex la cerró sin tocar nada, pero no puede descartar que al abrirse leyera su almacén o la nube; es lo mismo que abrirla a mano. El bloque de 4.2 respalda el almacén antes de instalar. Codex no vuelve a usar ese ayudante: el `.exe` del banco lo abre Carlos desde el Explorador.
+  - **O-134-2:** en la tablet, el banco no sincroniza. Primero le faltaba la app `[DEFAULT]` de Firebase, que Codex puso en una entrada privada; después, Android bloqueó el HTTP sin cifrar hacia el emulador («Cleartext HTTP traffic to 127.0.0.1 not permitted»). No se cambió `android/`, y la app publicada va por HTTPS. Android contra la nube se prueba por primera vez con el Honor, en 0.8. Para después del 7-nov: un banco de Android que llegue al emulador, con una configuración de red solo para depuración.
+  - **O-134-3:** el punto 4 del encargo pedía la banda del muelle en la Web, pero la Web nunca tiene la densidad del muelle (`bayStreamEsMuelle` exige `!kIsWeb`). Yov lo corrigió: la banda queda para el Honor.
+- **Dos P3:**
+  - **O-134-4:** «Archivo "null" cargado correctamente», al confirmar un plano en previo desde «Parámetros» y no con la banda. Viene de la 10.32, y Carlos lo vio en los tres clientes. Codex confirmó la causa en el código: ese camino llama a `_askForGeometry` sin `fileName`.
+  - **O-134-5:** con un corte de red simulado, el chip tardó más de medio minuto en pasar a «Sin conexión», y el plan agregado llegó solo, pero después de medio minuto de vuelta la red. No es una garantía de latencia: la lista espera un minuto antes de «Reintentar».
+
+**Yov lo revisó contra la evidencia:**
+- la huella del informe es la de `entrega-verificacion.json` (`3df4e2b4…`), con sus 39 capturas;
+- la suite registra 2097 aprobadas, `analyze` dice «No issues found!», y los resúmenes seguros de T-132 dicen lo mismo que el informe;
+- el informe no trae ningún número de contenedor;
+- Yov miró cuatro capturas: el diálogo de T-130 con sus cifras y su viaje, el distintivo de la oficina a 1920, las marcas a 360 y la tablet con «Baja» y «Paso» debajo del código.
+
+**La lista del piloto, al día** (`docs/piloto/LISTA-PILOTO.md`):
+- el resultado de la aceptación, arriba;
+- en 1.2, que el plano se confirma desde la banda;
+- en 1.18, que sin el perfil del buque la operación se busca al confirmar los parámetros;
+- las esperas de un minuto en 0.8, 2.13, 2.15 y 2.16, y O-134-2, O-134-4 y O-134-5 en la sección 5;
+- **en 4.1, una comprobación nueva:** la mezcla se detiene si `sprint-4` trae código distinto del que aceptó Codex (`15ef04b`).
+
+**El commit del informe de Codex** va desde `qa-r4`, con HEAD separado, como en la 0.4.1 y en las revisiones de T-129. Después, la carpeta del rediseño se pone al día con `git pull --ff-only` antes de su propio commit.
+
+**Decide Carlos: T-135, el «null» (O-134-4).**
+- **A:** T-135 antes de publicar. Es una línea y su prueba; Codex revisa el cambio corto, y la comprobación de 4.1 pasa al commit revisado.
+- **B:** publicar la 0.4.2 como está, y T-135 después del 7-nov. En la presentación, el plano se confirma con la banda.
+
+**Después:** las reglas de T-130 (4.0), la mezcla (4.1) y los clientes (4.2 a 4.4); al final, 0.7, 0.8 y el ensayo.
+
+La siguiente decisión es la **10.98**.
