@@ -971,6 +971,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     if (target == null) return;
 
     final isEditing = notifier.pendingVoyage == null;
+    // T-135: «Parámetros» llega sin el nombre; con un previo, es el del
+    // archivo que se está mirando.
+    final archivo = isEditing ? fileName : fileName ?? notifier.loadedFileName;
     var profile = notifier.currentProfile ?? VesselProfile.proposeFrom(target);
     final proposal =
         VesselProfile.proposeFrom(target, parameters: profile.geometry)
@@ -1030,7 +1033,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
             initialPortOfCall: target.portOfCall,
             initial: initial,
             profile: profile,
-            fileName: fileName,
+            fileName: archivo,
             proposedReeferSocketCount: profile.reeferSlotsOrigin ==
                     VesselProfileOrigin.proposedFromFile
                 ? profile.reeferSlots.length
@@ -1154,7 +1157,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
               : attachTo != null && kind != null && port != null
                   ? textoDelPlanAgregado(
                       kind: kind, port: port, plan: target, enElMuelle: false)
-                  : 'Archivo "$fileName" cargado correctamente',
+                  : 'Archivo "$archivo" cargado correctamente',
           corto: isEditing
               ? null
               : attachTo != null
