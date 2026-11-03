@@ -29,6 +29,7 @@ export 'componentes/bs_cartela.dart';
 export 'componentes/bs_casco_bodega.dart';
 export 'componentes/bs_celda.dart';
 export 'componentes/bs_cifra.dart';
+export 'componentes/bs_distintivo_de_rol.dart';
 export 'componentes/bs_ficha_de_cifra.dart';
 export 'componentes/bs_fondo_de_plano.dart';
 export 'componentes/bs_hoja_de_detalle.dart';

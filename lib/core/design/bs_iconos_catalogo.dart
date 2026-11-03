@@ -8,11 +8,12 @@ import 'bs_iconos.dart';
 /// generado y se deja tal cual; esto es lo que las pruebas, los censos y las
 /// vistas previas necesitan para recorrerlos.
 ///
-/// Los 31 primeros se dibujan en la rejilla de 24 y se usan a 16, 20 o 24 px;
+/// Los 32 íconos se dibujan en la rejilla de 24 y se usan a 16, 20 o 24 px;
 /// las cuatro insignias (`insignia_*`) se dibujan en la rejilla de 12 y van a
-/// 12 px en la esquina de la celda.
+/// 12 px en la esquina de la celda. `oficina` (v3, 10.90) va en U+E023,
+/// después de las insignias, para no mover los 35 de antes.
 abstract final class BsIconosCatalogo {
-  /// Los 31 íconos del dominio, por su nombre del paquete.
+  /// Los 32 íconos del dominio, por su nombre del paquete.
   static const Map<String, IconData> iconos = <String, IconData>{
     'contenedor_20': BsIconos.contenedor20,
     'contenedor_40': BsIconos.contenedor40,
@@ -45,6 +46,8 @@ abstract final class BsIconosCatalogo {
     'listado_agencia': BsIconos.listadoAgencia,
     'al_dia': BsIconos.alDia,
     'solo_aqui': BsIconos.soloAqui,
+    // T-131: el rol de oficina, pareja de `muelle` en el distintivo de rol.
+    'oficina': BsIconos.oficina,
   };
 
   /// Las cuatro insignias de 12 px, por su nombre del paquete.
@@ -55,7 +58,7 @@ abstract final class BsIconosCatalogo {
     'insignia_vacio': BsIconos.insigniaVacio,
   };
 
-  /// Los 35 glifos de la fuente, por su nombre del paquete.
+  /// Los 36 glifos de la fuente, por su nombre del paquete.
   static const Map<String, IconData> todos = <String, IconData>{
     ...iconos,
     ...insignias,

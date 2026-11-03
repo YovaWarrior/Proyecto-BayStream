@@ -102,7 +102,7 @@ flutter:
           weight: 500
     # Los iconos del dominio (T-114, 10.19): la fuente del paquete de Nube,
     # dibujada para BayStream (design/iconos/LEEME.md), area de uso privado
-    # U+E000 a U+E022; las constantes estan en lib/core/design/bs_iconos.dart.
+    # U+E000 a U+E023; las constantes estan en lib/core/design/bs_iconos.dart.
     - family: BayStreamIconos
       fonts:
         - asset: assets/fonts/bs_iconos/BayStreamIconos.ttf

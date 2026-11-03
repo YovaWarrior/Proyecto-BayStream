@@ -122,10 +122,14 @@ def _dibujar(pen, contornos):
                 pen.closePath()
 
 
-def construir(iconos: dict, insignias: dict, salida_ttf: str, salida_codigos: str, version: str = '1.0'):
-    """iconos: nombre → Icono (31, en el orden de los códigos); insignias: nombre → Icono (4)."""
-    nombres = list(iconos) + [f'insignia_{n}' for n in insignias]
-    fuentes = list(iconos.values()) + list(insignias.values())
+def construir(iconos: dict, insignias: dict, salida_ttf: str, salida_codigos: str, version: str = '1.0',
+              despues: dict | None = None):
+    """iconos: nombre → Icono (31, en el orden de los códigos); insignias: nombre → Icono (4); despues: los
+    glifos que llegaron después de las insignias (v3: oficina) y toman los códigos siguientes, para que los
+    35 anteriores no cambien de código."""
+    despues = despues or {}
+    nombres = list(iconos) + [f'insignia_{n}' for n in insignias] + list(despues)
+    fuentes = list(iconos.values()) + list(insignias.values()) + list(despues.values())
     codigos = {n: PRIMER_CODIGO + i for i, n in enumerate(nombres)}
     orden = ['.notdef'] + nombres
     fb = FontBuilder(UPEM, isTTF=True)
