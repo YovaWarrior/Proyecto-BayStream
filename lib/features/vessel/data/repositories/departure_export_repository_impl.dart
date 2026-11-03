@@ -19,8 +19,11 @@ class DepartureExportRepositoryImpl implements DepartureExportRepository {
 
     return FilePicker.platform.saveFile(
       dialogTitle: 'Guardar BAPLIE de salida',
+      // T-130 (10.90, ajuste 5): el nombre lleva el viaje del plan de carga,
+      // el mismo que el TDT del archivo; es el de la operación salvo que el
+      // plan se haya agregado con otro.
       fileName:
-          'BayStream_${safe(operation.vesselName)}_${safe(operation.voyageNumber)}_salida.edi',
+          'BayStream_${safe(operation.vesselName)}_${safe(operation.departureVoyageNumber)}_salida.edi',
       type: FileType.custom,
       allowedExtensions: ['edi'],
       bytes: Uint8List.fromList(DepartureCharacterSet.bytes(edi)),

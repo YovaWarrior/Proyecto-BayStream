@@ -7,15 +7,15 @@ la operación del MAGELLAN STAR 26043S con el plano de llegada para empezar la d
 de carga llegó después y la app lo rechazó; la carga se hizo con un rodeo (otra operación, con
 una copia del plan que decía 26043X en `TDT`). Carlos decidió que se corrige antes del 7-nov.
 
-**Este documento está en la fase 1:** trae el paso 0 y la sección «Diseño». **Carlos aprobó el
-diseño el 2-nov con las cinco decisiones de 3.14 y seis ajustes**, que ya están incorporados
-donde tocan y resumidos en 3.14. La fase 2 (el código, las pruebas, las reglas en el emulador y
-la compatibilidad) empieza cuando Carlos confirme que **la mezcla de T-132 está en `sprint-4`**,
-que ya trae T-129; **no espera a T-131**, que va en su propia carpeta y se cruza con T-130 solo
-en `vessel_overview_page.dart` (3.11). Dos cambios de Yov a los ajustes, ya incorporados: T-132
-en la base, así que el nombre del archivo de salida y la nota del viaje los hace T-130 (3.3,
-punto 6), y la base se comprueba antes de tocar nada (suite 1912, `analyze` cero; 3.10). Escrito
-el 2-nov-2026, de noche, solo en `docs/`.
+**Las dos fases están entregadas.** La fase 1 (el paso 0 y la sección «Diseño», 1 a 5) la
+aprobó Carlos el 2-nov con las cinco decisiones de 3.14 y seis ajustes, más dos cambios de Yov
+(T-132 en la base, así que el nombre del archivo de salida y la nota del viaje los hace T-130;
+la base se comprueba antes de tocar nada). La fase 2 (6 a 15: la base, lo hecho, las pruebas con
+sus cifras, las reglas en el emulador, cómo publicarlas y cotejarlas, la lista del piloto, los
+archivos y el bloque de Git) se escribió el 3-nov sobre `a18d2d3`, con T-129 y su corrección y
+la mezcla de T-132 en `sprint-4`, sin esperar a T-131, que se cruza con T-130 solo en
+`vessel_overview_page.dart` (3.11). **Cifras:** 37 pruebas nuevas en verde, la suite en 1951 de
+1951, `analyze` en cero, y en el emulador 69, 25, 31 y 38 de 38 contra las reglas de T-130.
 
 ## 1. Paso 0: la base, lo que hay en el árbol y lo que leí
 
@@ -795,17 +795,17 @@ T-133 (la marca sobre el OR); publicar cualquier cosa.
 
 ### 3.13 Horas
 
-- **Fase 1 (este documento):** ≈ 3,5 h de lectura y diseño, sin Flutter.
-- **Fase 2, estimada:** dominio, transporte y contrato 1,5 h; el adaptador de Firestore 1,5 h; el
-  motor 1,5 h; la oficina (previo, búsqueda, diálogo, notificador) 2,5 h; el muelle y «Nube y
-  cuenta» 1 h; las pruebas 3 h; las reglas, la batería y el lanzador 2 h; las corridas (`analyze`,
-  la suite, el emulador) 1,5 h; el informe con las reglas para Carlos y la lista del piloto 1,5 h;
-  los ajustes de Carlos: la búsqueda en la nube y la negativa de publicar 1 h, el registro de
-  escrituras propias y la carrera en los dos órdenes con la falsa de T-129 que crece, 2 h; el
-  nombre del archivo y la nota del viaje en la salida, con su prueba, 0,5 h; la comprobación de
-  la base (la suite en 1912 y `analyze`), 0,5 h. **≈ 20 h**, en dos o tres sesiones, más la
-  prueba de punta a punta de Carlos (≈ 2 h, con la variante de los ajustes 1 y 2) y la
-  aceptación de Codex.
+- **Fase 1:** ≈ 3,5 h de lectura y diseño, sin Flutter, más ≈ 1 h de los ajustes y los cambios
+  de Yov.
+- **Fase 2, hecha en una sesión del 3-nov:** la base y las lecturas de T-129 y T-132, 0,5 h; el
+  dominio, el transporte, el contrato y el adaptador, 2 h; el motor y el registro, 1 h; la
+  oficina (búsqueda, previo, diálogo, notificador, página), 2 h; el muelle, «Nube y cuenta» y la
+  salida, 0,5 h; las reglas, la batería y el lanzador, 1,5 h; las nubes falsas y las tres
+  pruebas, 3 h; las corridas y los ocho fallos de la primera (las dos trampas de las falsas, la
+  del repositorio del lector y la del listado), 1,5 h; el informe, 1,5 h. **≈ 13,5 h**, por
+  debajo de las 20 estimadas, porque el diseño ya decía qué escribir y las nubes falsas de T-79
+  y T-129 cubrieron más de lo previsto. Faltan la prueba de punta a punta de Carlos (≈ 2 h, con
+  la variante de los ajustes 1 y 2) y la aceptación de Codex.
 
 ### 3.14 Lo que Carlos decidió (2-nov): aprobado con seis ajustes
 
@@ -917,3 +917,426 @@ git commit -m "Sprint 4: T-130, fase 1, el diseno aprobado de la operacion publi
 git push origin sprint-4
 git log --oneline -1
 ```
+
+## 6. Fase 2 · La base y lo que se corrió
+
+- **La base** es `a18d2d3`: `sprint-4` con T-129 (`2d98f23`) y su corrección (`a18d2d3`, 10.92),
+  la mezcla de T-132 (`7cb96ec`), las decisiones 10.90 y 10.91 (`fb8be28`) y el diseño aprobado
+  (`733a8ab`). Al empezar, `SPRINT-4.md` traía la 10.92 sin confirmar (de Yov); no la toqué.
+  `git log a18d2d3..` no trae nada más. Los cambios ajenos de siempre (`test/t114_…`, tres de
+  `windows/flutter/`, `docs/t117/entrega1/`) siguen fuera de mi bloque.
+- **La comprobación de la base, antes de tocar nada** (3.10): `flutter analyze lib test
+  integration_test` → **No issues found** (82 s; `build/t130/00-analyze-base.log`); la suite
+  completa en una corrida, `flutter test --no-pub --reporter expanded` → **1914 de 1914**, sin
+  fallas ni omitidas, en 2 min 04 s (`01-suite-base.log`). Es lo que Carlos anunció (las 1912 de
+  T-129 y T-132 más las 2 de la corrección).
+- **Una falta mía:** la suite de la base corrió a la vez que la ventana exclusiva de Codex, que
+  estaba repitiendo sus sondas y `analyze`. Carlos lo señaló; Codex volvió a correr lo suyo.
+  Desde ese momento, **cada comando de Flutter de esta tarea se pide a Carlos y espera su
+  respuesta** (10.93 lo deja escrito para los dos programadores). El resultado de la suite vale
+  como lectura de la base (pasa o no pasa), no como medición de tiempo, y lo digo aquí para que
+  nadie lo tome por otra cosa.
+- **Durante la fase 2 entraron dos commits de `docs/`**, `e1ad29e` (la segunda revisión corta de
+  T-129, que la da por cerrada) y `bda658b` (10.92 y 10.93): no tocan `lib/`, `test/`,
+  `pubspec.*` ni `tool/`, así que la base del código sigue siendo `a18d2d3` y el bloque de 14
+  aplica sobre la punta `bda658b`.
+- **Después, sin Flutter:** todo el código de 7, las pruebas de 8, las reglas y la batería de 9
+  (con `node --check` de `tool/t130_reglas_plan.mjs`) y la huella de
+  `docs/T130-firestore.rules.propuesta` con `tool/t113_reglas.mjs`:
+  **`8B9039496CCCDA9FBC1412CC1F8610B3183D58FB4BA779EFB0C0C7D920EEFF71`** (484 líneas, LF; la
+  huella cruda y la normalizada coinciden). Un `diff` con el archivo de T-127 da 99 líneas: el
+  encabezado nuevo, `validPlanAddition` con `validAddedPlan` y `validPlanEntry`, el `validSource`
+  nuevo y `validAddedPart`.
+
+## 7. Lo hecho (el diseño de 3, con los seis ajustes y los dos cambios de Yov)
+
+### 7.1 El dominio y el transporte
+
+- `OperationSource.voyage` (`String?`, solo si difiere del de la operación), `withVoyage`, y
+  `voyage` en el JSON local (ausente si es nulo; lo guardado antes se lee igual).
+  `Operation.matchesVoyage(viaje)` (el suyo o el que declara una fuente) y
+  `Operation.departureVoyageNumber` (el del plan de carga, o el de la operación).
+- `SourceManifestEntry.voyage` (en `toMap` solo si lo hay; `read` lo lee) y `SourceManifest`
+  (las tres entradas por tipo, `read` del mapa `sources`, `plans`, `exportList`).
+  `packSource`/`assembleSource` llevan y traen el viaje. Un BAPLIE agregado va en trozos
+  `{tipo}-{i}` sin `revision`, el mismo formato que `publish`.
+- El contrato: `OperationSyncRepository.addSource`, `PlanArrival(kind, fileName, voyage)` y
+  `SyncStatus.planArrival`. `LocalOnlyOperationSync.addSource` contesta «sin nube».
+- `OperationSources`: `find` encuentra la operación por su viaje **o** por el que declara una
+  fuente; `publishedAtCall` (las publicadas y abiertas de ese buque en esa escala en este
+  equipo); `lookup` (función pura con las dos listas, el equipo y la nube, y las cuatro salidas
+  de 3.3: `NoPublishedOperation`, `AttachablePlan` con la fecha de publicación,
+  `PlanAlreadyThere` con `sameContent`, `PlanInCloudOnly`, `SeveralOpenOperations` ordenadas por
+  fecha); `save(…, attachTo:)`: en una operación publicada, el mismo texto no cambia nada, una
+  cerrada se niega, el listado sigue por `replaceSource`, un BAPLIE que ya está con otro texto
+  lanza el mensaje de 3.2 (`replaceMessage`), uno que falta sin confirmación lanza «…confirma el
+  plano desde la banda y acepta «Agregar a la operación».», y con confirmación sube por
+  `addSource` con `voyage` si el viaje del plano difiere. `sourceName` da el nombre de cada
+  fuente.
+
+### 7.2 El adaptador de Firestore y el motor
+
+- `FirestoreOperationSync.addSource`: exige oficina, lee del servidor, se niega si la operación
+  no está (`not_found`), está cerrada (`closed`) o ya tiene ese tipo (`already_has`, con el
+  archivo que tiene); escribe por `_writeSource`, que comparte con `replaceSource`: los trozos y
+  la entrada `sources.{tipo}` en un lote y, si pasa, la operación local. Los mensajes de la nube
+  en contra, por código (permiso, sin conexión, sin respuesta).
+- **El registro de escrituras propias** (`OwnSourceWrites`, en `sync_engine.dart`; ajuste 3):
+  `_writeSource` anota (operación, tipo, huella) antes de `batch.commit()` y lo borra en un
+  `finally` después de guardar en local; el adaptador se lo pasa a cada motor que crea en
+  `follow`. `replaceSource` queda cubierto por el mismo camino.
+- `publish` (ajuste 1): antes del lote, lee del servidor las operaciones abiertas
+  (`_openDuplicateOf`) y, si ya hay una del mismo buque, viaje y puerto con otro id, contesta
+  `duplicate` con el texto de 3.3 (punto 7), con la fecha de publicación (`fechaCorta`, nueva en
+  `core/utils/`). Otro viaje o la misma operación no son una segunda.
+- `FirestoreRemoteMovementStore`: `watchList` pasa a `watchSources` (las tres entradas del
+  manifiesto, sin escrituras propias pendientes) y se suma `planParts(operación, tipo)`
+  (`where('kind', isEqualTo: …)`, del servidor).
+- `SyncEngine`: `watchSources` → `_syncSources` = `_syncList` (como T-127, más el salto de lo
+  anotado como escritura propia) y `_syncPlans` (por cada BAPLIE que el manifiesto declara y lo
+  local no tiene: relee lo local, salta lo propio en vuelo, baja los trozos, arma y comprueba,
+  guarda sin tocar los movimientos y emite `planArrival`; sin red se queda y reintenta con el
+  siguiente contacto; los trozos que no cuadran se anotan por huella y no se vuelven a pedir).
+  `ownWrites` opcional en el constructor (un motor solo tiene el suyo).
+
+### 7.3 La oficina
+
+- `plan_attach_provider.dart` (nuevo): `lookupPlanAttachment` reúne la bitácora y, con sesión
+  autorizada, la lista de operaciones abiertas de la nube (`watchOpenOperations().first` con un
+  tope de 5 s; sin respuesta, solo lo local) y decide con `OperationSources.lookup`;
+  `textoDeLaBusqueda` escribe la banda o el aviso de cada salida.
+- `VoyageNotifier.lookupForPlan(port, kind)`; `_useProfile` (la publicación directa) ya no
+  publica si la escala tiene una operación publicada de este buque, aquí o en la nube: abre el
+  previo con `PreviewReason.operacionPublicada` y la nota de la búsqueda (`Previo.nota`,
+  `previewNota`); solo con ninguna, o con la misma fuente y el mismo texto, publica como hoy.
+  `confirmGeometry(…, attachTo:, sync:)` → `_publish` → `save(…, sync:, attachTo:)`.
+- `vessel_overview_page.dart`, `_askForGeometry`: después de «Parámetros del buque» (y del diálogo
+  «Tipo de BAPLIE»), la búsqueda; con una operación aquí a la que le falta el plan, el diálogo
+  `confirmarAgregarPlan` (`widgets/dialogo_agregar_plan.dart`, nuevo: cuándo se publicó,
+  «declara el viaje …» si difiere, las cifras y «Agregar a la operación …»); con una solo en la
+  nube, ya con ese tipo con otro texto o varias abiertas, el aviso en rojo y el plano sigue en
+  previo; «Cancelar» no publica nada. Al agregar, el aviso «Plan de carga agregado a la
+  operación publicada de GTSTC: … El muelle lo recibe solo.» (`textoDelPlanAgregado`). Es el
+  único archivo que se cruza con T-131, en `_askForGeometry` y en la línea de `AvisoDelPlan`.
+
+### 7.4 El muelle, «Nube y cuenta» y la salida
+
+- `AvisoDelPlan` (`widgets/aviso_del_plan.dart`, nuevo), hermano de `AvisoDelListado`: avisa una
+  vez por llegada con las cifras del plan leído de la operación local («Plan de carga agregado
+  por la oficina: 104 contenedores y 55 reservas.», «Plano de llegada agregado por la oficina:
+  398 se descargan.»; si no se puede leer, el archivo), llama a `changed()` y ofrece «Abrir»
+  (`openOperationSource`).
+- `cloud_page.dart`: la línea «Fuentes: llegada · carga (viaje M100N) · listado r1»
+  (`fuentesDeLaOperacion`), y la negativa de `publish` se muestra como cualquier fallo, con
+  «Unirse» debajo.
+- Ajuste 5, corregido por Yov: `departure_export_repository_impl.dart` nombra el archivo con
+  `operation.departureVoyageNumber`; `departure_baplie_page.dart` dice «El archivo lleva el
+  viaje M100N, el del plan de carga. La operación es la M100.» solo cuando difieren
+  (`departure-voyage-note`). Nada más de esos archivos; el escritor no se toca.
+
+### 7.5 Las nubes falsas y el banco
+
+- `test/support/t79_fake_cloud.dart`: `FakeServer.plans`, `manifest` y `addPlan(kind, content,
+  fileName:, voyage:)`; `FakeCloud.watchSources`, `planParts` con `planPartsRequests` y
+  `planPartsFailures`. Las pruebas de T-127 no cambian: usan la nube falsa a través del motor.
+- `test/support/t129_fake_firestore.dart` (Carlos autorizó tocarla en 10.92): `batch()` (`set`,
+  `update` con rutas anidadas, `commit` con la vista pendiente, el servidor y el eco),
+  `echoBeforeAck` (el eco antes de que el `commit` termine), `where(…).get()` y la escucha de una
+  colección (lo justo para el motor), `queryGets`, `docsIn`, `writePending` y `echo`.
+- `tool/t130_emu_main.dart` (nuevo): la app contra el emulador, como el banco de T-128, con el
+  anfitrión por `T130_HOST` (loopback o una IP privada del Wi-Fi, para el Honor) y solo
+  proyectos `demo-`.
+
+## 8. Las pruebas
+
+**37 pruebas nuevas, 37 en verde** (`build/t130/03-pruebas-nuevas.log`, «+37: All tests
+passed!»), en tres archivos, de a un comando y con la luz verde de Carlos para cada uno:
+
+1. `flutter analyze lib test integration_test` sobre el código nuevo: dos avisos de estilo
+   (`prefer_const_constructors`) en una prueba, corregidos; después **No issues found**
+   (`02-analyze-primero.log`).
+2. Las tres pruebas: en la primera corrida pasaron 29 de 37 (`03-…`, sobrescrito por la corrida
+   final). Los ocho fallos eran de las pruebas y de las nubes falsas, no del producto:
+   - **cuatro carreras del adaptador vencían el plazo** después de dar todas sus comprobaciones:
+     se colgaban al parar el motor, porque la bitácora en memoria de T-75 implementa `watch`
+     como un generador `async*` que espera en un `await for` sobre un flujo que nunca emite, y
+     cancelar un generador así no termina (la de Hive, la real, cierra con un controlador). La
+     bitácora de la prueba lo implementa como Hive. T-75 no cambia;
+   - **la consulta `where` sobre una colección de la nube falsa** fallaba con «type 'Null' is
+     not a subtype of type 'Iterable'»: `cloud_firestore` lee `parameters['where']` del
+     delegado antes de llamar a la plataforma, y la colección base lo deja vacío. La falsa lo
+     llena con los parámetros iniciales y la consulta reemplaza las condiciones (que
+     `cloud_firestore` manda acumuladas) en vez de sumarlas;
+   - **el aviso del muelle** no mostraba las cifras: `VesselRepositoryImpl` pide
+     `FirebaseFirestore.instance` al construirse, y en una prueba de widget no hay Firebase (en
+     la app siempre lo hay; los bancos lo reemplazan). La prueba le da un repositorio con una
+     nube vacía. Además el aviso leía la operación de `activeOperationProvider` sin esperar a
+     que resolviera; ahora espera su `future` después de `changed()`, que es lo que vuelve a
+     leerla de la bitácora;
+   - **el listado de la prueba del motor** era un JSON a mano que el lector no entiende: va con
+     `ExportList.toJson()`, como en T-127.
+   Con eso, **37 de 37**.
+3. `flutter analyze` otra vez, sin las marcas de diagnóstico: **No issues found**
+   (`04-analyze-tras-pruebas.log`).
+4. **El rojo contra la base:** una copia del árbol en `%TEMP%\t130-antes\copia` (robocopy sin
+   `.git`, `build`, `docs` ni `.dart_tool`, más `package_config.json`, `package_graph.json`,
+   `version` y `.flutter-plugins-dependencies` del árbol, como en T-127), con los 13 archivos de
+   `lib/` que toca T-130 repuestos desde `a18d2d3` con `git show` y los 4 nuevos de `lib/`
+   borrados; las pruebas y las nubes falsas, como están. `flutter test --no-pub` de los tres
+   archivos ahí: **ninguno compila** («Failed to load»; `05-rojo-contra-a18d2d3.log`): 254
+   errores, 152 en la prueba del motor y el dominio, 54 en la de pantallas, 24 en la del
+   adaptador y 22 en la nube falsa de T-79, todos por el contrato que no existe en la base
+   (`addSource`, `planArrival`, `watchSources`, `planParts`, `OperationSource.voyage`,
+   `SourceManifest`, `OwnSourceWrites`, `lookup`, `confirmarAgregarPlan`,
+   `departureVoyageNumber`…). Es el rojo que admite un contrato nuevo (O-127-1): no es «cada
+   una en su comprobación», y se dice así. Las reglas sí tienen su rojo caso por caso (9).
+5. **La suite completa en una sola corrida**, `flutter test --no-pub --reporter expanded`:
+   **1951 de 1951**, sin fallas ni omitidas, en 2 min 04 s (`06-suite-completa.log`): las 1914
+   de la base más las 37 nuevas. **El piso de `sprint-4` sube a 1951.** `pubspec.lock` no
+   cambia.
+6. `flutter analyze lib test integration_test` al final: **No issues found**
+   (`07-analyze-final.log`).
+
+**Lo que prueba cada archivo:**
+
+- `test/t130_plan_agregado_test.dart` (18): el dominio (4: el viaje en la fuente y en el manifiesto,
+  `assembleSource` con un plan agregado, `find` y `publishedAtCall`), la búsqueda (4: las cuatro
+  salidas, varias abiertas y la copia local que la nube ya no lista, `lookupPlanAttachment` con
+  nube, sin sesión y sin respuesta, los textos), `save` (2), el motor (7: el plan de carga llega
+  con descargas hechas y la revisión del listado sigue; el plano de llegada llega; sin red;
+  reintento con el siguiente contacto; trozos que no cuadran; el eco antes que el acuse para el
+  plan y para el listado; el acuse antes que el eco) y la propiedad (1: estado y BAPLIE de salida
+  idénticos, con el `TDT` del plan de carga).
+- `test/t130_plan_pantallas_test.dart` (10): el diálogo (3), la banda con la nota, «Nube y
+  cuenta», los textos del plan agregado, el aviso del muelle con «Abrir» (1), y la salida: la
+  nota del viaje, sin nota con el mismo viaje y el nombre del archivo (3).
+- `test/t130_adaptador_test.dart` (9), contra la nube falsa de T-129: `addSource` (3: el lote y
+  lo local; lo que no agrega y nada local cambia; la sesión), la carrera en los dos órdenes para
+  `addSource` y para `replaceSource` (4) y la negativa de `publish` (2). **La carrera, medida:**
+  con el motor de la oficina escuchando la operación, el eco del manifiesto antes y después del
+  acuse del lote; en los cuatro casos la fuente se guarda en local una sola vez (dos escrituras
+  en la bitácora: la de la prueba y la del adaptador), `follow` no emite `planArrival` ni
+  `listArrival`, y ninguna consulta pidió trozos.
+
+## 9. Las reglas y sus baterías
+
+**Las ocho corridas, en una sola pasada del lanzador** (`tool/t130_baterias.ps1`, 3-nov, con la
+luz verde de Carlos; emulador en `127.0.0.1:8282`, proyecto `demo-t130`, ningún puerto del
+emulador en escucha antes y el emulador cerrado al terminar; registros en `build/t130/`,
+resumen en `baterias-resumen.json`):
+
+| Batería | Contra T-130 | Contra T-127 | Registros |
+|---|---|---|---|
+| T-80, `tool/t80_reglas.mjs` | **69 de 69** | **69 de 69** | `reglas-t80-contra-t130.log`, `reglas-t80-contra-t127.log` |
+| T-113, `tool/t113_reglas_abuso.mjs` | **25 de 25** | **25 de 25** | `reglas-t113-contra-*.log` |
+| T-127, `tool/t127_reglas_revision.mjs` | **31 de 31** | **31 de 31** | `reglas-t127-contra-*.log` |
+| T-130, `tool/t130_reglas_plan.mjs` | **38 de 38** | **27 de 38**: caen los 11 de abajo | `reglas-t130-contra-*.log` |
+
+**Los once que caen contra T-127, y por qué tienen que caer:** las dos adiciones (el plano de
+llegada a una operación con solo el plan de carga, y al revés), el `voyage` válido y su lectura
+(T-127 no admite la entrada: denegado, 403), los dos trozos y la adición de cuatro trozos (lo
+mismo), y cuatro consecuencias de la holgura de T-80 que T-130 cierra: un trozo suelto sin su
+entrada pasa con T-127 (`validPublishedPart` no mira el manifiesto), un trozo suelto que no
+cuadra con el manifiesto también pasa, y por eso el que «completa» lo que el manifiesto declara
+encuentra su id ocupado y cae, y «un trozo agregado no se actualiza» resulta una creación
+permitida porque la adición nunca entró; la lectura de los trozos de la operación A solo
+encuentra `export_list-r1-0` y `loading_baplie-0`. Lo que T-130 **habilita** es exactamente lo
+que T-127 niega, y lo que T-130 **cierra** es lo que T-80 dejaba pasar.
+
+**El presupuesto de accesos (ajuste 4):** la publicación de cinco trozos en un lote y la adición
+de cuatro pasaron con las reglas de T-130. **Ninguna respuesta del emulador mencionó el límite
+de accesos a documentos**, ni en esa corrida ni en la de T-127, y ninguna denegación agotó las
+1 000 expresiones. No puedo afirmar que el emulador cuente los accesos como producción: no lo
+dijo, y la documentación de Firebase no lo promete. Queda la cuenta a mano de 3.7: 3 accesos por
+trozo, los mismos de T-80 (`exists` y `get` de la lista de autorizados, `getAfter` de la
+operación), 17 para publicar cinco trozos y 14 para agregar cuatro, bajo el límite de 20 por
+lote; y el techo preexistente de 6 trozos por lote sin caché. Si en producción un lote grande
+fallara por el límite, el síntoma sería «La nube no aceptó el plan…» y la vuelta atrás es la de
+10.3; con el BAPLIE más grande del corpus en un solo trozo, no es un caso del piloto.
+
+`docs/T130-firestore.rules.propuesta` es lo de 3.7 con el ajuste 4: `validPlanAddition`,
+`validAddedPlan`, `validPlanEntry`, `validAddedPart` sin `get`, y `validPublishedPart &&
+op.createdAt == request.time`. `tool/t130_reglas_plan.mjs` trae 38 comprobaciones (36 casos y dos
+lecturas): quién (4), una sola vez (5), la entrada (7, con el `voyage` válido y su lectura), los
+trozos (7), el ajuste al trozo publicado (2: el suelto que no cuadra no pasa; el que completa lo
+que el manifiesto declara sí, porque es inofensivo), el presupuesto (2: cinco trozos al publicar
+y cuatro al agregar) y lo que sigue igual (11). Busca en cada respuesta el texto del límite de
+accesos a documentos y lo dice al final. `tool/t130_baterias.ps1` corre las ocho (T-80, T-113,
+T-127 y T-130 contra T-130; las cuatro contra T-127, la última sin contar), en 8282 y
+`demo-t130`, nunca a la vez que el emulador de la Expo.
+
+## 10. Para Carlos: publicar las reglas de T-130 y cotejarlas
+
+### 10.1 Publicar desde la consola (nunca `firebase deploy`)
+
+1. Antes, Codex acepta T-130 y la candidata está lista para compilar. Las reglas van **antes**
+   que los clientes de la 0.4.2.
+2. En Chrome, `https://console.firebase.google.com` → proyecto **baystream-app** → **Firestore
+   Database** → pestaña **Reglas**.
+3. **Respaldo de lo publicado:** seleccionar todo el editor (Ctrl + A), copiar y guardar en
+   `build\t130\reglas-antes.txt` (UTF-8). Desde la carpeta del rediseño:
+   `node tool/t113_reglas.mjs build/t130/reglas-antes.txt build/t130 docs/T127-firestore.rules.propuesta`
+   → `"equal": true` con `FC17842C…` si lo publicado es T-127; si la 0.4.1 no se publicó, sin el
+   tercer argumento, `7E57F227…` (T-80).
+4. Abrir `docs\T130-firestore.rules.propuesta`, seleccionar todo, copiar; en la consola,
+   seleccionar todo y pegar encima; ninguna marca roja; la primera línea sigue siendo
+   `rules_version = '2';`.
+5. **Publicar.** Rige en menos de un minuto. No hace falta tocar índices: `where('kind',
+   isEqualTo: …)` usa el índice de un solo campo.
+
+### 10.2 Cotejar
+
+1. Copiar el editor a `build\t130\reglas-publicadas.txt` (UTF-8).
+2. `node tool/t113_reglas.mjs build/t130/reglas-publicadas.txt build/t130 docs/T130-firestore.rules.propuesta`
+3. Tiene que decir `"equal": true`, salir con 0 y dar la huella normalizada
+   **`8B9039496CCCDA9FBC1412CC1F8610B3183D58FB4BA779EFB0C0C7D920EEFF71`** (484 líneas, LF). Si no,
+   el script lista las líneas distintas: se corrige en la consola y se vuelve a cotejar. El
+   resultado queda en `build\t130\reglas-cotejo.json`.
+
+### 10.3 Volver atrás
+
+Pegar `build\t130\reglas-antes.txt` y publicar: la 0.4.2 vuelve a decir «La nube no aceptó el
+plan…» al agregar y no cambia nada local; el listado de T-127 y todo lo demás siguen igual.
+
+## 11. La lista del piloto: lo que cambia (propuesta; la mantiene Yov)
+
+- **0.1 y 4.0:** las reglas de T-130 (`8B903949…`) antes que los clientes de la 0.4.2; el respaldo
+  de lo anterior en `build\t130\reglas-antes.txt`.
+- **1.7:** deja de ser «antes de publicar»: con la operación publicada, el plan que falta entra
+  después (1.18).
+- **1.18, nuevo (oficina):** «Más» → «Cargar archivo BAPLIE» → el plan que falta. La banda dice
+  «La escala … ya tiene una operación publicada (viaje …) sin plan de carga: confirma para
+  agregarlo.» → «Confirmar» → «Parámetros del buque» → el diálogo «Agregar el plan de carga a la
+  operación publicada» (cuándo se publicó, el viaje que declara el archivo si difiere, las
+  cifras) → «Agregar a la operación …» → «Plan de carga agregado a la operación publicada de …».
+  Si la banda dice que la operación está en la nube y este equipo no la tiene: «Nube y cuenta»
+  → «Unirse» y volver a abrir el plan. Si hay varias abiertas, cerrar la que no corresponde.
+- **1.19, nuevo (oficina):** «Publicar operación» con otra abierta del mismo buque, viaje y
+  puerto se niega y nombra la que hay: «Unirse».
+- **2.16, nuevo (muelle):** con red y sin tocar nada, «Plan de carga agregado por la oficina: N
+  contenedores y M reservas.» (6 s), «Carga» muestra el plan y «Nube y cuenta» ofrece «Abrir plan
+  de carga»; con un plano de llegada agregado, «Abrir» en el aviso. Sin red, llega al volver la
+  red; si en medio minuto no llega, «Reintentar».
+- **1.13 y 1.14:** la nota «El archivo lleva el viaje …, el del plan de carga.» cuando difiera, y
+  el nombre del archivo con ese viaje.
+- **Sección 5:** la regla de uso (la laptop, el teléfono de la oficina y el Honor en la 0.4.2
+  antes de agregar un plan) y lo que hace un cliente viejo (3.8), en particular el que abre un
+  plan agregado con otro viaje.
+
+## 12. Lo que no entra y los límites
+
+Lo de 3.12. Además: la búsqueda en la nube necesita sesión autorizada y responde en 5 s o sigue
+con lo local (lo dice 7.3); la fecha de publicación es la de la nube cuando la nube respondió, y
+si no, la local («guardada el …»); las cifras del aviso del muelle salen de leer el plan ya
+guardado y, si no se puede leer, el aviso dice el archivo.
+
+## 13. Archivos tocados
+
+**Nuevos:** `docs/T130-firestore.rules.propuesta`; `lib/core/utils/fecha_corta.dart`;
+`lib/features/vessel/presentation/providers/plan_attach_provider.dart`;
+`lib/features/vessel/presentation/widgets/aviso_del_plan.dart`;
+`lib/features/vessel/presentation/widgets/dialogo_agregar_plan.dart`;
+`test/t130_plan_agregado_test.dart`; `test/t130_plan_pantallas_test.dart`;
+`test/t130_adaptador_test.dart`; `tool/t130_reglas_plan.mjs`; `tool/t130_baterias.ps1`;
+`tool/t130_emu_main.dart`; `docs/T130-RESULTADOS.md`.
+
+**Modificados:** `lib/features/vessel/domain/entities/operation.dart`;
+`lib/features/vessel/domain/repositories/operation_sync_repository.dart`;
+`lib/features/vessel/domain/services/operation_sources.dart`;
+`lib/features/vessel/data/repositories/source_revisions.dart`;
+`lib/features/vessel/data/repositories/sync_engine.dart`;
+`lib/features/vessel/data/repositories/firestore_operation_sync.dart`;
+`lib/features/vessel/data/repositories/local_only_operation_sync.dart`;
+`lib/features/vessel/data/repositories/departure_export_repository_impl.dart`;
+`lib/features/vessel/presentation/providers/vessel_providers.dart`;
+`lib/features/vessel/presentation/providers/voyage_ui_state.dart`;
+`lib/features/vessel/presentation/pages/vessel_overview_page.dart`;
+`lib/features/vessel/presentation/pages/cloud_page.dart`;
+`lib/features/vessel/presentation/pages/departure_baplie_page.dart`;
+`test/support/t79_fake_cloud.dart`; `test/support/t129_fake_firestore.dart`.
+
+No cambian `pubspec.yaml` ni `pubspec.lock`, ni `lib/main.dart`, ni las opciones de Firebase, ni
+`docs/T80-firestore.rules.propuesta`, ni `docs/T127-firestore.rules.propuesta`, ni
+`departure_baplie_writer.dart`, ni los archivos congelados.
+
+## 14. Bloque de Git para Carlos
+
+(Todas las validaciones de 8 y 9 están hechas: 37 de 37, suite 1951 de 1951, `analyze` cero y
+las ocho baterías. No incluye `SPRINT-4.md`, `pubspec.*`, `lib/main.dart`, los archivos de
+`docs/t117/` ni nada ajeno.)
+
+```powershell
+Set-Location -LiteralPath C:\Proyectos\baystream-rediseno
+git add -- docs/T130-firestore.rules.propuesta
+git add -- lib/core/utils/fecha_corta.dart
+git add -- lib/features/vessel/domain/entities/operation.dart
+git add -- lib/features/vessel/domain/repositories/operation_sync_repository.dart
+git add -- lib/features/vessel/domain/services/operation_sources.dart
+git add -- lib/features/vessel/data/repositories/source_revisions.dart
+git add -- lib/features/vessel/data/repositories/sync_engine.dart
+git add -- lib/features/vessel/data/repositories/firestore_operation_sync.dart
+git add -- lib/features/vessel/data/repositories/local_only_operation_sync.dart
+git add -- lib/features/vessel/data/repositories/departure_export_repository_impl.dart
+git add -- lib/features/vessel/presentation/providers/plan_attach_provider.dart
+git add -- lib/features/vessel/presentation/providers/vessel_providers.dart
+git add -- lib/features/vessel/presentation/providers/voyage_ui_state.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/pages/cloud_page.dart
+git add -- lib/features/vessel/presentation/pages/departure_baplie_page.dart
+git add -- lib/features/vessel/presentation/widgets/aviso_del_plan.dart
+git add -- lib/features/vessel/presentation/widgets/dialogo_agregar_plan.dart
+git add -- test/support/t79_fake_cloud.dart
+git add -- test/support/t129_fake_firestore.dart
+git add -- test/t130_plan_agregado_test.dart
+git add -- test/t130_plan_pantallas_test.dart
+git add -- test/t130_adaptador_test.dart
+git add -- tool/t130_reglas_plan.mjs
+git add -- tool/t130_baterias.ps1
+git add -- tool/t130_emu_main.dart
+git add -- docs/T130-RESULTADOS.md
+git commit -m "Sprint 4: T-130, la operacion publicada acepta el plan que le falta" --trailer "Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
+git push origin sprint-4
+git log --oneline -1
+```
+
+## 15. Tres líneas y mensaje para Yov (fase 2)
+
+**Tres líneas:**
+
+- Una operación publicada y abierta acepta el BAPLIE que le falta: la oficina lo confirma en un
+  diálogo que dice cuándo se publicó la operación, el viaje que declara el archivo y las cifras
+  del plan; sube en un lote con sus huellas y, si la nube no acepta, nada local cambia. La
+  búsqueda mira el equipo y la nube; si la operación está solo en la nube, la banda lleva a
+  «Unirse», y «Publicar operación» ya no publica una segunda del mismo buque, viaje y puerto.
+- El muelle lo recibe solo, avisa con las cifras y ofrece «Abrir»; los movimientos no se
+  tocan y el estado se deriva igual que con los dos planos publicados juntos (es una propiedad
+  probada); `join` trae las tres fuentes; la operación conserva su viaje y la fuente recuerda el
+  que declara. El eco antes que el acuse ya no hace que la oficina se avise a sí misma, tampoco
+  con el listado de T-127. La salida lleva el viaje del plan de carga en el nombre y lo dice en
+  la página.
+- 37 pruebas nuevas en verde (rojas contra `a18d2d3`: no compilan), la suite en 1951 de 1951
+  sin omitidas, `analyze` en cero antes y después; en el emulador, 69 de 69, 25 de 25, 31 de 31 y
+  38 de 38 contra las reglas de T-130 (`docs/T130-firestore.rules.propuesta`, `8B903949…`), y
+  contra las de T-127 solo caen los 11 casos que T-130 abre o cierra.
+
+**Mensaje para Yov:**
+
+> T-130, fase 2, sobre `a18d2d3` (T-129 con su corrección y T-132 en `sprint-4`): la base dio
+> `analyze` cero y 1914 de 1914, aunque esa suite corrió encima de la ventana de Codex, lo digo en
+> el informe (6), y desde entonces cada comando de Flutter se pidió a Carlos. Lo hecho es el
+> diseño de 3 con los seis ajustes y tus dos cambios (7): `addSource` y `OwnSourceWrites` en el
+> adaptador (el registro cubre también `replaceSource`), `watchSources` y `_syncPlans` en el
+> motor, `OperationSources.find` por el viaje declarado y `lookup` con sus cuatro salidas, la
+> búsqueda en el equipo y en la nube, el previo con el motivo nuevo, el diálogo
+> `confirmarAgregarPlan` (fecha de publicación, viaje, cifras), `AvisoDelPlan` con «Abrir»,
+> «Fuentes: …» en «Nube y cuenta», la negativa de `publish`, y en la salida el nombre con
+> `departureVoyageNumber` y la nota del viaje (solo eso de los archivos de T-132). Reglas:
+> T-127 más `validPlanAddition`, `validAddedPart` sin `get` y `validPublishedPart &&
+> op.createdAt == request.time`; huella `8B9039496CCC…` (484 líneas). Cifras: 37 nuevas en
+> verde (8 fallos de primera corrida, todos de las pruebas o de las nubes falsas: 8), rojo contra
+> `a18d2d3` = no compilan (254 errores), suite 1951 de 1951 sin omitidas, `analyze` cero;
+> emulador 69/25/31/38 contra T-130 y 69/25/31 contra T-127, con 27 de 38 en la de T-130 contra
+> T-127 (los 11 que caen, explicados en 9); el emulador no mencionó el límite de accesos, y lo
+> digo sin afirmar que lo cuente como producción. Para Carlos: publicar y cotejar en 10, la
+> lista del piloto en 11, la prueba de punta a punta en 3.10 con `tool/t130_emu_main.dart`.
+> ALTO: Yov revisa, Codex acepta.

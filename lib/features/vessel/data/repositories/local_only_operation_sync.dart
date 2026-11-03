@@ -44,6 +44,11 @@ class LocalOnlyOperationSync implements OperationSyncRepository {
       const Left(_failure);
 
   @override
+  Future<Either<Failure, Operation>> addSource(
+          Operation operation, OperationSource source) async =>
+      const Left(_failure);
+
+  @override
   Stream<SyncStatus> follow(Operation operation) => Stream.value(SyncStatus.local);
 
   @override

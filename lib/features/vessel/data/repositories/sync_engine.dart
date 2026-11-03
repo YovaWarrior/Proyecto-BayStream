@@ -44,15 +44,46 @@ abstract class RemoteMovementStore {
   /// Cuándo se cerró la operación en la nube; null si sigue abierta.
   Future<DateTime?> closedAt(String operationId);
 
-  /// T-127 · La entrada del listado en el manifiesto de la operación
-  /// (`sources.export_list`): al suscribirse y cada vez que cambia; null si
-  /// la operación no tiene listado. Solo lo que el servidor ya tiene: una
-  /// escritura propia todavía pendiente no cuenta.
-  Stream<SourceManifestEntry?> watchList(String operationId);
+  /// T-127 · El manifiesto `sources` de la operación, por tipo: al
+  /// suscribirse y cada vez que cambia. Solo lo que el servidor ya tiene: una
+  /// escritura propia todavía pendiente no cuenta. T-130 · Trae los tres
+  /// tipos, no solo el listado: el motor baja también el BAPLIE que la
+  /// oficina agregó después de publicar.
+  Stream<SourceManifest> watchSources(String operationId);
 
   /// T-127 · Los trozos de esa revisión del listado, del servidor. Sin red
   /// falla con [RemoteStoreException] y el motor lo vuelve a intentar.
   Future<List<SourcePart>> listParts(String operationId, int revision);
+
+  /// T-130 · Los trozos de ese BAPLIE (`{tipo}-{i}`, sin revisión), del
+  /// servidor. Sin red falla con [RemoteStoreException] y el motor lo vuelve
+  /// a intentar.
+  Future<List<SourcePart>> planParts(String operationId, OperationSourceKind kind);
+}
+
+/// T-130 (10.90, ajuste 3) · Las escrituras de fuentes propias en vuelo, lo
+/// que enseñó T-129: el eco del servidor puede llegar al motor **antes** de
+/// que el adaptador guarde en local la fuente que acaba de subir. El
+/// adaptador anota (operación, tipo, huella) antes del lote y lo borra
+/// después de guardar en local (o al fallar); el motor, al ver en el
+/// manifiesto una entrada anotada, no la baja ni avisa: esa fuente la guarda
+/// el adaptador, una sola vez. Lo comparten el adaptador y todos sus motores.
+class OwnSourceWrites {
+  final _inFlight = <String>{};
+
+  static String _key(String operationId, OperationSourceKind kind, String sha256) =>
+      '$operationId/${kind.wire}/$sha256';
+
+  void begin(String operationId, OperationSourceKind kind, String sha256) =>
+      _inFlight.add(_key(operationId, kind, sha256));
+
+  void end(String operationId, OperationSourceKind kind, String sha256) =>
+      _inFlight.remove(_key(operationId, kind, sha256));
+
+  bool contains(String operationId, OperationSourceKind kind, String sha256) =>
+      _inFlight.contains(_key(operationId, kind, sha256));
+
+  bool get isEmpty => _inFlight.isEmpty;
 }
 
 /// T-79 · El motor de la cola (T-79a 4.1 a 4.6), en Dart puro: no sabe que
@@ -76,6 +107,10 @@ class SyncEngine {
   final Duration unconfirmedAfter;
   final Duration tick;
 
+  /// T-130 · Las escrituras propias en vuelo del adaptador que creó este
+  /// motor; un motor solo (las pruebas) tiene el suyo, vacío.
+  final OwnSourceWrites ownWrites;
+
   SyncEngine({
     required this.log,
     required this.remote,
@@ -83,9 +118,15 @@ class SyncEngine {
     DateTime Function()? clock,
     this.unconfirmedAfter = const Duration(minutes: 5),
     this.tick = const Duration(seconds: 15),
+    OwnSourceWrites? ownWrites,
   })  : _clock = clock ?? DateTime.now,
+        ownWrites = ownWrites ?? OwnSourceWrites(),
         _closed = operation.closed,
-        _localListRevision = operation.exportListRevision;
+        _localListRevision = operation.exportListRevision,
+        _localPlans = {
+          for (final source in operation.sources)
+            if (source.kind != OperationSourceKind.exportList) source.kind
+        };
 
   final _status = StreamController<SyncStatus>.broadcast();
   SyncStatus _current = SyncStatus.local;
@@ -104,8 +145,9 @@ class SyncEngine {
   Timer? _timer;
 
   // T-127 · El listado de la agencia con revisión (8.3 de T-122; 10.78).
-  StreamSubscription<SourceManifestEntry?>? _list;
-  SourceManifestEntry? _remoteList;
+  // T-130 · Y los BAPLIE que la oficina agrega después de publicar (10.90).
+  StreamSubscription<SourceManifest>? _sources;
+  SourceManifest _remoteSources = SourceManifest.empty;
 
   /// La revisión del listado que la operación local ya tiene.
   int _localListRevision;
@@ -115,6 +157,15 @@ class SyncEngine {
   /// a bajar; el dispositivo se queda con el listado anterior, como `join`.
   int? _rejectedListRevision;
   ListArrival? _listArrival;
+
+  /// T-130 · Los BAPLIE que la operación local ya tiene.
+  final Set<OperationSourceKind> _localPlans;
+  bool _fetchingPlan = false;
+
+  /// T-130 · Un BAPLIE cuyos trozos no cuadraron con su entrada (por huella):
+  /// no se vuelve a pedir mientras la entrada sea esa.
+  final _rejectedPlans = <OperationSourceKind, String>{};
+  PlanArrival? _planArrival;
 
   SyncStatus get current => _current;
   Stream<SyncStatus> get status => _status.stream;
@@ -128,7 +179,7 @@ class SyncEngine {
     _timer = Timer.periodic(tick, (_) {
       evaluate();
       unawaited(flush());
-      unawaited(_syncList());
+      unawaited(_syncSources());
     });
     await setOperator(operator);
   }
@@ -166,14 +217,16 @@ class SyncEngine {
   void _listen(bool on) {
     unawaited(_remote?.cancel());
     _remote = null;
-    unawaited(_list?.cancel());
-    _list = null;
+    unawaited(_sources?.cancel());
+    _sources = null;
     _fromServer = false;
     _connectionKnown = false;
     _onlineSince = null;
     if (!on || _stopped) return;
     _remote = remote.watch(operation.id).listen(_onSnapshot, onError: _onWatchError);
-    _list = remote.watchList(operation.id).listen(_onList, onError: _onWatchError);
+    _sources = remote
+        .watchSources(operation.id)
+        .listen(_onSources, onError: _onWatchError);
   }
 
   Future<void> _onSnapshot(RemoteSnapshot snapshot) async {
@@ -187,8 +240,8 @@ class SyncEngine {
     await log.acceptRemote(snapshot.movements);
     _emit();
     await flush();
-    // T-127: con el servidor de vuelta, el listado que no se pudo bajar.
-    if (snapshot.fromServer) unawaited(_syncList());
+    // T-127: con el servidor de vuelta, lo que no se pudo bajar.
+    if (snapshot.fromServer) unawaited(_syncSources());
   }
 
   Future<void> _onWatchError(Object error) async {
@@ -203,9 +256,16 @@ class SyncEngine {
   }
 
   /// T-127 · El manifiesto de la operación cambió, o se acaba de escuchar.
-  Future<void> _onList(SourceManifestEntry? entry) async {
-    _remoteList = entry;
+  Future<void> _onSources(SourceManifest manifest) async {
+    _remoteSources = manifest;
+    await _syncSources();
+  }
+
+  /// T-127 y T-130 · Lo que el manifiesto declara y la operación local no
+  /// tiene: la revisión nueva del listado, y el BAPLIE agregado.
+  Future<void> _syncSources() async {
     await _syncList();
+    await _syncPlans();
   }
 
   /// T-127 · Si el manifiesto trae una revisión del listado mayor que la
@@ -215,13 +275,16 @@ class SyncEngine {
   /// con el listado que tenía y lo reintenta al siguiente contacto con el
   /// servidor (8.3, punto 3).
   Future<void> _syncList() async {
-    final entry = _remoteList;
+    final entry = _remoteSources.exportList;
     final revision = entry?.revision ?? 0;
     if (entry == null ||
         _stopped ||
         _fetchingList ||
         revision <= _localListRevision ||
-        revision == _rejectedListRevision) {
+        revision == _rejectedListRevision ||
+        // T-130: el listado que esta misma oficina está subiendo lo guarda
+        // el adaptador; el eco no es noticia.
+        ownWrites.contains(operation.id, OperationSourceKind.exportList, entry.sha256)) {
       return;
     }
     _fetchingList = true;
@@ -259,6 +322,63 @@ class SyncEngine {
       // Un error que no se sabe clasificar tampoco toca el listado local.
     } finally {
       _fetchingList = false;
+    }
+  }
+
+  /// T-130 · Por cada BAPLIE que el manifiesto declara y la operación local
+  /// no tiene: relee la operación local (lo que el dispositivo guardó manda),
+  /// salta lo que esta misma oficina está subiendo, baja sus trozos, los
+  /// comprueba como `join`, guarda la fuente en la operación local **sin
+  /// tocar los movimientos** y lo dice en [SyncStatus.planArrival]. Sin red,
+  /// se queda con lo que tiene y lo reintenta al siguiente contacto con el
+  /// servidor. Un plan cuyos trozos no cuadran se anota y no se vuelve a
+  /// pedir mientras su entrada sea la misma.
+  Future<void> _syncPlans() async {
+    if (_stopped || _fetchingPlan) return;
+    _fetchingPlan = true;
+    try {
+      for (final entry in _remoteSources.plans) {
+        if (_stopped) return;
+        if (_localPlans.contains(entry.kind) ||
+            _rejectedPlans[entry.kind] == entry.sha256 ||
+            ownWrites.contains(operation.id, entry.kind, entry.sha256)) {
+          continue;
+        }
+        final before = await _localOperation();
+        if (_stopped) return;
+        if (before != null) _refreshLocalPlans(before);
+        if (_localPlans.contains(entry.kind)) continue;
+        final parts = await remote.planParts(operation.id, entry.kind);
+        if (_stopped) return;
+        final source = assembleSource(entry, parts);
+        if (source == null) {
+          _rejectedPlans[entry.kind] = entry.sha256;
+          continue;
+        }
+        final current = await _localOperation();
+        if (_stopped || current == null) return;
+        _refreshLocalPlans(current);
+        if (_localPlans.contains(entry.kind)) continue;
+        final saved = await log.saveOperation(
+            current.copyWith(sources: [...current.sources, source]));
+        if (saved.isLeft()) continue;
+        _localPlans.add(entry.kind);
+        _planArrival = PlanArrival(
+            kind: entry.kind, fileName: entry.fileName, voyage: entry.voyage);
+        _emit();
+      }
+    } on RemoteStoreException catch (_) {
+      // Sin red o sin respuesta: se queda con los planos que tiene.
+    } catch (_) {
+      // Un error que no se sabe clasificar tampoco toca la operación local.
+    } finally {
+      _fetchingPlan = false;
+    }
+  }
+
+  void _refreshLocalPlans(Operation local) {
+    for (final source in local.sources) {
+      if (source.kind != OperationSourceKind.exportList) _localPlans.add(source.kind);
     }
   }
 
@@ -418,7 +538,8 @@ class SyncEngine {
         localOnly: local,
         since: since,
         closed: _closed,
-        listArrival: _listArrival);
+        listArrival: _listArrival,
+        planArrival: _planArrival);
     if (next == _current) return;
     _current = next;
     _status.add(next);
@@ -428,7 +549,7 @@ class SyncEngine {
     _stopped = true;
     _timer?.cancel();
     await _remote?.cancel();
-    await _list?.cancel();
+    await _sources?.cancel();
     await _local?.cancel();
     await _status.close();
   }

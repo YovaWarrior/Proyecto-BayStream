@@ -20,6 +20,7 @@ import '../providers/vessel_providers.dart';
 import '../providers/discharge_provider.dart' show offersDischarge;
 import '../providers/loading_operation_provider.dart';
 import '../providers/oficina_providers.dart';
+import '../providers/plan_attach_provider.dart';
 import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
 import '../providers/voyage_ui_state.dart';
@@ -36,7 +37,9 @@ import '../widgets/hatch_operation_controls.dart';
 import '../widgets/loading_plan_controls.dart'
     show BayPlanMode, SelectorDelModo;
 import '../widgets/aviso_del_listado.dart';
+import '../widgets/aviso_del_plan.dart';
 import '../widgets/avisos_del_viaje.dart';
+import '../widgets/dialogo_agregar_plan.dart';
 import '../widgets/navegacion_del_viaje.dart';
 import '../widgets/voyage_stats_view.dart';
 import '../widgets/sync_status_chip.dart';
@@ -260,6 +263,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         // T-127: si la oficina cambia el listado de la operación publicada,
         // el muelle lo recibe solo, avisa y vuelve a derivar el plano.
         const AvisoDelListado(),
+        // T-130: y si agrega el plano de llegada o el plan de carga que
+        // faltaba, el muelle lo recibe solo, avisa y ofrece abrirlo.
+        const AvisoDelPlan(),
         // Sin panel lateral a la vista, el movimiento se anuncia igual al
         // lector de pantalla (13.3, punto 5; 10.21, H3): solo el anuncio.
         if (!panelFijo && _flota == null) AnuncioDelMovimiento(voyage: voyage),
@@ -1070,13 +1076,58 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         if (!context.mounted) return;
         if (sourceKind == null) return;
       }
+      // T-130 (10.90): si la escala ya tiene una operación publicada de este
+      // buque, aquí o en la nube, la oficina confirma en un diálogo que el
+      // plan se agrega; si está solo en la nube, ya la tiene con otro texto o
+      // hay varias abiertas, se dice y el plano sigue en previo.
+      Operation? attachTo;
+      OperationSyncRepository? attachSync;
+      final port = result.portOfCall;
+      final kind = port == null
+          ? null
+          : OperationSources.baplieKind(target, port) ?? sourceKind;
+      if (!isEditing &&
+          port != null &&
+          kind != null &&
+          kind != OperationSourceKind.exportList) {
+        final lookup = await notifier.lookupForPlan(port, kind);
+        if (!context.mounted) return;
+        switch (lookup) {
+          case NoPublishedOperation():
+            break;
+          case PlanAlreadyThere(sameContent: true):
+            break;
+          case final AttachablePlan attachable:
+            final confirmed = await confirmarAgregarPlan(context,
+                plan: target,
+                port: port,
+                kind: kind,
+                lookup: attachable,
+                fileName: fileName ?? notifier.loadedFileName);
+            if (!context.mounted || !confirmed) return;
+            attachTo = attachable.operation;
+            attachSync = await ref.read(operationSyncProvider.future);
+            if (!context.mounted) return;
+          default:
+            ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+              texto: textoDeLaBusqueda(lookup,
+                      vesselName: target.vessel.name, port: port, kind: kind) ??
+                  '',
+              corto: 'No se publicó el plano.',
+              fondo: Theme.of(context).colorScheme.error,
+            ));
+            return;
+        }
+      }
       final error = await notifier.confirmGeometry(result.geometry,
           sourceKind: sourceKind,
           portOfCall: result.portOfCall,
           hatchCovers: result.hatchCovers,
           observedHoldBayNumbers: result.observedHoldBayNumbers,
           reeferSlots: result.reeferSlots,
-          reeferSlotsOrigin: result.reeferSlotsOrigin);
+          reeferSlotsOrigin: result.reeferSlotsOrigin,
+          attachTo: attachTo,
+          sync: attachSync);
       if (!context.mounted) return;
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
@@ -1100,8 +1151,15 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
           context,
           isEditing
               ? 'Parámetros del buque actualizados'
-              : 'Archivo "$fileName" cargado correctamente',
-          corto: isEditing ? null : 'Archivo cargado.');
+              : attachTo != null && kind != null && port != null
+                  ? textoDelPlanAgregado(
+                      kind: kind, port: port, plan: target, enElMuelle: false)
+                  : 'Archivo "$fileName" cargado correctamente',
+          corto: isEditing
+              ? null
+              : attachTo != null
+                  ? 'Plan agregado.'
+                  : 'Archivo cargado.');
       return;
     }
   }

@@ -6,6 +6,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../core/utils/fecha_corta.dart';
 import '../../domain/entities/movement.dart';
 import '../../domain/entities/operation.dart';
 import '../../domain/entities/vessel_profile.dart';
@@ -33,6 +34,11 @@ class FirestoreOperationSync implements OperationSyncRepository {
   final SessionRepository _session;
   final DateTime Function() _clock;
   final _engines = <String, SyncEngine>{};
+
+  /// T-130 · Las fuentes que esta oficina está subiendo, para que su propio
+  /// motor no las baje ni las avise cuando el eco llegue antes que el
+  /// guardado local (10.90, ajuste 3).
+  final _ownWrites = OwnSourceWrites();
 
   FirestoreOperationSync(this._db, this._log, this._session,
       {DateTime Function()? clock})
@@ -103,6 +109,22 @@ class FirestoreOperationSync implements OperationSyncRepository {
     try {
       final existing = await _serverGet(ref);
       if (!existing.exists) {
+        // T-130 (10.90, ajuste 1): no se publica una segunda operación
+        // abierta del mismo buque, viaje y puerto. Las reglas no pueden
+        // exigirlo; aquí se lee la misma lista de «Operaciones abiertas en
+        // la nube» y, si ya hay una, se ofrece unirse a ella.
+        final duplicate = await _openDuplicateOf(operation);
+        if (duplicate != null) {
+          final when = duplicate.createdAt;
+          return Left(FirestoreFailure(
+              code: 'duplicate',
+              message: 'Ya hay una operación publicada y abierta de '
+                  '${duplicate.vesselName} · ${duplicate.voyageNumber} · '
+                  '${duplicate.portOfCall}'
+                  '${when == null ? '' : ', publicada el ${fechaCorta(when)}'}. '
+                  'No se publica otra: únete a ella desde «Operaciones abiertas '
+                  'en la nube».'));
+        }
         final batch = _db.batch();
         final manifest = <String, Object?>{};
         for (final source in operation.sources) {
@@ -143,6 +165,26 @@ class FirestoreOperationSync implements OperationSyncRepository {
           message: 'Sin respuesta de la nube. Publicar requiere conexión: '
               'revisa la red e inténtalo de nuevo.'));
     }
+  }
+
+  /// T-130 · La operación abierta de la nube con el mismo buque, viaje y
+  /// puerto que [operation], si la hay, leída del servidor.
+  Future<PublishedOperation?> _openDuplicateOf(Operation operation) async {
+    final open = await _operations
+        .where('status', isEqualTo: 'open')
+        .get(const GetOptions(source: Source.server))
+        .timeout(_networkTimeout);
+    for (final doc in open.docs) {
+      final summary = _summary(doc.data());
+      if (summary != null &&
+          summary.id != operation.id &&
+          summary.vesselName == operation.vesselName &&
+          summary.voyageNumber == operation.voyageNumber &&
+          summary.portOfCall == operation.portOfCall) {
+        return summary;
+      }
+    }
+    return null;
   }
 
   static String _publishMessage(FirebaseException error) => switch (error.code) {
@@ -345,23 +387,11 @@ class FirestoreOperationSync implements OperationSyncRepository {
           OperationSourceKind.exportList, manifest[source.kind.wire]);
       final revision = (previous?.revision ?? 0) + 1;
       final packed = transport.packSource(source, revision: revision);
-      final batch = _db.batch();
-      for (final part in packed.parts) {
-        batch.set(ref.collection('sources').doc(part.id), {
-          ...part.toMap(),
-          'createdBy': uid,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-      batch.update(ref, {
-        FieldPath(['sources', source.kind.wire]): packed.entry.toMap(),
-      });
-      await batch.commit().timeout(_networkTimeout);
       final updated = operation.copyWith(sources: [
         ...operation.sources.where((s) => s.kind != source.kind),
         source.withRevision(revision),
       ]);
-      return (await _log.saveOperation(updated)).map((_) => updated);
+      return await _writeSource(ref, uid, operation.id, packed, updated);
     } on FirebaseException catch (error) {
       return Left(FirestoreFailure(
           code: error.code,
@@ -383,6 +413,113 @@ class FirestoreOperationSync implements OperationSyncRepository {
     }
   }
 
+  /// T-130 (10.90) · El BAPLIE que falta, en un solo lote: los trozos
+  /// `{tipo}-{i}` sin revisión (el mismo formato que `publish`, para que un
+  /// cliente 0.4.0 o 0.4.1 se pueda unir después) y la entrada
+  /// `sources.{tipo}` del manifiesto, con `voyage` si el archivo declara otro
+  /// viaje. Las reglas exigen que la operación siga abierta y que el tipo no
+  /// estuviera; si ya está, no se reemplaza.
+  @override
+  Future<Either<Failure, Operation>> addSource(
+      Operation operation, OperationSource source) async {
+    if (source.kind == OperationSourceKind.exportList) {
+      return const Left(ValidationFailure(
+          field: 'source',
+          message: 'El listado de la agencia se agrega o se reemplaza con '
+              'revisión, no como un plan: vuelve a importarlo desde «Listado de '
+              'la agencia».'));
+    }
+    final office = _office();
+    if (office.isLeft()) return office.map((_) => operation);
+    final uid = office.getOrElse(() => throw StateError('sin oficina')).uid;
+    final ref = _operations.doc(operation.id);
+    try {
+      final snapshot = await _serverGet(ref);
+      final data = snapshot.data();
+      if (!snapshot.exists || data == null) {
+        return const Left(FirestoreFailure(
+            code: 'not_found',
+            message: 'La operación ya no está en la nube: se retiró después de '
+                'publicarse. Publícala de nuevo antes de agregar el plan.'));
+      }
+      if (data['status'] != 'open') {
+        return const Left(FirestoreFailure(
+            code: 'closed',
+            message: 'La operación ya está cerrada en la nube y sus BAPLIE no '
+                'cambian. Para trabajar con este archivo, ábrelo como una '
+                'operación nueva.'));
+      }
+      final manifest = transport.SourceManifest.read(data['sources']);
+      final current = manifest[source.kind];
+      if (current != null) {
+        return Left(FirestoreFailure(
+            code: 'already_has',
+            message: 'La operación publicada ya tiene el '
+                '${_sourceName(source.kind)} («${current.fileName}») y los '
+                'BAPLIE de una operación publicada no cambian. Si este archivo '
+                'lo corrige, cierra la operación y publica una nueva con los '
+                'planos correctos.'));
+      }
+      final packed = transport.packSource(source);
+      final updated = operation.copyWith(sources: [
+        ...operation.sources.where((s) => s.kind != source.kind),
+        source,
+      ]);
+      return await _writeSource(ref, uid, operation.id, packed, updated);
+    } on FirebaseException catch (error) {
+      return Left(FirestoreFailure(
+          code: error.code,
+          message: switch (error.code) {
+            'permission-denied' =>
+              'La nube no aceptó el plan: la operación está cerrada, ya tiene '
+                  'ese plan, la cuenta no es de oficina o las reglas publicadas '
+                  'todavía no lo admiten. Vuelve a abrir el plano e inténtalo de '
+                  'nuevo.',
+            'unavailable' => 'Sin conexión con la nube: agregar un plan a una '
+                'operación publicada requiere red. Conéctate e inténtalo de '
+                'nuevo.',
+            _ => _unknownCloudError(error),
+          }));
+    } on TimeoutException {
+      return const Left(FirestoreFailure(
+          code: 'timeout',
+          message: 'Sin respuesta de la nube: agregar un plan requiere '
+              'conexión. Revisa la red e inténtalo de nuevo.'));
+    }
+  }
+
+  /// T-127 y T-130 · Los trozos y la entrada del manifiesto en un solo lote;
+  /// si pasa, la operación local actualizada. Mientras el lote vuela y hasta
+  /// que lo local está guardado, la fuente queda anotada como escritura
+  /// propia, para que el motor de esta misma oficina no la baje ni la avise
+  /// si el eco del servidor llega antes (10.90, ajuste 3).
+  Future<Either<Failure, Operation>> _writeSource(
+      DocumentReference<Map<String, dynamic>> ref,
+      String uid,
+      String operationId,
+      ({transport.SourceManifestEntry entry, List<transport.SourcePart> parts}) packed,
+      Operation updated) async {
+    final kind = packed.entry.kind;
+    _ownWrites.begin(operationId, kind, packed.entry.sha256);
+    try {
+      final batch = _db.batch();
+      for (final part in packed.parts) {
+        batch.set(ref.collection('sources').doc(part.id), {
+          ...part.toMap(),
+          'createdBy': uid,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+      batch.update(ref, {
+        FieldPath(['sources', kind.wire]): packed.entry.toMap(),
+      });
+      await batch.commit().timeout(_networkTimeout);
+      return (await _log.saveOperation(updated)).map((_) => updated);
+    } finally {
+      _ownWrites.end(operationId, kind, packed.entry.sha256);
+    }
+  }
+
   @override
   Stream<SyncStatus> follow(Operation operation) {
     if (!operation.published) return Stream.value(SyncStatus.local);
@@ -396,7 +533,8 @@ class FirestoreOperationSync implements OperationSyncRepository {
             log: _log,
             remote: FirestoreRemoteMovementStore(_db),
             operation: operation,
-            clock: _clock);
+            clock: _clock,
+            ownWrites: _ownWrites);
         engine = started;
         _engines[operation.id] = started;
         statuses = started.status.listen(controller.add);
@@ -502,22 +640,43 @@ class FirestoreRemoteMovementStore implements RemoteMovementStore {
   }
 
   /// T-127 · El documento de la operación, por su manifiesto. Una escritura
-  /// propia pendiente (la oficina que acaba de revisar) no cuenta hasta que
-  /// el servidor la confirma; de la caché, sin red, llega lo último visto.
+  /// propia pendiente (la oficina que acaba de revisar o agregar) no cuenta
+  /// hasta que el servidor la confirma; de la caché, sin red, llega lo último
+  /// visto. T-130: los tres tipos, no solo el listado.
   @override
-  Stream<transport.SourceManifestEntry?> watchList(String operationId) => _db
+  Stream<transport.SourceManifest> watchSources(String operationId) => _db
       .collection('operations')
       .doc(operationId)
       .snapshots(includeMetadataChanges: true)
       .where((snapshot) => !snapshot.metadata.hasPendingWrites)
-      .map((snapshot) {
-        final manifest = snapshot.data()?['sources'];
-        return manifest is Map
-            ? transport.SourceManifestEntry.read(OperationSourceKind.exportList,
-                manifest[OperationSourceKind.exportList.wire])
-            : null;
-      })
+      .map((snapshot) => transport.SourceManifest.read(snapshot.data()?['sources']))
       .handleError((Object error) => throw _remoteError(error));
+
+  /// T-130 · Los trozos `{tipo}-{i}` de un BAPLIE, del servidor: un índice de
+  /// un solo campo (`kind`), que Firestore crea solo. Sin red falla, y el
+  /// motor espera. Los de una revisión del listado no entran aquí; los de
+  /// otro tipo, tampoco.
+  @override
+  Future<List<transport.SourcePart>> planParts(
+      String operationId, OperationSourceKind kind) async {
+    try {
+      final query = await _db
+          .collection('operations')
+          .doc(operationId)
+          .collection('sources')
+          .where('kind', isEqualTo: kind.wire)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 45));
+      return [
+        for (final doc in query.docs)
+          if (transport.SourcePart.read(doc.data()) case final part?) part
+      ];
+    } on TimeoutException {
+      throw const RemoteStoreException(RemoteErrorKind.unavailable, 'timeout');
+    } catch (error) {
+      throw _remoteError(error);
+    }
+  }
 
   /// T-127 · Solo los trozos de esa revisión, del servidor: un índice de un
   /// solo campo, que Firestore crea solo. Sin red falla, y el motor espera.

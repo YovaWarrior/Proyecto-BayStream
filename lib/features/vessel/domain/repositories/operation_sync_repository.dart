@@ -41,6 +41,24 @@ class ListArrival extends Equatable {
   List<Object?> get props => [revision, rows];
 }
 
+/// T-130 · Un BAPLIE que llegó por la nube mientras se seguía la operación: la
+/// oficina agregó el plano de llegada o el plan de carga que faltaba después
+/// de publicar (10.90). El dispositivo ya lo guardó en su operación; la
+/// pantalla avisa («Plan de carga agregado por la oficina: …») y vuelve a
+/// derivar el plano con los movimientos intactos.
+class PlanArrival extends Equatable {
+  final OperationSourceKind kind;
+  final String fileName;
+
+  /// El viaje que declara el archivo, solo si es distinto del de la operación.
+  final String? voyage;
+
+  const PlanArrival({required this.kind, required this.fileName, this.voyage});
+
+  @override
+  List<Object?> get props => [kind, fileName, voyage];
+}
+
 class SyncStatus extends Equatable {
   final SyncState state;
 
@@ -62,6 +80,10 @@ class SyncStatus extends Equatable {
   /// mientras no llegue ninguno.
   final ListArrival? listArrival;
 
+  /// T-130 · El último BAPLIE que llegó por la nube en esta escucha; nulo
+  /// mientras no llegue ninguno.
+  final PlanArrival? planArrival;
+
   const SyncStatus(
     this.state, {
     this.pending = 0,
@@ -71,6 +93,7 @@ class SyncStatus extends Equatable {
     this.since,
     this.closed = false,
     this.listArrival,
+    this.planArrival,
   });
 
   static const local = SyncStatus(SyncState.localOnly);
@@ -84,14 +107,16 @@ class SyncStatus extends Equatable {
         otherAuthor,
         since,
         closed,
-        listArrival
+        listArrival,
+        planArrival
       ];
 
   @override
   String toString() => 'SyncStatus(${state.name}, pendientes $pending, '
       'rechazados $rejected, locales $localOnly, de otra cuenta $otherAuthor'
       '${since == null ? '' : ', desde $since'}${closed ? ', cerrada' : ''}'
-      '${listArrival == null ? '' : ', listado r${listArrival!.revision} de ${listArrival!.rows} filas'})';
+      '${listArrival == null ? '' : ', listado r${listArrival!.revision} de ${listArrival!.rows} filas'}'
+      '${planArrival == null ? '' : ', plan ${planArrival!.kind.wire} «${planArrival!.fileName}»'})';
 }
 
 /// Una operación abierta en la nube, para que el muelle elija a cuál unirse.
@@ -143,6 +168,15 @@ abstract class OperationSyncRepository {
   Future<Either<Failure, Operation>> replaceSource(
       Operation operation, OperationSource source);
 
+  /// T-130 · Oficina: agrega a una operación publicada y abierta el BAPLIE
+  /// que le falta (el plano de llegada o el plan de carga; 10.90). Sube los
+  /// trozos `{tipo}-{i}`, sin revisión, y la entrada del manifiesto en un solo
+  /// lote; solo si la nube lo acepta, guarda la fuente en la operación local
+  /// y la devuelve. Si falla, nada local cambia. Nunca reemplaza un BAPLIE
+  /// que ya está: los BAPLIE son el contrato de las claves de los movimientos.
+  Future<Either<Failure, Operation>> addSource(
+      Operation operation, OperationSource source);
+
   /// Sigue la operación: escucha la nube y envía lo pendiente mientras haya
   /// alguien suscrito. Emite el estado al suscribirse y en cada cambio.
   ///
@@ -151,6 +185,10 @@ abstract class OperationSyncRepository {
   /// trozos, comprueba las huellas como `join`, guarda la fuente en la
   /// operación local y lo dice en [SyncStatus.listArrival]. Sin red, el
   /// dispositivo sigue con el listado que tenía hasta reconectar.
+  ///
+  /// T-130 · Lo mismo con un BAPLIE que el manifiesto declara y la operación
+  /// local no tiene: lo baja, lo comprueba, lo guarda con los movimientos
+  /// intactos y lo dice en [SyncStatus.planArrival].
   Stream<SyncStatus> follow(Operation operation);
 
   /// Vuelve a poner en cola lo rechazado y reenvía lo pendiente.

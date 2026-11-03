@@ -112,6 +112,14 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
       Text(
           '${operation.vesselName} · ${voyageNumberLabel(operation.voyageNumber)} · ${operation.portOfCall}',
           style: Theme.of(context).textTheme.titleMedium),
+      // T-130 (10.90, ajuste 5): el archivo lleva el viaje que declara el plan
+      // de carga; si no es el de la operación, se dice.
+      if (operation.departureVoyageNumber != operation.voyageNumber)
+        Text(
+            'El archivo lleva el viaje ${operation.departureVoyageNumber}, el '
+            'del plan de carga. La operación es la '
+            '${voyageNumberLabel(operation.voyageNumber)}.',
+            key: const ValueKey('departure-voyage-note')),
       const SizedBox(height: 16),
       // T-124 (10.65, P3): con su singular.
       Text('${operationCount(output.containers, 'contenedor', 'contenedores')} '

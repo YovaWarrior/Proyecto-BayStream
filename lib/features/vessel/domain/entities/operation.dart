@@ -50,6 +50,20 @@ class Operation extends Equatable {
   int get exportListRevision =>
       source(OperationSourceKind.exportList)?.revision ?? 0;
 
+  /// T-130 · Si esta operación es la del viaje [voyageNumber]: el suyo, o el
+  /// que declara una de sus fuentes (un plan agregado después de publicar
+  /// puede venir con otro número de viaje, 10.85). La operación conserva su
+  /// viaje; aquí se relacionan los dos.
+  bool matchesVoyage(String voyageNumber) =>
+      this.voyageNumber == voyageNumber ||
+      sources.any((s) => s.voyage == voyageNumber);
+
+  /// T-130 (10.90, ajuste 5) · El viaje que lleva el BAPLIE de salida: el que
+  /// declara el plan de carga (su `TDT`, que el escritor copia), que es el de
+  /// la operación salvo que el plan se haya agregado con otro.
+  String get departureVoyageNumber =>
+      source(OperationSourceKind.loadingBaplie)?.voyage ?? voyageNumber;
+
   OperationSource? source(OperationSourceKind kind) {
     for (final s in sources) {
       if (s.kind == kind) return s;
@@ -142,24 +156,47 @@ class OperationSource extends Equatable {
   /// operación. Las operaciones guardadas antes la leen como nula.
   final int? revision;
 
+  /// T-130 · El viaje que declara el archivo de esta fuente, solo cuando es
+  /// distinto del de la operación: un BAPLIE agregado después de publicar
+  /// puede venir de otro viaje (la llegada 26043S y la salida 26043N, 10.85).
+  /// El archivo no se toca y la operación conserva su viaje;
+  /// [Operation.matchesVoyage] relaciona los dos. Nulo cuando coincide o cuando
+  /// la fuente se publicó con la operación. Las operaciones guardadas antes
+  /// lo leen como nulo.
+  final String? voyage;
+
   const OperationSource(
       {required this.kind,
       required this.fileName,
       this.content = '',
-      this.revision});
+      this.revision,
+      this.voyage});
 
   /// La misma fuente con la revisión que la nube le dio.
   OperationSource withRevision(int revision) => OperationSource(
-      kind: kind, fileName: fileName, content: content, revision: revision);
+      kind: kind,
+      fileName: fileName,
+      content: content,
+      revision: revision,
+      voyage: voyage);
+
+  /// T-130 · La misma fuente con el viaje que declara su archivo, o sin él.
+  OperationSource withVoyage(String? voyage) => OperationSource(
+      kind: kind,
+      fileName: fileName,
+      content: content,
+      revision: revision,
+      voyage: voyage);
 
   @override
-  List<Object?> get props => [kind, fileName, content, revision];
+  List<Object?> get props => [kind, fileName, content, revision, voyage];
 
   Map<String, dynamic> toJson({bool includeContent = true}) => {
         'kind': kind.wire,
         'fileName': fileName,
         if (includeContent) 'content': content,
         if (revision != null) 'revision': revision,
+        if (voyage != null) 'voyage': voyage,
       };
 
   factory OperationSource.fromJson(Map<String, dynamic> json) => OperationSource(
@@ -167,6 +204,7 @@ class OperationSource extends Equatable {
         fileName: json['fileName'] as String,
         content: json['content'] as String? ?? '',
         revision: (json['revision'] as num?)?.toInt(),
+        voyage: json['voyage'] as String?,
       );
 }
 

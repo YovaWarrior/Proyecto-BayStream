@@ -73,6 +73,10 @@ class SourceManifestEntry extends Equatable {
   /// de publicar: 1, 2, 3… Nula en lo publicado con la operación.
   final int? revision;
 
+  /// T-130 · Solo un BAPLIE agregado después de publicar, y solo si su
+  /// archivo declara otro viaje que la operación (`OperationSource.voyage`).
+  final String? voyage;
+
   const SourceManifestEntry({
     required this.kind,
     required this.fileName,
@@ -80,6 +84,7 @@ class SourceManifestEntry extends Equatable {
     required this.parts,
     required this.length,
     this.revision,
+    this.voyage,
   });
 
   /// Lo que se escribe en el manifiesto.
@@ -89,6 +94,7 @@ class SourceManifestEntry extends Equatable {
         'parts': parts,
         'length': length,
         if (revision != null) 'revision': revision,
+        if (voyage != null) 'voyage': voyage,
       };
 
   /// Lee la entrada de [kind]; null si no es un mapa con sus campos.
@@ -98,6 +104,7 @@ class SourceManifestEntry extends Equatable {
     final sha = entry['sha256'];
     if (parts is! num || sha is! String) return null;
     final revision = entry['revision'];
+    final voyage = entry['voyage'];
     return SourceManifestEntry(
       kind: kind,
       fileName: entry['fileName'] as String? ?? kind.wire,
@@ -105,11 +112,52 @@ class SourceManifestEntry extends Equatable {
       parts: parts.toInt(),
       length: (entry['length'] as num?)?.toInt() ?? 0,
       revision: revision is num ? revision.toInt() : null,
+      voyage: voyage is String ? voyage : null,
     );
   }
 
   @override
-  List<Object?> get props => [kind, fileName, sha256, parts, length, revision];
+  List<Object?> get props =>
+      [kind, fileName, sha256, parts, length, revision, voyage];
+}
+
+/// T-130 · El manifiesto `sources` de la operación, por tipo: lo que el motor
+/// escucha (`RemoteMovementStore.watchSources`) para saber qué listado y qué
+/// BAPLIE declara la nube. Una entrada que no se entiende no cuenta.
+class SourceManifest extends Equatable {
+  final Map<OperationSourceKind, SourceManifestEntry> entries;
+
+  const SourceManifest(this.entries);
+
+  static const empty = SourceManifest({});
+
+  /// Lee el mapa `sources` de un documento de la operación.
+  static SourceManifest read(Object? sources) {
+    if (sources is! Map) return empty;
+    return SourceManifest({
+      for (final kind in OperationSourceKind.values)
+        if (SourceManifestEntry.read(kind, sources[kind.wire]) case final entry?)
+          kind: entry,
+    });
+  }
+
+  SourceManifestEntry? operator [](OperationSourceKind kind) => entries[kind];
+
+  /// La entrada del listado de la agencia (T-127), si la hay.
+  SourceManifestEntry? get exportList => entries[OperationSourceKind.exportList];
+
+  /// Los BAPLIE que el manifiesto declara: el plano de llegada y el plan de
+  /// carga, los que haya.
+  Iterable<SourceManifestEntry> get plans => [
+        for (final kind in const [
+          OperationSourceKind.arrivalBaplie,
+          OperationSourceKind.loadingBaplie
+        ])
+          if (entries[kind] case final entry?) entry,
+      ];
+
+  @override
+  List<Object?> get props => [entries];
 }
 
 /// Un trozo de una fuente, como documento de `operations/{id}/sources/`.
@@ -194,6 +242,7 @@ class SourcePart extends Equatable {
       parts: pieces.length,
       length: source.content.length,
       revision: revision,
+      voyage: source.voyage,
     ),
     parts: [
       for (var i = 0; i < pieces.length; i++)
@@ -234,7 +283,8 @@ OperationSource? assembleSource(
       kind: entry.kind,
       fileName: entry.fileName,
       content: content,
-      revision: entry.revision);
+      revision: entry.revision,
+      voyage: entry.voyage);
 }
 
 /// Cuántas filas trae un listado publicado (el JSON de `ExportList`); null

@@ -30,6 +30,35 @@ class FakeServer {
   SourceManifestEntry? listManifest;
   final sourceParts = <SourcePart>[];
 
+  /// T-130 · Las entradas de los BAPLIE del manifiesto (`sources.arrival_baplie`
+  /// y `sources.loading_baplie`), publicados con la operación o agregados.
+  final plans = <OperationSourceKind, SourceManifestEntry>{};
+
+  /// T-130 · El manifiesto entero, como lo escucha el motor.
+  SourceManifest get manifest => SourceManifest({
+        ...plans,
+        if (listManifest case final list?) OperationSourceKind.exportList: list,
+      });
+
+  /// T-130 · Un BAPLIE publicado con la operación, o agregado después por la
+  /// oficina (`addSource`): los trozos `{tipo}-{i}` sin revisión y su entrada,
+  /// con `voyage` si el archivo declara otro viaje. Los dispositivos con red
+  /// reciben el manifiesto nuevo.
+  SourceManifestEntry addPlan(OperationSourceKind kind, String content,
+      {String? fileName, String? voyage}) {
+    final packed = packSource(OperationSource(
+        kind: kind,
+        fileName: fileName ?? '${kind.wire}.edi',
+        content: content,
+        voyage: voyage));
+    sourceParts.addAll(packed.parts);
+    plans[kind] = packed.entry;
+    for (final client in List.of(_clients)) {
+      client._emitSources();
+    }
+    return packed.entry;
+  }
+
   /// T-127 · Un listado publicado junto con la operación, sin revisión, como
   /// lo escribe `publish` (también en la 0.4.0).
   void publishList(String content, {String fileName = 'listado.xlsx'}) {
@@ -56,7 +85,7 @@ class FakeServer {
     sourceParts.addAll(packed.parts);
     listManifest = packed.entry;
     for (final client in List.of(_clients)) {
-      client._emitList();
+      client._emitSources();
     }
     return packed.entry;
   }
@@ -114,16 +143,20 @@ class FakeCloud implements RemoteMovementStore {
 
   final _queued = <(Movement, Completer<void>)>[];
   final _listeners = <StreamController<RemoteSnapshot>>[];
-  final _listListeners = <StreamController<SourceManifestEntry?>>[];
+  final _sourcesListeners = <StreamController<SourceManifest>>[];
 
   /// T-127 · Lo último que este dispositivo vio del manifiesto: su caché, lo
   /// que el SDK entrega sin red.
-  SourceManifestEntry? _seenList;
+  SourceManifest _seenSources = SourceManifest.empty;
 
   /// T-127 · Cuántas bajadas de trozos fallarán antes de responder, y
   /// cuántas se pidieron.
   int listPartsFailures = 0;
   int listPartsRequests = 0;
+
+  /// T-130 · Lo mismo para los trozos de un BAPLIE agregado.
+  int planPartsFailures = 0;
+  int planPartsRequests = 0;
 
   Map<String, Movement> get docs => server.docs;
   List<String> get writes => server.writes;
@@ -176,7 +209,7 @@ class FakeCloud implements RemoteMovementStore {
       _apply(movement, done);
     }
     _emit();
-    _emitList();
+    _emitSources();
   }
 
   /// Lo que estaba en la cola del SDK se pierde, como al forzar el cierre.
@@ -216,31 +249,50 @@ class FakeCloud implements RemoteMovementStore {
   Future<DateTime?> closedAt(String operationId) async => server.closedAtValue;
 
   /// T-127 · Con red, el manifiesto del servidor; sin red, nada nuevo.
-  void _emitList() {
+  void _emitSources() {
     if (!online) return;
-    _seenList = server.listManifest;
-    for (final listener in List.of(_listListeners)) {
-      listener.add(server.listManifest);
+    _seenSources = server.manifest;
+    for (final listener in List.of(_sourcesListeners)) {
+      listener.add(server.manifest);
     }
   }
 
   /// T-127 · Al suscribirse, con red, lo que tiene el servidor; sin red, lo
-  /// último visto (la caché del SDK).
+  /// último visto (la caché del SDK). T-130: el manifiesto entero.
   @override
-  Stream<SourceManifestEntry?> watchList(String operationId) {
-    late final StreamController<SourceManifestEntry?> controller;
-    controller = StreamController<SourceManifestEntry?>(
+  Stream<SourceManifest> watchSources(String operationId) {
+    late final StreamController<SourceManifest> controller;
+    controller = StreamController<SourceManifest>(
       onListen: () {
-        _listListeners.add(controller);
-        if (online) _seenList = server.listManifest;
-        controller.add(_seenList);
+        _sourcesListeners.add(controller);
+        if (online) _seenSources = server.manifest;
+        controller.add(_seenSources);
       },
       onCancel: () {
-        _listListeners.remove(controller);
+        _sourcesListeners.remove(controller);
         return controller.close();
       },
     );
     return controller.stream;
+  }
+
+  /// T-130 · Los trozos `{tipo}-{i}` de un BAPLIE, sin revisión; sin red
+  /// falla, y [planPartsFailures] hace fallar las primeras bajadas.
+  @override
+  Future<List<SourcePart>> planParts(
+      String operationId, OperationSourceKind kind) async {
+    planPartsRequests++;
+    if (!online) {
+      throw const RemoteStoreException(RemoteErrorKind.unavailable, 'unavailable');
+    }
+    if (planPartsFailures > 0) {
+      planPartsFailures--;
+      throw const RemoteStoreException(RemoteErrorKind.unavailable, 'unavailable');
+    }
+    return [
+      for (final part in server.sourceParts)
+        if (part.kind == kind && part.revision == null) part
+    ];
   }
 
   @override
