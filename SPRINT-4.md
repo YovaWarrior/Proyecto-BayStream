@@ -2795,3 +2795,30 @@ La siguiente decisión es la **10.97**.
 **Después:** las reglas de T-130 (4.0), la mezcla (4.1) y los clientes (4.2 a 4.4); al final, 0.7, 0.8 y el ensayo.
 
 La siguiente decisión es la **10.98**.
+
+### 10.98 · T-135 pasa la revisión corta de Codex; la 0.4.2 queda lista para publicar (3-nov, 13:55)
+
+**T-135 corrige O-134-4** (Timonel, Opus 5.5; `fd39951`; `docs/T135-RESULTADOS.md`). Carlos eligió la opción A de la 10.97, corregirlo antes de publicar; Timonel ya había empezado.
+- Con un plano en previo, `_askForGeometry` usa `fileName ?? notifier.loadedFileName` para «Archivo: …» y para el aviso final. En la edición no cambia nada, y el diálogo de T-130 queda igual.
+- La prueba nueva, `test/t135_aviso_archivo_test.dart`, recorre los tres caminos: la banda, «Parámetros» en el riel de la oficina y «Parámetros» en «Más» del teléfono. Contra `15ef04b`, los dos de «Parámetros» fallan por comportamiento y la banda pasa.
+- La suite da 2100 de 2100, sin omitidas, y `analyze` cero.
+- **Yov lo revisó contra el disco:** solo cambian `vessel_overview_page.dart` (+5 −2) y la prueba, y los registros de `build/t135/` dicen lo mismo que el informe.
+
+**Codex: PASA** (`docs/t135/revision-codex.md`, sobre `fd39951`):
+- los 3 casos en verde; el rojo contra `15ef04b`, 1 verde y 2 rojos, por el texto que falta; la suite, 2100 de 2100 sin omitidas, y `analyze` cero, en una copia limpia de 810 archivos;
+- Carlos lo confirmó a mano en Windows, Chrome y Edge, con el banco `r4` recompilado: «Archivo: T100_CARGA.edi» en la pantalla y «Archivo "T100_CARGA.edi" cargado correctamente» al confirmar. Abrió el `.exe` desde el Explorador, no con el ayudante (O-134-1);
+- O-134-4 queda cerrado. La versión sigue siendo `0.4.2+8`: T-135 entra antes de publicar.
+
+**La lista del piloto:**
+- T-135 entra en «Qué es la 0.4.2»;
+- 1.2 y la sección 5 ya no avisan del «null»: si vuelve a salir, es un fallo nuevo;
+- **la comprobación de 4.1 apunta a `fd39951`,** el último código que revisó Codex: desde ahí, solo pueden cambiar documentos.
+
+**Ahora publica Carlos,** con la sección 4 de la lista:
+1. las reglas de T-130 desde la consola (4.0);
+2. la mezcla a `master` y la etiqueta `v0.4.2` (4.1);
+3. Windows, Android y la Web (4.2 a 4.4).
+
+Después, 0.7, 0.8 y el ensayo.
+
+La siguiente decisión es la **10.99**.

@@ -1,4 +1,4 @@
-# Lista de comprobación · Ensayo y prueba piloto con COMAR (la 0.4.2, 10.96 y 10.97)
+# Lista de comprobación · Ensayo y prueba piloto con COMAR (la 0.4.2, 10.96 a 10.98)
 
 **Para quién.** Carlos publica la 0.4.2 y corre el ensayo y el piloto; Yov revisa esta
 lista y los comandos antes. La lista va por rol: **el muelle con el Honor** y **la oficina con la
@@ -29,7 +29,9 @@ entre comillas son los rótulos exactos de la app.
   un contenedor, la oficina elige antes de guardar (1.13);
 - **T-133, la marca no tapa el código** (10.85, hallazgo 7; 10.95): con marca, la celda sigue
   diciendo en grande su OR, su destino o su tipo, y la marca va debajo, con su ícono y su rótulo
-  corto («Baja», «Hecho», «Revisar», «Cancel.»…; 2.3).
+  corto («Baja», «Hecho», «Revisar», «Cancel.»…; 2.3);
+- **T-135, el nombre del archivo** (10.98): confirmar un plano en previo desde «Parámetros» ya
+  no dice «Archivo "null" cargado correctamente», sino el nombre del archivo (O-134-4, 1.2).
 
 **Codex la aceptó con reservas** (10.97; `docs/t134/aceptacion-codex.md`), sin el Honor: el
 Honor tiene la app de Play, y una compilación local no se instala encima sin borrar su almacén.
@@ -44,9 +46,8 @@ que no se pudo probar antes de publicar se prueba aquí, en 0.8 y en el ensayo:
   con las marcas de T-133 se mide en el Honor (3).
 - **Las esperas.** En la aceptación, el aviso de un plan agregado y el chip «Sin conexión»
   tardaron más de medio minuto (O-134-5): esta lista espera un minuto antes de «Reintentar».
-- **El aviso «Archivo "null" cargado correctamente»** (O-134-4, P3, viene de la 3.1.0) sale al
-  confirmar un plano en previo desde «Parámetros». No se pierde nada, y el plano se confirma con
-  «Confirmar» en la banda (1.2).
+- **El aviso «Archivo "null" cargado correctamente»** (O-134-4, desde la 3.1.0) lo corrigió
+  T-135, y Codex lo revisó a mano en Windows, Chrome y Edge (10.98).
 
 **El piloto del 1-nov (10.85)** encontró que una operación publicada no aceptaba el plan que
 llegó después, y la carga se hizo con otra operación. Desde la 0.4.2, el plan que falta entra
@@ -195,7 +196,7 @@ distintivo «Oficina» (1.6).
 | # | Qué hacer | Qué hay que ver | Si falla |
 |---|---|---|---|
 | 1.1 | «Seleccionar archivo» → el **plan de carga** (en el ensayo, `ENSAYO_CARGA.edi`) | El plano abre **en previo**: arriba la banda «Plano sin confirmar: perfil propuesto desde el archivo. Escala propuesta <puerto>.» con «Confirmar», y debajo «Peso por pila y tomas de refrigerado: sin evaluar hasta confirmar el perfil.» Son tres pasos y la rejilla ya se ve | Si sale «Este archivo no parece un BAPLIE: …» o «Versión BAPLIE no admitida: …», pedir la exportación 2.x a la agencia. Si no abre nada en 30 s, anotar y reintentar. Si la banda dice «La escala … ya tiene una operación publicada…», hay otra operación abierta de este buque en esta escala: 0.7 |
-| 1.2 | «Confirmar» en la banda | Si el equipo ya guarda perfiles de otros buques, primero «Perfil del buque nuevo»: elegir «Proponer desde el archivo». Si ya hay uno con el mismo nombre, «Confirma la identidad del buque»; si la carga excede el perfil guardado, «Revisar ampliación». Después se abre «Parámetros del buque»: filas y niveles propuestos, la escala en «Puerto de esta escala» (la propuesta y, con un plano de llegada, los puertos de descarga con su cuenta, «GTSTC (7)»), el límite de apilamiento. **«No lo tengo» no viene marcado**: hay que escribir el límite del manual de estabilidad o marcarlo a mano | Si la escala propuesta no es la de la operación, elegir la correcta en «Puerto de esta escala» antes de confirmar. Se confirma desde la banda: si se entra por «Parámetros» (el ícono de la regla), al final el aviso dice «Archivo "null" cargado correctamente» (O-134-4, P3, desde la 3.1.0), aunque el archivo sí se cargó |
+| 1.2 | «Confirmar» en la banda | Si el equipo ya guarda perfiles de otros buques, primero «Perfil del buque nuevo»: elegir «Proponer desde el archivo». Si ya hay uno con el mismo nombre, «Confirma la identidad del buque»; si la carga excede el perfil guardado, «Revisar ampliación». Después se abre «Parámetros del buque»: filas y niveles propuestos, la escala en «Puerto de esta escala» (la propuesta y, con un plano de llegada, los puertos de descarga con su cuenta, «GTSTC (7)»), el límite de apilamiento. **«No lo tengo» no viene marcado**: hay que escribir el límite del manual de estabilidad o marcarlo a mano | Si la escala propuesta no es la de la operación, elegir la correcta en «Puerto de esta escala» antes de confirmar. También se puede entrar por «Parámetros» (el ícono de la regla) → «Parámetros del buque»: la pantalla dice «Archivo: <nombre>» y el aviso final, el mismo de la banda (T-135). Si un aviso dice «null», anotarlo con el camino |
 | 1.3 | «Confirmar y ver el plano» | Vuelve al **Plano** (no a la Lista), la cabecera dice «Publicado» y, a su lado, el selector de modo con «Contenido», «Orden» y «Carga» (el plan de carga no ofrece «Descarga»). Si no caben, van en el menú «Modo del plano: …» | Si vuelve a «Parámetros del buque», algo no cuadra (un mensaje en rojo dice qué): corregir y confirmar otra vez |
 | 1.4 | «Lista» → «Listado de la agencia» → «Elegir listado (.xlsx)» → el listado (en el ensayo, `T100_LISTADO.xlsx`) | La página muestra el archivo, «N filas en M agencias · X llenos · Y vacíos», las equivalencias propuestas («Tipo 40ST → 42G1»…) y el cruce «X de X llenos cruzan con el plan». La fila «TOTAL» sale bajo «1 fila sin entender:»: es normal. Las filas bajo «AGREGADOS» se cuentan aparte, como la agencia «AGREGADOS» (H3) | Si a una equivalencia le falta el código («→ ?»), elegirla con el lápiz («Corregir <código>»); el botón lo pide con «Falta elegir N equivalencias antes de importar…». Si «N contenedores del plan no están en el listado» es alto, revisar el listado con la agencia antes de importar |
 | 1.5 | «Confirmar e importar», en el pie fijo de la página. No hace falta esperar a que se apague el aviso «Archivo "<nombre>" cargado correctamente»: flota por encima del pie. **Lo normal es antes de publicar (1.8)**; después, ver 1.17 | «Listado guardado en la operación de <escala>: N filas.» y el aviso «Listado importado.» En el Plano, en «Orden» y en «Carga», cada celda de carga lleva su OR | Si el botón está apagado, falta una equivalencia: ver 1.4. Si dice «Fila N: …», corregir el Excel y volver a importar. Con la operación ya publicada, el listado también entra: ver 1.17 |
@@ -361,8 +362,8 @@ Set-Location -LiteralPath C:\Proyectos\proyecto-baystream
 if ((git branch --show-current) -ne 'master') { throw 'Parar: la carpeta no esta en master' }
 if ((git rev-parse HEAD) -notlike 'be532ab*') { throw 'Parar: master no esta en be532ab' }
 if (-not (git show sprint-4:pubspec.yaml | Select-String -Pattern '^version: 0\.4\.2\+8' -Quiet)) { throw 'Parar: sprint-4 todavia no trae la 0.4.2' }
-git diff --quiet 15ef04b sprint-4 -- lib test integration_test tool android windows web assets pubspec.yaml pubspec.lock
-if ($LASTEXITCODE -ne 0) { throw 'Parar: sprint-4 trae codigo que Codex no acepto (10.97); avisar' }
+git diff --quiet fd39951 sprint-4 -- lib test integration_test tool android windows web assets pubspec.yaml pubspec.lock
+if ($LASTEXITCODE -ne 0) { throw 'Parar: sprint-4 trae codigo que Codex no reviso (10.98); avisar' }
 git merge --no-ff --no-commit sprint-4
 if ($LASTEXITCODE -ne 0) { throw 'Parar: la mezcla no salio limpia; no resolver nada' }
 git commit -m "Sprint 4: la 0.4.2, mezcla de sprint-4 a master"
@@ -376,7 +377,7 @@ git log --oneline -1
 
 Las cuatro comprobaciones del principio detienen el bloque si la carpeta no está en `master`,
 si `master` no está en `be532ab`, si `sprint-4` todavía no trae la 0.4.2 o si trae código que
-Codex no aceptó: desde `15ef04b`, el commit de la 10.96 que aceptó (10.97), solo pueden cambiar
+Codex no revisó: desde `fd39951`, T-135, el último código que revisó (10.98), solo pueden cambiar
 documentos. La mezcla se
 detiene antes del commit («stopped before committing as requested»): es lo esperado, y el
 `git commit` la cierra. La última línea tiene que mostrar «Sprint 4: la 0.4.2, mezcla de
@@ -572,10 +573,9 @@ cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`
   aceptación contra el emulador, en Chrome, al primer intento (10.97); en Windows y contra
   Firebase de verdad lo prueba el paso 11 de 0.8. Si ahí o en el ensayo vuelve a decir «No se
   encontró la operación…», 1.15 lo resuelve como antes, y se anota.
-- **El aviso «Archivo "null" cargado correctamente»** (O-134-4, P3, desde la 3.1.0) sale al
-  confirmar un plano en previo desde «Parámetros» en vez de la banda: ese camino no le pasa el
-  nombre del archivo al aviso. El archivo sí se cargó. Se anota solo si sale confirmando desde
-  la banda.
+- **El nombre del archivo al confirmar** (T-135, 10.98): por la banda y por «Parámetros», el
+  aviso dice «Archivo "<nombre>" cargado correctamente». Hasta la 0.4.0, por «Parámetros» decía
+  «null» (O-134-4). Si vuelve a salir, es un fallo nuevo: anotarlo con el camino.
 - **Las esperas de la nube** (O-134-5): en la aceptación, con un corte de red simulado, el chip
   tardó más de medio minuto en pasar a «Sin conexión», y el plan agregado llegó solo, pero
   después de medio minuto de vuelta la red. Esta lista espera un minuto antes de «Reintentar»
