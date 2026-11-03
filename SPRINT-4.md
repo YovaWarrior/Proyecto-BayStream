@@ -2887,3 +2887,40 @@ La siguiente decisión es la **10.100**.
 **Con la 1.0.0.** Si Timonel da por buena T-137 a más tardar el jueves 5, sale junto con la MSIX, de la misma Release. Si no, sale después, sin cambiar la versión de la app. El jueves, con el asistente a la vista, Carlos decide qué instalación lleva la laptop en la demostración. Yov recomienda el asistente si pasa: se quita la MSIX (los datos se quedan) y la MSIX 1.0.0 queda para volver.
 
 La siguiente decisión es la **10.101**.
+
+### 10.101 · T-136 crece: la Web sirve el SDK 12.19.0 y firebase_auth pasa a la 6.7.1; Carlos va por la 1.0.0 cuanto antes; T-138, «Volver al inicio» (3-nov, 16:35)
+
+**Dos cosas que la 10.99 no previó.** Timonel se detuvo las dos veces, y Yov lo comprobó en los paquetes de pub.dev.
+1. **El SDK de JavaScript que sirve la Web (T-92).** `web/vendor/firebase/12.17.0/` es la versión que pide `firebase_core_web` 3.10.0. La 3.11.0 pide la 12.18.0 y la 3.12.0, la 12.19.0, y `firebase_core` 4.15.2 exige la 3.11.0 o posterior. Con la copia vieja fallan tres pruebas de `test/t92_web_test.dart`. **Carlos autorizó la copia 12.19.0**, con el procedimiento del LEEME de T-92:
+   - los tres módulos (`firebase-app.js`, `firebase-auth.js` y `firebase-firestore-pipelines.js`) se bajan de gstatic, y la huella original de cada uno tiene que ser igual a la del archivo del mismo nombre en el paquete de npm `firebase@12.19.0`. Con la 12.17.0, las huellas de npm son las de su `provenance.json`;
+   - sale `web/vendor/firebase/12.17.0/`, para servir un solo SDK, y `tool/t129_evidencia.py` queda como evidencia de T-129;
+   - la Web ya compiló como 1.0.0 (9): `build/web` solo trae la 12.19.0, y `t92_verify` pasa.
+2. **`firebase_auth` 6.5.7 no compila en Android con `firebase_core` 4.15.2.** La 4.14.0 reescribió en Kotlin la parte de Android de `firebase_core` y movió `customAuthDomain`. La 6.5.7 lo sigue buscando donde estaba, aunque su pubspec acepte la 4.15.2. Desde la 6.6.0, `firebase_auth` ya está en Kotlin, y la 7.x pide `firebase_core` 5. **Carlos autorizó `firebase_auth` 6.7.1, fija:** la que FlutterFire publicó el 23-oct con la línea 4.15.x. Con ella cambian `firebase_auth_platform_interface` (9.0.7 o 9.1.0) y `firebase_auth_web` (6.2.7 o 6.3.0).
+
+**Lo que eso significa: la 1.0.0 ya no cambia solo Windows.** Cambia el código nativo de Firebase en los tres clientes:
+- en Android, el de `firebase_core` y el de las cuentas, reescritos en Kotlin;
+- en Windows, el SDK de C++ 13.13.1 y el plugin de las cuentas;
+- en la Web, el SDK 12.19.0.
+
+Por eso:
+- la aceptación de Codex prueba el inicio de sesión y la sincronización en Windows y en la Web, contra el emulador;
+- el inicio de sesión de Android no se puede probar antes de Play, porque el banco del emulador no llega a Firebase (O-134-2). Su primera prueba es en el Honor, apenas suba el AAB;
+- si Android falla ahí, Android vuelve a la 0.4.2 con el `versionCode` siguiente (4.5), y Windows y la Web se quedan en la 1.0.0.
+
+**Carlos decidió (16:29) ir por la 1.0.0 cuanto antes, si puede ser antes del jueves.** Yov recomendaba hacer la demostración con la 0.4.2, que queda como la vuelta de los tres clientes (4.5).
+
+**T-138 · «Volver al inicio»** (Carlos eligió la opción A, 15:53). Hoy se vuelve al inicio con «Más» → «Cerrar el plano», en los tres clientes, y en Android también con Atrás dos veces. No se borra nada, pero el camino está escondido, y el subtítulo «Limpia los datos cargados en este dispositivo» suena a borrar. T-138:
+- en la oficina (Windows y Web), la marca de BayStream de arriba del riel es el botón «Volver al inicio», sin agregar nada al riel;
+- en «Más», en los tres clientes, la entrada se llama «Volver al inicio», con un subtítulo que diga lo que de verdad hace;
+- en el teléfono no hay un botón suelto, para que nadie lo toque sin querer en el muelle;
+- con un previo, pregunta lo de siempre: «¿Descartar el plano sin confirmar?».
+
+Lo hace Timonel después de T-136 y lo revisa Codex. Entra en la 1.0.0 si pasa a tiempo.
+
+**El orden:**
+1. Timonel termina T-136, Yov la revisa y Carlos hace el commit.
+2. Codex acepta T-136 en `qa-r4`, con T-137 en pausa, mientras Timonel hace T-138.
+3. Codex revisa T-138 y Timonel revisa T-137.
+4. Yov prepara la lista de la 1.0.0, y Carlos publica: las reglas no cambian; la mezcla, con `v1.0.0`; el MSIX 1.0.0.0 y, si pasó, el asistente; el AAB y la Web. Después, una prueba corta con el Honor, con su propio viaje.
+
+La siguiente decisión es la **10.102**.
