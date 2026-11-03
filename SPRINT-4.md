@@ -2822,3 +2822,40 @@ La siguiente decisión es la **10.98**.
 Después, 0.7, 0.8 y el ensayo.
 
 La siguiente decisión es la **10.99**.
+
+### 10.99 · Se publica la 0.4.2; T-136, el parche de seguridad de Firestore en Windows, es la candidata 1.0.0; Carlos pide un instalador con asistente (3-nov, 14:40)
+
+**El aviso de Firebase** (correo del 3-nov, «[Act Now] Upgrade your Firebase SDKs for Firestore to apply an urgent security patch», proyecto `baystream-app`). Se filtraron las claves de unas CA intermedias de eMudhra, y con ellas se pueden falsificar certificados HTTPS. La guía de Firebase (`compromised-emudhra-intermediate-ca`, actualizada el 3-nov) da las versiones corregidas y dice que actualizar el sistema operativo o el servidor no arregla las compilaciones ya instaladas. Para BayStream:
+- **Windows está afectado.** Firestore va por el SDK de C++, que trae sus propias raíces. Con `firebase_core` 4.13.0 el SDK es el 13.9.0, y así lo dicen los `version.h` de `build\windows\x64\extracted` en `proyecto-baystream`, `baystream-rediseno` y `baystream-qa-r4`. Lo llevan la 0.4.0.0 instalada y la 0.4.2.0 que se publica hoy. El arreglo es `cloud_firestore` 6.10.2 con `firebase_core` 4.15.2, que traen el SDK de C++ 13.13.1 (PR #18869 de FlutterFire, publicadas el 23-oct).
+- **Android no:** Firestore y las cuentas van por el SDK nativo de Android, que la guía no da por afectado. **La Web tampoco:** el navegador valida con sus propios certificados.
+- **Dart.** La guía pide además Flutter 3.47.8 (Dart 3.13.7) en Android, Windows y Linux, porque `dart:io` valida TLS con su propio BoringSSL. En BayStream, `lib/` usa `dart:io` solo para archivos. Yov revisó los 109 paquetes de `pubspec.lock`: fuera de las herramientas de pruebas, lo único que abre HTTPS desde Dart es la política de contraseñas de `firebase_auth`, que solo baja `validatePassword`, y BayStream no la llama. Subir de la 3.38.9 a la 3.47.8 son nueve versiones menores de Flutter: no entra antes del 7-nov (**O-136-1**, para después).
+- **Las reglas y el servidor** no cambian.
+
+**Carlos decidió (14:00):**
+1. **La 0.4.2 se publica hoy como se aceptó** (10.98): las reglas de T-130 (4.0), la mezcla (4.1) y los tres clientes (4.2 a 4.4); después, 0.7, 0.8 y el ensayo. Mientras Windows lleve el SDK 13.9.0, en una red que no es de Carlos (un Wi-Fi público o el del puerto) los datos reales van por la Web, en Chrome o Edge, y no por el `.exe`. La sección 5 de la lista lo dice.
+2. **T-136 queda autorizada como candidata 1.0.0** (la hace Timonel y la acepta Codex), con el cambio de dependencias. Yov lo comprobó en pub.dev:
+   - `cloud_firestore: ^6.10.2` y `firebase_core: ^4.15.2`. Las dos piden Flutter 3.27 o posterior y Dart ^3.6.0, así que basta la Flutter de hoy (3.38.9);
+   - la fija de desarrollo `cloud_firestore_platform_interface` pasa de 8.0.6 a **8.0.7**, la única versión posible: `cloud_firestore` 6.10.2 pide ^8.0.7, y la 8.0.8 y la 8.1.0 piden `firebase_core` 5;
+   - `firebase_auth` se queda en 6.5.7, porque pide `firebase_core` ^4.13.0;
+   - en `pubspec.lock` se esperan siete cambios, todos de FlutterFire: `cloud_firestore`, `firebase_core`, `cloud_firestore_platform_interface`, `cloud_firestore_web` (5.7.3), `firebase_core_platform_interface` (8.1.1), `firebase_core_web` (3.11.0 o 3.12.0) y `_flutterfire_internals` (1.3.77). Si cambia cualquier otro, la tarea se detiene;
+   - la versión pasa a `1.0.0+9`, con `msix_version: 1.0.0.0`. Si la vuelta de Android de 4.5 llegara a gastar el 9, queda en `1.0.0+10`;
+   - si Codex la acepta a más tardar el jueves 5, se publica la 1.0.0 y la demostración va con ella. Si no, la demostración va con la 0.4.2 y la 1.0.0 llega después (10.74).
+3. **Carlos pide mejorar el instalador de Windows:** que sea bonito y diga qué instala y qué hay detrás, con lo que den Dart y Flutter. Hoy el MSIX abre el instalador de aplicaciones de Windows con un solo botón. Es **T-137**. La propuesta y lo que elija Carlos van en la 10.100.
+
+**La trampa del SDK de C++** (la encontró Yov en el `windows/CMakeLists.txt` de `firebase_core`; entre la 4.13.0 y la 4.15.2 solo cambia la versión):
+- al compilar Windows, CMake descarga `firebase_cpp_sdk_windows_<versión>.zip` en `build\windows\x64`, pero solo lo extrae si `build\windows\x64\extracted` **no existe**. Si existe, dice «Using cached extracted Firebase SDK» y enlaza lo que haya ahí;
+- en las tres carpetas, ahí está el 13.9.0 (8,5 GB). Sin apartarlo, una 1.0.0 con `firebase_core` 4.15.2 seguiría enlazando el SDK afectado.
+
+Por eso:
+- T-136 aparta `extracted` antes de su primera compilación de Windows y comprueba en `version.h` que queda el 13.13.1;
+- desde T-136, `tool/t93_msix.ps1` lo comprueba antes de empaquetar. Si el SDK extraído no es el que pide el `firebase_core` resuelto, lo aparta antes de compilar o, con `-SinCompilar`, se detiene;
+- la aceptación de Codex lo comprueba en su copia, y la lista de la 1.0.0 (4.2), en `proyecto-baystream`;
+- cada carpeta necesita unos 9,5 GB nuevos, entre el zip y lo extraído, y la laptop tiene 76 GB libres. Las carpetas apartadas con el 13.9.0 las borra Carlos después de publicar la 1.0.0.
+
+**Lo que sigue:**
+1. Carlos publica la 0.4.2 (4.0 a 4.4).
+2. Timonel empieza T-136 cuando terminen las compilaciones de la 0.4.2. Hasta entonces, solo lee.
+3. Codex acepta T-136.
+4. Yov escribe la 10.100, con T-137, y prepara la lista de la 1.0.0.
+
+La siguiente decisión es la **10.100**.

@@ -1,4 +1,4 @@
-# Lista de comprobación · Ensayo y prueba piloto con COMAR (la 0.4.2, 10.96 a 10.98)
+# Lista de comprobación · Ensayo y prueba piloto con COMAR (la 0.4.2, 10.96 a 10.99)
 
 **Para quién.** Carlos publica la 0.4.2 y corre el ensayo y el piloto; Yov revisa esta
 lista y los comandos antes. La lista va por rol: **el muelle con el Honor** y **la oficina con la
@@ -538,6 +538,11 @@ cliente, solo en el que falle, y siempre desde `C:\Proyectos\proyecto-baystream`
 
 ## 5. Lo que la 0.4.2 no cubre y hay que mirar en el ensayo
 
+- **El aviso de seguridad de Firebase** (eMudhra, 3-nov; 10.99): en Windows, la 0.4.2 lleva el
+  SDK de C++ de Firebase 13.9.0, que está afectado, igual que la 0.4.0. Lo corrige T-136 en la
+  1.0.0. Hasta entonces, en una red que no es tuya (un Wi-Fi público o el del puerto), los datos
+  reales van por la Web, en Chrome o Edge, y no por el `.exe`. Android y la Web no están
+  afectados, y las reglas no cambian.
 - **Lo que necesita Firebase** no se recorrió con los bancos (10.28, y T-125 tampoco): unirse,
   publicar, pedir y decidir cambios, sincronizar y, desde la 0.4.2, revisar el listado (T-127) y
   agregar el plan que falta (T-130). Está probado en memoria (`t80_requests_widget_test`,
