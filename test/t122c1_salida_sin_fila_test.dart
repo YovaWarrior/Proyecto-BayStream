@@ -62,7 +62,7 @@ void main() {
     expect(lleno.grossWeight, 7200);
     expect(lleno.status, ContainerStatus.full);
     // El que sigue a bordo va como antes, con lo que el plan declaraba.
-    expect(result.text, contains(t82Transit.replaceAll("'", "'\n")));
+    expect(result.text, contains(t82Transit));
   });
 
   test('con listado al que le falta la fila, el lleno sale con el plan y los demás con el listado',
@@ -94,7 +94,7 @@ void main() {
         .parse(result.text)
         .containers
         .firstWhere((c) => c.containerId == 'TSTU0000014');
-    expect(lleno.vgmWeight, 7266.59);
+    expect(lleno.vgmWeight, 7267); // T-132: el VGM nuevo va al kilo.
     expect(lleno.tareWeight, 3900);
     expect(lleno.dangerousGoods!.map((d) => d.unNumber), ['3082', '3077']);
   });

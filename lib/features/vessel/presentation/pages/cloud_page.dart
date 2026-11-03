@@ -223,6 +223,9 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       Text(operation.published
           ? (operation.closed ? 'Publicada y cerrada' : 'Publicada')
           : 'Solo en este dispositivo'),
+      // T-130: las fuentes, con el viaje que declara un plan agregado.
+      Text(fuentesDeLaOperacion(operation),
+          key: const ValueKey('cloud-sources')),
       const SizedBox(height: 8),
       Text(syncStatusText(status), key: const ValueKey('cloud-sync-status')),
       const SizedBox(height: 8),
@@ -385,6 +388,26 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         if (error == null && mounted) Navigator.of(context).pop();
         return error;
       });
+}
+
+/// T-130 · «Fuentes: llegada · carga (viaje M100N) · listado r1», o «Sin
+/// fuentes»: lo que la operación tiene, con el viaje que declara un plan
+/// agregado con otro número y la revisión del listado.
+String fuentesDeLaOperacion(Operation operation) {
+  final partes = <String>[];
+  for (final kind in OperationSourceKind.values) {
+    final source = operation.source(kind);
+    if (source == null) continue;
+    final nombre = switch (kind) {
+      OperationSourceKind.arrivalBaplie => 'llegada',
+      OperationSourceKind.loadingBaplie => 'carga',
+      OperationSourceKind.exportList => 'listado',
+    };
+    partes.add('$nombre'
+        '${source.voyage == null ? '' : ' (viaje ${source.voyage})'}'
+        '${source.revision == null ? '' : ' r${source.revision}'}');
+  }
+  return partes.isEmpty ? 'Sin fuentes' : 'Fuentes: ${partes.join(' · ')}';
 }
 
 /// T-112: lectura que terminó sin el viaje y sin un motivo.

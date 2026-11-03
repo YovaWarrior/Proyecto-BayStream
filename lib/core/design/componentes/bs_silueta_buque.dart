@@ -5,6 +5,7 @@ import '../bs_formato.dart';
 import '../bs_medidas.dart';
 import '../bs_movimiento.dart';
 import '../bs_tipografia.dart';
+import 'bs_rueda_horizontal.dart';
 
 /// Una bahía en la silueta: su número, cuántos niveles ocupados tiene en
 /// cubierta y en bodega, su avance en esta escala y si tiene trabajo en ella.
@@ -61,7 +62,8 @@ class BsBahiaDeSilueta {
 ///
 /// El casco y las pilas se pintan con `CustomPainter`; cada bahía es un botón
 /// de 56 dp de ancho con su etiqueta. Con `disableAnimations` el destello es
-/// un anillo fijo. Evoluciona `BsTiraDeBahias`, que se conserva.
+/// un anillo fijo. Evoluciona `BsTiraDeBahias`, que se conserva. La rueda del
+/// mouse la desplaza en horizontal ([BsRuedaHorizontal], 16.1).
 ///
 /// Con [compacta], la silueta del teléfono bajo (13.8): los mismos niveles,
 /// el mismo número, la misma barra de avance y el mismo botón de 56 dp de
@@ -192,87 +194,93 @@ class BsSiluetaBuque extends StatelessWidget {
       label: descripcion,
       child: SizedBox(
         height: geometria.alto,
-        child: SingleChildScrollView(
-          controller: controlador,
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: ancho,
-            height: geometria.alto,
-            child: Stack(
-              children: <Widget>[
-                Positioned.fill(
-                  child: ExcludeSemantics(
-                    child: recienMovida == null
-                        ? pintura(0)
-                        : reducido
-                            ? pintura(1)
-                            : TweenAnimationBuilder<double>(
-                                key: ValueKey<int>(recienMovida!),
-                                tween: Tween<double>(begin: 1, end: 0),
-                                duration: BsMovimiento.recienMovido,
-                                curve: BsMovimiento.entrada,
-                                builder: (BuildContext context, double valor,
-                                        Widget? _) =>
-                                    pintura(valor),
-                              ),
+        // La rueda del mouse avanza hacia la popa y regresa hacia la proa
+        // (T-119, 16.1).
+        child: BsRuedaHorizontal(
+          controlador: controlador,
+          constructor: (context, desplazamiento) => SingleChildScrollView(
+            controller: desplazamiento,
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: ancho,
+              height: geometria.alto,
+              child: Stack(
+                children: <Widget>[
+                  Positioned.fill(
+                    child: ExcludeSemantics(
+                      child: recienMovida == null
+                          ? pintura(0)
+                          : reducido
+                              ? pintura(1)
+                              : TweenAnimationBuilder<double>(
+                                  key: ValueKey<int>(recienMovida!),
+                                  tween: Tween<double>(begin: 1, end: 0),
+                                  duration: BsMovimiento.recienMovido,
+                                  curve: BsMovimiento.entrada,
+                                  builder: (BuildContext context, double valor,
+                                          Widget? _) =>
+                                      pintura(valor),
+                                ),
+                    ),
                   ),
-                ),
-                Positioned(
-                  left: medidas.espacioXs,
-                  bottom: medidas.espacioXs,
-                  child: ExcludeSemantics(
-                    child: Text('Proa',
-                        style: textos.labelSmall
-                            ?.copyWith(color: semanticos.tintaTenue)),
+                  Positioned(
+                    left: medidas.espacioXs,
+                    bottom: medidas.espacioXs,
+                    child: ExcludeSemantics(
+                      child: Text('Proa',
+                          style: textos.labelSmall
+                              ?.copyWith(color: semanticos.tintaTenue)),
+                    ),
                   ),
-                ),
-                Positioned(
-                  right: medidas.espacioXs,
-                  bottom: medidas.espacioXs,
-                  child: ExcludeSemantics(
-                    child: Text('Popa',
-                        style: textos.labelSmall
-                            ?.copyWith(color: semanticos.tintaTenue)),
+                  Positioned(
+                    right: medidas.espacioXs,
+                    bottom: medidas.espacioXs,
+                    child: ExcludeSemantics(
+                      child: Text('Popa',
+                          style: textos.labelSmall
+                              ?.copyWith(color: semanticos.tintaTenue)),
+                    ),
                   ),
-                ),
-                Positioned(
-                  left: margen,
-                  top: 0,
-                  bottom: 0,
-                  child: Row(
-                    children: <Widget>[
-                      for (final bahia in bahias)
-                        _BotonDeBahia(
-                          key: ValueKey<String>('silueta-bahia-${bahia.numero}'),
-                          bahia: bahia,
-                          seleccionada: bahia.numero == seleccionada,
-                          onTap: () => onSeleccion(bahia.numero),
-                          estiloNumero: (mono ?? textos.labelSmall)?.copyWith(
-                            fontSize: bahia.numero == seleccionada
-                                ? BsEscala.rotulo
-                                : BsEscala.rotuloMinimo,
-                            fontWeight: bahia.numero == seleccionada
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                            color: bahia.numero == seleccionada
-                                ? esquema.onSurface
-                                : semanticos.tintaTenue,
+                  Positioned(
+                    left: margen,
+                    top: 0,
+                    bottom: 0,
+                    child: Row(
+                      children: <Widget>[
+                        for (final bahia in bahias)
+                          _BotonDeBahia(
+                            key: ValueKey<String>(
+                                'silueta-bahia-${bahia.numero}'),
+                            bahia: bahia,
+                            seleccionada: bahia.numero == seleccionada,
+                            onTap: () => onSeleccion(bahia.numero),
+                            estiloNumero: (mono ?? textos.labelSmall)?.copyWith(
+                              fontSize: bahia.numero == seleccionada
+                                  ? BsEscala.rotulo
+                                  : BsEscala.rotuloMinimo,
+                              fontWeight: bahia.numero == seleccionada
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: bahia.numero == seleccionada
+                                  ? esquema.onSurface
+                                  : semanticos.tintaTenue,
+                            ),
+                            colorDeAvance: bahia.avance == null
+                                ? null
+                                : bahia.avance! >= 1
+                                    ? semanticos.hecho.contorno
+                                    : bahia.numero == seleccionada
+                                        ? semanticos.porBajarCubierta.relleno
+                                        : esquema.primary,
+                            pista: esquema.outlineVariant,
+                            altoDelPie: geometria.altoDelPie,
+                            pieInferior: pieInferior,
                           ),
-                          colorDeAvance: bahia.avance == null
-                              ? null
-                              : bahia.avance! >= 1
-                                  ? semanticos.hecho.contorno
-                                  : bahia.numero == seleccionada
-                                      ? semanticos.porBajarCubierta.relleno
-                                      : esquema.primary,
-                          pista: esquema.outlineVariant,
-                          altoDelPie: geometria.altoDelPie,
-                          pieInferior: pieInferior,
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

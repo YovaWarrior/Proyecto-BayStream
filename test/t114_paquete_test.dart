@@ -106,6 +106,10 @@ const _conSitio = <String>{
   'insigniaRefrigerado',
   'insigniaPeligrosa',
   'insigniaFueraDeMedida',
+  // T-131 (DESIGN.md 13.12): el distintivo de rol de la cabecera; `muelle`
+  // estaba sin sitio hasta aquí y `oficina` llega con el paquete v3.
+  'muelle',
+  'oficina',
 };
 
 /// Los que el LEEME da como «ninguno hoy»: quedan en la fuente sin sitio.
@@ -113,7 +117,6 @@ const _sinSitio = <String>{
   'limiteApilamiento',
   'segregacion',
   'grua',
-  'muelle',
   'escala',
   'insigniaVacio',
 };
@@ -266,8 +269,8 @@ void main() {
           reason: 'faltan ${_conSitio.difference(usados)}');
       expect(usados.intersection(_sinSitio), isEmpty,
           reason: 'los sin sitio se usan: ${usados.intersection(_sinSitio)}');
-      expect(_conSitio.length + _sinSitio.length, 35);
-      expect(BsIconosCatalogo.todos.keys, hasLength(35));
+      expect(_conSitio.length + _sinSitio.length, 36);
+      expect(BsIconosCatalogo.todos.keys, hasLength(36));
     });
   });
 

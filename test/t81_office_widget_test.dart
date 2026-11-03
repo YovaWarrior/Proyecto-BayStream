@@ -53,7 +53,13 @@ void main() {
     await log.append(MovementDraft.changePosition('op', fixture.move, 'Cambio remoto'), fixture.office.author);
     await log.append(MovementDraft.cancelItem('op', 'C:FULL0005678', 'No embarca'), fixture.office.author);
     await tester.pumpAndSettle();
-    expect(find.text('Cancelado'), findsOneWidget);
+    // T-133: la celda cancelada conserva su OR y lleva debajo el bloqueo
+    // («Cancel.» si cabe; con la fuente cuadrada de las pruebas, el icono).
+    final cancelled = find.byKey(const ValueKey('loading-C:FULL0005678'));
+    expect(find.descendant(of: cancelled, matching: find.text('OR 2')),
+        findsOneWidget);
+    expect(find.descendant(of: cancelled, matching: find.byIcon(Icons.block)),
+        findsOneWidget);
     scope.read(selectedBayProvider.notifier).select(5);
     await tester.pumpAndSettle();
     final cell = tester.widget<LoadingCell>(find.byKey(const ValueKey('loading-C:FULL0001234')));

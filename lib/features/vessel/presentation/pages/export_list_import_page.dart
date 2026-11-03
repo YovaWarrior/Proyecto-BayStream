@@ -91,6 +91,7 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
               onChoose: notifier.choose,
             ),
             if (state.crossCheck != null) _CrossCheckCard(check: state.crossCheck!),
+            if (state.impact != null) _RevisionImpactCard(impact: state.impact!),
             _RowsCard(list: list),
             const SizedBox(height: 8),
             if (state.hasPending)
@@ -460,6 +461,80 @@ class _CrossCheckCard extends StatelessWidget {
                 key: const ValueKey('cross-weight'),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// T-127 (10.78) · Lo ya operado con el listado nuevo: antes de confirmar, el
+/// cruce dice con números cuántos contenedores ya cargados no están en el
+/// listado nuevo y cuántos vacíos asignados cambian de grupo. Los movimientos
+/// no se pierden ni cambian: se vuelven a leer con el listado nuevo.
+class _RevisionImpactCard extends StatelessWidget {
+  final ExportListRevisionImpact impact;
+  const _RevisionImpactCard({required this.impact});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    Widget status(bool ok, String text, {Key? key}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(ok ? Icons.check_circle_outline : Icons.warning_amber,
+                  size: 18, color: ok ? scheme.primary : scheme.error),
+              const SizedBox(width: 8),
+              Expanded(child: Text(text, key: key)),
+            ],
+          ),
+        );
+    Widget section(String title, Iterable<String> items) => ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          title: Text(title, style: TextStyle(color: scheme.error)),
+          children: [
+            for (final item in items)
+              Align(alignment: Alignment.centerLeft, child: Text(item)),
+          ],
+        );
+    final missing = impact.loadedNotListed.length;
+    final regrouped = impact.emptiesRegrouped.length;
+    return Card(
+      key: const ValueKey('revision-impact'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Lo ya operado con el listado nuevo',
+                style: theme.textTheme.titleMedium),
+            const SizedBox(height: 4),
+            Text(
+                'Los movimientos registrados no se pierden ni cambian: se '
+                'vuelven a leer con el listado nuevo.',
+                style: theme.textTheme.bodySmall),
+            const SizedBox(height: 8),
+            status(
+                missing == 0,
+                missing == 1
+                    ? '1 contenedor ya cargado no está en el listado nuevo'
+                    : '$missing contenedores ya cargados no están en el listado nuevo',
+                key: const ValueKey('revision-loaded-missing')),
+            status(
+                regrouped == 0,
+                regrouped == 1
+                    ? '1 vacío asignado cambia de grupo'
+                    : '$regrouped vacíos asignados cambian de grupo',
+                key: const ValueKey('revision-empties-regrouped')),
+            if (missing > 0)
+              section('Ya cargados sin fila en el listado nuevo ($missing)',
+                  impact.loadedNotListed),
+            if (regrouped > 0)
+              section('Vacíos asignados que cambian de grupo ($regrouped)',
+                  impact.emptiesRegrouped),
           ],
         ),
       ),

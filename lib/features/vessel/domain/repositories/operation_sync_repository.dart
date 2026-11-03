@@ -27,6 +27,38 @@ enum SyncState {
   unconfirmed,
 }
 
+/// T-127 · Un listado de la agencia que llegó por la nube mientras se seguía
+/// la operación: la oficina lo agregó o lo reemplazó después de publicar
+/// (10.78). El dispositivo ya lo guardó en su operación; la pantalla avisa
+/// («Listado actualizado por la oficina: n filas») y vuelve a derivar el plan.
+class ListArrival extends Equatable {
+  final int revision;
+  final int rows;
+
+  const ListArrival({required this.revision, required this.rows});
+
+  @override
+  List<Object?> get props => [revision, rows];
+}
+
+/// T-130 · Un BAPLIE que llegó por la nube mientras se seguía la operación: la
+/// oficina agregó el plano de llegada o el plan de carga que faltaba después
+/// de publicar (10.90). El dispositivo ya lo guardó en su operación; la
+/// pantalla avisa («Plan de carga agregado por la oficina: …») y vuelve a
+/// derivar el plano con los movimientos intactos.
+class PlanArrival extends Equatable {
+  final OperationSourceKind kind;
+  final String fileName;
+
+  /// El viaje que declara el archivo, solo si es distinto del de la operación.
+  final String? voyage;
+
+  const PlanArrival({required this.kind, required this.fileName, this.voyage});
+
+  @override
+  List<Object?> get props => [kind, fileName, voyage];
+}
+
 class SyncStatus extends Equatable {
   final SyncState state;
 
@@ -44,6 +76,14 @@ class SyncStatus extends Equatable {
   final DateTime? since;
   final bool closed;
 
+  /// T-127 · El último listado que llegó por la nube en esta escucha; nulo
+  /// mientras no llegue ninguno.
+  final ListArrival? listArrival;
+
+  /// T-130 · El último BAPLIE que llegó por la nube en esta escucha; nulo
+  /// mientras no llegue ninguno.
+  final PlanArrival? planArrival;
+
   const SyncStatus(
     this.state, {
     this.pending = 0,
@@ -52,18 +92,31 @@ class SyncStatus extends Equatable {
     this.otherAuthor = 0,
     this.since,
     this.closed = false,
+    this.listArrival,
+    this.planArrival,
   });
 
   static const local = SyncStatus(SyncState.localOnly);
 
   @override
-  List<Object?> get props =>
-      [state, pending, rejected, localOnly, otherAuthor, since, closed];
+  List<Object?> get props => [
+        state,
+        pending,
+        rejected,
+        localOnly,
+        otherAuthor,
+        since,
+        closed,
+        listArrival,
+        planArrival
+      ];
 
   @override
   String toString() => 'SyncStatus(${state.name}, pendientes $pending, '
       'rechazados $rejected, locales $localOnly, de otra cuenta $otherAuthor'
-      '${since == null ? '' : ', desde $since'}${closed ? ', cerrada' : ''})';
+      '${since == null ? '' : ', desde $since'}${closed ? ', cerrada' : ''}'
+      '${listArrival == null ? '' : ', listado r${listArrival!.revision} de ${listArrival!.rows} filas'}'
+      '${planArrival == null ? '' : ', plan ${planArrival!.kind.wire} «${planArrival!.fileName}»'})';
 }
 
 /// Una operación abierta en la nube, para que el muelle elija a cuál unirse.
@@ -106,8 +159,36 @@ abstract class OperationSyncRepository {
   /// Oficina: cierra la operación, una vez.
   Future<Either<Failure, Operation>> close(String operationId);
 
+  /// T-127 · Oficina: agrega o reemplaza el listado de la agencia de una
+  /// operación publicada y abierta (10.78). Sube los trozos con la revisión
+  /// siguiente y el manifiesto en un solo lote; solo si la nube lo acepta,
+  /// guarda la fuente con su revisión en la operación local y la devuelve.
+  /// Si falla, nada local cambia. Solo admite `export_list`: los BAPLIE son
+  /// el contrato de las claves de los movimientos y no cambian.
+  Future<Either<Failure, Operation>> replaceSource(
+      Operation operation, OperationSource source);
+
+  /// T-130 · Oficina: agrega a una operación publicada y abierta el BAPLIE
+  /// que le falta (el plano de llegada o el plan de carga; 10.90). Sube los
+  /// trozos `{tipo}-{i}`, sin revisión, y la entrada del manifiesto en un solo
+  /// lote; solo si la nube lo acepta, guarda la fuente en la operación local
+  /// y la devuelve. Si falla, nada local cambia. Nunca reemplaza un BAPLIE
+  /// que ya está: los BAPLIE son el contrato de las claves de los movimientos.
+  Future<Either<Failure, Operation>> addSource(
+      Operation operation, OperationSource source);
+
   /// Sigue la operación: escucha la nube y envía lo pendiente mientras haya
   /// alguien suscrito. Emite el estado al suscribirse y en cada cambio.
+  ///
+  /// T-127 · Escucha también el documento de la operación: cuando el
+  /// manifiesto trae una revisión del listado mayor que la local, baja sus
+  /// trozos, comprueba las huellas como `join`, guarda la fuente en la
+  /// operación local y lo dice en [SyncStatus.listArrival]. Sin red, el
+  /// dispositivo sigue con el listado que tenía hasta reconectar.
+  ///
+  /// T-130 · Lo mismo con un BAPLIE que el manifiesto declara y la operación
+  /// local no tiene: lo baja, lo comprueba, lo guarda con los movimientos
+  /// intactos y lo dice en [SyncStatus.planArrival].
   Stream<SyncStatus> follow(Operation operation);
 
   /// Vuelve a poner en cola lo rechazado y reenvía lo pendiente.

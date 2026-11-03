@@ -42,6 +42,8 @@ class BsPaleta {
     required this.sobreGrua,
     required this.rampaDeMagnitud,
     required this.pistaDeMagnitud,
+    required this.metalMuelle,
+    required this.metalOficina,
   });
 
   /// Claro u oscuro.
@@ -138,6 +140,42 @@ class BsPaleta {
   /// lea entera, también donde no llega. No es un dato.
   final Color pistaDeMagnitud;
 
+  /// El distintivo de rol del muelle (`DESIGN.md` 13.12; 10.86): el cobre de
+  /// la presentación del 7-nov. Igual en claro y en oscuro.
+  final BsMetalDeRol metalMuelle;
+
+  /// El distintivo de rol de la oficina: el oro. Igual en claro y en oscuro.
+  final BsMetalDeRol metalOficina;
+
+  /// El cobre del muelle: el fondo de la banda en azul profundo, el filo de
+  /// cobre y el ícono en cobre claro; el brillo, blanco al 18 %, y la sombra,
+  /// la noche al 35 % (el lienzo de 10.86).
+  static const BsMetalDeRol _cobre = BsMetalDeRol(
+    fondoArriba: Color(0xFF0B3E93),
+    fondoAbajo: Color(0xFF082F70),
+    filoClaro: Color(0xFFF8D2B6),
+    filoMedio: Color(0xFFE0895A),
+    filoOscuro: Color(0xFF9E5530),
+    icono: Color(0xFFF4B48E),
+    rotulo: Color(0xFFFFFFFF),
+    brillo: Color(0x2EFFFFFF),
+    sombra: Color(0x5907111F),
+  );
+
+  /// El oro de la oficina: el fondo en el azul de la noche, el filo de oro y
+  /// el ícono en oro; el brillo, blanco al 14 %, y la sombra, negro al 40 %.
+  static const BsMetalDeRol _oro = BsMetalDeRol(
+    fondoArriba: Color(0xFF16305C),
+    fondoAbajo: Color(0xFF0E2244),
+    filoClaro: Color(0xFFFFF0C4),
+    filoMedio: Color(0xFFF2C46D),
+    filoOscuro: Color(0xFFA87A2C),
+    icono: Color(0xFFF2C46D),
+    rotulo: Color(0xFFF4F6FB),
+    brillo: Color(0x24FFFFFF),
+    sombra: Color(0x66000000),
+  );
+
   /// La paleta del día (el muelle): la de la Fase 2, sin cambios.
   static const BsPaleta claro = BsPaleta(
     brillo: Brightness.light,
@@ -171,6 +209,8 @@ class BsPaleta {
       Color(0xFF0D47A1),
     ],
     pistaDeMagnitud: Color(0xFFD9E7FC),
+    metalMuelle: _cobre,
+    metalOficina: _oro,
   );
 
   /// La paleta de la noche (la oficina), de 10.14.
@@ -206,9 +246,71 @@ class BsPaleta {
       Color(0xFFD9E7FC),
     ],
     pistaDeMagnitud: Color(0xFF1E3457),
+    // El metal no cambia con el tema (10.86).
+    metalMuelle: _cobre,
+    metalOficina: _oro,
   );
 
   /// La paleta que corresponde a un brillo.
   static BsPaleta de(Brightness brillo) =>
       brillo == Brightness.dark ? oscuro : claro;
+}
+
+/// El metal de un distintivo de rol (`DESIGN.md` 13.12; 10.86, la variante B
+/// «Filo de metal»): los colores de la presentación del 7-nov, el cobre del
+/// muelle y el oro de la oficina.
+///
+/// El metal va solo en el filo y en el ícono, nunca de relleno: así no se
+/// confunde con el naranja de «recién movido» ni con el ámbar de «Revisar».
+/// Es la única excepción a la escala de un solo tono y a «sin degradados»
+/// (Carlos, 1-nov). No cambia con el tema: [BsPaleta.claro] y
+/// [BsPaleta.oscuro] traen el mismo. Los pares están en
+/// `tool/rediseno_contraste.py`: el rótulo a 4.5:1 o más sobre los dos
+/// extremos del fondo, el ícono a 3:1 o más, y el filo o el relleno a 3:1 o
+/// más contra cada fondo donde va.
+@immutable
+class BsMetalDeRol {
+  /// Crea un metal. En el producto solo existen el cobre y el oro de
+  /// [BsPaleta].
+  const BsMetalDeRol({
+    required this.fondoArriba,
+    required this.fondoAbajo,
+    required this.filoClaro,
+    required this.filoMedio,
+    required this.filoOscuro,
+    required this.icono,
+    required this.rotulo,
+    required this.brillo,
+    required this.sombra,
+  });
+
+  /// El relleno arriba; el degradado del fondo va de arriba abajo.
+  final Color fondoArriba;
+
+  /// El relleno abajo.
+  final Color fondoAbajo;
+
+  /// El filo a 135°: el claro, arriba a la izquierda.
+  final Color filoClaro;
+
+  /// El filo en [paradaMedia].
+  final Color filoMedio;
+
+  /// El filo oscuro, abajo a la derecha.
+  final Color filoOscuro;
+
+  /// El ícono del rol.
+  final Color icono;
+
+  /// El rótulo.
+  final Color rotulo;
+
+  /// El brillo de 1 dp arriba, por dentro: blanco con su opacidad.
+  final Color brillo;
+
+  /// La sombra leve, con su opacidad.
+  final Color sombra;
+
+  /// Dónde va [filoMedio] en el degradado del filo.
+  static const double paradaMedia = 0.55;
 }

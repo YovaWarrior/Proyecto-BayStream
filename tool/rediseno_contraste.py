@@ -204,6 +204,31 @@ PAPEL = {'claro': ['#F5F8FC', '#FFFFFF', '#E9EFF7', '#E3EDFB'],
          'oscuro': ['#07111F', '#0C1A31', '#11223F', '#11213A']}
 
 # ---------------------------------------------------------------------------
+# El distintivo de rol (T-131; DESIGN.md 13.12; 10.86, «Filo de metal»): el
+# cobre del muelle y el oro de la oficina, de la presentación del 7-nov. No
+# cambia con el tema. El fondo va de arriba abajo; el filo de 1.5 dp, a 135°,
+# con la parada del medio al 55 %; el brillo y la sombra llevan su alfa.
+# ---------------------------------------------------------------------------
+METALES = {
+    'muelle': {'fondo': ('#0B3E93', '#082F70'),
+               'filo': ('#F8D2B6', '#E0895A', '#9E5530'),
+               'icono': '#F4B48E', 'rotulo': '#FFFFFF',
+               'brillo': ('#FFFFFF', 0.18), 'sombra': ('#07111F', 0.35)},
+    'oficina': {'fondo': ('#16305C', '#0E2244'),
+                'filo': ('#FFF0C4', '#F2C46D', '#A87A2C'),
+                'icono': '#F2C46D', 'rotulo': '#F4F6FB',
+                'brillo': ('#FFFFFF', 0.14), 'sombra': ('#000000', 0.40)},
+}
+# Dónde va: la banda del muelle (la marca como superficie, la misma en los dos
+# temas) y la barra superior del teléfono y la cabecera de la oficina, que van
+# sobre el papel del tema.
+FONDOS_DEL_DISTINTIVO = [
+    ('la banda del muelle', 'claro y oscuro', '#0D47A1'),
+    ('la barra superior y la cabecera de la oficina', 'claro', '#F5F8FC'),
+    ('la barra superior y la cabecera de la oficina', 'oscuro', '#07111F'),
+]
+
+# ---------------------------------------------------------------------------
 # Paleta categórica para «Colorear por» (destino y tipo de vacío).
 # Doce tonos, el mismo tono en claro y en oscuro. En claro (el día de la Fase
 # 2), el tono va en HSL a 30° desde 15°; en la noche (10.14), las fichas se
@@ -330,6 +355,40 @@ def atenuadas(informe: dict) -> list[dict]:
                       'peor texto': round(peor[0], 2), 'peor relleno': peor[1],
                       'borde': round(contrast(LINEA_FUERTE[modo], PAPEL_CELDA[modo]), 2)})
     return filas
+
+
+def distintivos() -> list[dict]:
+    """Los pares del distintivo de rol (13.12), compuestos con su alfa.
+
+    El rótulo a 4.5:1 y el ícono a 3:1 sobre los dos extremos del fondo (el
+    brillo es el borde de arriba, 1 dp, y no pasa por debajo de ellos). Contra
+    cada fondo donde va, también con la sombra encima, el relleno o el filo a
+    3:1: el filo en su claro y en su tono del medio (el 55 %); el extremo oscuro
+    se informa y no se exige (Carlos, 2-nov: sobre la banda, el cobre baja de
+    3:1 desde el 60 % del degradado).
+    """
+    filas = []
+    for rol, m in METALES.items():
+        arriba, abajo = m['fondo']
+        rotulo = min(contrast(m['rotulo'], f) for f in (arriba, abajo))
+        icono = min(contrast(m['icono'], f) for f in (arriba, abajo))
+        for donde, modo, fondo in FONDOS_DEL_DISTINTIVO:
+            fondos = (fondo, compuesto(m['sombra'][0], fondo, m['sombra'][1]))
+
+            def peor(color: str) -> float:
+                return min(contrast(color, f) for f in fondos)
+
+            relleno = min(peor(arriba), peor(abajo))
+            claro, medio, oscuro = (peor(c) for c in m['filo'])
+            borde = relleno >= AA_NON_TEXT or (claro >= AA_NON_TEXT and medio >= AA_NON_TEXT)
+            filas.append({'rol': rol, 'donde': donde, 'modo': modo, 'fondo': fondo,
+                          'rotulo': round(rotulo, 2), 'icono': round(icono, 2),
+                          'relleno': round(relleno, 2), 'filo claro': round(claro, 2),
+                          'filo medio': round(medio, 2), 'filo oscuro': round(oscuro, 2),
+                          'cumple': rotulo >= AA_TEXT and icono >= AA_NON_TEXT and borde})
+    return filas
+
+
 TABLA_TIPOS = ['45G1', '22G1', '45G0', 'L5G1', '45R1', '42G1', '42U1', '42P3',
                'L5G0', '22K2', '22U1', '22T1', '45R8']
 
@@ -433,6 +492,8 @@ def main() -> int:
                                'contraste borde': round(borde_ratio, 2),
                                'cumple': ok})
     informe['semanticos'] = semanticos
+    informe['distintivo'] = distintivos()
+    fallos += sum(0 if d['cumple'] else 1 for d in informe['distintivo'])
 
     if salida_json:
         print(json.dumps(informe, ensure_ascii=False, indent=2))
@@ -499,6 +560,19 @@ def main() -> int:
               f"{a['peor relleno']} | {a['borde']:.2f} | {'sí' if cumple else '**no**'} |")
     print('\n### Escala secuencial para Estadísticas (del papel a la marca)\n')
     print(' → '.join(informe['secuencial']))
+    print('\n### Distintivo de rol (T-131; 13.12): el cobre del muelle y el oro de la oficina\n')
+    print('El metal no cambia con el tema. El rótulo, a 4.5:1, y el ícono, a 3:1, sobre los dos '
+          'extremos del fondo. Contra cada fondo donde va, también con la sombra encima, el '
+          'relleno o el filo a 3:1: el filo en su claro y en su tono del 55 %. El extremo oscuro '
+          'del filo se informa y no se exige (Carlos, 2-nov).\n')
+    print('| Rol | Dónde | Modo | Fondo | Rótulo | Ícono | Relleno | Filo claro | Filo 55 % | '
+          'Filo oscuro (se informa) | Cumple |')
+    print('|---|---|---|---|---:|---:|---:|---:|---:|---:|---|')
+    for d in informe['distintivo']:
+        print(f"| {d['rol']} | {d['donde']} | {d['modo']} | {d['fondo']} | {d['rotulo']:.2f} | "
+              f"{d['icono']:.2f} | {d['relleno']:.2f} | {d['filo claro']:.2f} | "
+              f"{d['filo medio']:.2f} | {d['filo oscuro']:.2f} | "
+              f"{'sí' if d['cumple'] else '**no**'} |")
     print(f'\nPares que no cumplen: {fallos}')
     return 1 if fallos else 0
 

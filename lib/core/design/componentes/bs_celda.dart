@@ -26,7 +26,8 @@ enum BsInsigniaDeCelda {
 }
 
 /// La marca de la operación sobre la celda, en los modos Descarga y Carga:
-/// icono y rótulo además del color, para leerse a 360 dp y en los dos temas.
+/// icono y rótulo además del color, para leerse a 360 dp y en los dos temas,
+/// debajo del código, que no tapa (T-133).
 enum BsMarcaDeCelda {
   /// Sin marca: la celda muestra su código.
   ninguna,
@@ -113,6 +114,12 @@ enum BsCurvaDeCelda {
 /// dibuja en la oficina, con [zoom] de 100 % o más y si cabe con la escala de
 /// letra del sistema; en el muelle nunca (`DESIGN.md`, 4.2; 10.7, H2).
 ///
+/// La [marca] no tapa el [codigo] (T-133; `DESIGN.md`, 13.13): el código
+/// sigue siendo el texto grande y la marca va debajo, en su lugar de segunda
+/// línea, con su icono y su rótulo corto, a 10 sp en la oficina y a 11 en el
+/// muelle. Si no caben, gana el código: la marca queda en su color y en su
+/// icono, sin rótulo.
+///
 /// [BsEstadoDeCelda.recienMovido] sale de su celda media celda hacia arriba
 /// con `Transform` en `BsMovimiento.salida`, desde donde estaba (la misma
 /// celda, de 0 a media celda en 150 ms), y deja el hueco punteado en su sitio,
@@ -159,7 +166,8 @@ class BsCelda extends StatelessWidget {
   /// La insignia de carga especial.
   final BsInsigniaDeCelda insignia;
 
-  /// La marca de la operación.
+  /// La marca de la operación: el relleno de su rol y, debajo del código,
+  /// su icono y su rótulo si caben.
   final BsMarcaDeCelda marca;
 
   /// El estado de la vista Estado. Manda sobre [categoria] en el relleno.
@@ -188,8 +196,15 @@ class BsCelda extends StatelessWidget {
   /// El alfa del relleno de una celda atenuada.
   static const double alfaAtenuada = 0.35;
 
-  /// El tamaño del icono de la marca.
-  static const double tamanoIconoDeMarca = 14;
+  /// El tamaño del icono de la marca, en la segunda línea: el de la insignia,
+  /// en la rejilla de 12 (13.11; T-133).
+  static const double tamanoIconoDeMarca = 12;
+
+  /// Lo que separa el icono de la marca de su rótulo.
+  static const double separacionDeMarca = 2;
+
+  /// El tamaño de la palomita de la celda bajada sin marca.
+  static const double tamanoPalomita = 18;
 
   /// El tamaño de la insignia de la esquina.
   static const double tamanoInsignia = 12;
@@ -281,18 +296,39 @@ class BsCelda extends StatelessWidget {
     final esRecienMovido = estado == BsEstadoDeCelda.recienMovido;
     // Bajada sin marca: solo la palomita, el contenedor ya no está.
     final soloPalomita = esBajado && !conMarca;
-    final icono = conMarca
-        ? _iconoDeMarca(marca)
-        : soloPalomita
-            ? Icons.check
-            : null;
-    final muestraIcono = icono != null &&
-        (soloPalomita || altoDelCodigo + tamanoIconoDeMarca <= altoInterior);
-    final texto = conMarca
-        ? _rotuloDeMarca(marca, recienMovido: esRecienMovido)
-        : soloPalomita
-            ? ''
-            : codigo;
+    final texto = soloPalomita ? '' : codigo;
+    final altoDelTexto = texto.isEmpty ? 0.0 : altoDelCodigo;
+
+    // T-133 (10.85, hallazgo 7): la marca no tapa el código. El código sigue
+    // siendo el texto grande y la marca va debajo, como segunda línea, con
+    // su icono y su rótulo: a 10 en la oficina y a 11 en el muelle, donde
+    // nada baja de 11 (4.2). Si no caben las dos (la letra a 2.0, el zoom
+    // por debajo de 100 % o un rótulo más ancho que la celda), gana el
+    // código y la marca queda en su color y en su icono, sin rótulo.
+    final estiloDeMarca = textos.celdaLinea2.copyWith(
+      fontSize: medidas.esMuelle ? BsEscala.rotuloMinimo : null,
+      color: efectivo.texto,
+    );
+    final rotulo =
+        conMarca ? _rotuloDeMarca(marca, recienMovido: esRecienMovido) : '';
+    final muestraIconoDeMarca =
+        conMarca && altoDelTexto + tamanoIconoDeMarca <= altoInterior;
+    // El rótulo se mide como lo dibuja `Text`: sobre el estilo heredado.
+    final anchoDeLaMarca = muestraIconoDeMarca
+        ? tamanoIconoDeMarca +
+            separacionDeMarca +
+            _ancho(
+              rotulo,
+              DefaultTextStyle.of(context).style.merge(estiloDeMarca),
+              escala,
+              Directionality.of(context),
+            )
+        : double.infinity;
+    final muestraRotulo = muestraIconoDeMarca &&
+        zoom >= 1.0 &&
+        altoDelTexto + math.max(tamanoIconoDeMarca, altoDe(estiloDeMarca)) <=
+            altoInterior &&
+        anchoDeLaMarca <= medidas.anchoCelda - 2 * grosor;
     final muestraLinea2 = linea2 != null &&
         !conMarca &&
         !soloPalomita &&
@@ -316,12 +352,10 @@ class BsCelda extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  if (muestraIcono)
+                  if (soloPalomita)
                     Icon(
-                      icono,
-                      size: soloPalomita
-                          ? tamanoIconoDeMarca + medidas.espacioXs
-                          : tamanoIconoDeMarca,
+                      Icons.check,
+                      size: tamanoPalomita,
                       color: efectivo.texto,
                     ),
                   if (texto.isNotEmpty)
@@ -331,6 +365,28 @@ class BsCelda extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
+                    ),
+                  if (muestraIconoDeMarca)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Icon(
+                          _iconoDeMarca(marca),
+                          size: tamanoIconoDeMarca,
+                          color: efectivo.texto,
+                        ),
+                        if (muestraRotulo) ...<Widget>[
+                          const SizedBox(width: separacionDeMarca),
+                          Flexible(
+                            child: Text(
+                              rotulo,
+                              style: estiloDeMarca,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   if (muestraLinea2)
                     Text(
@@ -414,6 +470,21 @@ class BsCelda extends StatelessWidget {
     };
   }
 
+  /// Lo que mide [texto] en una línea con [estilo] y la letra del sistema,
+  /// como lo dibuja `Text`.
+  static double _ancho(String texto, TextStyle estilo, TextScaler escala,
+      TextDirection direccion) {
+    final pintor = TextPainter(
+      text: TextSpan(text: texto, style: estilo),
+      textDirection: direccion,
+      textScaler: escala,
+      maxLines: 1,
+    )..layout();
+    final ancho = pintor.width;
+    pintor.dispose();
+    return ancho;
+  }
+
   /// El primer color de [candidatos] que llega a 3:1 sobre [fondo], el
   /// mínimo de un icono; si ninguno llega, el de mayor contraste.
   static Color _legibleSobre(Color fondo, List<Color> candidatos) {
@@ -453,7 +524,10 @@ class BsCelda extends StatelessWidget {
         BsMarcaDeCelda.sube => recienMovido ? 'Subiendo' : 'Sube',
         BsMarcaDeCelda.hecho => 'Hecho',
         BsMarcaDeCelda.paso => 'Paso',
-        BsMarcaDeCelda.cancelado => 'Cancelado',
+        // Abreviado como «Re‑est.» (T-133): con el icono, «Cancelado» pide 58
+        // dp en la oficina y 62 en el muelle, más que la celda, y ya salía
+        // cortado. La etiqueta accesible dice «cancelado» entera.
+        BsMarcaDeCelda.cancelado => 'Cancel.',
         BsMarcaDeCelda.revisar => 'Revisar',
         // Abreviado como en la tabla de pendientes («Re‑est.»): «Re‑estiba»
         // no cabe en la celda de 52 ni de 56 dp y salía cortado (candidata

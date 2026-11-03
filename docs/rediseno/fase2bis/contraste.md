@@ -224,4 +224,17 @@ Ranuras 15 a 23: libres, las asigna la oficina (T-115).
 
 #D9E7FC → #95BBF6 → #518FF1 → #1365E5 → #0D47A1
 
+### Distintivo de rol (T-131; 13.12): el cobre del muelle y el oro de la oficina
+
+El metal no cambia con el tema. El rótulo, a 4.5:1, y el ícono, a 3:1, sobre los dos extremos del fondo. Contra cada fondo donde va, también con la sombra encima, el relleno o el filo a 3:1: el filo en su claro y en su tono del 55 %. El extremo oscuro del filo se informa y no se exige (Carlos, 2-nov).
+
+| Rol | Dónde | Modo | Fondo | Rótulo | Ícono | Relleno | Filo claro | Filo 55 % | Filo oscuro (se informa) | Cumple |
+|---|---|---|---|---:|---:|---:|---:|---:|---:|---|
+| muelle | la banda del muelle | claro y oscuro | #0D47A1 | 9.88 | 5.54 | 1.06 | 6.12 | 3.25 | 1.56 | sí |
+| muelle | la barra superior y la cabecera de la oficina | claro | #F5F8FC | 9.88 | 5.54 | 4.09 | 1.32 | 1.10 | 2.29 | sí |
+| muelle | la barra superior y la cabecera de la oficina | oscuro | #07111F | 9.88 | 5.54 | 1.49 | 13.42 | 7.12 | 3.42 | sí |
+| oficina | la banda del muelle | claro y oscuro | #0D47A1 | 12.05 | 8.00 | 1.05 | 7.61 | 5.30 | 2.25 | sí |
+| oficina | la barra superior y la cabecera de la oficina | claro | #F5F8FC | 12.05 | 8.00 | 4.34 | 1.06 | 1.53 | 1.27 | sí |
+| oficina | la barra superior y la cabecera de la oficina | oscuro | #07111F | 12.05 | 8.00 | 1.20 | 16.69 | 11.63 | 4.95 | sí |
+
 Pares que no cumplen: 0

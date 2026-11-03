@@ -1,7 +1,7 @@
 name: baystream
 description: Aplicación de gestión de carga marítima - Parser BAPLIE 2.2.1
 publish_to: 'none'
-version: 0.4.0+6
+version: 0.4.2+8
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -63,6 +63,10 @@ dev_dependencies:
   # Instalador MSIX de Windows (T-93, autorizado en 2.7 de SPRINT-3). Fija y
   # solo de desarrollo: no entra en la app compilada.
   msix: 3.18.0
+  # Nube falsa de T-129 en la capa de plataforma de Firestore (autorizado por
+  # Carlos el 2-nov, T-129 6.2): las clases de cloud_firestore son @sealed.
+  # Fija en la versión que ya traía el lock como transitiva; solo de pruebas.
+  cloud_firestore_platform_interface: 8.0.6
 
 flutter:
   uses-material-design: true
@@ -98,7 +102,7 @@ flutter:
           weight: 500
     # Los iconos del dominio (T-114, 10.19): la fuente del paquete de Nube,
     # dibujada para BayStream (design/iconos/LEEME.md), area de uso privado
-    # U+E000 a U+E022; las constantes estan en lib/core/design/bs_iconos.dart.
+    # U+E000 a U+E023; las constantes estan en lib/core/design/bs_iconos.dart.
     - family: BayStreamIconos
       fonts:
         - asset: assets/fonts/bs_iconos/BayStreamIconos.ttf
@@ -118,7 +122,7 @@ msix_config:
   identity_name: gt.cmartinez.baystream
   # Exactamente el sujeto del certificado autofirmado de Carlos.
   publisher: CN=BayStream
-  msix_version: 0.4.0.0
+  msix_version: 0.4.2.0
   # Solo red saliente. Sin microfono: en Windows no hay voz (T-94).
   capabilities: internetClient
   # T-88 (10.50): el PNG de 512; msix lee del .ico solo el cuadro de 16 px.

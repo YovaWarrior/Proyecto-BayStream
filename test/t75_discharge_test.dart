@@ -264,9 +264,15 @@ void main() {
           (MovementType.discharge, true, 'Despejar la bodega'));
       expect(summary(), contains('1 re‑estiba'));
       expect(find.byKey(const ValueKey('discharge-restowed')), findsOneWidget);
-      // La celda escribe «Re‑est.» (no cabe entera, 10.28); la etiqueta
-      // accesible y el resumen dicen «re‑estiba».
-      expect(find.text('Re‑est.'), findsWidgets);
+      // La celda escribe «Re‑est.» (no cabe entera, 10.28) debajo del
+      // código, si cabe junto a su icono (T-133); con la fuente cuadrada de
+      // las pruebas queda el icono. La etiqueta accesible y el resumen dicen
+      // «re‑estiba».
+      expect(
+          find.descendant(
+              of: find.byKey(const ValueKey('discharge-restowed')),
+              matching: find.byIcon(BsIconos.reestiba)),
+          findsOneWidget);
       // T-118 (DESIGN.md 14.7): la escala, en una ficha de una línea.
       expect(
           tester
@@ -282,8 +288,8 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('discharge-table-button')));
       await tester.pumpAndSettle();
       expect(find.textContaining('2 bahías · 4 pendientes'), findsOneWidget);
-      // La columna de la tabla; la celda del plano, detrás, también dice
-      // «Re‑est.» desde 10.28.
+      // La columna de la tabla; la celda del plano, detrás, también puede
+      // decir «Re‑est.» desde 10.28.
       expect(
           find.descendant(
               of: find.byType(DataTable), matching: find.text('Re‑est.')),

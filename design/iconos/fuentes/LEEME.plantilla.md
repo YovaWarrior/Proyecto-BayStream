@@ -1,4 +1,4 @@
-# Íconos e ilustraciones de BayStream · paquete 1 (v2)
+# Íconos e ilustraciones de BayStream · paquete 1 (v3)
 
 Estilo **B · Sólido**, elegido por Carlos Martínez el 22 de octubre de 2026 (decisión 10.18) sobre la página
 de conceptos (`design/iconos/conceptos.png`). Todo es vectorial, dibujado para BayStream y original; nada deriva de
@@ -8,11 +8,17 @@ de Material. Firma: **Nube**. Integra: **Timonel**.
 v2 (23-oct): `descarga` y `carga` con las flechas en el sentido de la app («Baja» / «Sube»), fuente 1.1 con los
 mismos códigos; fecha y número de la decisión corregidos. El resto del paquete es idéntico a la v1.
 
+v3 (2-nov): se suma `oficina`, el ícono del rol de oficina para el distintivo de la cabecera: la propuesta (a), la
+pantalla con la rejilla del plano calada sobre su pie, elegida por Carlos el 2 de noviembre (decisión 10.86) sobre la
+página de tres propuestas. Va en U+E023, después de las insignias; fuente 1.2 con las mismas métricas. Los 35 glifos
+anteriores no cambian ni de dibujo ni de código, y el resto del paquete es idéntico al v2 byte a byte: la sección
+«Frente al v2» lo demuestra con las huellas.
+
 ## Qué trae el paquete
 
-- **31 íconos del dominio** en `design/iconos/svg/` (rejilla de 24, margen de 2, un solo color:
+- **32 íconos del dominio** en `design/iconos/svg/` (rejilla de 24, margen de 2, un solo color:
   `currentColor`) y en la fuente `assets/fonts/bs_iconos/BayStreamIconos.ttf`, con sus códigos en
-  `design/iconos/codigos.json` desde U+E000.
+  `design/iconos/codigos.json` desde U+E000 (`oficina`, el de la v3, en U+E023, después de las insignias).
 - **4 insignias de 12 px** para la esquina de la celda (refrigerado, peligrosa, fuera_de_medida y vacio) en
   `design/iconos/svg_insignias/` (rejilla de 12) y en la misma fuente, como `insignia_<nombre>`.
 - **6 ilustraciones** en `design/ilustraciones/`: `<nombre>_claro.svg`, `<nombre>_oscuro.svg` y
@@ -55,7 +61,7 @@ Sin dependencias nuevas en la app: la fuente es un asset y las ilustraciones son
 
 {{TABLA_CODIGOS}}
 
-## Los 31 íconos: qué es cada uno y cómo se dibujó
+## Los 32 íconos: qué es cada uno y cómo se dibujó
 
 | Ícono | Qué es | Cómo se dibujó (rejilla de 24) |
 |---|---|---|
@@ -90,6 +96,7 @@ Sin dependencias nuevas en la app: la fuente es un asset y las ilustraciones son
 | `listado_agencia` | el listado de la agencia | la hoja apaisada (hoja de cálculo) con la tabla calada: columna del orden y columna del contenedor |
 | `al_dia` | sincronizado con la nube | la nube propia (base de celda y dos lomos) con el visto bueno calado |
 | `solo_aqui` | trabajando solo en este equipo | la misma nube con la pausa calada en el sitio del visto bueno |
+| `oficina` | el rol de oficina: operaciones o la agencia frente a su pantalla (v3) | la pantalla maciza (19 × 12) con la rejilla del plano calada (3 × 2 celdas de 3.5 × 3), el cuello y el pie-barra de la familia con la base en 22: el mismo pie y la misma base que `muelle`, su pareja en el distintivo de rol |
 
 ## Las cuatro insignias
 
@@ -140,6 +147,7 @@ Inventario sobre `lib/` de la rama `sprint-4` (`c287792`), por nombre de archivo
 | listado_agencia | `table_view` | «Listado de la agencia» en `_VesselOverviewPageState`; «Elegir listado (.xlsx)» en `_ExportListImportPageState` | `table_view` es también «CSV» en exportar |
 | al_dia | `cloud_done_outlined` | `syncStatusIcon` para `SyncState.upToDate` (`sync_status_chip.dart`) → `SyncStatusChip` y `SyncAppBarButton` | otros estados: `cloud_sync_outlined`, `cloud_upload_outlined`, `lock_clock_outlined`, `block`, `warning_amber_outlined`; `cloud_outlined` es «Nube y cuenta» |
 | solo_aqui | `phone_android` · `cloud_off_outlined` | `SyncState.localOnly` «Solo este dispositivo» y `SyncState.offline` «Sin conexión» en `syncStatusIcon` | dos estados con glifos distintos; en la barra superior `localOnly` se muestra con `cloud_outlined` |
+| oficina | ninguno hoy | el rol es texto («nombre · Oficina») en `_account` de `cloud_page.dart`; `BsEquipo.oficina` (`bs_panel_en_vivo.dart`) es un rótulo | va con `muelle` en el distintivo de rol de la cabecera (10.86); inventario de la rama `master` del 2-nov |
 
 Conceptos del dominio que hoy tienen ícono de Material y no están en el encargo (para que Carlos decida si entran en una segunda tanda):
 
@@ -169,12 +177,13 @@ dos íconos se confunden de un vistazo.
 
 {{TABLA_PAREJAS}}
 
-Ninguna pareja de los 31 queda por debajo del umbral (se midieron las 465 combinaciones). Lo que conviene saber:
+Ninguna pareja de los 32 queda por debajo del umbral (se midieron las 496 combinaciones; las 465 de los 31 de siempre y las 31 de `oficina`). Lo que conviene saber:
 
 - `contenedor_20` / `contenedor_40` / `contenedor_45`: el 20 se distingue por el largo (12 frente a 18) y el 45 por la altura (14 frente a 12) y el ancho a sangre; el largo extra del 45 son 1.3 px a 16 px y no se ve solo.
 - `descarga` / `carga`: cambian el sentido de la flecha y el sitio del contenedor, bajo la tapa o sobre el muelle (16 % de píxeles distintos a 16 px). Un espejo exacto, con el contenedor en el mismo sitio, se confundía.
 - `al_dia` / `solo_aqui`: es la misma nube cambiando solo el estado, a propósito (9 % / 22 px a 16 px, sobre el umbral).
 - `descarga` / `baplie_salida`: uno es vertical con el casco del buque, el otro horizontal con la hoja; no se parecen.
+- `oficina` (v3): sus ocho parientes son los de la fila de la propuesta (a) en la página de propuestas: `muelle` (su pareja en el distintivo), `bahia`, `baplie`, `al_dia` y `solo_aqui`, que pedía el encargo, y `contenedor_40`, `plataforma` y `listado_agencia`, añadidos por si la pantalla maciza se parecía a una caja. El más cercano de todos los 31 es `descarga` (58 px · 22.7 % a 16 px), lejos del umbral. Su peso, el área de tinta en píxeles de 16: {{PESOS}}. Una pantalla maciza pesa más que `muelle` aunque se cale; (a) era la más ligera de las tres propuestas y queda en el peso de `baplie`.
 
 ## Decisiones
 
@@ -186,6 +195,7 @@ Ninguna pareja de los 31 queda por debajo del umbral (se midieron las 465 combin
 - **Cómo se decidió**: cada grupo lo dibujaron dos diseñadores con ángulos distintos (silueta y detalle calado), lo juzgaron jueces con lentes de legibilidad a 16 px, sistema y semántica, y Nube fusionó e integró los 31 aplicando los veredictos. En operación no hubo jurado (se cortó por el límite de uso): la base es el candidato de silueta, con el `orden` del otro.
 - **El sentido de las flechas** (Carlos, 23-oct): las flechas dicen lo mismo que la app. En `descarga` la flecha baja («Baja», «BAJÓ»): el contenedor sale del buque hacia el muelle; en `carga` sube («Sube»): del muelle al buque. Coincide con `south`/`north`, que la app usa hoy. La tapa arriba y el muelle abajo son lo que evita que parezcan «descargar un archivo».
 - **Lo que no se dibujó**: nada de personas, grúas con nombre, buques reales ni cifras; `orden` señala una posición sin número.
+- **`oficina`** (Carlos, 2-nov, decisión 10.86): tras la tercera prueba piloto, el rol de la cuenta («Muelle» / «Oficina») se muestra en la cabecera como un distintivo con diseño, porque en un teléfono los dos roles se veían iguales. `muelle` ya existía; `oficina` se eligió entre tres propuestas (a: la pantalla con la rejilla del plano calada sobre su pie; b: la pantalla con el corte de la bahía calado, como `baplie`; c: la pantalla y el teclado, sin plano) vistas junto a `muelle` a 16, 20, 24 y 32 px, sobre claro y oscuro y dentro del distintivo a 16, 18 y 20 px. Ganó la (a): la que mejor sobrevive a 16 px y la más ligera. Va al final de la fuente, en U+E023, para no mover los 35 glifos anteriores.
 
 ## Las ilustraciones
 
@@ -245,6 +255,18 @@ la fuente y este LEEME (desde `fuentes/LEEME.plantilla.md`). Dos corridas dan ar
 3.13, Pillow 12.3, resvg-py 0.5.0, fontTools 4.67, skia-pathops 0.8, freetype-py 2.13); con otras versiones
 los PNG pueden comprimirse distinto sin cambiar un píxel. `comprobacion-skia.md` lo produce aparte
 `fuentes/comprobar_skia.py`, que necesita Node con Playwright y Chromium; no hace falta para regenerar.
+
+El v3 se generó y verificó con Python 3.13.18, Pillow 12.3.0, resvg-py 0.5.0, fontTools 4.68.0, skia-pathops 0.9.2 y
+freetype-py 2.5.1; con ellas `generar.py --verificar` sobre el v2 también daba 84 de 84. Salida de `generar.py --verificar`
+sobre el v3:
+
+```
+{{VERIFICAR}}
+```
+
+## Frente al v2
+
+{{TABLA_V2}}
 
 ## Archivos
 

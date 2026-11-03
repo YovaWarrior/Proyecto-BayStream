@@ -7,8 +7,12 @@ import '../../data/repositories/vessel_repository_impl.dart';
 import '../../data/services/baplie_parser_service.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/current_profile_parameters.dart';
+import '../../domain/repositories/operation_sync_repository.dart'
+    show OperationSyncRepository;
 import '../../domain/services/operation_sources.dart';
 import 'movement_log_provider.dart';
+import 'plan_attach_provider.dart';
+import 'sync_providers.dart' show operationSyncProvider, operatorProvider;
 import 'voyage_ui_state.dart' show PreviewReason;
 import '../../domain/repositories/vessel_repository.dart';
 import '../../domain/repositories/local_vessel_repository.dart';
@@ -129,6 +133,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   bool _preview = false;
   PreviewReason? _previewReason;
   String? _previewPortOfCall;
+  String? _previewNota;
   AsyncValue<VesselVoyage?>? _stateBeforePreview;
   VesselProfile? _publishedBeforePreview;
   List<VesselParameter> _keptBeforePreview = const [];
@@ -141,6 +146,10 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
 
   /// La escala que la app propone para el previo.
   String? get previewPortOfCall => _previewPortOfCall;
+
+  /// T-130 · Lo que la banda dice cuando la escala ya tiene una operación
+  /// publicada (`PreviewReason.operacionPublicada`).
+  String? get previewNota => _previewNota;
 
   /// El nombre del archivo leído (o «BAPLIE» si no se sabe). No se llama
   /// `fileName` porque los bancos de tool/ ya usan ese nombre en sus subclases.
@@ -355,8 +364,21 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
         proposedPort != null &&
         proposedPort == await _lastConfirmedPortFor(saved) &&
         OperationSources.baplieKind(voyage, proposedPort) != null) {
-      await _publish(voyage, _pendingProfile!, proposedPort);
-      return LoadFileResult.success(_fileName);
+      // T-130 (10.90): la publicación directa nunca agrega un plan a una
+      // operación publicada sin que la oficina lo vea. Si la escala ya tiene
+      // una de este buque, aquí o en la nube, el plano abre en previo y la
+      // banda dice cuál es el caso; «Confirmar» lleva al diálogo.
+      final kind = OperationSources.baplieKind(voyage, proposedPort)!;
+      final lookup = await lookupForPlan(proposedPort, kind);
+      if (lookup is NoPublishedOperation ||
+          (lookup is PlanAlreadyThere && lookup.sameContent)) {
+        await _publish(voyage, _pendingProfile!, proposedPort);
+        return LoadFileResult.success(_fileName);
+      }
+      _abrirPrevio(PreviewReason.operacionPublicada, proposedPort,
+          nota: textoDeLaBusqueda(lookup,
+              vesselName: voyage.vessel.name, port: proposedPort, kind: kind));
+      return LoadFileResult.preview(_fileName);
     }
     _abrirPrevio(
         saved == null
@@ -387,7 +409,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
   /// Publica el previo en `state` («ver primero, confirmar después»): el plano
   /// se ve con la geometría propuesta, sin escala y sin guardar nada. No es
   /// una escritura: `_publish` sigue siendo la única.
-  void _abrirPrevio(PreviewReason motivo, String? escala) {
+  void _abrirPrevio(PreviewReason motivo, String? escala, {String? nota}) {
     final voyage = _pendingVoyage!;
     final profile = _pendingProfile!;
     final geometry = profile.geometry.coversAll(voyage.stowagePositions)
@@ -402,6 +424,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     _preview = true;
     _previewReason = motivo;
     _previewPortOfCall = escala;
+    _previewNota = nota;
     _reopenKeptParameters = const [];
     ref.read(selectedBayProvider.notifier).clear();
     ref.read(highlightedContainerProvider.notifier).clear();
@@ -424,10 +447,39 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     state = before;
   }
 
+  /// T-130 · La búsqueda de la oficina para el plano pendiente en [port]: la
+  /// operación publicada y abierta de ese buque en esa escala, en este equipo
+  /// y en la nube (con sesión autorizada). Sin plano pendiente no hay nada
+  /// que buscar.
+  Future<PlanAttachment> lookupForPlan(
+      String port, OperationSourceKind kind) async {
+    final voyage = _pendingVoyage ?? publishedVoyage;
+    final text = _pendingBaplieText;
+    if (voyage == null || text == null) return const NoPublishedOperation();
+    final log = await ref.read(movementLogRepositoryProvider.future);
+    final operator = ref.read(operatorProvider).value;
+    final sync = operator != null && operator.authorized
+        ? await ref.read(operationSyncProvider.future)
+        : null;
+    return lookupPlanAttachment(
+        log: log,
+        sync: sync,
+        vesselName: voyage.vessel.name,
+        port: port,
+        kind: kind,
+        content: text);
+  }
+
   /// Único punto de publicación: siempre inyecta la geometría del perfil.
+  ///
+  /// T-130 · Con [attachTo], la fuente se agrega a esa operación publicada
+  /// por la nube ([sync]), con la confirmación que ya dio la oficina.
   Future<void> _publish(
       VesselVoyage voyage, VesselProfile profile, String? portOfCall,
-      {bool confirmedCall = false, OperationSourceKind? sourceKind}) async {
+      {bool confirmedCall = false,
+      OperationSourceKind? sourceKind,
+      Operation? attachTo,
+      OperationSyncRepository? sync}) async {
     final published = voyage
         .withGeometry(profile.geometry, portOfCall: portOfCall)
         .copyWith(
@@ -443,7 +495,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       }
       final log = await ref.read(movementLogRepositoryProvider.future);
       await OperationSources.save(log, published, portOfCall,
-          OperationSource(kind: kind, fileName: _fileName, content: text));
+          OperationSource(kind: kind, fileName: _fileName, content: text),
+          sync: sync, attachTo: attachTo);
       ref.read(operationSourcesRevisionProvider.notifier).changed();
     }
     (await local.saveVoyage(published))
@@ -470,7 +523,9 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       Set<String>? reeferSlots,
       Map<int, HatchCoverDeclaration>? hatchCovers,
       Set<int>? observedHoldBayNumbers,
-      VesselProfileOrigin? reeferSlotsOrigin}) async {
+      VesselProfileOrigin? reeferSlotsOrigin,
+      Operation? attachTo,
+      OperationSyncRepository? sync}) async {
     if (_busy) {
       return 'Hay una operación en curso. Espera a que termine e inténtalo de nuevo.';
     }
@@ -513,7 +568,10 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       if (error != null) return error;
       ref.invalidate(savedVesselProfilesProvider);
       await _publish(target, profile, portOfCall,
-          confirmedCall: true, sourceKind: sourceKind);
+          confirmedCall: true,
+          sourceKind: sourceKind,
+          attachTo: attachTo,
+          sync: sync);
       return null;
     } catch (error, stack) {
       return vesselErrorMessage(error, stack, 'confirmar la geometría del buque');
@@ -661,6 +719,7 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     _preview = false;
     _previewReason = null;
     _previewPortOfCall = null;
+    _previewNota = null;
     _stateBeforePreview = null;
     _publishedBeforePreview = null;
     _keptBeforePreview = const [];

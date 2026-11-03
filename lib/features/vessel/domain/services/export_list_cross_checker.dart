@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../entities/container_unit.dart';
 import '../entities/export_list.dart';
+import '../entities/operation.dart';
 import '../entities/reserved_slot.dart';
 import '../entities/vessel_voyage.dart';
 
@@ -178,10 +179,77 @@ class ExportListCrossCheck {
       matchesWithDifferences.isEmpty;
 }
 
+/// T-127 (10.78) · Lo que un listado nuevo cambia en una operación que ya
+/// tiene movimientos: el cruce lo dice con números antes de confirmar la
+/// importación. Los movimientos no se pierden ni cambian; lo que cambia es lo
+/// que el listado les da: los OR, los pesos exactos y los grupos de los vacíos.
+class ExportListRevisionImpact extends Equatable {
+  /// Contenedores ya cargados (llenos por su número y vacíos asignados a una
+  /// reserva) que el listado nuevo no trae: se quedan sin OR ni fila.
+  final List<String> loadedNotListed;
+
+  /// Vacíos asignados cuya fila cambia de grupo (tipo, puerto o línea) frente
+  /// al listado anterior o, sin él, frente a su reserva: pasan a verse como
+  /// «vacío de otro grupo».
+  final List<String> emptiesRegrouped;
+
+  ExportListRevisionImpact({
+    Iterable<String> loadedNotListed = const [],
+    Iterable<String> emptiesRegrouped = const [],
+  })  : loadedNotListed = List.unmodifiable(loadedNotListed),
+        emptiesRegrouped = List.unmodifiable(emptiesRegrouped);
+
+  bool get isEmpty => loadedNotListed.isEmpty && emptiesRegrouped.isEmpty;
+
+  @override
+  List<Object?> get props => [loadedNotListed, emptiesRegrouped];
+}
+
 /// T-73 · Propone las equivalencias y cruza el listado con el plan de carga.
 /// Dart puro: no sabe de Excel ni de almacenes.
 class ExportListCrossChecker {
   const ExportListCrossChecker._();
+
+  /// T-127 · Compara lo ya operado ([state], derivado con el listado
+  /// [previous], o sin listado) con el listado [next] que se va a importar.
+  static ExportListRevisionImpact revisionImpact(
+      OperationState state, ExportList? previous, ExportList next) {
+    final missing = <String>[];
+    final regrouped = <String>[];
+    for (final item in state.items.values) {
+      if (item.state != ItemState.moved || item.position == null) continue;
+      final String container;
+      if (item.kind == PlanItemKind.reservedSlot) {
+        final assigned = item.assignedContainer;
+        if (assigned == null) continue;
+        container = assigned;
+      } else if (item.role == PlanRole.load && item.key.startsWith('C:')) {
+        container = item.key.substring(2);
+      } else {
+        continue;
+      }
+      final row = next.byContainer(container);
+      if (row == null) {
+        missing.add(container);
+        continue;
+      }
+      if (item.kind != PlanItemKind.reservedSlot) continue;
+      final slot = state.effectivePlan?.loading[item.key]?.reservedSlot;
+      final before = previous?.byContainer(container)?.group ??
+          (slot == null
+              ? null
+              : (
+                  type: slot.isoSizeType ?? '?',
+                  pod: slot.portOfDischarge ?? '?',
+                  line: slot.operatorCode ?? '?'
+                ));
+      if (before != null && before != row.group) regrouped.add(container);
+    }
+    return ExportListRevisionImpact(
+      loadedNotListed: missing..sort(),
+      emptiesRegrouped: regrouped..sort(),
+    );
+  }
 
   static String? _planCode(EquivalenceKind kind, ContainerUnit c) => switch (kind) {
         EquivalenceKind.type => c.isoSizeType,

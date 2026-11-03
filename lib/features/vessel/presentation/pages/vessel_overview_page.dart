@@ -20,6 +20,7 @@ import '../providers/vessel_providers.dart';
 import '../providers/discharge_provider.dart' show offersDischarge;
 import '../providers/loading_operation_provider.dart';
 import '../providers/oficina_providers.dart';
+import '../providers/plan_attach_provider.dart';
 import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
 import '../providers/voyage_ui_state.dart';
@@ -35,7 +36,10 @@ import '../widgets/en_vivo_del_viaje.dart';
 import '../widgets/hatch_operation_controls.dart';
 import '../widgets/loading_plan_controls.dart'
     show BayPlanMode, SelectorDelModo;
+import '../widgets/aviso_del_listado.dart';
+import '../widgets/aviso_del_plan.dart';
 import '../widgets/avisos_del_viaje.dart';
+import '../widgets/dialogo_agregar_plan.dart';
 import '../widgets/navegacion_del_viaje.dart';
 import '../widgets/voyage_stats_view.dart';
 import '../widgets/sync_status_chip.dart';
@@ -256,6 +260,12 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final contenido = Column(
       children: [
         const RelojDelNaranja(),
+        // T-127: si la oficina cambia el listado de la operación publicada,
+        // el muelle lo recibe solo, avisa y vuelve a derivar el plano.
+        const AvisoDelListado(),
+        // T-130: y si agrega el plano de llegada o el plan de carga que
+        // faltaba, el muelle lo recibe solo, avisa y ofrece abrirlo.
+        const AvisoDelPlan(),
         // Sin panel lateral a la vista, el movimiento se anuncia igual al
         // lector de pantalla (13.3, punto 5; 10.21, H3): solo el anuncio.
         if (!panelFijo && _flota == null) AnuncioDelMovimiento(voyage: voyage),
@@ -961,6 +971,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     if (target == null) return;
 
     final isEditing = notifier.pendingVoyage == null;
+    // T-135: «Parámetros» llega sin el nombre; con un previo, es el del
+    // archivo que se está mirando.
+    final archivo = isEditing ? fileName : fileName ?? notifier.loadedFileName;
     var profile = notifier.currentProfile ?? VesselProfile.proposeFrom(target);
     final proposal =
         VesselProfile.proposeFrom(target, parameters: profile.geometry)
@@ -1020,7 +1033,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
             initialPortOfCall: target.portOfCall,
             initial: initial,
             profile: profile,
-            fileName: fileName,
+            fileName: archivo,
             proposedReeferSocketCount: profile.reeferSlotsOrigin ==
                     VesselProfileOrigin.proposedFromFile
                 ? profile.reeferSlots.length
@@ -1066,13 +1079,58 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         if (!context.mounted) return;
         if (sourceKind == null) return;
       }
+      // T-130 (10.90): si la escala ya tiene una operación publicada de este
+      // buque, aquí o en la nube, la oficina confirma en un diálogo que el
+      // plan se agrega; si está solo en la nube, ya la tiene con otro texto o
+      // hay varias abiertas, se dice y el plano sigue en previo.
+      Operation? attachTo;
+      OperationSyncRepository? attachSync;
+      final port = result.portOfCall;
+      final kind = port == null
+          ? null
+          : OperationSources.baplieKind(target, port) ?? sourceKind;
+      if (!isEditing &&
+          port != null &&
+          kind != null &&
+          kind != OperationSourceKind.exportList) {
+        final lookup = await notifier.lookupForPlan(port, kind);
+        if (!context.mounted) return;
+        switch (lookup) {
+          case NoPublishedOperation():
+            break;
+          case PlanAlreadyThere(sameContent: true):
+            break;
+          case final AttachablePlan attachable:
+            final confirmed = await confirmarAgregarPlan(context,
+                plan: target,
+                port: port,
+                kind: kind,
+                lookup: attachable,
+                fileName: fileName ?? notifier.loadedFileName);
+            if (!context.mounted || !confirmed) return;
+            attachTo = attachable.operation;
+            attachSync = await ref.read(operationSyncProvider.future);
+            if (!context.mounted) return;
+          default:
+            ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
+              texto: textoDeLaBusqueda(lookup,
+                      vesselName: target.vessel.name, port: port, kind: kind) ??
+                  '',
+              corto: 'No se publicó el plano.',
+              fondo: Theme.of(context).colorScheme.error,
+            ));
+            return;
+        }
+      }
       final error = await notifier.confirmGeometry(result.geometry,
           sourceKind: sourceKind,
           portOfCall: result.portOfCall,
           hatchCovers: result.hatchCovers,
           observedHoldBayNumbers: result.observedHoldBayNumbers,
           reeferSlots: result.reeferSlots,
-          reeferSlotsOrigin: result.reeferSlotsOrigin);
+          reeferSlotsOrigin: result.reeferSlotsOrigin,
+          attachTo: attachTo,
+          sync: attachSync);
       if (!context.mounted) return;
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(avisoDelViaje(
@@ -1096,8 +1154,15 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
           context,
           isEditing
               ? 'Parámetros del buque actualizados'
-              : 'Archivo "$fileName" cargado correctamente',
-          corto: isEditing ? null : 'Archivo cargado.');
+              : attachTo != null && kind != null && port != null
+                  ? textoDelPlanAgregado(
+                      kind: kind, port: port, plan: target, enElMuelle: false)
+                  : 'Archivo "$archivo" cargado correctamente',
+          corto: isEditing
+              ? null
+              : attachTo != null
+                  ? 'Plan agregado.'
+                  : 'Archivo cargado.');
       return;
     }
   }
@@ -1265,14 +1330,45 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
   }
 }
 
-/// El nombre del buque y, debajo, el viaje y la escala.
-class _TituloDelViaje extends StatelessWidget {
-  const _TituloDelViaje({required this.voyage});
+/// El nombre del buque y, debajo, el viaje y la escala. Con una cuenta
+/// autorizada, a la derecha, el distintivo de rol (T-131, `DESIGN.md` 13.12):
+/// en la barra superior del teléfono y en la cabecera de la oficina.
+class _TituloDelViaje extends ConsumerWidget {
+  const _TituloDelViaje({
+    required this.voyage,
+    this.compacto,
+    this.sinDistintivo = false,
+    this.cede = false,
+  });
 
   final VesselVoyage voyage;
 
+  /// La forma del distintivo. Sin valor, la que quepa: primero completo, si
+  /// no compacto, y solo después el nombre se encoge, como antes (la barra
+  /// superior del teléfono).
+  final bool? compacto;
+
+  /// Sin distintivo aunque haya cuenta: la cabecera de la oficina, cuando no
+  /// cabe sin cambiarla (13.12).
+  final bool sinDistintivo;
+
+  /// En la línea del título de la cabecera de dos líneas: completo, compacto
+  /// o nada, y solo si no hace más alta la línea (13.12).
+  final bool cede;
+
+  /// El distintivo de la cuenta en [rol], que abre «Nube y cuenta».
+  static Widget distintivo(
+          BuildContext context, OperatorRole rol, bool compacto) =>
+      BsDistintivoDeRol(
+        key: const ValueKey('distintivo-de-rol'),
+        equipo:
+            rol == OperatorRole.office ? BsEquipo.oficina : BsEquipo.muelle,
+        compacto: compacto,
+        onTap: () => openCloudPage(context),
+      );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
     final esquema = Theme.of(context).colorScheme;
     final viaje = <String>[
@@ -1280,7 +1376,7 @@ class _TituloDelViaje extends StatelessWidget {
       if (voyage.portOfCall != null) 'Escala ${voyage.portOfCall}',
     ].join(' · ');
     // Sin elipsis: con la letra grande se encoge, como el título de antes.
-    return Column(
+    final bloque = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1298,13 +1394,52 @@ class _TituloDelViaje extends StatelessWidget {
         ),
       ],
     );
+    final rol = ref.watch(rolDelDistintivoProvider);
+    if (rol == null || sinDistintivo) return bloque;
+    // A la derecha del bloque y centrado en su alto (Carlos, 2-nov): en la
+    // línea del nombre, la zona táctil de 48 dp no cabía en la barra de 56.
+    // Con la forma pedida va en una fila de la cabecera, que no le pone tope
+    // de ancho: ahí el bloque no se encoge.
+    final medidas = BsMedidas.de(context);
+    Widget conDistintivo(bool compacto, {bool encoge = true}) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (encoge) Flexible(child: bloque) else bloque,
+            SizedBox(width: medidas.espacioS),
+            distintivo(context, rol, compacto),
+          ],
+        );
+    final forma = compacto;
+    if (forma != null) return conDistintivo(forma, encoge: false);
+    if (!cede) {
+      return BsPrimeraQueCabe(
+          variantes: [conDistintivo(false), conDistintivo(true)]);
+    }
+    // En la cabecera de dos líneas el título va solo en la suya: la zona de
+    // 48 dp la haría más alta mientras el bloque mida menos (con la letra a
+    // 1.0, 38 dp), y entonces no va. Si va, completo o compacto al tamaño
+    // natural; si ni así cabe, sin él, y el nombre se encoge como antes
+    // (Carlos, 3-nov: el alto manda).
+    final escala = MediaQuery.textScalerOf(context);
+    double alto(TextStyle? estilo) =>
+        escala.scale(estilo!.fontSize!) * (estilo.height ?? 1);
+    if (alto(textos.titleMedium) + alto(textos.bodySmall) <
+        medidas.objetivoTactil) {
+      return bloque;
+    }
+    return BsPrimeraQueCabe(variantes: [
+      conDistintivo(false, encoge: false),
+      conDistintivo(true, encoge: false),
+      bloque,
+    ]);
   }
 }
 
 /// La cabecera de la oficina (`DESIGN.md` 13.8 y 14.8): el buque y el viaje,
-/// el estado, el selector de modo con el Plano a la vista, y siempre en el
-/// borde derecho buscar, la nube y el botón del panel lateral.
-class _CabeceraDeOficina extends StatelessWidget {
+/// con el distintivo de rol si hay cuenta (13.12), el estado, el selector de
+/// modo con el Plano a la vista, y siempre en el borde derecho buscar, la
+/// nube y el botón del panel lateral.
+class _CabeceraDeOficina extends ConsumerWidget {
   const _CabeceraDeOficina({
     required this.voyage,
     required this.publicado,
@@ -1323,10 +1458,11 @@ class _CabeceraDeOficina extends StatelessWidget {
   final Widget botonDelPanel;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final medidas = BsMedidas.de(context);
     final esquema = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
+    final conCuenta = ref.watch(rolDelDistintivoProvider) != null;
     Widget estado() => Container(
           padding: EdgeInsets.symmetric(
               horizontal: medidas.espacioS, vertical: medidas.espacioXs),
@@ -1352,9 +1488,14 @@ class _CabeceraDeOficina extends StatelessWidget {
             ],
           ],
         );
-    Widget enUnaLinea(BsFormaDelSelector forma) => Row(
+    // En una línea el distintivo va en la forma que se pide, o no va; en dos,
+    // el título tiene la línea entera y lo decide él (13.12).
+    Widget enUnaLinea(BsFormaDelSelector forma, {bool? compacto}) => Row(
           children: [
-            _TituloDelViaje(voyage: voyage),
+            _TituloDelViaje(
+                voyage: voyage,
+                compacto: compacto,
+                sinDistintivo: compacto == null),
             const Spacer(),
             SizedBox(width: medidas.espacioM),
             controlesEnFila(forma),
@@ -1372,18 +1513,29 @@ class _CabeceraDeOficina extends StatelessWidget {
           // medidos (10.21, H1; 14.8): en una línea con los segmentos; si no
           // caben, con el menú; si tampoco, el título arriba y los controles
           // en una segunda línea, y nada se desborda. A 600 dp con la letra a
-          // 2.0, la fila única dejaba Buscar fuera de la pantalla.
+          // 2.0, la fila única dejaba Buscar fuera de la pantalla. El
+          // distintivo de rol (13.12) cede primero: en cada forma, completo,
+          // compacto o sin él, y la cabecera es la misma que sin cuenta (el
+          // mismo selector, las mismas líneas y el mismo alto; Carlos, 3-nov).
           Expanded(
             child: BsPrimeraQueCabe(variantes: [
-              if (selector != null) enUnaLinea(BsFormaDelSelector.segmentos),
-              enUnaLinea(BsFormaDelSelector.menu),
+              for (final forma in [
+                if (selector != null) BsFormaDelSelector.segmentos,
+                BsFormaDelSelector.menu,
+              ]) ...[
+                if (conCuenta) ...[
+                  enUnaLinea(forma, compacto: false),
+                  enUnaLinea(forma, compacto: true),
+                ],
+                enUnaLinea(forma),
+              ],
               Wrap(
                 alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: medidas.espacioM,
                 runSpacing: medidas.espacioXs,
                 children: [
-                  _TituloDelViaje(voyage: voyage),
+                  _TituloDelViaje(voyage: voyage, cede: true),
                   Wrap(
                     key: const ValueKey('cabecera-controles'),
                     spacing: medidas.espacioM,
@@ -1411,7 +1563,8 @@ class _CabeceraDeOficina extends StatelessWidget {
 }
 
 /// La banda de la marca arriba del muelle (`DESIGN.md` 13.6 y 13.8): el
-/// buque, el viaje y la escala, el chip de la nube y Descarga / Carga.
+/// buque, el viaje y la escala, el chip de la nube y Descarga / Carga, con el
+/// distintivo de rol a su izquierda si hay cuenta (13.12).
 class _BandaDelMuelle extends ConsumerWidget {
   const _BandaDelMuelle({
     required this.voyage,
@@ -1443,6 +1596,7 @@ class _BandaDelMuelle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = visibleSyncStatus(ref.watch(syncStatusProvider));
+    final rol = ref.watch(rolDelDistintivoProvider);
     return BsBandaMuelle(
       key: const ValueKey('banda-del-muelle'),
       buque: voyage.vessel.name,
@@ -1457,6 +1611,10 @@ class _BandaDelMuelle extends ConsumerWidget {
       mostrarModos: true,
       onModo: onModo,
       acciones: acciones,
+      distintivo: rol == null
+          ? null
+          : (bool compacto) =>
+              _TituloDelViaje.distintivo(context, rol, compacto),
     );
   }
 }

@@ -17,7 +17,7 @@ lleva a `lib/core/design/` y a `lib/core/app.dart`: la noche, los estados de la 
 Estado, las fichas y la tabla reordenada, el tema por omisión según el equipo y las
 piezas nuevas. Donde la sección 13 y las secciones 4 y 5 digan cosas distintas, manda
 la 13. T-117 y T-118 (10.36 a 10.39) suman la sección 14: la oficina con más plano, el
-panel lateral que se oculta y el selector de modo único. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
+panel lateral que se oculta y el selector de modo único. T-119 (10.76) suma la sección 16: la rueda en la silueta, el zoom con el touchpad y Ctrl + rueda, y la barra horizontal de la rejilla. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
 por `tool/rediseno_contraste.py`, y la del contraste compuesto de la celda en
 `test/t114_celda_contraste_test.dart` y `test/t114_fase2bis_test.dart`.
 Material 3 sigue siendo la base: el sistema son tokens, un `ColorScheme` ajustado,
@@ -176,7 +176,8 @@ por vista (15.2). Son los únicos tamaños de letra del producto.
 Nada por debajo de 10; en el muelle, nada por debajo de 11: la segunda línea de la celda
 (10) se dibuja solo en la oficina, con zoom de 100 % o más (`BsCelda.zoom`) y si cabe con
 la escala de letra del sistema; en el muelle no se dibuja aunque la celda la reciba
-(10.7). Las cifras van siempre tabulares; Plex ya trae los dígitos de ancho fijo de serie.
+(10.7). La marca de la operación va en ese lugar, debajo del código: a 10 en la oficina y a 11
+en el muelle (13.13). Las cifras van siempre tabulares; Plex ya trae los dígitos de ancho fijo de serie.
 
 ### 4.3 Tokens (`BsMedidas`, en `bs_medidas.dart`)
 
@@ -202,7 +203,7 @@ las tres pautas de accesibilidad de Flutter.
 
 | Componente | Archivo | Qué es |
 |---|---|---|
-| `BsCelda` | `bs_celda.dart` | La celda del plano: relleno por categoría, código de cinco letras en condensada, insignia de carga especial siempre, marca de operación con icono y rótulo, resaltada, atenuada (relleno al 35 % sin `Opacity`, código en tinta suave y contorno en línea fuerte: 5.1), reservada (solo contorno), hueco; la segunda línea solo en la oficina con `zoom` ≥ 1.0; con la letra a 2.0 nada desborda, lo que no cabe no se dibuja |
+| `BsCelda` | `bs_celda.dart` | La celda del plano: relleno por categoría, código de cinco letras en condensada, insignia de carga especial siempre, marca de operación con icono y rótulo debajo del código, que no tapa (13.13), resaltada, atenuada (relleno al 35 % sin `Opacity`, código en tinta suave y contorno en línea fuerte: 5.1), reservada (solo contorno), hueco; la segunda línea solo en la oficina con `zoom` ≥ 1.0; con la letra a 2.0 nada desborda, lo que no cabe no se dibuja |
 | `BsTiraDeBahias` | `bs_tira_de_bahias.dart` | La silueta del buque como selector: una casilla de 48 × 64 por bahía, barra por ocupación o peso, casco pintado detrás |
 | `BsCartela` | `bs_cartela.dart` | El cajetín: título, cifras tabulares, leyenda en `Wrap` (nunca scroll horizontal), nota |
 | `BsBanda` | `bs_banda.dart` | El aviso que se queda: información, aviso, error o confirmación, con icono, texto que crece y acción con el mismo nombre que lo que hace |
@@ -236,7 +237,7 @@ vista Estado (13.2).
 |---|---|---|---|
 | Pendiente | flecha abajo o arriba, «Baja» / «Sube» | `#DCE7F8` / `#0D47A1` | `#1E3A66` / `#8FB4F2` |
 | Hecho | palomita, «Hecho» | `#D3EFDB` / `#1E6B43` | `#1D4A33` / `#6FCF97` |
-| Cancelado | bloqueo, «Cancelado», texto en tinta suave | `#E4E8EE` / `#6D809F` | `#2A3850` / `#8A9DB8` |
+| Cancelado | bloqueo, «Cancel.» (13.13), texto en tinta suave | `#E4E8EE` / `#6D809F` | `#2A3850` / `#8A9DB8` |
 | Revisar (conflicto, aviso) | aviso, «Revisar» | `#FBE7B5` / `#8A5A00` | `#5C4300` / `#E0B23F` |
 | Error | error y mensaje con causa y acción | `#F9D9D6` / `#B3261E` | `#601410` / `#F2B8B5` |
 | Peligrosa (IMO) | rombo y la clase | `#F9D9D6` / `#B3261E` | `#601410` / `#F2B8B5` |
@@ -1052,7 +1053,7 @@ etiqueta); la silueta, el casco, la marca y el anillo se pintan con `CustomPaint
 | `BsTarjetaCifra` | `BsTarjetaCifra({valor, rotulo, detalle?, rol?, anillo?, onTap?})` | La tarjeta de cifra grande del mosaico: rótulo arriba (tinta suave), la cifra a **34 / 600 tabular** (`BsTextos.cifraGrande`, la escala de 4.2, que 13.10 no cambia; el lienzo la dibujaba a 40: 10.17, O2), el detalle abajo (tinta tenue); con `rol` (revisar para alertas) la cifra y el rótulo toman el contorno del rol y el borde se tiñe; con `anillo`, un `BsAnilloAvance` a la izquierda de la cifra. Panel con radio 18 y borde en línea. Etiqueta: «Por bajar: 30, 18 en la bahía 14» |
 | `BsAnilloAvance` | `BsAnilloAvance({fraccion, tamano = 52, grosor = 9, color?, etiqueta?})` | El anillo: pista en línea, arco desde las 12 en el color (hecho por omisión), extremos redondeados; sin animación (es un dato, no un movimiento). Etiqueta «80 por ciento» |
 | `BsPanelEnVivo` | `BsPanelEnVivo({eventos: List<BsEventoEnVivo>, resumen?, enLinea = true, titulo = 'En vivo'})` con `BsEventoEnVivo({que, quien: BsEquipo.muelle \| oficina, detalle, tipo: BsTipoDeEvento.movido \| hecho \| aviso \| aprobado, momento?, accion?, onAccion?})` | La actividad en tiempo real: punto verde con pulso de opacidad (2.2 s, quieto si se reduce el movimiento), el resumen (p. ej. «Oficina y 2 teléfonos del muelle»), y una fila por evento: cuadrado de 9 dp del color del tipo (grúa, hecho, aviso, acero), «Bajado · Muelle» (el rol del equipo, nunca un nombre: la API solo admite el enum), el detalle en mono y el momento o la acción («Revisar»). Región en vivo para el lector de pantalla |
-| `BsBandaMuelle` | `BsBandaMuelle({buque, viaje?, nube?, modo?, onModo?, acciones = const []})` | La banda de la marca arriba del muelle: `BsMarca.sinRecuadro` de 44, el nombre del buque (17 / 600 blanco) y el viaje y la escala (`#BCD2F7`), el chip de la nube (marca profunda, punto en hecho) y, debajo, el `SegmentedButton` Descarga / Carga de 48 dp (seleccionado blanco con texto marca). Fondo `marcaSuperficie` en los dos temas |
+| `BsBandaMuelle` | `BsBandaMuelle({buque, viaje?, nube?, modo?, onModo?, acciones = const [], distintivo?})` | La banda de la marca arriba del muelle: `BsMarca.sinRecuadro` de 44, el nombre del buque (17 / 600 blanco) y el viaje y la escala (`#BCD2F7`), el chip de la nube (marca profunda, punto en hecho) y, debajo, el `SegmentedButton` Descarga / Carga de 48 dp (seleccionado blanco con texto marca). Fondo `marcaSuperficie` en los dos temas. Con `distintivo` (`Widget Function(bool compacto)`, T-131), el distintivo de rol a la izquierda de los segmentos, en la forma que cabe (13.12) |
 | `BsFondoDePlano` | `BsFondoDePlano({child})` | De noche, la rejilla de plano: líneas cada 32 dp (`pasoRejilla`) en acero al 5 % sobre la noche; de día, solo el papel |
 
 `BsTiraDeBahias`, `BsCifra` y los demás componentes de 4.4 se quedan como están; la Fase 3
@@ -1167,7 +1168,8 @@ con las fichas de la vista y su cuenta más «Resaltar» (RF-011), debajo de la 
 muelle operando, en su lugar va `BsBarraDeOperacion`. Las tarjetas de cifra van a la derecha
 de la silueta desde 1040 dp de ancho útil y debajo con menos; sin operación no hay tarjetas.
 La celda de carga lleva el OR como código y el estado como rol y segunda línea, porque
-`BsCelda` no dibuja icono y código a la vez. El peso de la celda y de las pilas se escribe
+`BsCelda` no dibujaba icono y código a la vez (desde T-133 sí: el conflicto y la cancelación
+van debajo del OR, 13.13). El peso de la celda y de las pilas se escribe
 como el plano impreso («28.7», sin unidad); el total de la bahía, con `formatearToneladas`.
 La celda se ensancha con la letra del sistema para que el código de cinco letras quepa
 entero a 2.0 (`BsMedidas.copyWith(anchoCelda:)`). El detalle es una sola hoja
@@ -1304,18 +1306,24 @@ tipografía de 4.2 y 4.3 no cambian.
 
 ### 13.11 Los íconos del dominio, las insignias y las ilustraciones (10.18, 10.19)
 
-El paquete de Nube (`design/iconos/LEEME.md`, v2, 84 archivos con su SHA-256) trae **31 íconos
-del dominio** en el estilo **B · Sólido** que eligió Carlos (10.18), **4 insignias** de 12 px y
-**6 ilustraciones**, todo dibujado para BayStream desde la geometría del ícono (la celda, la tapa,
-el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y lo acepta Codex.
+El paquete de Nube (`design/iconos/LEEME.md`, v3, 85 archivos con su SHA-256 y el LEEME) trae
+**32 íconos del dominio** en el estilo **B · Sólido** que eligió Carlos (10.18), **4 insignias**
+de 12 px y **6 ilustraciones**, todo dibujado para BayStream desde la geometría del ícono (la
+celda, la tapa, el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y lo
+acepta Codex. **El v3** (2-nov, 10.90; integrado en T-131) suma `oficina` en U+E023, después de
+las insignias: la pantalla con la rejilla del plano calada sobre su pie, la propuesta (a) que
+eligió Carlos, pareja de `muelle` en el distintivo de rol (13.12). Los 35 glifos de antes
+conservan su código y su dibujo, y de los 86 archivos del paquete 73 son idénticos al v2, 12
+cambian y 1 es nuevo; T-131 copió los 13 (la tabla «Frente al v2» del LEEME y
+`test/t131_distintivo_test.dart`).
 
 **Cómo llega a la app.**
-- La fuente `assets/fonts/bs_iconos/BayStreamIconos.ttf` (área de uso privado U+E000 a U+E022,
+- La fuente `assets/fonts/bs_iconos/BayStreamIconos.ttf` (área de uso privado U+E000 a U+E023,
   em 1024, ascendente 1024, descendente 0, avance 1024: cada glifo ocupa el cuadrado del em,
   como Material Icons) se declara en `pubspec.yaml` como la familia `BayStreamIconos`. Es un
   asset, no una dependencia.
 - `BsIconos` (`bs_iconos.dart`, copiado tal cual del LEEME) da una constante por glifo;
-  `BsIconosCatalogo` los recorre por su nombre del paquete (31 íconos y 4 insignias) para las
+  `BsIconosCatalogo` los recorre por su nombre del paquete (32 íconos y 4 insignias) para las
   pruebas, los censos y las vistas previas. Los SVG quedan en `design/iconos/` para documentos.
 - Las ilustraciones viajan como datos (`BsIlustraciones`, generado por
   `tool/bs_ilustraciones_generar.py` desde `design/ilustraciones/*.json`) y las pinta
@@ -1345,7 +1353,8 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
 | Archivos | `baplie` («Seleccionar archivo», «Cargar archivo BAPLIE»), `compararBaplie`, `baplieSalida`, `listadoAgencia` («Listado de la agencia», «Elegir listado») | | el CSV de exportar sigue en `table_view`; PDF y JSON, en los suyos |
 | Nube | `alDia` (al día) y `soloAqui` (solo este dispositivo, sin conexión) | el chip de estado y la barra superior | `cloud` para «Nube y cuenta» sin cuenta; `cloud_sync`, `cloud_upload`, `lock_clock`, `block` y `warning_amber` para los demás estados |
 | Número de orden | `orden` | el modo Número de orden del selector (14.6); hasta T-118 no tenía sitio | |
-| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `grua`, `muelle`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
+| Rol de la cuenta | `muelle` y `oficina` (T-131) | el distintivo de rol de la cabecera (13.12): `muelle` en cobre y `oficina` en oro, a 20 dp en el muelle y a 18 en la oficina | |
+| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `grua`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
 
 **Reglas de uso.**
 1. Los íconos del dominio se dibujaron en la rejilla de 24 y se usan a **16, 20 o 24 px**; las
@@ -1418,6 +1427,202 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
      opacidad 0 al empezar y al terminar el cruce y 1 a la mitad; el buque pintado una sola vez en 60
      cuadros; sin desbordes ni empujones a 360, 600, 1280 × 720 y 1920 × 1080 con la letra a 1.0,
      1.45 y 2.0; y `meetsGuideline` igual que antes.
+
+### 13.12 El distintivo de rol (T-131; 10.86 y 10.90)
+
+**Por qué.** En la tercera prueba piloto (1-nov; 10.85, hallazgo 8), la oficina en la Web del
+iPhone y el muelle en el Honor se veían iguales: el aspecto lo decide el equipo
+(`bayStreamEsMuelle`), no el rol de la cuenta. Carlos decidió el 1-nov que los permisos no cambian
+y que el rol va en la cabecera como un distintivo con diseño, no como texto plano, y eligió la
+variante B, «Filo de metal», del lienzo de Yov: el metal de la presentación del 7-nov, solo en el
+filo y en el ícono. Es el primer cambio visual del rediseño que viene después y entra en la versión
+del 7-nov; es la única pieza de la app con esos metales antes de esa fecha.
+
+**La pieza, `BsDistintivoDeRol`** (`componentes/bs_distintivo_de_rol.dart`):
+`BsDistintivoDeRol({required BsEquipo equipo, bool compacto = false, VoidCallback? onTap})`. No
+lee providers: recibe el rol, la forma y qué pasa al tocarla.
+- **La píldora**, del alto visible de `alturaChip` (40 en el muelle y 32 en la oficina), dentro de
+  una zona táctil de `objetivoTactil` (48) que ocupa su sitio, como la de los chips de Material: un
+  toque en el margen va a la píldora.
+- **El metal**, pintado con un `CustomPainter` dentro de un `RepaintBoundary`: el relleno con el
+  degradado del fondo, de arriba abajo; el filo de 1.5 dp con el degradado del metal a 135°, como
+  el `linear-gradient(135deg, …)` del lienzo (a 45° de verdad, con el claro en la esquina de arriba
+  a la izquierda y el oscuro en la de abajo a la derecha, sea cual sea el ancho, y la parada del
+  medio al 55 %); un brillo de 1 dp arriba, por dentro (blanco al 18 % en el muelle y al 14 % en la
+  oficina, el `inset 0 1px 0` del lienzo; a 3× sale una banda limpia de 3 px), y una sombra leve
+  (1 dp hacia abajo y 3 de desenfoque).
+- **El ícono** del paquete, `muelle` o `oficina`, a 20 dp en el muelle y a 18 en la oficina (13.11,
+  regla 1: a otro tamaño se escala entero). **El rótulo**, `BsEquipo.rotulo`, en IBM Plex Sans
+  Condensed 600 con el tamaño de `labelLarge`. Los aires son los del lienzo: 12 y 16 dp a los lados
+  y 8 entre el ícono y el rótulo en el muelle; 10, 14 y 6 en la oficina. Con la letra grande la
+  píldora crece en alto; el rótulo no se corta.
+- **La forma compacta**: solo el ícono, en un círculo de `alturaChip` con el mismo relleno y el
+  mismo filo, en la misma zona de 48.
+- **Sin animación.** El toque, el foco y el mouse se marcan con el color del rótulo al 16 % y al 8 %
+  encima del metal, sin la onda.
+- **Para el lector de pantalla**, un botón con la etiqueta «Rol: Muelle» o «Rol: Oficina» y la pista
+  «Abre Nube y cuenta». La descripción emergente dice el rol («Rol: Oficina») y queda fuera de la
+  semántica, como la de «Acciones» (14.8). Igual en la compacta.
+
+**Los colores** (`BsPaleta.metalMuelle` y `BsPaleta.metalOficina`, de tipo `BsMetalDeRol`; el mismo
+valor en claro y en oscuro: el metal no cambia con el tema):
+
+| | Muelle (cobre) | Oficina (oro) |
+|---|---|---|
+| Fondo, de arriba abajo | `#0B3E93` → `#082F70` | `#16305C` → `#0E2244` |
+| Filo de 1.5 dp, a 135° | `#F8D2B6` → `#E0895A` (55 %) → `#9E5530` | `#FFF0C4` → `#F2C46D` (55 %) → `#A87A2C` |
+| Ícono | `muelle` (U+E017) en `#F4B48E` | `oficina` (U+E023) en `#F2C46D` |
+| Rótulo | «Muelle» en `#FFFFFF` | «Oficina» en `#F4F6FB` |
+| Brillo y sombra | blanco al 18 %; `#07111F` al 35 % | blanco al 14 %; negro al 40 % |
+
+**La regla del metal.** El metal va solo en el filo y en el ícono, nunca de relleno: así no se
+confunde con el naranja de «recién movido» (13.3) ni con el ámbar de «Revisar». Es la única
+excepción a la escala de un solo tono y a «sin degradados», por decisión de Carlos del 1-nov; nada
+más de la app lleva metal ni degradado antes del 7-nov.
+
+**El contraste** (`tool/rediseno_contraste.py`, sección del distintivo, en
+`docs/rediseno/fase2bis/contraste.md`; `test/t131_distintivo_test.dart`). El rótulo, a 9.88:1
+(muelle) y 12.05:1 (oficina) sobre el peor extremo del fondo; el ícono, a 5.54:1 y 8.00:1. Contra
+cada fondo donde va, compuesto también con la sombra encima, el relleno o el filo a 3:1:
+
+| Fondo | Muelle: relleno · filo claro · 55 % · oscuro | Oficina: relleno · filo claro · 55 % · oscuro |
+|---|---|---|
+| La banda, `#0D47A1` (los dos temas) | 1.06 · **6.12 · 3.25** · 1.56 | 1.05 · **7.61 · 5.30** · 2.25 |
+| La barra superior y la cabecera, de día (`#F5F8FC`) | **4.09** · 1.32 · 1.10 · 2.29 | **4.34** · 1.06 · 1.53 · 1.27 |
+| La barra superior y la cabecera, de noche (`#07111F`) | 1.49 · **13.42 · 7.12** · 3.42 | 1.20 · **16.69 · 11.63** · 4.95 |
+
+De día cumple el relleno; de noche y sobre la banda, el filo. Sobre la banda, el filo se exige en
+su claro y en su tono del 55 %, y el extremo oscuro se informa sin exigirlo (Carlos, 2-nov): el
+cobre baja de 3:1 desde el 60 % del degradado y el oro desde el 86 %, en la esquina de abajo a la
+derecha.
+
+**Dónde va.** El rol sale de `operatorProvider` (`rolDelDistintivoProvider`, en
+`sync_providers.dart`): con una cuenta autorizada, también la de la copia local cuando no hay red,
+la oficina da «Oficina» y el muelle, «Muelle». Sin cuenta o sin autorizar no hay distintivo y la
+cabecera queda como antes. Si el rol cambia en la nube, el distintivo cambia sin reiniciar: la
+lista de autorizados se escucha en tiempo real. Al tocarlo se abre «Nube y cuenta».
+- **En la banda del muelle**, en la segunda fila, a la izquierda de Descarga / Carga y centrado con
+  los segmentos (la banda lo recibe por parámetro, 13.6).
+- **En el título del viaje**, a la derecha del bloque del nombre y el viaje, centrado en su alto.
+  Así va en la barra superior del teléfono (la oficina en la Web de un teléfono y el muelle fuera
+  de una operación) y en la cabecera de la oficina, en Windows y en la Web. **Carlos lo decidió el
+  2-nov**, en lugar de la línea del nombre del lienzo: ahí, la zona de 48 llevaba el título de 38 a
+  65 dp, que la barra de 56 recorta (`Clip.hardEdge`), y la cabecera de la oficina crecía de 64 a
+  81 dp. A la derecha del bloque, el título mide 48 y nada crece. Si la línea del viaje es más
+  larga que el nombre, el distintivo queda después del viaje.
+- **En la laptop no va a la derecha de la cabecera**, como en el lienzo: así es una sola regla, y
+  el borde derecho sigue siendo de Buscar, la nube y el panel.
+
+**Cómo cabe**, medido como el resto de la cabecera (`BsPrimeraQueCabe`). En la banda y en la
+cabecera de la oficina **los controles mandan y el distintivo cede primero**; ninguna de las dos
+crece por él (Carlos, 3-nov):
+- **En la barra superior del teléfono**: completo; si no cabe, compacto; y solo después el nombre
+  y el viaje se encogen, como antes. La barra mide 56 con o sin distintivo.
+- **En la cabecera de la oficina**: la misma que sin cuenta, con la misma forma del selector, las
+  mismas líneas y el mismo alto. El selector conserva sus segmentos mientras quepan sin el
+  distintivo. Para cada forma, en una línea: con los segmentos y el completo; con los segmentos y
+  el compacto; con los segmentos y sin distintivo; y lo mismo con el menú. En una línea, la zona
+  de 48 dp no cambia el alto (lo marcan los controles o el título).
+  - **Si no cabe en una línea**, van las dos de 14.8. El título va solo en la suya y el
+    distintivo, completo o compacto, solo si no la hace más alta: cuando el bloque del nombre y
+    el viaje mide 48 dp o más (con la letra a 1.0 mide 38, y en dos líneas no va). Si ni el
+    compacto cabe, va sin distintivo y el nombre se encoge como antes.
+  - **El nombre no se encoge para hacerle sitio.** La regla que eligió Carlos lo permite solo si
+    el alto no cambia (3-nov), y en la cabecera eso no se da nunca. En una línea, el nombre no se
+    encoge hoy. En dos, el distintivo va solo si el bloque mide 48 dp o más, y entonces es el
+    bloque el que marca el alto de la línea: encogerlo la bajaría (a 1366 con 2.0, de 92 a unos
+    86 dp).
+- **En la banda**: completo solo si Descarga y Carga conservan su rótulo y su ícono enteros; si
+  no, compacto; y si ni así, **sin distintivo**, la banda como antes (Carlos, 3-nov: a 360 dp con
+  la letra a 2.0, el compacto partía «Descarga» en dos renglones y la banda crecía de 164 a 184 dp).
+
+Lo que sale con el buque sintético de las pruebas (BUQUE MANUAL, «Viaje V117 · Escala GTSTC»;
+con otros nombres sale lo que quepa, por la misma regla):
+
+| Dónde | Tamaño | Letra 1.0 | Letra 2.0 |
+|---|---|---|---|
+| La banda del muelle | 360 × 640 y 360 × 800 | compacto; la banda, 136 dp, como antes | sin distintivo; 164 dp, como antes |
+| La barra del muelle sin operación | 360 de ancho | completo | compacto |
+| La barra de la oficina en un teléfono | 360 de ancho | compacto | compacto |
+| La barra de la oficina en un teléfono | 390 × 844 | completo | compacto |
+| La cabecera de la oficina | 600 × 800 | sin distintivo: va en dos líneas y el bloque del título mide 38 dp; 106 dp | sin distintivo: en dos líneas no cabe junto al título; 177 dp |
+| La cabecera de la oficina | 800 × 800 | completo, en una línea; 64 dp | completo, en la línea del título de las dos; 144 dp |
+| La cabecera de la oficina | 1280 × 720 | completo, en una línea; 64 dp | completo, en la línea del título de las dos; 144 dp |
+| La cabecera de la oficina | 1366 × 768 | completo, en una línea con el selector en menú, como sin cuenta; 64 dp | sin distintivo: la línea cabía con 4 dp de sobra; 92 dp, en una línea |
+| La cabecera de la oficina | 1920 × 1080 | completo, en una línea; 64 dp | compacto, en una línea; 92 dp |
+
+En la cabecera, cada alto es el mismo que sin cuenta (`test/t131_cabeceras_test.dart` lo exige a
+600 y a 1366, con la letra a 1.0 y a 2.0).
+
+**Las pruebas**: `test/t131_distintivo_test.dart` (la pieza, su contraste compuesto y la fuente
+v3) y `test/t131_cabeceras_test.dart` (las tres cabeceras con un `operatorProvider` falso, el
+toque, la forma que cabe, la cabecera igual que sin cuenta y la matriz sin desbordes a 360 × 640,
+360 × 800, 600 y 1366 de ancho con la letra a 1.0 y a 2.0). `meetsGuideline` con las cuatro pautas (`androidTapTargetGuideline`,
+`iOSTapTargetGuideline`, `labeledTapTargetGuideline` y `textContrastGuideline`) sobre la pieza, en
+claro y en oscuro, con las dos densidades, sobre el papel y sobre la banda, y en la cabecera de la
+oficina en la pantalla entera. En el teléfono, las de toque y etiqueta se miden en la cabecera,
+porque la línea del resumen del plano («Bahía 02, carga: nada pendiente»), anterior a T-131, mide
+21 dp de alto; y el contraste, en la pantalla entera, donde de día solo falla el peso por pila
+«110.0+?» (11 px en tinta suave, 4.33:1), que falla igual sin cuenta. Las capturas, con datos
+sintéticos, en `build/t131/` (`test/t131_capturas_test.dart`).
+
+### 13.13 La marca no tapa el número de orden (T-133; 10.85, hallazgo 7)
+
+**Por qué.** En la tercera prueba piloto (1-nov), 8 celdas de la bahía 10 decían «Revisar» y no
+dejaban ver el OR, y eran justo las que había que comparar con el papel: un intercambio de 4 por 4
+vacíos entre dos líneas, correcto, que se queda marcado. Hasta T-133, con marca, `BsCelda`
+cambiaba el código por el rótulo de la marca, y la segunda línea solo se dibujaba sin marca. La
+propuesta de Carlos: el OR sigue siendo el texto grande, y la marca va pequeña, con su ícono, como
+segunda línea.
+
+**La regla.**
+1. **Con marca, el texto grande es el de siempre:** el OR, el destino, el tipo o lo que la celda
+   muestre sin marca, en `BsTextos.celda` (12).
+2. **La marca va debajo, en el lugar de la segunda línea:** su ícono (`BsCelda.tamanoIconoDeMarca`,
+   12 dp, la rejilla de las insignias de 13.11) y, a 2 dp, su rótulo corto en
+   `BsTextos.celdaLinea2`, **a 10 en la oficina y a 11 en el muelle**, donde nada baja de 11 (4.2;
+   decisión de Carlos del 3-nov). El ícono y el rótulo van en el color del texto del rol, el mismo
+   del código. Con marca, la `linea2` (el peso, «OR», «Sube») no se dibuja: su lugar es de la marca.
+3. **El relleno y el borde son los de la marca,** como antes: la celda conserva su color para que
+   salte a la vista. El estado de la vista Estado sigue mandando en el relleno (13.2), y la celda
+   recién movida sigue en naranja (13.3).
+4. **Si no caben las dos, gana el código:** la marca queda en su color y en su ícono, sin rótulo.
+   El rótulo se mide como lo dibuja `Text` (con la letra del sistema y el estilo heredado) y se
+   dibuja solo si el ícono, el aire y el rótulo caben en el ancho interior de la celda y el código y
+   la línea de la marca caben en su alto interior; con el zoom por debajo de 100 % tampoco va, como
+   la segunda línea (10.7, H2). Si ni el ícono cabe debajo del código, queda solo el color.
+5. **La etiqueta accesible no cambia:** dice el código y la marca, como hoy (T-107 en Carga), y la
+   recién movida le añade «se acaba de mover». El código y el rótulo no se leen por separado.
+6. **Vale en Descarga y en Carga, y en las tres vistas de «Colorear por».** En Carga, el conflicto
+   y la cancelación son las dos marcas (`LoadingCell`); el estado sigue como rol y segunda línea
+   («Sube», «Cargado») cuando no hay marca.
+
+**Los rótulos.** «Cancelado» pasa a **«Cancel.»**, como «Re‑est.» (10.28; decisión de Carlos del
+3-nov): con el ícono pide 58 dp en la oficina (hay 50) y 62 en el muelle (hay 52), y ya salía
+cortado como «Cancela…». «Cancel.» mide 31 dp a 10 y 34 a 11. La etiqueta accesible dice
+«cancelado» entera. Lo que se ve a 1.0, en la celda sin ensanchar:
+
+| Marca | Rótulo | Oficina (52, rótulo a 10) | Muelle (56, rótulo a 11) |
+|---|---|---|---|
+| Revisar, Cancelado, Hecho, Paso, Re‑estiba, Baja, Sube | «Revisar», «Cancel.», «Hecho», «Paso», «Re‑est.», «Baja», «Sube» | ícono y rótulo | ícono y rótulo |
+| Baja, recién movida | «Bajando» | ícono y rótulo | solo el ícono |
+| Sube, recién movida | «Subiendo» | solo el ícono | solo el ícono |
+
+Con la letra a 2.0 no cabe ningún rótulo (el código mide 26 dp de alto y la línea de la marca 22 o
+24 en un alto interior de 46 o 44): queda el código, entero, y el ícono. A 1.45 caben los dos en la
+celda que la rejilla ensancha con la letra.
+
+**Las pruebas**: `test/t133_marca_test.dart`, con las fuentes del producto: la pieza (cada marca
+debajo del código en las dos densidades, el relleno y el borde de su rol, la letra a 2.0 y el zoom
+a 75 %, la etiqueta accesible, las combinaciones con «recién movido»), el contraste compuesto del
+código, del rótulo y del ícono sobre cada relleno de marca (sola, sobre la categoría, atenuada y
+recién movida; sobre el papel, la cubierta y la bodega; en claro y en oscuro; 4.5:1 y 3:1) y
+`meetsGuideline` (`textContrastGuideline`, `androidTapTargetGuideline`, `iOSTapTargetGuideline` y
+`labeledTapTargetGuideline`); y el caso del piloto con datos sintéticos
+(`test/support/t133_marca_support.dart`): las 8 reservas de la bahía 10 con los vacíos cruzados de
+dos líneas, cada una con su OR y «Revisar», un cancelado, el plano de carga a 360 × 640 con la letra
+a 1.0 y a 2.0 y en la oficina a 1280 × 720, y el de descarga con el conflicto y el cancelado en las
+tres vistas. Las capturas del antes y del después, en `build/t133/` (`test/t133_capturas_test.dart`).
 
 ## 14. La oficina con más plano (T-117) y el selector de modo (T-118)
 
@@ -2250,3 +2455,130 @@ sin número. La página los recibe de `assignedEmptiesProvider`, el mismo del qu
   queda como antes.
 - **Las cifras siguen cuadrando por construcción** (15.11, punto 5): `delArchivo` dice lo que trae
   el archivo, `vaciosAsignados` lo asignado, y `total` es su suma.
+
+## 16. El mouse y el touchpad (T-119)
+
+Decisiones 10.36, 10.38 (P4 y P7) y 10.76 de `SPRINT-4.md`. El diagnóstico y el diseño están en
+`docs/T117-T121-RESULTADOS.md` (0.7 y la tabla de 0.5.3); esta sección manda donde dicen cosas
+distintas, y 16.6 dice qué cambió. En Windows y en la Web. **El teléfono y la tableta conservan el
+pellizco de dos dedos sobre la pantalla**, que no cambia.
+
+| Dónde está el puntero | Rueda | Mayús + rueda | Ctrl + rueda o pellizco | Touchpad, dos dedos |
+|---|---|---|---|---|
+| Silueta | Avanza o regresa la silueta; en un extremo, la columna | La silueta, como antes | Como antes (16.6, punto 2) | Horizontal: la silueta; vertical: la columna |
+| Rejilla | La columna | La rejilla en horizontal | El zoom, con el punto bajo el puntero quieto | Desplazar: la columna y la rejilla; pellizco: el zoom |
+| La barra de abajo | La rejilla en horizontal | — | — | — |
+| Lo demás de la columna | La columna | — | Como antes | La columna |
+
+### 16.1 La rueda en la silueta, `BsRuedaHorizontal`
+
+- `BsRuedaHorizontal({ScrollController? controlador, required constructor})`, en
+  `lib/core/design/componentes/bs_rueda_horizontal.dart`, va **alrededor** del desplazable horizontal
+  de `BsSiluetaBuque`, que arma `constructor(context, controlador)` con el controlador de la
+  pantalla o, si no hay, con uno propio. Dentro no sirve: mientras el desplazable anima, su
+  contenido no recibe el puntero, y el segundo paso de la rueda se iba a la columna.
+- Con la rueda vertical se registra en `GestureBinding.instance.pointerSignalResolver`, donde gana el
+  primero que se registra: está más adentro que la columna, así que la columna no se mueve a la vez.
+  Hacia abajo avanza hacia la popa y hacia arriba regresa hacia la proa, con
+  **`BsMovimiento.rueda` (100 ms, nuevo)** y `BsMovimiento.entrada`; cero si el sistema reduce el
+  movimiento. Cada paso suma al destino del anterior, aunque la animación no haya llegado.
+- **En un extremo,** si la silueta no puede moverse en ese sentido, no se registra y la rueda pasa
+  a la columna.
+- **No toma lo que ya tiene dueño:** la rueda con más componente horizontal que vertical (el
+  touchpad en la Web) es del desplazable; Mayús + rueda también, porque invierte los ejes del
+  mouse; y Ctrl + rueda no es de la silueta.
+- **El pestillo,** `BsPestilloDeLaRueda`, envuelve la columna de la oficina: anota la hora de cada
+  paso de la rueda vertical que llega a la columna sin que nadie de dentro lo tome (Ctrl + rueda no
+  cuenta). Si el último fue hace menos de **300 ms** (`BsPestilloDeLaRueda.plazo`), la silueta no
+  toma la rueda y la columna sigue: al bajar, la silueta llega bajo el mouse y no se la roba. Lo que
+  toma la silueta no alarga el pestillo. Usa la hora del evento, no la del reloj.
+
+### 16.2 El zoom con el touchpad y con Ctrl + rueda
+
+En `PlanZoomViewport`, además de los dos contactos de la pantalla:
+
+- **El pellizco del touchpad** (`PointerPanZoomStart`, `Update` y `End`; en Windows, el touchpad de
+  precisión): la escala del inicio por `event.scale`, en cuanto se aparta más de un 1 % de 1.0
+  (`PlanZoomViewport.umbralDelPellizco`); antes, los dos dedos solo desplazan. **Mientras dura el
+  pellizco no se desplaza nada:** la rejilla, como con dos dedos en la pantalla, y la columna, que
+  lee `pellizcoDelPlanoProvider` y queda con `NeverScrollableScrollPhysics` hasta que el gesto
+  termina.
+- **Ctrl + rueda, también con el mouse** (P4): la escala por e^(−dy/200)
+  (`PlanZoomViewport.pasoDeLaRueda`), registrado en el resolvedor para que la columna no se mueva.
+  Se registra aunque la escala ya esté en su tope: Ctrl + rueda sobre la rejilla nunca desplaza.
+- **El pellizco de la Web:** el motor web de Flutter 3.38 entrega el pellizco y Ctrl + rueda como
+  `PointerScaleEvent` con escala e^(−dy/200) (`pointer_binding.dart`); se multiplica por su escala.
+- La escala sigue acotada entre **75 y 300 %** por `planZoomProvider`, y el chip del zoom no cambia.
+- En el teléfono (el lienzo sin `alturaNatural`) también amplían Ctrl + rueda y el touchpad, desde
+  la esquina, como el chip: ahí no hay punto fijo ni barra.
+
+### 16.3 El punto bajo el puntero se queda quieto
+
+En la oficina, al ampliar con el touchpad o con Ctrl + rueda, se corren los dos desplazamientos
+para que lo que está bajo el puntero quede donde estaba:
+
+- **En vertical** (la columna): nuevo = actual + (foco − 16) × (escala nueva ÷ escala vieja − 1),
+  con el foco medido desde el borde de arriba de la rejilla y los 16 dp de su aire
+  (`PlanZoomViewport.margen`), que no se amplían. Lo de arriba de la rejilla no cambia de alto.
+- **En horizontal** (la rejilla): si la bahía no llena la vista, va centrada, y su ancho natural lo
+  mide `PlanZoomContenido`. Con *inicio(e)* = 16 + máx(0, (vista − 32 − ancho × e) ÷ 2), el punto
+  bajo el foco es (actual + foco − inicio(vieja)) ÷ vieja, y el desplazamiento nuevo, inicio(nueva) +
+  punto × nueva − foco, acotado a lo que se puede desplazar.
+- Los dos se mueven **antes** del cuadro que dibuja la escala nueva, así que se ven juntos. Si una
+  cuenta pasa del borde nuevo, la física lo acota al medirse.
+- Cuando la bahía vuelve a caber, la centra el ancho mínimo y el punto ya no puede quedarse:
+  la bahía entera está a la vista.
+- Con el chip, el zoom sigue ampliando desde la esquina de arriba a la izquierda.
+
+### 16.4 La barra horizontal de la rejilla, `BarraDeLaRejilla`
+
+- **El desplazamiento horizontal va por fuera de la escala:** en la oficina, `PlanZoomViewport` lleva
+  un `SingleChildScrollView` horizontal (`rejilla-horizontal`) con la rejilla ampliada dentro
+  (`_TamanoAmpliado`, que mide lo que el hijo por la escala en los dos ejes); la rejilla ya no lleva
+  el suyo. Así la barra no se amplía con la rejilla.
+- `BarraDeLaRejilla` (`barra_de_la_rejilla.dart`, clave `barra-de-la-rejilla`) envuelve la columna:
+  es la `Scrollbar` de Material con el controlador de la rejilla, que la rejilla toma con
+  `BarraDeLaRejilla.controladorDe`, `scrollbarOrientation: bottom` y un `notificationPredicate` que
+  solo escucha ese controlador (la silueta y la columna llevan los suyos).
+- **Va pegada al borde de abajo de la columna, encima de la franja de cifras,** aunque el pie de la
+  rejilla esté más abajo, como en una hoja de cálculo.
+- **Solo aparece cuando la bahía no cabe a lo ancho.** Entonces se ve siempre, con su pista
+  (`thumbVisibility` y `trackVisibility`), y la columna deja **14 dp de aire** abajo
+  (`BarraDeLaRejilla.aire`: los 12 de la barra de escritorio con pista y sus 2 de margen): la barra
+  vive en ese aire y nunca tapa celdas. Sin barra, sin aire.
+- **El pulgar se arrastra** con el mouse y **un clic en la pista avanza una página**: el 80 % de la
+  vista, lo que hace cualquier barra de Flutter. La rueda sobre la barra mueve la rejilla.
+- En la tableta del muelle, la columna es la misma: la barra sale igual cuando la bahía no cabe.
+
+### 16.5 La Web y la página entera
+
+- **La prueba de P7 la hace Carlos** con su touchpad, en Chrome y en Edge: si el pellizco o
+  Ctrl + rueda amplían la página entera sobre el plano. Lo que dice el código del motor (no es una
+  medida): con Ctrl, la rueda llega a Flutter como `PointerScaleEvent`, y el motor cancela el
+  evento del navegador (`preventDefault`) en todo lo que dibuja Flutter. Si la prueba lo confirma,
+  `web/index.html` no se toca.
+- Si la página se amplía, P7 autoriza en `web/index.html` un escucha no pasivo que cancele
+  Ctrl + rueda **solo con el puntero sobre el plano**. Ctrl + «+» y Ctrl + «−» nunca se tocan.
+- **O-040-1,** el gesto del touchpad que regresa el navegador al deslizar sobre la silueta, queda
+  para después (10.76).
+
+### 16.6 Lo que cambió respecto de la propuesta (0.7.2)
+
+1. **La rueda va alrededor del desplazable, como decía la propuesta, y le da el controlador:**
+   `BsSiluetaBuque` no siempre recibe uno, así que `BsRuedaHorizontal` pone el suyo. Una primera
+   versión iba dentro, sin controlador, y la prueba de dos pasos seguidos la tumbó: durante la
+   animación el contenido ignora el puntero.
+2. **Mayús + rueda sigue siendo del desplazable,** y Ctrl + rueda fuera de la rejilla hace lo de
+   antes (en Windows desplaza la columna; en la Web no hace nada, porque llega como escala): la
+   silueta solo toma la rueda vertical sin modificadores. La propuesta decía «nada».
+3. **El punto fijo cuenta el centrado y mira el lienzo de ahora:** la propuesta daba nuevo = (actual + foco) × razón − foco,
+   que solo vale si la rejilla llena la vista y no tiene aire. Con el aire de 16 dp y una bahía que
+   cabe centrada, `PlanZoomContenido` mide su ancho natural (16.3). Y el foco se calcula desde la
+   posición en la pantalla en cada evento, no con `localPosition`: el gesto del touchpad guarda
+   la posición del lienzo al empezar, y el lienzo sube o baja con la columna mientras se pellizca.
+4. **La columna se congela durante el pellizco** con un proveedor (`pellizcoDelPlanoProvider`): la
+   columna está fuera de `PlanZoomViewport`, y la `ScrollConfiguration` de dentro no la alcanza.
+5. **Ctrl + rueda se registra también en el tope:** si no, al llegar a 300 % la rueda con Ctrl
+   desplazaba la columna.
+6. **La barra de Material sirvió fuera de su desplazable**, como pedía la propuesta probarlo: no hizo
+   falta una propia.

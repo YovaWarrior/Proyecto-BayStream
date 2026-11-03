@@ -8,6 +8,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/repositories/departure_export_repository.dart';
 import '../../domain/repositories/session_repository.dart';
 import '../../domain/services/departure_baplie_writer.dart';
+import '../../domain/services/departure_baplie_review.dart';
 import '../../domain/services/loading_operation.dart';
 import '../formatters/operation_text.dart';
 import '../formatters/vessel_error_message.dart';
@@ -51,7 +52,9 @@ class DepartureBapliePage extends ConsumerStatefulWidget {
 
 class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
   bool _saving = false;
-  DepartureBaplie _output(Operation operation, LoadingOperation data) {
+  final _choices = <String, DepartureChoice>{};
+  DepartureBaplie _output(Operation operation, LoadingOperation data,
+      {bool preview = false}) {
     // T-103: la llegada también aporta segmentos de los que siguen a bordo.
     for (final source in operation.sources) {
       if (source.kind != OperationSourceKind.exportList &&
@@ -66,7 +69,9 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
         operation: operation,
         state: data.state,
         list: data.list,
-        movements: data.movements);
+        movements: data.movements,
+        choices: _choices,
+        preview: preview);
   }
 
   @override
@@ -99,7 +104,7 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
             'La escala no tiene una operación guardada con su plan de carga: abre '
             'el plan de carga (BAPLIE) y confirma la escala.');
       }
-      output = _output(operation, data);
+      output = _output(operation, data, preview: true);
     } on StateError catch (error) {
       return Text(error.message, key: const ValueKey('departure-error'));
     }
@@ -107,6 +112,14 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
       Text(
           '${operation.vesselName} · ${voyageNumberLabel(operation.voyageNumber)} · ${operation.portOfCall}',
           style: Theme.of(context).textTheme.titleMedium),
+      // T-130 (10.90, ajuste 5): el archivo lleva el viaje que declara el plan
+      // de carga; si no es el de la operación, se dice.
+      if (operation.departureVoyageNumber != operation.voyageNumber)
+        Text(
+            'El archivo lleva el viaje ${operation.departureVoyageNumber}, el '
+            'del plan de carga. La operación es la '
+            '${voyageNumberLabel(operation.voyageNumber)}.',
+            key: const ValueKey('departure-voyage-note')),
       const SizedBox(height: 16),
       // T-124 (10.65, P3): con su singular.
       Text('${operationCount(output.containers, 'contenedor', 'contenedores')} '
@@ -132,6 +145,34 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
                     'de carga porque no tienen fila en el listado: '
                     '${output.withoutRow.join(', ')}.',
             key: const ValueKey('departure-without-row')),
+      if (output.decisions.isNotEmpty) ...[
+        const SizedBox(height: 16),
+        Text(
+          'Datos por confirmar',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const Text(
+          'Elige el dato válido para cada contenedor. '
+          'No se puede guardar hasta resolver todas las discrepancias.',
+        ),
+        for (final decision in output.decisions) _decision(decision),
+      ],
+      if (output.warnings.isNotEmpty) ...[
+        const SizedBox(height: 16),
+        Text(
+          'Avisos de la salida',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        for (final warning in output.warnings) Text(warning),
+      ],
+      if (output.errors.isNotEmpty) ...[
+        const SizedBox(height: 16),
+        Text(
+          'Datos que impiden guardar',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        for (final error in output.errors) Text(error),
+      ],
       const SizedBox(height: 16),
       Text('Cancelados vigentes (${output.cancelled.length})',
           style: Theme.of(context).textTheme.titleMedium),
@@ -150,10 +191,36 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
             icon: const Icon(Icons.copy),
             label: const Text('Copiar cancelados')),
       ],
+      const SizedBox(height: 16),
+      Text(
+        'Filas del listado que no cargaron (${output.notLoaded.length})',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      if (data.list == null)
+        const Text('La operación no tiene un listado de la agencia.')
+      else if (output.notLoaded.isEmpty)
+        const Text('Todas las filas del listado están a bordo en la salida.')
+      else ...[
+        SelectableText(
+          output.notLoadedText,
+          key: const ValueKey('departure-not-loaded-list'),
+        ),
+        TextButton.icon(
+          key: const ValueKey('departure-copy-not-loaded'),
+          onPressed: () async {
+            await Clipboard.setData(
+              ClipboardData(text: output.notLoadedText),
+            );
+            if (mounted) _notice('Lista de filas no cargadas copiada');
+          },
+          icon: const Icon(Icons.copy),
+          label: const Text('Copiar filas no cargadas'),
+        ),
+      ],
       const SizedBox(height: 24),
       FilledButton.icon(
           key: const ValueKey('departure-save'),
-          onPressed: _saving ? null : _save,
+          onPressed: _saving || !output.canSave ? null : _save,
           icon: const Icon(BsIconos.baplieSalida),
           label: Text(_saving ? 'Guardando…' : 'Guardar BAPLIE de salida')),
       const SizedBox(height: 12),
@@ -162,7 +229,9 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
           .any((s) => s.kind == OperationSourceKind.arrivalBaplie))
         OutlinedButton.icon(
             key: const ValueKey('departure-compare-arrival'),
-            onPressed: () => _compareWithArrival(operation, output),
+            onPressed: output.canSave
+                ? () => _compareWithArrival(operation, output)
+                : null,
             icon: const Icon(BsIconos.compararBaplie),
             label: const Text('Comparar con la llegada'))
       else
@@ -170,6 +239,42 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
             key: ValueKey('departure-compare-unavailable')),
     ]);
   }
+
+  Widget _decision(DepartureDecision decision) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'OR ${decision.order} · ${decision.container} · ${decision.subject}',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            Text(decision.message),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final choice in DepartureChoice.values)
+                  ChoiceChip(
+                    key: ValueKey(
+                      'departure-choice-${decision.container}-'
+                      '${decision.subject}-${choice.name}',
+                    ),
+                    label: Text(
+                      choice == DepartureChoice.plan
+                          ? 'Usar el plan'
+                          : 'Usar el listado',
+                    ),
+                    selected: _choices[decision.id] == choice,
+                    onSelected: _saving
+                        ? null
+                        : (_) => setState(() => _choices[decision.id] = choice),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      );
 
   Future<void> _compareWithArrival(
       Operation operation, DepartureBaplie output) async {

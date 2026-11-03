@@ -7,7 +7,7 @@ import 'componentes/bs_ilustracion.dart';
 import 'vistas_previas.dart' show bsTemaDeVistaPrevia, bsTemaDeVistaPreviaOficina;
 
 // Las vistas previas del paquete de íconos e ilustraciones (10.19), para
-// `flutter widget-preview start`: los 31 íconos del dominio a 24 y a 16 px,
+// `flutter widget-preview start`: los 32 íconos del dominio a 24 y a 16 px,
 // las cuatro insignias a 12 px y las seis ilustraciones, de día y de noche.
 
 /// Un lienzo con el papel del tema y relleno alrededor.
@@ -45,7 +45,8 @@ Widget _muestraDeIcono(String nombre, IconData icono, {double rejilla = 24}) =>
       ),
     );
 
-/// Los 31 íconos del dominio en tinta, a 24 y a 16 px, con su nombre.
+/// Los 32 íconos del dominio en tinta, a 24 y a 16 px, con su nombre (con
+/// `oficina`, la pareja de `muelle` en el distintivo de rol).
 @Preview(
   name: 'Íconos del dominio · 24 y 16 px',
   group: 'Diseño',

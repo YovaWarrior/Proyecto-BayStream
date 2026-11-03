@@ -23,6 +23,10 @@ abstract final class BsMovimiento {
   /// El fundido al cambiar de bahía en la oficina.
   static const Duration bahia = Duration(milliseconds: 120);
 
+  /// Un paso de la rueda del mouse en un desplazable horizontal: la silueta
+  /// avanza o regresa (T-119, `DESIGN.md` 16.1).
+  static const Duration rueda = Duration(milliseconds: 100);
+
   /// El único momento orquestado: la rejilla «asienta» al abrir un plano.
   static const Duration asentar = Duration(milliseconds: 250);
 

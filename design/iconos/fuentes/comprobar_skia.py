@@ -26,6 +26,7 @@ def main():
         if os.path.exists(os.path.join(os.path.dirname(ttf), '..', '..', '..', 'design', 'iconos', 'codigos.json')) else None
     if codigos is None:
         codigos = {n: f'U+{0xE000 + i:04X}' for i, n in enumerate(todos)}
+    todos = dict(sorted(todos.items(), key=lambda kv: int(codigos[kv[0]][2:], 16)))   # en el orden de los códigos
     b64 = base64.b64encode(open(ttf, 'rb').read()).decode()
     partes = [f'<!doctype html><html><head><meta charset="utf-8"><style>@font-face{{font-family:BS;src:url(data:font/ttf;base64,{b64}) format("truetype");}}'
               f'body{{margin:16px;background:{FONDO};color:{TINTA};font-family:BS;}} .t{{display:block;line-height:1;font-family:BS;}}'

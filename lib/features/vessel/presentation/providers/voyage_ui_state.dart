@@ -41,6 +41,14 @@ enum PreviewReason {
   /// El perfil cubre la carga, pero la escala propuesta no es la última
   /// confirmada para este buque (regla de `DESIGN.md` 7.2).
   escalaPorDecidir,
+
+  /// T-130 (10.90) · La escala ya tiene una operación publicada y abierta de
+  /// este buque: a la que le falta este plan (confirmar lo agrega, con un
+  /// diálogo), la que está en la nube y no en este equipo (hay que unirse),
+  /// la que ya tiene este tipo con otro texto, o varias abiertas. La
+  /// publicación directa nunca agrega sola: el plano abre en previo y la
+  /// banda dice cuál es el caso ([Previo.nota]).
+  operacionPublicada,
 }
 
 /// El plano se ve con el perfil propuesto, sin guardar nada: se puede mirar,
@@ -53,10 +61,15 @@ final class Previo extends VoyageUiState {
     required this.fileName,
     this.portOfCall,
     this.identidadPendiente = false,
+    this.nota,
   });
 
   /// El viaje tal como se dibuja: con la geometría propuesta y sin escala.
   final VesselVoyage voyage;
+
+  /// T-130 · Lo que la banda dice con [PreviewReason.operacionPublicada]: el
+  /// texto de la búsqueda (`textoDeLaBusqueda`), ya escrito por el notifier.
+  final String? nota;
 
   /// El perfil propuesto (o el guardado, si existe) que todavía no se confirma.
   final VesselProfile profile;
@@ -85,6 +98,9 @@ final class Previo extends VoyageUiState {
             : 'Plano sin confirmar: perfil propuesto desde el archivo. '
                 'Escala propuesta $portOfCall.',
         PreviewReason.escalaPorDecidir => _escalaPorDecidir,
+        PreviewReason.operacionPublicada => nota ??
+            'La escala ${portOfCall ?? 'de este plano'} ya tiene una operación '
+                'publicada de este buque: confirma para agregar este plan.',
       };
 
   String get _escalaPorDecidir {
@@ -144,6 +160,7 @@ final voyageUiStateProvider = Provider<VoyageUiState>((ref) {
       fileName: notifier.loadedFileName,
       portOfCall: notifier.previewPortOfCall,
       identidadPendiente: notifier.identityCandidates.isNotEmpty,
+      nota: notifier.previewNota,
     );
   }
   return Publicado(voyage);

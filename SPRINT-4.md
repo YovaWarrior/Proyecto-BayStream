@@ -1995,3 +1995,895 @@ La siguiente decisión es la **10.74**.
 3. Windows, Android y la Web, con 4.2 a 4.4.
 
 La siguiente decisión es la **10.75**.
+
+### 10.75 · La 0.4.0, publicada en los tres clientes, y lo que dejó el día (28-oct, 19:30)
+
+**Carlos la publicó con la sección 4 de la lista del piloto:**
+- **Windows:** `BayStream_0.4.0.0.msix`. Por dentro dice versión 0.4.0.0 y firmante `CN=BayStream`, con firma `Valid`, y su SHA-256 (`03AA5A42…71A17F7`) coincide con el `.sha256`. Un solo bloque compiló, verificó, copió los datos y solo entonces quitó la 3.1.1 e instaló la 0.4.0.0. La copia quedó en `C:\Proyectos\respaldo-almacen-20261028-1300`: 592 archivos del almacén (35 MB) y la carpeta del paquete, con 8 carpetas vacías y ningún archivo. Los datos nunca estuvieron dentro del paquete. La app abrió con los datos de siempre (Carlos).
+- **Android:** el AAB 6 (0.4.0), firmado con la clave de subida, en la prueba interna como «0.4.0 · Rediseño». El Honor lo actualizó y dice 0.4.0.
+- **Web:** la compilación 0.4.0+6. T-92 aprueba 57 archivos y Firebase publica 56: falta `.last_build_id`, que es oculto y Hosting no sube. El `version.json` publicado dice 0.4.0 y 6, y en incógnito la app abre la operación publicada.
+- La compilación no tocó el repositorio: `pubspec.lock` y lo que Flutter regenera en `windows/flutter/` siguen iguales a `be532ab`.
+
+**Play muestra un nombre temporal:**
+- Hasta la primera revisión de Google, la tienda dice «gt.cmartinez.baystream (unreviewed)», con un ícono genérico. En el teléfono, la app se llama BayStream y lleva su ícono, porque los dos van en el AAB. La prueba interna no pasa por esa revisión.
+- **Hoy quedó la ficha de Play Store en borrador:** el nombre, las dos descripciones, el ícono de 512 y el gráfico de 1024 × 500 de `design/icono/play/`, que se hicieron en T-88 y nunca se subieron.
+- **La primera revisión va con la prueba cerrada, después de la Expo.** Necesita las dos decisiones de 10.49 (cómo entra el revisor y un archivo de muestra sintético), las declaraciones de `docs/T88-DECLARACIONES-PLAY.md` y dos capturas de teléfono con un plano sintético.
+
+**Lo que Carlos encontró en la Web:**
+- **O-040-1:** en la silueta del buque, el deslizamiento horizontal del touchpad hace que Chrome vuelva a la página anterior. Según reportes de otros desarrolladores, la línea de CSS habitual puede no bastar en Chrome de Windows.
+- **O-040-2:** la rueda del mouse sobre la silueta no mueve las bahías. Es la primera línea de T-119, que está en la entrega 3 y todavía no se hace.
+- **Mientras tanto:** en la oficina, la app de Windows, que no tiene el «atrás» del navegador; en la silueta, Mayús + rueda.
+
+**Dos observaciones más, P3:**
+- `test/t102_weight_display_test.dart` crea una carpeta `t102-synthetic-*` en `%TEMP%` en cada corrida y nunca la borra: van 86. Va a la tarea del banco, con O1 de T-125 y O-126-1.
+- `build\t93` guarda un `BayStream_1.0.0.0.msix` del 15-oct (T-93). La compilación de la 1.0.0 lo sobrescribiría: ese día, se aparta antes.
+
+**El deck de la Expo:**
+- **El borrador 2 no abría en PowerPoint:** al repararlo, dejó en blanco las diapositivas de contenido.
+- **La causa:** cuando una línea mezcla dos colores, pptxgenjs repite el formato del párrafo (`a:pPr`) antes de cada parte. Eran 117 errores de esquema en las diapositivas; LibreOffice los tolera y PowerPoint no.
+- **La corrección:** `post.py` deja un solo formato por párrafo. Las copias que quita eran iguales a la primera, así que no cambia nada de lo que se ve.
+- **El borrador 3 pasa el esquema de PresentationML sin errores en las diapositivas.** Queda uno en `presentation.xml`: el orden que escribe pptxgenjs, que PowerPoint lee bien.
+- El borrador 3 dice 0.4.0 donde decía 3.2.0, con el video de la terminal grabado de nuevo. Carlos lo abrió en PowerPoint y se ve bien. Está en `C:\Proyectos\baystream-presentacion\expo\`, y su huella coincide.
+
+**La mudanza de `%TEMP%`, hecha:**
+- **75 de 75 entradas,** con 15.99 GB y 65 377 archivos, ya están en `C:\Proyectos\evidencia\`, con los mismos nombres. Se movieron por renombre en el mismo disco, sin copiar ni borrar. El manifiesto es `C:\Proyectos\evidencia\MANIFIESTO-28oct.csv`, y ahí están también el script y su lista.
+- Son 45 entradas citadas por nombre en los documentos y 30 del proyecto sin cita exacta. Una ruta de `%TEMP%\<nombre>` en un informe se lee ahora como `C:\Proyectos\evidencia\<nombre>`.
+- **No se movieron:** `expo`, que usa el recorrido de la Expo, y las 86 `t102-synthetic-*`. El script cuenta 86 porque su patrón no incluye `expo`.
+- De los 173 nombres de `%TEMP%` que citan los documentos, 127 ya no estaban. La limpieza de 10.72 liberó solo 0.1 GB, así que la mayoría se había ido antes; no se puede saber cuáles se llevó.
+
+La siguiente decisión es la **10.76**.
+
+### 10.76 · Carlos decide la 0.4.1: T-119 y el listado en una operación publicada (H2) (28-oct, 19:30)
+
+**Lo decidió a las 19:17:**
+- **T-119 va en la 0.4.1,** con el diseño de la sección 0.7 de `docs/T117-T121-RESULTADOS.md` y las respuestas P4 y P7 de 10.38. Son cuatro cosas:
+  - la rueda en la silueta, que arregla O-040-2;
+  - el pellizco del touchpad y Ctrl + rueda para el zoom;
+  - el punto bajo el puntero quieto al ampliar;
+  - la barra horizontal.
+- **El gesto del touchpad que regresa el navegador (O-040-1) queda para después.** T-119 no toca `web/index.html` por eso; solo por el pellizco, si la prueba lo exige (P7).
+- **H2 también va en la 0.4.1, como T-127:** que publicar una operación sin el listado no la deje sin poder importarlo después. Yov propone el diseño de la sección 8.3 de `docs/T122-RESULTADOS.md`, tal cual:
+  - los BAPLIE no cambian;
+  - el listado se agrega o se reemplaza mientras la operación esté abierta, con un número de revisión;
+  - el muelle lo recibe solo y avisa;
+  - antes de confirmar, el cruce dice qué contenedores ya cargados no están en el listado nuevo y qué vacíos cambian de grupo.
+  - Toca `domain/`, `data/` y las reglas. Las reglas nuevas las redacta Timonel y las prueba en el emulador: las 69, los 25 casos de abuso y los nuevos. Las publica Carlos desde la consola, antes que los clientes de la 0.4.1.
+  - **Carlos confirma el diseño antes del prompt de T-127.**
+- **T-120 queda para después,** con O1 y O2 de la entrega 1 y el arrastre entre dos monitores.
+
+**El orden:**
+1. T-119, con Timonel. Codex la acepta.
+2. T-127, con Timonel, mientras Codex acepta T-119. Codex acepta T-127.
+3. La candidata: `version: 0.4.1+7`, `msix_version: 0.4.1.0` y el AAB 7. Carlos publica las reglas y los tres clientes, a más tardar el 4-nov.
+
+**Lo que no cambia:**
+- `lib/`, `test/` y `pubspec.*` son de una tarea a la vez.
+- Flutter corre de a un comando, con la luz verde de Carlos, y nunca durante el repaso técnico, el ensayo del viernes ni la Expo del sábado.
+
+**Las demos de la Expo:** en vivo van la 3 (`integration_test`) y la 2 (el emulador). El emulador se arranca antes de empezar, con la consola abierta en Firestore → Requests, para no esperar sus 33 s en la sala. La demo 1 tarda unos 20 s: va en vivo si sobra tiempo, y si no se muestra con su diapositiva y el respaldo de la 20.
+
+La siguiente decisión es la **10.77**.
+
+### 10.77 · T-119 entregada y revisada: la rueda, el zoom y la barra; y una prueba que rompió 10.74 (29-oct, 00:45)
+
+**Timonel la entregó a las 00:20, sobre `9ef19f0`.** Está en `docs/T119-RESULTADOS.md` y `DESIGN.md` 16, con la evidencia en `build/t119/`.
+- **La rueda en la silueta:**
+  - hacia abajo avanza a la popa y hacia arriba regresa, con 100 ms de animación, o sin ella si el sistema reduce el movimiento;
+  - en un extremo, la rueda pasa a la columna;
+  - un pestillo de 300 ms evita que la silueta se robe la rueda al bajar la página;
+  - Mayús + rueda sigue siendo del desplazable.
+- **El zoom:**
+  - el pellizco del touchpad y Ctrl + rueda, también con el mouse (P4), amplían entre 75 y 300 %;
+  - mientras dura el pellizco, nada se desplaza;
+  - la celda bajo el puntero se queda quieta, también cuando la bahía pasa de caber centrada a no caber;
+  - el chip sigue ampliando desde la esquina, y en el teléfono el zoom del touchpad también.
+- **La barra horizontal:**
+  - va abajo de la columna, encima de la franja de cifras, y solo aparece cuando la bahía no cabe;
+  - se arrastra, un clic en la pista avanza una página y deja 14 dp de aire;
+  - en la oficina, el desplazamiento horizontal de la rejilla va ahora por fuera del zoom.
+- **La Web (P7):** no tocó `web/index.html`. Según el código del motor web de Flutter 3.38.9 (una lectura, no una medida), Ctrl + rueda llega como escala y el motor cancela el evento del navegador. Lo confirma Carlos en Chrome y Edge.
+- **Siete diferencias con el diseño de 0.7.2,** explicadas en la sección 4 del informe y en `DESIGN.md` 16.6. Tres salieron de errores que destaparon sus propias pruebas.
+- **Cifras:**
+  - 11 pruebas nuevas, que fallan las 11 contra el código de antes, cada una en su comprobación;
+  - la suite, 1852 en una corrida: 1851 en verde, ninguna omitida y una fallida;
+  - `analyze`, en cero.
+
+**La fallida la causó 10.74, no T-119:**
+- `test/t93_msix_config_test.dart` fija `msix_version` en `3.2.0.0`, y la numeración nueva cambió el pubspec sin cambiar la prueba. Falla igual en `9ef19f0`.
+- 10.74 dijo que no hacía falta repetir nada porque solo cambiaba el pubspec, y esa prueba lee el pubspec: fue un error de Yov.
+- Lo publicado no cambia, porque es una prueba y no código de la app. Pero desde `7647741` la suite no cumplía el piso de 1841 sin fallas.
+- **El arreglo:** que la prueba compruebe que `msix_version` es la versión del pubspec con `.0` al final, en vez de fijar un número. Así la 0.4.1 no la rompe. Lo hace Timonel, en un commit aparte.
+
+**Yov lo revisó contra el disco:**
+- cambian exactamente las 11 rutas del bloque: 7 modificadas y 4 nuevas. No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, las opciones de Firebase ni `web/index.html`;
+- los registros dicen lo que dice el informe:
+  - `analyze` da «No issues found!» en los tres directorios;
+  - la suite da «+1851 -1», con la única falla en `t93_msix_config_test.dart` («Expected: '3.2.0.0' · Actual: '0.4.0.0'»);
+  - las pruebas nuevas contra el código de antes dan «-11»;
+- el código hace lo que dice el informe:
+  - la rueda se registra en el resolvedor solo cuando la silueta puede moverse en ese sentido;
+  - el pestillo distingue el evento original del que toma la silueta;
+  - el pellizco se apaga al terminar y al desmontarse el plano.
+
+**Para la aceptación de Codex:**
+- Con el desplazamiento horizontal de la oficina fuera del zoom, H7 (el arrastre que desplaza el plano al acercarse al borde, también con zoom) y la prueba de T-105 merecen una pasada a mano en Windows a 200 %.
+- Un pellizco que no termina, por ejemplo si la ventana pierde el foco a la mitad, no debería dejar quieta la columna.
+
+**Lo que sigue:**
+1. Carlos sube el bloque de Timonel y el de esta decisión.
+2. Timonel arregla la prueba de T-93 y corre la suite: 1852 de 1852.
+3. Carlos hace la prueba de la sección 7 del informe: unos 10 minutos en Windows y 10 en Chrome y Edge, después del repaso técnico de la Expo.
+4. Codex acepta T-119.
+5. Con el ok de Carlos al diseño de 8.3, Yov escribe el prompt de T-127.
+
+La siguiente decisión es la **10.78**.
+
+### 10.78 · El arreglo de T-93, revisado; Carlos aprueba el diseño de T-127 y la pone en Fable 5.1 (29-oct, 01:00)
+
+**El arreglo de la prueba de T-93 (10.77), revisado:**
+- `test/t93_msix_config_test.dart` lee la línea `version: x.y.z+n` del pubspec y exige que `msix_version` sea `x.y.z.0`. Es lo único que cambió en ese archivo.
+- La prueba da 5 de 5; la suite, 1852 de 1852 en una corrida, sin omitidas; y `analyze`, cero. La evidencia está en `build/t119/`.
+- Timonel metió `git status` en un comando, por error. La regla de `.claude/settings.json` lo bloqueó y no corrió, y no quedó ningún `index.lock`.
+
+**Carlos aprueba el diseño de T-127 (00:40).** H2 se hace con la sección 8.3 de `docs/T122-RESULTADOS.md`, tal cual:
+- **Qué hace:**
+  - los BAPLIE de una operación publicada no cambian;
+  - el listado se agrega o se reemplaza mientras la operación esté abierta, con un número de revisión;
+  - el muelle lo recibe solo y avisa;
+  - antes de confirmar, el cruce dice qué contenedores ya cargados no están en el listado nuevo y qué vacíos cambian de grupo.
+- **Autoriza** tocar `domain/`, `data/` y `presentation/` para eso, sin dependencias nuevas.
+- **Las reglas nuevas** van en un archivo nuevo, `docs/T127-firestore.rules.propuesta`, que Timonel puede incluir en su bloque de Git. `docs/T80-firestore.rules.propuesta` sigue siendo lo publicado hasta que Carlos publique el archivo nuevo desde la consola, después de la aceptación de Codex y antes de los clientes de la 0.4.1. Lo publicado se coteja con el archivo, como en 10.108 de `SPRINT-3.md`.
+- **Las baterías** de 69 reglas y 25 abusos tienen que pasar también contra las reglas nuevas, más los casos nuevos de T-127.
+- **Compatibilidad:** un cliente 0.4.0 nunca daña una operación con revisión, y el informe dice qué le pasa. La regla de uso: la laptop y el Honor pasan a la 0.4.1 antes de usar la función.
+- **El emulador** de T-127 usa un proyecto `demo-` y el puerto 8282, para no chocar con el de la Expo (8181 y 4000).
+
+**Los modelos, desde ahora.** Carlos tiene el semanal de Fable en cero.
+- **Fable 5.1** para lo que toca reglas, sincronización o `domain/`, y para los diagnósticos difíciles. T-127 va con Fable 5.1 en Max, en un chat nuevo.
+- **Claude Opus 5.5** para lo de presentación y los arreglos chicos, en Extra o en Alto.
+- **Codex** sigue con GPT-6.1 Sol, en high, para las aceptaciones.
+
+**Lo que sigue:**
+1. Carlos sube T-119, el arreglo de T-93 y esta decisión.
+2. T-127 va a Timonel, con Fable 5.1, al despertar. Mientras no haya luz verde, lee, diseña y escribe código.
+3. Flutter y el emulador corren con la luz verde de Carlos, y nunca durante el repaso técnico de la Expo, el ensayo del viernes ni la Expo del sábado.
+4. Carlos prueba T-119 con su mouse y su touchpad, y después Codex la acepta.
+
+La siguiente decisión es la **10.79**.
+
+### 10.79 · T-127 entregada y revisada: el listado entra en una operación publicada; Yov propone cerrar la 0.4.1 con una sola aceptación (29-oct, 12:30)
+
+**Timonel la entregó con Fable 5.1, sobre `cf7cf3f`.** Está en `docs/T127-RESULTADOS.md`, con la evidencia en `build/t127/`. Es el diseño de 8.3 de T-122, tal cual:
+- **La oficina** agrega o reemplaza el listado en una operación publicada y abierta, con `replaceSource`: los trozos de la revisión nueva y el manifiesto van en un solo lote. Si la nube no acepta, nada local cambia. Antes de confirmar, el cruce dice cuántos cargados no están en el listado nuevo y cuántos vacíos asignados cambian de grupo.
+- **El muelle** escucha el manifiesto, baja solo la revisión nueva, comprueba las huellas y avisa «Listado actualizado por la oficina: n filas». Sin red, sigue con el anterior hasta reconectar.
+- **Lo demás:** los BAPLIE y los movimientos no cambian, y el estado se vuelve a derivar. `join` toma la última revisión, y lo ya publicado se sigue uniendo.
+- **Las reglas** van en `docs/T127-firestore.rules.propuesta`: T-80 más las dos cláusulas, con huella `FC17842C…`. Las de T-80 siguen siendo las publicadas.
+- **Compatibilidad (sección 4):**
+  - un cliente 0.4.0 que se une a una operación revisada falla con `source_mismatch` y un mensaje claro, sin guardar nada;
+  - uno que ya estaba unido sigue con el listado viejo, y sus movimientos se aceptan igual;
+  - una oficina 0.4.0 no puede revisar.
+  - Ninguno daña la operación.
+- **Cifras:**
+  - 19 pruebas nuevas en verde;
+  - la suite, 1871 de 1871 en una corrida, sin omitidas: el piso sube de 1852 a 1871;
+  - `analyze`, cero;
+  - en el emulador (`demo-t127`, puerto 8282, sin internet): contra las reglas nuevas, 69 de 69, 25 de 25 y 31 de 31; contra las de T-80, 69, 25 y 27 de 31, porque caen justo los cuatro casos que la revisión permite.
+- **Para Carlos:** la sección 7 dice cómo publicar las reglas desde la consola, cómo cotejarlas con `tool/t113_reglas.mjs` y el archivo nuevo como tercer argumento, y cómo volver atrás. La sección 8 trae una prueba de punta a punta de 14 pasos con la laptop y el Honor, con los sintéticos de T-100.
+
+**Yov lo revisó contra el disco:**
+- **El árbol:** cambian exactamente las 22 rutas del bloque, 14 modificadas y 8 nuevas. No cambian `pubspec.*`, `lib/main.dart`, las opciones de Firebase ni `docs/T80-firestore.rules.propuesta`.
+- **Las reglas:** sin contar el fin de línea, el archivo nuevo difiere del de T-80 solo en el encabezado y en las dos cláusulas. En la segunda, `validSource` se parte en el trozo publicado, que es el texto de T-80, y el de revisión.
+  - Revisar exige la oficina, la operación abierta y que solo cambie `sources.export_list`, sin poder quitarlo.
+  - La revisión sube, o empieza en 1 si no había listado.
+  - Cada trozo de revisión lleva la revisión, la huella y el número de trozos del manifiesto, con el tope de tamaño y el autor.
+  - Los trozos siguen sin `update` ni `delete`.
+- **La vuelta a la 0.4.0:** lo único nuevo que se guarda en el almacén local es el campo `revision` del listado, y la 0.4.0 lo ignora al leer. Si hubiera que volver a la 0.4.0, los datos locales se leen igual.
+- **Los registros dicen lo que dice el informe:** «No issues found!» al empezar y al terminar, «+1871: All tests passed!» y las seis baterías con sus resultados.
+
+**Dos observaciones, P3:**
+- **O-127-1:** contra `cf7cf3f`, las 19 pruebas nuevas «fallan» porque no compilan: usan el contrato nuevo. No muestran qué comportamiento faltaba, como sí lo mostraron las de T-119. Lo cubre la aceptación, con la app real en el emulador.
+- **O-127-2:** el lanzador de las baterías deja que el concentrador del emulador tome el puerto 4400, el mismo de la Expo. Nunca corre a la vez que el emulador de la Expo.
+
+**Primero va la Expo.** El repaso técnico de los diez comandos del guion, en `baystream-expo`, sigue pendiente, y va antes que cualquier cosa de la 0.4.1. Mientras dura, y en el ensayo del viernes y la Expo del sábado, ningún agente corre Flutter ni el emulador.
+
+**Yov propone cerrar la 0.4.1 con una sola aceptación de Codex, como la 3.2.0 en T-125.** 10.76 aceptaba T-119 y T-127 por separado, pero la de T-119 no empezó, y una sola sobre la candidata ahorra una corrida:
+1. Carlos sube el bloque de T-127 y el de esta decisión.
+2. Después del repaso, Carlos mueve `qa-r4` a la punta de `sprint-4` y hace ahí su prueba de T-119 (sección 7 de su informe).
+3. **T-128, la candidata,** con Timonel en Opus 5.5: `version: 0.4.1+7` y `msix_version: 0.4.1.0`, con la suite y `analyze`. Yov pone al día la sección 4 de la lista del piloto: las reglas de T-127 antes que los clientes, la 0.4.1 encima de la 0.4.0 y la vuelta atrás.
+4. **Codex acepta la 0.4.1 entera** en `qa-r4`:
+   - T-119, con la prueba de Carlos y las dos pasadas de 10.77;
+   - T-127, con sus baterías y una prueba de punta a punta en el emulador con la app real: la oficina, el muelle y un cliente 0.4.0 frente a una operación revisada;
+   - la candidata, con la lista del piloto.
+5. Con la aceptación, Carlos publica las reglas de T-127 y las coteja (sección 7). Después van los tres clientes, con la sección 4 de la lista, a más tardar el 4-nov, y al final la prueba de punta a punta de la sección 8, ya en la nube.
+
+**Decide Carlos.**
+
+La siguiente decisión es la **10.80**.
+
+### 10.80 · Carlos probó T-119 a mano y pasa todo; Codex la repite en los navegadores; Carlos aprueba cerrar la 0.4.1 con una sola aceptación (29-oct, 16:30)
+
+**La prueba de T-119 de Carlos** (sección 7 de `docs/T119-RESULTADOS.md`) fue la tarde del 29-oct, en `qa-r4` a `65db312`, con su mouse y su touchpad, en Windows, Chrome y Edge: «todo pasó».
+- Compiló Windows y la Web con `tool/t100_main.dart`, sin Firebase, con el plano sintético de T-100 y un almacén aparte en `%TEMP%`. Nada tocó el almacén real.
+- Al mover `qa-r4`, Git marcó tres archivos de `windows/flutter/` que Flutter regenera al compilar. Después de las dos compilaciones quedaron idénticos a los del repositorio.
+
+**T-127 quedó en `cce3c4c`,** encima de `65db312` (10.79): Carlos subió primero el bloque de la decisión y después el de Timonel, con las 22 rutas que revisó Yov. La prueba de Carlos no llevaba T-127, pero T-127 no toca ningún archivo de T-119.
+
+**Codex repite T-119 en Chrome y en Edge, con un conductor.** Es la parte Web de la aceptación de T-119, adelantada:
+- los pasos 1 a 9 de la Web, con eventos sintéticos y con números, en `qa-r4` a `cce3c4c`;
+- un instrumento calibrado en una página de control: donde no logre el efecto, el paso queda «no concluyente» y rige la prueba de Carlos;
+- el rojo: el mismo conductor, contra la Web sin T-119, tiene que fallar en los pasos 1, 2, 3, 4 y 6;
+- el informe en `docs/t119/navegadores-codex.md` y la evidencia en `build/t119-navegadores/`.
+
+**Carlos aprueba la propuesta de 10.79 (16:22):** la 0.4.1 se cierra con una sola aceptación de Codex.
+1. **T-128, la candidata,** con Timonel en Claude Opus 5.5, en Alto: `version: 0.4.1+7` y `msix_version: 0.4.1.0`, con la prueba de T-93, `analyze` y la suite.
+2. **La lista del piloto, al día para la 0.4.1,** por Yov, en el mismo commit que esta decisión:
+   - las reglas de T-127 antes que los clientes, en una sección 4.0 nueva;
+   - la 0.4.1 encima de la 0.4.0 en Windows, sin desinstalar;
+   - el listado en una operación publicada, en la oficina (1.17) y en el muelle (2.15);
+   - la vuelta a la 0.4.0.
+3. **Codex acepta la 0.4.1 entera** en `qa-r4`, sobre la punta con T-128:
+   - T-119, con la prueba de Carlos, su conductor de los navegadores otra vez y las dos pasadas de 10.77;
+   - T-127, con sus baterías y una prueba de punta a punta en el emulador con la app real, que incluye un cliente 0.4.0 frente a una operación revisada (O-127-1);
+   - la candidata y la lista del piloto.
+4. Con la aceptación, Carlos publica las reglas (4.0 de la lista) y los tres clientes, a más tardar el 4-nov, y hace la prueba de punta a punta de la sección 8 de T-127.
+
+**Flutter va de a un comando y con la luz verde de Carlos.** La suite de T-128 nunca corre a la vez que el conductor de Codex, porque el pestillo de 300 ms se mide con tiempos. Y nada corre durante el repaso técnico de la Expo, que sigue pendiente, el ensayo del viernes ni la Expo del sábado.
+
+La siguiente decisión es la **10.81**.
+
+### 10.81 · La parte Web de T-119, aceptada por Codex; T-128 entregada y revisada; la aceptación de la 0.4.1 va a Codex (29-oct, 17:30)
+
+**La parte Web de T-119, adelantada** (Codex, `docs/t119/navegadores-codex.md`, en `af87dd6`), sobre `cce3c4c`, con Chrome 156 y Edge 156:
+- **Cumple en los dos navegadores:** la rueda en la silueta, el pestillo, los dos dedos y la barra. En el pestillo, los intervalos medidos quedaron a los dos lados de los 300 ms.
+- **Ctrl + rueda amplía el plano** entre 75 y 300 %, con la celda quieta a menos de 0,43 dp. Queda no concluyente que el navegador no amplíe la página con Ctrl + rueda, y lo mismo los atajos Ctrl + «+» y «−»: el instrumento no logró ampliar ni la página de control. Ahí rige la prueba de Carlos (10.80).
+- **El pellizco no amplía la página,** ni sobre el plano ni fuera de él. Ya era así antes de T-119: lo hace el motor de Flutter (sección 6 de T-119).
+- **El rojo:** el mismo conductor, contra la Web sin T-119, falla en 1, 2, 3, 4 y 6, cada uno en su comprobación.
+- **Yov lo revisó contra la evidencia:** la huella del informe y la del conductor coinciden con el manifiesto, y también 80 de sus 1139 archivos, tomados al azar. Los 624 originales siguen intactos, y la matriz final dice lo mismo que el informe.
+
+**Tres observaciones, P3:**
+- **O-119-1:** al pellizcar desde el 100 %, justo cuando la bahía deja de caber centrada, la celda se corre hasta 1,9 dp en Chrome y 1,4 en Edge. Ya desbordada, se corre 0,06, y con Ctrl + rueda en el mismo cruce, 0,43. La prueba de T-119 solo cubría el pellizco con la bahía ya desbordada.
+  - **Yov propone aceptarla en la 0.4.1 y corregirla en T-120**, con una prueba que pellizque justo en ese cruce. Son unos 2 píxeles que la prueba de Carlos no vio, y corregirla ahora pediría otra entrega y otra aceptación antes del 4-nov.
+  - Decide Carlos.
+- **O-119-2:** el instrumento no logra el zoom del navegador ni con Ctrl + rueda ni con los atajos (arriba). No es del producto.
+- **O-119-3:** las precauciones del instrumento. Entre ellas va una pista para O-040-1: al armar el conductor, la rueda horizontal que se pasaba del borde regresó la pestaña a la página anterior. Codex no lo da por reproducido.
+
+**T-128, la candidata, entregada y revisada** (Timonel, en Claude Opus 5.5; `docs/T128-RESULTADOS.md`):
+- `pubspec.yaml` cambia solo dos líneas: `version: 0.4.1+7` y `msix_version: 0.4.1.0`. `pubspec.lock` conserva su huella.
+- La prueba de T-93 da 5 de 5; `analyze`, cero; y la suite, 1871 de 1871 en una corrida, sin omitidas. Corrió después de que Codex cerró sus navegadores.
+- Fuera de `docs/`, nada más fija la versión: Gradle y el runner de Windows la toman del pubspec, y `version.json` lo genera la compilación.
+- **Yov lo revisó contra el disco:** el diff del pubspec, la huella del lock y los tres registros.
+- **O-128-1, P3:** `tool/t93_msix.ps1` trae `-Version '1.0.0.0'` por omisión, y eso manda sobre el pubspec.
+  - Sin `-Version` sale un `BayStream_1.0.0.0.msix`, y una vez instalado, Windows ya no deja poner una 0.4.x encima.
+  - La lista del piloto siempre pasa `-Version`, así que en la 0.4.1 no hace daño.
+  - **Yov propone que el script lea `msix_version` del pubspec por omisión**, en la tarea del banco, después de la Expo. Decide Carlos.
+
+**Lo que sigue:**
+1. Carlos sube el bloque de T-128 y el de esta decisión, y mueve `qa-r4` a la punta.
+2. Codex acepta la 0.4.1 entera (10.80, punto 3) en `docs/t128/aceptacion-codex.md`. Además de lo de 10.80, hace una prueba de punta a punta con la app real contra el emulador, la primera que escribe de verdad contra las reglas de T-127, y compila la candidata en los tres clientes.
+3. El repaso técnico de la Expo, que sigue pendiente, va antes de la luz verde de esa aceptación. Mientras tanto, Codex solo lee y prepara.
+4. Con la aceptación, la sección 4 de la lista: las reglas (4.0), la mezcla y los tres clientes, a más tardar el 4-nov, y después 0.7.
+
+La siguiente decisión es la **10.82**.
+
+### 10.82 · Carlos aprueba las dos propuestas de 10.81 (29-oct, 17:19)
+
+- **O-119-1** queda como conocida en la 0.4.1 y va a T-120, con una prueba que pellizque justo cuando la bahía deja de caber centrada.
+- **O-128-1** va a la tarea del banco, después de la Expo: `tool/t93_msix.ps1` leerá `msix_version` del pubspec cuando no se le pase `-Version`. Hasta entonces, la lista del piloto lo llama siempre con la versión.
+- Esta decisión se sube junto con la revisión de la aceptación de la 0.4.1. Así la punta de `sprint-4` no se mueve mientras Codex acepta en `qa-r4`, porque su Paso 0 la fija en `c893687`.
+
+La siguiente decisión es la **10.83**.
+
+### 10.83 · Codex acepta la 0.4.1 con dos reservas (29-oct, 23:50)
+
+**Codex aceptó la 0.4.1 con reservas** (`docs/t128/aceptacion-codex.md`), sobre `c893687`:
+- **P1 · T-119:**
+  - el código, cotejado; 11 de 11 pruebas en verde, y las 11 en rojo contra `83d7b85`, por comportamiento;
+  - en Chrome y en Edge, lo mismo que en la parte Web adelantada (10.81);
+  - en Windows a 200 %, el arrastre de T-105 y H7 cumple: Carlos lo hizo y el plano se desplazó hasta el borde.
+- **P2 · T-127:**
+  - 19 de 19 pruebas, y las seis baterías como se esperaba;
+  - los 14 pasos de la sección 8 de T-127, con la app real contra el emulador. La oficina y el muelle fueron dos contextos de Chrome, el muelle a 360 × 800: no cubre el Honor ni Android, que van en 0.7;
+  - la compatibilidad con la 0.4.0 en sus cinco casos, también la vuelta del almacén local.
+- **P3 · T-128:** la candidata compila en los tres clientes, y cada uno dice 0.4.1 (7). El AAB lleva la firma de depuración: acredita la compilación, pero no es el que va a Play.
+- **P4 · La lista del piloto:**
+  - los rótulos que cita existen;
+  - los ocho bloques de PowerShell pasan el analizador;
+  - cuadran las huellas, la mezcla y el `.sha256`.
+- **La suite:** 1871 de 1871 en una sola corrida, sobre una copia limpia, y `analyze` en cero. Las regresiones con el banco de T-100 cumplen en los tres clientes.
+
+**El paso 6 necesitó una reserva.** `T100_CARGA.edi` no trae ninguna, porque sus diez vacíos llevan número.
+- Con el visto bueno de Carlos, Codex usó una copia en la que el OR 16, que es un vacío, pierde su número: `EQD+CN+MNLU0000827+45R1++2+4` pasa a `EQD+CN++45R1++2+4`. Su celda, 010-01-04, queda como reserva.
+- Lo mismo les pasa a 0.7 y 2.6 de la lista del piloto: Yov los corrige.
+
+**Las dos reservas, P2:**
+- **O-128-2:** después de revisar el listado, el primer «Cerrar operación» de la oficina cierra la operación en la nube, pero dice «No se encontró la operación para cerrarla en este dispositivo o en la nube…» y deja la copia local abierta.
+  - Al volver a abrir «Nube y cuenta» y repetirlo, dice «Operación cerrada.» y la cierra también en el dispositivo.
+  - No se pierde ningún movimiento, y la nube rechaza otra revisión de la operación cerrada.
+  - `close` no cambió en T-127, y la causa no está aislada. Se vio con la oficina en Chrome.
+- **O-128-4:** no se logró provocar a mano un pellizco que pierda el foco sin su evento final, porque los pellizcos de Carlos terminaron antes de perderlo. Es una prueba que falta, no un defecto visto.
+
+**Dos más, P3:** O-128-3, un error al arrancar el banco Web en el navegador integrado, sin atribuir; y O-128-1, ya decidida en 10.82.
+
+**Yov lo revisó contra la evidencia:**
+- la huella del informe es la del manifiesto y la del bloque de Codex;
+- 100 de los 1189 archivos del manifiesto, tomados al azar, coinciden;
+- la suite registra 1871 pruebas aprobadas, sin fallas ni omitidas, y `analyze` dice «No issues found!».
+
+**Yov propone; decide Carlos:**
+1. Aceptar las dos reservas y publicar la 0.4.1 después de la Expo. El paso 1.15 de la lista dirá qué hacer si el cierre falla: la nube ya quedó cerrada, y basta repetirlo.
+2. **T-129, después de la Expo:** Timonel diagnostica O-128-2 con una prueba roja, en Fable 5.1 porque toca la sincronización.
+   - Si el arreglo es chico, entra antes de publicar, con una revisión corta de Codex.
+   - Si no, va a la 0.4.2.
+3. **O-128-4 va a T-120:** que el plano suelte el pellizco cuando pierda el foco, con su prueba.
+
+La siguiente decisión es la **10.84**.
+
+### 10.84 · Carlos acepta las reservas: la 0.4.1 se publica después de la Expo, y T-129 diagnostica el cierre (29-oct, 23:55)
+
+**Carlos aprueba las tres propuestas de 10.83 (23:49):**
+1. **La 0.4.1 se publica después de la Expo, con las dos reservas a la vista.** El paso 1.15 de la lista dice qué hacer si el cierre falla (O-128-2): la nube ya la cerró, y basta repetirlo desde «Nube y cuenta». La sección 5 anota O-128-2 y O-128-4, con lo que hay que hacer mientras tanto.
+2. **T-129, después de la Expo:** Timonel diagnostica O-128-2 con una prueba roja, en Fable 5.1. Si el arreglo es chico, entra antes de publicar, con una revisión corta de Codex; si no, va a la 0.4.2.
+3. **O-128-4 va a T-120.**
+
+**La lista del piloto queda al día,** en el mismo commit que esta decisión:
+- **«Datos»** trae dos copias para el ensayo:
+  - `T100_LISTADO_v2.xlsx`, el listado sin la fila del OR 1;
+  - `T100_CARGA_RESERVA.edi`, el plan de carga con la reserva del OR 16. Va con un bloque que la deriva de `T100_CARGA.edi` y comprueba las dos huellas. Yov comprobó que el cambio da, byte a byte, la copia de la aceptación de Codex.
+  - Los sintéticos se generan en `%TEMP%\t100-ensayo`.
+- **0.7:** la oficina abre `T100_CARGA_RESERVA.edi`, porque el paso 6 necesita una reserva. Si en el paso 13 el cierre falla, es O-128-2.
+- **2.6:** en el ensayo, el vacío que se asigna es el OR 16, a la reserva 010-01-04.
+- **1.15:** qué hacer si el cierre dice «No se encontró la operación…».
+- **El encabezado y la sección 5:** la aceptación con sus dos reservas.
+
+**Lo que sigue:**
+1. Mañana, primero la Expo: el repaso técnico y el ensayo, sin agentes con Flutter.
+2. Después de la Expo:
+   - T-129;
+   - con lo que salga, la publicación de la 0.4.1 con la sección 4 de la lista (primero las reglas, en 4.0);
+   - y la prueba de 0.7, a más tardar el 4-nov.
+
+La siguiente decisión es la **10.85**.
+
+### 10.85 · La tercera prueba piloto, con un buque real: la descarga sale completa, la carga corre con un rodeo y el papel cuadra con la app (1 y 2-nov)
+
+**El piloto (domingo 1-nov):** el MAGELLAN STAR, viaje 26043S, escala GTSTC, con la 0.4.0. La oficina, en la Web del iPhone de Carlos (tema oscuro); el muelle, en el Honor. Los archivos reales (el reporte de MACS3, el plan de carga y el listado de la agencia) no entran al repositorio: aquí van solo números de orden, posiciones, códigos y conteos. El registro hora por hora está en el proyecto de Yov (`BayStream_Piloto3_MAGELLAN_STAR_1nov.md`).
+- **La descarga salió completa en la app.** H1 de la 3.1.1 (GTSTC como escala en un plano de llegada) quedó confirmado en una operación real.
+- **La carga tropezó tres veces y después corrió:**
+  - el plan abierto era el de otro viaje, el 26039S del 5-oct. El cruce con el listado lo avisó antes de cargar nada: 0 de 104 llenos;
+  - la operación ya publicada no acepta un plan nuevo (`OperationSources.save`); la 0.4.1 abre esa puerta solo para el listado (T-127);
+  - dos equivalencias guardadas en el iPhone desviaban el listado, «Puerto PAMIT → JMKCT» y «Línea CRL → COS», elegidas al importar en el plan equivocado.
+- **El rodeo:** otra operación, con una copia del plan de carga que dice 26043X en `TDT` (`RFF+VON` sigue en 26043S), el listado importado antes de publicar y las dos equivalencias corregidas. Desde ahí, el Honor cargó con los números de orden.
+- **Al 2-nov, las dos terminaron y siguen abiertas:** la 26043S (descarga) y la 26043X (carga). La 26039S no se usó.
+
+**El cotejo del papel con la app (2-nov).** Carlos mandó seis hojas del plano impreso, anotadas en el muelle (bahías 01/02, 09/10, 11, 14, 18 y 22), y ocho capturas del Honor (bahías 01, 02, 03, 10, 14, 18, 26 y 30). Yov las cruzó con el plan de carga y el listado, con un script que solo lee. Las 145 cargas del plan salen en al menos una foto: 70 en las dos, 32 solo en el papel y 43 solo en la app.
+- **Las seis hojas cuentan lo mismo que el plan:** 4, 37, 5, 12, 21 y 23 movimientos.
+- **Donde están los dos no hay ninguna contradicción:**
+  - 59 celdas iguales, con el OR a la vista;
+  - el 17 y el 123 de la bahía 14 cambiaron de celda: el papel lo marca con una flecha, y la app los tiene donde quedaron;
+  - 8 celdas de la bahía 10 dicen «Revisar» y no dejan ver el OR (hallazgo 7). Según el papel, son un intercambio de 4 por 4 entre líneas: el 142, el 148, el 138 y el 130 (CRLY) en reservas de ONE, y el 67, el 62, el 63 y el 69 (ONE) en reservas de CRLY. Es lo que el muelle anotó como «30 × 40' HC vacíos (Crowley + ONE)»: el mismo tipo y el mismo destino, PAMIT. Todas las reservas quedaron llenas;
+  - en una celda se equivoca el papel y no la app. El papel tiene el OR 136 dos veces, en la 010-04-84 y en la 010-02-08, y el 135 en ninguna; la app tiene el 136 en la 010-04-84 y el 135 en la 010-02-08. Un OR no puede estar en dos celdas: un BAPLIE digitado desde el papel habría repetido un contenedor y dejado fuera otro.
+- **En la 010-06-06, el papel tiene el 144 escrito sobre otro número:** se corrigió hasta coincidir con la app, que a las 19:25 del 1-nov ya lo tenía ahí.
+- **Lo que sale en una sola foto también cuadra con el plan:** en el papel, las bahías 09, 11 y 22; en la app, la 03, la 26 y la 30.
+
+**Los hallazgos:**
+1. **P1 · El plan de carga no entra en una operación ya publicada.** En el buque, la descarga y la carga van a la vez, y el plan de carga llega o se corrige después de publicar. Va a **T-130**: que una operación publicada acepte el plan que le falta, con el mecanismo de T-127. Reemplazar un plan que ya tiene movimientos se decide en el diseño. Plazo de Carlos: antes del 7-nov.
+2. **P2 · La lista del piloto cargaba el plano de llegada (1.8) después de publicar (1.7).** Se corrige en este mismo commit: los dos pasos cambian de lugar.
+3. **P2 · Una equivalencia elegida en un plan equivocado contamina las importaciones siguientes,** porque lo guardado manda aunque los contenedores la contradigan. Sin la corrección, el BAPLIE de salida habría mandado 40 vacíos a JMKCT con la línea COS. Propuesta: no guardar lo elegido sin respaldo, o atarlo al buque y al viaje, y pedir confirmación cuando el plan dice otra cosa.
+4. **P3 · Avisar cuando el viaje del listado no es el del plan.**
+5. **Corregido · Un vacío en la reserva de otro grupo ya estaba previsto:** pide un motivo, lo deja cargar y lo marca «Revisar» (`ConflictKind.otherGroup`).
+6. **P2 (era P3) · La oficina no tiene cómo dar por buena una desviación justificada.** Solo tiene «Deshacer carga» y «Corregir». El cotejo lo muestra: los 8 «Revisar» de la bahía 10 son correctos y se quedan marcados. Propuesta: «Aceptar con motivo», también para varios a la vez, o declarar antes de operar que los vacíos de dos líneas son intercambiables para el mismo tipo y destino.
+7. **P2 · La marca tapa el número de orden.** Los 8 «Revisar» son justo las celdas que había que comparar con el papel. Propuesta de Carlos: el OR sigue siendo el texto grande y la marca va pequeña, con su icono, como segunda línea.
+8. **P3 · En un teléfono, la oficina y el muelle se ven iguales.** Va a la 10.86.
+
+**Para la tesis, lo que atrapó el cruce:** el plan de otro viaje (0 de 104); las dos equivalencias (3 llenos con datos distintos y 40 vacíos sin grupo); tres peligrosas con el número ONU distinto en el listado y en el plan (OR 79, 122 y 126: UN 2903 contra 2902); los cancelados del listado (OR 49 y 50, reemplazados por el 149 y el 150); y el OR repetido del papel.
+
+**El cierre, como se lo explicó Yov a Carlos el 2-nov:**
+- **El muelle:** «0 pendientes» en su modo y el punto verde «Al día» en cada teléfono. Si dice «Enviando», «Sin conexión» o «Revisar», «Nube y cuenta» → «Reintentar», con red. Avisa a la oficina que terminó. No cierra el plano ni borra nada, y guarda el impreso.
+- **La oficina, en este orden, porque cerrar no se deshace:**
+  1. confirma con el muelle que todos sus equipos están «Al día»;
+  2. en «Avance», 0 pendientes; toca cada conflicto y lee su motivo;
+  3. «Lista» → «Generar BAPLIE de salida»: lee el resumen, «Copiar cancelados» y «Guardar BAPLIE de salida»;
+  4. «Comparar con otro BAPLIE…» con el archivo guardado. Con el plan de carga abierto, «Cargados» son los vacíos de las reservas, «Descargados» lo que el plan traía y no salió, en «Permanentes» aparecen los que cambiaron de celda, y «Reservas sin número» baja a 0 en el segundo;
+  5. en la 26043X, antes de enviarlo, `TDT` vuelve a 26043S;
+  6. manda a la línea el BAPLIE de salida y los cancelados;
+  7. «Nube y cuenta» → «Cerrar operación». Si dice «No se encontró la operación…», es O-128-2: repetir.
+- **Del resultado, la app exporta hoy dos cosas:** el BAPLIE de salida y la lista de cancelados. «Exportar PDF», «CSV» y «JSON» (en «Más») exportan el plan como llegó, sin los OR ni lo cargado.
+
+**Yov propone; decide Carlos:**
+1. Antes del 7-nov, solo T-130 y T-131 (10.86). El hallazgo 7, si alcanza el tiempo, en la misma versión; si no, después.
+2. Después del 7-nov, hacia la 1.0.0:
+   - el informe de cierre en PDF: el plano final por bahía con los OR, los movimientos por bahía, los cancelados, los conflictos con su motivo, las horas y la huella del BAPLIE de salida. Reemplaza las fotos del papel;
+   - el cierre guiado: una lista en la oficina antes de «Cerrar operación», y un «Terminé» desde el muelle;
+   - exportar los movimientos en CSV: OR, contenedor, celda, hora, quién y motivo;
+   - «Aceptar con motivo» (hallazgo 6), y los hallazgos 3 y 4;
+   - que las exportaciones del plan digan que son del plan («PDF del plan recibido»), para que nadie las confunda con el resultado.
+3. Hoy, Carlos genera el BAPLIE de salida de la 26043X sin cerrar todavía, y Yov lo cruza con el plan, el listado y el papel. La 010-02-08 se verifica con el número del contenedor en el registro de la terminal.
+
+La siguiente decisión es la **10.86**.
+
+### 10.86 · El rol, a la vista: el distintivo B, «Filo de metal», va en T-131 (1-nov, 23:41)
+
+**El hallazgo 8 de la 10.85:** en un teléfono, la oficina y el muelle se ven iguales. El aspecto lo decide el equipo (`bayStreamEsMuelle`), no el rol de la cuenta.
+- **Carlos (23:09):** los permisos no cambian; el rol va en la cabecera como un distintivo con diseño, no como texto plano.
+- **Yov publicó el lienzo «Distintivo de rol · BayStream»** (artefacto privado de Carlos: https://claude.ai/artifact/L9ajRePXVuWAuXcUPV1V9H), con dos variantes en el Honor, en la Web del iPhone y en la laptop: A, «Ficha», con la paleta actual, y B, «Filo de metal», con el cobre y el oro de la presentación del 7-nov, solo en el filo y en el ícono.
+- **Carlos eligió B (23:41).** Es el primer cambio visual del rediseño que viene después y entra ya, en la versión que se presenta el 7-nov. Es la única pieza de la app con los metales antes de esa fecha: la decisión del 27-oct, que deja el 3D y el brillo para después de entregar, sigue para todo lo demás.
+
+**La especificación:**
+
+| | Muelle | Oficina |
+|---|---|---|
+| Fondo, de arriba abajo | #0B3E93 → #082F70 | #16305C → #0E2244 |
+| Filo de 1.5 dp, a 135° | cobre: #F8D2B6 → #E0895A (55 %) → #9E5530 | oro: #FFF0C4 → #F2C46D (55 %) → #A87A2C |
+| Ícono | `muelle` (U+E017) en #F4B48E | `oficina` (U+E023, nuevo) en #F2C46D |
+| Rótulo | «Muelle» en #FFFFFF | «Oficina» en #F4F6FB |
+
+- Los colores no cambian con el tema y van a `BsPaleta`.
+- Es una píldora de `alturaChip` (40 en el muelle, 32 en la oficina) con zona táctil de 48 dp, el rótulo en IBM Plex Sans Condensed 600 y sin animación. La forma compacta es solo el ícono, en un círculo con el mismo relleno y el mismo filo.
+- **El metal va solo en el filo y en el ícono, nunca de relleno:** así no se confunde con el naranja de «recién movido» ni con el ámbar de «Revisar». Es la única excepción a la escala de un solo tono y a «sin degradados».
+- **El rol sale de `operatorProvider`:** con una cuenta autorizada, también la de la caché; sin cuenta o sin autorizar, no hay distintivo. Al tocarlo se abre «Nube y cuenta».
+- **Dónde va:** en la banda del muelle, en la segunda fila, a la izquierda de Descarga / Carga; y en el título del viaje, junto al nombre del buque, que cubre la barra superior del teléfono y la cabecera de la oficina. En la laptop no va a la derecha, como en el lienzo: así es una sola regla.
+- **Cómo cabe:** primero completo; si no, compacto; y solo después el nombre se encoge, como hoy.
+
+**El orden:**
+1. Nube dibuja el ícono `oficina` (U+E023): primero tres conceptos, Carlos elige y después el paquete v3, con los 35 glifos de antes sin cambios. Carlos lo guarda en `C:\Proyectos\baystream-iconos-paquete-v3.zip`.
+2. T-131 va a Timonel, en un chat nuevo con Claude Opus 5.5 en Extra, cuando estén el v3 y `lib/` libre. Puede correr mientras T-130 está en su fase de diseño, que solo escribe en `docs/`; si el diseño de T-130 se aprueba antes, su código espera a que T-131 se entregue.
+3. Propuesta: Codex acepta T-130 y T-131 juntas, en la candidata que se publica antes del 7-nov.
+
+Los dos prompts están en el proyecto de Yov (`BayStream_Distintivo_de_rol_T131.md`).
+
+La siguiente decisión es la **10.87**.
+
+### 10.87 · La 26043X, cerrada: el BAPLIE de salida cuadra en contenido, y el cotejo encuentra cinco defectos del archivo (2-nov, 18:31)
+
+**Carlos cerró la carga en la laptop, con la cuenta de oficina:**
+- «Avance» y el Plano: «Carga 145 de 145», «Llenos 99 de 99», «Vacíos 46 de 46», 8 conflictos y 0 cancelados. El último movimiento fue una carga, el 2-nov a las 03:11.
+- «Generar BAPLIE de salida»: «503 contenedores a bordo en la salida.», «Pendientes: 0 de carga y 0 de descarga.», «8 conflictos vigentes.» y «Cancelados vigentes (0)». Después, «Guardar BAPLIE de salida».
+- «Cerrar operación»: «Operación cerrada.» al primer intento. O-128-2 no salió; aquí el listado no se revisó después de publicar, lo que sirve a T-129.
+
+**El cotejo de Yov** cruzó el BAPLIE de salida con el plan de carga, el listado, el papel (102 celdas) y las capturas (113 celdas), con scripts que solo leen.
+- **La sintaxis cuadra:**
+  - UNT cuenta 4262 segmentos, y las referencias de UNH, UNT, UNB y UNZ coinciden;
+  - hay 503 celdas y 503 contenedores, sin repetir;
+  - ningún grupo queda sin tipo, POL, POD ni línea.
+- **El contenido es correcto:**
+  - los 358 que siguen a bordo salen idénticos al plan, byte a byte, salvo tres textos (defecto 2);
+  - las 145 cargas, 99 llenos y 46 vacíos, salen cada una en su celda física, con el tipo, el destino, la línea y el peso del listado traducidos con las 15 equivalencias, sin una sola diferencia;
+  - los 8 «Revisar» de la bahía 10 son los OR que decía el papel: un intercambio de 4 por 4 entre CRLY y ONE, con el que cada línea conserva sus espacios;
+  - el 17 y el 123 salen donde quedaron;
+  - el peso, 6868.7 t, es el del plan (6708.6 t) más la tara real de los 45 vacíos (157.4 t) más los VGM del listado (2.7 t).
+- **El papel tenía un error que la salida confirma:** en la 010-02-08 va el 135, no el 136, que está en la 010-04-84. Se confirma con el registro de la terminal.
+- **Del listado no cargaron cinco llenos:** el 49 y el 50 («REEMPLAZO - CANCEL»), y el 75, el 106 y el 150, que no tenían celda en el plan. Falta confirmar que el 75, el 106 y el 150 no subieron. La página del BAPLIE de salida no los menciona.
+
+**Los defectos del archivo, todos del escritor:**
+1. **P1 · Las peligrosas pierden datos.** Un lleno con fila en el listado sale armado solo con la fila (`_loaded`), y el DGS queda en clase y número ONU:
+   - el 76 pierde el punto de inflamación y el grupo de embalaje;
+   - el 79, el 122 y el 126 pierden el grupo de embalaje y la etiqueta, y su número ONU pasa del 2902 del plan al 2903 del listado sin aviso.
+2. **P2 · La codificación.** El plan se lee como Latin-1 (`String.fromCharCodes`) y la salida se escribe en UTF-8 (`utf8.encode`), así que las tildes del FTX de tres contenedores de la bahía 26 salen dobles.
+3. **P2 · Los pesos.** `weight()` escribe el número tal cual: 21 VGM salen con decimales, y 3 con restos de coma flotante («18837.129999999997»).
+4. **P3 · LOC+13 repite el destino en las 145 cargas.** Sale del POT del listado, que es igual al POD en sus 150 filas, y el archivo dice trasbordo donde no lo hay.
+5. **P1, latente · Los refrigerados llenos saldrían sin temperatura.** El mismo `_loaded` no escribe TMP: ni la del plan ni la que trae el listado («REEFER TEMP»). También perdería el LOC+83 y los FTX del plan. En este piloto no pasó, porque el único refrigerado que cargó fue un vacío, el OR 45; en una exportación con refrigerados llenos, la salida no llevaría sus temperaturas.
+
+Aparte de los cinco, `TDT` dice 26043X por el rodeo, y eso lo resuelve T-130.
+
+**La copia corregida y las evidencias:**
+- Yov preparó una copia del BAPLIE de salida para enviar:
+  - corrige el viaje, las tildes, los pesos al kilo, los DGS completos del plan y los LOC+13; lo demás queda igual;
+  - lo que sigue a bordo queda idéntico al plan en sus 358 grupos;
+  - en el 79, el 122 y el 126 deja el UN 2902 del plan hasta que la declaración de peligrosas diga cuál es.
+- Las evidencias del piloto están en un zip que no va a ningún repositorio: las fuentes, los dos BAPLIE de salida, el informe y el CSV del cotejo, los scripts, y las 40 fotos y capturas, con su LEEME y sus huellas.
+
+**Yov propone; decide Carlos:**
+1. **T-132 · El BAPLIE de salida, fiel:**
+   - cada carga con fila parte del grupo del plan, con los datos del listado encima;
+   - si el listado y el plan no coinciden en una peligrosa, la página lo muestra y no elige sola;
+   - la salida se escribe con los mismos bytes que se leyeron;
+   - los pesos van al kilo, y LOC+13 solo si el POT no es el POD;
+   - la página lista las filas del listado que no cargaron.
+   - la temperatura de cada refrigerado lleno: la del plan, o la del listado si el plan no la trae.
+   Es P1 por las peligrosas y por los refrigerados. Hasta que esté, un BAPLIE de salida con peligrosas o con refrigerados llenos se revisa a mano.
+2. **Carlos confirma tres cosas:** si el 150, el 75 y el 106 subieron; el número ONU del 79, el 122 y el 126; y el contenedor de la 010-02-08.
+3. **Cerrar la 26043S.** En la nube siguen abiertas también ECO BORA 26042SB y BUQUE PRUEBA T98.
+
+La siguiente decisión es la **10.88**.
+
+### 10.88 · El orden para empezar los cambios del piloto (2-nov, 18:50)
+
+**Carlos pide los prompts para empezar todos los cambios de la tercera prueba piloto.** Yov los deja en este orden. En la carpeta del rediseño, `lib/`, `test/` y `pubspec.*` siguen siendo de una tarea a la vez.
+1. **T-129, las corridas** (Timonel, el mismo chat, en Fable 5.1): las seis de la sección 6 de su informe. Con todo en verde, Carlos confirma su bloque de Git.
+2. **La revisión corta de T-129** (Codex, en `baystream-qa-r4`), como manda la 10.84.
+3. **El ícono `oficina`** (Nube), en paralelo con todo, porque no toca el repositorio.
+4. **T-130, fase 1: el diseño** (Timonel, Fable 5.1). Puede ir en paralelo con los pasos 1 a 3, porque solo escribe en `docs/`. Carlos lo aprueba.
+5. **T-131** (Timonel, Opus 5.5), cuando T-129 esté en commits y el paquete v3 de Nube esté en `C:\Proyectos\`.
+6. **T-130, fase 2: el código**, cuando T-131 se entregue y Carlos haya aprobado el diseño.
+7. **T-132 · El BAPLIE de salida, fiel** (Codex), en su propia carpeta y rama: `C:\Proyectos\baystream-t132`, rama `t132-salida`, desde `sprint-4`, si Carlos la abre. Así corre en paralelo y se mezcla después, como T-126. Si no, va después de T-130, en la carpeta del rediseño.
+8. **Nace T-133 · La marca no tapa el número de orden** (el hallazgo 7; Timonel). Va después de T-131, si alcanza antes del 7-nov.
+
+**El semáforo:** un comando de Flutter a la vez en la máquina, también con dos carpetas abiertas. Carlos da la luz verde.
+
+**Lo que escribe Yov cuando lleguen los informes:** las aceptaciones de T-131, T-130, T-132 y T-133, y la candidata que se publica antes del 7-nov, con la 0.4.1 adentro.
+
+Los prompts están en el proyecto de Yov (`BayStream_Prompts_Sprint4_3nov.md`).
+
+La siguiente decisión es la **10.89**.
+
+### 10.89 · T-129: el rojo y el verde salen; para que analyze dé cero, la nube falsa pasa a la capa de plataforma (2-nov, 21:26)
+
+**Timonel corrió T-129 sobre `687d68d`.** Lo hizo en un chat nuevo con Opus 5.5, no en Fable 5.1 como decía la 10.88.
+- **El rojo:** con el `close()` de `a52d203`, las pruebas 1 y 2 fallan por comportamiento («not_found: No se encontró la operación…») y las otras tres pasan.
+- **El verde:** 5 de 5 con el arreglo.
+- **`analyze` no da cero:** salen 4 avisos, todos en `test/support/t129_fake_firestore.dart` (`subtype_of_sealed_class` ×3 y `must_be_immutable`). La nube falsa implementa `DocumentReference`, `DocumentSnapshot` y `Query`, que `cloud_firestore` 6.8.0 marca `@sealed`, y la línea base no admite `// ignore:`.
+
+**Carlos autoriza una dependencia de desarrollo: `cloud_firestore_platform_interface` 8.0.6.** Sirve para rehacer la nube falsa en la capa de plataforma, que sí está hecha para extenderse.
+- Ya está en `pubspec.lock` como transitiva, así que no se baja nada nuevo.
+- Cambia `pubspec.yaml`, en `dev_dependencies`, y en `pubspec.lock` esa entrada pasa a «direct dev».
+- El arreglo y `lib/` no cambian.
+
+Después van el rojo y el verde con la falsa nueva, la suite completa y `analyze` en cero. La revisión corta de Codex (10.88, paso 2) se hace sobre ese commit.
+
+**Una corrección a la 10.87:** que la 26043X cerrara al primer intento no pone a prueba O-128-2. El fallo necesita que la oficina escuche el documento de la operación (T-129, 3.5), y esa escucha llegó con T-127, en la 0.4.1. Si la laptop tenía la 0.4.0, no la había. Carlos confirma qué versión tiene la laptop.
+
+La siguiente decisión es la **10.90**.
+
+### 10.90 · T-129 en commits, T-132 revisada e integrada, el diseño de T-130 aprobado con seis ajustes, el orden nuevo y el ícono `oficina` (2-nov, 22:25)
+
+**T-129 está en `2d98f23`** (22:07). La nube falsa quedó en la capa de plataforma, con `cloud_firestore_platform_interface` 8.0.6 como dependencia de desarrollo (10.89):
+- `pubspec.yaml` suma cuatro líneas en `dev_dependencies`, y en `pubspec.lock` cambia una sola, de `transitive` a `"direct dev"`;
+- el rojo sale +3 −2 por comportamiento, el verde 5 de 5, la suite 1876 de 1876 sin omitidas y `analyze` en cero;
+- la falsa monta la app de Firebase de prueba con `firebase_core`, sin otra dependencia.
+
+Yov lo comprobó en el disco. Codex hace la revisión corta (10.88, paso 2) en `baystream-qa-r4`, sobre `2d98f23`.
+
+**T-132 se entregó en `t132-salida`, sobre `687d68d`** (Codex, 21:51):
+- Cubre los seis defectos de la 10.87:
+  - los llenos parten del grupo del plan (DGS completo, TMP, LOC+83, FTX y RNG);
+  - la oficina elige, contenedor por contenedor, cuando el plan y el listado no coinciden en la peligrosa o en la temperatura;
+  - la salida conserva los bytes del plan y los pesos nuevos van al kilo;
+  - LOC+13 sale solo si el POT difiere del POD;
+  - la página lista y copia las filas que no cargaron.
+- Trae 36 pruebas nuevas: la suite da 1907 de 1907 sin omitidas, `analyze` en cero y `pubspec.*` no cambia.
+- Yov lo revisó en su carpeta: cambian los 12 archivos de su bloque y solo hay datos sintéticos.
+- Una observación menor (P3), para la aceptación: su lista de UNOA deja fuera `! " % & * ; < >`, que la norma admite. Bloquea de más; no corrompe.
+
+Carlos la integra en sprint-4 con una mezcla. El cotejo con los datos reales del piloto va en la aceptación de la candidata.
+
+**Carlos aprueba el diseño de T-130** con las cinco decisiones de su 3.14 y seis ajustes de Yov:
+1. **La búsqueda mira también las operaciones abiertas de la nube.** Hoy `find` solo mira el equipo, y desde un equipo que no se unió se puede publicar una segunda operación de la misma escala. Si la operación no está en el equipo, la banda lleva a «Unirse», y «Publicar operación» no publica una segunda del mismo buque, viaje y puerto.
+2. **El diálogo dice cuándo se publicó la operación.** Con más de una abierta de ese buque en la escala, la app no elige.
+3. **El eco antes que el acuse,** la lección de T-129: la oficina que agrega no se avisa a sí misma ni guarda dos veces. `replaceSource` de T-127 tiene el mismo hueco y se cierra igual.
+4. **Las reglas:** las dos cláusulas y el ajuste al trozo publicado con `op.createdAt == request.time`, sin accesos de más, porque un lote tiene 20 y Firestore no promete el caché. La batería mide una publicación de cinco trozos y una adición de cuatro.
+5. **El nombre del archivo de salida y la nota del viaje los hace T-130** (`OperationSource.voyage ?? operation.voyageNumber`), porque T-132 entra antes en sprint-4.
+6. **El cortafuegos de la prueba de punta a punta** lo abre y lo cierra Carlos, solo en el perfil privado.
+
+Reemplazar un BAPLIE queda primero en la lista de después del 7-nov: el plan de carga suele revisarse durante la escala. Timonel estima la fase 2 en unas 19 h. Si el 4-nov en la noche no va por la mitad, lo primero que espera es el viaje distinto, porque en el piloto los dos planos tenían el mismo.
+
+**El orden cambia.** La fase 2 de T-130 no espera a T-131: empieza en `baystream-rediseno` con T-129 y T-132 en sprint-4, sobre una suite de 1912 y `analyze` en cero. T-131 va en su propia carpeta, `C:\Proyectos\baystream-t131` (rama `t131-distintivo`), y se cruza con T-130 solo en `vessel_overview_page.dart`, en funciones distintas. Un comando de Flutter a la vez en la máquina, y nunca dos suites completas a la vez.
+
+**El ícono `oficina`: Carlos elige la propuesta (a)**, la pantalla con la rejilla del plano calada sobre su pie, que es la elección que le dejaba la 10.86. Yov también votó por la (a): es la que mejor se lee a 18 px, la más cercana al peso de `muelle` (92 frente a 75) y dice «el plano en pantalla». Nube entregó el paquete v3 (22:15) y Yov lo revisó:
+- de 86 archivos, 73 son idénticos al v2 del repositorio, 12 cambian y 1 es nuevo (`svg/oficina.svg`), como dice su LEEME;
+- en la fuente 1.2, los 35 glifos de antes conservan contorno, avance y código, `oficina` va en U+E023 y las métricas no cambian;
+- el SVG es el de la propuesta (a), trazo a trazo, y el nombre de la fuente no trae datos personales.
+
+Además del ícono, cambian cinco fuentes del generador (`generar.py`, `iconos.py`, `fuente.py`, `comprobar_skia.py` y la plantilla del LEEME), declaradas por Nube, para que `oficina` caiga en U+E023 sin mover los 35. T-131 copia los 13 archivos que el LEEME da por cambiados o nuevos. El paquete no se versiona desde la sesión de Nube: entra con T-131.
+
+**Pendiente:** Carlos confirma la versión de BayStream de la laptop (10.89).
+
+La siguiente decisión es la **10.91**.
+
+### 10.91 · La revisión corta de T-129 no pasa por un P2: el plazo del cierre se reinicia (2-nov, 22:45)
+
+**Codex revisó T-129 sobre `2d98f23` (`docs/t129/revision-codex.md`). El dictamen es NO PASA, por un P2.**
+- **Lo que sale bien:** las cinco pruebas en verde; el rojo de `a52d203`, +3 −2 por comportamiento; la suite, 1876 de 1876 sin omitidas, y `analyze` en cero. El criterio que acepta la instantánea es correcto, y la falsa usa la capa de plataforma sin clases selladas.
+- **El P2:** en `_afterOwnWrite`, `.timeout(_networkTimeout)` va antes de `firstWhere`, y `Stream.timeout` reinicia los 45 s con cada evento, también con los que el filtro descarta. Con instantáneas rechazadas cada 40 s, el cierre sigue esperando a los 160 s. Yov lo comprobó en el código.
+- **La corrección:** filtrar antes del plazo (`where(…).timeout(…).first`), con pruebas de silencio y de eventos rechazados sostenidos que exigen el `timeout` a los 45 s y ninguna escucha abierta.
+  - La hace el chat de T-129 en `baystream-rediseno`, sobre sprint-4 con T-132.
+  - Va antes de que empiece la fase 2 de T-130, que toca el mismo archivo.
+  - Codex la vuelve a revisar.
+- **El caso del emulador** (O-128-2, la oficina en Chrome) no se corrió. Queda para la revisión de la corrección, si la máquina está libre, o para la aceptación de la candidata.
+- **Para después del 7-nov:** `flutter analyze` lee los `.dart` de `build/`. Timonel vio 129 avisos falsos y Codex tuvo que analizar una copia preparada. Conviene excluir `build/` en `analysis_options.yaml`.
+
+La siguiente decisión es la **10.92**.
+
+### 10.92 · La corrección de T-129 y tres definiciones de T-131 (2-nov, 23:20)
+
+**El P2 de T-129 quedó corregido** (10.91), sobre `733a8ab`:
+- **El arreglo.** En `_afterOwnWrite`, el filtro va antes del plazo (`where(criterio).timeout(45 s).first`). Las instantáneas descartadas ya no reinician los 45 s, y la escucha se suelta al llegar la buena o al vencer el plazo. Yov lo comprobó en el código.
+- **Las pruebas nuevas.** Son dos, con el reloj simulado: una en silencio y otra con rechazos a los 40, 80, 120 y 160 s. En las dos, `timeout` a los 46 s, ninguna escucha abierta y la copia local abierta.
+- **La falsa** gana `holdEcho` y `emitRejected`, y las cinco pruebas de siempre no cambian. Carlos autorizó tocarla: el encargo pedía usar la falsa y a la vez no tocar ese archivo, una contradicción de Yov.
+- **Las cifras.**
+  - El rojo, contra el `lib/` de `2d98f23`: +6 −1, con la falla en la de rechazos sostenidos.
+  - El verde, 7 de 7.
+  - La suite, 1914 de 1914 sin omitidas, y `analyze` en cero.
+  - `pubspec.*` no cambia.
+- **El reloj simulado.** La cancelación de `Stream.timeout` termina en la zona raíz, que el reloj simulado no corre. Las pruebas le dan vueltas reales con `tester.runAsync` (6.4 del informe de T-129).
+
+Codex la vuelve a revisar sobre la punta nueva. La fase 2 de T-130 empieza sobre 1914.
+
+**T-131: tres definiciones de Carlos** (23:12 a 23:15):
+1. **El distintivo va a la derecha del bloque nombre + viaje**, centrado en su alto, y no en la línea del nombre.
+   - Con la zona táctil de 48 dp, el título pasaba de 38 a 65 dp: la barra del teléfono (56) lo recortaba y la cabecera de la oficina crecía de 64 a 81.
+   - Así nada crece. Si el viaje es más largo que el nombre, el distintivo queda después del viaje.
+2. **El contraste sobre la banda del muelle** (#0D47A1). Ahí el relleno no separa (1.2 a 1.8:1).
+   - La prueba exige 3:1 al filo en su tono central (cobre 3.25, oro 5.30) y en el claro.
+   - El extremo oscuro (cobre 1.56, oro 2.25) se informa sin exigirse: es la sombra del metal, y el distintivo se reconoce por su ícono (5.5:1) y su rótulo (9.9:1).
+   - Corrige la especificación del distintivo (10.86), que daba el filo a 3:1 en toda la banda. En el papel claro y en la noche pasa entero.
+3. **El reporte de `tool/rediseno_contraste.py`**, `docs/rediseno/fase2bis/contraste.md`, se regenera con los pares nuevos y va en el bloque por su ruta exacta. Carlos autorizó ese archivo de `docs/`, y solo cambia la sección del distintivo.
+
+**Pendiente:** la versión de BayStream de la laptop (10.89).
+
+La siguiente decisión es la **10.93**.
+
+### 10.93 · T-129 pasa la segunda revisión de Codex y queda cerrada; T-130 arranca sobre 1914 (2-nov, 23:40)
+
+**Codex volvió a revisar T-129 sobre `a18d2d3` (sección 9 de `docs/t129/revision-codex.md`). PASA:** el P2 queda cerrado y no hay hallazgos P1, P2 ni P3 nuevos.
+- El cierre responde entre los 44 y los 46 s y cancela la escucha, también con rechazos sostenidos.
+- Las 7 pruebas de T-129 y las 3 sondas de Codex salen en verde. La suite da 1914 de 1914 sin omitidas, y `analyze` en cero sobre la copia preparada con fuentes idénticos.
+- El emulador quedó fuera; el caso de O-128-2 en Chrome pasa a la aceptación de la candidata.
+
+T-129 entra en la candidata que se presenta el 7-nov (10.84).
+
+**T-130 empezó su fase 2 (23:28).** Su base dio `analyze` en cero y la suite 1914 de 1914. Esa suite corrió a la vez que la ventana exclusiva de Codex, porque el «Listo» de Yov no le recordó pedir la luz verde; Codex repitió sus sondas y `analyze` en otra ventana. Desde ahora, cada programador pide la luz verde a Carlos antes de cada comando de Flutter. El orden de la luz verde es T-130 primero, porque es la tarea que más tiempo necesita para llegar al 7-nov, y después T-131.
+
+La siguiente decisión es la **10.94**.
+
+### 10.94 · T-130 entregada y revisada; dos definiciones más de T-131 (3-nov, 01:10)
+
+**T-130 entregó la fase 2** (Timonel, Fable 5.1, 01:00), sobre `a18d2d3`:
+- **Las pruebas.**
+  - Las 37 nuevas (dominio 18, pantallas 10, adaptador 9) salen en verde. Contra `a18d2d3` no compilan (254 errores, por el contrato nuevo, como en T-127).
+  - La suite da 1951 de 1951 sin omitidas, y `analyze` en cero antes y después.
+- **Las reglas en el emulador.**
+  - Contra las de T-130: T-80 69 de 69, T-113 25 de 25, T-127 31 de 31 y T-130 38 de 38.
+  - Contra las de T-127: las tres de siempre dan lo mismo, y la de T-130 cae en 11, todas donde debe.
+  - El emulador no informa el límite de accesos. La cuenta a mano da 3 accesos por trozo: 17 al publicar cinco trozos y 14 al agregar cuatro, bajo el límite de 20.
+- **Los seis ajustes de la 10.90 están:**
+  1. la búsqueda cruza la nube (5 s; si no responde, lo local) y la banda lleva a «Unirse»;
+  2. «Publicar operación» se niega ante otra abierta del mismo buque, viaje y puerto;
+  3. el diálogo dice cuándo se publicó la operación y, con varias abiertas, no elige;
+  4. el registro de escrituras propias en vuelo, que vale también para `replaceSource` de T-127;
+  5. el trozo publicado se ata con `op.createdAt == request.time`;
+  6. el nombre del archivo de salida y su nota llevan el viaje del plan de carga.
+- **Yov lo revisó.** Cambian exactamente los 27 archivos del bloque. `pubspec.*`, `lib/main.dart`, las reglas de T-80 y T-127 y el escritor de la salida no cambian. En `vessel_overview_page.dart` toca las importaciones, tres líneas de `build()` y `_askForGeometry`. La mezcla de tres vías con T-131 en ese archivo sale sin conflictos.
+- **Para la publicación.** Carlos publica las reglas de T-130 desde la consola (sección 10 del informe; huella normalizada `8B903949…`), después de la aceptación de Codex y antes de los clientes de la 0.4.2. La prueba de punta a punta (la laptop y el Honor contra el emulador, 3.10) va en la aceptación.
+- Los cambios de la lista del piloto (sección 11 del informe) los integra Yov.
+
+**T-131: dos definiciones más de Carlos (00:15 y 00:39), y lo que Yov pidió antes del commit:**
+1. **En la banda del muelle,** si ni el compacto deja enteros «Descarga» y «Carga» (360 dp con la letra a 2.0), va sin distintivo.
+2. **En la cabecera, el alto manda.**
+   - El selector de modo conserva sus rótulos y el distintivo cede primero: completo; si no, compacto; si no, el nombre encogido, solo si el alto no cambia; y si no, sin distintivo.
+   - La cabecera mide lo mismo con distintivo y sin él. A 1366 con la letra a 2.0 va sin distintivo, en 92 dp; antes del ajuste pasaba a dos líneas (144 dp).
+3. **La evidencia de `build/t131/` no va a Git,** como en T-129 y T-132. Además, uno de sus registros trae una ruta con el usuario de Windows.
+
+Para la línea base de `analyze`, T-131 copió de `baystream-t132` la entrada generada de T-124 (`build/t124/entradas/t124_entradas.dart`, fuera de Git).
+
+**Para después del 7-nov:**
+- Que `tool/t124_main.dart` no dependa de un archivo fuera de Git: toda carpeta nueva da `analyze` con 3 errores, y ya van tres veces.
+- Excluir `build/` del analizador (10.91).
+- Dos observaciones anteriores a T-131, en el teléfono: la línea «Bahía 02, carga: nada pendiente» mide 21 dp y no pasa la pauta de toque, y el peso por pila «110.0+?» queda a 4.33:1.
+
+La siguiente decisión es la **10.95**.
+
+### 10.95 · T-131 y T-133 en sprint-4; la candidata 0.4.2 queda para el 3-nov; las pruebas de Android, con una tablet en el emulador (3-nov, 01:50)
+
+**T-131 está en sprint-4.** Su rama entró con la mezcla `725a74e` (01:11), sin conflictos. La suite de T-131 dio 2012 de 2012 y `analyze` cero.
+
+**T-133 está en `4b939f3`** (Timonel, Opus 5.5, 01:44):
+- **Lo que cambia.** Con marca, `BsCelda` conserva el código como texto grande y pone la marca debajo, con su ícono y su rótulo. Si no caben, gana el código. El relleno, el borde y la etiqueta accesible no cambian.
+- **El caso del piloto.** Las 8 reservas de la bahía 10 dicen ahora «OR 130 · Revisar», «OR 148 · Revisar»…
+- **Las cifras.**
+  - Antes de tocar nada, su paso 0 dio la suite 2051 de 2051 y `analyze` cero, lo que confirma la mezcla de T-131.
+  - Al cerrar, la suite da 2097 de 2097: son 46 pruebas nuevas, y se ajustaron 9 que buscaban el rótulo y con la fuente cuadrada de las pruebas ya no cabe.
+  - `analyze` en cero; `pubspec.*`, `domain/` y `data/` no cambian.
+- **Definiciones de Carlos** (01:15 a 01:45):
+  - la marca va a 11 en el muelle, el mínimo de `DESIGN.md` 4.2, y a 10 en la oficina;
+  - «Cancelado» pasa a «Cancel.», como «Re‑est.» (10.28);
+  - «Bajando» y «Subiendo», que duran 1.5 s, quedan solo con su ícono;
+  - en Descarga, el texto grande es ahora el código (en la vista «Destino», el puerto, GTSTC o PAMIT) y el estado va debajo. Carlos lo acepta así.
+- **Para la aceptación (RNF-002):** cada celda con marca mide su rótulo al dibujarse, solo en la bahía a la vista, y Timonel no midió ese costo. Se revisa en el Honor con una bahía llena de marcas.
+
+**La candidata 0.4.2 queda para el 3-nov.** Trae T-129, T-130, T-131, T-132 y T-133.
+- La aceptación de Codex incluye:
+  - la suite y `analyze` en la punta;
+  - la prueba de punta a punta de T-130, con la laptop de oficina y el Honor de muelle contra el emulador de Firebase;
+  - T-132 con los datos reales del piloto, fuera del repositorio;
+  - el cierre de T-129 (O-128-2) en el emulador;
+  - el distintivo de T-131 y las marcas de T-133 en el Honor;
+  - la prueba del pellizco y Ctrl + rueda de Carlos en el `.exe`, Chrome y Edge.
+- Después, Carlos publica las reglas de T-130 desde la consola y, al final, los clientes de la 0.4.2.
+
+**El pellizco del touchpad** (consulta de Carlos, 01:38) no falla: entró con T-119 en la línea de la 0.4.1, y la `v0.4.0` (`be532ab`) no lo trae. La laptop y la Web publicada siguen en la 0.4.0, y por eso ahí no funciona. Carlos ya lo había probado el 29-oct en `qa-r4`: «todo pasó».
+
+**Las pruebas de Android, desde el 3-nov.** El teléfono es el Honor, conectado por depuración USB. Cuando haga falta un emulador de Android, es una tablet, no un teléfono.
+
+Con el Honor por USB, la prueba de punta a punta de T-130 puede llegar al emulador de Firebase de la laptop con `adb reverse` (8383 y 9399). Así no hace falta abrir el cortafuegos ni escuchar en `0.0.0.0` (ajuste 6 de la 10.90).
+
+**Pendiente:** Carlos confirma la versión de BayStream de la laptop (10.89). Todo apunta a la 0.4.0.
+
+La siguiente decisión es la **10.96**.
+
+### 10.96 · T-134 entregada y revisada; la lista del piloto pasa a la 0.4.2; la aceptación de Codex va sin el Honor (3-nov, 10:50)
+
+**T-134 está entregada** (Timonel, Opus 5.5, sobre `a9bbc05`; `docs/T134-RESULTADOS.md`):
+- `pubspec.yaml` cambia dos líneas, `version: 0.4.2+8` y `msix_version: 0.4.2.0`, y conserva el CRLF. `pubspec.lock` no cambia.
+- La prueba de T-93 da 5 de 5, `analyze` cero y la suite 2097 de 2097, sin omitidas, en 2:14. Timonel no compiló los clientes: los compila Codex en la aceptación.
+- **Yov lo revisó contra el disco:**
+  - deshechas las dos líneas, `pubspec.yaml` es el de `a9bbc05`, y `pubspec.lock` es el mismo;
+  - los otros 694 archivos con seguimiento de `lib/`, `test/`, `tool/`, `integration_test/`, `android/`, `windows/`, `web/` y la configuración coinciden con `a9bbc05`, sin contar el fin de línea; lo que sobra son archivos generados que Git ignora;
+  - los registros de `build/t134/` dicen lo mismo que el informe.
+- **El 8 y no el 7:** el 7 era de la 0.4.1, que no se subió a Play. Play solo exige que el número suba, y el último subido es el 6.
+- **O-128-1 sigue:** `tool/t93_msix.ps1` arma la 1.0.0.0 si no se le pasa `-Version`. La lista lo llama con `-Version 0.4.2.0`.
+
+**La lista del piloto pasa a la 0.4.2** (`docs/piloto/LISTA-PILOTO.md`, Yov):
+- las reglas de T-130 en 0.1 y 4.0, con la huella `8B903949…`. El respaldo de 4.0 acepta las de T-80 o las de T-127 y dice cuáles eran: deberían ser las de T-80, porque las de T-127 iban con la 0.4.1;
+- 1.18, 1.19 y 2.16 son nuevos, y 1.7 deja de ir solo antes de publicar (sección 11 de T-130);
+- 1.13 y 1.14 traen la página de T-132 y el viaje del plan de carga; 1.15, el cierre de T-129; 1.6 y 2.2, el distintivo; 2.3, 2.5 y 2.7, las marcas de T-133;
+- la sección 4 es la de la 0.4.2: el AAB 8, el MSIX 0.4.2.0 encima de la 0.4.0.0 o de la 0.4.1.0, y la Web 0.4.2 (8). Si hay que volver a la 0.4.0 en Android, va con el `versionCode` 9;
+- la sección 5 trae la regla de uso de T-130 (3.8) y lo que no se midió: el costo de las marcas en el Honor (RNF-002).
+
+**Dos cosas que Yov encontró al leer el código, para la lista:**
+1. **0.7: cerrar las operaciones de pruebas y pilotos anteriores que siguen abiertas** (10.87, punto 3).
+   - La búsqueda de T-130 es por buque y escala, de cualquier viaje (`OperationSources.lookup`). Con la 26043S abierta, al abrir el plan del próximo MAGELLAN STAR en GTSTC, la banda propondría agregarlo a la 26043S en vez de abrir una operación nueva.
+   - Las que se conocen son MAGELLAN STAR 26043S, ECO BORA 26042SB y BUQUE PRUEBA T98. Una operación cerrada no se reabre: Carlos decide cuáles cierra.
+2. **Cada corrida contra Firebase de verdad lleva un viaje propio.**
+   - Un equipo que ya tiene una operación publicada de un buque, viaje y escala la vuelve a encontrar, aunque esté cerrada (`OperationSources.find`), y no abre otra: «La operación de esta escala ya está cerrada y sus BAPLIE no cambian…».
+   - La lista de la 0.4.1 tenía ese choque: su 0.7 cerraba la M100, y el ensayo volvía a usar la M100 en los mismos equipos. En una escala real es lo correcto, así que no es un defecto.
+   - Las copias de «Datos» cambian el viaje de `TDT`: P130 y P130N para 0.8, y E042 para el ensayo. Llevan sus huellas, y el listado sirve para cualquier viaje.
+
+**0.8 es la prueba de punta a punta de T-130 contra Firebase de verdad,** con la laptop de oficina y el Honor de muelle: 11 pasos y una mirada a la consola, en lugar de la de T-127. T-127 queda en 1.17 y 2.15 del ensayo.
+
+**Corrección a la 10.95: el Honor no recibe compilaciones locales.**
+- Su app es la de Play (`gt.cmartinez.baystream`), firmada con la clave de la app que guarda Play.
+- Una compilación local lleva otra firma con el mismo `applicationId`, y no se instala encima. Ante eso, `flutter run` desinstala sola la de Play («Uninstalling old version...») y se lleva el almacén del Honor.
+- La regla de la sección 2 sigue: no se tocan las apps instaladas. Por eso, en la aceptación:
+  - el muelle contra el emulador de Firebase va en una tablet del emulador de Android;
+  - lo propio del teléfono (la banda con el distintivo, las marcas a 360 dp) se mira en la Web del banco a 360 × 800, como en T-128;
+  - el Honor se desconecta del USB mientras dura la aceptación. Se prueba con la 0.4.2 de Play, en 0.8 y en el ensayo, con la vuelta de 4.5 si algo falla.
+- Con `adb reverse`, el modo avión de la tablet no corta el camino al emulador, que va por adb. La caída de red se simula quitando el túnel, o con `T130_HOST=10.0.2.2`.
+
+**La aceptación de Codex,** en `baystream-qa-r4`, con HEAD separado en el commit de esta decisión. Lo que entra:
+1. la suite y `analyze` en una copia limpia;
+2. T-130: sus pruebas, las ocho corridas de las baterías y la prueba de punta a punta de 3.10, con la oficina en Chrome y el muelle en la tablet. Su paso 12 es también el cierre de T-129 (O-128-2) con el motor siguiendo la operación;
+3. T-132 con los datos reales del piloto, que Yov dejó en `%TEMP%\t134acc-piloto`, fuera de todo repositorio: la salida del escritor nuevo, contra la copia corregida a mano el 2-nov;
+4. T-131 y T-133 en la Web a 360 × 800, en la oficina y en la tablet;
+5. las compilaciones de los tres clientes de la candidata;
+6. los diez bloques de PowerShell de la lista, con el analizador y sin correrlos;
+7. el pellizco y Ctrl + rueda, que Carlos prueba a mano en el `.exe`, en Chrome y en Edge, con el namespace `r4`.
+
+El informe es `docs/t134/aceptacion-codex.md`, como el de la 0.4.1.
+
+**Después:** Yov anota en la lista lo que encuentre Codex. Carlos publica las reglas de T-130 desde la consola (4.0), mezcla (4.1) y publica los clientes (4.2 a 4.4). Al final hace 0.7, 0.8 y el ensayo.
+
+La siguiente decisión es la **10.97**.
+
+### 10.97 · Codex acepta la 0.4.2 con reservas; la lista, al día; falta decidir T-135 (3-nov, 13:15)
+
+**Codex aceptó la candidata con reservas** (`docs/t134/aceptacion-codex.md`), sobre `15ef04b` (10.96):
+- **Lo que pasa:**
+  - la suite da 2097 de 2097 en una corrida, sin omitidas, y `analyze` cero, en una copia limpia de 809 archivos que siguió idéntica a HEAD;
+  - las baterías: 69, 25, 31 y 38 contra las reglas de T-130, y la de T-130 cae en sus 11 contra las de T-127;
+  - los tres clientes compilan y dicen 0.4.2 (8). El AAB lleva la firma de depuración: acredita la compilación, pero no es el que va a Play;
+  - **T-132 con los datos reales del piloto:** 503 de 503 celdas, 358 de 358 grupos de paso byte a byte, 4 de 4 DGS completos, ningún peso con decimales, ningún LOC+13 con el POT igual al POD y UNT con 4117. Contra la copia corregida de Yov no hay ninguna diferencia en los grupos: la única es la de `TDT`, que Yov cambió a mano. La página pidió 3 decisiones, todas de peligrosas (UN 2902 contra 2903), y guardó una vez;
+  - **T-130 y T-129:** los 15 pasos de 3.10 y las dos variantes contra el emulador, con la oficina y el muelle en Chrome. El cierre sale al primer intento, después de revisar el listado. Las cifras y los textos de 0.8 son los de la lista, con M100 en vez de P130;
+  - **T-131 y T-133:** el distintivo dorado de la oficina a 1280 y a 1920 y, en la Web a 360, el compacto de cobre en la barra de arriba. En la tablet, las marcas con la densidad del muelle: 56 × 48 y el rótulo a 11;
+  - los diez bloques de PowerShell pasan el analizador sintáctico (PSScriptAnalyzer no está instalado), y el bloque de «Datos» da sus cuatro «Listo»;
+  - Carlos probó a mano el pellizco y Ctrl + rueda en el `.exe`, en Chrome y en Edge, con el namespace `r4`: pasan.
+- **Las reservas** son de validación: no hay ningún P1 ni P2 del producto.
+  - **O-134-1:** al preparar la prueba de Windows, el ayudante de Codex abrió la app instalada (0.4.0.0) en vez del `.exe` del banco. Codex la cerró sin tocar nada, pero no puede descartar que al abrirse leyera su almacén o la nube; es lo mismo que abrirla a mano. El bloque de 4.2 respalda el almacén antes de instalar. Codex no vuelve a usar ese ayudante: el `.exe` del banco lo abre Carlos desde el Explorador.
+  - **O-134-2:** en la tablet, el banco no sincroniza. Primero le faltaba la app `[DEFAULT]` de Firebase, que Codex puso en una entrada privada; después, Android bloqueó el HTTP sin cifrar hacia el emulador («Cleartext HTTP traffic to 127.0.0.1 not permitted»). No se cambió `android/`, y la app publicada va por HTTPS. Android contra la nube se prueba por primera vez con el Honor, en 0.8. Para después del 7-nov: un banco de Android que llegue al emulador, con una configuración de red solo para depuración.
+  - **O-134-3:** el punto 4 del encargo pedía la banda del muelle en la Web, pero la Web nunca tiene la densidad del muelle (`bayStreamEsMuelle` exige `!kIsWeb`). Yov lo corrigió: la banda queda para el Honor.
+- **Dos P3:**
+  - **O-134-4:** «Archivo "null" cargado correctamente», al confirmar un plano en previo desde «Parámetros» y no con la banda. Viene de la 10.32, y Carlos lo vio en los tres clientes. Codex confirmó la causa en el código: ese camino llama a `_askForGeometry` sin `fileName`.
+  - **O-134-5:** con un corte de red simulado, el chip tardó más de medio minuto en pasar a «Sin conexión», y el plan agregado llegó solo, pero después de medio minuto de vuelta la red. No es una garantía de latencia: la lista espera un minuto antes de «Reintentar».
+
+**Yov lo revisó contra la evidencia:**
+- la huella del informe es la de `entrega-verificacion.json` (`3df4e2b4…`), con sus 39 capturas;
+- la suite registra 2097 aprobadas, `analyze` dice «No issues found!», y los resúmenes seguros de T-132 dicen lo mismo que el informe;
+- el informe no trae ningún número de contenedor;
+- Yov miró cuatro capturas: el diálogo de T-130 con sus cifras y su viaje, el distintivo de la oficina a 1920, las marcas a 360 y la tablet con «Baja» y «Paso» debajo del código.
+
+**La lista del piloto, al día** (`docs/piloto/LISTA-PILOTO.md`):
+- el resultado de la aceptación, arriba;
+- en 1.2, que el plano se confirma desde la banda;
+- en 1.18, que sin el perfil del buque la operación se busca al confirmar los parámetros;
+- las esperas de un minuto en 0.8, 2.13, 2.15 y 2.16, y O-134-2, O-134-4 y O-134-5 en la sección 5;
+- **en 4.1, una comprobación nueva:** la mezcla se detiene si `sprint-4` trae código distinto del que aceptó Codex (`15ef04b`).
+
+**El commit del informe de Codex** va desde `qa-r4`, con HEAD separado, como en la 0.4.1 y en las revisiones de T-129. Después, la carpeta del rediseño se pone al día con `git pull --ff-only` antes de su propio commit.
+
+**Decide Carlos: T-135, el «null» (O-134-4).**
+- **A:** T-135 antes de publicar. Es una línea y su prueba; Codex revisa el cambio corto, y la comprobación de 4.1 pasa al commit revisado.
+- **B:** publicar la 0.4.2 como está, y T-135 después del 7-nov. En la presentación, el plano se confirma con la banda.
+
+**Después:** las reglas de T-130 (4.0), la mezcla (4.1) y los clientes (4.2 a 4.4); al final, 0.7, 0.8 y el ensayo.
+
+La siguiente decisión es la **10.98**.
+
+### 10.98 · T-135 pasa la revisión corta de Codex; la 0.4.2 queda lista para publicar (3-nov, 13:55)
+
+**T-135 corrige O-134-4** (Timonel, Opus 5.5; `fd39951`; `docs/T135-RESULTADOS.md`). Carlos eligió la opción A de la 10.97, corregirlo antes de publicar; Timonel ya había empezado.
+- Con un plano en previo, `_askForGeometry` usa `fileName ?? notifier.loadedFileName` para «Archivo: …» y para el aviso final. En la edición no cambia nada, y el diálogo de T-130 queda igual.
+- La prueba nueva, `test/t135_aviso_archivo_test.dart`, recorre los tres caminos: la banda, «Parámetros» en el riel de la oficina y «Parámetros» en «Más» del teléfono. Contra `15ef04b`, los dos de «Parámetros» fallan por comportamiento y la banda pasa.
+- La suite da 2100 de 2100, sin omitidas, y `analyze` cero.
+- **Yov lo revisó contra el disco:** solo cambian `vessel_overview_page.dart` (+5 −2) y la prueba, y los registros de `build/t135/` dicen lo mismo que el informe.
+
+**Codex: PASA** (`docs/t135/revision-codex.md`, sobre `fd39951`):
+- los 3 casos en verde; el rojo contra `15ef04b`, 1 verde y 2 rojos, por el texto que falta; la suite, 2100 de 2100 sin omitidas, y `analyze` cero, en una copia limpia de 810 archivos;
+- Carlos lo confirmó a mano en Windows, Chrome y Edge, con el banco `r4` recompilado: «Archivo: T100_CARGA.edi» en la pantalla y «Archivo "T100_CARGA.edi" cargado correctamente» al confirmar. Abrió el `.exe` desde el Explorador, no con el ayudante (O-134-1);
+- O-134-4 queda cerrado. La versión sigue siendo `0.4.2+8`: T-135 entra antes de publicar.
+
+**La lista del piloto:**
+- T-135 entra en «Qué es la 0.4.2»;
+- 1.2 y la sección 5 ya no avisan del «null»: si vuelve a salir, es un fallo nuevo;
+- **la comprobación de 4.1 apunta a `fd39951`,** el último código que revisó Codex: desde ahí, solo pueden cambiar documentos.
+
+**Ahora publica Carlos,** con la sección 4 de la lista:
+1. las reglas de T-130 desde la consola (4.0);
+2. la mezcla a `master` y la etiqueta `v0.4.2` (4.1);
+3. Windows, Android y la Web (4.2 a 4.4).
+
+Después, 0.7, 0.8 y el ensayo.
+
+La siguiente decisión es la **10.99**.
+
+### 10.99 · Se publica la 0.4.2; T-136, el parche de seguridad de Firestore en Windows, es la candidata 1.0.0; Carlos pide un instalador con asistente (3-nov, 14:25)
+
+**El aviso de Firebase** (correo del 3-nov, «[Act Now] Upgrade your Firebase SDKs for Firestore to apply an urgent security patch», proyecto `baystream-app`). Se filtraron las claves de unas CA intermedias de eMudhra, y con ellas se pueden falsificar certificados HTTPS. La guía de Firebase (`compromised-emudhra-intermediate-ca`, actualizada el 3-nov) da las versiones corregidas y dice que actualizar el sistema operativo o el servidor no arregla las compilaciones ya instaladas. Para BayStream:
+- **Windows está afectado.** Firestore va por el SDK de C++, que trae sus propias raíces. Con `firebase_core` 4.13.0 el SDK es el 13.9.0, y así lo dicen los `version.h` de `build\windows\x64\extracted` en `proyecto-baystream`, `baystream-rediseno` y `baystream-qa-r4`. Lo llevan la 0.4.0.0 instalada y la 0.4.2.0 que se publica hoy. El arreglo es `cloud_firestore` 6.10.2 con `firebase_core` 4.15.2, que traen el SDK de C++ 13.13.1 (PR #18869 de FlutterFire, publicadas el 23-oct).
+- **Android no:** Firestore y las cuentas van por el SDK nativo de Android, que la guía no da por afectado. **La Web tampoco:** el navegador valida con sus propios certificados.
+- **Dart.** La guía pide además Flutter 3.47.8 (Dart 3.13.7) en Android, Windows y Linux, porque `dart:io` valida TLS con su propio BoringSSL. En BayStream, `lib/` usa `dart:io` solo para archivos. Yov revisó los 109 paquetes de `pubspec.lock`: fuera de las herramientas de pruebas, lo único que abre HTTPS desde Dart es la política de contraseñas de `firebase_auth`, que solo baja `validatePassword`, y BayStream no la llama. Subir de la 3.38.9 a la 3.47.8 son nueve versiones menores de Flutter: no entra antes del 7-nov (**O-136-1**, para después).
+- **Las reglas y el servidor** no cambian.
+
+**Carlos decidió (14:00):**
+1. **La 0.4.2 se publica hoy como se aceptó** (10.98): las reglas de T-130 (4.0), la mezcla (4.1) y los tres clientes (4.2 a 4.4); después, 0.7, 0.8 y el ensayo. Mientras Windows lleve el SDK 13.9.0, en una red que no es de Carlos (un Wi-Fi público o el del puerto) los datos reales van por la Web, en Chrome o Edge, y no por el `.exe`. La sección 5 de la lista lo dice.
+2. **T-136 queda autorizada como candidata 1.0.0** (la hace Timonel y la acepta Codex), con el cambio de dependencias. Yov lo comprobó en pub.dev:
+   - `cloud_firestore: ^6.10.2` y `firebase_core: ^4.15.2`. Las dos piden Flutter 3.27 o posterior y Dart ^3.6.0, así que basta la Flutter de hoy (3.38.9);
+   - la fija de desarrollo `cloud_firestore_platform_interface` pasa de 8.0.6 a **8.0.7**, la única versión posible: `cloud_firestore` 6.10.2 pide ^8.0.7, y la 8.0.8 y la 8.1.0 piden `firebase_core` 5;
+   - `firebase_auth` se queda en 6.5.7, porque pide `firebase_core` ^4.13.0;
+   - en `pubspec.lock` se esperan siete cambios, todos de FlutterFire: `cloud_firestore`, `firebase_core`, `cloud_firestore_platform_interface`, `cloud_firestore_web` (5.7.3), `firebase_core_platform_interface` (8.1.1), `firebase_core_web` (3.11.0 o 3.12.0) y `_flutterfire_internals` (1.3.77). Si cambia cualquier otro, la tarea se detiene;
+   - la versión pasa a `1.0.0+9`, con `msix_version: 1.0.0.0`. Si la vuelta de Android de 4.5 llegara a gastar el 9, queda en `1.0.0+10`;
+   - si Codex la acepta a más tardar el jueves 5, se publica la 1.0.0 y la demostración va con ella. Si no, la demostración va con la 0.4.2 y la 1.0.0 llega después (10.74).
+3. **Carlos pide mejorar el instalador de Windows:** que sea bonito y diga qué instala y qué hay detrás, con lo que den Dart y Flutter. Hoy el MSIX abre el instalador de aplicaciones de Windows con un solo botón. Es **T-137**. La propuesta y lo que elija Carlos van en la 10.100.
+
+**La trampa del SDK de C++** (la encontró Yov en el `windows/CMakeLists.txt` de `firebase_core`; entre la 4.13.0 y la 4.15.2 solo cambia la versión):
+- al compilar Windows, CMake descarga `firebase_cpp_sdk_windows_<versión>.zip` en `build\windows\x64`, pero solo lo extrae si `build\windows\x64\extracted` **no existe**. Si existe, dice «Using cached extracted Firebase SDK» y enlaza lo que haya ahí;
+- en las tres carpetas, ahí está el 13.9.0 (8,5 GB). Sin apartarlo, una 1.0.0 con `firebase_core` 4.15.2 seguiría enlazando el SDK afectado.
+
+Por eso:
+- T-136 aparta `extracted` antes de su primera compilación de Windows y comprueba en `version.h` que queda el 13.13.1;
+- desde T-136, `tool/t93_msix.ps1` lo comprueba antes de empaquetar. Si el SDK extraído no es el que pide el `firebase_core` resuelto, lo aparta antes de compilar o, con `-SinCompilar`, se detiene;
+- la aceptación de Codex lo comprueba en su copia, y la lista de la 1.0.0 (4.2), en `proyecto-baystream`;
+- cada carpeta necesita unos 9,5 GB nuevos, entre el zip y lo extraído, y la laptop tiene 76 GB libres. Las carpetas apartadas con el 13.9.0 las borra Carlos después de publicar la 1.0.0.
+
+**Lo que sigue:**
+1. Carlos publica la 0.4.2 (4.0 a 4.4).
+2. Timonel empieza T-136 cuando terminen las compilaciones de la 0.4.2. Hasta entonces, solo lee.
+3. Codex acepta T-136.
+4. Yov escribe la 10.100, con T-137, y prepara la lista de la 1.0.0.
+
+La siguiente decisión es la **10.100**.
+
+### 10.100 · T-137, el instalador de Windows con asistente: Inno Setup 7.1.1, armado con Dart y dibujado con Flutter (3-nov, 14:35)
+
+**Carlos eligió (14:30) la propuesta de Yov.** Flutter no trae un motor para instaladores: su guía de Windows remite a la MSIX (el paquete `msix`) o a un instalador como Inno Setup o WiX. El motor del asistente es **Inno Setup 7.1.1**, la versión recomendada de jrsoftware.org (28-oct), y todo lo demás es Dart y Flutter. Un instalador hecho todo en Flutter tardaría semanas, porque habría que programar lo que Inno Setup ya hace (copiar, los accesos, el desinstalador, instalar encima, detectar la MSIX), y una app de Flutter no es un solo `.exe`. Para el 7-nov queda fuera.
+
+**T-137 · El instalador de Windows con asistente** (lo hace Codex, lo revisa Timonel y Carlos lo recorre a mano):
+- **Qué ve quien instala.** Hoy, el instalador de aplicaciones de Windows, con el logo y «Instalar». Con T-137, un asistente en español: bienvenida → «Qué se instala» → «Lo que hay detrás» → carpeta y accesos → instalar → «Abrir BayStream».
+  - Sigue el tema claro u oscuro de Windows, con la paleta de BayStream.
+  - No pide administrador, y aparece en Configuración → Aplicaciones con su ícono, su versión y su editor.
+  - Instala en cualquier Windows 10 u 11 de 64 bits sin importar el certificado, que la MSIX sí pide en un equipo nuevo.
+- **Lo que ponen Dart y Flutter:**
+  - las imágenes del asistente las dibuja Flutter, con `BsPaleta` clara y oscura, IBM Plex, el ícono y la ilustración `inicio` (`DESIGN.md` 13), a los tamaños que pide Inno Setup para cada escala: la grande, de 202 × 386 a 534 × 1022, y la pequeña, de 58 × 58 a 159 × 159;
+  - un programa de Dart, `tool/t137_instalador.dart`, arma el instalador. Lee la versión del `.exe`, las de `pubspec.lock`, la de Flutter y la del SDK de C++, y comprueba que el SDK enlazado es el que pide `firebase_core` (la trampa de la 10.99). Agrega junto al `.exe` el runtime de Visual C++ que pide la guía de Flutter, comprueba las DLL con `dumpbin` y deja el instalador con su huella y su manifiesto.
+- **La app no cambia.** Se empaqueta la misma Release que firma la MSIX, y la MSIX sigue de respaldo. Mientras T-136 no esté, Codex empaqueta la Release de la 0.4.2 que Carlos compila hoy en `proyecto-baystream`, sin cambiarla.
+- **La MSIX y el asistente no conviven.** Si la cuenta tiene la MSIX, el asistente se detiene antes de copiar nada y explica cómo quitarla. Los datos no corren riesgo: están fuera del paquete, en `%LOCALAPPDATA%\BayStream` (10.75), y el desinstalador no los toca.
+- **Dónde:** `C:\Proyectos\baystream-t137`, rama `t137-instalador` desde `sprint-4`, como T-132. Solo toca `windows/installer/`, `tool/t137_*`, `docs/T137-RESULTADOS.md` y `build/t137/`. No toca `lib/`, `test/`, `pubspec.*` ni `tool/t93_msix.ps1`, que son de T-136. Corre a la vez que T-136, con un comando de Flutter a la vez en la máquina.
+- **Las pruebas.** Windows 11 Home no trae Sandbox, así que:
+  - en la cuenta de Carlos solo se instala, en silencio, una variante de prueba (otro AppId, otro nombre y otra carpeta), sin abrir la app y con la huella del almacén real igual antes y después;
+  - en la cuenta de Carlos, la variante de producción tiene que detenerse por la MSIX;
+  - el recorrido a mano lo hace Carlos en una cuenta local de prueba de Windows, «BayStream Prueba», sin la MSIX y sin datos: en claro y en oscuro, abrir y desinstalar. Ahí la app abre con Firebase de verdad, pero nadie inicia sesión.
+- **Antes de empezar,** Carlos instala Inno Setup 7.1.1 (`winget install --id JRSoftware.InnoSetup.7 -e`) y abre la carpeta de T-137. La cuenta de prueba la crea antes del recorrido a mano. El sitio de Inno Setup pide licencia a quien lo usa comercialmente, y un proyecto de graduación no lo es.
+- **Los límites, declarados:**
+  - sin un certificado comercial, el instalador no va firmado: si se descarga de internet, Windows avisa «Windows protegió su PC». Copiado a la laptop, no;
+  - no hay un Windows limpio, sin el runtime de Visual C++, donde probarlo: lo cubre la comprobación de las DLL.
+
+**Con la 1.0.0.** Si Timonel da por buena T-137 a más tardar el jueves 5, sale junto con la MSIX, de la misma Release. Si no, sale después, sin cambiar la versión de la app. El jueves, con el asistente a la vista, Carlos decide qué instalación lleva la laptop en la demostración. Yov recomienda el asistente si pasa: se quita la MSIX (los datos se quedan) y la MSIX 1.0.0 queda para volver.
+
+La siguiente decisión es la **10.101**.
