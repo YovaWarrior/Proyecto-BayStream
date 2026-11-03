@@ -22,10 +22,10 @@ void main() {
     final result = output(t82Loads);
     final voyage = BaplieParserService().parse(result.text);
     expect(voyage.containers, hasLength(3));
-    expect(result.text, contains(t82Transit.replaceAll("'", "'\n")));
+    expect(result.text, contains(t82Transit));
     final full =
         voyage.containers.firstWhere((c) => c.containerId == 'TSTU0000014');
-    expect(full.vgmWeight, 7266.59);
+    expect(full.vgmWeight, 7267); // T-132: el VGM nuevo va al kilo.
     expect(full.tareWeight, 3900);
     expect(full.isoSizeType, '22G1');
     expect(full.portOfLoading, 'GTSTC');

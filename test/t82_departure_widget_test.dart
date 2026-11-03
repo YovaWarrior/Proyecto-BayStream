@@ -81,7 +81,14 @@ void main() {
           MovementDraft.cancelItem('op', 'C:TSTU0000014', 'No embarca'), 0);
       scope.read(events.provider.notifier).update([cancel, ...t82Loads]);
       await tester.pumpAndSettle();
-      expect(find.textContaining('OR 5 · TSTU0000014'), findsOneWidget);
+      // T-132 también lo muestra entre las filas no cargadas: verificamos
+      // cada lista por su identidad, sin confundir la nueva con los cancelados.
+      expect(tester.widget<SelectableText>(find.byKey(
+          const ValueKey('departure-cancelled-list'))).data,
+          contains('OR 5 · TSTU0000014 · 0030282 · No embarca'));
+      expect(tester.widget<SelectableText>(find.byKey(
+          const ValueKey('departure-not-loaded-list'))).data,
+          contains('OR 5 · TSTU0000014 · cancelado en la operación'));
       await tester.ensureVisible(
           find.byKey(const ValueKey('departure-copy-cancelled')));
       await tester.tap(find.byKey(const ValueKey('departure-copy-cancelled')));
