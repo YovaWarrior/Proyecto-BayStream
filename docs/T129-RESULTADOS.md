@@ -350,7 +350,8 @@ terminar, de a un comando.
 - **Si el eco no llega** (la red cae justo después del acuse): a los 45 s `close()` devuelve el
   `timeout` de siempre («Sin respuesta de la nube: cerrar requiere red…»), la nube ya está
   cerrada y el siguiente intento la cierra en local, como hoy. Es el mismo límite que tienen
-  publicar y unirse.
+  publicar y unirse. **Corregido el 2-nov (6.4):** en `2d98f23` los 45 s se reiniciaban con cada
+  instantánea descartada; ahora cuentan desde que empieza la espera.
 - **Lo que descarté.** Leer con `ServerTimestampBehavior.estimate`: una línea, pero guardaría en
   local una hora **estimada con el reloj del cliente**, distinta de la del servidor. Escribir una
   hora del cliente: lo prohíben las reglas. Reintentar la lectura «del servidor» en bucle: volvería
@@ -483,6 +484,74 @@ arreglo `0ae18382…`, falsa `d2fe564c…`, prueba `1147d320…`.
 
 El piso queda en **1876** (1871 + 5).
 
+### 6.4 La revisión de Codex: el plazo del cierre se reiniciaba (P2, 10.91; 2-nov, noche)
+
+**El P2** (`docs/t129/revision-codex.md`, 4). En `_afterOwnWrite`, el `.timeout(_networkTimeout)`
+iba antes del `firstWhere`. `Stream.timeout` reinicia los 45 s con **cada** evento de su fuente,
+también con los que el filtro descarta después: instantáneas pendientes o de la caché que llegan
+cada menos de 45 s dejaban el cierre sin plazo total. La sonda de Codex lo tenía esperando a los
+160 s. Codex tiene razón; lo comprobé con el rojo de abajo.
+
+**Base.** `733a8ab` («T-130, fase 1…»), con T-132 integrada (`7cb96ec`), la revisión de Codex
+(`b08bd7f`) y la 10.91 (`fb8be28`). `git log 2d98f23..HEAD` no toca mis archivos, y
+`git diff --stat` no tenía cambios sin confirmar. El `lib/` del árbol era el de `2d98f23`: sin los
+`\r` (la laptop escribe CRLF), los dos dan `1b08bf20…`. Por eso el rojo corrió sobre el árbol tal
+cual, sin sustituir ningún archivo.
+
+**Los cuatro archivos** (Carlos autorizó el cuarto, la falsa, el 2-nov: la contradicción del
+encargo, que limitaba a dos archivos, era de Yov):
+- `lib/features/vessel/data/repositories/firestore_operation_sync.dart` (+7/−4): el filtro va
+  antes del plazo,
+  `snapshots(includeMetadataChanges: true).where(criterio).timeout(_networkTimeout).first`, con
+  el comentario del porqué. El plazo cuenta desde que empieza la espera y solo lo reinicia una
+  instantánea aceptada, que es la que termina la espera. `.first` cancela la escucha con la
+  instantánea buena o con el error del plazo. El criterio, la escritura y lo demás de `close()`
+  no cambian.
+- `test/support/t129_fake_firestore.dart` (+25/−4): dos controles.
+  - `holdEcho`: retiene el eco tras el acuse; el servidor aplica la escritura y las escuchas se
+    quedan con la vista pendiente.
+  - `T129FakeDocument.emitRejected({fromCache})`: entrega a las escuchas abiertas una instantánea
+    que hay que descartar, la vista pendiente o el documento leído de la caché. Para eso `_snapshot`
+    acepta `isFromCache`.
+
+  Con los dos apagados, la falsa se comporta como antes: las cinco pruebas de siempre dan lo mismo
+  en el rojo y en el verde.
+- `test/t129_cierre_test.dart` (+90): un grupo nuevo con dos pruebas en `testWidgets`, cuyo
+  `tester.pump(d)` es el reloj simulado (sin `fake_async`, que es transitiva). Las dos comprueban,
+  al terminar: código `timeout`, la nube cerrada, ninguna escucha abierta y la copia local abierta.
+  1. **En silencio**: con el eco retenido, a los 44 s `close()` sigue esperando y a los 46 s
+     contestó `timeout`.
+  2. **Con instantáneas rechazadas sostenidas**: una pendiente a los 40 s; a los 44 s sigue
+     esperando y a los 46 s contestó `timeout`. Después, más rechazos a los 80, 120 y 160 s (de la
+     caché, pendiente y de la caché), sin nadie escuchando y sin cambiar el resultado.
+- Este informe.
+
+**Una trampa del reloj simulado, que Codex también encontró.** `Stream.timeout` cancela su fuente
+devolviendo `subscription.cancel()`, que es `Future._nullFuture`, de la zona **raíz**. Con
+`cancelOnError`, el error del plazo se entrega cuando esa cancelación termina, y esa continuación no
+corre bajo el reloj simulado de `testWidgets`. El plazo vence y la escucha se suelta, pero `close()`
+no termina nunca. Lo vi en dos corridas de diagnóstico: una sonda temporal mostró `listeners=0` y
+`result=null` a los 46 s y cinco minutos después. La prueba lo resuelve con `pasa()`, que tras cada
+`pump` da tres vueltas del bucle real con `tester.runAsync`. Es lo mismo que Codex anotó en su
+revisión (2: «ajustar la espera de continuaciones asíncronas fuera del reloj simulado»). Mientras lo
+buscaba probé a cambiar el `onCancel` de la falsa y lo revertí: no era la causa. La sonda ya no está
+en la prueba.
+
+**Las corridas** (registros en `build/t129/plazo/`; de a una y con `SEMÁFORO:`; antes de la
+suite, ningún otro `flutter` en la máquina). Huellas finales: `lib` `f2256e5a…`, falsa
+`a1aaee9b…`, prueba `8c0f4364…`.
+
+| # | Corrida | Hora | Resultado |
+|---|---|---|---|
+| — | Diagnóstico de las pruebas nuevas, sin `pasa()` (`diagnostico.log`, y una sonda de silencio sin registro) | 23:02–23:05 | Las dos nuevas cuelgan también en silencio, por la trampa de arriba. **No cuentan como rojo** |
+| 1 | **El rojo**: `flutter test test/t129_cierre_test.dart` con el `lib/` de `2d98f23` (`1b08bf20…` sin `\r`) y la falsa nueva (`rojo.log`) | 23:06:20–23:06:26 | **+6 −1.** Pasan las cinco de siempre y la de silencio, como en la sonda de Codex. Falla la de rechazos sostenidos, en la línea 267, la comprobación de los 46 s: «Expected: not null / Actual: <null> / close() sigue esperando». El evento de los 40 s reinició el plazo |
+| 2 | **El verde**, con la corrección (`verde.log`) | 23:06:48–23:06:52 | **7 de 7** |
+| 3 | **La suite completa**, una sola corrida, con `--file-reporter json` (`suite.log`, `suite.json`) | 23:07:01–23:09:24 | **1914 de 1914** `success`, 0 fallas, 0 omitidas, 149 archivos; las 7 de `t129_cierre_test.dart` están entre ellas. Es el piso de 1912 (sprint-4 con T-132) más las 2 nuevas |
+| 4 | **`flutter analyze`** (`analyze.log`) | 23:09:34–23:10:06 | **«No issues found!»**. Ningún `// ignore` ni `print` en los tres archivos de código |
+
+El piso queda en **1914**. El emulador no se corrió: la 10.91 lo deja para la revisión de la
+corrección o para la aceptación de la candidata.
+
 ## 7. Lo que no entra y los límites
 
 - No medí `hasPendingWrites` de la lectura que falló: Codex no la instrumentó. La rama sale por
@@ -513,7 +582,9 @@ El piso queda en **1876** (1871 + 5).
 **Modificados**
 
 - `lib/features/vessel/data/repositories/firestore_operation_sync.dart` — `_afterOwnWrite` y su
-  uso en `close()` (+18/−1).
+  uso en `close()` (+18/−1); el 2-nov por la noche, el filtro antes del plazo (6.4, +7/−4).
+- La corrección del P2 (6.4) toca también la falsa (`holdEcho`, `emitRejected`) y la prueba (dos
+  pruebas nuevas), además de este informe.
 
 - `pubspec.yaml` — **sí cambia** (2-nov, autorizado por Carlos): `cloud_firestore_platform_interface:
   8.0.6` en `dev_dependencies`, +4 líneas con su comentario.
@@ -523,6 +594,24 @@ No cambian `lib/main.dart`, las opciones de Firebase, las reglas, el contrato, l
 los archivos congelados. La dependencia es solo de pruebas y no entra en la app compilada.
 
 ## 9. Bloque de Git para Carlos
+
+**La corrección del P2 (6.4), lista para ejecutarse (2-nov, 23:10):** rojo +6 −1, verde 7 de 7,
+suite 1914 de 1914 y `analyze` en cero. Son cuatro archivos y **no cambian `pubspec.yaml` ni
+`pubspec.lock`**. No van los cambios ajenos que haya en el árbol. Después, Codex la vuelve a
+revisar (10.91), y la fase 2 de T-130 empieza sobre este commit.
+
+```powershell
+Set-Location -LiteralPath C:\Proyectos\baystream-rediseno
+git add -- lib/features/vessel/data/repositories/firestore_operation_sync.dart
+git add -- test/support/t129_fake_firestore.dart
+git add -- test/t129_cierre_test.dart
+git add -- docs/T129-RESULTADOS.md
+git commit -m "Sprint 4: T-129, el plazo del cierre no se reinicia con instantaneas rechazadas" --trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git push origin sprint-4
+git log --oneline -1
+```
+
+**El bloque anterior, ya ejecutado por Carlos (`2d98f23`), queda como registro:**
 
 **Listo para ejecutarse (2-nov, 21:46):** rojo +3 −2, verde 5 de 5, suite 1876 de 1876 y
 `analyze` en cero (6.3). **Cambian `pubspec.yaml` y `pubspec.lock`** (8). Los cambios ajenos del
@@ -547,6 +636,18 @@ git log --oneline -1
 
 ## 10. Tres líneas
 
+**La corrección del P2 (6.4):**
+
+- El plazo de 45 s del cierre ya no se reinicia con instantáneas descartadas: el filtro va antes
+  del plazo (`where(…).timeout(…).first`) y cuenta desde que empieza la espera.
+- Dos pruebas nuevas con reloj simulado, en silencio y con rechazos cada 40 s hasta los 160 s; la
+  falsa gana `holdEcho` y `emitRejected`. Rojo contra `2d98f23`: +6 −1, falla la de rechazos a los
+  46 s.
+- Verde 7 de 7, suite 1914 de 1914 en una corrida y sin omitidas, y `analyze` en cero. Cuatro
+  archivos, sin `pubspec.*`.
+
+**Las del 2-nov, antes de la revisión:**
+
 - El primer cierre fallaba porque, con la oficina escuchando el documento desde T-127, la lectura
   «del servidor» que sigue a la escritura devuelve la vista local con `closedAt` todavía
   pendiente, que se lee como nulo: la nube se cerraba y el dispositivo no; `close()` es el mismo
@@ -562,6 +663,22 @@ git log --oneline -1
   sigue haciendo falta (3.5).
 
 ## 11. Mensaje para Yov
+
+**El de la corrección del P2 (2-nov, noche):**
+
+> T-129, el P2 de Codex corregido sobre `733a8ab` (sprint-4 con T-132). En `_afterOwnWrite` el
+> filtro va ahora antes del plazo: `where(criterio).timeout(45 s).first`. Las instantáneas
+> descartadas ya no reinician los 45 s, y `.first` suelta la escucha con la buena o con el plazo.
+> Dos pruebas nuevas en `t129_cierre_test.dart`, con reloj simulado (`testWidgets`), en silencio y
+> con rechazos a los 40, 80, 120 y 160 s: `timeout` a los 46 s, la nube cerrada, ninguna escucha y
+> la copia local abierta. La falsa gana `holdEcho` y `emitRejected` (Carlos autorizó el cuarto
+> archivo; el encargo decía dos), y las cinco de siempre no cambian. Rojo contra el `lib/` de
+> `2d98f23`: +6 −1, como la sonda de Codex (silencio pasa, rechazos sostenidos fallan a los 46 s).
+> Verde 7 de 7; suite 1914/1914 en una corrida, sin omitidas, con las 7 adentro; `analyze` cero;
+> sin `pubspec.*`. Una trampa del reloj simulado: la cancelación de `Stream.timeout` pasa por
+> `Future._nullFuture`, de la zona raíz, y hay que darle vueltas reales con `runAsync`, como anotó
+> Codex. Lo cuenta 6.4. Emulador sin correr. Bloque de Git en la sección 9, con cuatro archivos.
+> Después: la nueva revisión de Codex y la fase 2 de T-130.
 
 **El del 2-nov, con las corridas:**
 

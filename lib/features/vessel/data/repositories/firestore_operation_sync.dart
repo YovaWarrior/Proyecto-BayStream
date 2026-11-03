@@ -80,15 +80,18 @@ class FirestoreOperationSync implements OperationSyncRepository {
   /// escucha, que todavía lleva la hora pendiente y la lee como nula, hasta
   /// que llega el eco del servidor. Aquí se espera ese eco: la primera
   /// instantánea del servidor sin escrituras pendientes. Si no llega en
-  /// [_networkTimeout], falla como las demás lecturas.
+  /// [_networkTimeout], falla como las demás lecturas. El filtro va antes del
+  /// plazo: `Stream.timeout` lo reinicia con cada evento, y las instantáneas
+  /// descartadas no deben darle más tiempo (revisión de Codex, 10.91).
   Future<DocumentSnapshot<Map<String, dynamic>>> _afterOwnWrite(
           DocumentReference<Map<String, dynamic>> ref) =>
       ref
           .snapshots(includeMetadataChanges: true)
-          .timeout(_networkTimeout)
-          .firstWhere((snapshot) =>
+          .where((snapshot) =>
               !snapshot.metadata.hasPendingWrites &&
-              !snapshot.metadata.isFromCache);
+              !snapshot.metadata.isFromCache)
+          .timeout(_networkTimeout)
+          .first;
 
   @override
   Future<Either<Failure, Operation>> publish(

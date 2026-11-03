@@ -188,6 +188,96 @@ void main() {
           contains('No se encontró la operación'));
     });
   });
+
+  // Revisión de Codex (`docs/t129/revision-codex.md`, P2; 10.91): el plazo de
+  // 45 s del cierre cuenta desde que empieza a esperar el eco, y las
+  // instantáneas que descarta no lo reinician. Con el reloj simulado de
+  // `testWidgets`: `tester.pump(d)` adelanta el tiempo y dispara los plazos.
+  group('T-129 · el plazo del cierre no se reinicia (P2 de la revisión)', () {
+    /// Adelanta el reloj simulado [d] y deja correr lo que quedó pendiente.
+    /// `Stream.timeout` cancela su fuente devolviendo `subscription.cancel()`,
+    /// que es `Future._nullFuture`, de la zona raíz; con `cancelOnError`, el
+    /// error del plazo se entrega cuando esa cancelación termina, y eso solo
+    /// corre con una vuelta del bucle real (`runAsync`). Codex lo anotó igual
+    /// en sus sondas (`docs/t129/revision-codex.md`, 2).
+    Future<void> pasa(WidgetTester tester, Duration d) async {
+      await tester.pump(d);
+      for (var i = 0; i < 3; i++) {
+        await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+        await tester.pump();
+      }
+    }
+
+    /// Llama a `close()` sin esperarla y devuelve cómo va: nulo mientras
+    /// espera. Si termina con un error en vez de un resultado, falla con él.
+    Future<Either<Failure, Operation>?> Function() closing() {
+      Either<Failure, Operation>? result;
+      Object? error;
+      sync.close(operationId).then((value) => result = value,
+          onError: (Object e) => error = e);
+      return () async {
+        expect(error, isNull, reason: 'close() terminó con un error');
+        return result;
+      };
+    }
+
+    Future<void> expectTimedOut(Either<Failure, Operation>? result) async {
+      expect(result, isNotNull, reason: 'close() sigue esperando');
+      expect(result!.fold((f) => f.code, (_) => null), 'timeout');
+      expect(db.server[path]?['status'], 'closed');
+      expect(db.document(path).listeners, 0,
+          reason: 'la escucha del cierre sigue abierta');
+      final local = (await log.getOperation(operationId)).getOrElse(() => null);
+      expect(local?.closed, isFalse);
+    }
+
+    testWidgets('en silencio, contesta timeout a los 45 s y suelta la escucha',
+        (tester) async {
+      await log.saveOperation(published());
+      db.holdEcho = true;
+
+      final result = closing();
+      await pasa(tester, Duration.zero);
+      expect(db.document(path).listeners, 1);
+
+      await pasa(tester, const Duration(seconds: 44));
+      expect(await result(), isNull, reason: 'terminó antes de los 45 s');
+      await pasa(tester, const Duration(seconds: 2));
+      await expectTimedOut(await result());
+    });
+
+    testWidgets(
+        'con instantáneas rechazadas cada 40 s, contesta timeout a los 45 s '
+        'y no espera hasta los 160 s', (tester) async {
+      await log.saveOperation(published());
+      db.holdEcho = true;
+      final doc = db.document(path);
+
+      final result = closing();
+      await pasa(tester, Duration.zero);
+      expect(doc.listeners, 1);
+
+      // A los 40 s, la vista con la escritura pendiente: no sirve.
+      await pasa(tester, const Duration(seconds: 40));
+      doc.emitRejected();
+      await pasa(tester, const Duration(seconds: 4));
+      expect(await result(), isNull, reason: 'terminó antes de los 45 s');
+      // A los 46 s ya contestó, aunque el último evento fue a los 40.
+      await pasa(tester, const Duration(seconds: 2));
+      await expectTimedOut(await result());
+
+      // Los rechazos siguen hasta pasar los 160 s, de la caché y pendientes:
+      // nadie los escucha y el resultado no cambia.
+      var now = 46;
+      for (final second in [80, 120, 160]) {
+        await pasa(tester, Duration(seconds: second - now));
+        now = second;
+        doc.emitRejected(fromCache: second != 120);
+      }
+      await pasa(tester, const Duration(seconds: 5));
+      await expectTimedOut(await result());
+    });
+  });
 }
 
 /// La bitácora en memoria de T-75 con la lectura de una operación, que

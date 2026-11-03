@@ -69,6 +69,13 @@ class T129FakeFirestore {
   /// abierta, sin ir al servidor.
   int readsFromListenedView = 0;
 
+  /// Revisión de Codex (10.91) · Con `true`, el eco que sigue a una escritura
+  /// propia no llega: el servidor la aplica y el `update` termina, pero las
+  /// escuchas se quedan con la vista pendiente, como sin red después del
+  /// acuse. Las instantáneas rechazadas las entrega
+  /// [T129FakeDocument.emitRejected].
+  bool holdEcho = false;
+
   final _documents = <String, T129FakeDocument>{};
 
   /// El `FirebaseFirestore` real que la app recibe, sobre esta nube.
@@ -176,14 +183,26 @@ class T129FakeDocument extends DocumentReferencePlatform {
   Map<String, Object?>? get _serverData => _cloud.server[path];
 
   DocumentSnapshotPlatform _snapshot(Map<String, Object?>? data,
-          {required bool hasPendingWrites}) =>
+          {required bool hasPendingWrites, bool isFromCache = false}) =>
       DocumentSnapshotPlatform(
         _cloud._platform,
         path,
         data == null ? null : Map<String, Object?>.unmodifiable(data),
         InternalSnapshotMetadata(
-            hasPendingWrites: hasPendingWrites, isFromCache: false),
+            hasPendingWrites: hasPendingWrites, isFromCache: isFromCache),
       );
+
+  /// Revisión de Codex (10.91) · Entrega a las escuchas abiertas una
+  /// instantánea que el cierre tiene que descartar: la vista con la escritura
+  /// propia todavía pendiente o, con [fromCache], el documento del servidor
+  /// leído de la caché.
+  void emitRejected({bool fromCache = false}) {
+    final pending = _pendingView;
+    _emit(fromCache || pending == null
+        ? _snapshot(_serverData,
+            hasPendingWrites: !fromCache, isFromCache: fromCache)
+        : _snapshot(pending, hasPendingWrites: true));
+  }
 
   DocumentSnapshotPlatform _serverSnapshot() =>
       _snapshot(_serverData, hasPendingWrites: false);
@@ -228,8 +247,10 @@ class T129FakeDocument extends DocumentReferencePlatform {
     };
     // 3. El acuse termina el `update` sin que la vista cambie
     //    (`shouldWaitForSyncedDocument`); el eco del servidor llega en una
-    //    vuelta posterior del bucle de eventos.
-    unawaited(Future<void>.delayed(Duration.zero, _echo));
+    //    vuelta posterior del bucle de eventos, salvo que se retenga.
+    if (!_cloud.holdEcho) {
+      unawaited(Future<void>.delayed(Duration.zero, _echo));
+    }
   }
 
   void _echo() {
