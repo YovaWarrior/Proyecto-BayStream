@@ -1,0 +1,23 @@
+[
+  {
+    "file": "firebase-app.js",
+    "url": "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js",
+    "originalSha256": "39A50952B5DEF557337B2290069C7D7371F3515AD46C44A43B9C520F734D8D14",
+    "servedSha256": "6831B388C680B3335204FC1EFBCA6D494841949600DF6B6BA3829B3534CBFA1B",
+    "license": "LICENSE.txt"
+  },
+  {
+    "file": "firebase-auth.js",
+    "url": "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js",
+    "originalSha256": "59F60CE3ADCB4C85A5260E963FD14134EEC088DE5B18DDFB9E95771C72F65264",
+    "servedSha256": "0F99FC82C189CC62A37EF58558BBE91A54B83D47A8592B03144E3DC15C678B5C",
+    "license": "LICENSE.txt"
+  },
+  {
+    "file": "firebase-firestore-pipelines.js",
+    "url": "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-pipelines.js",
+    "originalSha256": "E9BB207298105253EB73336C2478A0C30BC31631960EA1BF7CB4B6C87CE05F05",
+    "servedSha256": "0C4E645F0CF31B5553E71922C29EB0314A998940A7949141A668340FBE749A98",
+    "license": "LICENSE.txt"
+  }
+]

@@ -87,4 +87,26 @@ void main() {
     expect(script, isNot(contains('--certificate-path')));
     expect(script, isNot(contains('--certificate-password')));
   });
+
+  test('T-136 el script comprueba el SDK de Firebase antes de empaquetar', () {
+    final script = File('tool/t93_msix.ps1').readAsStringSync();
+    // Los comandos de verdad: el encabezado del script también nombra
+    // «flutter build windows» y «dart run msix:create».
+    final pubGet = script.indexOf('& flutter pub get');
+    final apartar = script.indexOf(r'& $sdkFirebase -Proyecto $repo -Apartar');
+    final compilar = script.indexOf('& flutter build windows');
+    final empaquetar = script.indexOf('& dart run msix:create');
+    expect(script, contains('t136_sdk_firebase.ps1'));
+    expect(pubGet, greaterThanOrEqualTo(0));
+    expect(pubGet, lessThan(apartar));
+    expect(apartar, lessThan(compilar));
+    // En la columna 0, fuera del bloque de compilar: con -SinCompilar también
+    // se comprueba, y la comprobación queda después de compilar.
+    final verificar = RegExp(r'^& \$sdkFirebase -Proyecto \$repo -Verificar',
+            multiLine: true)
+        .firstMatch(script);
+    expect(verificar, isNotNull);
+    expect(compilar, lessThan(verificar!.start));
+    expect(verificar.start, lessThan(empaquetar));
+  });
 }

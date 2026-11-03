@@ -36,7 +36,7 @@ _flutter.loader.load({
     }
 
     // Core primero: los otros servicios comparten exactamente su módulo.
-    const sdkBase = new URL('vendor/firebase/12.17.0/', document.baseURI);
+    const sdkBase = new URL('vendor/firebase/12.19.0/', document.baseURI);
     window.firebase_core = await import(new URL('firebase-app.js', sdkBase).href);
     const [auth, firestore] = await Promise.all([
       import(new URL('firebase-auth.js', sdkBase).href),
