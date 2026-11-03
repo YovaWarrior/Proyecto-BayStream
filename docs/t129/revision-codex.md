@@ -231,3 +231,133 @@ NO PASA por P2: los eventos rechazados reinician el plazo; código intacto y emu
 > plazo y probar silencio y eventos sostenidos con cancelación. No ejecuté el
 > emulador. Informe: `docs/t129/revision-codex.md`; bloque para copiarlo y
 > versionarlo en `baystream-rediseno` dentro del informe. `pubspec.*` intactos.
+
+
+## 9. Segunda revisión corta · Corrección del P2 (2-nov-2026)
+
+**Dictamen vigente sobre la corrección: PASA.** El P2 de la sección 4 queda
+**cerrado**. No encontré hallazgos P1, P2 ni P3 nuevos en el alcance revisado.
+Las secciones anteriores conservan el resultado histórico sobre `2d98f23`.
+
+### 9.1 Base y alcance
+
+Revisión sobre `a18d2d3d9c6d326a1f5aa59d76ec81879bc5a9c0`, «Sprint 4: T-129, el
+plazo del cierre no se reinicia con instantaneas rechazadas», confirmado al
+empezar y al terminar. Se revisó exclusivamente la corrección del plazo, los dos
+controles de la falsa y las dos pruebas nuevas, con las regresiones solicitadas.
+
+Leí la 10.91 de `SPRINT-4.md` y la sección 6.4 de `docs/T129-RESULTADOS.md`.
+En esta punta todavía no existe la 10.92: el sprint termina anunciándola como
+siguiente decisión. Carlos confirmó que está escrita pero sin commit, que solo
+resume la corrección y que debía continuar con su encargo, la 10.91 y la 6.4.
+No se modificó el documento del sprint.
+
+### 9.2 Código, pruebas y cancelación
+
+- `_afterOwnWrite` (líneas 86–94) usa exactamente
+  `snapshots(includeMetadataChanges: true).where(criterio).timeout(_networkTimeout).first`.
+  El criterio conserva `!hasPendingWrites && !isFromCache`. Los eventos
+  descartados ya no llegan al temporizador; la primera instantánea aceptada
+  termina la espera. No cambian la escritura, la hora del servidor ni las demás
+  ramas de `close()`.
+- `.first` cancela la suscripción al recibir el dato y usa `cancelOnError` para
+  el error del plazo. La cancelación se comprobó en las sondas, tanto al llegar
+  el eco limpio como al vencer el plazo: **cero escuchas abiertas**.
+- `holdEcho` vale `false` por omisión. Activarlo retiene el eco, conservando la
+  aplicación de la escritura en el servidor y la resolución del acuse.
+  `emitRejected()` emite la vista pendiente; `emitRejected(fromCache: true)`
+  emite el documento con `isFromCache: true` y sin escrituras pendientes. Son
+  controles de prueba en la capa de plataforma; no incorporan clases selladas
+  ni afectan el camino normal mientras no se usan.
+- Las **cinco pruebas anteriores y sus auxiliares son idénticos** a los de
+  `2d98f23`, normalizando únicamente CRLF/LF para comparar la lectura de Git.
+  El cotejo está en `cotejo-cinco-originales.json`.
+- Las dos pruebas nuevas comprueban silencio y rechazos sostenidos: a los
+  **44 s** el resultado sigue pendiente; a los **46 s** ya es `timeout`, con la
+  nube cerrada, la copia local abierta y **cero escuchas**. En la segunda llega
+  un rechazo a los 40 s y se siguen emitiendo rechazos a los 80, 120 y 160 s:
+  no queda ninguna suscripción y el resultado no cambia.
+- El ayudante `pasa()` combina `tester.pump` con vueltas reales mediante
+  `tester.runAsync`. Permite terminar las continuaciones de la cancelación
+  registradas fuera de la zona del reloj simulado, como explica la 6.4. No
+  modifica el plazo del producto ni sustituye el resultado de `close()`.
+
+Los segundos citados son del reloj simulado; no constituyen mediciones de red.
+La prueba acota la respuesta entre 44 y 46 s desde el inicio de la espera.
+
+### 9.3 Corridas propias y evidencia
+
+Evidencia definitiva: `build/t129-revision/segunda/`, con `resumen-final.json`.
+
+| Comprobación | Resultado | Registro |
+|---|---|---|
+| `flutter test --no-pub test/t129_cierre_test.dart` | **7/7**, sin fallas ni omitidas | `t129.log`, `t129.json` |
+| Las tres sondas exactas de la primera revisión contra el repositorio corregido | **3/3**, sin fallas ni omitidas | `sondas-exclusivas.log`, `sondas-exclusivas.json` |
+| Suite completa, una sola corrida con reportero JSON | **1914/1914**, cero fallas y cero omitidas; incluye las siete de T-129 | `suite.log`, `suite.json` |
+| `flutter analyze --no-pub`, copia preparada con fuentes idénticos | **No issues found!** | `analyze-exclusivo.log` |
+
+La suite tiene `success: true` y terminó a los 131326 ms del reportero. No se
+sumaron corridas parciales. El conteo de T-129 se obtuvo por la ruta de su suite
+en el JSON, que incluye tanto los cinco `test` como los dos `testWidgets`.
+
+Mis tres sondas conservaron exactamente el archivo de pruebas y la falsa
+archivados en la primera revisión. Solo el repositorio probado procede de la
+punta corregida; `sondas-integridad.json` verifica ese contraste. Pasan los tres
+casos: silencio, rechazos pendientes a los 40/80/120/160 s y caché seguida del eco
+limpio. La sonda de rechazos que antes fallaba a los 160 s ahora pasa; las dos
+pruebas nuevas anteriores acreditan además la respuesta cerca de los 45 s.
+
+Para `analyze` usé una copia temporal con **633 archivos idénticos**, incluidos
+**486 fuentes Dart**, la misma configuración y el mismo lock. Como en la
+primera revisión, preparé allí la entrada sintética de T-124 con el generador
+existente y los sintéticos T-100/T-99. No se alteraron fuentes, configuración ni
+supresiones para obtener el cero. `bancos.json` identifica las copias y su cotejo.
+
+**Semáforo.** Carlos autorizó la ventana exclusiva. Mi suite completa terminó
+antes de que otro programador iniciara una suite: 23:28:24 frente a 23:28:35.
+Detecté posteriormente que ese otro comando sí se había superpuesto con el
+tramo de sondas/análisis. No se tocó su proceso. Carlos reservó una segunda
+ventana exclusiva y repetí únicamente esas dos verificaciones: **3/3 y cero**,
+de 23:33:28 a 23:33:51. Esas repeticiones son las definitivas de la tabla. No
+se repitió la suite completa, que no había coincidido con la otra.
+
+### 9.4 Entrega y límites
+
+Solo se añadió esta sección a `docs/t129/revision-codex.md`, manteniendo intacto
+el contenido anterior. No modifiqué código del producto ni pruebas del proyecto.
+Antes de anexarla se cotejaron **375 archivos** y no había cambios: `lib/`,
+`test/`, manifiesto, lock, configuración, informe y los tres generados de Windows.
+**`pubspec.yaml` y `pubspec.lock` no cambian.** Las evidencias y los scripts propios
+quedan bajo `build/t129-revision/segunda/`, ignorado por `/build/`; no van a Git.
+
+El emulador queda fuera por decisión expresa de Carlos. No se abrió Chrome,
+no se inició una app ni se accedió a Firebase real o a los almacenes de Windows.
+Los fakes usan bitácora en memoria. El dictamen cierra el P2 de la primera
+revisión mediante código y pruebas; el caso E2E del SDK real queda sin medir aquí.
+
+### 9.5 Git para Carlos
+
+```powershell
+New-Item -ItemType Directory -Force -Path 'C:\Proyectos\baystream-rediseno\docs\t129' | Out-Null
+Copy-Item -LiteralPath 'C:\Proyectos\baystream-qa-r4\docs\t129\revision-codex.md' -Destination 'C:\Proyectos\baystream-rediseno\docs\t129\revision-codex.md'
+Set-Location -LiteralPath 'C:\Proyectos\baystream-rediseno'
+git add -- docs/t129/revision-codex.md
+git commit -m "Sprint 4: segunda revision corta de T-129"
+git push origin sprint-4
+```
+
+### 9.6 Tres líneas
+
+PASA: el filtro precede al plazo y el P2 queda cerrado, con cancelación de la escucha.
+Siete pruebas T-129 y tres sondas verdes; suite única 1914/1914 sin omitidas y analyze cero.
+Solo se amplió este informe; código y pubspec intactos, emulador fuera del alcance.
+
+### 9.7 Mensaje para Yov
+
+> Segunda revisión de T-129 sobre `a18d2d3`: PASA, P2 cerrado, sin hallazgos P1/P2/P3
+> nuevos. Siete pruebas y mis tres sondas verdes; a los 44 s sigue pendiente y a los
+> 46 s devuelve timeout sin escuchas, aunque haya rechazos. Suite única 1914/1914
+> sin omitidas y analyze cero en copia preparada con fuentes idénticos. Repetí
+> sondas/analyze en una nueva ventana exclusiva tras detectar una superposición
+> de comandos; las suites completas no coincidieron. Código y pubspec intactos,
+> emulador fuera. Sección 9 de `docs/t129/revision-codex.md`, con el bloque de Git.
