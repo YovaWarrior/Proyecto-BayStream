@@ -2660,3 +2660,41 @@ Para la línea base de `analyze`, T-131 copió de `baystream-t132` la entrada ge
 - Dos observaciones anteriores a T-131, en el teléfono: la línea «Bahía 02, carga: nada pendiente» mide 21 dp y no pasa la pauta de toque, y el peso por pila «110.0+?» queda a 4.33:1.
 
 La siguiente decisión es la **10.95**.
+
+### 10.95 · T-131 y T-133 en sprint-4; la candidata 0.4.2 queda para el 3-nov; las pruebas de Android, con una tablet en el emulador (3-nov, 01:50)
+
+**T-131 está en sprint-4.** Su rama entró con la mezcla `725a74e` (01:11), sin conflictos. La suite de T-131 dio 2012 de 2012 y `analyze` cero.
+
+**T-133 está en `4b939f3`** (Timonel, Opus 5.5, 01:44):
+- **Lo que cambia.** Con marca, `BsCelda` conserva el código como texto grande y pone la marca debajo, con su ícono y su rótulo. Si no caben, gana el código. El relleno, el borde y la etiqueta accesible no cambian.
+- **El caso del piloto.** Las 8 reservas de la bahía 10 dicen ahora «OR 130 · Revisar», «OR 148 · Revisar»…
+- **Las cifras.**
+  - Antes de tocar nada, su paso 0 dio la suite 2051 de 2051 y `analyze` cero, lo que confirma la mezcla de T-131.
+  - Al cerrar, la suite da 2097 de 2097: son 46 pruebas nuevas, y se ajustaron 9 que buscaban el rótulo y con la fuente cuadrada de las pruebas ya no cabe.
+  - `analyze` en cero; `pubspec.*`, `domain/` y `data/` no cambian.
+- **Definiciones de Carlos** (01:15 a 01:45):
+  - la marca va a 11 en el muelle, el mínimo de `DESIGN.md` 4.2, y a 10 en la oficina;
+  - «Cancelado» pasa a «Cancel.», como «Re‑est.» (10.28);
+  - «Bajando» y «Subiendo», que duran 1.5 s, quedan solo con su ícono;
+  - en Descarga, el texto grande es ahora el código (en la vista «Destino», el puerto, GTSTC o PAMIT) y el estado va debajo. Carlos lo acepta así.
+- **Para la aceptación (RNF-002):** cada celda con marca mide su rótulo al dibujarse, solo en la bahía a la vista, y Timonel no midió ese costo. Se revisa en el Honor con una bahía llena de marcas.
+
+**La candidata 0.4.2 queda para el 3-nov.** Trae T-129, T-130, T-131, T-132 y T-133.
+- La aceptación de Codex incluye:
+  - la suite y `analyze` en la punta;
+  - la prueba de punta a punta de T-130, con la laptop de oficina y el Honor de muelle contra el emulador de Firebase;
+  - T-132 con los datos reales del piloto, fuera del repositorio;
+  - el cierre de T-129 (O-128-2) en el emulador;
+  - el distintivo de T-131 y las marcas de T-133 en el Honor;
+  - la prueba del pellizco y Ctrl + rueda de Carlos en el `.exe`, Chrome y Edge.
+- Después, Carlos publica las reglas de T-130 desde la consola y, al final, los clientes de la 0.4.2.
+
+**El pellizco del touchpad** (consulta de Carlos, 01:38) no falla: entró con T-119 en la línea de la 0.4.1, y la `v0.4.0` (`be532ab`) no lo trae. La laptop y la Web publicada siguen en la 0.4.0, y por eso ahí no funciona. Carlos ya lo había probado el 29-oct en `qa-r4`: «todo pasó».
+
+**Las pruebas de Android, desde el 3-nov.** El teléfono es el Honor, conectado por depuración USB. Cuando haga falta un emulador de Android, es una tablet, no un teléfono.
+
+Con el Honor por USB, la prueba de punta a punta de T-130 puede llegar al emulador de Firebase de la laptop con `adb reverse` (8383 y 9399). Así no hace falta abrir el cortafuegos ni escuchar en `0.0.0.0` (ajuste 6 de la 10.90).
+
+**Pendiente:** Carlos confirma la versión de BayStream de la laptop (10.89). Todo apunta a la 0.4.0.
+
+La siguiente decisión es la **10.96**.
