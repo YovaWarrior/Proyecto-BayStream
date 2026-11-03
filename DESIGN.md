@@ -1052,7 +1052,7 @@ etiqueta); la silueta, el casco, la marca y el anillo se pintan con `CustomPaint
 | `BsTarjetaCifra` | `BsTarjetaCifra({valor, rotulo, detalle?, rol?, anillo?, onTap?})` | La tarjeta de cifra grande del mosaico: rótulo arriba (tinta suave), la cifra a **34 / 600 tabular** (`BsTextos.cifraGrande`, la escala de 4.2, que 13.10 no cambia; el lienzo la dibujaba a 40: 10.17, O2), el detalle abajo (tinta tenue); con `rol` (revisar para alertas) la cifra y el rótulo toman el contorno del rol y el borde se tiñe; con `anillo`, un `BsAnilloAvance` a la izquierda de la cifra. Panel con radio 18 y borde en línea. Etiqueta: «Por bajar: 30, 18 en la bahía 14» |
 | `BsAnilloAvance` | `BsAnilloAvance({fraccion, tamano = 52, grosor = 9, color?, etiqueta?})` | El anillo: pista en línea, arco desde las 12 en el color (hecho por omisión), extremos redondeados; sin animación (es un dato, no un movimiento). Etiqueta «80 por ciento» |
 | `BsPanelEnVivo` | `BsPanelEnVivo({eventos: List<BsEventoEnVivo>, resumen?, enLinea = true, titulo = 'En vivo'})` con `BsEventoEnVivo({que, quien: BsEquipo.muelle \| oficina, detalle, tipo: BsTipoDeEvento.movido \| hecho \| aviso \| aprobado, momento?, accion?, onAccion?})` | La actividad en tiempo real: punto verde con pulso de opacidad (2.2 s, quieto si se reduce el movimiento), el resumen (p. ej. «Oficina y 2 teléfonos del muelle»), y una fila por evento: cuadrado de 9 dp del color del tipo (grúa, hecho, aviso, acero), «Bajado · Muelle» (el rol del equipo, nunca un nombre: la API solo admite el enum), el detalle en mono y el momento o la acción («Revisar»). Región en vivo para el lector de pantalla |
-| `BsBandaMuelle` | `BsBandaMuelle({buque, viaje?, nube?, modo?, onModo?, acciones = const []})` | La banda de la marca arriba del muelle: `BsMarca.sinRecuadro` de 44, el nombre del buque (17 / 600 blanco) y el viaje y la escala (`#BCD2F7`), el chip de la nube (marca profunda, punto en hecho) y, debajo, el `SegmentedButton` Descarga / Carga de 48 dp (seleccionado blanco con texto marca). Fondo `marcaSuperficie` en los dos temas |
+| `BsBandaMuelle` | `BsBandaMuelle({buque, viaje?, nube?, modo?, onModo?, acciones = const [], distintivo?})` | La banda de la marca arriba del muelle: `BsMarca.sinRecuadro` de 44, el nombre del buque (17 / 600 blanco) y el viaje y la escala (`#BCD2F7`), el chip de la nube (marca profunda, punto en hecho) y, debajo, el `SegmentedButton` Descarga / Carga de 48 dp (seleccionado blanco con texto marca). Fondo `marcaSuperficie` en los dos temas. Con `distintivo` (`Widget Function(bool compacto)`, T-131), el distintivo de rol a la izquierda de los segmentos, en la forma que cabe (13.12) |
 | `BsFondoDePlano` | `BsFondoDePlano({child})` | De noche, la rejilla de plano: líneas cada 32 dp (`pasoRejilla`) en acero al 5 % sobre la noche; de día, solo el papel |
 
 `BsTiraDeBahias`, `BsCifra` y los demás componentes de 4.4 se quedan como están; la Fase 3
@@ -1304,18 +1304,24 @@ tipografía de 4.2 y 4.3 no cambian.
 
 ### 13.11 Los íconos del dominio, las insignias y las ilustraciones (10.18, 10.19)
 
-El paquete de Nube (`design/iconos/LEEME.md`, v2, 84 archivos con su SHA-256) trae **31 íconos
-del dominio** en el estilo **B · Sólido** que eligió Carlos (10.18), **4 insignias** de 12 px y
-**6 ilustraciones**, todo dibujado para BayStream desde la geometría del ícono (la celda, la tapa,
-el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y lo acepta Codex.
+El paquete de Nube (`design/iconos/LEEME.md`, v3, 85 archivos con su SHA-256 y el LEEME) trae
+**32 íconos del dominio** en el estilo **B · Sólido** que eligió Carlos (10.18), **4 insignias**
+de 12 px y **6 ilustraciones**, todo dibujado para BayStream desde la geometría del ícono (la
+celda, la tapa, el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y lo
+acepta Codex. **El v3** (2-nov, 10.90; integrado en T-131) suma `oficina` en U+E023, después de
+las insignias: la pantalla con la rejilla del plano calada sobre su pie, la propuesta (a) que
+eligió Carlos, pareja de `muelle` en el distintivo de rol (13.12). Los 35 glifos de antes
+conservan su código y su dibujo, y de los 86 archivos del paquete 73 son idénticos al v2, 12
+cambian y 1 es nuevo; T-131 copió los 13 (la tabla «Frente al v2» del LEEME y
+`test/t131_distintivo_test.dart`).
 
 **Cómo llega a la app.**
-- La fuente `assets/fonts/bs_iconos/BayStreamIconos.ttf` (área de uso privado U+E000 a U+E022,
+- La fuente `assets/fonts/bs_iconos/BayStreamIconos.ttf` (área de uso privado U+E000 a U+E023,
   em 1024, ascendente 1024, descendente 0, avance 1024: cada glifo ocupa el cuadrado del em,
   como Material Icons) se declara en `pubspec.yaml` como la familia `BayStreamIconos`. Es un
   asset, no una dependencia.
 - `BsIconos` (`bs_iconos.dart`, copiado tal cual del LEEME) da una constante por glifo;
-  `BsIconosCatalogo` los recorre por su nombre del paquete (31 íconos y 4 insignias) para las
+  `BsIconosCatalogo` los recorre por su nombre del paquete (32 íconos y 4 insignias) para las
   pruebas, los censos y las vistas previas. Los SVG quedan en `design/iconos/` para documentos.
 - Las ilustraciones viajan como datos (`BsIlustraciones`, generado por
   `tool/bs_ilustraciones_generar.py` desde `design/ilustraciones/*.json`) y las pinta
@@ -1345,7 +1351,8 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
 | Archivos | `baplie` («Seleccionar archivo», «Cargar archivo BAPLIE»), `compararBaplie`, `baplieSalida`, `listadoAgencia` («Listado de la agencia», «Elegir listado») | | el CSV de exportar sigue en `table_view`; PDF y JSON, en los suyos |
 | Nube | `alDia` (al día) y `soloAqui` (solo este dispositivo, sin conexión) | el chip de estado y la barra superior | `cloud` para «Nube y cuenta» sin cuenta; `cloud_sync`, `cloud_upload`, `lock_clock`, `block` y `warning_amber` para los demás estados |
 | Número de orden | `orden` | el modo Número de orden del selector (14.6); hasta T-118 no tenía sitio | |
-| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `grua`, `muelle`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
+| Rol de la cuenta | `muelle` y `oficina` (T-131) | el distintivo de rol de la cabecera (13.12): `muelle` en cobre y `oficina` en oro, a 20 dp en el muelle y a 18 en la oficina | |
+| Sin sitio todavía | `limiteApilamiento`, `segregacion`, `grua`, `escala` | la tabla del LEEME los da como «ninguno hoy»: su concepto es texto o no tiene ícono; quedan en la fuente para cuando una pantalla los pida | |
 
 **Reglas de uso.**
 1. Los íconos del dominio se dibujaron en la rejilla de 24 y se usan a **16, 20 o 24 px**; las
@@ -1418,6 +1425,144 @@ el casco, el hueco, la pieza que se mueve). Lo integró Timonel (Parte B y C) y 
      opacidad 0 al empezar y al terminar el cruce y 1 a la mitad; el buque pintado una sola vez en 60
      cuadros; sin desbordes ni empujones a 360, 600, 1280 × 720 y 1920 × 1080 con la letra a 1.0,
      1.45 y 2.0; y `meetsGuideline` igual que antes.
+
+### 13.12 El distintivo de rol (T-131; 10.86 y 10.90)
+
+**Por qué.** En la tercera prueba piloto (1-nov; 10.85, hallazgo 8), la oficina en la Web del
+iPhone y el muelle en el Honor se veían iguales: el aspecto lo decide el equipo
+(`bayStreamEsMuelle`), no el rol de la cuenta. Carlos decidió el 1-nov que los permisos no cambian
+y que el rol va en la cabecera como un distintivo con diseño, no como texto plano, y eligió la
+variante B, «Filo de metal», del lienzo de Yov: el metal de la presentación del 7-nov, solo en el
+filo y en el ícono. Es el primer cambio visual del rediseño que viene después y entra en la versión
+del 7-nov; es la única pieza de la app con esos metales antes de esa fecha.
+
+**La pieza, `BsDistintivoDeRol`** (`componentes/bs_distintivo_de_rol.dart`):
+`BsDistintivoDeRol({required BsEquipo equipo, bool compacto = false, VoidCallback? onTap})`. No
+lee providers: recibe el rol, la forma y qué pasa al tocarla.
+- **La píldora**, del alto visible de `alturaChip` (40 en el muelle y 32 en la oficina), dentro de
+  una zona táctil de `objetivoTactil` (48) que ocupa su sitio, como la de los chips de Material: un
+  toque en el margen va a la píldora.
+- **El metal**, pintado con un `CustomPainter` dentro de un `RepaintBoundary`: el relleno con el
+  degradado del fondo, de arriba abajo; el filo de 1.5 dp con el degradado del metal a 135°, como
+  el `linear-gradient(135deg, …)` del lienzo (a 45° de verdad, con el claro en la esquina de arriba
+  a la izquierda y el oscuro en la de abajo a la derecha, sea cual sea el ancho, y la parada del
+  medio al 55 %); un brillo de 1 dp arriba, por dentro (blanco al 18 % en el muelle y al 14 % en la
+  oficina, el `inset 0 1px 0` del lienzo; a 3× sale una banda limpia de 3 px), y una sombra leve
+  (1 dp hacia abajo y 3 de desenfoque).
+- **El ícono** del paquete, `muelle` o `oficina`, a 20 dp en el muelle y a 18 en la oficina (13.11,
+  regla 1: a otro tamaño se escala entero). **El rótulo**, `BsEquipo.rotulo`, en IBM Plex Sans
+  Condensed 600 con el tamaño de `labelLarge`. Los aires son los del lienzo: 12 y 16 dp a los lados
+  y 8 entre el ícono y el rótulo en el muelle; 10, 14 y 6 en la oficina. Con la letra grande la
+  píldora crece en alto; el rótulo no se corta.
+- **La forma compacta**: solo el ícono, en un círculo de `alturaChip` con el mismo relleno y el
+  mismo filo, en la misma zona de 48.
+- **Sin animación.** El toque, el foco y el mouse se marcan con el color del rótulo al 16 % y al 8 %
+  encima del metal, sin la onda.
+- **Para el lector de pantalla**, un botón con la etiqueta «Rol: Muelle» o «Rol: Oficina» y la pista
+  «Abre Nube y cuenta». La descripción emergente dice el rol («Rol: Oficina») y queda fuera de la
+  semántica, como la de «Acciones» (14.8). Igual en la compacta.
+
+**Los colores** (`BsPaleta.metalMuelle` y `BsPaleta.metalOficina`, de tipo `BsMetalDeRol`; el mismo
+valor en claro y en oscuro: el metal no cambia con el tema):
+
+| | Muelle (cobre) | Oficina (oro) |
+|---|---|---|
+| Fondo, de arriba abajo | `#0B3E93` → `#082F70` | `#16305C` → `#0E2244` |
+| Filo de 1.5 dp, a 135° | `#F8D2B6` → `#E0895A` (55 %) → `#9E5530` | `#FFF0C4` → `#F2C46D` (55 %) → `#A87A2C` |
+| Ícono | `muelle` (U+E017) en `#F4B48E` | `oficina` (U+E023) en `#F2C46D` |
+| Rótulo | «Muelle» en `#FFFFFF` | «Oficina» en `#F4F6FB` |
+| Brillo y sombra | blanco al 18 %; `#07111F` al 35 % | blanco al 14 %; negro al 40 % |
+
+**La regla del metal.** El metal va solo en el filo y en el ícono, nunca de relleno: así no se
+confunde con el naranja de «recién movido» (13.3) ni con el ámbar de «Revisar». Es la única
+excepción a la escala de un solo tono y a «sin degradados», por decisión de Carlos del 1-nov; nada
+más de la app lleva metal ni degradado antes del 7-nov.
+
+**El contraste** (`tool/rediseno_contraste.py`, sección del distintivo, en
+`docs/rediseno/fase2bis/contraste.md`; `test/t131_distintivo_test.dart`). El rótulo, a 9.88:1
+(muelle) y 12.05:1 (oficina) sobre el peor extremo del fondo; el ícono, a 5.54:1 y 8.00:1. Contra
+cada fondo donde va, compuesto también con la sombra encima, el relleno o el filo a 3:1:
+
+| Fondo | Muelle: relleno · filo claro · 55 % · oscuro | Oficina: relleno · filo claro · 55 % · oscuro |
+|---|---|---|
+| La banda, `#0D47A1` (los dos temas) | 1.06 · **6.12 · 3.25** · 1.56 | 1.05 · **7.61 · 5.30** · 2.25 |
+| La barra superior y la cabecera, de día (`#F5F8FC`) | **4.09** · 1.32 · 1.10 · 2.29 | **4.34** · 1.06 · 1.53 · 1.27 |
+| La barra superior y la cabecera, de noche (`#07111F`) | 1.49 · **13.42 · 7.12** · 3.42 | 1.20 · **16.69 · 11.63** · 4.95 |
+
+De día cumple el relleno; de noche y sobre la banda, el filo. Sobre la banda, el filo se exige en
+su claro y en su tono del 55 %, y el extremo oscuro se informa sin exigirlo (Carlos, 2-nov): el
+cobre baja de 3:1 desde el 60 % del degradado y el oro desde el 86 %, en la esquina de abajo a la
+derecha.
+
+**Dónde va.** El rol sale de `operatorProvider` (`rolDelDistintivoProvider`, en
+`sync_providers.dart`): con una cuenta autorizada, también la de la copia local cuando no hay red,
+la oficina da «Oficina» y el muelle, «Muelle». Sin cuenta o sin autorizar no hay distintivo y la
+cabecera queda como antes. Si el rol cambia en la nube, el distintivo cambia sin reiniciar: la
+lista de autorizados se escucha en tiempo real. Al tocarlo se abre «Nube y cuenta».
+- **En la banda del muelle**, en la segunda fila, a la izquierda de Descarga / Carga y centrado con
+  los segmentos (la banda lo recibe por parámetro, 13.6).
+- **En el título del viaje**, a la derecha del bloque del nombre y el viaje, centrado en su alto.
+  Así va en la barra superior del teléfono (la oficina en la Web de un teléfono y el muelle fuera
+  de una operación) y en la cabecera de la oficina, en Windows y en la Web. **Carlos lo decidió el
+  2-nov**, en lugar de la línea del nombre del lienzo: ahí, la zona de 48 llevaba el título de 38 a
+  65 dp, que la barra de 56 recorta (`Clip.hardEdge`), y la cabecera de la oficina crecía de 64 a
+  81 dp. A la derecha del bloque, el título mide 48 y nada crece. Si la línea del viaje es más
+  larga que el nombre, el distintivo queda después del viaje.
+- **En la laptop no va a la derecha de la cabecera**, como en el lienzo: así es una sola regla, y
+  el borde derecho sigue siendo de Buscar, la nube y el panel.
+
+**Cómo cabe**, medido como el resto de la cabecera (`BsPrimeraQueCabe`). En la banda y en la
+cabecera de la oficina **los controles mandan y el distintivo cede primero**; ninguna de las dos
+crece por él (Carlos, 3-nov):
+- **En la barra superior del teléfono**: completo; si no cabe, compacto; y solo después el nombre
+  y el viaje se encogen, como antes. La barra mide 56 con o sin distintivo.
+- **En la cabecera de la oficina**: la misma que sin cuenta, con la misma forma del selector, las
+  mismas líneas y el mismo alto. El selector conserva sus segmentos mientras quepan sin el
+  distintivo. Para cada forma, en una línea: con los segmentos y el completo; con los segmentos y
+  el compacto; con los segmentos y sin distintivo; y lo mismo con el menú. En una línea, la zona
+  de 48 dp no cambia el alto (lo marcan los controles o el título).
+  - **Si no cabe en una línea**, van las dos de 14.8. El título va solo en la suya y el
+    distintivo, completo o compacto, solo si no la hace más alta: cuando el bloque del nombre y
+    el viaje mide 48 dp o más (con la letra a 1.0 mide 38, y en dos líneas no va). Si ni el
+    compacto cabe, va sin distintivo y el nombre se encoge como antes.
+  - **El nombre no se encoge para hacerle sitio.** La regla que eligió Carlos lo permite solo si
+    el alto no cambia (3-nov), y en la cabecera eso no se da nunca. En una línea, el nombre no se
+    encoge hoy. En dos, el distintivo va solo si el bloque mide 48 dp o más, y entonces es el
+    bloque el que marca el alto de la línea: encogerlo la bajaría (a 1366 con 2.0, de 92 a unos
+    86 dp).
+- **En la banda**: completo solo si Descarga y Carga conservan su rótulo y su ícono enteros; si
+  no, compacto; y si ni así, **sin distintivo**, la banda como antes (Carlos, 3-nov: a 360 dp con
+  la letra a 2.0, el compacto partía «Descarga» en dos renglones y la banda crecía de 164 a 184 dp).
+
+Lo que sale con el buque sintético de las pruebas (BUQUE MANUAL, «Viaje V117 · Escala GTSTC»;
+con otros nombres sale lo que quepa, por la misma regla):
+
+| Dónde | Tamaño | Letra 1.0 | Letra 2.0 |
+|---|---|---|---|
+| La banda del muelle | 360 × 640 y 360 × 800 | compacto; la banda, 136 dp, como antes | sin distintivo; 164 dp, como antes |
+| La barra del muelle sin operación | 360 de ancho | completo | compacto |
+| La barra de la oficina en un teléfono | 360 de ancho | compacto | compacto |
+| La barra de la oficina en un teléfono | 390 × 844 | completo | compacto |
+| La cabecera de la oficina | 600 × 800 | sin distintivo: va en dos líneas y el bloque del título mide 38 dp; 106 dp | sin distintivo: en dos líneas no cabe junto al título; 177 dp |
+| La cabecera de la oficina | 800 × 800 | completo, en una línea; 64 dp | completo, en la línea del título de las dos; 144 dp |
+| La cabecera de la oficina | 1280 × 720 | completo, en una línea; 64 dp | completo, en la línea del título de las dos; 144 dp |
+| La cabecera de la oficina | 1366 × 768 | completo, en una línea con el selector en menú, como sin cuenta; 64 dp | sin distintivo: la línea cabía con 4 dp de sobra; 92 dp, en una línea |
+| La cabecera de la oficina | 1920 × 1080 | completo, en una línea; 64 dp | compacto, en una línea; 92 dp |
+
+En la cabecera, cada alto es el mismo que sin cuenta (`test/t131_cabeceras_test.dart` lo exige a
+600 y a 1366, con la letra a 1.0 y a 2.0).
+
+**Las pruebas**: `test/t131_distintivo_test.dart` (la pieza, su contraste compuesto y la fuente
+v3) y `test/t131_cabeceras_test.dart` (las tres cabeceras con un `operatorProvider` falso, el
+toque, la forma que cabe, la cabecera igual que sin cuenta y la matriz sin desbordes a 360 × 640,
+360 × 800, 600 y 1366 de ancho con la letra a 1.0 y a 2.0). `meetsGuideline` con las cuatro pautas (`androidTapTargetGuideline`,
+`iOSTapTargetGuideline`, `labeledTapTargetGuideline` y `textContrastGuideline`) sobre la pieza, en
+claro y en oscuro, con las dos densidades, sobre el papel y sobre la banda, y en la cabecera de la
+oficina en la pantalla entera. En el teléfono, las de toque y etiqueta se miden en la cabecera,
+porque la línea del resumen del plano («Bahía 02, carga: nada pendiente»), anterior a T-131, mide
+21 dp de alto; y el contraste, en la pantalla entera, donde de día solo falla el peso por pila
+«110.0+?» (11 px en tinta suave, 4.33:1), que falla igual sin cuenta. Las capturas, con datos
+sintéticos, en `build/t131/` (`test/t131_capturas_test.dart`).
 
 ## 14. La oficina con más plano (T-117) y el selector de modo (T-118)
 

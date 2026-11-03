@@ -29,6 +29,18 @@ final operatorProvider = StreamProvider<Operator?>((ref) async* {
 final movementAuthorProvider = Provider<MovementAuthor>(
     (ref) => ref.watch(operatorProvider).value?.author ?? dockOperator);
 
+/// T-131 · El rol que dice el distintivo de la cabecera (`DESIGN.md` 13.12;
+/// 10.86): con una cuenta autorizada, también la que viene de la copia local
+/// cuando no hay red, su rol; sin cuenta o sin autorizar, nada, y la cabecera
+/// queda como antes. Sigue a [operatorProvider], que escucha la lista de
+/// autorizados en tiempo real: si el rol cambia en la nube, el distintivo
+/// cambia sin reiniciar. Es solo lo que se ve: los permisos no dependen de
+/// esto.
+final rolDelDistintivoProvider = Provider<OperatorRole?>((ref) {
+  final operador = ref.watch(operatorProvider).value;
+  return operador == null || !operador.authorized ? null : operador.role;
+});
+
 final operationSyncProvider = FutureProvider<OperationSyncRepository>((ref) async {
   final log = await ref.watch(movementLogRepositoryProvider.future);
   final session = await ref.watch(sessionRepositoryProvider.future);

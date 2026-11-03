@@ -6,6 +6,7 @@ import '../bs_medidas.dart';
 import '../bs_paleta.dart';
 import 'bs_marca.dart';
 import 'bs_panel_en_vivo.dart';
+import 'bs_primera_que_cabe.dart';
 
 /// El modo de operación que la banda ofrece.
 enum BsModoDeOperacion {
@@ -26,7 +27,8 @@ enum BsModoDeOperacion {
 
 /// La banda de la marca arriba del muelle (`DESIGN.md`, 13.6 y 13.8): la marca
 /// sin recuadro sobre el azul, el nombre del buque y el viaje, el chip de la
-/// nube y, debajo, el `SegmentedButton` Descarga / Carga de 48 dp.
+/// nube y, debajo, el `SegmentedButton` Descarga / Carga de 48 dp, con el
+/// distintivo de rol a su izquierda (13.12).
 ///
 /// El fondo es la marca como superficie en los dos temas; el texto va en
 /// blanco (8.6:1) y la frase en el azul claro de la banda (5.6:1).
@@ -45,6 +47,7 @@ class BsBandaMuelle extends StatelessWidget {
       BsModoDeOperacion.carga,
     },
     this.acciones = const <Widget>[],
+    this.distintivo,
   });
 
   /// El nombre del buque.
@@ -73,12 +76,75 @@ class BsBandaMuelle extends StatelessWidget {
   /// Acciones a la derecha del chip de la nube (iconos de 48 dp).
   final List<Widget> acciones;
 
+  /// El distintivo de rol (`BsDistintivoDeRol`, 13.12) en la forma que se le
+  /// pide: va en la segunda fila, a la izquierda de Descarga / Carga y
+  /// centrado con los segmentos. Completo solo si los segmentos conservan su
+  /// rótulo y su ícono enteros; si no, compacto; si ni así, no va. Sin él, la
+  /// banda queda como antes.
+  final Widget Function(bool compacto)? distintivo;
+
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final paleta = BsPaleta.de(tema.brightness);
     final medidas = BsMedidas.de(context);
     final textos = tema.textTheme;
+    final segmentos = (modo != null || mostrarModos) && modos.isNotEmpty
+        ? SegmentedButton<BsModoDeOperacion>(
+            emptySelectionAllowed: true,
+            segments: <ButtonSegment<BsModoDeOperacion>>[
+              for (final valor in BsModoDeOperacion.values)
+                if (modos.contains(valor))
+                  ButtonSegment<BsModoDeOperacion>(
+                    value: valor,
+                    label: Text(valor.rotulo),
+                    icon: Icon(valor.icono),
+                  ),
+            ],
+            selected: <BsModoDeOperacion>{
+              if (modo != null && modos.contains(modo)) modo!,
+            },
+            onSelectionChanged: onModo == null
+                ? null
+                : (Set<BsModoDeOperacion> valores) {
+                    if (valores.isNotEmpty) onModo!(valores.first);
+                  },
+            showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(
+              minimumSize: Size(medidas.objetivoTactil, medidas.alturaBoton),
+              backgroundColor: paleta.marcaProfunda,
+              foregroundColor: paleta.sobreMarcaSuave,
+              selectedBackgroundColor: paleta.sobreMarcaSuperficie,
+              selectedForegroundColor: paleta.marcaSuperficie,
+              side: BorderSide(color: paleta.marcaProfunda),
+              textStyle: textos.labelLarge,
+            ),
+          )
+        : null;
+    // La segunda fila (13.12): el distintivo a la izquierda de los segmentos,
+    // medido como el resto de la cabecera. Completo solo si los segmentos
+    // caben con su rótulo y su ícono enteros; si no, compacto; y si ni así,
+    // los segmentos solos, como antes: Descarga y Carga mandan (Carlos,
+    // 3-nov; a 360 dp con la letra a 2.0, el compacto partía «Descarga»).
+    final distintivo = this.distintivo;
+    final Widget? segundaFila = distintivo == null
+        ? segmentos
+        : segmentos == null
+            ? Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: distintivo(false),
+              )
+            : BsPrimeraQueCabe(variantes: <Widget>[
+                for (final compacto in const <bool>[false, true])
+                  Row(
+                    children: <Widget>[
+                      distintivo(compacto),
+                      SizedBox(width: medidas.espacioM),
+                      Expanded(child: segmentos),
+                    ],
+                  ),
+                segmentos,
+              ]);
     return Material(
       color: paleta.marcaSuperficie,
       child: SafeArea(
@@ -136,38 +202,9 @@ class BsBandaMuelle extends StatelessWidget {
                   ],
                 ],
               ),
-              if ((modo != null || mostrarModos) && modos.isNotEmpty) ...<Widget>[
+              if (segundaFila != null) ...<Widget>[
                 SizedBox(height: medidas.espacioM),
-                SegmentedButton<BsModoDeOperacion>(
-                  emptySelectionAllowed: true,
-                  segments: <ButtonSegment<BsModoDeOperacion>>[
-                    for (final valor in BsModoDeOperacion.values)
-                      if (modos.contains(valor))
-                        ButtonSegment<BsModoDeOperacion>(
-                        value: valor,
-                        label: Text(valor.rotulo),
-                        icon: Icon(valor.icono),
-                      ),
-                  ],
-                  selected: <BsModoDeOperacion>{
-                    if (modo != null && modos.contains(modo)) modo!,
-                  },
-                  onSelectionChanged: onModo == null
-                      ? null
-                      : (Set<BsModoDeOperacion> valores) {
-                          if (valores.isNotEmpty) onModo!(valores.first);
-                        },
-                  showSelectedIcon: false,
-                  style: SegmentedButton.styleFrom(
-                    minimumSize: Size(medidas.objetivoTactil, medidas.alturaBoton),
-                    backgroundColor: paleta.marcaProfunda,
-                    foregroundColor: paleta.sobreMarcaSuave,
-                    selectedBackgroundColor: paleta.sobreMarcaSuperficie,
-                    selectedForegroundColor: paleta.marcaSuperficie,
-                    side: BorderSide(color: paleta.marcaProfunda),
-                    textStyle: textos.labelLarge,
-                  ),
-                ),
+                segundaFila,
               ],
             ],
           ),

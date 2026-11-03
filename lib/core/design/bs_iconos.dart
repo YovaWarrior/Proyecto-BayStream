@@ -2,8 +2,9 @@
 /// Generado por design/iconos/generar.py a partir de design/iconos/codigos.json; no editar a mano.
 library;
 
-// Copiado tal cual del LEEME del paquete v2 (design/iconos/LEEME.md, 10.19);
-// solo se suma `library;` para que el comentario quede atado al archivo.
+// Copiado tal cual del LEEME del paquete v3 (design/iconos/LEEME.md; 10.19 y,
+// para `oficina`, 10.86 y 10.90); solo se suma `library;` para que el
+// comentario quede atado al archivo.
 // El catálogo por nombre, para pruebas y vistas previas, está en
 // bs_iconos_catalogo.dart.
 import 'package:flutter/widgets.dart';
@@ -46,4 +47,5 @@ abstract final class BsIconos {
   static const IconData insigniaPeligrosa = IconData(0xE020, fontFamily: familia);
   static const IconData insigniaFueraDeMedida = IconData(0xE021, fontFamily: familia);
   static const IconData insigniaVacio = IconData(0xE022, fontFamily: familia);
+  static const IconData oficina = IconData(0xE023, fontFamily: familia);
 }

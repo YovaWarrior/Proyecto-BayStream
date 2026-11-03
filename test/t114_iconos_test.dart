@@ -2,10 +2,10 @@
 // BayStreamIconos y sus constantes.
 //   - pubspec declara la familia con su único asset, y el TTF es el del LEEME
 //     (SHA-256 de la tabla del paquete);
-//   - codigos.json y BsIconos coinciden: 35 glifos de U+E000 a U+E022, con el
-//     catálogo por nombre;
-//   - el cmap del TTF trae los 35 códigos;
-//   - con la fuente cargada, cada constante pinta su glifo y los 35 son
+//   - codigos.json y BsIconos coinciden: 36 glifos de U+E000 a U+E023, con el
+//     catálogo por nombre (T-131 suma `oficina`, paquete v3, 10.90);
+//   - el cmap del TTF trae los 36 códigos;
+//   - con la fuente cargada, cada constante pinta su glifo y los 36 son
 //     distintos entre sí;
 //   - una muestra, pintada como texto a 16 y 24 px, coincide con su SVG
 //     (el mismo trazado, rasterizado con Canvas), con tolerancia de borde.
@@ -23,9 +23,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _ttf = 'assets/fonts/bs_iconos/BayStreamIconos.ttf';
 
-/// El SHA-256 del TTF en la tabla «Archivos» de design/iconos/LEEME.md (v2).
+/// El SHA-256 del TTF en la tabla «Archivos» de design/iconos/LEEME.md (v3).
 const _sha256DelLeeme =
-    '8eec33ae80a6d3bd73f1214626fc20ebc90df77927107d75628b8d9a2b159147';
+    'c2d8ed7b8acfb7d88ca75e483ecf1e03c95f18b35c4ac43d3445cfd68bf3e61c';
 
 /// La muestra que se compara con su SVG: contenedores, lo que más se usa en
 /// la celda, las dos flechas de Carlos (10.19) y dos insignias.
@@ -213,10 +213,10 @@ void main() {
     expect(sha256.convert(archivo.readAsBytesSync()).toString(), _sha256DelLeeme);
   });
 
-  test('codigos.json y BsIconos coinciden: 35 glifos de U+E000 a U+E022', () {
-    expect(codigos, hasLength(35));
-    expect(BsIconosCatalogo.todos, hasLength(35));
-    expect(BsIconosCatalogo.iconos, hasLength(31));
+  test('codigos.json y BsIconos coinciden: 36 glifos de U+E000 a U+E023', () {
+    expect(codigos, hasLength(36));
+    expect(BsIconosCatalogo.todos, hasLength(36));
+    expect(BsIconosCatalogo.iconos, hasLength(32));
     expect(BsIconosCatalogo.insignias, hasLength(4));
     expect(BsIconosCatalogo.todos.keys.toSet(), codigos.keys.toSet());
     for (final entrada in codigos.entries) {
@@ -230,8 +230,8 @@ void main() {
     final puntos = BsIconosCatalogo.todos.values.map((i) => i.codePoint).toList()
       ..sort();
     expect(puntos.first, 0xE000);
-    expect(puntos.last, 0xE022);
-    expect(puntos.toSet(), hasLength(35), reason: 'sin códigos repetidos');
+    expect(puntos.last, 0xE023);
+    expect(puntos.toSet(), hasLength(36), reason: 'sin códigos repetidos');
     for (final nombre in BsIconosCatalogo.insignias.keys) {
       expect(nombre, startsWith('insignia_'));
       expect(BsIconosCatalogo.rejillaDe(nombre), 12);
@@ -239,16 +239,16 @@ void main() {
     expect(BsIconosCatalogo.rejillaDe('buque'), 24);
   });
 
-  test('el cmap de la fuente trae un glifo para cada uno de los 35 códigos', () {
+  test('el cmap de la fuente trae un glifo para cada uno de los 36 códigos', () {
     final presentes = _codigosDelCmap(File(_ttf).readAsBytesSync());
     for (final entrada in BsIconosCatalogo.todos.entries) {
       expect(presentes, contains(entrada.value.codePoint), reason: entrada.key);
     }
     // Ningún glifo de más en el área de uso privado.
-    expect(presentes.where((c) => c >= 0xE000 && c <= 0xF8FF), hasLength(35));
+    expect(presentes.where((c) => c >= 0xE000 && c <= 0xF8FF), hasLength(36));
   });
 
-  testWidgets('con la fuente cargada, cada constante pinta su glifo y los 35 son distintos',
+  testWidgets('con la fuente cargada, cada constante pinta su glifo y los 36 son distintos',
       (tester) async {
     await _cargarFuente();
     const lado = 24;

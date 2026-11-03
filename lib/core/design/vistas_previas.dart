@@ -15,6 +15,7 @@ import 'componentes/bs_cartela.dart';
 import 'componentes/bs_casco_bodega.dart';
 import 'componentes/bs_celda.dart';
 import 'componentes/bs_cifra.dart';
+import 'componentes/bs_distintivo_de_rol.dart';
 import 'componentes/bs_ficha_de_cifra.dart';
 import 'componentes/bs_fondo_de_plano.dart';
 import 'componentes/bs_hoja_de_detalle.dart';
@@ -481,6 +482,69 @@ Widget vistaPreviaBandaMuelle() => BsBandaMuelle(
       modo: BsModoDeOperacion.descarga,
       onModo: (BsModoDeOperacion modo) {},
     );
+
+/// Los cuatro distintivos de rol: el muelle y la oficina, completo y
+/// compacto.
+Widget _distintivos() => Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: <Widget>[
+        for (final equipo in BsEquipo.values) ...<Widget>[
+          BsDistintivoDeRol(equipo: equipo, onTap: () {}),
+          BsDistintivoDeRol(equipo: equipo, compacto: true, onTap: () {}),
+        ],
+      ],
+    );
+
+/// El distintivo de rol (13.12; 10.86, «Filo de metal»), con la densidad del
+/// muelle: sobre el papel y en la banda, a la izquierda de Descarga / Carga.
+@Preview(name: 'Distintivo de rol', group: 'Diseño', theme: bsTemaDeVistaPrevia, size: Size(420, 320))
+Widget vistaPreviaDistintivoDeRol() => Builder(
+      builder: (BuildContext context) => Material(
+        color: Theme.of(context).colorScheme.surface,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Padding(padding: const EdgeInsets.all(16), child: _distintivos()),
+            BsBandaMuelle(
+              buque: 'BUQUE MANUAL',
+              viaje: 'Viaje M100 · GTSTC',
+              nube: BsChipDeNube(texto: 'Al día', onTap: () {}),
+              modo: BsModoDeOperacion.descarga,
+              onModo: (BsModoDeOperacion modo) {},
+              distintivo: (bool compacto) => BsDistintivoDeRol(
+                equipo: BsEquipo.muelle,
+                compacto: compacto,
+                onTap: () {},
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+/// El mismo, de noche: el metal no cambia con el tema.
+@Preview(
+  name: 'Distintivo de rol, noche',
+  group: 'Diseño',
+  theme: bsTemaDeVistaPrevia,
+  brightness: Brightness.dark,
+  size: Size(420, 320),
+)
+Widget vistaPreviaDistintivoDeRolOscuro() => vistaPreviaDistintivoDeRol();
+
+/// Con la densidad de la oficina (32 dp de alto visible y el ícono a 18), de
+/// noche, como en la cabecera de la oficina.
+@Preview(
+  name: 'Distintivo de rol · oficina, noche',
+  group: 'Diseño',
+  theme: bsTemaDeVistaPreviaOficina,
+  brightness: Brightness.dark,
+  size: Size(420, 120),
+)
+Widget vistaPreviaDistintivoDeRolOficina() => _lienzo(_distintivos());
 
 /// El fondo de plano: la rejilla al 5 % solo de noche.
 @Preview(

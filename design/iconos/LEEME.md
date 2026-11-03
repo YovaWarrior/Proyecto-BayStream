@@ -1,4 +1,4 @@
-# Íconos e ilustraciones de BayStream · paquete 1 (v2)
+# Íconos e ilustraciones de BayStream · paquete 1 (v3)
 
 Estilo **B · Sólido**, elegido por Carlos Martínez el 22 de octubre de 2026 (decisión 10.18) sobre la página
 de conceptos (`design/iconos/conceptos.png`). Todo es vectorial, dibujado para BayStream y original; nada deriva de
@@ -8,11 +8,17 @@ de Material. Firma: **Nube**. Integra: **Timonel**.
 v2 (23-oct): `descarga` y `carga` con las flechas en el sentido de la app («Baja» / «Sube»), fuente 1.1 con los
 mismos códigos; fecha y número de la decisión corregidos. El resto del paquete es idéntico a la v1.
 
+v3 (2-nov): se suma `oficina`, el ícono del rol de oficina para el distintivo de la cabecera: la propuesta (a), la
+pantalla con la rejilla del plano calada sobre su pie, elegida por Carlos el 2 de noviembre (decisión 10.86) sobre la
+página de tres propuestas. Va en U+E023, después de las insignias; fuente 1.2 con las mismas métricas. Los 35 glifos
+anteriores no cambian ni de dibujo ni de código, y el resto del paquete es idéntico al v2 byte a byte: la sección
+«Frente al v2» lo demuestra con las huellas.
+
 ## Qué trae el paquete
 
-- **31 íconos del dominio** en `design/iconos/svg/` (rejilla de 24, margen de 2, un solo color:
+- **32 íconos del dominio** en `design/iconos/svg/` (rejilla de 24, margen de 2, un solo color:
   `currentColor`) y en la fuente `assets/fonts/bs_iconos/BayStreamIconos.ttf`, con sus códigos en
-  `design/iconos/codigos.json` desde U+E000.
+  `design/iconos/codigos.json` desde U+E000 (`oficina`, el de la v3, en U+E023, después de las insignias).
 - **4 insignias de 12 px** para la esquina de la celda (refrigerado, peligrosa, fuera_de_medida y vacio) en
   `design/iconos/svg_insignias/` (rejilla de 12) y en la misma fuente, como `insignia_<nombre>`.
 - **6 ilustraciones** en `design/ilustraciones/`: `<nombre>_claro.svg`, `<nombre>_oscuro.svg` y
@@ -81,6 +87,7 @@ Sin dependencias nuevas en la app: la fuente es un asset y las ilustraciones son
      static const IconData insigniaPeligrosa = IconData(0xE020, fontFamily: familia);
      static const IconData insigniaFueraDeMedida = IconData(0xE021, fontFamily: familia);
      static const IconData insigniaVacio = IconData(0xE022, fontFamily: familia);
+     static const IconData oficina = IconData(0xE023, fontFamily: familia);
    }
    ```
 3. **Las ilustraciones.** El SVG sirve para documentos y para la Web; la app pinta el JSON con un
@@ -132,8 +139,9 @@ Sin dependencias nuevas en la app: la fuente es un asset y las ilustraciones son
 | `insignia_peligrosa` | U+E020 |
 | `insignia_fuera_de_medida` | U+E021 |
 | `insignia_vacio` | U+E022 |
+| `oficina` | U+E023 |
 
-## Los 31 íconos: qué es cada uno y cómo se dibujó
+## Los 32 íconos: qué es cada uno y cómo se dibujó
 
 | Ícono | Qué es | Cómo se dibujó (rejilla de 24) |
 |---|---|---|
@@ -168,6 +176,7 @@ Sin dependencias nuevas en la app: la fuente es un asset y las ilustraciones son
 | `listado_agencia` | el listado de la agencia | la hoja apaisada (hoja de cálculo) con la tabla calada: columna del orden y columna del contenedor |
 | `al_dia` | sincronizado con la nube | la nube propia (base de celda y dos lomos) con el visto bueno calado |
 | `solo_aqui` | trabajando solo en este equipo | la misma nube con la pausa calada en el sitio del visto bueno |
+| `oficina` | el rol de oficina: operaciones o la agencia frente a su pantalla (v3) | la pantalla maciza (19 × 12) con la rejilla del plano calada (3 × 2 celdas de 3.5 × 3), el cuello y el pie-barra de la familia con la base en 22: el mismo pie y la misma base que `muelle`, su pareja en el distintivo de rol |
 
 ## Las cuatro insignias
 
@@ -218,6 +227,7 @@ Inventario sobre `lib/` de la rama `sprint-4` (`c287792`), por nombre de archivo
 | listado_agencia | `table_view` | «Listado de la agencia» en `_VesselOverviewPageState`; «Elegir listado (.xlsx)» en `_ExportListImportPageState` | `table_view` es también «CSV» en exportar |
 | al_dia | `cloud_done_outlined` | `syncStatusIcon` para `SyncState.upToDate` (`sync_status_chip.dart`) → `SyncStatusChip` y `SyncAppBarButton` | otros estados: `cloud_sync_outlined`, `cloud_upload_outlined`, `lock_clock_outlined`, `block`, `warning_amber_outlined`; `cloud_outlined` es «Nube y cuenta» |
 | solo_aqui | `phone_android` · `cloud_off_outlined` | `SyncState.localOnly` «Solo este dispositivo» y `SyncState.offline` «Sin conexión» en `syncStatusIcon` | dos estados con glifos distintos; en la barra superior `localOnly` se muestra con `cloud_outlined` |
+| oficina | ninguno hoy | el rol es texto («nombre · Oficina») en `_account` de `cloud_page.dart`; `BsEquipo.oficina` (`bs_panel_en_vivo.dart`) es un rótulo | va con `muelle` en el distintivo de rol de la cabecera (10.86); inventario de la rama `master` del 2-nov |
 
 Conceptos del dominio que hoy tienen ícono de Material y no están en el encargo (para que Carlos decida si entran en una segunda tanda):
 
@@ -272,13 +282,22 @@ dos íconos se confunden de un vistazo.
 | `comparar_baplie` · `baplie_salida` | 67 · 26.2 % | 106 · 26.5 % | sí |
 | `baplie` · `listado_agencia` | 70 · 27.3 % | 129 · 32.2 % | sí |
 | `al_dia` · `solo_aqui` | 22 · 8.6 % | 30 · 7.5 % | sí |
+| `oficina` · `muelle` | 92 · 35.9 % | 144 · 36.0 % | sí |
+| `oficina` · `bahia` | 110 · 43.0 % | 165 · 41.2 % | sí |
+| `oficina` · `baplie` | 93 · 36.3 % | 135 · 33.8 % | sí |
+| `oficina` · `al_dia` | 119 · 46.5 % | 142 · 35.5 % | sí |
+| `oficina` · `solo_aqui` | 121 · 47.3 % | 140 · 35.0 % | sí |
+| `oficina` · `contenedor_40` | 90 · 35.2 % | 121 · 30.2 % | sí |
+| `oficina` · `plataforma` | 102 · 39.8 % | 138 · 34.5 % | sí |
+| `oficina` · `listado_agencia` | 109 · 42.6 % | 146 · 36.5 % | sí |
 
-Ninguna pareja de los 31 queda por debajo del umbral (se midieron las 465 combinaciones). Lo que conviene saber:
+Ninguna pareja de los 32 queda por debajo del umbral (se midieron las 496 combinaciones; las 465 de los 31 de siempre y las 31 de `oficina`). Lo que conviene saber:
 
 - `contenedor_20` / `contenedor_40` / `contenedor_45`: el 20 se distingue por el largo (12 frente a 18) y el 45 por la altura (14 frente a 12) y el ancho a sangre; el largo extra del 45 son 1.3 px a 16 px y no se ve solo.
 - `descarga` / `carga`: cambian el sentido de la flecha y el sitio del contenedor, bajo la tapa o sobre el muelle (16 % de píxeles distintos a 16 px). Un espejo exacto, con el contenedor en el mismo sitio, se confundía.
 - `al_dia` / `solo_aqui`: es la misma nube cambiando solo el estado, a propósito (9 % / 22 px a 16 px, sobre el umbral).
 - `descarga` / `baplie_salida`: uno es vertical con el casco del buque, el otro horizontal con la hoja; no se parecen.
+- `oficina` (v3): sus ocho parientes son los de la fila de la propuesta (a) en la página de propuestas: `muelle` (su pareja en el distintivo), `bahia`, `baplie`, `al_dia` y `solo_aqui`, que pedía el encargo, y `contenedor_40`, `plataforma` y `listado_agencia`, añadidos por si la pantalla maciza se parecía a una caja. El más cercano de todos los 31 es `descarga` (58 px · 22.7 % a 16 px), lejos del umbral. Su peso, el área de tinta en píxeles de 16: `oficina` 92.4, `muelle` 75.0, `baplie` 93.0, `bahia` 97.1, `al_dia` 106.5. Una pantalla maciza pesa más que `muelle` aunque se cale; (a) era la más ligera de las tres propuestas y queda en el peso de `baplie`.
 
 ## Decisiones
 
@@ -290,6 +309,7 @@ Ninguna pareja de los 31 queda por debajo del umbral (se midieron las 465 combin
 - **Cómo se decidió**: cada grupo lo dibujaron dos diseñadores con ángulos distintos (silueta y detalle calado), lo juzgaron jueces con lentes de legibilidad a 16 px, sistema y semántica, y Nube fusionó e integró los 31 aplicando los veredictos. En operación no hubo jurado (se cortó por el límite de uso): la base es el candidato de silueta, con el `orden` del otro.
 - **El sentido de las flechas** (Carlos, 23-oct): las flechas dicen lo mismo que la app. En `descarga` la flecha baja («Baja», «BAJÓ»): el contenedor sale del buque hacia el muelle; en `carga` sube («Sube»): del muelle al buque. Coincide con `south`/`north`, que la app usa hoy. La tapa arriba y el muelle abajo son lo que evita que parezcan «descargar un archivo».
 - **Lo que no se dibujó**: nada de personas, grúas con nombre, buques reales ni cifras; `orden` señala una posición sin número.
+- **`oficina`** (Carlos, 2-nov, decisión 10.86): tras la tercera prueba piloto, el rol de la cuenta («Muelle» / «Oficina») se muestra en la cabecera como un distintivo con diseño, porque en un teléfono los dos roles se veían iguales. `muelle` ya existía; `oficina` se eligió entre tres propuestas (a: la pantalla con la rejilla del plano calada sobre su pie; b: la pantalla con el corte de la bahía calado, como `baplie`; c: la pantalla y el teclado, sin plano) vistas junto a `muelle` a 16, 20, 24 y 32 px, sobre claro y oscuro y dentro del distintivo a 16, 18 y 20 px. Ganó la (a): la que mejor sobrevive a 16 px y la más ligera. Va al final de la fuente, en U+E023, para no mover los 35 glifos anteriores.
 
 ## Las ilustraciones
 
@@ -370,6 +390,7 @@ que caen a medio píxel parpadean en el umbral de 128 sin que cambie la forma). 
 | `insignia_peligrosa` | U+E020 | 0.31 · 0 | 0 · 0.0 % | 0.39 · 2 | 10 · 1.7 % | sí |
 | `insignia_fuera_de_medida` | U+E021 | 0.19 · 0 | 2 · 0.8 % | 0.14 · 0 | 0 · 0.0 % | sí |
 | `insignia_vacio` | U+E022 | 0.5 · 0 | 0 · 0.0 % | 0.0 · 0 | 0 · 0.0 % | sí |
+| `oficina` | U+E023 | 0.37 · 0 | 3 · 1.2 % | 0.03 · 0 | 14 · 2.4 % | sí |
 
 ### Y con Skia, el motor de Flutter
 
@@ -412,6 +433,7 @@ que caen a medio píxel parpadean en el umbral de 128 sin que cambie la forma). 
 | `insignia_peligrosa` | 2 · 0.8 % · 1.96 | 2 · 0.8 % · 3.03 | 13 · 2.3 % · 0.89 | 6 · 1.0 % · 1.48 | sí |
 | `insignia_fuera_de_medida` | 0 · 0.0 % · 1.55 | 2 · 0.8 % · 3.02 | 2 · 0.3 % · 0.51 | 4 · 0.7 % · 0.94 | sí |
 | `insignia_vacio` | 0 · 0.0 % · 0.59 | 0 · 0.0 % · 1.8 | 0 · 0.0 % · 0.23 | 0 · 0.0 % · 0.43 | sí |
+| `oficina` | 4 · 1.6 % · 1.49 | 0 · 0.0 % · 2.5 | 36 · 6.2 % · 0.61 | 30 · 5.2 % · 0.89 | sí |
 
 ## Cómo regenerar y verificar
 
@@ -429,30 +451,122 @@ la fuente y este LEEME (desde `fuentes/LEEME.plantilla.md`). Dos corridas dan ar
 los PNG pueden comprimirse distinto sin cambiar un píxel. `comprobacion-skia.md` lo produce aparte
 `fuentes/comprobar_skia.py`, que necesita Node con Playwright y Chromium; no hace falta para regenerar.
 
+El v3 se generó y verificó con Python 3.13.18, Pillow 12.3.0, resvg-py 0.5.0, fontTools 4.68.0, skia-pathops 0.9.2 y
+freetype-py 2.5.1; con ellas `generar.py --verificar` sobre el v2 también daba 84 de 84. Salida de `generar.py --verificar`
+sobre el v3:
+
+```
+85 de 85 comprobaciones correctas.
+```
+
+## Frente al v2
+
+73 archivos con la misma huella que en el v2, 11 cambian, 1 nuevo (`design/iconos/LEEME.md` cambia y no lleva huella).
+
+Cambian: `assets/fonts/bs_iconos/BayStreamIconos.ttf`, `design/iconos/codigos.json`, `design/iconos/comprobacion-fuente.png`, `design/iconos/comprobacion-skia.md`, `design/iconos/comprobacion-skia.png`, `design/iconos/fuentes/LEEME.plantilla.md`, `design/iconos/fuentes/comprobar_skia.py`, `design/iconos/fuentes/fuente.py`, `design/iconos/fuentes/iconos.py`, `design/iconos/generar.py`, `design/iconos/vista-previa.png`.
+
+Nuevo: `design/iconos/svg/oficina.svg`.
+
+| Archivo igual al v2 | SHA-256 (la misma en v2 y v3) |
+|---|---|
+| `design/iconos/conceptos.png` | `2f3d0e3037ef8950cf939227bf60ab75509ffbb01aad90c860f8d9b61862db2d` |
+| `design/iconos/fuentes/ayudantes.py` | `b271e2814a92b030568ffc92f826be2e67d48601d7b7f2dbf87ca1650d73bb6d` |
+| `design/iconos/fuentes/comprobar_skia.js` | `4feb12127319affa62e7543e67911cc2da61e19648110a3febddcd06ca05e656` |
+| `design/iconos/fuentes/dsl.py` | `dd1a13a0ee0f345f4b46bbc6598fc53b9867f95c3fd8996f577718b71f838cfb` |
+| `design/iconos/fuentes/exportar_json.py` | `bc8ce5388a459901b4a9859f500736e67f984d39a42975a46353bafcbc64880a` |
+| `design/iconos/fuentes/geom.py` | `b6d905a78b12d288bf6c398c12733d96329d814a8336452c2d136a93cfaa7529` |
+| `design/iconos/fuentes/insignias.py` | `6810f972d0a7fc7848e04b217be13f44800ccb770b80906136a7beab25095dc7` |
+| `design/iconos/fuentes/parejas.py` | `8da277c067e558a12872e9422bba1bcb5a9c1f6cbdc709bd165f6e9564f6ea5a` |
+| `design/iconos/fuentes/verificar_fuente.py` | `a69b7f7826ab3b81176735dfac6d78da74114133068185a15f9a6cc4ec9ade20` |
+| `design/iconos/fuentes/vista_previa.py` | `affb38a08196c08b3ec8abe09fda437891675f38f73529af862cb4eaeb9d9e23` |
+| `design/iconos/svg/al_dia.svg` | `22a9637123c9670546b500400cd24a811122dc7d16815f0c498b858419fc01b6` |
+| `design/iconos/svg/bahia.svg` | `9a8b6e6b9954ab46546157cb6ad84db782da00afbf16143ddba1714c04216808` |
+| `design/iconos/svg/baplie.svg` | `0513e11727c0469bab491d5700727c1ef3c3056bd3e26866cc96ae668b6c40ed` |
+| `design/iconos/svg/baplie_salida.svg` | `d3ffdd439fea0a6c42b54c8e4a3216bda6a3fb815ddded7867bddb3a19319b0d` |
+| `design/iconos/svg/buque.svg` | `fc82753b5c888a4417805c6657596597d84424480a1e8e929ee54eaf2ce3ae2b` |
+| `design/iconos/svg/carga.svg` | `a6ec8a53684ce04b13d6332cd195c5444f7b751714282d4c4fa6fa79e8dfe066` |
+| `design/iconos/svg/comparar_baplie.svg` | `b14da614e0fcd2cabe691d4aa0db0bd98e4d37df625b6eb631946e8d1f3671e4` |
+| `design/iconos/svg/contenedor_20.svg` | `d28640992e28539b88ae5318ff6a6d5c82b17473153eaf627b20591ff19c9a0a` |
+| `design/iconos/svg/contenedor_40.svg` | `c19a4adf1456b9d515a6bd4ec8a22e9103e2ad3c37879430195092b4bff3b183` |
+| `design/iconos/svg/contenedor_45.svg` | `93e301b450c33e83e53abbc55a58850dcb81168fb7cc221e2620a91bba9dcdfe` |
+| `design/iconos/svg/descarga.svg` | `b5d13ffd7169ac499f462ba0dc7c8bd5cbaa02d2d07e0eb7a83164970ffa7fc4` |
+| `design/iconos/svg/escala.svg` | `a00c79293eeee80e7bd653b0fcf2d0259f4a95f313829d5a8370212ebd8421c6` |
+| `design/iconos/svg/fuera_de_medida.svg` | `00a5b867402285a8a7e346e280332cda6c8e8329cf9e2d198858ac329772e244` |
+| `design/iconos/svg/grua.svg` | `b23897b646de4f1feade75d1cb0dd8037ee06d0685db5fc2a91c4fd9497c19b7` |
+| `design/iconos/svg/limite_apilamiento.svg` | `04d5afc4bc73d253c01c4c04e4978f4db9b1c7125f57643d6219d0db8be0c5f2` |
+| `design/iconos/svg/listado_agencia.svg` | `312e5943ee8cfa13cf70a0dc0dd551c3807391dfaa847e6e838d03eeca38ffe7` |
+| `design/iconos/svg/muelle.svg` | `06239e59338282b26a571a4d1bcc727d003edeca9849c5739ab0cdab2340e701` |
+| `design/iconos/svg/orden.svg` | `1870f55e7a9cfd764954b45075a24f0ab778b45f96e7ffcda36a017d930ac6c1` |
+| `design/iconos/svg/pedir_cambio.svg` | `76e47e7a2128ceb2a63229587431cc90065ab81184b32d35ef1cb1d37ef0a8be` |
+| `design/iconos/svg/peligrosa.svg` | `ab0fb8f2afa666e04ef75f2f77ed91b611531d27e515fa0fcd4944d931f7c551` |
+| `design/iconos/svg/peso_pila.svg` | `8f68a719b52c006e5faa564960c58d2b94df5b01bb9e32d3ef860ad888e0efe2` |
+| `design/iconos/svg/plataforma.svg` | `a74d32d27ab10d4062446cf72d35c6bb8dd97ae607967c86cb104d99537452c1` |
+| `design/iconos/svg/reestiba.svg` | `d860291d21c2d9d9165d108b1722f983a8210fb02956703f14460c0aa9dabb8c` |
+| `design/iconos/svg/refrigerado.svg` | `a166d93a1528dfbb6fef82eef67277cead31293832ef1b53f74a8f66e7def3b6` |
+| `design/iconos/svg/segregacion.svg` | `c0f7f1de4f56899bcee3cab099ba5310df720dcd9803f0c551e2b0d45356a0fd` |
+| `design/iconos/svg/solo_aqui.svg` | `dc6d4ae7f02103523c5d2a2445dc05ebef998f15d21de1af4dd8ed288a6920d4` |
+| `design/iconos/svg/tanque.svg` | `78e1af21aa0fdc9a2e357d19e3d376ac9f483baf45087e0cb722924ed41a18e4` |
+| `design/iconos/svg/tapa_escotilla.svg` | `c73200aa3a5e731012dc688e4673d125161d859164211d9c2ab2035ffd6697e0` |
+| `design/iconos/svg/techo_abierto.svg` | `2d38c6f38ead85195757d3834bb721534d7b8794a8b4cdcb4bb856939361ad9c` |
+| `design/iconos/svg/vacio.svg` | `49caf59f172edb0afbf74ead8543f804025fb613c5c5a2e742ddcf9bfb8deb86` |
+| `design/iconos/svg/vgm.svg` | `9090a24771b435546d90b23420e464ba1052a25f46fa0f329805e3a23b989612` |
+| `design/iconos/svg_insignias/fuera_de_medida.svg` | `c7a3c7541fb3ded71b8fac61c7ee144320483b2e74a1e8cdbeaaab34b9e8d338` |
+| `design/iconos/svg_insignias/peligrosa.svg` | `40a4e73433cdc4b169eaf6e856c7630b1ede5b053d3fb6d6fa1ec9be031fa195` |
+| `design/iconos/svg_insignias/refrigerado.svg` | `b4507f95c1a3375803b28ebf70cf2009b511bb8ff16e9119e1e20caf10ed7f0c` |
+| `design/iconos/svg_insignias/vacio.svg` | `9bd8fa12915aee865a02721aa6478eb50cf1e7b7bea65d6228fbfbd3e1c3ee63` |
+| `design/ilustraciones/descarga_completa.json` | `fd986e230704e8961ea72881abaa9b5f1b3b54cc1d1f30d975571ebe010d1c84` |
+| `design/ilustraciones/descarga_completa_claro.svg` | `fdf6b176c0c65a4728444334f6cec50d5b806c401e3541b2f4c2f7e36c208156` |
+| `design/ilustraciones/descarga_completa_oscuro.svg` | `f0f1c8242ad9dc6d3acffcd0e34cddb9df98220e44a5f0239b4f3642d8080989` |
+| `design/ilustraciones/fuentes/descarga_completa.py` | `9955a2c0901ee6368aa3a5e3fc1add6abfe4385c3a98adbd9d125fd60734fb8d` |
+| `design/ilustraciones/fuentes/geom.py` | `b6d905a78b12d288bf6c398c12733d96329d814a8336452c2d136a93cfaa7529` |
+| `design/ilustraciones/fuentes/ilus.py` | `20c4875226a09c04fe1a1c53ada33fe9222be15fa92b9c3a4e573cac5b871580` |
+| `design/ilustraciones/fuentes/inicio.py` | `4b374e5177353a139b897a19f2729ae9f56a9d5a763c671fe83da659957e05af` |
+| `design/ilustraciones/fuentes/plantilla.py` | `d3ce8cc1601ee9f980b0c94873dd4562512c3d6807c5395d82a9e1e043e120ea` |
+| `design/ilustraciones/fuentes/sin_alertas.py` | `8207a185d9c8cff9cc026070a833eae31750d697f30ec44ce34483cc2785766b` |
+| `design/ilustraciones/fuentes/sin_conexion.py` | `f021215b8cbaea79bccd93f64415ce7127c89198d2a1800d615bf96da4be138b` |
+| `design/ilustraciones/fuentes/vacio_busqueda.py` | `7bb47631a8499ac6c7d0cfc1af618db1b2f33a107b1b20614809c30055656f86` |
+| `design/ilustraciones/fuentes/vacio_recientes.py` | `8ee0b41f70ffdbdb18dfdf7e0ec2c73d31f152c9a800a548b492f2cd98de6071` |
+| `design/ilustraciones/inicio.json` | `8c332a5e7d5de83e7c897c185e68b0738048580fad08ff762e02f1686ddafb71` |
+| `design/ilustraciones/inicio_claro.svg` | `5ce64222a2e3c66254c750330ddd78fe04aa8658b781e654ad28d0979798c10c` |
+| `design/ilustraciones/inicio_oscuro.svg` | `3feeaa16a7490a696a43f429c6504bdcf0dc516b0d8a3cd3ebcfc85f06545799` |
+| `design/ilustraciones/sin_alertas.json` | `c62b199958e426b6281d46f2255c641629e62b5a3fb40e90f4929258b5dc5598` |
+| `design/ilustraciones/sin_alertas_claro.svg` | `f6ee7c859449bb10cb0b4a118b58eb0f08abee576874bb5a1826dc3e7873c88b` |
+| `design/ilustraciones/sin_alertas_oscuro.svg` | `96220ad037ae7ede8896bf7909823f420483ed36a81eae8b3916b803beac7387` |
+| `design/ilustraciones/sin_conexion.json` | `d98c3a1dcb76c77367c1373389b6f7e90e619130f6a09190dfe4841df285f748` |
+| `design/ilustraciones/sin_conexion_claro.svg` | `c68cae697ed77043f57b147b20139977d78b1004535d6013c4627fc36856cdc2` |
+| `design/ilustraciones/sin_conexion_oscuro.svg` | `21254aa5baf8dfa88f3d15d78bbe9a5a73c750bf46c8f81e11790fea5b302821` |
+| `design/ilustraciones/vacio_busqueda.json` | `66ac232176ce34269c6685029893683dad1f887771e3107a35ec649891ad45c3` |
+| `design/ilustraciones/vacio_busqueda_claro.svg` | `d6b1889e931ba9558ce3a13e012d70dc4b1b0a3d4445d942fa753f8892de2c1a` |
+| `design/ilustraciones/vacio_busqueda_oscuro.svg` | `df4cc405cd7db79574f2210d15513534db5ebb5059c5708c96f6887482e604b2` |
+| `design/ilustraciones/vacio_recientes.json` | `deddb15ac9e7dd54812a362a9cae7240fa8bc08cbd9ab042f234df1f72406666` |
+| `design/ilustraciones/vacio_recientes_claro.svg` | `c0136029ea285266d5cc80b97c10291cf6f493032f868a6ae1567a2f73190d9d` |
+| `design/ilustraciones/vacio_recientes_oscuro.svg` | `8a5e7bad076450f76b54f37fb56048dc76b6da3abf34edf8c850aacd1efbf5b0` |
+| `design/ilustraciones/vista-previa.png` | `e16763153cf69010d1619bef2771b7b95560a9ca21cc94caff1854d122c0585d` |
+
 ## Archivos
 
 | Archivo | Bytes | SHA-256 |
 |---|---:|---|
-| `assets/fonts/bs_iconos/BayStreamIconos.ttf` | 8 864 | `8eec33ae80a6d3bd73f1214626fc20ebc90df77927107d75628b8d9a2b159147` |
-| `design/iconos/codigos.json` | 1 076 | `f726bc84f708ff74a8fe5773bd42b490e540d4c006e3e3803429d7c86d3ed51e` |
-| `design/iconos/comprobacion-fuente.png` | 112 513 | `c8179bd06ccb4b24bb39ecdeca36340d2b524ce8405eaf55fcc3301484f41500` |
-| `design/iconos/comprobacion-skia.md` | 3 984 | `46b711568b518693f409ad4a4743afd416411175f413668392a7f614df782245` |
-| `design/iconos/comprobacion-skia.png` | 124 713 | `097160d22609ec9c125dd883df3a54561b23674a6db61f942c86ab4763c5efbb` |
+| `assets/fonts/bs_iconos/BayStreamIconos.ttf` | 9 212 | `c2d8ed7b8acfb7d88ca75e483ecf1e03c95f18b35c4ac43d3445cfd68bf3e61c` |
+| `design/iconos/codigos.json` | 1 101 | `4f676978ee07ad2737a6d432c6caee840cc0e7639f0d7b0b19ba772f5f75eb83` |
+| `design/iconos/comprobacion-fuente.png` | 115 864 | `63224b6a85784a38f34cad349a7f3ffdd18e5ad63bd3f6dc5fbf36c722f92554` |
+| `design/iconos/comprobacion-skia.md` | 4 089 | `1025bd9bb3afd389934a1fd5aabb047f4c50a338d5262d5df51cb2b0bc78e301` |
+| `design/iconos/comprobacion-skia.png` | 128 487 | `95ac9b9c3f2f469583a8bda4e1995106a5cbb8e47d7a90db36644fe32f36b324` |
 | `design/iconos/conceptos.png` | 950 325 | `2f3d0e3037ef8950cf939227bf60ab75509ffbb01aad90c860f8d9b61862db2d` |
-| `design/iconos/fuentes/LEEME.plantilla.md` | 25 483 | `4e1fc39bd17b150986042fe635c8a82a0597a511b07a471cdc0184b3121e98be` |
+| `design/iconos/fuentes/LEEME.plantilla.md` | 28 344 | `76f54feaa0504dfc9db7a1f3a2d98b0309a98b8191cf74b1b09bfedec891c8b9` |
 | `design/iconos/fuentes/ayudantes.py` | 9 575 | `b271e2814a92b030568ffc92f826be2e67d48601d7b7f2dbf87ca1650d73bb6d` |
 | `design/iconos/fuentes/comprobar_skia.js` | 974 | `4feb12127319affa62e7543e67911cc2da61e19648110a3febddcd06ca05e656` |
-| `design/iconos/fuentes/comprobar_skia.py` | 6 576 | `6717c5508ac63f26cd7b89d4fad978400eb41de6dcfac51aa8766b02b7d9d5d8` |
+| `design/iconos/fuentes/comprobar_skia.py` | 6 692 | `9c2806f8a2bbb87423689993c10b3df0367e9ea32bfa52bd84c980cd81a4e0ce` |
 | `design/iconos/fuentes/dsl.py` | 8 498 | `dd1a13a0ee0f345f4b46bbc6598fc53b9867f95c3fd8996f577718b71f838cfb` |
 | `design/iconos/fuentes/exportar_json.py` | 4 472 | `bc8ce5388a459901b4a9859f500736e67f984d39a42975a46353bafcbc64880a` |
-| `design/iconos/fuentes/fuente.py` | 7 903 | `177933cfef240e7ba117ae8d5a6c31aaba15716c85d64674a84960e717a9480c` |
+| `design/iconos/fuentes/fuente.py` | 8 179 | `60248f2d5b544ccabe9629f2a81f76e3a737c76a12d94aba8a360bc925139366` |
 | `design/iconos/fuentes/geom.py` | 9 345 | `b6d905a78b12d288bf6c398c12733d96329d814a8336452c2d136a93cfaa7529` |
-| `design/iconos/fuentes/iconos.py` | 15 751 | `22102de9d77c3c8904839555c2308cf6bee807f39c96dbf9f4bab9147df2b787` |
+| `design/iconos/fuentes/iconos.py` | 16 936 | `0ffae19fd758a387222f654d5db13f524b997e66aa75eca1cf991617f9307213` |
 | `design/iconos/fuentes/insignias.py` | 1 849 | `6810f972d0a7fc7848e04b217be13f44800ccb770b80906136a7beab25095dc7` |
 | `design/iconos/fuentes/parejas.py` | 1 892 | `8da277c067e558a12872e9422bba1bcb5a9c1f6cbdc709bd165f6e9564f6ea5a` |
 | `design/iconos/fuentes/verificar_fuente.py` | 5 810 | `a69b7f7826ab3b81176735dfac6d78da74114133068185a15f9a6cc4ec9ade20` |
 | `design/iconos/fuentes/vista_previa.py` | 3 558 | `affb38a08196c08b3ec8abe09fda437891675f38f73529af862cb4eaeb9d9e23` |
-| `design/iconos/generar.py` | 13 694 | `2532a6b0106cb8b7b7eda3c1dd72383c7d9fbcef1ef9d9f22f540d396122f9f9` |
+| `design/iconos/generar.py` | 26 187 | `cc887e2d3c312dcf358789a7e637bf0a799611fc0813c565a7c992b16d6ef58e` |
 | `design/iconos/svg/al_dia.svg` | 920 | `22a9637123c9670546b500400cd24a811122dc7d16815f0c498b858419fc01b6` |
 | `design/iconos/svg/bahia.svg` | 1 011 | `9a8b6e6b9954ab46546157cb6ad84db782da00afbf16143ddba1714c04216808` |
 | `design/iconos/svg/baplie.svg` | 1 168 | `0513e11727c0469bab491d5700727c1ef3c3056bd3e26866cc96ae668b6c40ed` |
@@ -470,6 +584,7 @@ los PNG pueden comprimirse distinto sin cambiar un píxel. `comprobacion-skia.md
 | `design/iconos/svg/limite_apilamiento.svg` | 762 | `04d5afc4bc73d253c01c4c04e4978f4db9b1c7125f57643d6219d0db8be0c5f2` |
 | `design/iconos/svg/listado_agencia.svg` | 1 306 | `312e5943ee8cfa13cf70a0dc0dd551c3807391dfaa847e6e838d03eeca38ffe7` |
 | `design/iconos/svg/muelle.svg` | 935 | `06239e59338282b26a571a4d1bcc727d003edeca9849c5739ab0cdab2340e701` |
+| `design/iconos/svg/oficina.svg` | 1 489 | `470bb78a6001e2887bd80bba90e7c55982ae78e02e88dcb315e21056cc2ac625` |
 | `design/iconos/svg/orden.svg` | 1 056 | `1870f55e7a9cfd764954b45075a24f0ab778b45f96e7ffcda36a017d930ac6c1` |
 | `design/iconos/svg/pedir_cambio.svg` | 788 | `76e47e7a2128ceb2a63229587431cc90065ab81184b32d35ef1cb1d37ef0a8be` |
 | `design/iconos/svg/peligrosa.svg` | 721 | `ab0fb8f2afa666e04ef75f2f77ed91b611531d27e515fa0fcd4944d931f7c551` |
@@ -488,7 +603,7 @@ los PNG pueden comprimirse distinto sin cambiar un píxel. `comprobacion-skia.md
 | `design/iconos/svg_insignias/peligrosa.svg` | 766 | `40a4e73433cdc4b169eaf6e856c7630b1ede5b053d3fb6d6fa1ec9be031fa195` |
 | `design/iconos/svg_insignias/refrigerado.svg` | 1 039 | `b4507f95c1a3375803b28ebf70cf2009b511bb8ff16e9119e1e20caf10ed7f0c` |
 | `design/iconos/svg_insignias/vacio.svg` | 486 | `9bd8fa12915aee865a02721aa6478eb50cf1e7b7bea65d6228fbfbd3e1c3ee63` |
-| `design/iconos/vista-previa.png` | 126 082 | `a68c9b1a0200d01b956368cc5071cb39026b889c1511a68d81068c2f8dda0968` |
+| `design/iconos/vista-previa.png` | 130 117 | `dd7fe29862b6a2110e652efdcce231309e565fcdf80f22f4190e1d93fffd81d0` |
 | `design/ilustraciones/descarga_completa.json` | 10 304 | `fd986e230704e8961ea72881abaa9b5f1b3b54cc1d1f30d975571ebe010d1c84` |
 | `design/ilustraciones/descarga_completa_claro.svg` | 8 804 | `fdf6b176c0c65a4728444334f6cec50d5b806c401e3541b2f4c2f7e36c208156` |
 | `design/ilustraciones/descarga_completa_oscuro.svg` | 8 721 | `f0f1c8242ad9dc6d3acffcd0e34cddb9df98220e44a5f0239b4f3642d8080989` |
@@ -530,87 +645,15 @@ git add -- design/iconos/codigos.json
 git add -- design/iconos/comprobacion-fuente.png
 git add -- design/iconos/comprobacion-skia.md
 git add -- design/iconos/comprobacion-skia.png
-git add -- design/iconos/conceptos.png
 git add -- design/iconos/fuentes/LEEME.plantilla.md
-git add -- design/iconos/fuentes/ayudantes.py
-git add -- design/iconos/fuentes/comprobar_skia.js
 git add -- design/iconos/fuentes/comprobar_skia.py
-git add -- design/iconos/fuentes/dsl.py
-git add -- design/iconos/fuentes/exportar_json.py
 git add -- design/iconos/fuentes/fuente.py
-git add -- design/iconos/fuentes/geom.py
 git add -- design/iconos/fuentes/iconos.py
-git add -- design/iconos/fuentes/insignias.py
-git add -- design/iconos/fuentes/parejas.py
-git add -- design/iconos/fuentes/verificar_fuente.py
-git add -- design/iconos/fuentes/vista_previa.py
 git add -- design/iconos/generar.py
-git add -- design/iconos/svg/al_dia.svg
-git add -- design/iconos/svg/bahia.svg
-git add -- design/iconos/svg/baplie.svg
-git add -- design/iconos/svg/baplie_salida.svg
-git add -- design/iconos/svg/buque.svg
-git add -- design/iconos/svg/carga.svg
-git add -- design/iconos/svg/comparar_baplie.svg
-git add -- design/iconos/svg/contenedor_20.svg
-git add -- design/iconos/svg/contenedor_40.svg
-git add -- design/iconos/svg/contenedor_45.svg
-git add -- design/iconos/svg/descarga.svg
-git add -- design/iconos/svg/escala.svg
-git add -- design/iconos/svg/fuera_de_medida.svg
-git add -- design/iconos/svg/grua.svg
-git add -- design/iconos/svg/limite_apilamiento.svg
-git add -- design/iconos/svg/listado_agencia.svg
-git add -- design/iconos/svg/muelle.svg
-git add -- design/iconos/svg/orden.svg
-git add -- design/iconos/svg/pedir_cambio.svg
-git add -- design/iconos/svg/peligrosa.svg
-git add -- design/iconos/svg/peso_pila.svg
-git add -- design/iconos/svg/plataforma.svg
-git add -- design/iconos/svg/reestiba.svg
-git add -- design/iconos/svg/refrigerado.svg
-git add -- design/iconos/svg/segregacion.svg
-git add -- design/iconos/svg/solo_aqui.svg
-git add -- design/iconos/svg/tanque.svg
-git add -- design/iconos/svg/tapa_escotilla.svg
-git add -- design/iconos/svg/techo_abierto.svg
-git add -- design/iconos/svg/vacio.svg
-git add -- design/iconos/svg/vgm.svg
-git add -- design/iconos/svg_insignias/fuera_de_medida.svg
-git add -- design/iconos/svg_insignias/peligrosa.svg
-git add -- design/iconos/svg_insignias/refrigerado.svg
-git add -- design/iconos/svg_insignias/vacio.svg
+git add -- design/iconos/svg/oficina.svg
 git add -- design/iconos/vista-previa.png
-git add -- design/ilustraciones/descarga_completa.json
-git add -- design/ilustraciones/descarga_completa_claro.svg
-git add -- design/ilustraciones/descarga_completa_oscuro.svg
-git add -- design/ilustraciones/fuentes/descarga_completa.py
-git add -- design/ilustraciones/fuentes/geom.py
-git add -- design/ilustraciones/fuentes/ilus.py
-git add -- design/ilustraciones/fuentes/inicio.py
-git add -- design/ilustraciones/fuentes/plantilla.py
-git add -- design/ilustraciones/fuentes/sin_alertas.py
-git add -- design/ilustraciones/fuentes/sin_conexion.py
-git add -- design/ilustraciones/fuentes/vacio_busqueda.py
-git add -- design/ilustraciones/fuentes/vacio_recientes.py
-git add -- design/ilustraciones/inicio.json
-git add -- design/ilustraciones/inicio_claro.svg
-git add -- design/ilustraciones/inicio_oscuro.svg
-git add -- design/ilustraciones/sin_alertas.json
-git add -- design/ilustraciones/sin_alertas_claro.svg
-git add -- design/ilustraciones/sin_alertas_oscuro.svg
-git add -- design/ilustraciones/sin_conexion.json
-git add -- design/ilustraciones/sin_conexion_claro.svg
-git add -- design/ilustraciones/sin_conexion_oscuro.svg
-git add -- design/ilustraciones/vacio_busqueda.json
-git add -- design/ilustraciones/vacio_busqueda_claro.svg
-git add -- design/ilustraciones/vacio_busqueda_oscuro.svg
-git add -- design/ilustraciones/vacio_recientes.json
-git add -- design/ilustraciones/vacio_recientes_claro.svg
-git add -- design/ilustraciones/vacio_recientes_oscuro.svg
-git add -- design/ilustraciones/vista-previa.png
 git add -- design/iconos/LEEME.md
-git commit -m "Agrega los iconos del dominio y las ilustraciones de BayStream, paquete 1"
+git commit -m "Suma el icono oficina (U+E023) al paquete de iconos, v3"
 git push
 ```
 

@@ -1269,14 +1269,45 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
   }
 }
 
-/// El nombre del buque y, debajo, el viaje y la escala.
-class _TituloDelViaje extends StatelessWidget {
-  const _TituloDelViaje({required this.voyage});
+/// El nombre del buque y, debajo, el viaje y la escala. Con una cuenta
+/// autorizada, a la derecha, el distintivo de rol (T-131, `DESIGN.md` 13.12):
+/// en la barra superior del teléfono y en la cabecera de la oficina.
+class _TituloDelViaje extends ConsumerWidget {
+  const _TituloDelViaje({
+    required this.voyage,
+    this.compacto,
+    this.sinDistintivo = false,
+    this.cede = false,
+  });
 
   final VesselVoyage voyage;
 
+  /// La forma del distintivo. Sin valor, la que quepa: primero completo, si
+  /// no compacto, y solo después el nombre se encoge, como antes (la barra
+  /// superior del teléfono).
+  final bool? compacto;
+
+  /// Sin distintivo aunque haya cuenta: la cabecera de la oficina, cuando no
+  /// cabe sin cambiarla (13.12).
+  final bool sinDistintivo;
+
+  /// En la línea del título de la cabecera de dos líneas: completo, compacto
+  /// o nada, y solo si no hace más alta la línea (13.12).
+  final bool cede;
+
+  /// El distintivo de la cuenta en [rol], que abre «Nube y cuenta».
+  static Widget distintivo(
+          BuildContext context, OperatorRole rol, bool compacto) =>
+      BsDistintivoDeRol(
+        key: const ValueKey('distintivo-de-rol'),
+        equipo:
+            rol == OperatorRole.office ? BsEquipo.oficina : BsEquipo.muelle,
+        compacto: compacto,
+        onTap: () => openCloudPage(context),
+      );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textos = Theme.of(context).textTheme;
     final esquema = Theme.of(context).colorScheme;
     final viaje = <String>[
@@ -1284,7 +1315,7 @@ class _TituloDelViaje extends StatelessWidget {
       if (voyage.portOfCall != null) 'Escala ${voyage.portOfCall}',
     ].join(' · ');
     // Sin elipsis: con la letra grande se encoge, como el título de antes.
-    return Column(
+    final bloque = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1302,13 +1333,52 @@ class _TituloDelViaje extends StatelessWidget {
         ),
       ],
     );
+    final rol = ref.watch(rolDelDistintivoProvider);
+    if (rol == null || sinDistintivo) return bloque;
+    // A la derecha del bloque y centrado en su alto (Carlos, 2-nov): en la
+    // línea del nombre, la zona táctil de 48 dp no cabía en la barra de 56.
+    // Con la forma pedida va en una fila de la cabecera, que no le pone tope
+    // de ancho: ahí el bloque no se encoge.
+    final medidas = BsMedidas.de(context);
+    Widget conDistintivo(bool compacto, {bool encoge = true}) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (encoge) Flexible(child: bloque) else bloque,
+            SizedBox(width: medidas.espacioS),
+            distintivo(context, rol, compacto),
+          ],
+        );
+    final forma = compacto;
+    if (forma != null) return conDistintivo(forma, encoge: false);
+    if (!cede) {
+      return BsPrimeraQueCabe(
+          variantes: [conDistintivo(false), conDistintivo(true)]);
+    }
+    // En la cabecera de dos líneas el título va solo en la suya: la zona de
+    // 48 dp la haría más alta mientras el bloque mida menos (con la letra a
+    // 1.0, 38 dp), y entonces no va. Si va, completo o compacto al tamaño
+    // natural; si ni así cabe, sin él, y el nombre se encoge como antes
+    // (Carlos, 3-nov: el alto manda).
+    final escala = MediaQuery.textScalerOf(context);
+    double alto(TextStyle? estilo) =>
+        escala.scale(estilo!.fontSize!) * (estilo.height ?? 1);
+    if (alto(textos.titleMedium) + alto(textos.bodySmall) <
+        medidas.objetivoTactil) {
+      return bloque;
+    }
+    return BsPrimeraQueCabe(variantes: [
+      conDistintivo(false, encoge: false),
+      conDistintivo(true, encoge: false),
+      bloque,
+    ]);
   }
 }
 
 /// La cabecera de la oficina (`DESIGN.md` 13.8 y 14.8): el buque y el viaje,
-/// el estado, el selector de modo con el Plano a la vista, y siempre en el
-/// borde derecho buscar, la nube y el botón del panel lateral.
-class _CabeceraDeOficina extends StatelessWidget {
+/// con el distintivo de rol si hay cuenta (13.12), el estado, el selector de
+/// modo con el Plano a la vista, y siempre en el borde derecho buscar, la
+/// nube y el botón del panel lateral.
+class _CabeceraDeOficina extends ConsumerWidget {
   const _CabeceraDeOficina({
     required this.voyage,
     required this.publicado,
@@ -1327,10 +1397,11 @@ class _CabeceraDeOficina extends StatelessWidget {
   final Widget botonDelPanel;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final medidas = BsMedidas.de(context);
     final esquema = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
+    final conCuenta = ref.watch(rolDelDistintivoProvider) != null;
     Widget estado() => Container(
           padding: EdgeInsets.symmetric(
               horizontal: medidas.espacioS, vertical: medidas.espacioXs),
@@ -1356,9 +1427,14 @@ class _CabeceraDeOficina extends StatelessWidget {
             ],
           ],
         );
-    Widget enUnaLinea(BsFormaDelSelector forma) => Row(
+    // En una línea el distintivo va en la forma que se pide, o no va; en dos,
+    // el título tiene la línea entera y lo decide él (13.12).
+    Widget enUnaLinea(BsFormaDelSelector forma, {bool? compacto}) => Row(
           children: [
-            _TituloDelViaje(voyage: voyage),
+            _TituloDelViaje(
+                voyage: voyage,
+                compacto: compacto,
+                sinDistintivo: compacto == null),
             const Spacer(),
             SizedBox(width: medidas.espacioM),
             controlesEnFila(forma),
@@ -1376,18 +1452,29 @@ class _CabeceraDeOficina extends StatelessWidget {
           // medidos (10.21, H1; 14.8): en una línea con los segmentos; si no
           // caben, con el menú; si tampoco, el título arriba y los controles
           // en una segunda línea, y nada se desborda. A 600 dp con la letra a
-          // 2.0, la fila única dejaba Buscar fuera de la pantalla.
+          // 2.0, la fila única dejaba Buscar fuera de la pantalla. El
+          // distintivo de rol (13.12) cede primero: en cada forma, completo,
+          // compacto o sin él, y la cabecera es la misma que sin cuenta (el
+          // mismo selector, las mismas líneas y el mismo alto; Carlos, 3-nov).
           Expanded(
             child: BsPrimeraQueCabe(variantes: [
-              if (selector != null) enUnaLinea(BsFormaDelSelector.segmentos),
-              enUnaLinea(BsFormaDelSelector.menu),
+              for (final forma in [
+                if (selector != null) BsFormaDelSelector.segmentos,
+                BsFormaDelSelector.menu,
+              ]) ...[
+                if (conCuenta) ...[
+                  enUnaLinea(forma, compacto: false),
+                  enUnaLinea(forma, compacto: true),
+                ],
+                enUnaLinea(forma),
+              ],
               Wrap(
                 alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: medidas.espacioM,
                 runSpacing: medidas.espacioXs,
                 children: [
-                  _TituloDelViaje(voyage: voyage),
+                  _TituloDelViaje(voyage: voyage, cede: true),
                   Wrap(
                     key: const ValueKey('cabecera-controles'),
                     spacing: medidas.espacioM,
@@ -1415,7 +1502,8 @@ class _CabeceraDeOficina extends StatelessWidget {
 }
 
 /// La banda de la marca arriba del muelle (`DESIGN.md` 13.6 y 13.8): el
-/// buque, el viaje y la escala, el chip de la nube y Descarga / Carga.
+/// buque, el viaje y la escala, el chip de la nube y Descarga / Carga, con el
+/// distintivo de rol a su izquierda si hay cuenta (13.12).
 class _BandaDelMuelle extends ConsumerWidget {
   const _BandaDelMuelle({
     required this.voyage,
@@ -1447,6 +1535,7 @@ class _BandaDelMuelle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = visibleSyncStatus(ref.watch(syncStatusProvider));
+    final rol = ref.watch(rolDelDistintivoProvider);
     return BsBandaMuelle(
       key: const ValueKey('banda-del-muelle'),
       buque: voyage.vessel.name,
@@ -1461,6 +1550,10 @@ class _BandaDelMuelle extends ConsumerWidget {
       mostrarModos: true,
       onModo: onModo,
       acciones: acciones,
+      distintivo: rol == null
+          ? null
+          : (bool compacto) =>
+              _TituloDelViaje.distintivo(context, rol, compacto),
     );
   }
 }

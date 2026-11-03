@@ -1,8 +1,9 @@
-"""Los 31 íconos del dominio de BayStream · estilo B · Sólido · Nube.
+"""Los 32 íconos del dominio de BayStream · estilo B · Sólido · Nube.
 
 Cada ícono es una función que devuelve un Icono del DSL (rejilla de 24, margen de 2, un solo color).
 Todo macizo o calado, luz ≥ 2, esquinas de celda; los ayudantes viven en ayudantes.py. El orden de
-ICONOS es el de los códigos de la fuente (U+E000 en adelante): carga, buque y plano, operación, archivos.
+ICONOS es el de los códigos de la fuente (U+E000 en adelante): carga, buque y plano, operación, archivos;
+oficina (v3) va al final y la fuente la coloca después de las insignias, en U+E023.
 
 Decisiones que vienen del jurado y de Carlos (10.18, 22-oct; correcciones del 23-oct):
   - contenedor_20 es una caja corta (12) con una ranura: la única que no llega a 16 de eje. Un 20′ ocupa
@@ -17,6 +18,8 @@ Decisiones que vienen del jurado y de Carlos (10.18, 22-oct; correcciones del 23
     ella (bajo la tapa / sobre el muelle), así los dos se distinguen a 16 px (16 % de píxeles distintos).
   - reestiba es una flecha recta de la celda vacía a la celda ocupada: sin arco, sin candado.
   - la báscula (viga sobre fulcro) es la forma de peso de peso_pila y vgm; el tope ⊓ es el límite.
+  - oficina (v3, 2-nov, decisión 10.86): la propuesta (a), la pantalla con la rejilla del plano calada sobre su
+    pie, para el distintivo de rol de la cabecera; hace pareja con muelle (misma base en 22, mismo pie-barra).
 """
 import math
 from dsl import Icono, R_CELDA
@@ -374,8 +377,26 @@ def solo_aqui():
     return ic
 
 
+# ================================================================ roles (v3)
+def oficina():
+    """Oficina = operaciones o la agencia frente a su pantalla: la pantalla maciza (19 × 12, x 2.5–21.5,
+    y 2–14) con la rejilla del plano calada (3 columnas × 2 filas de celdas de 3.5 × 3; bisel de 2, paredes
+    de 2.25 entre columnas y de 2 entre filas), el cuello de 3 y el pie como barra-píldora de la familia
+    (12 de ancho, y 19.5–22): la misma base y el mismo pie que muelle, con el que hace pareja en el
+    distintivo de rol. A 16 px: una pantalla con seis huecos sobre su pie."""
+    ic = Icono('oficina')
+    ic.rect(2.5, 2, 19, 12, relleno=True)
+    ic.rect(10.5, 13.5, 3, 7, relleno=True)
+    barra(ic, 6, 19.5, 12)
+    for x0 in (4.5, 10.25, 16):
+        for y0 in (4, 9):
+            ic.rect(x0, y0, 3.5, 3, calado=True)
+    return ic
+
+
 ICONOS = {n: globals()[n]() for n in [
     'contenedor_20', 'contenedor_40', 'contenedor_45', 'vacio', 'refrigerado', 'peligrosa', 'fuera_de_medida', 'tanque', 'plataforma', 'techo_abierto',
     'buque', 'bahia', 'tapa_escotilla', 'peso_pila', 'limite_apilamiento', 'vgm', 'segregacion',
     'descarga', 'carga', 'reestiba', 'pedir_cambio', 'orden', 'grua', 'muelle', 'escala',
-    'baplie', 'comparar_baplie', 'baplie_salida', 'listado_agencia', 'al_dia', 'solo_aqui']}
+    'baplie', 'comparar_baplie', 'baplie_salida', 'listado_agencia', 'al_dia', 'solo_aqui',
+    'oficina']}

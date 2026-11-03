@@ -36,6 +36,7 @@
     "insignia_refrigerado": "U+E01F",
     "insignia_peligrosa": "U+E020",
     "insignia_fuera_de_medida": "U+E021",
-    "insignia_vacio": "U+E022"
+    "insignia_vacio": "U+E022",
+    "oficina": "U+E023"
   }
 }
