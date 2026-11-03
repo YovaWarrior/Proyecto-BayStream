@@ -2623,3 +2623,40 @@ T-129 entra en la candidata que se presenta el 7-nov (10.84).
 **T-130 empezó su fase 2 (23:28).** Su base dio `analyze` en cero y la suite 1914 de 1914. Esa suite corrió a la vez que la ventana exclusiva de Codex, porque el «Listo» de Yov no le recordó pedir la luz verde; Codex repitió sus sondas y `analyze` en otra ventana. Desde ahora, cada programador pide la luz verde a Carlos antes de cada comando de Flutter. El orden de la luz verde es T-130 primero, porque es la tarea que más tiempo necesita para llegar al 7-nov, y después T-131.
 
 La siguiente decisión es la **10.94**.
+
+### 10.94 · T-130 entregada y revisada; dos definiciones más de T-131 (3-nov, 01:10)
+
+**T-130 entregó la fase 2** (Timonel, Fable 5.1, 01:00), sobre `a18d2d3`:
+- **Las pruebas.**
+  - Las 37 nuevas (dominio 18, pantallas 10, adaptador 9) salen en verde. Contra `a18d2d3` no compilan (254 errores, por el contrato nuevo, como en T-127).
+  - La suite da 1951 de 1951 sin omitidas, y `analyze` en cero antes y después.
+- **Las reglas en el emulador.**
+  - Contra las de T-130: T-80 69 de 69, T-113 25 de 25, T-127 31 de 31 y T-130 38 de 38.
+  - Contra las de T-127: las tres de siempre dan lo mismo, y la de T-130 cae en 11, todas donde debe.
+  - El emulador no informa el límite de accesos. La cuenta a mano da 3 accesos por trozo: 17 al publicar cinco trozos y 14 al agregar cuatro, bajo el límite de 20.
+- **Los seis ajustes de la 10.90 están:**
+  1. la búsqueda cruza la nube (5 s; si no responde, lo local) y la banda lleva a «Unirse»;
+  2. «Publicar operación» se niega ante otra abierta del mismo buque, viaje y puerto;
+  3. el diálogo dice cuándo se publicó la operación y, con varias abiertas, no elige;
+  4. el registro de escrituras propias en vuelo, que vale también para `replaceSource` de T-127;
+  5. el trozo publicado se ata con `op.createdAt == request.time`;
+  6. el nombre del archivo de salida y su nota llevan el viaje del plan de carga.
+- **Yov lo revisó.** Cambian exactamente los 27 archivos del bloque. `pubspec.*`, `lib/main.dart`, las reglas de T-80 y T-127 y el escritor de la salida no cambian. En `vessel_overview_page.dart` toca las importaciones, tres líneas de `build()` y `_askForGeometry`. La mezcla de tres vías con T-131 en ese archivo sale sin conflictos.
+- **Para la publicación.** Carlos publica las reglas de T-130 desde la consola (sección 10 del informe; huella normalizada `8B903949…`), después de la aceptación de Codex y antes de los clientes de la 0.4.2. La prueba de punta a punta (la laptop y el Honor contra el emulador, 3.10) va en la aceptación.
+- Los cambios de la lista del piloto (sección 11 del informe) los integra Yov.
+
+**T-131: dos definiciones más de Carlos (00:15 y 00:39), y lo que Yov pidió antes del commit:**
+1. **En la banda del muelle,** si ni el compacto deja enteros «Descarga» y «Carga» (360 dp con la letra a 2.0), va sin distintivo.
+2. **En la cabecera, el alto manda.**
+   - El selector de modo conserva sus rótulos y el distintivo cede primero: completo; si no, compacto; si no, el nombre encogido, solo si el alto no cambia; y si no, sin distintivo.
+   - La cabecera mide lo mismo con distintivo y sin él. A 1366 con la letra a 2.0 va sin distintivo, en 92 dp; antes del ajuste pasaba a dos líneas (144 dp).
+3. **La evidencia de `build/t131/` no va a Git,** como en T-129 y T-132. Además, uno de sus registros trae una ruta con el usuario de Windows.
+
+Para la línea base de `analyze`, T-131 copió de `baystream-t132` la entrada generada de T-124 (`build/t124/entradas/t124_entradas.dart`, fuera de Git).
+
+**Para después del 7-nov:**
+- Que `tool/t124_main.dart` no dependa de un archivo fuera de Git: toda carpeta nueva da `analyze` con 3 errores, y ya van tres veces.
+- Excluir `build/` del analizador (10.91).
+- Dos observaciones anteriores a T-131, en el teléfono: la línea «Bahía 02, carga: nada pendiente» mide 21 dp y no pasa la pauta de toque, y el peso por pila «110.0+?» queda a 4.33:1.
+
+La siguiente decisión es la **10.95**.
