@@ -2522,3 +2522,62 @@ Después van el rojo y el verde con la falsa nueva, la suite completa y `analyze
 **Una corrección a la 10.87:** que la 26043X cerrara al primer intento no pone a prueba O-128-2. El fallo necesita que la oficina escuche el documento de la operación (T-129, 3.5), y esa escucha llegó con T-127, en la 0.4.1. Si la laptop tenía la 0.4.0, no la había. Carlos confirma qué versión tiene la laptop.
 
 La siguiente decisión es la **10.90**.
+
+### 10.90 · T-129 en commits, T-132 revisada e integrada, el diseño de T-130 aprobado con seis ajustes, el orden nuevo y el ícono `oficina` (2-nov, 22:25)
+
+**T-129 está en `2d98f23`** (22:07). La nube falsa quedó en la capa de plataforma, con `cloud_firestore_platform_interface` 8.0.6 como dependencia de desarrollo (10.89):
+- `pubspec.yaml` suma cuatro líneas en `dev_dependencies`, y en `pubspec.lock` cambia una sola, de `transitive` a `"direct dev"`;
+- el rojo sale +3 −2 por comportamiento, el verde 5 de 5, la suite 1876 de 1876 sin omitidas y `analyze` en cero;
+- la falsa monta la app de Firebase de prueba con `firebase_core`, sin otra dependencia.
+
+Yov lo comprobó en el disco. Codex hace la revisión corta (10.88, paso 2) en `baystream-qa-r4`, sobre `2d98f23`.
+
+**T-132 se entregó en `t132-salida`, sobre `687d68d`** (Codex, 21:51):
+- Cubre los seis defectos de la 10.87:
+  - los llenos parten del grupo del plan (DGS completo, TMP, LOC+83, FTX y RNG);
+  - la oficina elige, contenedor por contenedor, cuando el plan y el listado no coinciden en la peligrosa o en la temperatura;
+  - la salida conserva los bytes del plan y los pesos nuevos van al kilo;
+  - LOC+13 sale solo si el POT difiere del POD;
+  - la página lista y copia las filas que no cargaron.
+- Trae 36 pruebas nuevas: la suite da 1907 de 1907 sin omitidas, `analyze` en cero y `pubspec.*` no cambia.
+- Yov lo revisó en su carpeta: cambian los 12 archivos de su bloque y solo hay datos sintéticos.
+- Una observación menor (P3), para la aceptación: su lista de UNOA deja fuera `! " % & * ; < >`, que la norma admite. Bloquea de más; no corrompe.
+
+Carlos la integra en sprint-4 con una mezcla. El cotejo con los datos reales del piloto va en la aceptación de la candidata.
+
+**Carlos aprueba el diseño de T-130** con las cinco decisiones de su 3.14 y seis ajustes de Yov:
+1. **La búsqueda mira también las operaciones abiertas de la nube.** Hoy `find` solo mira el equipo, y desde un equipo que no se unió se puede publicar una segunda operación de la misma escala. Si la operación no está en el equipo, la banda lleva a «Unirse», y «Publicar operación» no publica una segunda del mismo buque, viaje y puerto.
+2. **El diálogo dice cuándo se publicó la operación.** Con más de una abierta de ese buque en la escala, la app no elige.
+3. **El eco antes que el acuse,** la lección de T-129: la oficina que agrega no se avisa a sí misma ni guarda dos veces. `replaceSource` de T-127 tiene el mismo hueco y se cierra igual.
+4. **Las reglas:** las dos cláusulas y el ajuste al trozo publicado con `op.createdAt == request.time`, sin accesos de más, porque un lote tiene 20 y Firestore no promete el caché. La batería mide una publicación de cinco trozos y una adición de cuatro.
+5. **El nombre del archivo de salida y la nota del viaje los hace T-130** (`OperationSource.voyage ?? operation.voyageNumber`), porque T-132 entra antes en sprint-4.
+6. **El cortafuegos de la prueba de punta a punta** lo abre y lo cierra Carlos, solo en el perfil privado.
+
+Reemplazar un BAPLIE queda primero en la lista de después del 7-nov: el plan de carga suele revisarse durante la escala. Timonel estima la fase 2 en unas 19 h. Si el 4-nov en la noche no va por la mitad, lo primero que espera es el viaje distinto, porque en el piloto los dos planos tenían el mismo.
+
+**El orden cambia.** La fase 2 de T-130 no espera a T-131: empieza en `baystream-rediseno` con T-129 y T-132 en sprint-4, sobre una suite de 1912 y `analyze` en cero. T-131 va en su propia carpeta, `C:\Proyectos\baystream-t131` (rama `t131-distintivo`), y se cruza con T-130 solo en `vessel_overview_page.dart`, en funciones distintas. Un comando de Flutter a la vez en la máquina, y nunca dos suites completas a la vez.
+
+**El ícono `oficina`: Carlos elige la propuesta (a)**, la pantalla con la rejilla del plano calada sobre su pie, que es la elección que le dejaba la 10.86. Yov también votó por la (a): es la que mejor se lee a 18 px, la más cercana al peso de `muelle` (92 frente a 75) y dice «el plano en pantalla». Nube entregó el paquete v3 (22:15) y Yov lo revisó:
+- de 86 archivos, 73 son idénticos al v2 del repositorio, 12 cambian y 1 es nuevo (`svg/oficina.svg`), como dice su LEEME;
+- en la fuente 1.2, los 35 glifos de antes conservan contorno, avance y código, `oficina` va en U+E023 y las métricas no cambian;
+- el SVG es el de la propuesta (a), trazo a trazo, y el nombre de la fuente no trae datos personales.
+
+Además del ícono, cambian cinco fuentes del generador (`generar.py`, `iconos.py`, `fuente.py`, `comprobar_skia.py` y la plantilla del LEEME), declaradas por Nube, para que `oficina` caiga en U+E023 sin mover los 35. T-131 copia los 13 archivos que el LEEME da por cambiados o nuevos. El paquete no se versiona desde la sesión de Nube: entra con T-131.
+
+**Pendiente:** Carlos confirma la versión de BayStream de la laptop (10.89).
+
+La siguiente decisión es la **10.91**.
+
+### 10.91 · La revisión corta de T-129 no pasa por un P2: el plazo del cierre se reinicia (2-nov, 22:45)
+
+**Codex revisó T-129 sobre `2d98f23` (`docs/t129/revision-codex.md`). El dictamen es NO PASA, por un P2.**
+- **Lo que sale bien:** las cinco pruebas en verde; el rojo de `a52d203`, +3 −2 por comportamiento; la suite, 1876 de 1876 sin omitidas, y `analyze` en cero. El criterio que acepta la instantánea es correcto, y la falsa usa la capa de plataforma sin clases selladas.
+- **El P2:** en `_afterOwnWrite`, `.timeout(_networkTimeout)` va antes de `firstWhere`, y `Stream.timeout` reinicia los 45 s con cada evento, también con los que el filtro descarta. Con instantáneas rechazadas cada 40 s, el cierre sigue esperando a los 160 s. Yov lo comprobó en el código.
+- **La corrección:** filtrar antes del plazo (`where(…).timeout(…).first`), con pruebas de silencio y de eventos rechazados sostenidos que exigen el `timeout` a los 45 s y ninguna escucha abierta.
+  - La hace el chat de T-129 en `baystream-rediseno`, sobre sprint-4 con T-132.
+  - Va antes de que empiece la fase 2 de T-130, que toca el mismo archivo.
+  - Codex la vuelve a revisar.
+- **El caso del emulador** (O-128-2, la oficina en Chrome) no se corrió. Queda para la revisión de la corrección, si la máquina está libre, o para la aceptación de la candidata.
+- **Para después del 7-nov:** `flutter analyze` lee los `.dart` de `build/`. Timonel vio 129 avisos falsos y Codex tuvo que analizar una copia preparada. Conviene excluir `build/` en `analysis_options.yaml`.
+
+La siguiente decisión es la **10.92**.
