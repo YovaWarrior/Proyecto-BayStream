@@ -2823,7 +2823,7 @@ Después, 0.7, 0.8 y el ensayo.
 
 La siguiente decisión es la **10.99**.
 
-### 10.99 · Se publica la 0.4.2; T-136, el parche de seguridad de Firestore en Windows, es la candidata 1.0.0; Carlos pide un instalador con asistente (3-nov, 14:40)
+### 10.99 · Se publica la 0.4.2; T-136, el parche de seguridad de Firestore en Windows, es la candidata 1.0.0; Carlos pide un instalador con asistente (3-nov, 14:25)
 
 **El aviso de Firebase** (correo del 3-nov, «[Act Now] Upgrade your Firebase SDKs for Firestore to apply an urgent security patch», proyecto `baystream-app`). Se filtraron las claves de unas CA intermedias de eMudhra, y con ellas se pueden falsificar certificados HTTPS. La guía de Firebase (`compromised-emudhra-intermediate-ca`, actualizada el 3-nov) da las versiones corregidas y dice que actualizar el sistema operativo o el servidor no arregla las compilaciones ya instaladas. Para BayStream:
 - **Windows está afectado.** Firestore va por el SDK de C++, que trae sus propias raíces. Con `firebase_core` 4.13.0 el SDK es el 13.9.0, y así lo dicen los `version.h` de `build\windows\x64\extracted` en `proyecto-baystream`, `baystream-rediseno` y `baystream-qa-r4`. Lo llevan la 0.4.0.0 instalada y la 0.4.2.0 que se publica hoy. El arreglo es `cloud_firestore` 6.10.2 con `firebase_core` 4.15.2, que traen el SDK de C++ 13.13.1 (PR #18869 de FlutterFire, publicadas el 23-oct).
@@ -2859,3 +2859,31 @@ Por eso:
 4. Yov escribe la 10.100, con T-137, y prepara la lista de la 1.0.0.
 
 La siguiente decisión es la **10.100**.
+
+### 10.100 · T-137, el instalador de Windows con asistente: Inno Setup 7.1.1, armado con Dart y dibujado con Flutter (3-nov, 14:35)
+
+**Carlos eligió (14:30) la propuesta de Yov.** Flutter no trae un motor para instaladores: su guía de Windows remite a la MSIX (el paquete `msix`) o a un instalador como Inno Setup o WiX. El motor del asistente es **Inno Setup 7.1.1**, la versión recomendada de jrsoftware.org (28-oct), y todo lo demás es Dart y Flutter. Un instalador hecho todo en Flutter tardaría semanas, porque habría que programar lo que Inno Setup ya hace (copiar, los accesos, el desinstalador, instalar encima, detectar la MSIX), y una app de Flutter no es un solo `.exe`. Para el 7-nov queda fuera.
+
+**T-137 · El instalador de Windows con asistente** (lo hace Codex, lo revisa Timonel y Carlos lo recorre a mano):
+- **Qué ve quien instala.** Hoy, el instalador de aplicaciones de Windows, con el logo y «Instalar». Con T-137, un asistente en español: bienvenida → «Qué se instala» → «Lo que hay detrás» → carpeta y accesos → instalar → «Abrir BayStream».
+  - Sigue el tema claro u oscuro de Windows, con la paleta de BayStream.
+  - No pide administrador, y aparece en Configuración → Aplicaciones con su ícono, su versión y su editor.
+  - Instala en cualquier Windows 10 u 11 de 64 bits sin importar el certificado, que la MSIX sí pide en un equipo nuevo.
+- **Lo que ponen Dart y Flutter:**
+  - las imágenes del asistente las dibuja Flutter, con `BsPaleta` clara y oscura, IBM Plex, el ícono y la ilustración `inicio` (`DESIGN.md` 13), a los tamaños que pide Inno Setup para cada escala: la grande, de 202 × 386 a 534 × 1022, y la pequeña, de 58 × 58 a 159 × 159;
+  - un programa de Dart, `tool/t137_instalador.dart`, arma el instalador. Lee la versión del `.exe`, las de `pubspec.lock`, la de Flutter y la del SDK de C++, y comprueba que el SDK enlazado es el que pide `firebase_core` (la trampa de la 10.99). Agrega junto al `.exe` el runtime de Visual C++ que pide la guía de Flutter, comprueba las DLL con `dumpbin` y deja el instalador con su huella y su manifiesto.
+- **La app no cambia.** Se empaqueta la misma Release que firma la MSIX, y la MSIX sigue de respaldo. Mientras T-136 no esté, Codex empaqueta la Release de la 0.4.2 que Carlos compila hoy en `proyecto-baystream`, sin cambiarla.
+- **La MSIX y el asistente no conviven.** Si la cuenta tiene la MSIX, el asistente se detiene antes de copiar nada y explica cómo quitarla. Los datos no corren riesgo: están fuera del paquete, en `%LOCALAPPDATA%\BayStream` (10.75), y el desinstalador no los toca.
+- **Dónde:** `C:\Proyectos\baystream-t137`, rama `t137-instalador` desde `sprint-4`, como T-132. Solo toca `windows/installer/`, `tool/t137_*`, `docs/T137-RESULTADOS.md` y `build/t137/`. No toca `lib/`, `test/`, `pubspec.*` ni `tool/t93_msix.ps1`, que son de T-136. Corre a la vez que T-136, con un comando de Flutter a la vez en la máquina.
+- **Las pruebas.** Windows 11 Home no trae Sandbox, así que:
+  - en la cuenta de Carlos solo se instala, en silencio, una variante de prueba (otro AppId, otro nombre y otra carpeta), sin abrir la app y con la huella del almacén real igual antes y después;
+  - en la cuenta de Carlos, la variante de producción tiene que detenerse por la MSIX;
+  - el recorrido a mano lo hace Carlos en una cuenta local de prueba de Windows, «BayStream Prueba», sin la MSIX y sin datos: en claro y en oscuro, abrir y desinstalar. Ahí la app abre con Firebase de verdad, pero nadie inicia sesión.
+- **Antes de empezar,** Carlos instala Inno Setup 7.1.1 (`winget install --id JRSoftware.InnoSetup.7 -e`) y abre la carpeta de T-137. La cuenta de prueba la crea antes del recorrido a mano. El sitio de Inno Setup pide licencia a quien lo usa comercialmente, y un proyecto de graduación no lo es.
+- **Los límites, declarados:**
+  - sin un certificado comercial, el instalador no va firmado: si se descarga de internet, Windows avisa «Windows protegió su PC». Copiado a la laptop, no;
+  - no hay un Windows limpio, sin el runtime de Visual C++, donde probarlo: lo cubre la comprobación de las DLL.
+
+**Con la 1.0.0.** Si Timonel da por buena T-137 a más tardar el jueves 5, sale junto con la MSIX, de la misma Release. Si no, sale después, sin cambiar la versión de la app. El jueves, con el asistente a la vista, Carlos decide qué instalación lleva la laptop en la demostración. Yov recomienda el asistente si pasa: se quita la MSIX (los datos se quedan) y la MSIX 1.0.0 queda para volver.
+
+La siguiente decisión es la **10.101**.
