@@ -2698,3 +2698,57 @@ Con el Honor por USB, la prueba de punta a punta de T-130 puede llegar al emulad
 **Pendiente:** Carlos confirma la versión de BayStream de la laptop (10.89). Todo apunta a la 0.4.0.
 
 La siguiente decisión es la **10.96**.
+
+### 10.96 · T-134 entregada y revisada; la lista del piloto pasa a la 0.4.2; la aceptación de Codex va sin el Honor (3-nov, 10:50)
+
+**T-134 está entregada** (Timonel, Opus 5.5, sobre `a9bbc05`; `docs/T134-RESULTADOS.md`):
+- `pubspec.yaml` cambia dos líneas, `version: 0.4.2+8` y `msix_version: 0.4.2.0`, y conserva el CRLF. `pubspec.lock` no cambia.
+- La prueba de T-93 da 5 de 5, `analyze` cero y la suite 2097 de 2097, sin omitidas, en 2:14. Timonel no compiló los clientes: los compila Codex en la aceptación.
+- **Yov lo revisó contra el disco:**
+  - deshechas las dos líneas, `pubspec.yaml` es el de `a9bbc05`, y `pubspec.lock` es el mismo;
+  - los otros 694 archivos con seguimiento de `lib/`, `test/`, `tool/`, `integration_test/`, `android/`, `windows/`, `web/` y la configuración coinciden con `a9bbc05`, sin contar el fin de línea; lo que sobra son archivos generados que Git ignora;
+  - los registros de `build/t134/` dicen lo mismo que el informe.
+- **El 8 y no el 7:** el 7 era de la 0.4.1, que no se subió a Play. Play solo exige que el número suba, y el último subido es el 6.
+- **O-128-1 sigue:** `tool/t93_msix.ps1` arma la 1.0.0.0 si no se le pasa `-Version`. La lista lo llama con `-Version 0.4.2.0`.
+
+**La lista del piloto pasa a la 0.4.2** (`docs/piloto/LISTA-PILOTO.md`, Yov):
+- las reglas de T-130 en 0.1 y 4.0, con la huella `8B903949…`. El respaldo de 4.0 acepta las de T-80 o las de T-127 y dice cuáles eran: deberían ser las de T-80, porque las de T-127 iban con la 0.4.1;
+- 1.18, 1.19 y 2.16 son nuevos, y 1.7 deja de ir solo antes de publicar (sección 11 de T-130);
+- 1.13 y 1.14 traen la página de T-132 y el viaje del plan de carga; 1.15, el cierre de T-129; 1.6 y 2.2, el distintivo; 2.3, 2.5 y 2.7, las marcas de T-133;
+- la sección 4 es la de la 0.4.2: el AAB 8, el MSIX 0.4.2.0 encima de la 0.4.0.0 o de la 0.4.1.0, y la Web 0.4.2 (8). Si hay que volver a la 0.4.0 en Android, va con el `versionCode` 9;
+- la sección 5 trae la regla de uso de T-130 (3.8) y lo que no se midió: el costo de las marcas en el Honor (RNF-002).
+
+**Dos cosas que Yov encontró al leer el código, para la lista:**
+1. **0.7: cerrar las operaciones de pruebas y pilotos anteriores que siguen abiertas** (10.87, punto 3).
+   - La búsqueda de T-130 es por buque y escala, de cualquier viaje (`OperationSources.lookup`). Con la 26043S abierta, al abrir el plan del próximo MAGELLAN STAR en GTSTC, la banda propondría agregarlo a la 26043S en vez de abrir una operación nueva.
+   - Las que se conocen son MAGELLAN STAR 26043S, ECO BORA 26042SB y BUQUE PRUEBA T98. Una operación cerrada no se reabre: Carlos decide cuáles cierra.
+2. **Cada corrida contra Firebase de verdad lleva un viaje propio.**
+   - Un equipo que ya tiene una operación publicada de un buque, viaje y escala la vuelve a encontrar, aunque esté cerrada (`OperationSources.find`), y no abre otra: «La operación de esta escala ya está cerrada y sus BAPLIE no cambian…».
+   - La lista de la 0.4.1 tenía ese choque: su 0.7 cerraba la M100, y el ensayo volvía a usar la M100 en los mismos equipos. En una escala real es lo correcto, así que no es un defecto.
+   - Las copias de «Datos» cambian el viaje de `TDT`: P130 y P130N para 0.8, y E042 para el ensayo. Llevan sus huellas, y el listado sirve para cualquier viaje.
+
+**0.8 es la prueba de punta a punta de T-130 contra Firebase de verdad,** con la laptop de oficina y el Honor de muelle: 11 pasos y una mirada a la consola, en lugar de la de T-127. T-127 queda en 1.17 y 2.15 del ensayo.
+
+**Corrección a la 10.95: el Honor no recibe compilaciones locales.**
+- Su app es la de Play (`gt.cmartinez.baystream`), firmada con la clave de la app que guarda Play.
+- Una compilación local lleva otra firma con el mismo `applicationId`, y no se instala encima. Ante eso, `flutter run` desinstala sola la de Play («Uninstalling old version...») y se lleva el almacén del Honor.
+- La regla de la sección 2 sigue: no se tocan las apps instaladas. Por eso, en la aceptación:
+  - el muelle contra el emulador de Firebase va en una tablet del emulador de Android;
+  - lo propio del teléfono (la banda con el distintivo, las marcas a 360 dp) se mira en la Web del banco a 360 × 800, como en T-128;
+  - el Honor se desconecta del USB mientras dura la aceptación. Se prueba con la 0.4.2 de Play, en 0.8 y en el ensayo, con la vuelta de 4.5 si algo falla.
+- Con `adb reverse`, el modo avión de la tablet no corta el camino al emulador, que va por adb. La caída de red se simula quitando el túnel, o con `T130_HOST=10.0.2.2`.
+
+**La aceptación de Codex,** en `baystream-qa-r4`, con HEAD separado en el commit de esta decisión. Lo que entra:
+1. la suite y `analyze` en una copia limpia;
+2. T-130: sus pruebas, las ocho corridas de las baterías y la prueba de punta a punta de 3.10, con la oficina en Chrome y el muelle en la tablet. Su paso 12 es también el cierre de T-129 (O-128-2) con el motor siguiendo la operación;
+3. T-132 con los datos reales del piloto, que Yov dejó en `%TEMP%\t134acc-piloto`, fuera de todo repositorio: la salida del escritor nuevo, contra la copia corregida a mano el 2-nov;
+4. T-131 y T-133 en la Web a 360 × 800, en la oficina y en la tablet;
+5. las compilaciones de los tres clientes de la candidata;
+6. los diez bloques de PowerShell de la lista, con el analizador y sin correrlos;
+7. el pellizco y Ctrl + rueda, que Carlos prueba a mano en el `.exe`, en Chrome y en Edge, con el namespace `r4`.
+
+El informe es `docs/t134/aceptacion-codex.md`, como el de la 0.4.1.
+
+**Después:** Yov anota en la lista lo que encuentre Codex. Carlos publica las reglas de T-130 desde la consola (4.0), mezcla (4.1) y publica los clientes (4.2 a 4.4). Al final hace 0.7, 0.8 y el ensayo.
+
+La siguiente decisión es la **10.97**.
