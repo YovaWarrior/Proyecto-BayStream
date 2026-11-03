@@ -2504,3 +2504,21 @@ La siguiente decisión es la **10.88**.
 Los prompts están en el proyecto de Yov (`BayStream_Prompts_Sprint4_3nov.md`).
 
 La siguiente decisión es la **10.89**.
+
+### 10.89 · T-129: el rojo y el verde salen; para que analyze dé cero, la nube falsa pasa a la capa de plataforma (2-nov, 21:26)
+
+**Timonel corrió T-129 sobre `687d68d`.** Lo hizo en un chat nuevo con Opus 5.5, no en Fable 5.1 como decía la 10.88.
+- **El rojo:** con el `close()` de `a52d203`, las pruebas 1 y 2 fallan por comportamiento («not_found: No se encontró la operación…») y las otras tres pasan.
+- **El verde:** 5 de 5 con el arreglo.
+- **`analyze` no da cero:** salen 4 avisos, todos en `test/support/t129_fake_firestore.dart` (`subtype_of_sealed_class` ×3 y `must_be_immutable`). La nube falsa implementa `DocumentReference`, `DocumentSnapshot` y `Query`, que `cloud_firestore` 6.8.0 marca `@sealed`, y la línea base no admite `// ignore:`.
+
+**Carlos autoriza una dependencia de desarrollo: `cloud_firestore_platform_interface` 8.0.6.** Sirve para rehacer la nube falsa en la capa de plataforma, que sí está hecha para extenderse.
+- Ya está en `pubspec.lock` como transitiva, así que no se baja nada nuevo.
+- Cambia `pubspec.yaml`, en `dev_dependencies`, y en `pubspec.lock` esa entrada pasa a «direct dev».
+- El arreglo y `lib/` no cambian.
+
+Después van el rojo y el verde con la falsa nueva, la suite completa y `analyze` en cero. La revisión corta de Codex (10.88, paso 2) se hace sobre ese commit.
+
+**Una corrección a la 10.87:** que la 26043X cerrara al primer intento no pone a prueba O-128-2. El fallo necesita que la oficina escuche el documento de la operación (T-129, 3.5), y esa escucha llegó con T-127, en la 0.4.1. Si la laptop tenía la 0.4.0, no la había. Carlos confirma qué versión tiene la laptop.
+
+La siguiente decisión es la **10.90**.
