@@ -203,3 +203,87 @@ Mensaje para Yov:
 > Propongo dejar «Sigue en Recientes; no se borra nada.», sin aplicarlo.
 > Informe: docs/t138/revision-codex.md. Solo ese archivo va a Git; Firebase
 > demo, Chrome y proxies cerrados; Windows y Android no se abrieron.
+
+## Segunda revisión
+
+**Dictamen vigente: PASA.** La corrección retira la promesa temporal que motivó
+el NO PASA anterior. Se conserva arriba la primera revisión como historial;
+el P2 de ese subtítulo queda resuelto con el texto actual.
+
+3-nov-2026, Guatemala. Revisión en `C:\Proyectos\baystream-qa-r4`, con HEAD
+separado **`32eac61839ac31c9bc22746800b810c6777663af`**, «Sprint 4: decision
+10.103 y DESIGN.md con volver al inicio». Inmediatamente debajo está
+**`8e364a49b27bff22759e834664134c3e6ce23646`**, «Sprint 4: T-138, el subtitulo
+de volver al inicio».
+
+**Paso 0 conforme:** desde `b153048` solo cambian
+`vessel_overview_page.dart`, `test/t138_volver_al_inicio_test.dart`,
+`docs/T138-RESULTADOS.md`, `SPRINT-4.md` y `DESIGN.md`. No había diferencias
+de contenido rastreado respecto de HEAD; permanecían los avisos LF/CRLF
+conocidos de los tres generados de Windows.
+
+**Revisión de la corrección:**
+
+- Con un plano confirmado o publicado, el producto dice exactamente
+  **«Sigue en Recientes; no se borra nada.»**. La frase sobre subir al reabrir
+  ya no está en el producto. Con un previo conserva
+  **«Descarta el previo sin guardar nada»**, el mismo `_clear` y su pregunta.
+- La prueba usa ambos textos exactos y los busca dentro de `mas-cerrar`;
+  conserva las comprobaciones de Recientes y de «Seguir mirando».
+- El informe de Timonel atribuye el recorrido, la marca de tiempo y la
+  explicación a Codex. Reconoce que su promesa inicial venía de una lectura
+  de código y distingue sus propias corridas. No se atribuye nuestra medición
+  ni afirma haber repetido el recorrido después de esta corrección.
+- La decisión 10.103 y DESIGN, secciones 8 y 13.7, describen la marca del
+  riel de oficina, la misma acción de «Más», la pregunta del previo y los
+  textos actuales. Son coherentes con el comportamiento revisado. El envío
+  observado se refiere a escrituras ya entregadas al SDK que pueden terminar
+  con el plano cerrado; la recepción de otros equipos sigue expresamente
+  sin medir. La pantalla ya no promete nada de esa sincronización.
+
+**Corridas nuevas, en secuencia y con luz verde/SEMÁFORO de Carlos:**
+
+| Comando, copia limpia de esta punta | Resultado |
+|---|---|
+| `flutter test test/t138_volver_al_inicio_test.dart --reporter json` | **6/6**, sin fallos ni omitidas; salida 0 |
+| `flutter test --reporter json`, suite completa en una corrida | **2107/2107**, cero fallos, cero omitidas; salida 0 |
+| `flutter analyze lib test` | **Cero incidencias**, salida 0 |
+| Integridad final de la copia | **812/812 archivos** idénticos a HEAD |
+
+La copia se materializó mediante lecturas `git show`, con el mismo
+prerrequisito generado de T-124 y su huella ya documentada arriba.
+Las evidencias nuevas quedan separadas en **`build/t138rev/segunda/`**:
+`head.txt`, `paso0-diff.txt`, `revision-estatica.json`, `t138-resumen.json`,
+`suite-resumen.json`, `analyze.log`, sus registros de ejecución,
+`copia-manifiesto.json`, `integridad-copia.json` y `pubspecs-integridad.json`.
+
+Conforme al encargo, **no se abrió Chrome ni ningún cliente**, no se compiló
+la app ni se levantaron emuladores. No se repitió la revisión visual a 360:
+el nuevo subtítulo es más corto que el que ya se vio completo. No se tocaron
+apps instaladas, el almacén real ni Firebase. No se modificó código ni se
+ejecutaron escrituras de Git. **`pubspec.yaml` y `pubspec.lock` no cambian.**
+La única modificación para Git es este anexo en **`docs/t138/revision-codex.md`**.
+
+Para Carlos, desde `C:\Proyectos\baystream-qa-r4`, con HEAD separado:
+
+```powershell
+git add -- docs/t138/revision-codex.md
+git commit -m "Sprint 4: segunda revision de T-138"
+git push origin HEAD:sprint-4
+```
+
+Tres líneas:
+
+1. **PASA:** subtítulo corregido, previo conservado y P2 del texto anterior resuelto.
+2. **6/6**, suite **2107/2107** sin omitidas y **analyze cero**, en copia limpia.
+3. Informe, 10.103 y DESIGN coherentes; solo se anexa este informe, sin abrir clientes ni tocar el almacén real.
+
+Mensaje para Yov:
+
+> Yov: segunda revisión de T-138 PASA, sobre 32eac61/8e364a4. El subtítulo
+> confirmado ya dice «Sigue en Recientes; no se borra nada.»; el previo se
+> conserva. La prueba exige ambos textos y la documentación atribuye bien
+> el hallazgo y su límite. Nuevas corridas: 6/6, 2107/2107 sin omitidas,
+> analyze lib/test cero; 812 huellas intactas. Sin Chrome, clientes,
+> emuladores ni almacén real. Solo se anexa «Segunda revisión» en
+> docs/t138/revision-codex.md; ninguna escritura de Git ni publicación.
