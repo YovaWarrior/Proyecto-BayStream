@@ -2950,3 +2950,42 @@ La siguiente decisión es la **10.102**.
 **Lo que sigue:** Codex vuelve a T-137; Timonel termina T-138 y Codex lo revisa; Yov prepara la publicación de la 1.0.0.
 
 La siguiente decisión es la **10.103**.
+
+### 10.103 · La 0.8 pasa con la 0.4.2; T-138 corrige su subtítulo y T-137 sus textos (3-nov, 20:00)
+
+**La 0.8 pasó con la 0.4.2 contra Firebase de verdad.** Carlos (19:46): «el paso a paso salió como esperábamos, todo bien». Es la prueba de punta a punta de T-130 con la laptop de oficina y el Honor de muelle, en la operación de prueba BUQUE MANUAL · P130 · GTSTC, publicada a las 19:16. Sus capturas muestran:
+- el paso 4, con dos descargas ya registradas desde el Honor («Descarga 2 de 30»);
+- el paso 5: el diálogo «Agregar el plan de carga a la operación publicada», con los tres textos de la tabla, y el aviso «Plan de carga agregado a la operación publicada de GTSTC: 30 contenedores y 0 reservas. El muelle lo recibe solo.»;
+- el paso 9: 30 filas en 2 agencias, 20 de 20 llenos cruzan con el plan, y la fila «TOTAL» bajo «1 fila sin entender», que es lo normal (1.4);
+- el paso 10: las filas que no cargaron y el nombre `BayStream_BUQUE MANUAL_P130N_salida.edi`;
+- el paso 11: «Operación cerrada.», «Fuentes: llegada · carga (viaje P130N) · listado r1» y «No hay operaciones abiertas.»
+
+Con eso, 1.18 (agregar el plan después de publicar) queda para el piloto.
+
+**Un texto para después del 7-nov:** con la operación cerrada, «Nube y cuenta» pone «Operación de la escala abierta» encima de «Publicada y cerrada». «Abierta» es la escala del plano en pantalla, pero se lee como si fuera la operación. No entra en la 1.0.0.
+
+**T-138: Codex dijo NO PASA, y Timonel lo corrigió.**
+- **Lo que no pasó** (`docs/t138/revision-codex.md`, `b153048`): el subtítulo «Lo pendiente sube al reabrirlo». Con el muelle en el inicio, el movimiento subió antes de reabrir el plano: la sincronización no se pausa. Timonel lo había leído en el código, no lo había medido.
+- **Lo que pasó:** la marca, el hover, Tab y Enter, «Recientes», el previo y los subtítulos a 360, en Chrome.
+- **La corrección:** con un plano confirmado o publicado, el subtítulo es «Sigue en Recientes; no se borra nada.» La prueba comprueba ese texto y el informe corrige su paso 0. Prueba 6 de 6, suite 2107 de 2107 y `analyze` cero.
+- **Yov comparó** el árbol de `baystream-rediseno` con el de `qa-r4` sin contar los finales de línea: solo cambian esos tres archivos. Lo que llega de otros equipos con el plano cerrado no se midió, y ningún texto lo promete.
+- Codex vuelve a mirar solo la corrección.
+- `DESIGN.md` ya dice «Volver al inicio»: en la sección 8, la entrada de «Más», la pregunta del previo y un párrafo sobre T-138; en 13.7, la marca del riel de la oficina.
+
+**T-137: Codex corrigió los textos del asistente** (`docs/T137-RESULTADOS.md`, «Revisión de textos previa al recorrido»).
+- El arte dice «OFICINA Y MUELLE» y «Windows, Android y Web». «Tu carga, a la vista.» se queda. «Puente de mando» es el nombre interno de la dirección de diseño, y la app no lo muestra.
+- La bienvenida: «BayStream lee el BAPLIE y muestra el plano de estiba, para la oficina y el muelle.»
+- El recorrido normal habla de tú, con `[Messages]` del `.iss`; `Spanish.isl` no cambia.
+- El arte y los dos instaladores se regeneraron. La aceptación automática nueva pasó, con el almacén real idéntico (592 archivos). El primer intento se detuvo porque BayStream 0.4.2 estaba abierta, como debía.
+- Yov miró tres de las siete capturas nuevas: la bienvenida, «Lo que hay detrás» y la carpeta.
+- **Falta:** el recorrido de Carlos en la cuenta «BayStream Prueba», en claro y en oscuro, y la revisión de Timonel, que empieza a la vez que la de Codex.
+
+**La 1.0.0 no espera al asistente.** T-137 no toca la aplicación: son `tool/`, `windows/installer/` y su informe. Si pasa antes de publicar, entra a `sprint-4` y va en la mezcla. Si pasa después, entra como herramienta y empaqueta la misma 1.0.0. Mientras tanto, la laptop sigue con el MSIX.
+
+**El orden:**
+1. Codex revisa la corrección de T-138, y Timonel revisa T-137.
+2. Carlos recorre el asistente en «BayStream Prueba».
+3. Si T-137 pasa, Carlos hace su commit y T-137 entra a `sprint-4`.
+4. Carlos publica la 1.0.0 (10.102), esta noche o mañana temprano.
+
+La siguiente decisión es la **10.104**.
