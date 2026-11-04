@@ -3161,3 +3161,22 @@ El instrumento de la sesión va en blanco en los anexos.
 Las cuatro van como observaciones para después del 7-nov. En el documento 1 van como limitaciones de H1.
 
 La siguiente decisión es la **10.110**.
+
+### 10.110 · T-139 aceptada; H2 y H6 quedan como en la 10.108 (4-nov, 16:30)
+
+**T-139, aceptada** (Yov, 14:10; commit `36bdeda`). Son el manual de la 1.0.0 (`docs/MANUAL-USUARIO-1.0.0.md`), sus 43 capturas en `docs/manual-1.0.0/` y `docs/T139-RESULTADOS.md`. Antes del commit, Timonel hizo los cuatro retoques que pidió Yov:
+- las figuras 1 a 3 se recortaron a la ventana del asistente, que traía detrás el Explorador;
+- 3.3 distingue el «Publicado» del plano, confirmado en ese equipo, de la operación «Publicada» en la nube;
+- 7.11 dice lo que ve el muelle después del cierre;
+- el informe atribuye al prompt de T-139 la opción de recorrer el teléfono en la Web a 360 dp.
+
+Faltan las figuras 5 y 6, la instalación en Android y en la Web. Las toma Carlos, con los nombres de archivo que ya fija el manual.
+
+**Las observaciones de T-139:**
+- O-139-1, el muelle que sigue en «Publicada» y «Al día» después del cierre: el manual ya lo explica, y el arreglo va después del 7-nov;
+- O-139-2, O-139-3, O-139-6 y O-139-7: después del 7-nov, porque la 1.0.0 no cambia antes de la presentación;
+- O-139-4 y O-139-5: no son defectos.
+
+**H2 y H6 quedan como en la 10.108** (Carlos, 16:18). La sesión de la tarde, de 14:30 a 16:09, tampoco se usa como evidencia: sus registros no son mediciones válidas. Los dos van como escenario de referencia, con la nota neutra, y quedan pendientes de contraste con usuarios en la prueba de campo.
+
+La siguiente decisión es la **10.111**.
