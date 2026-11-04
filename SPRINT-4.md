@@ -3136,4 +3136,28 @@ El instrumento de la sesión va en blanco en los anexos.
 - H4, con el conteo de `m2-baseline` y el de T-99;
 - H5, con las series del 14-ago y del 25-ago (10.10 de `SPRINT-1.md`).
 
-La siguiente decisión es la **10.109**.
+### 10.109 · T-140 entregada: H1 medido con todo el corpus, 99.85 % (4-nov, 14:00)
+
+**El volcado** (Timonel, `tool/t140_volcado_test.dart`, 1 de 1 en verde). Leyó los 10 archivos con el lector de la 1.0.0 y dejó en `build/t140/` un CSV por archivo y `resumen.json`:
+- los contenedores son 977, 806, 369, 369, 979, 736, 717, 398, 405 y 405;
+- A08 y A08v traen 55 celdas reservadas;
+- A06 se leyó como la 1.5, con las reglas de la 2.x;
+- las huellas de los `.edi` coinciden con las de la carpeta del corpus.
+
+**El cotejo** (Yov). Cada contenedor se comparó campo por campo con una lectura independiente de su `.edi`, que no usa nada del código de BayStream. El script está en el proyecto, en `claude/herramientas/h1_cotejo.py`.
+
+| Medida | Correctos | Precisión | IC 95 % (Wilson) |
+|---|---|---|---|
+| Los 9 campos del instrumento: matrícula, tipo ISO, estado, posición, peso, operador, peligrosa, refrigerado y sobredimensionado | 6152 de 6161 | **99.85 %** | 99.72 % a 99.92 % |
+| Lo mismo, sin las dos variantes (8 operaciones) | 5381 de 5387 | 99.89 % | 99.76 % a 99.95 % |
+| Los 9 campos más los puertos de carga y descarga (OE «a») | 5435 de 6161 | 88.22 % | 87.39 % a 89.00 % |
+
+**H1 cumple el umbral del 99.5 %,** y también lo cumple el límite inferior del intervalo. Lo que falla está identificado:
+- **Las peligrosas con dos DGS.** Hay 5 contenedores con dos mercancías peligrosas (A02, A03 y A07; 9 casos con las variantes). El lector guarda solo la última: marca la peligrosa bien, pero pierde la otra clase y su número ONU. Con «una de las declaradas», los 9 campos dan 100 %.
+- **La 1.5 pierde los puertos.** En A06, los 717 contenedores salen sin puerto de carga ni de descarga: la 1.5 los declara en LOC+6 y LOC+12, y el lector los busca en LOC+9 y LOC+11. Sin A06, la medida con puertos da 99.83 %.
+- **El destino final (LOC+83) no se extrae en ningún archivo.** La columna «Destino final» del CSV sale vacía. No es parte de H1.
+- **Las matrículas con espacio de A06** (`BYSU 9672095`) se conservan tal cual vienen; el cotejo las compara sin el espacio.
+
+Las cuatro van como observaciones para después del 7-nov. En el documento 1 van como limitaciones de H1.
+
+La siguiente decisión es la **10.110**.
