@@ -3102,11 +3102,7 @@ Es el primer armado de producción contra `proyecto-baystream`, y salió a la pr
 
 Los escribe Yov el jueves. El plan y las fuentes están en el documento del proyecto `BayStream_Documentos_finales_7nov.md`.
 
-**La sesión con usuarios se hizo el 4-nov, de 08:00 a 09:40, con cinco personas de COMAR**, para H2 y H6 de PG I. Cada uno hizo seis tareas cronometradas con `CORPUS_A01.edi`, tres en el Bloc de notas y tres en BayStream 1.0.0, y después el SUS. Yov cotejó el Word con las fotos de las hojas en papel, y coinciden:
-- el tiempo baja un 77.4 %, con un umbral del 60 %;
-- el SUS medio es 82.5, con un umbral de 68.
-
-La tabulación completa va en el documento 1.
+**La sesión con usuarios del 4-nov no se usa como evidencia de H2 y H6.** *Corregido el 4-nov a las 13:10: sus registros no son mediciones válidas, y se retiraron los resultados que se habían anotado aquí. Cómo se miden H2 y H6 se decide en la 10.108.*
 
 **T-139 · El manual de usuario de la 1.0.0.** El de T-100 (`docs/MANUAL-USUARIO.md` y sus 103 capturas en `docs/manual/`) es de `sprint3-cierre-2`, de antes del rediseño. Para el documento 2 hace falta una edición de la 1.0.0, más corta y para imprimir en color. La hace Timonel, con estas reglas:
 - usa los datos sintéticos de T-100 (BUQUE MANUAL, M100) y nada del corpus;
@@ -3122,4 +3118,22 @@ La entrega, el miércoles en la noche:
 
 Versionar esas rutas de `docs/` requiere la autorización de Carlos (`AGENTS.md`), por nombre exacto; va en el prompt de T-139.
 
-La siguiente decisión es la **10.108**.
+### 10.108 · El título de los documentos; H2 y H6 van como escenario de referencia; T-140 mide H1 (4-nov, 13:30)
+
+**El título** de los dos documentos es «Ecosistema multiplataforma para la planificación de estiba de buques portacontenedores en tiempo real». Sale «optimización», porque BayStream no planifica la estiba de forma automática (10.80 de `SPRINT-3.md`).
+
+**H2 y H6 no se miden con usuarios antes del 7-nov** (Carlos). En el documento 1 van como un escenario de referencia, con una nota al inicio de la sección:
+- dice que esos valores no proceden de la aplicación con participantes;
+- dice que la medición con usuarios queda para la prueba de campo, sujeta al despliegue en muelle;
+- en la prueba de hipótesis, los dos quedan pendientes de contraste.
+
+El instrumento de la sesión va en blanco en los anexos.
+
+**T-140 · El volcado del lector para H1** (Timonel, ≈ 0.3 h). Corre el lector de la 1.0.0 sobre los 10 archivos del corpus y guarda en `build/t140/` el CSV que exporta la app, uno por archivo. Yov compara cada contenedor, campo por campo, con una lectura independiente del `.edi` y da la precisión con su intervalo de Wilson, contra el umbral del 99.5 %. Del corpus no entra nada al repositorio: solo el script `tool/t140_volcado_test.dart`.
+
+**H3, H4 y H5 van con sus datos reales:**
+- H3, con el piloto 3 (10.85);
+- H4, con el conteo de `m2-baseline` y el de T-99;
+- H5, con las series del 14-ago y del 25-ago (10.10 de `SPRINT-1.md`).
+
+La siguiente decisión es la **10.109**.
