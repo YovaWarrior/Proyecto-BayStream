@@ -3066,3 +3066,32 @@ La siguiente decisión es la **10.105**.
   - las observaciones O-136-1, O-134-2 y O-137-1 a O-137-7.
 
 La siguiente decisión es la **10.106**.
+
+### 10.106 · T-137 aceptada, con el recorrido de Carlos en el asistente de la 1.0.0 (3-nov, 22:25)
+
+**El asistente de la 1.0.0 se armó desde `C:\Proyectos\baystream-t137`**, contra la Release que firmó el MSIX (10.105), con los pasos de la revisión de Timonel:
+- `BayStream_Setup_1.0.0.9.exe`, `ef8f2bbb5bcf0fdf935b8fb2fed819204961ce295a793a777aefa1cf59d0aadb`, con el AppId de producción, 32 archivos en la carga y «Origen verificado sin cambios»;
+- el manifiesto dice 1.0.0.9, cloud_firestore 6.10.2, firebase_core 4.15.2, el SDK de C++ 13.13.1 pedido y extraído, Flutter 3.38.9, Dart 3.10.8 y Riverpod 3.1.0;
+- está en `C:\Users\Public\BayStream-T137\1.0.0.9`.
+
+Es el primer armado de producción contra `proyecto-baystream`, y salió a la primera.
+
+**Carlos lo recorrió en la cuenta estándar «BayStream Prueba», en claro y en oscuro.** Las 30 capturas están en `build/t137/capturas/carlos/`, fuera de Git, y Yov las revisó todas:
+- las seis páginas, con «OFICINA Y MUELLE», la bienvenida nueva, el trato de tú y las versiones de la 1.0.0 en «Lo que hay detrás»;
+- sin MSIX en la cuenta, el asistente siguió: es la primera vez que corre ese camino;
+- la carpeta del almacén, `…\AppData\Local\BayStream`, se rechaza con «Elige otra carpeta: la instalación debe quedar separada de %LOCALAPPDATA%\BayStream, donde viven tus datos.». También se rechaza después de que Windows pregunte si instalar en una carpeta que ya existe y se conteste que sí;
+- la instalación es por usuario, en `…\AppData\Local\Programs\BayStream`, con el acceso en Inicio y el del escritorio;
+- BayStream abrió desde el final del asistente, desde Inicio y desde el escritorio, con el almacén vacío de esa cuenta y sin iniciar sesión;
+- en Aplicaciones dice «BayStream · 1.0.0.9 · Carlos Martínez · 94.5 MB»;
+- la confirmación nueva de desinstalar se lee completa, y al final dice «Tus datos permanecen en %LOCALAPPDATA%\BayStream. El desinstalador no los borra.»;
+- en oscuro, el cuadro gris de O-137-5 no le molesta a Carlos.
+
+**Lo que mostró desinstalar con BayStream abierta (O-137-8, para después del 7-nov).** El desinstalador no detecta la app ni la cierra. Termina con «La desinstalación de BayStream terminó, aunque Windows no pudo quitar algunos archivos de la aplicación», y esos archivos se quedan en la carpeta de la aplicación: al reinstalar, Windows preguntó si instalar en una carpeta que ya existe. El aviso es veraz y los datos no se tocan. El arreglo es que el desinstalador pida cerrar BayStream antes de seguir; mientras tanto, se cierra BayStream antes de desinstalar.
+
+**T-137 queda aceptada:** la entrega de Codex, la revisión de Timonel con la corrección de H1 (10.104), el recorrido de Carlos y la revisión de Yov. Sigue en su rama, `t137-instalador`, hasta que se arregle O-137-1 (10.104); después entra a `sprint-4` y a `master`.
+
+**Lo que sigue:**
+- el jueves, Carlos decide qué instalación lleva la laptop en la demostración: el MSIX 1.0.0.0 o el asistente 1.0.0.9. Si elige el asistente, antes quita la MSIX, porque en la laptop los datos se quedan (10.104), y lo primero después de instalar es la sesión de oficina;
+- después de la demostración, las observaciones de la 10.104 y O-137-8.
+
+La siguiente decisión es la **10.107**.
