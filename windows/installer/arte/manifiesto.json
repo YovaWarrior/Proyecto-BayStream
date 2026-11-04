@@ -1,0 +1,360 @@
+{
+  "schema": 1,
+  "generador": "flutter test tool/t137_arte_test.dart",
+  "paletas": {
+    "claro": {
+      "papel": "#f5f8fc",
+      "hoja": "#ffffff",
+      "tinta": "#10243f",
+      "tintaSuave": "#4a5b73",
+      "marca": "#0d47a1"
+    },
+    "oscuro": {
+      "papel": "#07111f",
+      "hoja": "#0c1a31",
+      "tinta": "#eaf0f9",
+      "tintaSuave": "#a9b9d2",
+      "marca": "#4f8ef7"
+    }
+  },
+  "fuentes": [
+    {
+      "archivo": "assets/fonts/Roboto-Medium.ttf",
+      "sha256": "f205cc511821ea56078a105557fcea6253129404d411c997e1866fbd006abb68"
+    },
+    {
+      "archivo": "assets/fonts/Roboto-Regular.ttf",
+      "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95"
+    },
+    {
+      "archivo": "assets/fonts/plex/IBMPlexMono-Medium.ttf",
+      "sha256": "98fbd727aae340b236955879dabed4d991aac9e8e90b3b2a67ce4a59221cc97c"
+    },
+    {
+      "archivo": "assets/fonts/plex/IBMPlexMono-Regular.ttf",
+      "sha256": "7c6fbddca4b700be918f5f6183d9bd4464fa427fe435f0b480d77fe2bb8c5a43"
+    },
+    {
+      "archivo": "assets/fonts/plex/IBMPlexSans-Medium.ttf",
+      "sha256": "331c8639d7598b2cde62a911a71db195e30cb655cd6bdf2e324a7e984955f907"
+    },
+    {
+      "archivo": "assets/fonts/plex/IBMPlexSans-Regular.ttf",
+      "sha256": "975dcda37d80f038dcd143c22e33ca2d97a0cc5a929aace1c749153b0fe1afa5"
+    },
+    {
+      "archivo": "assets/fonts/plex/IBMPlexSans-SemiBold.ttf",
+      "sha256": "a20caf8286023a6a7a85e40b1d2a4ae9fc3e3b1f9eda8f4c542dd4986af67bb1"
+    },
+    {
+      "archivo": "assets/fonts/plex/IBMPlexSansCondensed-Medium.ttf",
+      "sha256": "0c6b79ef4a7de76ffc6bf2091980e5f81a1a87ac3967566bc98aae0baa518f54"
+    },
+    {
+      "archivo": "assets/fonts/plex/IBMPlexSansCondensed-SemiBold.ttf",
+      "sha256": "acc2b1e3b9597ee13b08b767f845bd038fe120cbee806859af7c01b60fe6e9e6"
+    },
+    {
+      "archivo": "lib/core/design/bs_categorico.dart",
+      "sha256": "c91c87ffee4416fa0dac68c6bb5e98bd13e32b6a1abd6ab5aa2b2602312d6a8d"
+    },
+    {
+      "archivo": "lib/core/design/bs_colores_semanticos.dart",
+      "sha256": "1be20d953ff006755ac791321deb1048c52929146dfcca234b9dad1f83dfbbe7"
+    },
+    {
+      "archivo": "lib/core/design/bs_ilustraciones.dart",
+      "sha256": "b5c21e01d7c60ff8ad8f11d0019011a3c8179bef074eb12073db8328d5c6a5f9"
+    },
+    {
+      "archivo": "lib/core/design/bs_medidas.dart",
+      "sha256": "25b5bb9bfed2ce59cb46d4e554e1c9cd1b1dbf611e2042f527475f35e077f006"
+    },
+    {
+      "archivo": "lib/core/design/bs_paleta.dart",
+      "sha256": "d8e6b535e704809dea291ea257c4e6dade684aea53a41f0c8cd52c37e74d2bdd"
+    },
+    {
+      "archivo": "lib/core/design/bs_tema.dart",
+      "sha256": "2c41b62d6598b33f75f384ada9409498ea7ac2213ed9e2a25a33088026b2397c"
+    },
+    {
+      "archivo": "lib/core/design/bs_tipografia.dart",
+      "sha256": "d4500fbe06e3256f357be0c6b62810546be56a27baaed921f7c83a7b2eb277e9"
+    },
+    {
+      "archivo": "lib/core/design/componentes/bs_fondo_de_plano.dart",
+      "sha256": "077060056a99df08c023f328689d2a6e632f4399f57c494ebbc6eb09f1861adf"
+    },
+    {
+      "archivo": "lib/core/design/componentes/bs_ilustracion.dart",
+      "sha256": "e717c71fa2ed2d315bf712bb089c06ae0fbb4b73c3c73b74e1467dd19cf8dffb"
+    },
+    {
+      "archivo": "test/support/t117_oficina_support.dart",
+      "sha256": "9951694499237c796a3c5650fa1e4f7cd9c77c4d10b8290b6c486ee882e4da65"
+    },
+    {
+      "archivo": "tool/t137_arte_test.dart",
+      "sha256": "fd84d4975a4b167df83de50f437819f64bc490ded060e44f7490a8b4a8f321e0"
+    },
+    {
+      "archivo": "web/icons/Icon-512.png",
+      "sha256": "37e29e43385b43a91446bca6320a417c4583c4a525d44856c677e21de8c22cf6"
+    }
+  ],
+  "archivos": [
+    {
+      "archivo": "grande_claro_100.png",
+      "ancho": 202,
+      "alto": 386,
+      "escala": 100,
+      "tema": "claro",
+      "tipo": "grande",
+      "sha256": "c0e0f20c58cfe6b7f70e92701586ab64507f4c98a1f8abad4c772dae7fe56c60"
+    },
+    {
+      "archivo": "pequena_claro_100.png",
+      "ancho": 58,
+      "alto": 58,
+      "escala": 100,
+      "tema": "claro",
+      "tipo": "pequena",
+      "sha256": "78760b77197524ac783788d4f5fdb955e1c0d62a61d635f619d8c99b2f679233"
+    },
+    {
+      "archivo": "grande_claro_125.png",
+      "ancho": 269,
+      "alto": 515,
+      "escala": 125,
+      "tema": "claro",
+      "tipo": "grande",
+      "sha256": "2ca66abd174b437f22efd3b1b3c7e4c77dacb3efcdb21185a3b94cff27db6962"
+    },
+    {
+      "archivo": "pequena_claro_125.png",
+      "ancho": 77,
+      "alto": 77,
+      "escala": 125,
+      "tema": "claro",
+      "tipo": "pequena",
+      "sha256": "e6bfe13705a6b1ff4b1f49b2ed99ca5e425734e6090148ded236a9b6b644635c"
+    },
+    {
+      "archivo": "grande_claro_150.png",
+      "ancho": 336,
+      "alto": 643,
+      "escala": 150,
+      "tema": "claro",
+      "tipo": "grande",
+      "sha256": "844a736a28f3ec0f8a4f5b5b020e1a07e0ad64543d9ac27fd17ccea92b624280"
+    },
+    {
+      "archivo": "pequena_claro_150.png",
+      "ancho": 97,
+      "alto": 97,
+      "escala": 150,
+      "tema": "claro",
+      "tipo": "pequena",
+      "sha256": "a9adf4ad8da8f55a779df62c48a68d59f527e078e91c6076534ba329bdfcc9a6"
+    },
+    {
+      "archivo": "grande_claro_175.png",
+      "ancho": 403,
+      "alto": 772,
+      "escala": 175,
+      "tema": "claro",
+      "tipo": "grande",
+      "sha256": "7ad5b9c6f90a92eed318953fd7d6f4c400403291b7f132bf312716b26775244e"
+    },
+    {
+      "archivo": "pequena_claro_175.png",
+      "ancho": 116,
+      "alto": 116,
+      "escala": 175,
+      "tema": "claro",
+      "tipo": "pequena",
+      "sha256": "f456c64a88e0fdb437c49efde04b4bdfc305109e49eff6df88c04953239fe77e"
+    },
+    {
+      "archivo": "grande_claro_200.png",
+      "ancho": 430,
+      "alto": 824,
+      "escala": 200,
+      "tema": "claro",
+      "tipo": "grande",
+      "sha256": "8759b005bfe78e92d963ae0aa80010d61cad93c2e112efd25dd969739b12e8df"
+    },
+    {
+      "archivo": "pequena_claro_200.png",
+      "ancho": 124,
+      "alto": 124,
+      "escala": 200,
+      "tema": "claro",
+      "tipo": "pequena",
+      "sha256": "f71384ae2454f6b874e6bb656ba2a031447ceaf3406d73951dade7b2e187d87e"
+    },
+    {
+      "archivo": "grande_claro_225.png",
+      "ancho": 498,
+      "alto": 953,
+      "escala": 225,
+      "tema": "claro",
+      "tipo": "grande",
+      "sha256": "407911f3549f4424f78d99c80876a89b63e3b342f860dccf12fbf7bbe3a7f170"
+    },
+    {
+      "archivo": "pequena_claro_225.png",
+      "ancho": 143,
+      "alto": 143,
+      "escala": 225,
+      "tema": "claro",
+      "tipo": "pequena",
+      "sha256": "2b1db96bf25432d887a01b489303c6ce28f51e63beafe6ec0f8100d1ea1537e6"
+    },
+    {
+      "archivo": "grande_claro_250.png",
+      "ancho": 534,
+      "alto": 1022,
+      "escala": 250,
+      "tema": "claro",
+      "tipo": "grande",
+      "sha256": "0a962f73f806d0216f5d747b74eb805b071ba47fc86686e681152dd16a632a8a"
+    },
+    {
+      "archivo": "pequena_claro_250.png",
+      "ancho": 159,
+      "alto": 159,
+      "escala": 250,
+      "tema": "claro",
+      "tipo": "pequena",
+      "sha256": "513ea03ed1b7d063d053730bd5447799579ce5e88dd39fb0917f757c5596a72c"
+    },
+    {
+      "archivo": "grande_oscuro_100.png",
+      "ancho": 202,
+      "alto": 386,
+      "escala": 100,
+      "tema": "oscuro",
+      "tipo": "grande",
+      "sha256": "7cad2194a78f815043d9065528a59a7c5662c65fce978c712cb287e9ce0aaf52"
+    },
+    {
+      "archivo": "pequena_oscuro_100.png",
+      "ancho": 58,
+      "alto": 58,
+      "escala": 100,
+      "tema": "oscuro",
+      "tipo": "pequena",
+      "sha256": "60d2dd78bfa714183b450a3810cec33ec29a3f953bcc3411ae49e76e6941d600"
+    },
+    {
+      "archivo": "grande_oscuro_125.png",
+      "ancho": 269,
+      "alto": 515,
+      "escala": 125,
+      "tema": "oscuro",
+      "tipo": "grande",
+      "sha256": "9c1b3c1e2fed1b4f5ba40a3c337cb69209c2fd288aead683f851cff5427672ca"
+    },
+    {
+      "archivo": "pequena_oscuro_125.png",
+      "ancho": 77,
+      "alto": 77,
+      "escala": 125,
+      "tema": "oscuro",
+      "tipo": "pequena",
+      "sha256": "842841147257b1cfa8e29f2452ed0fe3fec30f7d52da86cfc760eefe280aa6b3"
+    },
+    {
+      "archivo": "grande_oscuro_150.png",
+      "ancho": 336,
+      "alto": 643,
+      "escala": 150,
+      "tema": "oscuro",
+      "tipo": "grande",
+      "sha256": "fbfa72a0b33a6467087908d5a3f7226046216c88c63d8225195356ca07c6a340"
+    },
+    {
+      "archivo": "pequena_oscuro_150.png",
+      "ancho": 97,
+      "alto": 97,
+      "escala": 150,
+      "tema": "oscuro",
+      "tipo": "pequena",
+      "sha256": "e1af48712d59952c44aa7e4b9d09dcb5828e833406f4ee5e2d04bab37f0f9d27"
+    },
+    {
+      "archivo": "grande_oscuro_175.png",
+      "ancho": 403,
+      "alto": 772,
+      "escala": 175,
+      "tema": "oscuro",
+      "tipo": "grande",
+      "sha256": "cf9475044450a1c975863704cdddd2be6e61f25e7c8b8f4e2ed59f10ccd85720"
+    },
+    {
+      "archivo": "pequena_oscuro_175.png",
+      "ancho": 116,
+      "alto": 116,
+      "escala": 175,
+      "tema": "oscuro",
+      "tipo": "pequena",
+      "sha256": "8c376eee1ebf467976ee64eb7fb4c4351310607b86ae7c7866aaebe6fbabaab6"
+    },
+    {
+      "archivo": "grande_oscuro_200.png",
+      "ancho": 430,
+      "alto": 824,
+      "escala": 200,
+      "tema": "oscuro",
+      "tipo": "grande",
+      "sha256": "70a6acc52922420e49557001f7d6044b3715533c39164c132ed7b22ef0684c9a"
+    },
+    {
+      "archivo": "pequena_oscuro_200.png",
+      "ancho": 124,
+      "alto": 124,
+      "escala": 200,
+      "tema": "oscuro",
+      "tipo": "pequena",
+      "sha256": "949bdc05cd236461c5e2f6ef5d502db25acc77cf4e6b6ea86fa0ec9e127e01df"
+    },
+    {
+      "archivo": "grande_oscuro_225.png",
+      "ancho": 498,
+      "alto": 953,
+      "escala": 225,
+      "tema": "oscuro",
+      "tipo": "grande",
+      "sha256": "04d733cdeabbcb8f176bc04eccd383d9909b4832e3a964d9c78a27f6e4cf884e"
+    },
+    {
+      "archivo": "pequena_oscuro_225.png",
+      "ancho": 143,
+      "alto": 143,
+      "escala": 225,
+      "tema": "oscuro",
+      "tipo": "pequena",
+      "sha256": "8622d6e3f879933200148e2963f2565288a881dafdd8380d2dcc52985870ba1f"
+    },
+    {
+      "archivo": "grande_oscuro_250.png",
+      "ancho": 534,
+      "alto": 1022,
+      "escala": 250,
+      "tema": "oscuro",
+      "tipo": "grande",
+      "sha256": "3ccf066ead3045297a51c042890356843de17460de4af72ca70be22bb4f2d2e6"
+    },
+    {
+      "archivo": "pequena_oscuro_250.png",
+      "ancho": 159,
+      "alto": 159,
+      "escala": 250,
+      "tema": "oscuro",
+      "tipo": "pequena",
+      "sha256": "48c58cba7e38c2712889685ab5481b5a24d58ad49e4beb7b747be78712c4e5b4"
+    }
+  ]
+}
