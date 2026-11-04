@@ -2924,3 +2924,29 @@ Lo hace Timonel después de T-136 y lo revisa Codex. Entra en la 1.0.0 si pasa a
 4. Yov prepara la lista de la 1.0.0, y Carlos publica: las reglas no cambian; la mezcla, con `v1.0.0`; el MSIX 1.0.0.0 y, si pasó, el asistente; el AAB y la Web. Después, una prueba corta con el Honor, con su propio viaje.
 
 La siguiente decisión es la **10.102**.
+
+### 10.102 · Codex acepta T-136 con reservas: la sesión nativa de Windows y de Android se prueba al publicar (3-nov, 17:40)
+
+**Codex aceptó T-136 con reservas** (`docs/t136/aceptacion-codex.md`, sobre `5ab830b`).
+- **Lo que pasa:**
+  - entre `8ea84bd` y `5ab830b` cambian 20 rutas: `SPRINT-4.md`, el informe de T-136 y sus 18 archivos;
+  - en `pubspec.lock` cambian los diez paquetes de FlutterFire de la 10.101, y ninguno más;
+  - la suite da 2101 de 2101, sin omitidas, y `analyze lib test`, cero, en una copia limpia de 811 archivos que siguió idéntica a HEAD;
+  - **Windows:** en `qa-r4`, `-Apartar` no movió nada mientras `.dart_tool` resolvía la 4.13.0, como debe; después de `flutter pub get`, apartó el 13.9.0. La compilación extrajo y enlazó el 13.13.1, `-Verificar` pasa y el `.exe` dice 1.0.0+9;
+  - **Web:** `build/web` solo trae la 12.19.0, y sus módulos coinciden con npm y con lo que se sirve por HTTP. `t92_verify` pasa. En Chrome, contra el emulador, todo pasa: el arranque sin errores ni avisos de versiones, la sesión de oficina y la de muelle, un movimiento, el plan agregado (30 contenedores), el listado (30 filas, revisión 1) y el cierre al primer intento;
+  - **Android:** el AAB release dice 1.0.0 (9), con la firma de depuración. El APK del banco arranca en la tablet sin caerse: `firebase_core` y las cuentas, ya en Kotlin, se registran bien.
+- **Las reservas:**
+  - **Windows:** el banco dibujó el inicio, pero la sesión contra el emulador dio «No se pudo iniciar sesión: el servicio de cuentas respondió con un error que BayStream no reconoce…», sin el código nativo, porque no había consola. La misma cuenta funciona en el emulador por REST. El banco de Windows nunca había iniciado sesión contra el emulador, tampoco con la 0.4.2: T-129 y T-130 lo probaron en Chrome. No se sabe si la falla es del banco o de la 1.0.0;
+  - **Android:** O-134-2 otra vez: «Cleartext HTTP traffic to 127.0.0.1 not permitted».
+- **La excepción a O-134-1.** Carlos estaba fuera de casa y autorizó a Codex a abrir el banco de Windows, solo en esta aceptación y con condiciones: la ruta exacta por `explorer.exe`, sin otra instancia abierta, la ruta y el proceso padre comprobados (Id 37176) y el cierre por Id. El ayudante no abrió nada más. El almacén real quedó idéntico: 592 archivos y la misma huella, leída fuera del paquete.
+
+**Yov lo revisó contra la evidencia:** el resumen de la suite (2101, sin errores), `analyze`, la comparación del almacén real, el diagnóstico de la tablet y que el informe no trae números de contenedor.
+
+**Al publicar la 1.0.0, la sesión nativa se prueba contra Firebase de verdad:**
+- **Android sube primero.** Mientras Play procesa el AAB, se publica Windows. En el Honor se prueban la sesión de muelle, «Unirse» y un movimiento antes de seguir. Si falla, Android vuelve a la 0.4.2 (4.5);
+- **Windows:** lo primero después de instalar el MSIX 1.0.0.0 es la sesión de oficina. Si falla, Windows vuelve a la 0.4.2.0 en minutos, con los datos intactos, porque están fuera del paquete (10.75);
+- **la Web, ya probada, va al final.** Después, la prueba corta de punta a punta, con su propio viaje.
+
+**Lo que sigue:** Codex vuelve a T-137; Timonel termina T-138 y Codex lo revisa; Yov prepara la publicación de la 1.0.0.
+
+La siguiente decisión es la **10.103**.
