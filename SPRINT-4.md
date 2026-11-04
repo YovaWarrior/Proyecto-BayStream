@@ -2873,7 +2873,7 @@ La siguiente decisión es la **10.100**.
   - las imágenes del asistente las dibuja Flutter, con `BsPaleta` clara y oscura, IBM Plex, el ícono y la ilustración `inicio` (`DESIGN.md` 13), a los tamaños que pide Inno Setup para cada escala: la grande, de 202 × 386 a 534 × 1022, y la pequeña, de 58 × 58 a 159 × 159;
   - un programa de Dart, `tool/t137_instalador.dart`, arma el instalador. Lee la versión del `.exe`, las de `pubspec.lock`, la de Flutter y la del SDK de C++, y comprueba que el SDK enlazado es el que pide `firebase_core` (la trampa de la 10.99). Agrega junto al `.exe` el runtime de Visual C++ que pide la guía de Flutter, comprueba las DLL con `dumpbin` y deja el instalador con su huella y su manifiesto.
 - **La app no cambia.** Se empaqueta la misma Release que firma la MSIX, y la MSIX sigue de respaldo. Mientras T-136 no esté, Codex empaqueta la Release de la 0.4.2 que Carlos compila hoy en `proyecto-baystream`, sin cambiarla.
-- **La MSIX y el asistente no conviven.** Si la cuenta tiene la MSIX, el asistente se detiene antes de copiar nada y explica cómo quitarla. Los datos no corren riesgo: están fuera del paquete, en `%LOCALAPPDATA%\BayStream` (10.75), y el desinstalador no los toca.
+- **La MSIX y el asistente no conviven.** Si la cuenta tiene la MSIX, el asistente se detiene antes de copiar nada y explica cómo quitarla. Los datos no corren riesgo: están fuera del paquete, en `%LOCALAPPDATA%\BayStream` (10.75), y el desinstalador no los toca. *Corregido en la 10.104: eso es cierto en la laptop de Carlos, no en una PC sin BayStream previo (10.37 de `SPRINT-3.md`).*
 - **Dónde:** `C:\Proyectos\baystream-t137`, rama `t137-instalador` desde `sprint-4`, como T-132. Solo toca `windows/installer/`, `tool/t137_*`, `docs/T137-RESULTADOS.md` y `build/t137/`. No toca `lib/`, `test/`, `pubspec.*` ni `tool/t93_msix.ps1`, que son de T-136. Corre a la vez que T-136, con un comando de Flutter a la vez en la máquina.
 - **Las pruebas.** Windows 11 Home no trae Sandbox, así que:
   - en la cuenta de Carlos solo se instala, en silencio, una variante de prueba (otro AppId, otro nombre y otra carpeta), sin abrir la app y con la huella del almacén real igual antes y después;
@@ -2989,3 +2989,80 @@ Con eso, 1.18 (agregar el plan después de publicar) queda para el piloto.
 4. Carlos publica la 1.0.0 (10.102), esta noche o mañana temprano.
 
 La siguiente decisión es la **10.104**.
+
+### 10.104 · T-138 pasa; T-137 no pasa por el aviso de la MSIX, Timonel lo corrige y se corrige la 10.100; la 1.0.0 se publica esta noche (3-nov, 20:55)
+
+**T-138 pasa en la segunda revisión de Codex** (`docs/t138/revision-codex.md`, «Segunda revisión», sobre `32eac61` y `8e364a4`). El subtítulo dice «Sigue en Recientes; no se borra nada.», el previo no cambia y la prueba exige los dos textos. Prueba 6 de 6, suite 2107 de 2107 sin omitidas y `analyze` cero, en una copia limpia de 812 archivos idéntica a la punta. Sin Chrome ni clientes: el subtítulo nuevo es más corto que el que Codex miró a 360. Yov revisó la evidencia. **El código de la app de la 1.0.0 es el de `32eac61`.**
+
+**T-137 no pasó la revisión de Timonel, por un solo hallazgo** (`docs/t137/revision-timonel.md`, H1, P1). Cuando el asistente se detiene por la MSIX, el aviso decía «Tus datos se quedan: están fuera del paquete», y mandaba desinstalarla.
+- Es cierto en la laptop de Carlos, donde la carpeta existía antes de la MSIX. Timonel lo comprobó: el paquete no tiene `BayStream`.
+- Es falso en una PC sin BayStream previo, como la de la oficina o la del piloto: ahí el almacén vive dentro del paquete y se borra al desinstalar (`SPRINT-3.md` 10.37).
+
+**La frase venía de la 10.100, y el error es de Yov:** «Los datos no corren riesgo: están fuera del paquete». La 10.75 lo midió en la laptop, y Yov lo dio por general. **Queda corregida:** dónde guarda los datos la MSIX depende de si la carpeta existía antes, como dice la 10.37, y desinstalarla no los borra solo en un equipo como la laptop. Lo que la 10.100 dice de la laptop para el jueves sigue en pie.
+
+**Codex se quedó sin tokens: Timonel corrigió H1, con la autorización de Carlos, y Yov revisó la corrección.** Carlos y Yov eligieron el texto. El aviso nuevo tiene cuatro párrafos:
+- BayStream ya está instalado como paquete MSIX en esta cuenta, y el asistente no lo reemplaza;
+- para saber dónde están los datos, se busca una carpeta `BayStream` en `%LOCALAPPDATA%\Packages`, dentro de la carpeta que empieza por `gt.cmartinez.baystream`, en `LocalCache` y en `Local`. Si está, los datos viven dentro del paquete y se borran con él: si se necesitan, se sigue con la MSIX. Si no está, viven en `%LOCALAPPDATA%\BayStream` y se quedan. Timonel mostró que mirar solo la carpeta de afuera falla en dos casos: si la MSIX corrió antes de que esa carpeta existiera, y en Windows 10 anterior a 1903;
+- para cambiar al asistente, se abre cada operación publicada hasta que diga «Al día», porque con el plano cerrado nada lo dice, y después se desinstala la MSIX;
+- el asistente no desinstala la MSIX ni copia archivos.
+
+Con la misma regeneración, la confirmación de desinstalar pasa a «¿Seguro que quieres desinstalar %1? Tus datos en %LOCALAPPDATA%\BayStream se conservan.» (O-137-4).
+
+**Lo que Yov revisó:**
+- el `.iss` cambia solo en esos dos lugares;
+- los dos instaladores llevan la misma carga de 32 archivos, con las mismas huellas, los mismos metadatos y los mismos AppId. Producción es `0e4b8b07…` y prueba, `a8952666…`;
+- la aceptación automática pasó (`build/t137/aceptacion-04/`). La variante de prueba se instaló, se instaló encima y se desinstaló; producción se detuvo por la MSIX, con los cuatro párrafos en el registro; el almacén real quedó idéntico (592 archivos);
+- Carlos abrió el asistente de producción en su cuenta: se detuvo con el aviso nuevo, completo y legible, sin instalar nada.
+
+**Lo demás de la revisión de Timonel pasa:** los datos, la cuenta sin administrador, las dos variantes separadas, el bloqueo que se detiene si PowerShell falla, las versiones leídas de la compilación y el arte. Con una Release 1.0.0, el asistente dice 1.0.0.9, 6.10.2, 4.15.2 y 13.13.1. El armado de Timonel dio el mismo instalador que el de Codex.
+
+**Las observaciones quedan para después del 7-nov**, salvo lo que se indica:
+- **O-137-1:** el armado solo funciona desde `C:\Proyectos\baystream-t137`, porque la huella de las fuentes de texto del arte depende del fin de línea. Por eso **T-137 se queda en su rama** hasta arreglarlo, y la mezcla de la 1.0.0 lleva solo la app. El asistente de la 1.0.0 se arma desde esa carpeta, con los pasos de la revisión de Timonel;
+- **O-137-2:** la trampa del SDK se comprueba en `extracted` y no en el `.exe`. Mientras tanto, al publicar se busca la cadena `Firebase C++` dentro del `.exe`; la publicación de la 1.0.0 ya lo hace;
+- **O-137-3:** las DLL de Visual C++ salen de System32. Hoy son idénticas byte por byte a las de `VC\Redist`;
+- **O-137-5:** en oscuro, los cuadros de texto no llevan el color de BayStream; lo decide Carlos en su recorrido;
+- **O-137-6:** 36 MB de restos de compilación en la carga;
+- **O-137-7:** el asistente dice 1.0.0.9, PowerShell corre sin límite de tiempo, y la Release de `proyecto-baystream` trae dos archivos viejos.
+
+**Falta para aceptar T-137:** el recorrido de Carlos en «BayStream Prueba», en claro y en oscuro, con las cuatro comprobaciones que agregó Timonel. Después, el commit de T-137 y el de su revisión.
+
+**Carlos decidió publicar la 1.0.0 esta noche** (20:40): «lleguemos hoy hasta donde podamos». Lo que no se termine queda para mañana temprano.
+
+La siguiente decisión es la **10.105**.
+
+### 10.105 · La 1.0.0, publicada en los tres clientes, con la sesión nativa probada y la prueba corta del viaje S100 (3-nov, 21:35)
+
+**Carlos publicó la 1.0.0 esta noche**, en el orden de la 10.102:
+- **La mezcla:** `master` en `eddc388`, «Sprint 4: la 1.0.0, mezcla de sprint-4 a master», con la etiqueta `v1.0.0`. La guardia comprobó que el código de la app es el que Codex revisó en `32eac61`. T-137 no entró (10.104).
+- **Android, primero:** el AAB 1.0.0 (9), de 51.5 MB, firmado con la clave de subida, en la prueba interna de Play. Resolvió los paquetes de T-136: cloud_firestore 6.10.2, firebase_core 4.15.2, firebase_auth 6.7.1 y cloud_firestore_platform_interface 8.0.7. El Honor se actualizó a la 1.0.0 desde Play.
+- **Windows:** el MSIX 1.0.0.0, instalado encima de la 0.4.2.0 (`BA01DED75EB1E0DA80B1B30D9CE9B8649167683994B583683398A889246E764B`, con la firma válida de la huella `60BEF8F4…`).
+  - `tool/t93_msix.ps1` apartó el SDK 13.9.0 a `extracted-13.9.0`, la compilación extrajo el 13.13.1 y `-Verificar` pasó.
+  - Antes de instalar, el bloque comprobó dentro del `.exe` `1.0.0+9` y `Firebase C++ 13.13.1` (O-137-2).
+  - La copia del almacén está en `C:\Proyectos\respaldo-almacen-20261103-2103` (592 archivos).
+  - El enlazador dio un aviso, LNK4078, por las secciones `.voltbl` de las bibliotecas precompiladas del SDK. El `.exe` funciona.
+- **La sesión nativa, contra Firebase de verdad:** en Windows, «Cuenta autorizada», y después cerrar sesión y volver a entrar con la cuenta de oficina; en el Honor, la 1.0.0 con la sesión de muelle autorizada. Es lo que la aceptación de T-136 no pudo acreditar (10.102).
+- **La Web:** la 1.0.0 (9), con `version.json` comprobado antes de publicar, solo el SDK web 12.19.0 y `t92_verify` aprobado. Se publicó a las 21:09, solo Hosting.
+
+**La prueba corta pasó completa** (Carlos, 21:35). Usó la operación de prueba BUQUE MANUAL · S100 · GTSTC y las copias `S100_LLEGADA.edi` y `S100N_CARGA.edi`, que Yov sacó de las P130 cambiando el viaje en `TDT`, con sus huellas comprobadas. Pasaron todos los pasos:
+- publicar la llegada;
+- unirse y descargar desde el Honor;
+- agregar el plan S100N y cargar desde el Honor;
+- importar el listado;
+- «Volver al inicio» desde la marca del riel y reabrir el plano desde «Recientes»;
+- cerrar la operación al primer intento, y comprobar en la Web que ya no está abierta.
+
+**Al abrir `S100_LLEGADA.edi`, el plano abrió confirmado sin pedir nada.** Es la regla de publicación directa (`DESIGN.md` 7.2): el perfil de BUQUE MANUAL estaba guardado y GTSTC era su última escala confirmada. El paso 1 de la prueba corta suponía un previo, y el de la 0.8 también. **Queda un texto para después del 7-nov:** con el plano confirmado, la cabecera dice «Publicado» antes de que se publique la operación en la nube.
+
+**Para volver atrás, cliente por cliente:**
+- Windows: el MSIX 0.4.2.0 (`D57F8E50…`), desinstalando antes la 1.0.0.0;
+- Android: `v0.4.2` con el `versionCode` 10;
+- la Web: `v0.4.2`, con 0.4.2 (8).
+
+**Lo que sigue:**
+- **T-137:** el asistente de la 1.0.0 se arma desde `C:\Proyectos\baystream-t137` (10.104), y el recorrido de Carlos en «BayStream Prueba» se hace con ese instalador. Después, sus commits. El jueves, Carlos decide qué instalación lleva la laptop en la demostración.
+- **Después de la demostración:**
+  - borrar los SDK 13.9.0 apartados y su `.zip` en las tres carpetas, y las carpetas de prueba de `%TEMP%`;
+  - poner al día con la 1.0.0 la lista del piloto, que en 2.14 todavía dice «Cerrar el plano»;
+  - las observaciones O-136-1, O-134-2 y O-137-1 a O-137-7.
+
+La siguiente decisión es la **10.106**.
