@@ -2,14 +2,17 @@
 
 Timonel (Claude Code, Opus 5.5), 3-nov, en `C:\Proyectos\baystream-rediseno`, rama `sprint-4`, sobre `5ab830b` (T-136). La versión sigue en `1.0.0+9`.
 
+**Corregido después de la revisión de Codex** (`docs/t138/revision-codex.md`), que dijo NO PASA por el subtítulo. La primera entrega es `46580f4`; esta corrección cambia una línea de texto en el producto y una en la prueba, sobre `b153048`.
+
 ## Resultado
 
 - En «Más», en los tres clientes, «Cerrar el plano» pasa a llamarse «Volver al inicio». La clave `mas-cerrar` y su lugar en la hoja no cambian.
 - En Windows y la Web, la marca de arriba del riel es el botón «Volver al inicio», con descripción emergente, etiqueta para el lector de pantalla y foco con el teclado.
 - En el teléfono no hay botón suelto, y Atrás dos veces sigue igual.
+- Con un plano confirmado o publicado, el subtítulo de «Más» es «Sigue en Recientes; no se borra nada.»
 - La suite da **2107 de 2107**, sin omitidas, y `analyze` cero.
 
-**No se miró en pantalla:** no se compiló ningún cliente, como pide el encargo. El contorno de foco y el de hover solo están probados en el árbol de widgets; su aspecto lo ve la revisión.
+**En pantalla:** Timonel no compiló ningún cliente, como pide el encargo. La marca, el hover, Tab y Enter, Recientes, el previo y los subtítulos a 360 los recorrió Codex en Chrome sobre `46580f4`, y pasan. Esta corrección no se volvió a mirar en pantalla: el subtítulo es más corto que el que Codex midió a 360. Windows y Android no se abrieron.
 
 ## Paso 0: qué hace volver al inicio
 
@@ -21,14 +24,15 @@ La punta era `5ab830b`, y `lib/`, `test/`, `tool/`, `web/` y `pubspec.*` no ten�
 |---|---|---|
 | El plano confirmado | Sigue en el almacén y en «Recientes». Se guarda al confirmar (`:502`), antes de quedar `Publicado` (`:513`), y `clearVoyage` no llama a ningún borrado | `recentVoyagesProvider` lee `getAllVoyages` |
 | La bitácora | No se toca: vive en su propio almacén | `clearVoyage` no la nombra |
-| Lo que falta por subir | Sigue en la bitácora, pendiente | `pendingOf` |
-| **La sincronización** | **Se detiene mientras el plano no está abierto** | Abajo |
+| Lo que falta por subir | Sigue en la bitácora, y **sube aunque el plano esté cerrado** | Abajo |
 
-**La sincronización.** Con el plano cerrado, `activeOperationProvider` da `null` y `syncStatusProvider` pasa a local. Eso cancela `follow`, cuyo `onCancel` llama a `engine.stop()`. El botón de la nube del inicio mantiene activo el provider, así que el cambio ocurre aunque el plano ya no esté en pantalla. Mientras tanto no se sube lo pendiente ni se recibe lo de los demás. Al reabrir, `follow` crea otro motor: `start` escucha la bitácora y `flush` envía lo pendiente, y el envío es idempotente. Lo que iba en camino lo confirma el eco o el reenvío del siguiente arranque.
+**La sincronización sigue con el plano cerrado,** como mostró la revisión de Codex. Con el muelle sin red, registró una descarga y volvió al inicio. Al restituir la red, y sin reabrir el plano, el movimiento llegó al emulador (`createTime` 18:43:56.949, Guatemala). Al reabrir quedó un solo documento, con el mismo Id.
 
-**Esto se leyó en el código, no se midió:** en las pruebas no hay Firebase y `syncStatusProvider` se queda en local.
+**Lo que esta entrega decía antes era falso.** Decía que la sincronización se detenía y que lo pendiente subía al reabrir. Salió de leer el código hasta `SyncEngine.stop()`, que sí detiene el motor, sin mirar lo que queda por debajo: `stop()` no cancela la escritura que `_send()` ya le entregó al SDK de Firestore, y lo observado es consistente con que el SDK la complete al volver la red. Esa explicación es de Codex. Timonel lo había anotado como «leído, no medido», pero igual lo puso en la pantalla como una promesa, y una lectura de código no bastaba.
 
-**El subtítulo nuevo** lo dice: «Sigue en Recientes; no se borra nada. Lo pendiente sube al reabrirlo». Es más largo que el ejemplo del encargo porque la pausa del envío es lo que más le importa a quien tiene movimientos sin subir. A 360 dp ocupa dos líneas. Con un previo sigue «Descarta el previo sin guardar nada», con la misma pregunta.
+**Lo que no se midió:** lo que llega de otros dispositivos con el plano cerrado. Por eso ningún texto de la pantalla habla de la sincronización.
+
+**El subtítulo** dice solo lo comprobado: «Sigue en Recientes; no se borra nada.» Con un previo sigue «Descarta el previo sin guardar nada», con la misma pregunta.
 
 ## El cambio
 
@@ -75,44 +79,45 @@ Con la luz verde de Carlos. Los registros están en `build/t138/`.
 | 2 | La prueba con T-138 | **5 de 6**: mi prueba fijaba 80 de ancho, y con las fuentes del producto el riel mide 98,25, con y sin botón | 3 s | No: error de la prueba, no del producto |
 | 3 | La prueba corregida | 6 de 6 | 7 s | Sí |
 | 4 | Suite completa | **2107 de 2107**, sin omitidas | 162 s | Sí |
-| 5 | `flutter analyze` | **Cero** | 35 s | Sí |
+| 5 | `flutter analyze` | **Cero** | 35 s | Sí, para `46580f4` |
+| 6 | La prueba, con el subtítulo corregido | 6 de 6 | 12 s | **Sí** |
+| 7 | Suite completa | **2107 de 2107**, sin omitidas | 130 s | **Sí** |
+| 8 | `flutter analyze` | **Cero** (`No issues found!`) | 42 s | **Sí** |
 
-El rojo de la corrida 1 no se repitió tras corregir la prueba: el caso del ancho ya caía antes de esa línea, al no encontrar la marca.
+El rojo de la corrida 1 no se repitió tras corregir la prueba: el caso del ancho ya caía antes de esa línea, al no encontrar la marca. Tampoco se repitió para la corrección: las pruebas buscan el subtítulo por su texto exacto.
+
+Las corridas 1 a 5 son de la primera entrega, y las 6 a 8, de esta corrección.
 
 Sin `// ignore:`, sin dependencias nuevas y sin tocar `lib/main.dart` ni los dos congelados.
 
 ## Archivos
 
-`pubspec.yaml` y `pubspec.lock` **no cambian**.
+`pubspec.yaml` y `pubspec.lock` **no cambian**. Los de esta corrección:
 
-- `lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart`
 - `lib/features/vessel/presentation/pages/vessel_overview_page.dart`
-- `lib/features/vessel/presentation/providers/loading_operation_provider.dart` (solo un comentario)
-- `test/t114_fase3_inicio_test.dart` (solo un comentario)
-- `test/t138_volver_al_inicio_test.dart` (nuevo)
-- `docs/T138-RESULTADOS.md` (nuevo)
+- `test/t138_volver_al_inicio_test.dart`
+- `docs/T138-RESULTADOS.md`
+
+La primera entrega (`46580f4`) cambió además `navegacion_del_viaje.dart`, un comentario de `loading_operation_provider.dart` y un comentario de `test/t114_fase3_inicio_test.dart`.
 
 ## Bloque de Git
 
 Para Carlos, en `C:\Proyectos\baystream-rediseno`:
 
 ```bash
-git add -- lib/features/vessel/presentation/widgets/navegacion_del_viaje.dart
 git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
-git add -- lib/features/vessel/presentation/providers/loading_operation_provider.dart
-git add -- test/t114_fase3_inicio_test.dart
 git add -- test/t138_volver_al_inicio_test.dart
 git add -- docs/T138-RESULTADOS.md
-git commit -m "Sprint 4: T-138, volver al inicio"
+git commit -m "Sprint 4: T-138, el subtitulo de volver al inicio"
 git push
 ```
 
 ## Tres líneas
 
-1. En Windows y la Web, la marca del riel es el botón «Volver al inicio»; en «Más», en los tres clientes, la entrada se llama igual.
-2. No se borra nada: el plano sigue en Recientes, y lo pendiente sube al reabrirlo, porque el envío se detiene con el plano cerrado.
-3. Suite 2107 de 2107 y `analyze` cero; falta que la revisión lo vea en pantalla.
+1. Con un plano confirmado o publicado, el subtítulo de «Volver al inicio» dice «Sigue en Recientes; no se borra nada.»
+2. El informe corrige el paso 0: la sincronización sigue con el plano cerrado, como mostró Codex, y la pantalla ya no promete una pausa.
+3. Prueba 6 de 6, suite 2107 de 2107 y `analyze` cero; solo cambió ese texto.
 
 ## Para Yov
 
-> T-138 lista para la revisión de Codex: marca del riel como «Volver al inicio» en Windows y la Web, «Más» renombrado en los tres clientes, suite 2107/2107, `analyze` cero, rojo 6/6 contra `5ab830b`. El paso 0 confirma que no se borra nada, pero el envío a la nube se detiene mientras el plano no está abierto y sigue al reabrirlo (leído en el código, no medido); el subtítulo lo dice: «Sigue en Recientes; no se borra nada. Lo pendiente sube al reabrirlo». En Android no hay botón, tampoco acostado ni en tableta. Con un previo encima de un plano abierto, descartar vuelve a ese plano, igual que «Más». Te tocan `DESIGN.md` 8 (dos menciones). Informe: `docs/T138-RESULTADOS.md`.
+> T-138 corregida: con un plano confirmado o publicado, el subtítulo es «Sigue en Recientes; no se borra nada.», y la prueba comprueba ese texto. Prueba 6/6, suite 2107/2107, `analyze` cero. El informe corrige el paso 0: la sincronización sigue con el plano cerrado, como mostró Codex; la pausa que afirmó Timonel era una lectura de código que no se sostuvo. Lo que llega de otros dispositivos con el plano cerrado no se midió. Sin recorrer otra vez en pantalla. Te siguen tocando `DESIGN.md` 8 (dos menciones). Informe: `docs/T138-RESULTADOS.md`.

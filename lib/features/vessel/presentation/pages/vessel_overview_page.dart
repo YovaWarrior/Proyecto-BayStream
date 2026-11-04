@@ -610,8 +610,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         titulo: 'Volver al inicio',
         subtitulo: preview
             ? 'Descarta el previo sin guardar nada'
-            : 'Sigue en Recientes; no se borra nada. '
-                'Lo pendiente sube al reabrirlo',
+            : 'Sigue en Recientes; no se borra nada.',
         onTap: () => _clear(context, preview: preview),
       ),
     ];

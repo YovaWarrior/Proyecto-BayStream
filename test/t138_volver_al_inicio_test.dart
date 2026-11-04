@@ -37,8 +37,7 @@ const _planDeCarga = "UNH+1+BAPLIE:D:95B:UN:SMDG20'"
 const _oficina = Size(1280, 800);
 const _telefono = Size(360, 800);
 
-const _subtituloConfirmado =
-    'Sigue en Recientes; no se borra nada. Lo pendiente sube al reabrirlo';
+const _subtituloConfirmado = 'Sigue en Recientes; no se borra nada.';
 const _subtituloPrevio = 'Descarta el previo sin guardar nada';
 
 final _windows = TargetPlatformVariant.only(TargetPlatform.windows);
