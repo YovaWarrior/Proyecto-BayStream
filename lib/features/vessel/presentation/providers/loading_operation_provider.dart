@@ -12,7 +12,7 @@ final loadingOperationProvider = StreamProvider.autoDispose
   ref.watch(operationSourcesRevisionProvider);
   final repository = await ref.watch(movementLogRepositoryProvider.future);
   // Si el viaje se cierra mientras esto construye (Atrás dos veces nada más
-  // abrir el plano, «Cerrar el plano»), el provider ya está desechado y usar
+  // abrir el plano, «Volver al inicio»), el provider ya está desechado y usar
   // `ref` lanzaría: se comprueba después de cada espera (10.28).
   if (!ref.mounted) return;
   final operation =

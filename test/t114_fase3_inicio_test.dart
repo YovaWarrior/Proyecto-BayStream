@@ -309,7 +309,7 @@ void main() {
               reason: 'cancelar deja el plano a la vista, sin operar');
           expect(find.byKey(const ValueKey('preview-banner')), findsOneWidget);
 
-          // «Cerrar el plano» está en «Más» (DESIGN.md 8).
+          // «Volver al inicio» está en «Más» (DESIGN.md 8).
           await tester.tap(find.text('Más'));
           await tester.pumpAndSettle();
           await tester.tap(find.byKey(const ValueKey('mas-cerrar')));

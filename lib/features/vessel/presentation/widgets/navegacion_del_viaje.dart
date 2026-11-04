@@ -436,6 +436,7 @@ class RielDelViaje extends StatelessWidget {
     this.alertas = 0,
     this.alertaCritica = false,
     this.onAlertas,
+    this.onVolverAlInicio,
     this.pie = const <Widget>[],
   });
 
@@ -447,6 +448,11 @@ class RielDelViaje extends StatelessWidget {
 
   /// Con esto, «Alertas» es un destino más del riel que abre la pantalla.
   final VoidCallback? onAlertas;
+
+  /// Con esto, la marca de arriba es el botón «Volver al inicio» (T-138). Sin
+  /// él, es solo la marca: en Android el riel sale con el teléfono acostado, y
+  /// en el muelle no hay botón suelto.
+  final VoidCallback? onVolverAlInicio;
 
   /// Lo que va al pie del riel (la nube, Parámetros).
   final List<Widget> pie;
@@ -512,7 +518,9 @@ class RielDelViaje extends StatelessWidget {
       leading: Padding(
         padding: EdgeInsets.only(
             top: medidas.espacioS, bottom: medidas.espacioM),
-        child: const BsMarca(tamano: 44),
+        child: onVolverAlInicio == null
+            ? const BsMarca(tamano: 44)
+            : _MarcaVolverAlInicio(onPressed: onVolverAlInicio!),
       ),
       // El pie va después del grupo de destinos, que ya se queda con todo el
       // alto sobrante: queda abajo sin otro `Expanded` (que duplicaba el alto
@@ -544,6 +552,69 @@ class RielDelViaje extends StatelessWidget {
             label: const Text('Alertas'),
           ),
       ],
+    );
+  }
+}
+
+/// La marca del riel como botón «Volver al inicio» (T-138). Ocupa lo mismo que
+/// la marca sola. El contorno va por fuera del recuadro y encima, porque la
+/// tinta de un `InkWell` queda debajo del azul de la marca y no se vería.
+class _MarcaVolverAlInicio extends StatefulWidget {
+  const _MarcaVolverAlInicio({required this.onPressed});
+
+  static const String texto = 'Volver al inicio';
+
+  /// Las esquinas del recuadro de la marca a 44 dp.
+  static const double radio = 10;
+
+  final VoidCallback onPressed;
+
+  @override
+  State<_MarcaVolverAlInicio> createState() => _MarcaVolverAlInicioState();
+}
+
+class _MarcaVolverAlInicioState extends State<_MarcaVolverAlInicio> {
+  bool _conFoco = false;
+  bool _encima = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colores = Theme.of(context).colorScheme;
+    final borde = BorderRadius.circular(_MarcaVolverAlInicio.radio);
+    final contorno = _conFoco
+        ? colores.primary
+        : _encima
+            ? colores.outline
+            : null;
+    return Tooltip(
+      message: _MarcaVolverAlInicio.texto,
+      // El nombre lo da la etiqueta: con la descripción se leería dos veces.
+      excludeFromSemantics: true,
+      child: Semantics(
+        container: true,
+        button: true,
+        label: _MarcaVolverAlInicio.texto,
+        child: InkWell(
+          key: const ValueKey('riel-volver-al-inicio'),
+          borderRadius: borde,
+          onTap: widget.onPressed,
+          onFocusChange: (bool foco) => setState(() => _conFoco = foco),
+          onHover: (bool encima) => setState(() => _encima = encima),
+          child: DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: BoxDecoration(
+              borderRadius: borde,
+              border: contorno == null
+                  ? null
+                  : Border.all(
+                      color: contorno,
+                      width: 2,
+                      strokeAlign: BorderSide.strokeAlignOutside),
+            ),
+            child: const ExcludeSemantics(child: BsMarca(tamano: 44)),
+          ),
+        ),
+      ),
     );
   }
 }
