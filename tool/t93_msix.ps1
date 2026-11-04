@@ -98,11 +98,17 @@ if ($opcionesCompletas.StartsWith([System.IO.Path]::GetFullPath($repo), 'Ordinal
   throw 'El archivo de opciones no puede estar dentro del repositorio.'
 }
 
+# T-136: CMake enlaza lo que haya en extracted aunque firebase_core pida otro SDK.
+$sdkFirebase = Join-Path $PSScriptRoot 't136_sdk_firebase.ps1'
 if (-not $SinCompilar) {
+  & flutter pub get
+  if ($LASTEXITCODE -ne 0) { throw "flutter pub get fallo ($LASTEXITCODE)." }
+  & $sdkFirebase -Proyecto $repo -Apartar
   Write-Host '== 1/2 flutter build windows --release'
   & flutter build windows --release "--dart-define-from-file=$opcionesCompletas"
   if ($LASTEXITCODE -ne 0) { throw "flutter build windows fallo ($LASTEXITCODE)." }
 }
+& $sdkFirebase -Proyecto $repo -Verificar
 $exe = Join-Path $repo 'build\windows\x64\runner\Release\baystream.exe'
 if (-not (Test-Path -LiteralPath $exe)) {
   throw 'No hay compilacion Release: build\windows\x64\runner\Release\baystream.exe'

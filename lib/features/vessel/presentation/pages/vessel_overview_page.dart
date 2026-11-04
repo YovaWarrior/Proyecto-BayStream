@@ -470,6 +470,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
               alertas: alertas,
               alertaCritica: critica,
               onAlertas: conPanel ? () => _openAlerts(voyage) : null,
+              onVolverAlInicio: AtrasDelViaje.porOmision
+                  ? null
+                  : () => _clear(context, preview: preview),
               pie: [const SyncAppBarButton(), parametersButton],
             ),
             const VerticalDivider(width: 1),
@@ -604,10 +607,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       _EntradaDeMas(
         clave: 'mas-cerrar',
         icono: Icons.close,
-        titulo: 'Cerrar el plano',
+        titulo: 'Volver al inicio',
         subtitulo: preview
             ? 'Descarta el previo sin guardar nada'
-            : 'Limpia los datos cargados en este dispositivo',
+            : 'Sigue en Recientes; no se borra nada.',
         onTap: () => _clear(context, preview: preview),
       ),
     ];
@@ -771,7 +774,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     return true;
   }
 
-  /// «Cerrar el plano»: con un previo pregunta; publicado, limpia como siempre.
+  /// «Volver al inicio»: con un previo pregunta; publicado, limpia como siempre.
   Future<void> _clear(BuildContext context, {required bool preview}) async {
     if (preview) {
       await _discardPreviewIfAny(context);

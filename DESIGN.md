@@ -426,11 +426,22 @@ perfil.» y «Para exportar, confirma el perfil del buque.».
 
 «Más» abre una hoja con **Alertas de estiba** (primera, con su cuenta), Comparar con
 otro BAPLIE, BAPLIE de salida, Listado de la agencia, Orden de descarga, Tapas, Nube y
-cuenta, Parámetros y «Cerrar plano». **El destino «Más» lleva un `Badge` con el número
+cuenta, Parámetros y «Volver al inicio» (T-138). **El destino «Más» lleva un `Badge` con el número
 de alertas** (posibles incumplimientos) para que nunca queden escondidas. Sin viaje no
 hay barra. Las ocho acciones de la barra de hoy se reparten: Recientes y Perfiles al
 inicio; Buscar en Plano y Lista; Exportar, Parámetros y Limpiar a «Más»; Nube como chip
 en la cabecera y destino del riel; Cargar archivo al inicio.
+
+**Volver al inicio (T-138; 10.101 y 10.103).** En la oficina (Windows y la Web, desde 600
+dp), la marca de arriba del riel es el botón «Volver al inicio», con descripción
+emergente, etiqueta para el lector de pantalla y foco con el teclado; el riel no cambia de
+ancho ni de destinos. En «Más», en los tres clientes, la entrada se llama igual: con un
+plano confirmado o publicado, su subtítulo es «Sigue en Recientes; no se borra nada.»; con
+un previo, «Descarta el previo sin guardar nada», y pregunta «¿Descartar el plano sin
+confirmar?». En el teléfono no hay botón suelto, para que nadie lo toque sin querer en el
+muelle. Volver al inicio no detiene el envío: en la revisión de Codex, un movimiento
+pendiente subió con el plano cerrado. Lo que llega de otros equipos con el plano cerrado
+no se midió, y la pantalla no promete nada de la sincronización.
 
 Atrás (Android): cierra primero hojas y paneles; en la raíz del viaje pregunta «¿Cerrar
 el plano?» solo si hay un previo sin confirmar; con el viaje publicado vuelve al inicio.
@@ -444,7 +455,7 @@ diálogos y la búsqueda son rutas y las cierra el `Navigator` por su cuenta; el
 zoom no es una ruta, así que mientras está abierto se anota en
 `cerrablesDeAtrasProvider` y Atrás lo cierra antes que nada; con panel lateral, Atrás
 cierra el detalle de la celda. En la raíz del viaje, con un previo, pregunta lo mismo
-que «Más → Cerrar el plano», «¿Descartar el plano sin confirmar?», con «Seguir mirando»
+que «Más → Volver al inicio», «¿Descartar el plano sin confirmar?», con «Seguir mirando»
 y «Descartar» (Atrás sobre la pregunta es seguir mirando); con el viaje publicado,
 vuelve al inicio solo con **dos toques seguidos**: el primero advierte «Toca Atrás otra
 vez para volver al inicio» durante 2 s, contados desde ese toque con su propio reloj, y
@@ -1064,7 +1075,7 @@ pide.
 
 | Dónde | Pieza | Tamaño |
 |---|---|---|
-| Arriba del riel, en la oficina | `BsMarca` con recuadro | 44 |
+| Arriba del riel, en la oficina | `BsMarca` con recuadro; es el botón «Volver al inicio» (T-138, sección 8) | 44 |
 | La banda del muelle | `BsMarca` sin recuadro, sobre el azul | 44 |
 | El inicio, junto a «BayStream» | `BsMarca` con recuadro | 40 |
 | La espera («Leyendo A01.edi…», publicar, unirse) | `BsMarca(espera: true)` dentro de un recuadro de 72 con radio 16 | 52 |

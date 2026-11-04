@@ -2887,3 +2887,105 @@ La siguiente decisión es la **10.100**.
 **Con la 1.0.0.** Si Timonel da por buena T-137 a más tardar el jueves 5, sale junto con la MSIX, de la misma Release. Si no, sale después, sin cambiar la versión de la app. El jueves, con el asistente a la vista, Carlos decide qué instalación lleva la laptop en la demostración. Yov recomienda el asistente si pasa: se quita la MSIX (los datos se quedan) y la MSIX 1.0.0 queda para volver.
 
 La siguiente decisión es la **10.101**.
+
+### 10.101 · T-136 crece: la Web sirve el SDK 12.19.0 y firebase_auth pasa a la 6.7.1; Carlos va por la 1.0.0 cuanto antes; T-138, «Volver al inicio» (3-nov, 16:35)
+
+**Dos cosas que la 10.99 no previó.** Timonel se detuvo las dos veces, y Yov lo comprobó en los paquetes de pub.dev.
+1. **El SDK de JavaScript que sirve la Web (T-92).** `web/vendor/firebase/12.17.0/` es la versión que pide `firebase_core_web` 3.10.0. La 3.11.0 pide la 12.18.0 y la 3.12.0, la 12.19.0, y `firebase_core` 4.15.2 exige la 3.11.0 o posterior. Con la copia vieja fallan tres pruebas de `test/t92_web_test.dart`. **Carlos autorizó la copia 12.19.0**, con el procedimiento del LEEME de T-92:
+   - los tres módulos (`firebase-app.js`, `firebase-auth.js` y `firebase-firestore-pipelines.js`) se bajan de gstatic, y la huella original de cada uno tiene que ser igual a la del archivo del mismo nombre en el paquete de npm `firebase@12.19.0`. Con la 12.17.0, las huellas de npm son las de su `provenance.json`;
+   - sale `web/vendor/firebase/12.17.0/`, para servir un solo SDK, y `tool/t129_evidencia.py` queda como evidencia de T-129;
+   - la Web ya compiló como 1.0.0 (9): `build/web` solo trae la 12.19.0, y `t92_verify` pasa.
+2. **`firebase_auth` 6.5.7 no compila en Android con `firebase_core` 4.15.2.** La 4.14.0 reescribió en Kotlin la parte de Android de `firebase_core` y movió `customAuthDomain`. La 6.5.7 lo sigue buscando donde estaba, aunque su pubspec acepte la 4.15.2. Desde la 6.6.0, `firebase_auth` ya está en Kotlin, y la 7.x pide `firebase_core` 5. **Carlos autorizó `firebase_auth` 6.7.1, fija:** la que FlutterFire publicó el 23-oct con la línea 4.15.x. Con ella cambian `firebase_auth_platform_interface` (9.0.7 o 9.1.0) y `firebase_auth_web` (6.2.7 o 6.3.0).
+
+**Lo que eso significa: la 1.0.0 ya no cambia solo Windows.** Cambia el código nativo de Firebase en los tres clientes:
+- en Android, el de `firebase_core` y el de las cuentas, reescritos en Kotlin;
+- en Windows, el SDK de C++ 13.13.1 y el plugin de las cuentas;
+- en la Web, el SDK 12.19.0.
+
+Por eso:
+- la aceptación de Codex prueba el inicio de sesión y la sincronización en Windows y en la Web, contra el emulador;
+- el inicio de sesión de Android no se puede probar antes de Play, porque el banco del emulador no llega a Firebase (O-134-2). Su primera prueba es en el Honor, apenas suba el AAB;
+- si Android falla ahí, Android vuelve a la 0.4.2 con el `versionCode` siguiente (4.5), y Windows y la Web se quedan en la 1.0.0.
+
+**Carlos decidió (16:29) ir por la 1.0.0 cuanto antes, si puede ser antes del jueves.** Yov recomendaba hacer la demostración con la 0.4.2, que queda como la vuelta de los tres clientes (4.5).
+
+**T-138 · «Volver al inicio»** (Carlos eligió la opción A, 15:53). Hoy se vuelve al inicio con «Más» → «Cerrar el plano», en los tres clientes, y en Android también con Atrás dos veces. No se borra nada, pero el camino está escondido, y el subtítulo «Limpia los datos cargados en este dispositivo» suena a borrar. T-138:
+- en la oficina (Windows y Web), la marca de BayStream de arriba del riel es el botón «Volver al inicio», sin agregar nada al riel;
+- en «Más», en los tres clientes, la entrada se llama «Volver al inicio», con un subtítulo que diga lo que de verdad hace;
+- en el teléfono no hay un botón suelto, para que nadie lo toque sin querer en el muelle;
+- con un previo, pregunta lo de siempre: «¿Descartar el plano sin confirmar?».
+
+Lo hace Timonel después de T-136 y lo revisa Codex. Entra en la 1.0.0 si pasa a tiempo.
+
+**El orden:**
+1. Timonel termina T-136, Yov la revisa y Carlos hace el commit.
+2. Codex acepta T-136 en `qa-r4`, con T-137 en pausa, mientras Timonel hace T-138.
+3. Codex revisa T-138 y Timonel revisa T-137.
+4. Yov prepara la lista de la 1.0.0, y Carlos publica: las reglas no cambian; la mezcla, con `v1.0.0`; el MSIX 1.0.0.0 y, si pasó, el asistente; el AAB y la Web. Después, una prueba corta con el Honor, con su propio viaje.
+
+La siguiente decisión es la **10.102**.
+
+### 10.102 · Codex acepta T-136 con reservas: la sesión nativa de Windows y de Android se prueba al publicar (3-nov, 17:40)
+
+**Codex aceptó T-136 con reservas** (`docs/t136/aceptacion-codex.md`, sobre `5ab830b`).
+- **Lo que pasa:**
+  - entre `8ea84bd` y `5ab830b` cambian 20 rutas: `SPRINT-4.md`, el informe de T-136 y sus 18 archivos;
+  - en `pubspec.lock` cambian los diez paquetes de FlutterFire de la 10.101, y ninguno más;
+  - la suite da 2101 de 2101, sin omitidas, y `analyze lib test`, cero, en una copia limpia de 811 archivos que siguió idéntica a HEAD;
+  - **Windows:** en `qa-r4`, `-Apartar` no movió nada mientras `.dart_tool` resolvía la 4.13.0, como debe; después de `flutter pub get`, apartó el 13.9.0. La compilación extrajo y enlazó el 13.13.1, `-Verificar` pasa y el `.exe` dice 1.0.0+9;
+  - **Web:** `build/web` solo trae la 12.19.0, y sus módulos coinciden con npm y con lo que se sirve por HTTP. `t92_verify` pasa. En Chrome, contra el emulador, todo pasa: el arranque sin errores ni avisos de versiones, la sesión de oficina y la de muelle, un movimiento, el plan agregado (30 contenedores), el listado (30 filas, revisión 1) y el cierre al primer intento;
+  - **Android:** el AAB release dice 1.0.0 (9), con la firma de depuración. El APK del banco arranca en la tablet sin caerse: `firebase_core` y las cuentas, ya en Kotlin, se registran bien.
+- **Las reservas:**
+  - **Windows:** el banco dibujó el inicio, pero la sesión contra el emulador dio «No se pudo iniciar sesión: el servicio de cuentas respondió con un error que BayStream no reconoce…», sin el código nativo, porque no había consola. La misma cuenta funciona en el emulador por REST. El banco de Windows nunca había iniciado sesión contra el emulador, tampoco con la 0.4.2: T-129 y T-130 lo probaron en Chrome. No se sabe si la falla es del banco o de la 1.0.0;
+  - **Android:** O-134-2 otra vez: «Cleartext HTTP traffic to 127.0.0.1 not permitted».
+- **La excepción a O-134-1.** Carlos estaba fuera de casa y autorizó a Codex a abrir el banco de Windows, solo en esta aceptación y con condiciones: la ruta exacta por `explorer.exe`, sin otra instancia abierta, la ruta y el proceso padre comprobados (Id 37176) y el cierre por Id. El ayudante no abrió nada más. El almacén real quedó idéntico: 592 archivos y la misma huella, leída fuera del paquete.
+
+**Yov lo revisó contra la evidencia:** el resumen de la suite (2101, sin errores), `analyze`, la comparación del almacén real, el diagnóstico de la tablet y que el informe no trae números de contenedor.
+
+**Al publicar la 1.0.0, la sesión nativa se prueba contra Firebase de verdad:**
+- **Android sube primero.** Mientras Play procesa el AAB, se publica Windows. En el Honor se prueban la sesión de muelle, «Unirse» y un movimiento antes de seguir. Si falla, Android vuelve a la 0.4.2 (4.5);
+- **Windows:** lo primero después de instalar el MSIX 1.0.0.0 es la sesión de oficina. Si falla, Windows vuelve a la 0.4.2.0 en minutos, con los datos intactos, porque están fuera del paquete (10.75);
+- **la Web, ya probada, va al final.** Después, la prueba corta de punta a punta, con su propio viaje.
+
+**Lo que sigue:** Codex vuelve a T-137; Timonel termina T-138 y Codex lo revisa; Yov prepara la publicación de la 1.0.0.
+
+La siguiente decisión es la **10.103**.
+
+### 10.103 · La 0.8 pasa con la 0.4.2; T-138 corrige su subtítulo y T-137 sus textos (3-nov, 20:00)
+
+**La 0.8 pasó con la 0.4.2 contra Firebase de verdad.** Carlos (19:46): «el paso a paso salió como esperábamos, todo bien». Es la prueba de punta a punta de T-130 con la laptop de oficina y el Honor de muelle, en la operación de prueba BUQUE MANUAL · P130 · GTSTC, publicada a las 19:16. Sus capturas muestran:
+- el paso 4, con dos descargas ya registradas desde el Honor («Descarga 2 de 30»);
+- el paso 5: el diálogo «Agregar el plan de carga a la operación publicada», con los tres textos de la tabla, y el aviso «Plan de carga agregado a la operación publicada de GTSTC: 30 contenedores y 0 reservas. El muelle lo recibe solo.»;
+- el paso 9: 30 filas en 2 agencias, 20 de 20 llenos cruzan con el plan, y la fila «TOTAL» bajo «1 fila sin entender», que es lo normal (1.4);
+- el paso 10: las filas que no cargaron y el nombre `BayStream_BUQUE MANUAL_P130N_salida.edi`;
+- el paso 11: «Operación cerrada.», «Fuentes: llegada · carga (viaje P130N) · listado r1» y «No hay operaciones abiertas.»
+
+Con eso, 1.18 (agregar el plan después de publicar) queda para el piloto.
+
+**Un texto para después del 7-nov:** con la operación cerrada, «Nube y cuenta» pone «Operación de la escala abierta» encima de «Publicada y cerrada». «Abierta» es la escala del plano en pantalla, pero se lee como si fuera la operación. No entra en la 1.0.0.
+
+**T-138: Codex dijo NO PASA, y Timonel lo corrigió.**
+- **Lo que no pasó** (`docs/t138/revision-codex.md`, `b153048`): el subtítulo «Lo pendiente sube al reabrirlo». Con el muelle en el inicio, el movimiento subió antes de reabrir el plano: la sincronización no se pausa. Timonel lo había leído en el código, no lo había medido.
+- **Lo que pasó:** la marca, el hover, Tab y Enter, «Recientes», el previo y los subtítulos a 360, en Chrome.
+- **La corrección:** con un plano confirmado o publicado, el subtítulo es «Sigue en Recientes; no se borra nada.» La prueba comprueba ese texto y el informe corrige su paso 0. Prueba 6 de 6, suite 2107 de 2107 y `analyze` cero.
+- **Yov comparó** el árbol de `baystream-rediseno` con el de `qa-r4` sin contar los finales de línea: solo cambian esos tres archivos. Lo que llega de otros equipos con el plano cerrado no se midió, y ningún texto lo promete.
+- Codex vuelve a mirar solo la corrección.
+- `DESIGN.md` ya dice «Volver al inicio»: en la sección 8, la entrada de «Más», la pregunta del previo y un párrafo sobre T-138; en 13.7, la marca del riel de la oficina.
+
+**T-137: Codex corrigió los textos del asistente** (`docs/T137-RESULTADOS.md`, «Revisión de textos previa al recorrido»).
+- El arte dice «OFICINA Y MUELLE» y «Windows, Android y Web». «Tu carga, a la vista.» se queda. «Puente de mando» es el nombre interno de la dirección de diseño, y la app no lo muestra.
+- La bienvenida: «BayStream lee el BAPLIE y muestra el plano de estiba, para la oficina y el muelle.»
+- El recorrido normal habla de tú, con `[Messages]` del `.iss`; `Spanish.isl` no cambia.
+- El arte y los dos instaladores se regeneraron. La aceptación automática nueva pasó, con el almacén real idéntico (592 archivos). El primer intento se detuvo porque BayStream 0.4.2 estaba abierta, como debía.
+- Yov miró tres de las siete capturas nuevas: la bienvenida, «Lo que hay detrás» y la carpeta.
+- **Falta:** el recorrido de Carlos en la cuenta «BayStream Prueba», en claro y en oscuro, y la revisión de Timonel, que empieza a la vez que la de Codex.
+
+**La 1.0.0 no espera al asistente.** T-137 no toca la aplicación: son `tool/`, `windows/installer/` y su informe. Si pasa antes de publicar, entra a `sprint-4` y va en la mezcla. Si pasa después, entra como herramienta y empaqueta la misma 1.0.0. Mientras tanto, la laptop sigue con el MSIX.
+
+**El orden:**
+1. Codex revisa la corrección de T-138, y Timonel revisa T-137.
+2. Carlos recorre el asistente en «BayStream Prueba».
+3. Si T-137 pasa, Carlos hace su commit y T-137 entra a `sprint-4`.
+4. Carlos publica la 1.0.0 (10.102), esta noche o mañana temprano.
+
+La siguiente decisión es la **10.104**.
