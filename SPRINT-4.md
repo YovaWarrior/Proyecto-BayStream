@@ -3094,4 +3094,32 @@ Es el primer armado de producción contra `proyecto-baystream`, y salió a la pr
 - el jueves, Carlos decide qué instalación lleva la laptop en la demostración: el MSIX 1.0.0.0 o el asistente 1.0.0.9. Si elige el asistente, antes quita la MSIX, porque en la laptop los datos se quedan (10.104), y lo primero después de instalar es la sesión de oficina;
 - después de la demostración, las observaciones de la 10.104 y O-137-8.
 
-La siguiente decisión es la **10.107**.
+### 10.107 · Los dos documentos del 7-nov, la sesión con usuarios de COMAR y T-139, el manual de la 1.0.0 (4-nov, 13:00)
+
+**El tutor pide dos documentos impresos para la terna del sábado 7-nov** (Ing. Escobar, 2-nov):
+- el 1, de investigación, en blanco y negro: el PG I corregido y lo de PG II, con el instrumento, la recolección y la tabulación, la prueba de hipótesis, las conclusiones y las recomendaciones;
+- el 2, técnico, en color: la ERS, el Product Backlog y los Sprint Backlog, y el manual de usuario.
+
+Los escribe Yov el jueves. El plan y las fuentes están en el documento del proyecto `BayStream_Documentos_finales_7nov.md`.
+
+**La sesión con usuarios se hizo el 4-nov, de 08:00 a 09:40, con cinco personas de COMAR**, para H2 y H6 de PG I. Cada uno hizo seis tareas cronometradas con `CORPUS_A01.edi`, tres en el Bloc de notas y tres en BayStream 1.0.0, y después el SUS. Yov cotejó el Word con las fotos de las hojas en papel, y coinciden:
+- el tiempo baja un 77.4 %, con un umbral del 60 %;
+- el SUS medio es 82.5, con un umbral de 68.
+
+La tabulación completa va en el documento 1.
+
+**T-139 · El manual de usuario de la 1.0.0.** El de T-100 (`docs/MANUAL-USUARIO.md` y sus 103 capturas en `docs/manual/`) es de `sprint3-cierre-2`, de antes del rediseño. Para el documento 2 hace falta una edición de la 1.0.0, más corta y para imprimir en color. La hace Timonel, con estas reglas:
+- usa los datos sintéticos de T-100 (BUQUE MANUAL, M100) y nada del corpus;
+- la nube va contra el emulador de Firebase, como en T-130 y T-129, y nunca contra producción ni con `baystream-privado`;
+- el teléfono, en el emulador de Android y no en el Honor;
+- no toca `lib/`, `test/` ni `pubspec.*`: lo que encuentre queda como observación;
+- las capturas de la instalación en Android y en la Web las toma Carlos en sus equipos. Las del asistente de Windows ya están en `build/t137/capturas/carlos/` (10.106).
+
+La entrega, el miércoles en la noche:
+- `docs/MANUAL-USUARIO-1.0.0.md`;
+- las capturas, en `docs/manual-1.0.0/`;
+- `docs/T139-RESULTADOS.md`.
+
+Versionar esas rutas de `docs/` requiere la autorización de Carlos (`AGENTS.md`), por nombre exacto; va en el prompt de T-139.
+
+La siguiente decisión es la **10.108**.
