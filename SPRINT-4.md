@@ -3180,3 +3180,18 @@ Faltan las figuras 5 y 6, la instalación en Android y en la Web. Las toma Carlo
 **H2 y H6 quedan como en la 10.108** (Carlos, 16:18). La sesión de la tarde, de 14:30 a 16:09, tampoco se usa como evidencia: sus registros no son mediciones válidas. Los dos van como escenario de referencia, con la nota neutra, y quedan pendientes de contraste con usuarios en la prueba de campo.
 
 La siguiente decisión es la **10.111**.
+
+### 10.111 · Los dos documentos del 7-nov, completos; T-141, las pruebas finales de seguridad de la 1.0.0 (4-nov, 20:15)
+
+**Los dos documentos del 7-nov quedaron escritos a las 17:50** y el Documento 2 incorporó a las 19:05 el capítulo III, «Diseño del Sistema», con diez diagramas UML levantados del código de la 1.0.0 (casos de uso, clases del dominio, componentes, despliegue, secuencia de una escala, estados y actividad). Están en `docs/entrega-7nov/` (commit `63b5ac8`: el Documento 1, de investigación, 120 páginas, y el Documento 2, técnico, 184 páginas); las fuentes y los diagramas quedan en `docs/entrega-7nov/fuentes/`, fuera del repositorio. Los dos pasan `verificar_formato.py` con 0 fallas y 0 avisos. Antes de imprimir: la revisión independiente en Claude Code (Opus 5.5), las correcciones que salgan y los índices en Word.
+
+**T-141, las pruebas finales de seguridad de la 1.0.0** (GLM, 4-nov, de 19:26 a 19:52; `docs/T141-SEGURIDAD-RESULTADOS.md` y los scripts `tool/t141_*`). Repite el método de T-113 sobre lo publicado (`eddc388`, `v1.0.0`):
+- las reglas publicadas son idénticas a `docs/T130-firestore.rules.propuesta` (`8B903949…`; la copia fresca de la consola del 4-nov, 20:03, es igual byte a byte a la del 3-nov). Contra ese texto, en el emulador: 69 de 69 (T-80), 25 de 25 (T-113), 31 de 31 (T-127), 38 de 38 (T-130) y 18 de 18 casos de abuso nuevos sobre lo que T-130 abrió (`tool/t141_reglas_abuso.mjs`);
+- 117 paquetes sin avisos vigentes en OSV y GitHub Advisory; SDK web 12.19.0 con la huella de `provenance.json`, BoM 34.19.0, C++ 13.13.1, Inno Setup 7.1.1;
+- 520 confirmaciones y 3 557 objetos de la historia sin ningún secreto nuevo; T113-06 cerrado (`output/` ignorado);
+- el APK de la 1.0.0 coincide con las declaraciones de Play (T-88); el MSIX verifica su firma; el instalador se instala por usuario sin administrador y va sin firma de código; la Web en vivo responde con TLS 1.3 y HSTS, sin las demás cabeceras (T113-04, confirmado en vivo);
+- fuzzing del lector BAPLIE: 180 mutantes, 0 fallas, 112 rechazados con mensaje con causa y acción (`tool/t141_fuzz_baplie.dart`).
+
+Ocho hallazgos, ninguno crítico ni alto. **Decisiones de Carlos:** T141-01, las cabeceras de seguridad del Hosting, con el parche escrito para `firebase.json`, va después del 7-nov; T141-06, la protección de enumeración de correos de Authentication, estaba activa en la consola (resuelto); T141-07 y T113-07, los contenedores del corpus anonimizado en documentos versionados, quedan aceptados con el argumento de la anonimización. Nada obliga a tocar la 1.0.0 antes de la presentación. Las pruebas se citan en el Documento 2, IV.F. T-141: 0.4 h.
+
+La siguiente decisión es la **10.112**.
