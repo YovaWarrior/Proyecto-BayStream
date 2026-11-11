@@ -53,7 +53,7 @@ void main(List<String> args) {
       resultados.add(r);
       if (r['clase'] == 'FALLA') fallas++;
       if (detalle || r['clase'] == 'FALLA') {
-        print('${r['clase'].toString().padRight(9)} · ${r['caso']}'
+        stdout.writeln('${r['clase'].toString().padRight(9)} · ${r['caso']}'
             '${r['clase'] == 'FALLA' ? ' · ${r['detalle']}' : ''}');
       }
     }
@@ -63,14 +63,14 @@ void main(List<String> args) {
   for (final r in resultados) {
     porClase.update(r['clase'].toString(), (v) => v + 1, ifAbsent: () => 1);
   }
-  print('');
-  print('Mutantes: ${resultados.length} · '
+  stdout.writeln('');
+  stdout.writeln('Mutantes: ${resultados.length} · '
       'leidos bien: ${porClase['ok'] ?? 0} · '
       'rechazo con mensaje: ${porClase['controlada'] ?? 0} · '
       'fallas: ${porClase['FALLA'] ?? 0}');
-  print('Mensajes de rechazo distintos: ${mensajes.length}');
+  stdout.writeln('Mensajes de rechazo distintos: ${mensajes.length}');
   for (final m in mensajes.toList()..sort()) {
-    print('  - $m');
+    stdout.writeln('  - $m');
   }
 
   Directory('build/t141').createSync(recursive: true);

@@ -20,8 +20,10 @@ import 't86_corpus_support.dart';
 ///
 /// Ejecución (un solo comando de Flutter):
 ///
-///   flutter test tool/t140_volcado_test.dart --no-pub
-///     --dart-define=BAYSTREAM_CORPUS_DIRECTORY=<carpeta del corpus>
+/// ```
+/// flutter test tool/t140_volcado_test.dart --no-pub
+///   --dart-define=BAYSTREAM_CORPUS_DIRECTORY=<carpeta del corpus>
+/// ```
 ///
 /// Del corpus no entra nada al repositorio: `build/` está en `.gitignore`.
 const _files = [
