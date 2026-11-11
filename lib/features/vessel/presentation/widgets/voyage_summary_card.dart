@@ -148,7 +148,7 @@ class VoyageSummaryCard extends StatelessWidget {
               );
               final stacked = (constraints.maxWidth < 480 &&
                       scaler.scale(12) > 18) ||
-                  ['Contenedores', 'Bahías', 'Peso Total'].any(
+                  ['Contenedores', 'Bahías', 'Peso total'].any(
                     (text) => textWidth(text, textTheme.bodySmall) > columnWidth,
                   ) ||
                   [voyage.totalContainers.toString(), voyage.bays.length.toString(),
@@ -177,7 +177,7 @@ class VoyageSummaryCard extends StatelessWidget {
                     context,
                     Icons.scale,
                     _formatWeight(voyage.totalWeight),
-                    'Peso Total',
+                    'Peso total',
                     colorScheme.tertiary,
                   ),
                 ),

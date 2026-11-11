@@ -95,6 +95,20 @@ enum T131Cabecera {
       };
 }
 
+/// T-143 · La operación de la escala de T-117 (BUQUE MANUAL · V117 ·
+/// GTSTC), publicada y, si se pide, cerrada: con ella la píldora dice
+/// «Publicada» o «Cerrada». Sin operación, el plano está «Confirmado» aquí.
+Operation t131Operacion({bool cerrada = false, bool publicada = true}) =>
+    Operation(
+      id: '0b9e6d42-7c1a-4f85-a3e2-5d8c1b4f9a06',
+      vesselName: 'BUQUE MANUAL',
+      voyageNumber: 'V117',
+      portOfCall: 'GTSTC',
+      createdAt: DateTime.utc(2026, 11, 10, 20),
+      published: publicada,
+      closedAt: cerrada ? DateTime.utc(2026, 11, 10, 22) : null,
+    );
+
 class _Viaje extends VoyageNotifier {
   _Viaje(this.voyage);
   final VesselVoyage voyage;
@@ -115,6 +129,7 @@ Future<ValueChanged<Operator?>> t131Pump(
   bool oscuro = false,
   VesselVoyage? voyage,
   bool capturable = false,
+  Operation? Function()? operacion,
 }) async {
   await t117CargarFuentes();
   tester.view.devicePixelRatio = 1;
@@ -138,6 +153,13 @@ Future<ValueChanged<Operator?>> t131Pump(
       yield cuenta;
       yield* cuentas.stream;
     }),
+    // T-143: la operación de la escala, que la píldora lee; se vuelve a leer
+    // con `operationSourcesRevisionProvider`, como en la app al publicar.
+    if (operacion != null)
+      activeOperationProvider.overrideWith((ref) async {
+        ref.watch(operationSourcesRevisionProvider);
+        return operacion();
+      }),
   ]);
   addTearDown(scope.dispose);
   scope.read(selectedBayProvider.notifier).select(2);

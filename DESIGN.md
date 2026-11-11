@@ -387,7 +387,14 @@ perfil.» y «Para exportar, confirma el perfil del buque.».
    llegada propone como escala el puerto de salida, y sin esa coincidencia el plano no
    opera hasta que el planificador confirme.
 3. En `Previo`, la banda muestra la escala propuesta y «Confirmar». Confirmar abre
-   «Parámetros del buque» con la propuesta cargada y «No lo tengo» sin marcar; al
+   «Parámetros del buque» con la propuesta cargada. **El límite de apilamiento** (T-143,
+   10.117): si el perfil guardado de este buque ya lo resolvió, con un valor o con «No lo
+   tengo», viene resuelto y lo dice una línea bajo la explicación, «Del perfil guardado:
+   “No lo tengo”.» o «Del perfil guardado: 90 000 kg por pila.», con el valor que tenga;
+   el planificador lo puede cambiar, y entonces la línea se va. Con la propuesta del
+   archivo o con una plantilla de otro buque, «No lo tengo» empieza sin marcar y sin
+   línea, y sin elegir no se confirma (10.15, H1). «Resuelto» es un perfil del mismo buque
+   declarado por el usuario: con límite, ese valor; sin límite, «No lo tengo». Al
    confirmar, el viaje se publica y **se queda en el Plano**.
 4. Mientras no se confirme: los modos Carga y Descarga no aparecen; «Publicar
    operación», el listado, la salida y **exportar** dicen que falta confirmar; el peso por
@@ -781,6 +788,10 @@ en vertical.
 3. Nada en mayúsculas sostenidas: «Bahía 02», «Cubierta», «Baja», «Hecho», «Total». El rótulo
    de la tira de bahías que el conductor de T-99 busca («BAHÍA nn (») cambia con el
    conductor, en la misma entrega.
+   T-143 (O-139-2, 10.117) llevó a esta regla los tres textos de T-112 que la rompían en
+   pantalla: «Peso total» en la tarjeta del viaje y «Lleno» y «Vacío» en la Lista (y «Sin
+   dato» en lugar de «N/A», regla 4). Las exportaciones no cambian: el PDF ya decía «Peso
+   total», «Lleno» y «Vacío», y el CSV «lleno» y «vacío».
 4. Sin «N/A»: «sin dato», «no declarado», «sin posición».
 5. Los números son el dato principal: tabulares, agrupados («MSCU 123456 7», «28 650 kg»),
    una sola unidad en pantalla («28.7 t»), porcentaje con espacio («91 %»), posiciones
@@ -863,7 +874,7 @@ de selección.
 |---|---|---|---|---|
 | Papel / noche | `surface`, `scaffoldBackgroundColor` | `#F5F8FC` | `#07111F` | El fondo. De noche lleva la rejilla de plano: líneas cada 32 dp en acero al 5 % (`BsFondoDePlano`), solo en oscuro |
 | Hoja / panel | `surfaceContainerLowest` (día), `surfaceContainerLow` (noche) | `#FFFFFF` | `#0C1A31` | Tarjetas, paneles, hojas, el casco de la silueta |
-| Hoja alta / panel alto | `surfaceContainerHigh` | `#E9EFF7` | `#11223F` | Fila activa, chips de estado («Publicado»), la celda de paso, la banda de información |
+| Hoja alta / panel alto | `surfaceContainerHigh` | `#E9EFF7` | `#11223F` | Fila activa, chips de estado («Publicada»), la celda de paso, la banda de información |
 | Tinta | `onSurface` | `#10243F` | `#EAF0F9` | Texto, iconos, cifras |
 | Tinta suave | `onSurfaceVariant` | `#4A5B73` | `#A9B9D2` | Texto secundario, rótulos, el código de la celda atenuada |
 | Tinta tenue | `BsColoresSemanticos.tintaTenue` | `#566986` | `#8DA0BE` | Metadatos terciarios: el momento de un evento, «18 en la bahía 14», los números de bahía no seleccionados |
@@ -1092,7 +1103,7 @@ los valores de 13.1. Buques y números sintéticos (TSTU con dígito de control)
 **9.2 bis · Plano por bahía a 1920 px, de noche (la oficina)**
 ```
 ┌─────┬────────────────────────────────────────────────────────────────────────────────┬────────────────────┐
-│ [▣] │ BUQUE MANUAL  (Publicado)   Viaje M100 · Escala GTSTC     ◉ Descarga ○ Carga   │ ● Al día 3 equipos │ 56
+│ [▣] │ BUQUE MANUAL  (Publicada)   Viaje M100 · Escala GTSTC     ◉ Descarga ○ Carga   │ ● Al día 3 equipos │ 56
 │     │                                                           [ Número, OR o celda 🔍 ] │                    │
 │ ⌂   ├────────────────────────────────────────────────────────────────────────────────┴────────────────────┤
 │ In  │ ┌ Bahías de proa a popa ─ avance de la descarga en GTSTC bajo cada bahía ──────┐ ┌──────┐ ┌──────┐ │
@@ -1902,11 +1913,35 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
 
 ### 14.8 La cabecera y la franja de la bahía, medidas
 
-- **La cabecera** (`cabecera-de-oficina`): el buque y el viaje, el estado («Publicado» o «Sin
-  confirmar») y el selector de modo; siempre en el borde derecho, Buscar, la nube y el botón del
+- **La cabecera** (`cabecera-de-oficina`): el buque y el viaje, el estado y el selector de
+  modo; siempre en el borde derecho, Buscar, la nube y el botón del
   panel. Con `BsPrimeraQueCabe`: en una línea con los segmentos; si no caben, en una línea con el
   menú; si tampoco, en dos líneas, el título arriba y el estado con el menú abajo (la regla de la
   corrección de 10.21).
+- **El estado** (`cabecera-estado`; T-143, 10.117) es una sola regla para los tres clientes,
+  `estadoDeLaOperacion` en `formatters/operation_text.dart`, que también lee «Nube y cuenta».
+  La palabra de la nube va solo cuando la operación está en la nube:
+
+  | Cuándo | La píldora | La frase (descripción emergente y etiqueta) | «Nube y cuenta» |
+  |---|---|---|---|
+  | `Previo` | Sin confirmar | Sin confirmar: confirma el perfil del buque para operar | — |
+  | Confirmado aquí; la operación no está publicada, o no hay operación | Confirmado | Confirmado en este equipo: la operación todavía no está en la nube | Solo en este dispositivo |
+  | Operación publicada y abierta | Publicada | Publicada en la nube | Publicada |
+  | Operación cerrada (guardada aquí, o vista por el motor en la nube) | Cerrada | Cerrada por la oficina: ya no se registran movimientos | Publicada y cerrada |
+
+  La red no cambia el estado: sin red la operación sigue «Publicada» y el chip dice «Sin
+  conexión». El muelle se entera del cierre por la escucha del documento de la operación,
+  sin registrar nada; sin red, al volver la red. En el teléfono no hay píldora: el estado se
+  lee en «Nube y cuenta» y en la descripción del ícono de la nube.
+- **La excepción de «Confirmado»** (Carlos y Yov, 11-nov). La regla de T-131 fija la cabecera
+  de 1366 dp con la letra a 2.0 en una línea de 92 dp. «Confirmado» mide 128.4 px a esa letra,
+  18.9 más que el «Publicado» de antes, y ahí no cabe. **Solo en el estado «Confirmado» y solo
+  cuando no cabe**, la cabecera va en dos líneas (144 dp a 1366 con la letra a 2.0), sin nada
+  cortado. Es un estado de paso: al publicar, vuelve a una línea, con la misma bahía, el mismo
+  zoom y el mismo desplazamiento de la rejilla. Con «Publicada» (109.2 px) y «Cerrada» (87.3 px)
+  la línea de 92 dp sigue exigida, y a 1920 dp con la letra a 2.0, donde trabajan los
+  planificadores, «Confirmado» va en una línea (`test/t131_cabeceras_test.dart`, el grupo «el
+  estado “Confirmado” (T-143)»).
 - **La franja de la bahía** (`franja-de-la-bahia`): ‹ y › (la bahía anterior y la siguiente,
   `bahia-anterior` y `bahia-siguiente`); el título «Bahía 10», que abre la lista de bahías
   (`bahia-elegir`); a la derecha «Colorear por» (`colorear-por`), el zoom (`ZoomDelPlano`), «OR /
@@ -2239,7 +2274,7 @@ códigos de puerto y de naviera; `formatearCuenta` donde una palabra concuerda (
 **1920 × 1080 · la oficina de noche, el panel lateral oculto; contenido a 1 440, centrado**
 ```
 ┌─────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│[▣]  │ BUQUE MANUAL  (Publicado)   Viaje M100 · Escala GTSTC                            Buscar · Nube · Panel   │
+│[▣]  │ BUQUE MANUAL  (Publicada)   Viaje M100 · Escala GTSTC                            Buscar · Nube · Panel   │
 │ ⌂   ├──────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ ▦   │   977                                                                         [ ▦ Ver como tabla ]       │
 │ ☰   │   contenedores a bordo                                                                                   │

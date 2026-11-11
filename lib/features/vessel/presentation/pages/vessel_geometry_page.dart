@@ -145,6 +145,26 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
   /// El usuario declaró no tener el manual de estabilidad a mano.
   bool _limitUnavailable = false;
 
+  /// T-143 (O-139-6; 10.117) · Cómo resolvió el límite el perfil guardado de
+  /// este buque: `(valor: null)` es «No lo tengo»; nulo, el perfil no lo
+  /// resolvió (propuesta del archivo, plantilla de otro buque o sin perfil).
+  ({double? valor})? _limiteDelPerfil;
+
+  /// La línea que dice de dónde viene el límite, mientras lo que se ve sea lo
+  /// del perfil guardado. Si el planificador lo cambia, la línea se va.
+  String? get _lineaDelPerfil {
+    final delPerfil = _limiteDelPerfil;
+    if (delPerfil == null) return null;
+    final valor = delPerfil.valor;
+    if (valor == null) {
+      return _limitUnavailable ? 'Del perfil guardado: “No lo tengo”.' : null;
+    }
+    if (_limitUnavailable || double.tryParse(_stackLimit.text.trim()) != valor) {
+      return null;
+    }
+    return 'Del perfil guardado: ${formatearKilos(valor)} por pila.';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -179,6 +199,11 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
     _limitUnavailable = mismoBuque &&
         perfil.origin == VesselProfileOrigin.declaredByUser &&
         start.stackWeightLimitKg == null;
+    // T-143: el perfil guardado de este buque ya resolvió el límite, con un
+    // valor o con «No lo tengo»; la página lo trae resuelto y lo dice.
+    if (mismoBuque && perfil.origin == VesselProfileOrigin.declaredByUser) {
+      _limiteDelPerfil = (valor: perfil.stackWeightLimitKg);
+    }
 
     for (final controller in _controllers) {
       controller.addListener(_onFieldChanged);
@@ -1040,6 +1065,15 @@ class _VesselGeometryPageState extends State<VesselGeometryPage> {
               'a este buque.',
               style: textTheme.bodyMedium,
             ),
+            if (_lineaDelPerfil case final linea?) ...[
+              const SizedBox(height: 8),
+              Text(
+                linea,
+                key: const ValueKey('geometry-limit-from-profile'),
+                style: textTheme.bodyMedium
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+              ),
+            ],
             const SizedBox(height: 16),
             TextFormField(
               key: const ValueKey('geometry-stack-limit'),

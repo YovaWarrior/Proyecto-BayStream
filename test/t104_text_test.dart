@@ -142,7 +142,7 @@ void main() {
         'Contenedores',
         'Bahías',
         '6940.6 t',
-        'Peso Total'
+        'Peso total'
       ]) {
         final text = find.text(label);
         await tester.ensureVisible(text);

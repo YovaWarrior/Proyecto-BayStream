@@ -34,6 +34,17 @@ class RemoteSnapshot {
   const RemoteSnapshot(this.movements, {required this.fromServer});
 }
 
+/// T-143 (O-139-1) · Lo que el motor lee del documento de la operación en
+/// una sola escucha: el manifiesto de las fuentes (T-127, T-130) y la hora
+/// del cierre, nula mientras siga abierta. El cierre no se deshace en la
+/// nube, así que un `closedAt` visto, también desde la caché, vale.
+class RemoteOperationDocument {
+  final SourceManifest sources;
+  final DateTime? closedAt;
+
+  const RemoteOperationDocument(this.sources, {this.closedAt});
+}
+
 /// Lo único del motor que toca la nube (T-79a 3.4).
 abstract class RemoteMovementStore {
   /// `set()` con id = `movement.id`. Termina cuando el servidor confirma.
@@ -48,8 +59,9 @@ abstract class RemoteMovementStore {
   /// suscribirse y cada vez que cambia. Solo lo que el servidor ya tiene: una
   /// escritura propia todavía pendiente no cuenta. T-130 · Trae los tres
   /// tipos, no solo el listado: el motor baja también el BAPLIE que la
-  /// oficina agregó después de publicar.
-  Stream<SourceManifest> watchSources(String operationId);
+  /// oficina agregó después de publicar. T-143 · Y la hora del cierre, del
+  /// mismo documento: el muelle se entera sin registrar nada.
+  Stream<RemoteOperationDocument> watchOperation(String operationId);
 
   /// T-127 · Los trozos de esa revisión del listado, del servidor. Sin red
   /// falla con [RemoteStoreException] y el motor lo vuelve a intentar.
@@ -146,7 +158,7 @@ class SyncEngine {
 
   // T-127 · El listado de la agencia con revisión (8.3 de T-122; 10.78).
   // T-130 · Y los BAPLIE que la oficina agrega después de publicar (10.90).
-  StreamSubscription<SourceManifest>? _sources;
+  StreamSubscription<RemoteOperationDocument>? _sources;
   SourceManifest _remoteSources = SourceManifest.empty;
 
   /// La revisión del listado que la operación local ya tiene.
@@ -225,8 +237,8 @@ class SyncEngine {
     if (!on || _stopped) return;
     _remote = remote.watch(operation.id).listen(_onSnapshot, onError: _onWatchError);
     _sources = remote
-        .watchSources(operation.id)
-        .listen(_onSources, onError: _onWatchError);
+        .watchOperation(operation.id)
+        .listen(_onDocument, onError: _onWatchError);
   }
 
   Future<void> _onSnapshot(RemoteSnapshot snapshot) async {
@@ -255,10 +267,26 @@ class SyncEngine {
     _emit();
   }
 
-  /// T-127 · El manifiesto de la operación cambió, o se acaba de escuchar.
-  Future<void> _onSources(SourceManifest manifest) async {
-    _remoteSources = manifest;
+  /// T-127 · El documento de la operación cambió, o se acaba de escuchar.
+  /// T-143 · Si trae la hora del cierre, la operación se cerró.
+  Future<void> _onDocument(RemoteOperationDocument document) async {
+    _remoteSources = document.sources;
+    final closedAt = document.closedAt;
+    if (closedAt != null && !_closed) await _markClosed(closedAt);
     await _syncSources();
+  }
+
+  /// El motor se entera del cierre (por el documento o por un rechazo), lo
+  /// guarda en la operación local para recordarlo al reiniciar y lo dice en
+  /// [SyncStatus.closed]. Guarda sobre la operación que el dispositivo tiene
+  /// ahora, no sobre la del arranque: entretanto pudo llegar un plan (T-130).
+  Future<void> _markClosed(DateTime closedAt) async {
+    _closed = true;
+    final current = await _localOperation();
+    if (_stopped) return;
+    final base = current ?? operation;
+    if (!base.closed) await log.saveOperation(base.copyWith(closedAt: closedAt));
+    _emit();
   }
 
   /// T-127 y T-130 · Lo que el manifiesto declara y la operación local no
@@ -460,11 +488,8 @@ class SyncEngine {
           return;
         }
         if (closedAt != null && movement.createdAt.isAfter(closedAt)) {
-          _closed = true;
           // El muelle se entera del cierre y lo recuerda al reiniciar.
-          if (!operation.closed) {
-            await log.saveOperation(operation.copyWith(closedAt: closedAt));
-          }
+          await _markClosed(closedAt);
           await log.markRejected(
               movement.id, 'La operación se cerró antes de este movimiento.');
         } else {

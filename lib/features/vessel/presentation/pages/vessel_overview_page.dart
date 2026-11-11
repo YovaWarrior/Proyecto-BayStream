@@ -24,6 +24,7 @@ import '../providers/plan_attach_provider.dart';
 import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
 import '../providers/voyage_ui_state.dart';
+import '../formatters/operation_text.dart';
 import '../formatters/vessel_error_message.dart';
 import '../widgets/voyage_summary_card.dart';
 import '../widgets/reserved_slots_list_view.dart';
@@ -37,6 +38,7 @@ import '../widgets/hatch_operation_controls.dart';
 import '../widgets/loading_plan_controls.dart'
     show BayPlanMode, SelectorDelModo;
 import '../widgets/aviso_del_listado.dart';
+import '../widgets/aviso_del_cierre.dart';
 import '../widgets/aviso_del_plan.dart';
 import '../widgets/avisos_del_viaje.dart';
 import '../widgets/dialogo_agregar_plan.dart';
@@ -266,6 +268,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         // T-130: y si agrega el plano de llegada o el plan de carga que
         // faltaba, el muelle lo recibe solo, avisa y ofrece abrirlo.
         const AvisoDelPlan(),
+        // T-143 (O-139-1): y si la oficina cierra la operación, el muelle se
+        // entera sin registrar nada, y lo dice una vez.
+        const AvisoDelCierre(),
         // Sin panel lateral a la vista, el movimiento se anuncia igual al
         // lector de pantalla (13.3, punto 5; 10.21, H3): solo el anuncio.
         if (!panelFijo && _flota == null) AnuncioDelMovimiento(voyage: voyage),
@@ -1466,15 +1471,31 @@ class _CabeceraDeOficina extends ConsumerWidget {
     final esquema = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
     final conCuenta = ref.watch(rolDelDistintivoProvider) != null;
-    Widget estado() => Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: medidas.espacioS, vertical: medidas.espacioXs),
-          decoration: BoxDecoration(
-            color: esquema.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(medidas.radioControl),
+    // T-143 (O-139-7): la píldora dice el estado de la operación, no solo
+    // que el perfil se confirmó aquí (operation_text.dart).
+    final situacion = estadoDeLaOperacion(
+      confirmado: publicado,
+      operation: publicado ? ref.watch(activeOperationProvider).value : null,
+      status: publicado ? ref.watch(syncStatusProvider).value : null,
+    );
+    final frase = fraseDelEstado(situacion);
+    Widget estado() => Tooltip(
+          message: frase,
+          excludeFromSemantics: true,
+          child: Semantics(
+            key: const ValueKey('cabecera-estado'),
+            label: frase,
+            excludeSemantics: true,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                  horizontal: medidas.espacioS, vertical: medidas.espacioXs),
+              decoration: BoxDecoration(
+                color: esquema.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(medidas.radioControl),
+              ),
+              child: Text(textoDelEstado(situacion), style: textos.labelMedium),
+            ),
           ),
-          child: Text(publicado ? 'Publicado' : 'Sin confirmar',
-              style: textos.labelMedium),
         );
     // El estado y el selector. En una línea van en una fila: el ancho
     // intrínseco de un `Wrap` no cuenta su `spacing`, y la medida se quedaba

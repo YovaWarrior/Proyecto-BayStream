@@ -69,7 +69,9 @@ class SiluetaDelViaje extends ConsumerWidget {
     final bahias = <BsBahiaDeSilueta>[
       for (final numero in numeros)
         _bahia(displayedVoyage.bays[numero]!, descarga, porBahia[numero],
-            conEscala: conEscala),
+            conEscala: conEscala,
+            conAvance: descarga != null || porBahia.isNotEmpty,
+            escala: voyage.portOfCall),
     ];
     return BsSiluetaBuque(
       key: const ValueKey('silueta-del-viaje'),
@@ -87,9 +89,14 @@ class SiluetaDelViaje extends ConsumerWidget {
     );
   }
 
+  /// T-143 (O-139-3) · La etiqueta dice el motivo real de una bahía sin
+  /// avance: sin escala no hay operación; con la silueta mostrando el avance
+  /// de la descarga o de la carga, la bahía no tiene movimientos en esta
+  /// escala; si en este modo la silueta no muestra avance (un plan de carga
+  /// en «Contenido»), la etiqueta tampoco habla de él.
   static BsBahiaDeSilueta _bahia(
       Bay bay, DischargeProgress? descarga, BayOperationProgress? carga,
-      {required bool conEscala}) {
+      {required bool conEscala, required bool conAvance, String? escala}) {
     final geometria = bay.geometry;
     final cubierta = <int>{};
     final bodega = <int>{};
@@ -121,6 +128,11 @@ class SiluetaDelViaje extends ConsumerWidget {
       nivelesBodega: bodega.length,
       avance: avance,
       conTrabajo: conTrabajo,
+      sinAvance: !conEscala
+          ? 'sin operación'
+          : conAvance
+              ? 'sin movimientos en $escala'
+              : null,
     );
   }
 }

@@ -364,15 +364,17 @@ class _ContainerCard extends StatelessWidget {
     }
   }
 
-  /// Obtiene el texto del estado
+  /// Obtiene el texto del estado, en tipo oración (T-143, O-139-2; regla 3
+  /// de DESIGN.md 11). Las exportaciones no lo usan.
   String _getStatusText(ContainerStatus status) {
     switch (status) {
       case ContainerStatus.full:
-        return 'LLENO';
+        return 'Lleno';
       case ContainerStatus.empty:
-        return 'VACÍO';
+        return 'Vacío';
       case ContainerStatus.unknown:
-        return 'N/A';
+        // T-143: sin «N/A» (regla 4 de DESIGN.md 11).
+        return 'Sin dato';
     }
   }
 

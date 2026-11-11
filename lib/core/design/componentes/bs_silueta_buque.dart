@@ -18,6 +18,7 @@ class BsBahiaDeSilueta {
     this.nivelesBodega = 0,
     this.avance,
     this.conTrabajo = false,
+    this.sinAvance,
   });
 
   /// El número de bahía.
@@ -36,6 +37,12 @@ class BsBahiaDeSilueta {
   /// clara que las que solo van de paso.
   final bool conTrabajo;
 
+  /// T-143 (O-139-3) · Lo que dice la etiqueta cuando no hay [avance]: quien
+  /// arma la silueta sabe por qué («sin operación», «sin movimientos en
+  /// GTSTC»); nulo, la etiqueta no habla del avance. Antes la pieza decía
+  /// «sin operación» siempre, también con la operación en marcha.
+  final String? sinAvance;
+
   /// El número con dos cifras.
   String get rotulo => numero.toString().padLeft(2, '0');
 
@@ -45,10 +52,11 @@ class BsBahiaDeSilueta {
         ? 'sin carga'
         : '${formatearCuenta(nivelesCubierta, 'nivel', 'niveles')} en cubierta '
             'y $nivelesBodega en bodega';
-    final progreso = avance == null
-        ? 'sin operación'
-        : 'avance ${formatearPorcentaje(avance!)}';
-    return 'Bahía $rotulo, $niveles, $progreso';
+    final progreso =
+        avance == null ? sinAvance : 'avance ${formatearPorcentaje(avance!)}';
+    return progreso == null
+        ? 'Bahía $rotulo, $niveles'
+        : 'Bahía $rotulo, $niveles, $progreso';
   }
 }
 
