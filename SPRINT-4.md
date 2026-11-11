@@ -3492,4 +3492,36 @@ No se publica sola: sale con la versión del bloque 1 (10.117).
 
 **Decide Carlos:** dónde van los cuatro pendientes sin bloque.
 
-La siguiente decisión es la **10.123**.
+### 10.123 · La propuesta de T-144, revisada: se aprueba con una condición, que la 1.0.0 siga leyendo lo que guarde la versión nueva (11-nov, 13:30)
+
+**Timonel entregó la fase 1** (`docs/T144-RESULTADOS.md`, sobre `7b1c56e`), sin tocar `lib/`, `test/` ni `tool/`. Leyó las guías de SMDG de la 2.2.1 (06/2016) y de la 1.5 (05/1993).
+
+**Lo que Yov comprobó:**
+- **El corpus, con un conteo propio** fuera del repositorio, en los 10 archivos de T-140. Todo coincide con la propuesta:
+  - las DGS dobles: A02 1, A03 3, A03v 3 y A07 2, es decir, seis contenedores y nueve casos;
+  - A06: LOC+6 y LOC+12 en sus 717 contenedores, ningún LOC+9 ni LOC+11, y 717 matrículas con espacio, todas con el dígito de control correcto;
+  - ningún DIM, 30 `XXVSL` en A01 y `*****` en el LOC+61 de A04 y de A06.
+
+  Una sola corrección: el LOC+83 trae texto libre en **7** de los 8 archivos de la carpeta, no en 6 (solo A02 trae únicamente UN/LOCODE), y también en A07 y A08.
+- **La guía 2.2.1:** los calificadores 9, 11, 83 y 97 (este con `XXOPT`), el número del contenedor como «one continuous string» y el DIM de 5 a 9, en CMT o INH.
+- **El código:** `MovementDraft.validate()` exige `^C:[A-Z0-9]{1,17}$` (`movement.dart:315`) y `append` lo aplica antes de anexar. Las reglas publicadas (`8B903949…`) exigen la misma forma en `validDischarge`, `validLoadFull` y `validCancel`. Es cierto que hoy no puede existir un movimiento con una matrícula con espacio, y que en la 1.0.0 los contenedores de A06 no se pueden descargar ni cargar.
+- **A07 y A08,** en el escritorio de Carlos, tienen las huellas de `build/t140/resumen.json`.
+
+**Lo que decide Yov:**
+1. **El CSV, aprobado:** « | » en «Clase IMDG» y «Número ONU», y «DGS declarados» al final. Con una sola declaración, o con ninguna, las dos celdas quedan como hoy, para que el volcado de un archivo sin DGS dobles sea idéntico al de T-140, salvo la columna nueva.
+2. **`XX…`, aprobado sin aviso:** son códigos de convenio (la guía define `XXOPT`), no errores de escritura. Se muestran tal cual y no toman color de la tabla fija (DESIGN.md 5.3).
+3. **Volver a la 1.0.0 no se acepta como riesgo.** No hace falta reinstalar a mano: volver a la versión anterior del Hosting es el camino de vuelta escrito en la 10.116, y la Web 1.0.0 leería el mismo almacén del navegador. `BaplieReadNotice.fromJson` lanza un error con un tipo que no conoce (`vessel_voyage.dart:592`), y `getAllVoyages` lee todos los viajes de una vez, así que un solo viaje con un aviso nuevo dejaría a la 1.0.0 sin «Recientes». Lo que se pide:
+   - `readNotices` guarda solo los cuatro tipos de hoy, y los dos nuevos (UN/LOCODE y DIM) van en otra clave, que la 1.0.0 no lee;
+   - desde esta versión, un tipo que no se conoce se salta, sin romper la lectura del viaje;
+   - una prueba que fije las dos cosas.
+4. **La etiqueta «IMO 3 +1» de la Lista, aprobada,** con dos condiciones: ningún texto cortado a 360 dp con letra 1.0, 1.45 y 2.0, y la etiqueta accesible con todas las clases.
+
+**Lo demás de la propuesta se aprueba como está,** incluido lo que precisa del prompt: la matrícula pierde los espacios y pasa a mayúsculas, pero no se completa a 11 posiciones.
+
+**Para la lista de la versión del bloque 1:** se publican los tres clientes juntos, y antes no queda abierta ninguna operación con una fuente 1.5 o con matrículas con espacio.
+
+**El prompt de T-144 le llegó cortado a Timonel,** desde «fuera del…», en las reglas: le faltaron el final de las reglas y la sección 6, «Cómo entregas». Carlos se lo pasa con estas decisiones.
+
+**Decide Carlos:** la aprobación de la propuesta, con las cuatro decisiones de arriba.
+
+La siguiente decisión es la **10.124**.
