@@ -3357,3 +3357,40 @@ La siguiente decisión es la **10.117**.
 **El prompt de T-143** (Timonel) está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
 
 La siguiente decisión es la **10.118**.
+
+### 10.118 · T-143 entregada y revisada; `analyze` vuelve a cero en todo el paquete; la excepción de «Confirmado» (11-nov, 01:35)
+
+**El paso 0 de T-143 encontró `analyze` con 6 avisos de nivel info, todos en `tool/`:** uno en `tool/t140_volcado_test.dart` (T-140) y cinco `avoid_print` en `tool/t141_fuzz_baplie.dart` (T-141). Esas dos tareas no corrieron `analyze` porque no tocaban `lib/` ni `test/`, así que desde el 4-nov la punta no cumplía la regla dura de la sección 2. **Carlos (con Yov) los mandó corregir en un commit aparte,** antes del de T-143: el comentario pasó a un bloque de código y los `print` a `stdout.writeln`, con la misma salida. **Regla desde hoy:** toda tarea que toque código Dart, también en `tool/`, corre `flutter analyze` sobre todo el paquete antes de entregar.
+
+**La propuesta de T-143, revisada por Yov y aprobada por Carlos** (11-nov, 00:10), con estos ajustes:
+- la píldora dice «Confirmado»;
+- «N/A» pasa a «Sin dato»;
+- bloquear el registro en el muelle después del cierre no entra: queda como **O-143-1**, para el frente de usabilidad;
+- la línea del límite dice «Del perfil guardado: …».
+
+**El ALTO de Timonel (00:48).** «Confirmado» mide 128.4 px con la letra a 2.0, 18.9 más que «Publicado», y no cabía en la línea única de 92 dp que T-131 fijó para 1366 dp. Carlos (con Yov) aceptó las dos líneas solo en «Confirmado» y solo cuando no cabe, con cinco condiciones, todas cumplidas:
+1. con «Publicada» y «Cerrada», la prueba de T-131 sigue exigiendo una línea de 92 dp;
+2. con «Confirmado», dos líneas de 144 dp a 1366 con la letra a 2.0, sin nada cortado, y una sola línea a 1920 con la letra a 2.0;
+3. al publicar, la cabecera vuelve a una línea y se conservan la bahía, el zoom y el desplazamiento de la rejilla;
+4. la excepción queda escrita en `DESIGN.md` 14.8;
+5. el censo de T-112 queda como **O-143-2**, para el bloque de calidad: en la punta ya se detenía con 143 cadenas sin decisión, de T-117 en adelante, y T-143 solo agrega las dos del aviso del cierre.
+
+**T-143, entregada** (Timonel, Opus 5.5, 3.0 h; `docs/T143-RESULTADOS.md`):
+- **La cabecera** dice «Sin confirmar», «Confirmado», «Publicada» o «Cerrada», con una sola regla para los tres clientes (`estadoDeLaOperacion`, en `formatters/operation_text.dart`), que también lee «Nube y cuenta».
+- **El muelle se entera del cierre sin registrar nada.** La escucha del documento de la operación (`watchOperation`, antes `watchSources`) trae también `closedAt`, sin lecturas nuevas ni cambios de reglas. Sale un aviso una vez, que no aparece en el equipo que cerró, y «Nube y cuenta» pasa a «Publicada y cerrada». Sin red, el cambio llega solo al volver la red.
+- **La cola después del cierre:** lo registrado antes entra. Lo de después dice «1 rechazado: la operación ya estaba cerrada», sin «Reintentar».
+- **La silueta** dice «sin operación» solo cuando no la hay.
+- **O-139-6 no se reproducía en la 1.0.0:** «No lo tengo» ya venía marcado. Solo cambian la línea «Del perfil guardado…» y `DESIGN.md` 7.2.
+- **Los textos:** «Peso total», «Lleno», «Vacío» y «Sin dato». Ninguna exportación cambia.
+- **Las validaciones:** `analyze` en cero; la suite, 2145 de 2145 sin omitidas (el piso era 2107, con 38 nuevas); las de T-131, 59 de 59. El cierre se probó contra el emulador `demo-t143` con dos teléfonos en la Web, y hay 35 capturas en `build/t143/`.
+
+**Yov revisó** la escucha del documento, `_markClosed` en el motor, el aviso, la regla del estado, `DESIGN.md` (7.2, 11 y 14.8) y que el bloque de Git coincide con los archivos tocados desde el inicio de la fase 2, sin `// ignore:` ni datos de cuentas.
+
+**Lo que sigue:**
+- Carlos: los dos bloques de Git del informe, primero el de `tool/` y después el de T-143, y la carpeta de Codex en la punta.
+- Codex: la aceptación de T-143, con Windows contra el emulador, que Timonel no pudo recorrer.
+- Los pasos del manual que cambian (sección 7 del informe) los aplica Yov al armar la versión, en el manual de esa versión.
+- El Honor, en la vuelta corta de esa versión.
+- Sigue T-144, el lector y el volcado.
+
+La siguiente decisión es la **10.119**.
