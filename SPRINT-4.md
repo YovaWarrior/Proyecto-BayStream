@@ -3194,4 +3194,79 @@ La siguiente decisión es la **10.111**.
 
 Ocho hallazgos, ninguno crítico ni alto. **Decisiones de Carlos:** T141-01, las cabeceras de seguridad del Hosting, con el parche escrito para `firebase.json`, va después del 7-nov; T141-06, la protección de enumeración de correos de Authentication, estaba activa en la consola (resuelto); T141-07 y T113-07, los contenedores del corpus anonimizado en documentos versionados, quedan aceptados con el argumento de la anonimización. Nada obliga a tocar la 1.0.0 antes de la presentación. Las pruebas se citan en el Documento 2, IV.F. T-141: 0.4 h.
 
-La siguiente decisión es la **10.112**.
+### 10.112 · La revisión independiente, aplicada a los dos documentos con seis decisiones de Carlos (4-nov, noche)
+
+**La revisión de Opus 5.5** (`docs/entrega-7nov/REVISION-INDEPENDIENTE.md`, 105 hallazgos: 53 del Doc 1 y 52 del Doc 2) se aplicó entera sobre las fuentes de los dos documentos, que se reconstruyeron, verificaron (`verificar_formato.py`: 0 fallas y 0 avisos en ambos) y renderizaron. Quedan en `docs/entrega-7nov/` con sus fuentes en `fuentes/`.
+
+**Las seis decisiones de Carlos (20:33):**
+1. **«Código abierto» sale** del objetivo general, la pregunta general, la introducción y la brecha. El repositorio es privado durante la evaluación y la publicación con licencia abierta queda prevista para después de la graduación; se declara como cambio frente a PG I (alcance 9 y tabla de cambios).
+2. **Las cifras de agosto se declaran:** los entregables del 14 y 23-ago reportaron 12 participantes (−74.6 %, −83.3 %, SUS 86.25) y 98.9 % de precisión; eran un ejercicio de simulación para ensayar los instrumentos (la hoja los rotula sintéticos) y se retiran. Va en IV.F, en la limitación 3 y en la conclusión 7.
+3. **Las tablas del escenario de referencia se quedan,** con su origen declarado (las preparó Codex el 3-nov con valores inventados, para ensayar el formato y el cálculo) y sin ninguna comparación con el umbral.
+4. **Los buques van con alias** en el Doc 1: buque A (pilotos 1 y 3) y buque B (piloto 2), sin nombres ni números de viaje.
+5. **Se conservan H1 a H6,** con la frase de correspondencia con los seis indicadores de la presentación (revisión del tutor del 17-oct).
+6. **El umbral de H1 sigue en 99.5 %,** citando la indicación del catedrático del 2-nov.
+
+**Lo demás que cambió en el Doc 1:** H1 con la causa real de las nueve discrepancias (el volcado exporta solo la última DGS; el lector conserva las dos), seis contenedores y no cinco, A07 en 99.497 %, cuatro limitaciones (más el espacio interno de las matrículas de A06) y la precisión por matrícula distinta (4 386; 99.86 %, IC 99.70–99.94); H3 con el denominador real (papel 102 celdas, 1 error de anotación; app 113 capturas del Honor, 0; 70 en ambos), los cinco defectos del escritor y el rodeo 26043X, las tres discrepancias de datos (no «errores de posición»), los cancelados 49 y 50 y los tres sin celda; H4 con los dos instrumentos declarados (`cloc` con plantillas; T-99 sin ellas) y la fila de la 3.0 en la misma base (65.9 %); H5 con la regla de decisión (mediana y P95 ≤ 3 s), C3 en diez ciclos, los crudos del 25-ago no tabulados y las condiciones de la medición; la nula general no se rechaza; H4 y H5 «cumplen el umbral» sin prueba inferencial; H2 cuasiexperimental; tabla de cambios frente al anteproyecto (Tabla 4); apartado nuevo IV.J, Limitaciones del Estudio (9); conclusión general y respuesta a las seis preguntas específicas; recomendaciones con criterio verificable; Gemini, GLM y Nube declarados en IV.H; versiones por indicador y la renumeración 0.x; línea base de H4 antes del 14-ago; Backlog del 23-ago; seis publicaciones; «prueba con usuarios en muelle» para lo pendiente; Bilican et al. y Van Twiller et al. con sus autores de Crossref; SMDG como Ship-planning Message Design Group y las guías 2.2.1 y 3.1.1 (verificado en smdg.org: la revisión decía 3.2 sobre D.21A y no se confirmó); sobreestiba frente a re-estiba; color por tabla fija de 15 puertos; orden de movimientos por hora del dispositivo, dispositivo y secuencia; exportaciones del plan frente al BAPLIE de salida; lo que revisa la carga antes de confirmar; Anexo E alineado con la ERS v2 (RF-001, 002, 009, 016, 021 y 033 redefinidos; RF-021 y 022 en OE2; RF-036 a 041 agregados); «Google LLC» y «Supabase, Inc.»; título real en las propiedades del archivo.
+
+**En el Doc 2** (aplicado antes, 10.111 y esta misma noche): el recuento de requisitos (32 hechos, 12 redefinidos, 2 parciales, 1 no; 17 de 18 MUST), T-72 restaurado con las horas del tablero, T-141 en el Sprint 4, la fila de asistentes de apoyo, el MSIX con la confianza del certificado, la salida solo con plan, y el diagrama de despliegue (se había cortado por el lienzo: corregido).
+
+**Pendiente de Carlos:** generar el índice en Word en los dos archivos finales antes de imprimir, y confirmar la fecha de la indicación del catedrático (2-nov) en II.D y en la Tabla 4 del Doc 1.
+
+### 10.113 · El material impreso para la terna y las dos cuentas de demostración (5-nov, tarde)
+
+**Lo que Carlos lleva impreso el 7-nov, además de los dos documentos** (todo en `docs/entrega-7nov/terna/` y `docs/entrega-7nov/`, hecho el 4 y el 5-nov):
+- **la hoja de ruta para la terna** (una página, a color): la pregunta, los seis indicadores con umbral, resultado, dictamen y página, lo que cambió frente al anteproyecto y dónde está cada cosa; y **la ficha de preguntas probables** (dos páginas, de uso personal), con diez preguntas y sus respuestas. Las páginas citadas son las del índice que Word generó en los archivos finales, no las del render de LibreOffice: difieren en una página en cada documento (Doc 1: +1 desde la introducción; Doc 2: −1 en el manual);
+- **las páginas a color** para imprimir aparte: `BayStream_Paginas_a_color.pdf` (64 páginas: las dos carátulas y las páginas 124 a 185 del Doc 2, apartados B a J del manual, cortadas del PDF que Word exportó) y el mismo contenido como Word (`BayStream_Paginas_a_color.docx`, construido desde el paquete del Doc 2, con la numeración 124–185 y la jerarquía del manual, no convertido desde el PDF);
+- **la presentación**, borrador 7 (`C:\Proyectos\baystream-presentacion\`): la apertura dura 15 s con el sonido vuelto a sintetizar para esa duración (`apertura15_sonido.mp4`), las cifras siguen a los documentos finales (2 107 pruebas, 99.85 %, 123/145, 0.26–0.79 s, sin «código abierto», H2 y H6 pendientes) y la última lámina lleva seis de los diez diagramas UML rehechos;
+- **el trifoliar** (carta apaisada, seis caras, con las marcas de doblez en 9.31 cm): producto y no ruta, con dibujos, un código QR a `baystream-app.web.app` y los tres pasos para abrir un BAPLIE en la Web. Fuente en `terna/fuente-trifoliar/`.
+
+**Las dos cuentas de demostración.** Carlos decidió que la terna pueda entrar a BayStream Web si quiere, con dos cuentas que crea él en la consola (Authentication, correo y contraseña; la app no tiene registro) y autoriza en `authorized/{uid}` con `active: true`, `role` y `name`: `oficina-prueba@baystream-app.web.app` (`office`) y `muelle-prueba@baystream-app.web.app` (`dock`), con una misma contraseña que va impresa en la contraportada del trifoliar y en ningún archivo del repositorio. Valen hasta el 14-nov; ese día se desactivan en Authentication o con `active: false`, que la app respeta de inmediato. Como entran al proyecto real (una cuenta autorizada lista todas las operaciones abiertas, la de oficina publica y cierra, la de muelle registra movimientos en la que se une), antes del sábado Carlos cierra las operaciones reales del piloto que sigan abiertas y deja publicada una operación de demostración desde oficina-prueba. **La carpeta `terna/` no entra en Git:** es material de impresión y el trifoliar lleva la contraseña.
+
+**Hecho el 5-nov, 19:10–19:30, desde el Chrome de Carlos:** él creó los dos usuarios en Authentication y Yov escribió los dos documentos de `authorized` (UID `c5pcMx54…` oficina, `ROTvVAGe…` muelle), comprobó que las 17 operaciones de la nube ya estaban cerradas (ninguna con `status: "open"`), verificó la sesión de oficina-prueba en la Web («Cuenta autorizada», «Operaciones abiertas en la nube») y publicó la operación de demostración: **BUQUE GOLF · VIAJE007A · GTSTC**, desde `CORPUS_A07.edi` (plano de llegada, 398 contenedores, 114 se descargan, perfil propuesto desde el archivo, sin límite por pila), documento `8f614ccb-9bc9-40b4-8464-d3eb70559b25`, `createdBy` = oficina-prueba. Queda pendiente probar «Unirse» con muelle-prueba desde un teléfono.
+
+La siguiente decisión es la **10.114**.
+
+### 10.114 · La presentación del 7-nov: las cuatro recomendaciones de la terna y lo que queda del sprint (10-nov, 18:25)
+
+**El sábado 7-nov Carlos presentó BayStream ante la terna.** Según su relato, no hubo preguntas técnicas, y la terna dejó cuatro recomendaciones:
+1. **Doble factor de autenticación.** Un ingeniero vio que se entra solo con correo y contraseña, y le pareció poca seguridad.
+2. **Capacitar al personal del sector** para que aprenda a usar la app.
+3. **Que la entienda quien no es del rubro.** El evaluador que no conoce de muelles dijo que la app está bien, pero que solo Carlos sabía a qué apartado entrar, por trabajar en el rubro, y que a algunos apartados se llega con muchos clics.
+4. **La estabilidad del buque según los pesos,** con una simulación en 3D que muestre en tiempo real cómo queda el buque con los contenedores y sus toneladas: que esa limitación del proyecto se vuelva un alcance nuevo de BayStream.
+
+**Lo que Yov verificó del doble factor (10-nov):**
+- Firebase lo da con la mejora a *Firebase Authentication with Identity Platform*, con el segundo factor por SMS o por TOTP (una app autenticadora). La guía de Flutter pide el correo verificado y advierte que el SMS es inseguro; enviar SMS, además, solo se puede en el plan Blaze (`firebase.google.com/docs/auth/flutter/multi-factor` y `/docs/auth/limits`).
+- **En Windows no hay:** la misma guía dice «Windows platform does not support multi-factor authentication». La oficina usa la app de Windows, así que Windows necesita otro camino.
+- Con la mejora, el plan Spark admite hasta 3 000 usuarios activos por día: de sobra para BayStream.
+- La API de FlutterFire trae el generador de TOTP; en qué plataformas funciona se comprueba en el diseño.
+
+**Cómo se aplican (propuesta de Yov; decide Carlos):**
+1. **Seguridad.** Hoy, T-142: las cabeceras de seguridad del Hosting (T141-01). Después, el doble factor por TOTP en la Web y en Android: el enrolamiento desde «Nube y cuenta» y reglas que exijan el segundo factor a la oficina. Para Windows hay dos caminos: que la oficina use la Web cuando trabaja con la nube, o un inicio de sesión por el navegador que devuelva un token propio (necesita Cloud Functions y el plan Blaze). Se diseña antes de tocar código, como T-130.
+2. **Capacitación.** Un paquete por rol, para oficina y para muelle: el manual de la 1.0.0, una guía de una página por rol, videos cortos por tarea y una operación de práctica con datos sintéticos (BUQUE MANUAL). La sesión de capacitación en COMAR es también la ocasión de medir H2 y H6 con el instrumento del 4-nov, que siguen pendientes de contraste con usuarios (10.108).
+3. **Usabilidad para quien no es del rubro.** Primero se mide: el mapa de clics de las tareas frecuentes de cada rol y una prueba con tres a cinco personas ajenas al puerto. Después se cambia: un inicio por rol con las acciones del día, los nombres del rubro explicados (OR, escala, reserva…), una ayuda «?» en cada pantalla y las acciones frecuentes fuera de «Más» y de «Acciones». Un ejemplo del mismo sábado: el mismo toque hace cosas distintas según el rol. En el muelle, tocar una celda reservada abre la elección del vacío; en la oficina abre «Mover» y «Cancelar embarque», y el vacío se asigna desde «Acciones» → «Asignar vacío». Va con RNF-002 (productivo en menos de 10 minutos sin capacitación, SUS ≥ 75), que quedó parcial.
+4. **Estabilidad y 3D, un alcance nuevo, por fases:**
+   - A, sin pedirle nada nuevo al buque: la vista 3D del buque con los contenedores coloreados por peso, que cambia en vivo con cada movimiento, y los indicadores de la carga: el peso a babor y a estribor, a proa y a popa, y el centro de gravedad vertical de la carga;
+   - B, con el cuadernillo de estabilidad del buque en su perfil (el peso en rosca, las tablas hidrostáticas y los tanques): calados, asiento, escora y GM;
+   - C, el cotejo con el computador de carga del buque en escalas reales.
+
+   Todo va como una estimación para planificar, rotulada PROVISIONAL: el cálculo de estabilidad que vale es el del computador de carga aprobado del buque (IACS UR L5; OMI MSC.1/Circ.1229). La técnica del 3D, un dibujo propio sin dependencias o una biblioteca que necesita autorización, se decide con una prueba corta.
+
+**Lo que queda del Sprint 4** (de las decisiones 10.105 a 10.113 y del alcance del sprint):
+- **Git:** `sprint-4` en GitHub sigue en `820f66e` (10.111). Faltan los commits de 10.112 a 10.114 y los documentos finales de `docs/entrega-7nov/`.
+- **El 14-nov:** desactivar las dos cuentas de demostración (10.113).
+- **Seguridad:** T141-01 pasa a T-142; T141-03, el cifrado del almacén local, sigue pendiente de decisión.
+- **Para una 1.0.1:**
+  - la cabecera que dice «Publicado» antes de que se publique en la nube (10.105);
+  - O-139-1 (el muelle sigue en «Publicada» y «Al día» después del cierre) y O-139-2, O-139-3, O-139-6 y O-139-7 (10.110);
+  - O-136-1, O-134-2 y O-137-1 a O-137-8 (10.105 y 10.106); al arreglar O-137-1, T-137 entra a `sprint-4`;
+  - las observaciones de H1: el volcado y el detalle con todas las DGS, el LOC+83, los puertos de la 1.5 y las matrículas con espacio (10.109 y 10.112).
+- **Requisitos:** RF-018, la búsqueda por tipo de carga especial, el único que no se construyó; RF-005 (sobredimensión) y RF-035 (tercer rol), parciales; los RNF que no cumplen (001, 005, 007 y 008) y los parciales (002, 003 y 004).
+- **Investigación:** H2 y H6 con usuarios, y la campaña de errores inyectados de H3.
+- **T-87,** la BAPLIE 3.1, espera un archivo real. **T-114** no tiene su cierre formal: la auditoría de `flutter-ui` en cero y RNF-002 y RNF-003 vueltos a medir.
+- **La limpieza de Carlos:** los SDK 13.9.0 apartados, las carpetas de prueba de `%TEMP%`, la lista del piloto (2.14) y, si quiere, devolver el almacén de Windows desde `BayStream_respaldo_*`.
+
+**T-142 · Las cabeceras de seguridad del Hosting (T141-01).** Hoy, con Timonel. Solo cambia `firebase.json`: se publica la misma Web 1.0.0, sin compilar, con las cabeceras que faltan, probadas en el emulador de Hosting y, por Carlos, en un canal de vista previa antes de producción. El prompt está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
+
+**Decide Carlos:** el orden de los cuatro frentes (Yov propone la seguridad primero, después la usabilidad junto con la capacitación, y la estabilidad como alcance aparte), si el doble factor entra en la siguiente versión y qué camino toma Windows.
+
+La siguiente decisión es la **10.115**.
