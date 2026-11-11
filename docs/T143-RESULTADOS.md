@@ -732,3 +732,125 @@ Corrección 1: 0.5 h. Total de T-143: 3.5 h.
 > que llegan a la vez que el cierre. Las cuatro fallaban contra `04cd717` (3 y 4 guardados, sin
 > pérdida de datos). ACC-02: la frase va en 14.8. `analyze` cero y suite 2149 de 2149 en una
 > corrida. Un commit: «Sprint 4: T-143, correccion 1, el cierre se guarda una vez».
+
+## 14. Corrección 2 (T143-ACC-03)
+
+11-nov, de 03:00 a 03:15 según el reloj de la máquina (las líneas de SEMÁFORO de
+`build/t143/semaforo.log`), sobre `ba79d10` (10.120). La reaceptación de Codex (sección 11 de
+`docs/t143/aceptacion-codex.md`) no pasó por un P2 nuevo, introducido por la corrección 1.
+
+### 14.1 La causa
+
+`saveOperation` avisa los errores con un `Left`, no con una excepción: el `await` termina
+normalmente. `_markClosed` no miraba el resultado. Un primer guardado fallido quedaba memorizado
+en `_closing` como hecho:
+- el rechazo siguiente esperaba ese mismo futuro ya resuelto y no volvía a guardar;
+- el documento no lo intentaba, por la guarda `!_closed`;
+- `retry()` no tocaba el cierre.
+
+El motor quedaba «Al día · operación cerrada» con la operación local abierta.
+
+### 14.2 La corrección
+
+Solo en `lib/features/vessel/data/repositories/sync_engine.dart`:
+- **Se distinguen el cierre conocido y el guardado.** `_closed` es el cierre que el motor
+  conoce, el que dice `SyncStatus.closed`. `_closedSaved` es el que guardó en la operación local:
+  al arrancar vale lo mismo que `operation.closed`, y después solo cambia con un guardado que
+  devuelve `Right`. `_knownClosedAt` recuerda la hora del cierre para volver a intentarlo.
+- **Un guardado fallido no se memoriza.** Dentro de la cola, la persistencia devuelve si guardó:
+  `true` con `Right` o si la operación ya estaba cerrada; `false` con `Left`, con una excepción o
+  si el motor se detuvo. Con `true` se marca `_closedSaved`; con `false` se libera `_closing`.
+- **Se vuelve a intentar** con el siguiente rechazo, con el documento (la guarda pasa de
+  `!_closed` a `!_closedSaved`) y con `retry()`, que con un cierre conocido y sin guardar lo
+  intenta otra vez. El guardado es local, así que también funciona sin red.
+- **Se mantiene la corrección 1.** Las llamadas que llegan mientras un guardado está en curso
+  esperan ese mismo guardado y no guardan de nuevo. Ya guardado, `_markClosed` vuelve enseguida.
+  La cola de escrituras no cambia.
+
+**El listado y el plan no tienen el problema.** Ninguno de los dos memoriza su guardado:
+- el listado actualiza `_localListRevision` solo si el guardado devolvió `Right`;
+- el plan agrega su tipo a `_localPlans` solo si el guardado devolvió `Right`;
+- con un `Left` no se anota nada, y el siguiente `_syncSources` lo vuelve a bajar y a guardar.
+  Ese `_syncSources` llega con el reloj del motor, con la siguiente instantánea del servidor o
+  con el documento;
+- una excepción la recoge el `catch` de cada uno, y su `finally` libera `_fetchingList` o
+  `_fetchingPlan`.
+
+No los toqué.
+
+### 14.3 Las pruebas permanentes
+
+El grupo «corrección 2» de `test/t143_cierre_una_vez_test.dart` suma 6 pruebas. La bitácora de
+prueba ahora puede hacer fallar los primeros guardados de la operación cerrada, con un `Left` o
+con una excepción, y separa los intentos de los guardados buenos.
+
+1. **La sonda de Codex** (`save_failure_test.dart`): el primer guardado da `Left`. El motor conoce
+   el cierre y la operación local sigue abierta. Después, un rechazo y `retry()`: la operación
+   local queda cerrada, con un solo guardado bueno.
+2. El rechazo siguiente, solo, basta para guardarlo.
+3. `retry()`, solo y sin red, basta.
+4. El documento, cuando vuelve a llegar (se va la red y vuelve), basta.
+5. Una excepción al guardar tampoco queda como hecho.
+6. **El fallo con llamadas concurrentes:** sin red, el documento cerrado y tres rechazos llegan
+   juntos al volver la red, con lecturas lentas. El primer guardado falla. Al final, un solo
+   fallido, **un solo guardado bueno** y la operación local cerrada.
+
+Las cuatro de la corrección 1 siguen en verde.
+
+**En rojo contra `b336117`** (el motor de la corrección 1, puesto un momento en el árbol y
+restaurado después; se comprobó idéntico con `cmp`): **las 6 nuevas fallan y las 4 de la
+corrección 1 pasan** (`build/t143/correccion2-rojo-b336117.log`).
+
+### 14.4 Las validaciones
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze`, todo el paquete | **«No issues found!»** (03:06:14 a 03:07:07). Sigue O-143-3: en esta carpeta existe el archivo generado de T-124 |
+| Las pruebas del motor y del cierre | **77 de 77**: `t143_cierre_una_vez` (10), `t143_cierre`, `t79_sync_engine`, `t127_listado_revision`, `t130_plan_agregado` y `t129_cierre` (`build/t143/correccion2-pruebas.log`) |
+| **La suite, en una sola corrida** | **2155 de 2155, sin omitidas**, en 2 min 59 s (03:07:07 a 03:10:11; `build/t143/suite-correccion2.log`): las 2149 de la corrección 1 más las 6 nuevas |
+
+No hizo falta volver al emulador ni a las capturas: la corrección no cambia nada de lo que se ve.
+
+### 14.5 Archivos de la corrección 2
+
+- `lib/features/vessel/data/repositories/sync_engine.dart`, modificado;
+- `test/t143_cierre_una_vez_test.dart`, modificado (la bitácora de prueba y el grupo nuevo);
+- `docs/T143-RESULTADOS.md`, esta sección.
+
+`DESIGN.md`, `pubspec.yaml` y `pubspec.lock` no cambian; tampoco `lib/main.dart` ni los
+congelados.
+
+### 14.6 Para Carlos: el bloque de Git de la corrección 2
+
+```
+git add lib/features/vessel/data/repositories/sync_engine.dart
+git add test/t143_cierre_una_vez_test.dart
+git add docs/T143-RESULTADOS.md
+git commit -m "Sprint 4: T-143, correccion 2, un guardado fallido del cierre se reintenta"
+git push
+```
+
+### 14.7 Horas
+
+Corrección 2: 0.4 h. Total de T-143: 3.9 h.
+
+### 14.8 En tres líneas
+
+- El motor distingue el cierre que conoce del que guardó, y un guardado fallido (`Left` o
+  excepción) ya no queda como hecho.
+- Se vuelve a intentar con el rechazo siguiente, con el documento y con «Reintentar», con un
+  solo guardado entre llamadas concurrentes; el listado y el plan no tenían el problema.
+- Seis pruebas permanentes, rojas contra `b336117`; `analyze` cero y la suite 2155 de 2155 en
+  una corrida.
+
+### 14.9 Para Yov
+
+> T-143, corrección 2, en la sección 14 de `docs/T143-RESULTADOS.md`. ACC-03: el motor separa el
+> cierre conocido (`_closed`) del guardado (`_closedSaved`). Un `Left` o una excepción ya no se
+> memorizan: el siguiente rechazo, el documento o «Reintentar» lo vuelven a intentar, con un
+> solo guardado entre llamadas concurrentes. El listado y el plan no tenían el problema, porque
+> solo anotan su guardado con `Right`. Seis pruebas nuevas en `t143_cierre_una_vez_test.dart`:
+> la sonda de Codex, cada camino de reintento, la excepción y el fallo con llamadas concurrentes.
+> Las seis son rojas contra `b336117`, y las cuatro de la corrección 1 siguen en verde.
+> `analyze` cero y suite 2155 de 2155 en una corrida. Un commit: «Sprint 4: T-143, correccion 2,
+> un guardado fallido del cierre se reintenta».

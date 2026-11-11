@@ -24,19 +24,48 @@ import 'support/t82_fixture.dart';
 /// cierre y una fuente nueva (el plan de carga agregado o una revisión del
 /// listado): las dos cosas quedan guardadas.
 ///
-/// Contra la nube falsa de T-79 y la bitácora real en Hive. La bitácora solo
-/// cuenta los guardados de la operación cerrada y, para abrir la ventana de
-/// la carrera, puede demorar las lecturas de la operación; no cambia lo que
-/// lee ni lo que guarda.
+/// T-143, corrección 2 (T143-ACC-03; 10.120) · Un guardado fallido del
+/// cierre no queda como hecho. El grupo del final inyecta un `Left` (o una
+/// excepción) en los primeros guardados de la operación cerrada: la sonda de
+/// la reaceptación de Codex (`build/t143acc/save_failure_test.dart` en su
+/// carpeta) y los caminos que vuelven a intentarlo.
+///
+/// Contra la nube falsa de T-79 y la bitácora real en Hive. La bitácora
+/// cuenta los guardados de la operación cerrada, puede demorar las lecturas
+/// de la operación para abrir la ventana de la carrera y puede hacer fallar
+/// los primeros guardados del cierre; fuera de eso, no cambia lo que lee ni
+/// lo que guarda.
 class _Bitacora extends MovementLogRepositoryImpl {
   _Bitacora(super.source, {required super.clock});
 
+  /// Las llamadas a `saveOperation` con la operación cerrada, también las
+  /// que fallan por inyección.
   int guardadosCerrada = 0;
   Duration demoraDeLectura = Duration.zero;
 
+  /// Cuántos de los próximos guardados de la operación cerrada fallan, y
+  /// cómo: con un `Left` (lo que hace el repositorio) o con una excepción.
+  int fallosPorInyectar = 0;
+  bool fallarConExcepcion = false;
+  int fallidos = 0;
+
+  /// Los guardados de la operación cerrada que sí llegaron a Hive.
+  int get guardadosBuenos => guardadosCerrada - fallidos;
+
   @override
   Future<Either<Failure, void>> saveOperation(Operation operation) {
-    if (operation.closed) guardadosCerrada++;
+    if (operation.closed) {
+      guardadosCerrada++;
+      if (fallosPorInyectar > 0) {
+        fallosPorInyectar--;
+        fallidos++;
+        if (fallarConExcepcion) {
+          return Future.error(StateError('Fallo de almacenamiento inyectado'));
+        }
+        return Future.value(
+            const Left(CacheFailure(message: 'Fallo de almacenamiento inyectado')));
+      }
+    }
     return super.saveOperation(operation);
   }
 
@@ -193,4 +222,128 @@ void main() {
           reason: 'el cierre una vez, y la fuente sobre la operación ya cerrada');
     });
   }
+
+  group('corrección 2: un guardado fallido del cierre se reintenta (T143-ACC-03)',
+      () {
+    Future<Operation> cerradaPorElDocumento(SyncEngine sync, FakeCloud cloud) async {
+      cloud.server.closeOperation(now.subtract(const Duration(seconds: 1)));
+      await until(() => sync.current.closed);
+      await until(() => log.fallidos == 1);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      return local();
+    }
+
+    test('la sonda de Codex: el primer guardado da Left; un rechazo y '
+        '«Reintentar» lo dejan guardado', () async {
+      log.fallosPorInyectar = 1;
+      final cloud = FakeCloud(clock: () => now)
+        ..authorization[dock.uid] = RemoteAuthorization.active;
+      final sync = motor(cloud);
+      addTearDown(sync.stop);
+      await sync.start(dock);
+      final tras = await cerradaPorElDocumento(sync, cloud);
+      expect(tras.closed, isFalse, reason: 'el Left no guardó nada');
+      expect(sync.current.closed, isTrue, reason: 'el motor sí conoce el cierre');
+
+      await log.append(
+          MovementDraft.loadFull(operationId, 'TSTU0000001', '0140102', order: 1),
+          dock.author);
+      await until(() => sync.current.rejected == 1);
+      await sync.retry();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect((await local()).closed, isTrue,
+          reason: 'no memorizar un Left como persistencia exitosa');
+      expect(log.guardadosBuenos, 1, reason: 'y una sola vez');
+    });
+
+    test('el rechazo siguiente basta para guardarlo', () async {
+      log.fallosPorInyectar = 1;
+      final cloud = FakeCloud(clock: () => now)
+        ..authorization[dock.uid] = RemoteAuthorization.active;
+      final sync = motor(cloud);
+      addTearDown(sync.stop);
+      await sync.start(dock);
+      await cerradaPorElDocumento(sync, cloud);
+      await log.append(
+          MovementDraft.loadFull(operationId, 'TSTU0000001', '0140102', order: 1),
+          dock.author);
+      await until(() async => (await local()).closed);
+      expect(log.guardadosBuenos, 1);
+    });
+
+    test('«Reintentar» basta, también sin red', () async {
+      log.fallosPorInyectar = 1;
+      final cloud = FakeCloud(clock: () => now)
+        ..authorization[dock.uid] = RemoteAuthorization.active;
+      final sync = motor(cloud);
+      addTearDown(sync.stop);
+      await sync.start(dock);
+      await cerradaPorElDocumento(sync, cloud);
+      cloud.goOffline();
+      await sync.retry();
+      await until(() async => (await local()).closed);
+      expect(log.guardadosBuenos, 1);
+    });
+
+    test('el documento, cuando vuelve a llegar, basta', () async {
+      log.fallosPorInyectar = 1;
+      final cloud = FakeCloud(clock: () => now)
+        ..authorization[dock.uid] = RemoteAuthorization.active;
+      final sync = motor(cloud);
+      addTearDown(sync.stop);
+      await sync.start(dock);
+      await cerradaPorElDocumento(sync, cloud);
+      // Se va la red y vuelve: el documento cerrado llega otra vez.
+      cloud.goOffline();
+      cloud.goOnline();
+      await until(() async => (await local()).closed);
+      expect(log.guardadosBuenos, 1);
+    });
+
+    test('una excepción al guardar tampoco queda como hecho', () async {
+      log
+        ..fallosPorInyectar = 1
+        ..fallarConExcepcion = true;
+      final cloud = FakeCloud(clock: () => now)
+        ..authorization[dock.uid] = RemoteAuthorization.active;
+      final sync = motor(cloud);
+      addTearDown(sync.stop);
+      await sync.start(dock);
+      final tras = await cerradaPorElDocumento(sync, cloud);
+      expect(tras.closed, isFalse);
+      await sync.retry();
+      await until(() async => (await local()).closed);
+      expect(log.guardadosBuenos, 1);
+    });
+
+    test('con el fallo y llamadas concurrentes, un solo guardado bueno', () async {
+      // Sin red: el documento cerrado y tres rechazos llegan juntos al volver
+      // la red, con las lecturas lentas. El primer guardado falla.
+      log
+        ..fallosPorInyectar = 1
+        ..demoraDeLectura = const Duration(milliseconds: 15);
+      final cloud = FakeCloud(clock: () => now)
+        ..authorization[dock.uid] = RemoteAuthorization.active;
+      cloud.online = false;
+      final sync = motor(cloud);
+      addTearDown(sync.stop);
+      await sync.start(dock);
+      for (var i = 1; i <= 3; i++) {
+        await log.append(
+            MovementDraft.loadFull(operationId, 'TSTU000000$i', '01401${i}2', order: i),
+            dock.author);
+      }
+      cloud.server.closeOperation(now.subtract(const Duration(seconds: 1)));
+      cloud.goOnline();
+      await until(() => sync.current.rejected == 3);
+      // Si todas las llamadas esperaban el guardado que falló, «Reintentar»
+      // lo vuelve a intentar; si alguna llegó después, ya está guardado.
+      await sync.retry();
+      await until(() async => (await local()).closed);
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      expect(log.fallidos, 1);
+      expect(log.guardadosBuenos, 1, reason: 'un solo guardado bueno');
+      expect(sync.current.closed, isTrue);
+    });
+  });
 }

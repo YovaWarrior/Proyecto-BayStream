@@ -134,6 +134,7 @@ class SyncEngine {
   })  : _clock = clock ?? DateTime.now,
         ownWrites = ownWrites ?? OwnSourceWrites(),
         _closed = operation.closed,
+        _closedSaved = operation.closed,
         _localListRevision = operation.exportListRevision,
         _localPlans = {
           for (final source in operation.sources)
@@ -149,7 +150,20 @@ class SyncEngine {
   bool _notAuthorized = false;
   bool _fromServer = false;
   bool _connectionKnown = false;
+  /// El cierre que el motor conoce: por el documento, por un rechazo o
+  /// porque la operación local ya estaba cerrada. Es lo que dice
+  /// [SyncStatus.closed].
   bool _closed;
+
+  /// T-143, corrección 2 (T143-ACC-03) · El cierre que el motor **guardó**
+  /// en la operación local (o que ya estaba guardado al arrancar). Mientras
+  /// el motor conozca el cierre y no lo haya guardado, lo vuelve a intentar
+  /// con el siguiente rechazo, con el documento y con «Reintentar».
+  bool _closedSaved;
+
+  /// La hora del cierre que el motor conoce, para volver a intentar el
+  /// guardado desde «Reintentar».
+  DateTime? _knownClosedAt;
   bool _stopped = false;
   DateTime? _onlineSince;
   StreamSubscription<RemoteSnapshot>? _remote;
@@ -223,6 +237,10 @@ class SyncEngine {
     _notAuthorized = !(_operator?.authorized ?? true);
     _listen(_operator?.authorized ?? false);
     _emit();
+    // T-143, corrección 2: un cierre conocido que no se pudo guardar se
+    // vuelve a intentar, también sin red (el guardado es local).
+    final closedAt = _knownClosedAt;
+    if (_closed && !_closedSaved && closedAt != null) await _markClosed(closedAt);
     await flush();
   }
 
@@ -272,7 +290,8 @@ class SyncEngine {
   Future<void> _onDocument(RemoteOperationDocument document) async {
     _remoteSources = document.sources;
     final closedAt = document.closedAt;
-    if (closedAt != null && !_closed) await _markClosed(closedAt);
+    // T-143, corrección 2: mientras no esté guardado, no basta conocerlo.
+    if (closedAt != null && !_closedSaved) await _markClosed(closedAt);
     await _syncSources();
   }
 
@@ -283,21 +302,44 @@ class SyncEngine {
   ///
   /// T-143, corrección 1 (T143-ACC-01) · **Una sola persistencia del cierre**:
   /// el documento y cada rechazo comparten la misma, que se memoriza en
-  /// [_closing]. Lo que llega después la espera y no vuelve a guardar. Va en
-  /// la cola de las escrituras del motor ([_enCola]), así que no se cruza con
-  /// el listado ni con el plan que llegan a la vez.
+  /// [_closing]. Lo que llega mientras está en curso la espera y no vuelve a
+  /// guardar. Va en la cola de las escrituras del motor ([_enCola]), así que
+  /// no se cruza con el listado ni con el plan que llegan a la vez.
+  ///
+  /// T-143, corrección 2 (T143-ACC-03) · `saveOperation` avisa los errores
+  /// con un `Left`, no con una excepción. Solo un guardado que devuelve
+  /// `Right` cuenta como hecho ([_closedSaved]). Un `Left` o una excepción
+  /// liberan [_closing]: el siguiente rechazo, el documento o «Reintentar»
+  /// vuelven a intentarlo. Ya guardado, no se vuelve a guardar.
   Future<void> _markClosed(DateTime closedAt) {
     _closed = true;
+    _knownClosedAt ??= closedAt;
+    if (_closedSaved) return Future<void>.value();
     return _closing ??= _enCola(() async {
-      if (_stopped) return;
-      final current = await _localOperation();
-      if (_stopped) return;
-      final base = current ?? operation;
-      if (!base.closed) await log.saveOperation(base.copyWith(closedAt: closedAt));
-    }).then((_) => _emit());
+      try {
+        if (_stopped) return false;
+        final current = await _localOperation();
+        if (_stopped) return false;
+        final base = current ?? operation;
+        if (base.closed) return true;
+        final saved = await log.saveOperation(base.copyWith(closedAt: closedAt));
+        return saved.isRight();
+      } catch (_) {
+        // Un error que no se sabe clasificar tampoco cuenta como guardado.
+        return false;
+      }
+    }).then((guardado) {
+      if (guardado) {
+        _closedSaved = true;
+      } else {
+        _closing = null;
+      }
+      _emit();
+    });
   }
 
-  /// T-143, corrección 1 · La persistencia del cierre, en curso o hecha.
+  /// T-143, corrección 1 · La persistencia del cierre en curso, o la que ya
+  /// se guardó. Corrección 2: un guardado fallido no se queda aquí.
   Future<void>? _closing;
 
   /// T-143, corrección 1 (T143-ACC-01) · La cola de las escrituras del motor
