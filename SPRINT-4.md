@@ -3414,3 +3414,22 @@ La siguiente decisión es la **10.119**.
 **Lo que sigue:** Carlos lleva el commit de la aceptación a `sprint-4` desde `baystream-qa-r4` y lo trae a `baystream-rediseno`; Timonel hace la corrección 1 en el chat de T-143; Yov la revisa y Codex la vuelve a aceptar.
 
 La siguiente decisión es la **10.120**.
+
+### 10.120 · La corrección 1 de T-143, revisada; la reaceptación no pasa por un P2 nuevo: un guardado fallido del cierre queda como hecho; Timonel corrige otra vez (11-nov, 03:10)
+
+**La corrección 1** (Timonel, `b336117`; sección 13 de `docs/T143-RESULTADOS.md`). Solo cambia `sync_engine.dart`:
+- el cierre se guarda una sola vez: el documento y los rechazos comparten una persistencia en curso (`_closing`);
+- el cierre, el listado y el plan escriben la operación local en una sola cola del motor (`_enCola`), y cada uno relee la operación en su turno.
+
+Lleva cuatro pruebas permanentes en `test/t143_cierre_una_vez_test.dart`, que fallaban contra `04cd717`. `DESIGN.md` 14.8 suma la frase de ACC-02. `analyze` en cero y la suite en 2149 de 2149. Yov la revisó contra `04cd717`: la lógica de antes se conserva caso por caso.
+
+**La reaceptación de Codex: NO PASA** (sección 11 de `docs/t143/aceptacion-codex.md`).
+- **Pasa:**
+  - ACC-01, con su sonda original en 1 guardado y las cuatro pruebas rojas contra el motor anterior;
+  - ACC-02;
+  - `analyze` en cero y la suite en 2149 de 2149, en una sola corrida.
+- **T143-ACC-03 (P2, nuevo).** `saveOperation` avisa los errores con un `Left`, no con una excepción. `_markClosed` no lo mira: memoriza la persistencia como hecha aunque haya fallado. Después, ni el rechazo siguiente, ni el documento (`!_closed`), ni `retry()` vuelven a guardar. El motor queda «Al día · operación cerrada» con la operación local abierta. Codex lo reprodujo con un fallo transitorio en el primer guardado: falla con la corrección 1 y pasa con el motor de `04cd717`, así que es una regresión de la corrección.
+
+**Lo que decide Yov:** se corrige ahora. El motor distingue el cierre que conoce del cierre que guardó. Un guardado fallido no se memoriza: la persistencia se vuelve a intentar con el siguiente rechazo, con el documento y con `retry()`, sin perder la garantía de un solo guardado concurrente. La prueba del fallo transitorio pasa a ser permanente.
+
+La siguiente decisión es la **10.121**.
