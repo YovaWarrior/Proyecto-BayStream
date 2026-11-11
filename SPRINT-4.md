@@ -3301,3 +3301,22 @@ Propuesta de Yov para las próximas publicaciones (decide Carlos): cada publicac
 3. Después de publicar, Yov anota la publicación y las cabeceras en vivo en la 10.116.
 
 La siguiente decisión es la **10.116**.
+
+### 10.116 · T-142 publicada: la Web 1.0.0 en producción ya manda las cabeceras de seguridad, y T141-01 queda cerrado (10-nov, 20:15)
+
+**El camino de la 10.115, completo** (Carlos):
+1. En `baystream-rediseno`, `3b738e9` (10.115) y `df15047` (T-142), subidos a `sprint-4`.
+2. En `proyecto-baystream`, `git cherry-pick -x df15047` → `8f2505e` en `master`, con los 8 archivos de T-142. Las huellas de `build/web` coincidieron con las de la Web publicada (10.115).
+3. El canal `t142-cabeceras` (`baystream-app--t142-cabeceras-6srivuki.web.app`, vence el 17-nov). Yov comprobó desde el equipo las cinco cabeceras, un solo HSTS, el `main.dart.js` `98a83241…` y que producción seguía sin CSP.
+4. La prueba de Carlos en el canal, en la laptop (Chrome en incógnito, con la consola abierta y «Conservar registro»): la sesión de oficina-prueba, «Operaciones abiertas en la nube», la operación BUQUE GOLF · VIAJE007A · GTSTC en Carga y la búsqueda por voz («Escuchando…», con el 8395 dictado). Con el filtro «Refused», la consola quedó vacía. Los dos avisos de «Issues» no son de T-142: `Intl.v8BreakIterator` obsoleto, del motor de Flutter (`main.dart.js`), y «Session History Item Has Been Marked Skippable», de Chrome, por la entrada de historial que agrega Flutter. Carlos: «funcionó todo».
+5. Producción: `firebase deploy --only hosting` desde `proyecto-baystream` (10-nov, 20:09; 56 archivos) y `git push origin master` (`eddc388..8f2505e`).
+
+**En vivo, comprobado por Carlos con `curl -sI` y por Yov desde el equipo:** `/` y `/privacidad.html` traen la CSP, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` y `Permissions-Policy`, con un solo `Strict-Transport-Security`. El `main.dart.js` sigue siendo `98a83241…` y `version.json` dice 1.0.0+9: la Web publicada es la misma 1.0.0, y solo cambiaron las cabeceras.
+
+**T141-01 (antes T113-04) queda cerrado.** Para volver atrás: en Hosting, el historial de versiones, la del 3-nov a las 21:09; o `git revert 8f2505e` en `master` y publicar desde `proyecto-baystream`.
+
+**Las pruebas en el Honor y en el iPhone** no quedaron registradas. Si al usar la Web desde un teléfono aparece algo distinto de la línea de `apis.google.com` (10.115), se revisa.
+
+**Lo que sigue:** el 14-nov, desactivar las cuentas de demostración (10.113), y las decisiones de Carlos de la 10.114: el orden de los cuatro frentes, el doble factor y el camino de Windows.
+
+La siguiente decisión es la **10.117**.
