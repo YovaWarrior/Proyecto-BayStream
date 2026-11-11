@@ -3270,3 +3270,34 @@ La siguiente decisión es la **10.114**.
 **Decide Carlos:** el orden de los cuatro frentes (Yov propone la seguridad primero, después la usabilidad junto con la capacitación, y la estabilidad como alcance aparte), si el doble factor entra en la siguiente versión y qué camino toma Windows.
 
 La siguiente decisión es la **10.115**.
+
+### 10.115 · T-142 revisada: las cabeceras pasan en el emulador y se publican desde `proyecto-baystream`, con la Web 1.0.0 que ya está en vivo (10-nov, 19:50)
+
+**El paso 0 encontró dos compilaciones 1.0.0+9.** El `build/web` de `baystream-rediseno` (armado el 3-nov a las 16:38; `main.dart.js` `07c9111b…`) no es la Web publicada. La publicada es la de `C:\Proyectos\proyecto-baystream\build\web` (`master`, `eddc388`), armada a las 21:09, el minuto de la publicación (10.105). Timonel se detuvo, Yov lo comprobó desde el equipo (el `main.dart.js` en vivo es `98a83241…`) y Carlos eligió probar con una copia de la publicada. Publicar desde el rediseño habría puesto en producción otra compilación con el mismo número.
+
+**Las huellas de la Web 1.0.0 publicada**, para cotejarlas antes de cualquier publicación:
+- `version.json`: `2139F1018590344D4A16E8CFB0795B4EAFB271C6457EF22B8928524C028388D0`;
+- `main.dart.js`: `98A83241F999FB23D89E21F1825B4879088972A0E3DB789504A6B649615CF91C`;
+- `flutter_bootstrap.js`: `3FCD39CC2D3D9383BD2B6E0461F84AA0849340F692D43A6B63448FF0B8ABEC41`.
+
+Propuesta de Yov para las próximas publicaciones (decide Carlos): cada publicación de la Web anota en su decisión las huellas de esos tres archivos, y cada compilación nueva lleva un número de compilación nuevo.
+
+**T-142, entregada (Timonel, Opus 5.5) y revisada por Yov** (`docs/T142-RESULTADOS.md`, `tool/t142_*` y las evidencias en `build/t142/`). Solo cambia `firebase.json`, sin compilar:
+- **La CSP:** `default-src 'self'`; `script-src 'self' 'wasm-unsafe-eval'`; `style-src 'self' 'unsafe-inline'`; `connect-src 'self'` con identitytoolkit, securetoken y firestore; `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` y `frame-ancestors 'none'`. No hace falta `'unsafe-eval'` ni compilar con `--csp`, y cada concesión tiene probado qué se rompe sin ella.
+- **Las demás:** `X-Content-Type-Options: nosniff` (antes se comprobaron en vivo los tipos que manda Hosting), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` y `Permissions-Policy` con el micrófono y el portapapeles solo para el sitio y lo demás apagado. HSTS ya lo pone Firebase.
+- **En el emulador de Hosting,** con la copia de la publicada y el proyecto `demo-t142`: 13 de 13 pasos sin sesión con 0 violaciones, 0 errores y ningún origen externo; la voz en `prompt` frente al `not-allowed` del control negativo; el service worker, en 4 de 4 casos; la carga, 1760 ms antes y 1734 ms después (mediana de 10).
+- **Yov comprobó en el equipo** las huellas, el `firebase.json`, los resúmenes de `build/t142/` y que la contraseña de las cuentas de demostración no aparece en ningún archivo de la tarea.
+
+**Lo que agrega la revisión:**
+- **Los navegadores móviles y Safari.** En móviles, en Safari y en iOS, el SDK de Auth 12.19.0 prepara por adelantado el inicio de sesión con ventana emergente (`_shouldInitProactively`) y pide `https://apis.google.com/js/api.js`. La CSP lo bloquea y el SDK ignora el fallo (`try … catch`). BayStream no usa ese inicio de sesión: en el Honor y en el iPhone **se espera una línea `Refused to load the script 'https://apis.google.com/js/api.js…'`**, que no detiene la publicación si la sesión se inicia con normalidad. Por eso no se abre `script-src` a Google. Las pruebas de Timonel se hicieron con Chrome de escritorio, donde esa línea no sale.
+- **Si algún día se inicia sesión con Google** (ventana emergente o redirección), hay que revisar `script-src`, `frame-src` y `X-Frame-Options`.
+- **Si el canal falla,** `master` no se deshace con `reset --hard`: el cherry-pick se queda local, sin subir, y la corrección llega en un commit nuevo.
+- **El SEMÁFORO de las 19:00 a las 19:03** no se anunció antes. Si nadie compilaba en ese rato, la medición vale.
+- **Hallazgo de herramienta:** en Windows, el emulador de Hosting no aplica las cabeceras con `"source": "**"`, porque el patrón se vuelve `\**`. Para probarlas ahí se usa `"regex": ".*"`. En Hosting real no pasa.
+
+**Lo que sigue (Carlos):**
+1. El bloque de Git de esta decisión y de T-142, en `baystream-rediseno`.
+2. En `proyecto-baystream`: el cherry-pick a `master`, las huellas, el canal `t142-cabeceras` con la lista de la sección 5 del informe (la laptop con oficina-prueba, el Honor con muelle-prueba y, si puede, el iPhone con Safari) y, si pasa, `firebase deploy --only hosting` y el push de `master`.
+3. Después de publicar, Yov anota la publicación y las cabeceras en vivo en la 10.116.
+
+La siguiente decisión es la **10.116**.
