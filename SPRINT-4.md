@@ -3394,3 +3394,23 @@ La siguiente decisión es la **10.118**.
 - Sigue T-144, el lector y el volcado.
 
 La siguiente decisión es la **10.119**.
+
+### 10.119 · La aceptación de T-143 no pasa por un P2: el cierre se guarda tres veces; Timonel corrige (11-nov, 02:45)
+
+**Codex (GPT-6.1 Sol), `docs/t143/aceptacion-codex.md`: NO PASA.**
+- **Lo que pasa:**
+  - `analyze` en cero en una copia aislada, y la suite en 2145 de 2145, sin omitidas: T-131 en 59 de 59 y T-143 en 31 de 31;
+  - la vuelta que Timonel no pudo dar, Windows como oficina (Release r4, contra `demo-t143`) y dos muelles en la Web a 360 dp. El muelle con red cambió solo y avisó una vez. El muelle sin red, al volver la red, confirmó lo de antes del cierre y rechazó lo de después con «1 rechazado: la operación ya estaba cerrada», sin «Reintentar». Al reabrirla, la operación conservó el cierre, sin otro aviso;
+  - la excepción de «Confirmado», con sus cinco condiciones, también en la Web;
+  - las exportaciones, sin cambios.
+- **T143-ACC-01 (P2).** Con el documento cerrado y dos rechazos que llegan a la vez, `_markClosed` guarda la operación cerrada **tres veces**, contra una exigida. Lo midió la sonda de Codex, dos veces, con Hive real y la nube falsa de T-79. Las llamadas se solapan antes de que termine la lectura local. En la sonda no se perdieron movimientos ni fuentes, pero queda abierta una carrera entre las escrituras del motor sobre la operación local: el cierre y el manifiesto de las fuentes.
+- **T143-ACC-02 (P3).** Con BUQUE MANUAL · A143B, un viaje de cinco caracteres, a 1366 con la letra a 2.0, «Publicada» también va en dos líneas. Con el viaje de cuatro caracteres del caso de T-131, cabe en una. No es una regresión de T-143.
+- **Del entorno de la aceptación.** `analyze` directo en la carpeta de aceptación dio 427 avisos: el instrumental viejo de `build/` y `tool/t124_main.dart`, que importa un archivo generado en `build/t124/`, ignorado por Git. En una copia limpia del repositorio, `analyze` no da cero sin ese archivo. Queda como **O-143-3**, para el bloque de calidad: que `tool/` no dependa de `build/`, y excluir `build/` del análisis.
+
+**Lo que decide Yov:**
+- **ACC-01 se corrige ahora.** El cierre se guarda una sola vez, con una sola persistencia en curso que comparten el documento y los rechazos. Las escrituras del motor sobre la operación local no se pisan con una copia vieja. La sonda de Codex pasa a ser una prueba permanente, más otra con un plan o un listado que llega a la vez que el cierre.
+- **ACC-02:** `DESIGN.md` 14.8 describe la identidad de referencia de T-131. Con un nombre o un viaje más largos, la cabecera puede ir en dos líneas también publicada o cerrada, por la regla general, sin nada cortado. Se escribe en 14.8, sin más cobertura: la cabecera se rehace en el frente de usabilidad.
+
+**Lo que sigue:** Carlos lleva el commit de la aceptación a `sprint-4` desde `baystream-qa-r4` y lo trae a `baystream-rediseno`; Timonel hace la corrección 1 en el chat de T-143; Yov la revisa y Codex la vuelve a aceptar.
+
+La siguiente decisión es la **10.120**.
