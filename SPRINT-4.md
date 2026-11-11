@@ -3460,4 +3460,36 @@ No se publica sola: sale con la versión del bloque 1 (10.117).
 
 **Sigue T-144,** el lector y el volcado, con Timonel en un chat nuevo. El prompt está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
 
-La siguiente decisión es la **10.122**.
+### 10.122 · T-144 con Timonel y T-145 con Codex, a la vez; el tablero encuentra cuatro pendientes sin bloque (11-nov, 13:00)
+
+**El tablero del Sprint 4 al 11-nov** (Yov, 03:33; su generador, `claude/herramientas/build_kanban_s4.py`, está en el proyecto de Yov): de las 32 tareas del sprint (T-114 a T-145) hay 27 terminadas. Faltan T-144 y T-145 (bloque 1), el cierre de T-114 (bloque 4), T-115 y T-120. Git, al día: en GitHub, `sprint-4` está en `f445d65` (10.121) y `master` en `8f2505e` (10.116).
+
+**Lo que encontró al armarlo:**
+- **Cuatro pendientes no tienen bloque en la 10.117:**
+  - T-115, los colores de puerto que asigna la oficina (10.6, unas 3 h): no se construyó, y hoy el color sale de la tabla fija de 15 puertos y de un cálculo;
+  - T-120, filtrar por destino en la Lista, que quedó para después con O-119-1, O-128-4, O1 y O2 de la entrega 1 y el arrastre entre dos monitores (10.76);
+  - RNF-004, la seguridad de los datos, parcial (10.114);
+  - O-134-2, un banco de Android que llegue al emulador (10.97).
+
+  Yov propone: T-115 y T-120 al bloque 2, con RF-018 y RF-035; O-134-2 al bloque 3; y RNF-004 al frente del doble factor, con T141-03.
+- **Los pies de las figuras 5 y 6 del manual** (`docs/MANUAL-USUARIO-1.0.0.md`) todavía dicen «Captura pendiente», aunque las dos capturas están en `docs/manual-1.0.0/` desde el 4-nov. Se corrigen con los pasos del manual de T-143, al armar la versión del bloque 1.
+
+**T-144 empieza con Timonel,** con el prompt de la 10.121, sin cambios.
+
+**T-145 va a la vez, con Codex,** en `C:\Proyectos\baystream-t137`, rama `t137-instalador`, como T-137 (10.100):
+- **La rama, comprobada por Yov en GitHub:** está en `dae3259`, sobre `8ea84bd` (10.100), y frente a `sprint-4` solo agrega los 35 archivos de T-137 (`windows/installer/`, `tool/t137_*`, `docs/T137-RESULTADOS.md` y `docs/t137/`). De las 21 fuentes del arte, las 20 que también están en `sprint-4` tienen el mismo contenido en `8ea84bd` y en `f445d65`, y la otra, `tool/t137_arte_test.dart`, llega con la rama: al mezclar solo cambia el fin de línea, que es O-137-1.
+- **Lo que hace** (10.104 y 10.106):
+  - O-137-1: la huella de las fuentes de texto del arte, con `\r\n` normalizado a `\n`. Con eso, T-137 entra a `sprint-4`;
+  - O-137-2: la versión del SDK de Firebase C++, leída dentro del `.exe`;
+  - O-137-3: las DLL de Visual C++ desde `VC\Redist`, y System32 solo como último recurso, con aviso;
+  - O-137-6: los 36.3 MB de `.lib` y `.exp`, fuera de la carga. Yov propone excluirlos con una lista cerrada; lo decide Carlos al aprobar la propuesta;
+  - O-137-7: un límite de tiempo para PowerShell en el aviso de la MSIX y un aviso por los archivos viejos de la Release; el 1.0.0.9 no cambia;
+  - O-137-8: el desinstalador pide cerrar BayStream si está abierta;
+  - O-137-4 ya quedó en la 10.104, y O-137-5 no cambia (10.106).
+- **Cómo convive con T-144:** no toca `lib/`, `test/` ni `pubspec.*`; empaqueta la Release 1.0.0 de `proyecto-baystream` sin compilar nada; va un comando de Flutter o de Dart a la vez en la máquina, con las líneas `SEMÁFORO:`; y en la cuenta de Carlos no abre BayStream ni ejecuta la variante de producción si ya no está la MSIX.
+- **La acepta Timonel,** en una pausa de T-144 o al terminarla, y Carlos repite el recorrido corto en «BayStream Prueba». Después, Carlos mezcla `t137-instalador` en `sprint-4`, y el primer armado desde `baystream-rediseno` comprueba O-137-1 en la carpeta real.
+- El prompt está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
+
+**Decide Carlos:** dónde van los cuatro pendientes sin bloque.
+
+La siguiente decisión es la **10.123**.
