@@ -305,3 +305,83 @@ Codex no ejecutó estos comandos.
 ### 11.7 Mensaje para Yov
 
 > Yov: reaceptación de la corrección 1 añadida al informe. ACC-01 pasa la sonda original y las cuatro permanentes; comprobé que las cuatro son rojas con 04cd717. ACC-02 está resuelto en 14.8. Analyze cero y suite 2149/2149 sin omitidas, pero NO PASA por ACC-03 (P2): un Left al guardar el cierre queda memorizado como éxito; incluso tras otro rechazo y retry, el motor está cerrado y Al día, y la operación local sigue abierta. La sonda de fallo transitorio falla con b336117 y pasa con el motor anterior. No corregí producto ni repetí Windows/Web; solo va a Git el informe.
+
+## 12. Reaceptación 2 (corrección 2)
+
+**Dictamen vigente para `235c7eb`: PASA.** Se cierra **T143-ACC-03** y **ACC-01 sigue cerrado**. Ambas sondas originales pasan sin cambios; las seis pruebas nuevas detectan el defecto de `b336117`. No se encontraron hallazgos nuevos P1, P2 o P3 en el alcance de esta revisión. Los dictámenes anteriores se conservan como historial.
+
+**11-nov-2026, Guatemala.** El paso 0 confirmó:
+
+```text
+235c7eb Sprint 4: T-143, correccion 2, un guardado fallido del cierre se reintenta
+ba79d10 Sprint 4: decision 10.120, la reaceptacion de T-143 no pasa
+cd0983c Sprint 4: reaceptacion de T-143
+```
+
+Se leyeron 10.120 y la sección 14 completa del informe de Timonel. Carlos confirmó el carril libre y todos los comandos Flutter fueron consecutivos. Se revisó la corrección únicamente en `sync_engine.dart`, además de las pruebas. No se modificó producto ni se ejecutaron escrituras de Git.
+
+### 12.1 Validaciones ejecutadas
+
+Evidencia propia: **`build/t143acc/reaceptacion2/`**. La copia actual contiene **796 archivos cotejados sin diferencias**, más **27 archivos Android también idénticos**. Se recuperó la entrada generada de T-124 como en las aceptaciones anteriores; O-143-3 sigue diferida y no se cambiaron exclusiones del analizador.
+
+Las dos sondas se copiaron conservando exactamente sus bytes desde las rutas de la aceptación y la primera reaceptación. Sus imports se resolvieron contra la copia nueva de esta punta. Para el control negativo se preparó otra copia con una única diferencia de producto: `sync_engine.dart` de **`b336117`**, obtenido por `git show`. No se puso el motor anterior en el árbol de trabajo.
+
+| Comprobación | Resultado | Evidencia relativa a la carpeta anterior |
+|---|---|---|
+| Sonda original ACC-01 | **Pasa: 1 guardado** | `foco.log` |
+| Sonda original de fallo transitorio ACC-03 | **Pasa:** el cierre local se recupera después del fallo | `foco.log` |
+| Pruebas permanentes de cierre | **10/10**: cuatro anteriores y seis nuevas | `foco-resumen.json`, `suite-resumen.json` |
+| Cuatro sondas adicionales de listado/plan, con Left y excepción | **4/4** | `foco.log`, `copia/build/t143acc/source_failure_test.dart` |
+| Total enfocado, aparte de la suite completa | **16/16**, sin omitidas | `foco-resumen.json`, `foco-ejecucion.json` |
+| Analyze de todo el paquete aislado, incluido `tool/` | **Cero incidencias**, salida 0 | `analyze.log`, `analyze-ejecucion.json` |
+| Suite completa, **una sola corrida** | **2155/2155, 0 omitidas**, salida 0; T-131 59/59 | `suite.log`, `suite-resumen.json`, `suite-ejecucion.json` |
+| Seis nuevas contra `b336117` | **Las seis rojas:** cinco fallos y un error en el caso de excepción; las cuatro anteriores verdes | `roja-pruebas.log`, `roja-pruebas-resumen.json` |
+
+Analyze se ejecutó de **03:15:52 a 03:16:48**. Los registros de ejecución conservan los horarios de la suite y las demás corridas; sus duraciones no se usan como mediciones H5. El control rojo también conserva verde la sonda ACC-01 y roja la sonda original ACC-03, coherente con la primera reaceptación. No se sumaron subconjuntos para formar la cifra de 2155.
+
+### 12.2 Código y sentido de las pruebas
+
+**Cierre conocido frente a persistencia confirmada.** `_closed` sigue representando el hecho remoto y alimenta `SyncStatus.closed`. `_closedSaved` arranca con `operation.closed` y solo pasa a verdadero después de un `Right` o de releer que la operación local ya estaba cerrada. `_knownClosedAt` conserva la hora necesaria para un reintento local. El motor no confunde conocer el cierre con haberlo persistido.
+
+**Fallo y concurrencia.** El trabajo en cola devuelve falso ante `Left`, excepción o detención. Ese resultado libera `_closing`; el éxito marca `_closedSaved`. Mientras hay un guardado en curso, las llamadas esperan el mismo futuro. Después del guardado bueno, la guarda evita repetirlo. Las sondas y el caso con tres rechazos concurrentes comprueban que puede haber un intento fallido y **un solo guardado bueno**.
+
+**Tres caminos de reintento.** El rechazo vuelve a `_markClosed`; el documento usa `!_closedSaved`, y `retry()` intenta el cierre conocido pendiente con su hora guardada, aunque no haya red. La operación es local. Los seis casos nuevos comprueban:
+
+1. El fallo transitorio original: `Left`, operación local inicialmente abierta, rechazo y `retry()`, cierre persistido y un guardado bueno.
+2. El rechazo siguiente sin necesitar llamar a `retry()`.
+3. `retry()` sin red.
+4. La nueva recepción del documento cerrado al recuperar la red.
+5. Una excepción, con recuperación posterior y sin memorizar el fallo.
+6. El fallo con documento y tres rechazos concurrentes: un fallo inyectado, un guardado bueno y cierre local verdadero.
+
+La bitácora de prueba distingue intentos e inyecciones fallidas; la preparación abierta no se cuenta. Fuera del fallo inyectado delega en Hive real, y las pruebas también releen el cierre efectivo. Las seis fallan contra el motor anterior ya compilado: el caso de excepción registra el error inyectado y los demás detectan el cierre no recuperado. No son errores de preparación ni pruebas omitidas. Las cuatro anteriores siguen comprobando la escritura única y la conservación de cierre/fuentes con el contador apropiado para una fuente guardada después del cierre.
+
+**Cola, listado y plan.** Las únicas tres llamadas a `saveOperation` del motor siguen dentro de `_enCola` —líneas 325, 408 y 464—, con relectura en su turno; no se añadieron escrituras fuera. No hay una espera recursiva entre esas tareas. Listado y plan actualizan su revisión/tipo y su aviso de llegada después de un guardado `Right`. Se comprobó además con cuatro sondas independientes: el primer guardado de cada fuente falla con `Left` o excepción, la fuente y el aviso siguen ausentes, y una recepción posterior permite guardarla y anunciarla. La llegada original se conserva. Esas cuatro sondas pasaron y no se incorporaron a las 2155 pruebas del paquete.
+
+### 12.3 Dictamen, integridad y entrega
+
+**ACC-03 cerrado; ACC-01 continúa cerrado; ACC-02 conserva el cierre acordado en 10.119. Nuevos hallazgos: 0 P1, 0 P2 y 0 P3.** O-143-1, O-143-2 y O-143-3 mantienen su tratamiento previo.
+
+No fue necesario repetir Windows ni Web: esta corrección se verificó en el motor con Hive real y la nube falsa existente. No se levantó el emulador ni se tocó Firebase real, el Honor o el almacén de operación por defecto. Los comandos de Flutter terminaron y se liberó el semáforo.
+
+**Único archivo modificado para Git: `docs/t143/aceptacion-codex.md`, mediante esta sección al final.** El contenido anterior se conservó byte por byte. `integridad.json`, `verificacion-final.json` e `indice.json` conservan los cotejos y las huellas; las copias, instrumentos y registros están bajo `build/t143acc/reaceptacion2/`, ignorado por `/build/`, sin forzarlos a Git. **No cambian `pubspec.yaml` ni `pubspec.lock`**, código de producto, pruebas permanentes, DESIGN, opciones Firebase o configuración local.
+
+Desde la carpeta de aceptación, solo el informe:
+
+```powershell
+git add -- docs/t143/aceptacion-codex.md
+git commit -m "Sprint 4: segunda reaceptacion de T-143"
+git push origin HEAD:sprint-4
+```
+
+Codex no ejecutó estos comandos.
+
+### 12.4 Tres líneas
+
+1. **PASA:** ACC-03 queda cerrado y ACC-01 sigue con un solo guardado; sin hallazgos nuevos P1/P2/P3.
+2. Ambas sondas y las diez permanentes pasan; las seis nuevas son rojas contra `b336117`, y listado/plan recuperan guardados fallidos.
+3. Analyze cero y **2155/2155 sin omitidas en una corrida**; solo se amplió el informe, sin cambios de producto.
+
+### 12.5 Mensaje para Yov
+
+> Yov: segunda reaceptación de T-143, PASA sobre 235c7eb. Ambas sondas originales pasan; las diez permanentes están verdes y las seis nuevas son rojas contra b336117. ACC-03 cerrado y ACC-01 sigue cerrado. Verifiqué también que listado/plan no memorizan ni anuncian un Left o excepción y se recuperan. Analyze cero y suite 2155/2155 sin omitidas en una corrida. Sin hallazgos nuevos P1/P2/P3, sin repetir clientes ni modificar producto; solo va a Git la nueva sección del informe.
