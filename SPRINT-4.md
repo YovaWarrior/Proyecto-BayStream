@@ -3433,3 +3433,31 @@ Lleva cuatro pruebas permanentes en `test/t143_cierre_una_vez_test.dart`, que fa
 **Lo que decide Yov:** se corrige ahora. El motor distingue el cierre que conoce del cierre que guardó. Un guardado fallido no se memoriza: la persistencia se vuelve a intentar con el siguiente rechazo, con el documento y con `retry()`, sin perder la garantía de un solo guardado concurrente. La prueba del fallo transitorio pasa a ser permanente.
 
 La siguiente decisión es la **10.121**.
+
+### 10.121 · T-143 aceptada (11-nov, 03:30)
+
+**La segunda reaceptación de Codex pasa** (sección «Reaceptación 2» de `docs/t143/aceptacion-codex.md`, sobre `235c7eb`):
+- ACC-03 queda cerrado y ACC-01 sigue cerrado;
+- las dos sondas de Codex y las diez pruebas permanentes pasan, y las seis de la corrección 2 fallan contra `b336117`;
+- con una sonda propia, Codex comprobó además que el listado y el plan también se recuperan de un guardado fallido;
+- `analyze` en cero y la suite en 2155 de 2155, en una sola corrida;
+- sin hallazgos nuevos.
+
+**T-143 queda aceptada**, en estos commits de `sprint-4`:
+- `b6374bf`, `analyze` en cero (`tool/` de T-140 y T-141);
+- `04cd717`, T-143;
+- `b336117`, la corrección 1 (el cierre se guarda una vez);
+- `235c7eb`, la corrección 2 (un guardado fallido se reintenta);
+- y las tres aceptaciones de Codex en `docs/t143/aceptacion-codex.md`.
+
+No se publica sola: sale con la versión del bloque 1 (10.117).
+
+**Lo que dejó:**
+- la regla de la 10.118: toda tarea que toque Dart corre `analyze`;
+- O-143-1, bloquear el registro en el muelle después del cierre, para el frente de usabilidad;
+- O-143-2, el censo de T-112, y O-143-3, `analyze` en una copia limpia depende de `build/t124/`, para el bloque de calidad;
+- los pasos del manual que cambian (3.3, 4.1, 7.3, 7.7, 7.10 y 7.11), que se aplican al armar la versión.
+
+**Sigue T-144,** el lector y el volcado, con Timonel en un chat nuevo. El prompt está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
+
+La siguiente decisión es la **10.122**.
