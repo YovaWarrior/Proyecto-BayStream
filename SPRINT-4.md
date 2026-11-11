@@ -3320,3 +3320,40 @@ La siguiente decisión es la **10.116**.
 **Lo que sigue:** el 14-nov, desactivar las cuentas de demostración (10.113), y las decisiones de Carlos de la 10.114: el orden de los cuatro frentes, el doble factor y el camino de Windows.
 
 La siguiente decisión es la **10.117**.
+
+### 10.117 · Carlos decide el orden después de la presentación: primero lo que faltó del proyecto, con el rediseño de oro; después usabilidad, estabilidad 3D, doble factor y capacitación (10-nov, 23:45)
+
+**Las respuestas de Carlos a la 10.114:**
+1. **Los documentos no se corrigen.** La terna dejó recomendaciones, no correcciones: los dos documentos quedan como se entregaron el 7-nov.
+2. **El orden.** Antes de las recomendaciones va todo lo que faltó del proyecto, incluido el rediseño de oro. Después, los cuatro frentes de la terna, en este orden:
+   1. la usabilidad para quien no es del rubro: el mapa de clics, el inicio por rol y las ayudas;
+   2. la estabilidad y el 3D (las fases A, B y C de la 10.114);
+   3. el doble factor;
+   4. la capacitación, con la medición de H2 y H6.
+3. **El doble factor, por ahora no.** Queda como riesgo aceptado: las cuentas las crea Carlos, no hay registro, los roles los exigen las reglas, la protección de enumeración está activa y la Web va con TLS, HSTS y, desde la 10.116, CSP. El camino de Windows se decide al llegar al tercer frente.
+4. **Las correcciones chicas de la 1.0.0** salen con el primer bloque, en una sola versión para los tres clientes.
+
+**El rediseño de oro** es lo que dejó pendiente la decisión del 27-oct: llevar a la app los metales de la presentación (el cobre y el oro sobre el cobalto) y el brillo de los videos de Blender. Hasta hoy, la única pieza con metal es el distintivo de rol (T-131, 10.86), con la regla de que el metal va en el filo y en el ícono, nunca de relleno.
+
+**Lo que faltó, en el orden que propone Yov:**
+- **Bloque 1 · Las deudas de la 1.0.0:**
+  - T-143, los estados y los textos de la operación: O-139-7 («Publicado» antes de la nube, el texto de la 10.105), O-139-1, O-139-3, O-139-6 y O-139-2;
+  - T-144, el lector y el volcado: todas las DGS en el volcado y en el detalle, el LOC+83, los puertos de la 1.5, las matrículas con espacio, el DIM de la sobredimensión (RF-005) y la validación de UN/LOCODE (RNF-008);
+  - T-145, el instalador con asistente: O-137-1 a O-137-8. Con O-137-1 resuelto, T-137 entra a `sprint-4`. No toca `lib/`, así que puede ir en paralelo, en su carpeta.
+- **Bloque 2 · Los requisitos que quedaron:** RF-018, la búsqueda por tipo de carga especial, y RF-035, el rol de administrador para autorizar y desactivar cuentas desde la app (toca las reglas de Firestore).
+- **Bloque 3 · La calidad:** RNF-001 y RNF-007 (la memoria, el tablero, el teléfono y buques sintéticos de 5 000 a 10 000 contenedores), RNF-005 (las once violaciones de capas y la documentación), la campaña de errores inyectados de H3 y Flutter al día (O-136-1).
+- **Bloque 4 · El rediseño de oro:**
+  - el diseño corre desde ya en paralelo, sin tocar `lib/`: el lienzo de Yov y las piezas de Nube, y Carlos elige;
+  - el código va por fases, como T-114, al final, sobre la base ya corregida;
+  - con él se cierra T-114: la auditoría de `flutter-ui` en cero y RNF-002 y RNF-003 vueltos a medir;
+  - el inicio se deja para el frente de usabilidad, que lo rehace por rol.
+- **Al cerrar los cuatro bloques:** una versión para los tres clientes, con las huellas de la Web anotadas (10.115). Yov propone que con ella cierre el Sprint 4 y que los frentes de la terna abran el Sprint 5.
+- **Fuera del orden:** T-87, la BAPLIE 3.1, sigue esperando un archivo real; T141-03, cifrar el almacén, se decide con el doble factor; el 14-nov se desactivan las cuentas de demostración.
+
+**Yov decide O-139-6 y O-139-2,** que la 10.110 dejó para Yov:
+- O-139-6: si el perfil guardado del buque ya resolvió el límite de apilamiento (con un valor o con «No lo tengo»), el diálogo lo trae resuelto y lo muestra, y el planificador lo puede cambiar. DESIGN.md 7.2 se actualiza.
+- O-139-2: los textos de la tarjeta del viaje pasan a tipo oración («Peso total», «Lleno», «Vacío»). En las exportaciones no cambian.
+
+**El prompt de T-143** (Timonel) está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
+
+La siguiente decisión es la **10.118**.
