@@ -187,3 +187,121 @@ Codex no ejecutó estos comandos.
 ## 10. Mensaje para Yov
 
 > Yov: aceptación de T-143 en `docs/t143/aceptacion-codex.md`, NO PASA por T143-ACC-01 (P2): documento de cierre más dos rechazos concurrentes producen tres guardados locales en vez de uno, reproducido dos veces con Hive real y la nube falsa existente. Analyze del paquete aislado cero; suite 2145/2145 sin omitidas y T-131 59/59. La vuelta que faltaba sí pasó: Windows publica, recibe el movimiento y cierra contra demo-t143; el muelle con red cambia solo y el de la cola confirma lo anterior y rechaza lo posterior, sin Reintentar. La cabecera patrón pasó también en Web; P3 aparte para Publicada con viaje de cinco caracteres, sin regresión demostrada. No se corrigió producto; solo va a Git este informe. Se cerró el instrumental y no se tocó Firebase real ni el Honor.
+
+## 11. Reaceptación (corrección 1)
+
+**Dictamen: NO PASA.** La corrección elimina los guardados duplicados del caso original y cumple la aclaración de cabecera. Sin embargo, introduce un **P2 de recuperación de persistencia, T143-ACC-03**: si el primer guardado del cierre devuelve `Left(CacheFailure)`, el motor memoriza la operación asíncrona como completada con éxito y ya no vuelve a intentar ese guardado durante su vida, aunque el almacenamiento se recupere. La operación local queda abierta mientras el motor conoce el cierre remoto. Se reprodujo con una sonda de fallo transitorio y se contrastó con el motor anterior.
+
+Revisión del **11-nov-2026**, horario de Guatemala, sobre:
+
+```text
+b336117 Sprint 4: T-143, correccion 1, el cierre se guarda una vez
+e5eff4e Sprint 4: decision 10.119, T-143 no pasa la aceptacion
+6978711 Sprint 4: aceptacion de T-143
+```
+
+Se leyeron la decisión 10.119 y la sección 13 completa del informe de Timonel. Carlos confirmó el carril libre. No se cambió código de producto ni se ejecutaron escrituras de Git. No se repitieron Windows ni Web, ni se levantó Firebase Emulator: el alcance modificado está en el motor y el defecto nuevo se reproduce allí, sin interfaz ni Firebase.
+
+### 11.1 Entorno y cifras
+
+Evidencia propia: **`build/t143acc/reaceptacion1/`**. Se prepararon dos copias nuevas, sin alterar el banco ni los registros de la aceptación anterior:
+
+- `copia/`: **796/796 archivos cotejados** de la punta actual, incluidos todos los Dart de `tool/`, más los recursos Android necesarios y la entrada generada de T-124 recuperada del banco anterior. O-143-3 sigue diferida; no se añadieron exclusiones al análisis.
+- `roja/`: los mismos archivos, con **una sola diferencia de producto**, `sync_engine.dart` obtenido mediante `git show` de `04cd717`. El motor anterior se puso únicamente en esa copia, nunca en el árbol de trabajo.
+- La sonda original solicitada se conservó sin modificar su contenido y se copió al mismo lugar relativo de ambas variantes para que importara el motor correspondiente. Su SHA-256 es `16049e40925fc70fe312b88d484f4afad07cdd5fe4dd6f5b61ecae249897f39a`.
+
+| Comprobación ejecutada | Resultado | Registro relativo a la evidencia |
+|---|---|---|
+| `pub get`, copia actual | Correcto; sin cambios de pubspec | `pub.log`, `pub-ejecucion.json` |
+| Sonda original + cuatro pruebas permanentes contra `b336117` | **5/5**; la sonda original exige y obtiene **1 guardado** | `foco.log`, `foco-resumen.json` |
+| Analyze desde la raíz del paquete aislado, sin limitar rutas | **Cero incidencias**, salida 0 | `analyze.log`, `analyze-ejecucion.json` |
+| Suite completa, una sola corrida | **2149/2149, 0 omitidas**, salida 0; T-131 59/59 y nuevas permanentes 4/4 | `suite.log`, `suite-resumen.json`, `suite-ejecucion.json` |
+| Sonda original contra `04cd717` | **Roja: 3 frente a 1** | `roja-pruebas.log`, `roja-pruebas-resumen.json` |
+| Cuatro pruebas permanentes contra `04cd717` | **4/4 rojas**: contadores 3, 4, 3 y 3 | Los mismos registros rojos |
+| Sonda de fallo transitorio contra `b336117` | **Falla**: local abierta después del rechazo posterior y `retry()`; un solo intento de guardar cierre | `fallo-al-guardar.log`, `fallo-al-guardar-resumen.json` |
+| La misma sonda de fallo transitorio contra `04cd717` | **Pasa**: el cierre local se recupera | `roja-pruebas.log` |
+
+Analyze corrió de **02:50:43 a 02:51:59** y la suite completa de **02:52:37 a 02:56:00**. Son duraciones de ejecución, no mediciones H5. No se combinaron subconjuntos para formar la cifra de 2149. La sonda adicional de fallo está bajo `build/` y se ejecutó aparte; no forma parte de esas 2149 pruebas del paquete.
+
+### 11.2 Qué cuentan las cuatro pruebas
+
+Se revisó `test/t143_cierre_una_vez_test.dart` completo y se ejecutó el contraste rojo/verde, sin modificarlo.
+
+1. La primera reproduce la sonda original con dos rechazos: el contador solo incrementa cuando se llama a `saveOperation` con una operación cerrada, y luego delega en Hive real. La operación abierta de preparación no se cuenta. Exige exactamente **1**, comprueba el cierre local y el del motor. Da **3** sin la corrección.
+2. La segunda usa tres rechazos y demora 15 ms el retorno de las lecturas, conservando la instantánea que se leyó. Abre la ventana de concurrencia de forma explícita y exige **1**. Da **4** sin la corrección.
+3. La prueba del plan comprueba el cierre, el contenido exacto del nuevo plan y la llegada original. El contador cuenta **todos los guardados de una operación cerrada**, también el guardado legítimo de una fuente posterior al cierre; por eso su límite es **2**, no 1. Da **3** sin la corrección.
+4. La del listado comprueba cierre, revisión 1 del listado y contenido de la llegada original, con el mismo límite de **2**. Da **3** sin la corrección.
+
+Los dos últimos casos permiten que la fuente se guarde antes del cierre —un guardado cerrado— o después —dos guardados cerrados—. No prometen contar exclusivamente la transición de cierre. **Las cuatro detectan el defecto de la entrega anterior.** En el control rojo, las dos de fuentes fallaron por el contador, no por pérdida de contenido; no se afirma que esa corrida haya demostrado pérdida de fuentes. Ninguna de las cuatro inyecta un `Left` al persistir, por lo que no cubren ACC-03.
+
+### 11.3 Revisión de `_closing`, `_enCola` y DESIGN
+
+- **Una persistencia compartida, en el camino exitoso:** `_closing ??=` memoriza el futuro que esperan documento y rechazos. El caso original queda resuelto, verificado por la sonda sin cambios y las permanentes.
+- **Una cola del motor:** las únicas tres llamadas a `log.saveOperation` del archivo están en las tareas de cierre, listado y plan, dentro de `_enCola` —líneas 296, 366 y 422—. Cada una relee la operación dentro de su turno. Las lecturas previas de revisión y los viajes a la nube quedan fuera; no son escrituras adicionales de la operación local.
+- **Sin espera recursiva identificada:** ninguna de esas tareas llama a `_enCola` ni espera a otra tarea de la misma cola. El documento espera el cierre antes de sincronizar fuentes, una vez liberado ese turno. No se identificó un bloqueo mutuo en esos caminos; las pruebas terminaron.
+- **El `onError` de la cola no es por sí solo el defecto:** normaliza únicamente el futuro interno `_writes` para que un trabajo fallido no impida ejecutar el siguiente. `_enCola` devuelve `resultado` sin convertir su error en éxito para el llamador. La incidencia está en el resultado `Either` del repositorio que `_markClosed` no examina, detallada abajo.
+- **ACC-02, cerrado conforme a 10.119:** DESIGN 14.8 ahora limita las medidas a BUQUE MANUAL y un viaje de cuatro caracteres, V117, y permite dos líneas con Publicada o Cerrada para identidades más anchas, sin cortes. Cita el caso A143B y conserva el rediseño de la cabecera para usabilidad. No se añadió cobertura visual, tal como se decidió.
+
+### 11.4 T143-ACC-03 · P2 · Un guardado fallido queda memorizado como éxito
+
+**Ubicación:** `lib/features/vessel/data/repositories/sync_engine.dart:289`, especialmente la llamada a `saveOperation` de la línea **296** y la memorización en `_closing`. El filtro del documento en la línea 275 y el uso del futuro compartido en el rechazo, línea 527, impiden una persistencia posterior en el mismo motor.
+
+**Reproducción ejecutada:** `copia/build/t143acc/save_failure_test.dart`, con Hive real y `FakeCloud` de T-79. La bitácora solo sustituye **el primer intento de guardar una operación cerrada** por un `Left(CacheFailure)`; las lecturas, los movimientos y todas las escrituras siguientes usan la implementación real.
+
+1. Guardar una operación publicada y abierta y arrancar el motor con un muelle autorizado y red.
+2. Recibir el cierre del servidor. El primer guardado devuelve `Left(CacheFailure)` y no persiste.
+3. Comprobar que el motor conoce el cierre y que el registro local sigue abierto.
+4. Con el almacenamiento ya recuperado, registrar un movimiento posterior al cierre; su rechazo vuelve a llamar a `_markClosed`. Ejecutar además `retry()` y releer la operación local.
+
+**Resultado con la corrección 1:**
+
+```text
+intentos=1
+estado=SyncState.upToDate
+motorCerrado=true
+localCerrado=false
+Expected: true / Actual: false
+```
+
+**Resultado del control:** la misma prueba pasa con el motor `04cd717`, donde el rechazo posterior sí permite recuperar la persistencia. Las dos variantes tienen idéntica sonda y difieren únicamente en el motor. Es una regresión de la memorización nueva, no una inferencia basada solo en leer el código.
+
+**Causa:** `saveOperation` comunica errores mediante `Either<Failure, void>`. Un `Left` no es una excepción del futuro: el `await` termina normalmente. `_markClosed` descarta ese valor, ejecuta `_emit()` y deja `_closing` resuelto. El rechazo siguiente espera ese mismo futuro completado y no vuelve a guardar. Al reescuchar, `_closed == true` hace que el documento tampoco lo intente. El aviso técnico que pudiera imprimir `_guard` en un fallo real de Hive no cambia esta conclusión: **el motor no propaga ese `Failure`, no conserva la persistencia como pendiente y no se recupera en los caminos ensayados**.
+
+**Impacto demostrado:** falta la persistencia local del cierre durante la vida de ese motor, aun con el almacenamiento recuperado. El hecho remoto de que la operación está cerrada sigue siendo verdadero; no se propone ocultarlo. La sonda no prueba ni afirma pérdida de movimientos, corrupción del almacén o imposibilidad de recuperación tras reiniciar.
+
+**Corrección propuesta, sin implementarla:** distinguir el cierre conocido de la persistencia confirmada; examinar el `Either`, conservar una única escritura en curso para las llamadas concurrentes y permitir recuperar un guardado fallido sin memorizarlo como éxito. Propagar o comunicar el fallo por el mecanismo acordado del producto y añadir la prueba del error transitorio a la cobertura permanente.
+
+Para repetir únicamente la sonda, con el carril libre:
+
+```powershell
+# Desde C:\Proyectos\baystream-qa-r4\build\t143acc\reaceptacion1\copia
+flutter test --no-pub --machine build/t143acc/save_failure_test.dart
+```
+
+**Balance de esta reaceptación:** 0 P1; **1 P2 nuevo que impide aceptar, ACC-03**; 0 P3 nuevos. ACC-01 pasa su reproducción original; ACC-02 se cierra por la decisión y el texto aprobado. O-143-1, O-143-2 y O-143-3 conservan su tratamiento anterior.
+
+### 11.5 Entrega y Git para Carlos
+
+Solo se añade esta sección a **`docs/t143/aceptacion-codex.md`**. Se preservó byte por byte el contenido anterior del informe; la comprobación del prefijo y las huellas están en `build/t143acc/reaceptacion1/verificacion-final.json` e `indice.json`. Los instrumentos y las copias nuevas quedan bajo `build/t143acc/reaceptacion1/`, ignorados por `/build/`, sin forzarlos a Git.
+
+**No cambian `pubspec.yaml` ni `pubspec.lock`**, ni código de producto, pruebas permanentes, DESIGN, Firebase o configuración local. No se ejecutó Firebase real, emulador ni clientes gráficos. Todos los comandos de Flutter terminaron y se liberó el semáforo. El diff de contenido rastreado previo a esta sección seguía vacío, con los mismos avisos de fin de línea de los registrantes Windows.
+
+Desde la carpeta de aceptación, solo este archivo:
+
+```powershell
+git add -- docs/t143/aceptacion-codex.md
+git commit -m "Sprint 4: reaceptacion de T-143"
+git push origin HEAD:sprint-4
+```
+
+Codex no ejecutó estos comandos.
+
+### 11.6 Tres líneas
+
+1. **NO PASA por ACC-03 (P2):** un fallo transitorio de persistencia queda memorizado como éxito y no se recupera en el mismo motor.
+2. La sonda original da **1 guardado**; las cuatro permanentes pasan y son rojas con el motor anterior; ACC-02 queda documentado.
+3. Analyze cero y **2149/2149 sin omitidas** en una corrida; sin repetir Windows/Web ni modificar producto.
+
+### 11.7 Mensaje para Yov
+
+> Yov: reaceptación de la corrección 1 añadida al informe. ACC-01 pasa la sonda original y las cuatro permanentes; comprobé que las cuatro son rojas con 04cd717. ACC-02 está resuelto en 14.8. Analyze cero y suite 2149/2149 sin omitidas, pero NO PASA por ACC-03 (P2): un Left al guardar el cierre queda memorizado como éxito; incluso tras otro rechazo y retry, el motor está cerrado y Al día, y la operación local sigue abierta. La sonda de fallo transitorio falla con b336117 y pasa con el motor anterior. No corregí producto ni repetí Windows/Web; solo va a Git el informe.
