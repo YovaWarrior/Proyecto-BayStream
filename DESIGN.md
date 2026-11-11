@@ -1942,6 +1942,11 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
   la línea de 92 dp sigue exigida, y a 1920 dp con la letra a 2.0, donde trabajan los
   planificadores, «Confirmado» va en una línea (`test/t131_cabeceras_test.dart`, el grupo «el
   estado “Confirmado” (T-143)»).
+  Todo esto vale para la identidad de referencia de T-131: BUQUE MANUAL con un viaje de cuatro
+  caracteres (V117). Con un nombre o un viaje más largos, la cabecera puede ir en dos líneas
+  también con «Publicada» o «Cerrada», por la regla general de 14.8, sin nada cortado (T-143,
+  corrección 1, T143-ACC-02: BUQUE MANUAL · A143B a 1366 con la letra a 2.0). La cabecera se
+  rehace en el frente de usabilidad.
 - **La franja de la bahía** (`franja-de-la-bahia`): ‹ y › (la bahía anterior y la siguiente,
   `bahia-anterior` y `bahia-siguiente`); el título «Bahía 10», que abre la lista de bahías
   (`bahia-elegir`); a la derecha «Colorear por» (`colorear-por`), el zoom (`ZoomDelPlano`), «OR /

@@ -630,3 +630,105 @@ el código, las pruebas, el ALTO, el después y el emulador). Total: 3.0 h.
 > cambian (3.3, 4.1, 7.3, 7.7, 7.10 y 7.11) y las figuras que se pueden volver a tomar. Quedan
 > O-143-1 (bloquear el registro después del cierre) y O-143-2 (el censo de T-112). Dos commits:
 > primero `tool/` y después T-143.
+
+## 13. Corrección 1 (T143-ACC-01 y -02)
+
+11-nov, de 02:25 a 02:40 según el reloj de la máquina (las líneas de SEMÁFORO de `build/t143/semaforo.log`), sobre `e5eff4e` (10.119). La aceptación de Codex
+(`docs/t143/aceptacion-codex.md`) no pasó por un P2.
+
+### 13.1 T143-ACC-01 (P2): el cierre se guarda una sola vez
+
+**La causa,** la que describió Codex. `_markClosed` se llamaba desde el documento y desde cada
+rechazo. La guarda `!_closed` solo protegía el camino del documento, y cada llamada leía la
+operación local antes de que otra terminara de guardar: todas la veían abierta y todas la
+guardaban. Además, `_syncList` y `_syncPlans` leían y guardaban la operación local por su cuenta,
+así que una copia vieja podía caer encima del cierre, o al revés.
+
+**La corrección,** solo en `lib/features/vessel/data/repositories/sync_engine.dart`:
+- **Una sola persistencia del cierre.** `_markClosed` marca `_closed` y devuelve la persistencia
+  memorizada en `_closing`. La primera llamada la crea; las siguientes (el documento y los demás
+  rechazos) esperan esa misma y no vuelven a guardar. Si el motor arrancó con la operación ya
+  cerrada, la persistencia relee, la ve cerrada y no guarda.
+- **Una cola para las escrituras del motor sobre la operación local** (`_enCola`): el cierre, el
+  listado (T-127) y el plan agregado (T-130). Cada escritura relee la operación dentro de su turno
+  y guarda sobre esa lectura. Bajar los trozos de la nube va fuera de la cola; solo la lectura y
+  el guardado esperan su turno.
+- El aviso, los textos y la regla del estado no cambian.
+
+**Las pruebas permanentes,** `test/t143_cierre_una_vez_test.dart` (4), contra la nube falsa de
+T-79 y Hive real. La bitácora cuenta los guardados de la operación cerrada y, en tres de las
+pruebas, demora 15 ms la lectura de la operación para abrir la ventana de la carrera; no cambia
+lo que lee ni lo que guarda.
+1. **La sonda de Codex:** sin red, el documento cerrado y dos rechazos al volver la red dan **un
+   solo guardado**.
+2. Lo mismo con tres rechazos y las lecturas lentas: un guardado.
+3. **El plan de carga agregado llega a la vez que el cierre:** quedan guardados el cierre, el plan
+   y la llegada.
+4. **Una revisión del listado llega a la vez que el cierre:** quedan guardados el cierre, el
+   listado y la llegada.
+
+**En rojo contra el motor de la entrega** (`04cd717`, puesto un momento en el árbol y restaurado
+después; se comprobó idéntico con `cmp`): las cuatro fallan. La sonda da 3 guardados del cierre
+(lo que midió Codex), 4 con lecturas lentas, y 3 en cada prueba de la fuente. En esas corridas no
+se perdió el cierre ni la fuente: el defecto observado son los guardados de más
+(`build/t143/correccion1-rojo-04cd717.log`).
+
+### 13.2 T143-ACC-02 (P3): la frase en 14.8
+
+Como decidió Yov, `DESIGN.md` 14.8 suma al final de la excepción de «Confirmado»: todo vale para
+la identidad de referencia de T-131 (BUQUE MANUAL con un viaje de cuatro caracteres). Con un
+nombre o un viaje más largos, la cabecera puede ir en dos líneas también con «Publicada» o
+«Cerrada», por la regla general, sin nada cortado. La cabecera se rehace en el frente de
+usabilidad. No se agregó cobertura.
+
+### 13.3 Las validaciones
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze`, todo el paquete | **«No issues found!»** (02:34:12 a 02:35:06). En esta carpeta existe `build/t124/entradas/t124_entradas.dart`; en una copia limpia sin ese archivo, `tool/t124_main.dart` no compila: es O-143-3 (10.119), del bloque de calidad |
+| Las pruebas del motor y del cierre | 71 de 71: las 4 nuevas, `t143_cierre`, `t79_sync_engine`, `t127_listado_revision`, `t130_plan_agregado` y `t129_cierre` (`build/t143/correccion1-pruebas.log`) |
+| **La suite, en una sola corrida** | **2149 de 2149, sin omitidas**, en 2 min 42 s (02:35:12 a 02:37:58; `build/t143/suite-correccion1.log`): las 2145 de la entrega más las 4 nuevas |
+
+No hizo falta volver al emulador ni a las capturas: la corrección no cambia nada de lo que se ve.
+
+### 13.4 Archivos de la corrección
+
+- `lib/features/vessel/data/repositories/sync_engine.dart`, modificado;
+- `test/t143_cierre_una_vez_test.dart`, nuevo;
+- `DESIGN.md`, 14.8;
+- `docs/T143-RESULTADOS.md`, esta sección.
+
+`pubspec.yaml` y `pubspec.lock` no cambian; tampoco `lib/main.dart` ni los congelados.
+
+### 13.5 Para Carlos: el bloque de Git de la corrección
+
+```
+git add lib/features/vessel/data/repositories/sync_engine.dart
+git add test/t143_cierre_una_vez_test.dart
+git add DESIGN.md
+git add docs/T143-RESULTADOS.md
+git commit -m "Sprint 4: T-143, correccion 1, el cierre se guarda una vez"
+git push
+```
+
+### 13.6 Horas
+
+Corrección 1: 0.5 h. Total de T-143: 3.5 h.
+
+### 13.7 En tres líneas
+
+- El cierre se guarda una sola vez: el documento y los rechazos comparten una persistencia
+  memorizada.
+- El cierre, el listado y el plan escriben la operación local en una sola cola del motor, sin
+  copias viejas; cuatro pruebas permanentes, rojas contra la entrega.
+- `analyze` cero, la suite 2149 de 2149 en una corrida, y la frase de ACC-02 en 14.8.
+
+### 13.8 Para Yov
+
+> T-143, corrección 1, en la sección 13 de `docs/T143-RESULTADOS.md`. ACC-01: el cierre se guarda
+> una vez (una persistencia memorizada que comparten el documento y los rechazos), y el cierre,
+> el listado y el plan escriben la operación local en una sola cola del motor. Hay cuatro pruebas
+> permanentes en `test/t143_cierre_una_vez_test.dart`: la sonda de Codex y el plan o el listado
+> que llegan a la vez que el cierre. Las cuatro fallaban contra `04cd717` (3 y 4 guardados, sin
+> pérdida de datos). ACC-02: la frase va en 14.8. `analyze` cero y suite 2149 de 2149 en una
+> corrida. Un commit: «Sprint 4: T-143, correccion 1, el cierre se guarda una vez».

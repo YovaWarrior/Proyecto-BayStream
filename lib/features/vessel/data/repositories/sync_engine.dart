@@ -280,13 +280,38 @@ class SyncEngine {
   /// guarda en la operación local para recordarlo al reiniciar y lo dice en
   /// [SyncStatus.closed]. Guarda sobre la operación que el dispositivo tiene
   /// ahora, no sobre la del arranque: entretanto pudo llegar un plan (T-130).
-  Future<void> _markClosed(DateTime closedAt) async {
+  ///
+  /// T-143, corrección 1 (T143-ACC-01) · **Una sola persistencia del cierre**:
+  /// el documento y cada rechazo comparten la misma, que se memoriza en
+  /// [_closing]. Lo que llega después la espera y no vuelve a guardar. Va en
+  /// la cola de las escrituras del motor ([_enCola]), así que no se cruza con
+  /// el listado ni con el plan que llegan a la vez.
+  Future<void> _markClosed(DateTime closedAt) {
     _closed = true;
-    final current = await _localOperation();
-    if (_stopped) return;
-    final base = current ?? operation;
-    if (!base.closed) await log.saveOperation(base.copyWith(closedAt: closedAt));
-    _emit();
+    return _closing ??= _enCola(() async {
+      if (_stopped) return;
+      final current = await _localOperation();
+      if (_stopped) return;
+      final base = current ?? operation;
+      if (!base.closed) await log.saveOperation(base.copyWith(closedAt: closedAt));
+    }).then((_) => _emit());
+  }
+
+  /// T-143, corrección 1 · La persistencia del cierre, en curso o hecha.
+  Future<void>? _closing;
+
+  /// T-143, corrección 1 (T143-ACC-01) · La cola de las escrituras del motor
+  /// sobre la operación local: el cierre, el listado (T-127) y el plan
+  /// agregado (T-130). Cada una relee la operación dentro de su turno y
+  /// guarda sobre esa lectura, así que ninguna guarda una copia vieja encima
+  /// de otra. Bajar los trozos de la nube va fuera de la cola: solo la
+  /// lectura y el guardado esperan su turno.
+  Future<void> _writes = Future<void>.value();
+
+  Future<T> _enCola<T>(Future<T> Function() tarea) {
+    final resultado = _writes.then((_) => tarea());
+    _writes = resultado.then<void>((_) {}, onError: (Object _) {});
+    return resultado;
   }
 
   /// T-127 y T-130 · Lo que el manifiesto declara y la operación local no
@@ -332,15 +357,19 @@ class SyncEngine {
         _rejectedListRevision = revision;
         return;
       }
-      final current = await _localOperation();
-      if (_stopped || current == null || current.exportListRevision >= revision) {
-        return;
-      }
-      final saved = await log.saveOperation(current.copyWith(sources: [
-        ...current.sources.where((s) => s.kind != OperationSourceKind.exportList),
-        source,
-      ]));
-      if (saved.isLeft()) return;
+      // T-143, corrección 1: leer y guardar, en la cola del motor.
+      final guardado = await _enCola(() async {
+        final current = await _localOperation();
+        if (_stopped || current == null || current.exportListRevision >= revision) {
+          return false;
+        }
+        final saved = await log.saveOperation(current.copyWith(sources: [
+          ...current.sources.where((s) => s.kind != OperationSourceKind.exportList),
+          source,
+        ]));
+        return saved.isRight();
+      });
+      if (!guardado) return;
       _localListRevision = revision;
       _listArrival = ListArrival(revision: revision, rows: rows);
       _emit();
@@ -383,13 +412,19 @@ class SyncEngine {
           _rejectedPlans[entry.kind] = entry.sha256;
           continue;
         }
-        final current = await _localOperation();
-        if (_stopped || current == null) return;
-        _refreshLocalPlans(current);
-        if (_localPlans.contains(entry.kind)) continue;
-        final saved = await log.saveOperation(
-            current.copyWith(sources: [...current.sources, source]));
-        if (saved.isLeft()) continue;
+        // T-143, corrección 1: leer y guardar, en la cola del motor. Nulo
+        // es que el motor se detuvo o la operación ya no está.
+        final guardado = await _enCola<bool?>(() async {
+          final current = await _localOperation();
+          if (_stopped || current == null) return null;
+          _refreshLocalPlans(current);
+          if (_localPlans.contains(entry.kind)) return false;
+          final saved = await log.saveOperation(
+              current.copyWith(sources: [...current.sources, source]));
+          return saved.isRight();
+        });
+        if (guardado == null) return;
+        if (!guardado) continue;
         _localPlans.add(entry.kind);
         _planArrival = PlanArrival(
             kind: entry.kind, fileName: entry.fileName, voyage: entry.voyage);
