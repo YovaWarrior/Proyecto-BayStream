@@ -3577,4 +3577,19 @@ No se publica sola: sale con la versión del bloque 1 (10.117).
 
 **Después,** Yov revisa la corrección y Codex repite la aceptación completa. El Honor, si Carlos lo reserva; si no, el emulador de Android, y el Honor pasa a la lista de la versión.
 
-La siguiente decisión es la **10.126**.
+### 10.126 · La corrección 1 de T-144, revisada: una búsqueda vacía ya no encuentra nada; pasa a la reaceptación de Codex (11-nov, 23:35)
+
+**Timonel corrigió T144-ACC-01** (`docs/T144-RESULTADOS.md`, «Corrección 1», sobre `28438f0`), sin commits:
+- en el buscador, una consulta que queda vacía al quitarle los espacios, la tabulación o el espacio duro se trata como vacía: el estado inicial, con sus sugerencias, y ningún contenedor. Los filtros no cambian;
+- `searchContainers` devuelve una lista vacía, sin leer los viajes;
+- 11 pruebas nuevas, de las que 8 fallan sin la corrección: las de consulta vacía. `analyze` en cero y la suite en 2213 de 2213, sin omitidas;
+- el mismo patrón no aparece en otro lugar de `lib/`;
+- el informe corrige lo que decía en 2.2: antes de la corrección, con solo espacios, solo la matrícula dejaba de coincidir.
+
+**Yov lo revisó contra `28438f0`:** cambian exactamente los cuatro archivos del informe, y en los dos de `lib/` el cambio es la condición que pedía la 10.125, nada más.
+
+**O-144-1 (P3), sin cambio:** el buscador encuentra «BYSU 967», pero no lo resalta en el resultado, porque compara la consulta con espacios contra la matrícula sin ellos. No bloquea; se decide al armar la versión del bloque 1.
+
+**La reaceptación va a Codex, en el mismo chat,** sobre la punta con la corrección: el paso 0 sin el fuzzing (el lector no cambió), T144-ACC-01 con su propia sonda y los siete puntos que quedaron pendientes. El Honor, si Carlos lo reserva; si no, el emulador de Android, y el Honor pasa a la lista de la versión.
+
+La siguiente decisión es la **10.127**.
