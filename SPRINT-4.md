@@ -3560,4 +3560,21 @@ No se publica sola: sale con la versión del bloque 1 (10.117).
 
 **La aceptación va a Codex,** en `C:\Proyectos\baystream-qa-r4`, sobre la punta de `sprint-4` con T-144, como la de T-143. Si Codex no empezó T-145, hace primero esta aceptación. El prompt está en el documento del proyecto `BayStream_T144_aceptacion_11nov.md`.
 
-La siguiente decisión es la **10.125**.
+### 10.125 · La aceptación de T-144 no pasa por un P2: una búsqueda de solo espacios encuentra contenedores; Timonel corrige (11-nov, 23:25)
+
+**Codex aceptó sobre `2d91c54`** (`docs/t144/aceptacion-codex.md`, en `qa-r4`):
+- **El paso 0 pasa entero,** en una copia limpia de 838 archivos idéntica a la punta: `analyze` en cero, la suite en 2202 de 2202 sin omitidas, y el fuzzing de T-141 con 180 mutantes y 0 fallas.
+- **T144-ACC-01 (P2).** Con su propia prueba, un BAPLIE sintético de un contenedor con puertos, «bysu 967» encuentra BYSU9672095, pero tres espacios dan 1 resultado en vez de 0. `container_search_delegate.dart:77` solo mira `query.isEmpty`. Con espacios, la consulta normalizada queda vacía, y aunque `matchesId` ya exige texto, los filtros del puerto de carga, del de descarga y de la naviera siguen con `contains('')`, que es verdadero para cualquier valor.
+- Codex se detuvo al primer fallo, como pedía el encargo: los puntos 1 a 3 y 5 a 8 quedan para la reaceptación. Windows se reservó y se liberó; el Honor no estaba disponible.
+
+**Yov lo comprobó en el código.** Además, `searchContainers` de `vessel_repository_impl.dart` devuelve todos los contenedores con una consulta vacía. Hoy nadie lo llama, pero T-144 lo tocó y se corrige igual. El criterio del punto 4 es de Yov; el informe de Timonel lo decía solo de la matrícula (2.2, punto 5).
+
+**La corrección 1, con Timonel en el mismo chat:**
+1. en el buscador, una consulta que queda vacía al quitarle los espacios se trata como vacía: el estado inicial, con sus sugerencias, y ningún contenedor;
+2. `searchContainers` devuelve una lista vacía con una consulta vacía;
+3. las pruebas: tres espacios, una tabulación y el espacio duro, en los dos lugares, y «bysu 967» sigue encontrando su contenedor;
+4. una búsqueda del mismo patrón en lo que T-144 tocó; lo que aparezca fuera de T-144 se anota y no se cambia.
+
+**Después,** Yov revisa la corrección y Codex repite la aceptación completa. El Honor, si Carlos lo reserva; si no, el emulador de Android, y el Honor pasa a la lista de la versión.
+
+La siguiente decisión es la **10.126**.
