@@ -3524,4 +3524,40 @@ No se publica sola: sale con la versión del bloque 1 (10.117).
 
 **Decide Carlos:** la aprobación de la propuesta, con las cuatro decisiones de arriba.
 
-La siguiente decisión es la **10.124**.
+### 10.124 · T-144 entregada y revisada: H1 da 100 % con el volcado nuevo; pasa a la aceptación de Codex (11-nov, 23:10)
+
+**Timonel entregó la fase 2** (`docs/T144-RESULTADOS.md`, sección 2), sin commits:
+- `analyze` en cero en todo el paquete y la suite en 2202 de 2202 (2155 más 47), sin omitidas;
+- el fuzzing de T-141, con 180 mutantes y 0 fallas;
+- el volcado del corpus en `build/t144/h1/`, con las 10 huellas de T-140;
+- las cuatro decisiones de la 10.123: el CSV con « | » y «DGS declarados», `XX…` sin aviso, los avisos nuevos en `extraReadNotices` con `tryFromJson`, y «IMO 3 +1» en la Lista;
+- 5 archivos nuevos y 16 cambiados (`DESIGN.md`, 11 de `lib/` y 4 pruebas), más su informe. `pubspec.*` no cambia.
+
+**Lo que Yov revisó:**
+- **El árbol, archivo por archivo,** contra `886fbb0`, con las huellas sin el fin de línea: cambian exactamente los 16 del informe, y en `lib/`, `test/` y `tool/` solo hay 5 archivos nuevos, los de T-144. Ni `lib/main.dart`, ni los congelados, ni `pubspec.*`.
+- **El código de lo delicado:**
+  - la matrícula normalizada (`numeroDeContenedor`) en el lector, en `ContainerUnit.fromJson`, en las búsquedas y en las claves del escritor;
+  - los avisos repartidos entre `readNotices` y `extraReadNotices`, y `tryFromJson`, que salta un tipo desconocido;
+  - el CSV, que con una o ninguna DGS escribe lo de antes;
+  - los calificadores 6 y 12, atados a la 1.5.
+- **El volcado contra el de T-140:** solo cambian las celdas que dice el informe, más la columna nueva:
+  - el destino final, en los 10 archivos;
+  - la clase y el número ONU, en los 9 casos de DGS dobles;
+  - en A06, la matrícula y los dos puertos de los 717 contenedores.
+- **H1 otra vez,** con el mismo oráculo independiente de la 10.109 (`h1_cotejo.py`, adaptado a « | »). Las peligrosas se comparan completas y en orden, y «DGS declarados» coincide en todos:
+
+| Medida (6161 contenedores) | T-140, 1.0.0 | T-144 |
+|---|---|---|
+| Los 9 campos del instrumento | 6152, 99.85 % | 6161, **100 %** (Wilson 95 %: 99.94 % a 100 %) |
+| Los 9 campos y los puertos de carga y descarga | 5435, 88.22 % | 6161, **100 %** |
+| Lo anterior y el destino final | — | 6161, **100 %** |
+
+- **La lista de países:** los 249 códigos de `un_locode.dart` son exactamente los de ISO 3166-1 en iso-codes (pycountry 26.2.16), TW incluido. Lo que Timonel agregó de memoria queda confirmado.
+- **`XX…`:** el color calculado es lo que pedía la 10.123, porque esos códigos están fuera de la tabla fija.
+- **La hoja de detalle de la Lista,** con una fila por declaración, no estaba en la propuesta. Se acepta: es el mismo defecto de H1 en otra pantalla.
+
+**Lo que falta es de la aceptación:** abrir los tres clientes. Timonel fijó lo que se ve con pruebas de widgets, sin capturas.
+
+**La aceptación va a Codex,** en `C:\Proyectos\baystream-qa-r4`, sobre la punta de `sprint-4` con T-144, como la de T-143. Si Codex no empezó T-145, hace primero esta aceptación. El prompt está en el documento del proyecto `BayStream_T144_aceptacion_11nov.md`.
+
+La siguiente decisión es la **10.125**.
