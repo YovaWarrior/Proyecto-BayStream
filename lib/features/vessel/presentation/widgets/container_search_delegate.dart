@@ -74,7 +74,11 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
   }
 
   Widget _buildSearchResults(BuildContext context) {
-    if (query.isEmpty) {
+    // T-144, corrección 1 (10.125): una consulta que queda vacía al quitarle
+    // los espacios (también la tabulación y el espacio duro) es una consulta
+    // vacía. Si no, los filtros de puerto y naviera harían `contains('')`,
+    // que es verdadero para cualquier valor.
+    if (numeroDeContenedor(query).isEmpty) {
       return _buildEmptyState(context);
     }
 

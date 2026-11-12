@@ -118,10 +118,13 @@ class VesselRepositoryImpl implements VesselRepository {
   @override
   Future<Either<Failure, List<ContainerUnit>>> searchContainers(
       String query) async {
+    // T-144: la matrícula se busca sin espacios, como se guarda.
+    final normalized = numeroDeContenedor(query);
+    // T-144, corrección 1 (10.125): sin nada que buscar no hay resultados;
+    // `contains('')` devolvería todos los contenedores.
+    if (normalized.isEmpty) return const Right(<ContainerUnit>[]);
     final voyagesResult = await getAllVoyages();
     return voyagesResult.map((voyages) {
-      // T-144: la matrícula se busca sin espacios, como se guarda.
-      final normalized = numeroDeContenedor(query);
       return voyages
           .expand((voyage) => voyage.containers)
           .where((container) =>

@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:baystream/core/design/design.dart';
+import 'package:baystream/core/errors/failures.dart';
 import 'package:baystream/features/vessel/data/datasources/local_vessel_codec.dart';
+import 'package:baystream/features/vessel/data/repositories/vessel_repository_impl.dart';
 import 'package:baystream/features/vessel/data/services/baplie_parser_service.dart';
 import 'package:baystream/features/vessel/data/services/export_list_parser_service.dart';
 import 'package:baystream/features/vessel/data/services/export_service.dart';
@@ -19,11 +21,13 @@ import 'package:baystream/features/vessel/presentation/widgets/container_search_
 import 'package:baystream/features/vessel/presentation/widgets/containers_list_view.dart';
 import 'package:baystream/features/vessel/presentation/widgets/detalle_contenedor.dart';
 import 'package:baystream/features/vessel/presentation/widgets/voyage_summary_card.dart';
+import 'package:dartz/dartz.dart' hide State;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/t129_fake_firestore.dart';
 import 'support/t73_export_list_support.dart';
 import 'support/t82_fixture.dart';
 
@@ -690,4 +694,86 @@ void main() {
       expect(releido.readNotices, conSeisTipos().readNotices);
     });
   });
+
+  group('Corrección 1 (10.125) · una consulta de solo espacios no busca', () {
+    // T144-ACC-01: con puertos y naviera, «   » encontraba el contenedor por
+    // `contains('')` en esos filtros.
+    final conPuertos = leer(edi(grupo('BYSU 9672095',
+            despues: "NAD+CA+LINEA:172:20'")))
+        .containers
+        .single;
+    const vacias = {
+      'tres espacios': '   ',
+      'una tabulación': '\t',
+      'el espacio duro': ' ',
+      'todo junto': ' \t   ',
+    };
+
+    test('el contenedor de la prueba tiene puertos y naviera', () {
+      expect(conPuertos.containerId, 'BYSU9672095');
+      expect([conPuertos.portOfLoading, conPuertos.portOfDischarge],
+          ['GTSTC', 'PAMIT']);
+      expect(conPuertos.operatorCode, 'LINEA');
+    });
+
+    Widget buscador(String consulta) => app(Consumer(builder: (context, ref, _) {
+          final delegado =
+              ContainerSearchDelegate(containers: [conPuertos], ref: ref)
+                ..query = consulta;
+          return delegado.buildResults(context);
+        }));
+
+    for (final MapEntry(key: nombre, value: consulta) in vacias.entries) {
+      testWidgets('en el buscador, $nombre da el estado inicial y ningún '
+          'contenedor', (tester) async {
+        await tester.pumpWidget(buscador(consulta));
+        await tester.pumpAndSettle();
+        expect(find.byType(ListTile), findsNothing);
+        expect(find.byKey(const ValueKey('busqueda-sin-resultados')),
+            findsNothing);
+        expect(find.text('Busca por ID, puerto de descarga o naviera'),
+            findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+
+      test('en searchContainers, $nombre da una lista vacía sin leer los '
+          'viajes', () async {
+        final repositorio = _RepositorioConViajes([viajeCon([conPuertos])]);
+        final resultado = await repositorio.searchContainers(consulta);
+        expect(resultado.getOrElse(() => [conPuertos]), isEmpty);
+        expect(repositorio.lecturas, 0);
+      });
+    }
+
+    testWidgets('«bysu 967» sigue encontrando BYSU9672095', (tester) async {
+      await tester.pumpWidget(buscador('bysu 967'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ListTile), findsOneWidget);
+    });
+
+    test('searchContainers con «bysu 967» sigue encontrando BYSU9672095',
+        () async {
+      final repositorio = _RepositorioConViajes([viajeCon([conPuertos])]);
+      final resultado = await repositorio.searchContainers('bysu 967');
+      expect(resultado.getOrElse(() => const []).map((c) => c.containerId),
+          ['BYSU9672095']);
+      expect(repositorio.lecturas, 1);
+    });
+  });
+}
+
+/// El repositorio real con los viajes en memoria: solo cambia de dónde salen
+/// los viajes. La nube falsa de T-129 basta para construirlo; no se usa.
+class _RepositorioConViajes extends VesselRepositoryImpl {
+  _RepositorioConViajes(this.viajes)
+      : super(firestore: T129FakeFirestore().instance);
+
+  final List<VesselVoyage> viajes;
+  int lecturas = 0;
+
+  @override
+  Future<Either<Failure, List<VesselVoyage>>> getAllVoyages() async {
+    lecturas++;
+    return Right(viajes);
+  }
 }

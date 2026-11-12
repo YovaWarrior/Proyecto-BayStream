@@ -503,3 +503,86 @@ git push
 ## 5. Para Yov
 
 > Yov, T-144 fase 2 entregada (`docs/T144-RESULTADOS.md`, sección 2). Suite 2202/2202 sin omitidas (piso 2155 + 47), `analyze` cero, fuzzing 180/0, volcado en `build/t144/h1/` con las 10 huellas de T-140. Frente a T-140 solo cambian: «Destino final» donde hay LOC+83; Clase y ONU en los 9 casos de DGS dobles (A02 1, A03 3, A03v 3, A07 2); y en A06, Contenedor, Puerto de carga y Puerto de descarga en los 717. Cero avisos nuevos en el corpus. La decisión 3 va con `extraReadNotices` y `tryFromJson`, con prueba. Tres cosas para que mires: (1) la lista de ISO 3166‑1 sale de la M49 de la ONU (248) más TW, que agregué de memoria porque la OBP de ISO pide aceptar sus términos; confírmalo en la OBP. (2) `XX…` sigue con la ranura calculada, como cualquier código fuera de la tabla fija; no cambié colores. Si querías neutro, dime. (3) Agregué, fuera de la propuesta, una fila por declaración en la hoja de detalle propia de la Lista, que también mostraba solo la última DGS.
+
+---
+
+## Corrección 1 (10.125) · La búsqueda con solo espacios
+
+**El hallazgo:** T144-ACC-01, P2 (`docs/t144/aceptacion-codex.md`, sección 4).
+- **Qué pasaba:** en el buscador, «   » encontraba un contenedor que tiene puertos o naviera.
+- **La causa:**
+  - `_buildSearchResults` solo miraba `query.isEmpty`;
+  - con espacios, la consulta normalizada quedaba vacía;
+  - `matchesId` ya exigía texto, pero `matchesPod`, `matchesPol` y `matchesOperator` hacían `contains('')`, que es verdadero para cualquier valor.
+- **Mi error:** en 2.2, punto 5, escribí que una consulta de solo espacios ya no encontraba contenedores. Eso solo era cierto para la matrícula. El hallazgo ya existía antes de T-144, pero T-144 tocó esa búsqueda y debía cerrarlo.
+
+Trabajé sobre la punta `28438f0` (10.125).
+
+### Lo que cambia
+
+| Archivo | Cambio |
+|---|---|
+| `lib/features/vessel/presentation/widgets/container_search_delegate.dart` | Al principio de `_buildSearchResults`, `if (numeroDeContenedor(query).isEmpty)` devuelve el estado inicial, con sus sugerencias y sin ningún contenedor. Es la misma normalización de la matrícula: quita todo espacio en blanco, también la tabulación, el espacio duro y el fino. Los filtros no cambian. |
+| `lib/features/vessel/data/repositories/vessel_repository_impl.dart` | En `searchContainers`, con la consulta vacía después de normalizar, devuelve `Right([])` **sin leer los viajes**. Antes devolvía todos los contenedores. Hoy nadie lo llama (10.125). |
+| `test/t144_lector_volcado_test.dart` | Un grupo nuevo, «Corrección 1», con 11 pruebas. |
+
+### Las pruebas nuevas
+
+Usan un contenedor sintético `BYSU 9672095`, con puerto de carga GTSTC, de descarga PAMIT y naviera LINEA.
+
+- **Cuatro consultas vacías:** tres espacios, una tabulación, el espacio duro y las tres juntas con un espacio fino.
+  - **En el buscador:** ningún resultado, ni «Sin resultados», y el estado inicial («Busca por ID, puerto de descarga o naviera»).
+  - **En `searchContainers`:** una lista vacía, sin leer los viajes.
+- **«bysu 967»** sigue encontrando BYSU9672095, en el buscador y en `searchContainers`.
+- **Cómo se prueba `searchContainers`:** sobre el repositorio real, en una subclase de prueba que solo cambia de dónde salen los viajes (`getAllVoyages`). La nube falsa de T-129 basta para construirlo y no se usa.
+- **Contra el código sin la corrección** (los dos archivos de `HEAD`, puestos un momento y restaurados byte a byte), **8 de las 11 fallan**: las 4 del buscador y las 4 de `searchContainers`. Las 3 que pasan son las que deben pasar: la que comprueba el contenedor y las dos de «bysu 967».
+
+### El mismo patrón en lo demás
+
+Busqué un `contains`, un `indexOf` o un `startsWith` con una consulta que puede quedar vacía en todo `lib/`, no solo en lo que tocó T-144:
+- **En lo que tocó T-144:** solo los dos lugares de arriba, ya corregidos. `_buildHighlightedText`, el resaltado del resultado, también hace `contains` con la consulta, pero ya no se llega con una consulta vacía.
+- **Fuera de T-144:** ningún otro filtro de texto sobre contenedores, puertos o navieras. Los demás `contains` del paquete comparan contra listas fijas o códigos de error.
+- **Una observación, sin cambio y fuera del patrón:** el resaltado compara la consulta tal cual se escribió («BYSU 967») contra la matrícula sin espacios. El resultado aparece, pero sin resaltar. Queda como **O-144-1**, para el frente de usabilidad.
+
+### Las validaciones
+
+| Validación | Resultado |
+|---|---|
+| `flutter analyze` (todo el paquete) | **0 avisos**, sin `// ignore:` (23:17 y 23:18). |
+| `test/t144_lector_volcado_test.dart` | 58 de 58 (47 + 11). |
+| Suite completa | **2213 de 2213**, sin omitidas (23:18 a 23:21). El piso era 2202. |
+
+No toqué el lector, el CSV ni el volcado, así que el fuzzing y el volcado de `build/t144/h1/` no cambian.
+
+### Los archivos
+
+Modificados:
+- `lib/features/vessel/presentation/widgets/container_search_delegate.dart`
+- `lib/features/vessel/data/repositories/vessel_repository_impl.dart`
+- `test/t144_lector_volcado_test.dart`
+- `docs/T144-RESULTADOS.md` (esta sección)
+
+`pubspec.*` no cambia. Los cuatro archivos que Git marca solo por el fin de línea siguen sin ser míos.
+
+**Horas:** ≈ 0.3 h.
+
+### Git (lo ejecuta Carlos)
+
+```
+git add -- lib/features/vessel/presentation/widgets/container_search_delegate.dart
+git add -- lib/features/vessel/data/repositories/vessel_repository_impl.dart
+git add -- test/t144_lector_volcado_test.dart
+git add -- docs/T144-RESULTADOS.md
+git commit -m "Sprint 4: T-144, correccion 1, la busqueda con solo espacios"
+git push
+```
+
+### En tres líneas
+
+1. Una consulta que queda vacía al quitarle los espacios es una consulta vacía: el buscador muestra su estado inicial y `searchContainers` devuelve una lista vacía.
+2. Once pruebas nuevas, ocho de ellas rojas sin la corrección; «bysu 967» sigue encontrando su contenedor.
+3. `analyze` da cero y la suite 2213 de 2213. No hay otro caso del patrón; el resaltado sin espacios queda como O-144-1.
+
+### Para Yov
+
+> Yov, T-144 corrección 1 (T144-ACC-01) lista, sección «Corrección 1» de `docs/T144-RESULTADOS.md`, sobre `28438f0`. El buscador trata como vacía la consulta que queda vacía al quitarle todo espacio en blanco (`numeroDeContenedor(query).isEmpty`): estado inicial y ningún contenedor; los filtros no cambian. `searchContainers` devuelve `Right([])` sin leer los viajes. 11 pruebas nuevas: tres espacios, tabulación, espacio duro y todo junto, en los dos lugares, más «bysu 967»; 8 fallan contra los archivos de `HEAD`. `analyze` cero, suite 2213/2213 sin omitidas. El patrón no aparece en otro lugar de `lib/`. Una observación: el resaltado del resultado no marca «BYSU 967» porque compara con espacios contra la matrícula sin espacios (O-144-1, sin cambio). Corrijo además lo que dije en 2.2, punto 5: con solo espacios, antes solo la matrícula dejaba de coincidir.
