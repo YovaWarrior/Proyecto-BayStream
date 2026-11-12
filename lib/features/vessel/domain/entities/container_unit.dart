@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../../core/utils/iso_coordinate_parser.dart';
+import '../services/container_number.dart';
 import 'dangerous_goods.dart';
 
 /// Entidad que representa un contenedor
@@ -314,7 +315,9 @@ class ContainerUnit extends Equatable {
 
   factory ContainerUnit.fromJson(Map<String, dynamic> json) => ContainerUnit(
         id: json['id'] as String,
-        containerId: json['containerId'] as String,
+        // T-144: un viaje guardado antes traía la matrícula como venía en el
+        // archivo (A06: «BYSU 9672095»); se lee ya normalizada.
+        containerId: numeroDeContenedor(json['containerId'] as String),
         isoSizeType: json['isoSizeType'] as String?,
         status: ContainerStatus.values.firstWhere(
           (e) => e.name == json['status'],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
+import '../formatters/carga_especial.dart';
 import '../providers/discharge_provider.dart';
 import 'discharge_controls.dart';
 import 'iconos_del_dominio.dart';
@@ -71,12 +72,25 @@ class DetalleContenedor extends ConsumerWidget {
       BsFilaDeDetalle('Puerto de carga', container.portOfLoading ?? 'Sin declarar'),
       BsFilaDeDetalle(
           'Puerto de descarga', container.portOfDischarge ?? 'Sin declarar'),
+      // T-144: el LOC+83 tal cual viene; solo si el archivo lo declara.
+      if (container.finalDestination != null)
+        BsFilaDeDetalle('Destino final', container.finalDestination!),
       if (container.operatorCode != null)
         BsFilaDeDetalle('Naviera', container.operatorCode!),
     ];
 
     final secciones = <Widget>[
-      if (container.isDangerous)
+      if (container.isDangerous && (container.dangerousGoods?.length ?? 0) > 1)
+        // T-144: con dos o más DGS, una línea por declaración, en el orden
+        // del archivo (como las celdas reservadas).
+        _Senal(
+          icono: BsIconos.peligrosa,
+          color: semanticos.peligrosa.contorno,
+          titulo: 'Carga peligrosa · '
+              '${container.dangerousGoods!.length} declaraciones',
+          detalle: container.dangerousGoods!.map(lineaDeDeclaracion).join('\n'),
+        )
+      else if (container.isDangerous)
         _Senal(
           icono: BsIconos.peligrosa,
           color: semanticos.peligrosa.contorno,
@@ -99,6 +113,7 @@ class DetalleContenedor extends ConsumerWidget {
           icono: BsIconos.fueraDeMedida,
           color: semanticos.oog.contorno,
           titulo: 'Sobredimensionado',
+          detalle: medidasFueraDeGalibo(container),
         ),
       // T-75: estado en la escala, quién y cuándo, y deshacer.
       if (offersDischarge(voyage))

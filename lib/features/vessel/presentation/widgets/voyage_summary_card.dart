@@ -326,6 +326,8 @@ class _ReadNotice extends StatelessWidget {
         BaplieReadNoticeKind.position => 'Posiciones mal formadas en LOC+147',
         BaplieReadNoticeKind.checkDigit => 'Dígito de control inválido en EQD',
         BaplieReadNoticeKind.incomplete => 'Archivo posiblemente incompleto',
+        BaplieReadNoticeKind.locode => 'Códigos de puerto que no son UN/LOCODE',
+        BaplieReadNoticeKind.dimension => 'Medidas DIM revisadas',
       };
 
   String get summary {
@@ -337,9 +339,19 @@ class _ReadNotice extends StatelessWidget {
     final action = switch (notice.kind) {
       BaplieReadNoticeKind.weight => 'revisa esos pesos antes de operar',
       BaplieReadNoticeKind.position => 'pide una exportación corregida',
+      BaplieReadNoticeKind.locode => 'revisa esos puertos con la agencia',
+      BaplieReadNoticeKind.dimension => 'revisa esas medidas antes de estibar',
       _ => 'revisa esos números con la agencia',
     };
-    return '$title: $count ${count == 1 ? 'contenedor' : 'contenedores'} · $action';
+    // T-144: un aviso de UN/LOCODE puede ser de la cabecera o de una celda
+    // reservada, que no son contenedores.
+    final soloContenedores = notice.details.every((detail) =>
+        !detail.startsWith('Cabecera:') &&
+        !detail.startsWith('Celda reservada '));
+    final unidad = soloContenedores
+        ? (count == 1 ? 'contenedor' : 'contenedores')
+        : (count == 1 ? 'caso' : 'casos');
+    return '$title: $count $unidad · $action';
   }
 
   @override

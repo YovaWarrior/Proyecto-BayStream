@@ -5,6 +5,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/repositories/vessel_repository.dart';
+import '../../domain/services/container_number.dart';
 import '../services/baplie_parser_service.dart';
 
 /// Implementación del repositorio de buques
@@ -119,7 +120,8 @@ class VesselRepositoryImpl implements VesselRepository {
       String query) async {
     final voyagesResult = await getAllVoyages();
     return voyagesResult.map((voyages) {
-      final normalized = query.trim().toUpperCase();
+      // T-144: la matrícula se busca sin espacios, como se guarda.
+      final normalized = numeroDeContenedor(query);
       return voyages
           .expand((voyage) => voyage.containers)
           .where((container) =>

@@ -3,7 +3,7 @@
 Timonel (Claude Code, Opus 5.5), rama `sprint-4`, carpeta `C:\Proyectos\baystream-rediseno`.
 Bloque 1 de la 10.117. Sale con T-143 en la versión del bloque 1.
 
-Estado: **fase 1, propuesta escrita. ALTO:** Yov la revisa y Carlos la aprueba antes de tocar `lib/`, `test/` o `tool/`.
+Estado: **fase 2 entregada.** La propuesta (sección 1) la revisó Yov y la aprobó Carlos con cuatro decisiones (10.123); lo hecho está en la sección 2.
 
 ---
 
@@ -13,9 +13,9 @@ Estado: **fase 1, propuesta escrita. ALTO:** Yov la revisa y Carlos la aprueba a
 |---|---|
 | Punta de `sprint-4` | `7b1c56e` (10.122). Trae `235c7eb` (T-143, corrección 2) y `f445d65` (10.121). |
 | Árbol de trabajo | `git diff --stat` sale vacío. Los cuatro archivos que Git marca como modificados (`test/t114_fase3_correccion_test.dart` y los tres `windows/flutter/generated_plugin*`) solo traen el aviso de LF→CRLF: no hay cambio de contenido. No son míos y no los toco. |
-| T-145 en paralelo | Va con Codex en `C:\Proyectos\baystream-t137` (10.122) y no toca `lib/`, `test/` ni `pubspec.*`. **Falta que Carlos lo confirme.** |
-| `flutter pub get` y `flutter analyze` | **Sin correr.** Esperan la luz verde de Carlos y una línea `SEMÁFORO:`. Esta fase solo escribe en `docs/`. |
-| Corpus | La carpeta tiene 8 de los 10 archivos de T-140. Faltan `CORPUS_A07.edi` y `CORPUS_A08.edi`, que ahora están en el escritorio de Carlos. **Carlos tiene que pasarme la ruta.** Las huellas de los otros 8 coinciden con `build/t140/resumen.json`. |
+| T-145 en paralelo | Va con Codex en `C:\Proyectos\baystream-t137` (10.122) y no toca `lib/`, `test/` ni `pubspec.*`. Carlos confirmó al aprobar que ninguna otra tarea tiene abiertos `lib/`, `test/` ni `pubspec.*` en esta carpeta. |
+| `flutter pub get` y `flutter analyze` | Con la luz verde de Carlos, sobre `886fbb0` (10.123), a las 13:19: «Got dependencies!» y «No issues found!». `pubspec.*` sin cambios. |
+| Corpus | La carpeta tiene 8 de los 10 archivos de T-140; `CORPUS_A07.edi` y `CORPUS_A08.edi` están en el escritorio de Carlos. Comprobé las huellas de los dos antes de leerlos: A07 `f5bb081e…` y A08 `d2bbe288…`, las de `build/t140/resumen.json`. Las de los otros 8 también coinciden. |
 
 ---
 
@@ -43,7 +43,7 @@ Las copias de trabajo están fuera del repositorio, en mi carpeta temporal. Los 
 **Lo que trae el corpus** (conteo directo de segmentos; los 8 archivos que hay en la carpeta):
 
 - **DGS dobles:** A02 tiene 1 grupo con dos DGS, A03 tiene 3 y A03v tiene 3. Con A07 (2, según la 10.112) son **6 contenedores, 9 casos contando las variantes**.
-- **LOC+83:** viene en todos los archivos menos en los dos `PRUEBA_NIVEL_*`. A01 lo trae en 648 contenedores, A02 en 481, A03 en 369, A04 en 978, A05 en 736, A06 en 626 y A08v en 185. **En 6 de los 8 archivos, el 83 trae texto libre y no un UN/LOCODE:** un país de tres letras, «país − ciudad», asteriscos o vacío.
+- **LOC+83:** viene en todos los archivos menos en los dos `PRUEBA_NIVEL_*`. A01 lo trae en 648 contenedores, A02 en 481, A03 en 369, A04 en 978, A05 en 736, A06 en 626 y A08v en 185. **En 7 de los 8 archivos de la carpeta (todos menos A02), y también en A07 y A08, el 83 trae texto libre y no un UN/LOCODE** (corregido por Yov en la 10.123; yo había contado 6): un país de tres letras, «país − ciudad», asteriscos o vacío.
 - **A06:** los 717 contenedores traen LOC+6 y LOC+12, y ninguno trae LOC+9 ni LOC+11. Los 717 números tienen la forma «4 letras, espacio, 7 cifras», y **los 717 tienen el dígito de control ISO 6346 correcto** una vez quitado el espacio.
 - **DIM:** ningún archivo lo trae.
 - **Códigos de puerto** (9, 11, 6, 12, 5 y 61): todos tienen la forma de 5 caracteres, con dos excepciones:
@@ -79,7 +79,7 @@ Las copias de trabajo están fuera del repositorio, en mi carpeta temporal. Los 
 
 **Lector.** El LOC+83 del grupo del contenedor pasa a `finalDestination`, en la 2.x y en la 1.5, porque las dos guías usan el mismo calificador. Si viene más de uno, gana el último, como hoy con el 9 y el 11.
 
-**Valor:** el primer componente del C517, recortado y **tal cual viene**. No se interpreta: el corpus trae texto libre en 6 de los 8 archivos, y sacar un UN/LOCODE de «US − USHOU» sería inventar el dato. Si el componente viene vacío, el valor es nulo.
+**Valor:** el primer componente del C517, recortado y **tal cual viene**. No se interpreta: el corpus trae texto libre en 7 de los 8 archivos de la carpeta y en A07 y A08, y sacar un UN/LOCODE de «US − USHOU» sería inventar el dato. Si el componente viene vacío, el valor es nulo.
 
 **Detalle.** Una fila nueva, «Destino final», debajo de «Puerto de descarga». Solo sale si el archivo lo declara. No se valida ni se colorea.
 
@@ -176,7 +176,7 @@ Es lo que exige G221 («one continuous string», p. 25) y lo que hacen la 1.5 co
 
 **Qué se valida:**
 - **Los puertos que la app usa para operar:** 9 y 11 en la 2.x, 6 y 12 en la 1.5, el 13, y el 5 y el 61 de la cabecera.
-- **El 83 y el 76 no se validan:** se guardan y se muestran tal cual. El 83 trae texto libre en 6 de los 8 archivos, y validarlo daría cientos de avisos sin ninguna acción posible para el planificador.
+- **El 83 y el 76 no se validan:** se guardan y se muestran tal cual. El 83 trae texto libre en 7 de los 8 archivos de la carpeta y en A07 y A08, y validarlo daría cientos de avisos sin ninguna acción posible para el planificador.
 
 **La regla:**
 1. **La forma:** `^[A-Z]{2}[A-Z0-9]{3}$`. Es la misma que ya usan el lector para el LOC+61 y las reglas de Firestore para `portOfCall`, así que no hay dos criterios en la app.
@@ -287,3 +287,219 @@ Los propongo en la fase 2, con el texto final. Son estos:
   - que ninguna otra tarea tiene abiertos `lib/`, `test/` ni `pubspec.*`;
   - la luz verde para `flutter pub get` y `flutter analyze`;
   - antes de publicar, que no quede abierta ninguna operación con una fuente 1.5 o con matrículas con espacio (1.5).
+
+**Lo que se decidió (10.123):**
+1. el CSV como se propuso; con una o ninguna declaración, las dos celdas quedan como antes;
+2. `XX…` aprobado sin aviso;
+3. volver a la 1.0.0 **no** se acepta como riesgo: los avisos nuevos se guardan en otra clave, y un tipo desconocido se salta;
+4. la etiqueta «IMO 3 +1» aprobada, sin nada cortado a 360 dp con letra 1.0, 1.45 y 2.0, y con la etiqueta accesible con todas las clases.
+
+---
+
+## 2. Lo hecho (fase 2)
+
+### 2.1 Por punto
+
+**1 · Todas las peligrosas**
+- **El lector no cambia.**
+- **CSV** (`export_service.dart`):
+  - con dos o más DGS, «Clase IMDG» y «Número ONU» llevan todas las declaraciones, separadas por « | » y con «sin dato» donde falta;
+  - con una o ninguna, las celdas salen como antes;
+  - «DGS declarados» va al final: vacío en un registro viejo y 0 sin DGS.
+- **El detalle:** «Carga peligrosa · 2 declaraciones» y una línea por declaración; con una, el texto de siempre.
+- **La Lista:**
+  - la etiqueta dice «IMO 3 +1»;
+  - el lector de pantalla oye «Carga peligrosa: IMO 3 e IMO 8», en la etiqueta que reúne la tarjeta.
+
+**2 · El destino final.** El LOC+83 va a `finalDestination` en la 2.x y en la 1.5, tal cual viene, y se reinicia en cada LOC+147. En el detalle, la fila «Destino final» sale solo si hay dato; en el CSV llena la columna.
+
+**3 · La 1.5.**
+- `_validateVersion` devuelve si el mensaje es la 1.5. Con la 1.5, los puertos se leen de LOC+6 y LOC+12; en la 2.x siguen 9 y 11.
+- Las reservas usan la misma regla. El LOC+97 no se lee.
+- Las constantes (`locPortOfLoadingV15`, `locPortOfDischargeV15` y `locFinalDestination`) llevan la cita de la guía.
+
+**4 · La matrícula.** `numeroDeContenedor()` (nuevo, `domain/services/container_number.dart`) se aplica en:
+- el EQD del lector;
+- `ContainerUnit.fromJson`, así que los viajes guardados se leen normalizados;
+- las dos búsquedas;
+- las claves de `_groups` y `_rawGroups` del BAPLIE de salida, que sigue copiando el grupo tal cual.
+
+El listado ya hacía lo mismo, y queda sin tocar.
+
+**5 · El DIM:**
+- `_parseDIM` lee los calificadores 5 a 9 en su componente; acepta CMT y CM, convierte INH con aviso, y avisa sin unidad, con otra unidad, con el valor en otro componente o con un valor que no es número;
+- `applyDimension` deja el mayor si el calificador se repite, con aviso. Un DIM que llega antes del EQD queda pendiente, como el MEA;
+- el modelo no cambia;
+- el detalle: «Frente 30 cm · … · Alto 25 cm», o «Medidas no declaradas»;
+- el BAPLIE de salida conserva el DIM: hay una prueba con el escritor de T-82.
+
+**6 · El UN/LOCODE.** `problemaDeUnLocode()` está en `domain/services/un_locode.dart`, que es nuevo.
+- **Qué revisa:**
+  - la forma, `^[A-Z]{2}[A-Z0-9]{3}$`;
+  - que el país esté entre los 249 códigos de ISO 3166‑1.
+- **Lo que deja pasar sin aviso:**
+  - el vacío y los asteriscos;
+  - la agencia 112;
+  - los códigos `XX…`.
+- **Qué puertos revisa:**
+  - en el grupo: 9, 11 y 13 en la 2.x; 6, 12 y 13 en la 1.5;
+  - en la cabecera: 5 y 61.
+- **El aviso:**
+  - es de tipo `locode`;
+  - sale por contenedor, «Cabecera: …» o «Celda reservada 0020182: …»;
+  - se guarda como texto.
+- **El resumen** dice «N contenedores» o, si hay casos de cabecera o de reserva, «N casos».
+
+**Decisión 3 · La 1.0.0 sigue leyendo lo guardado.**
+- **Al guardar,** `VesselVoyage.toJson` reparte los avisos así:
+  - en `readNotices`, solo los cuatro tipos de la 1.0.0 (`BaplieReadNoticeKind.readByV100`);
+  - en `extraReadNotices`, `locode` y `dimension`.
+- **Al leer,** `fromJson` lee las dos claves con `BaplieReadNotice.tryFromJson`, que devuelve `null` con un tipo desconocido: ese aviso se salta y el viaje se lee entero. `fromJson` lanza como antes, para quien lo llame directamente.
+
+### 2.2 Lo que hice distinto de la propuesta o agregué
+
+1. **La lista de ISO 3166‑1.**
+   - **No es la de ISO.** La plataforma OBP de ISO pide aceptar sus Términos de uso para ver la lista, y no los acepté sin permiso de Carlos. La página de UNECE del UN/LOCODE pide una verificación anti-bots, y no la salté.
+   - **Lo que usé:**
+     - la tabla M49 de la División de Estadística de la ONU, columna «ISO-alpha2 Code», leída el 11-nov: 248 códigos;
+     - **más TW**, que ISO asigna y la M49 no publica como área propia. **TW lo agregué de mi conocimiento, no de una página que haya leído hoy.** Yov o Carlos lo pueden confirmar en la OBP.
+   - **El permiso de uso** sí lo leí en la página de ISO: «ISO allows free-of-charge use of its country, currency and language codes».
+   - Todo está citado en el comentario de `un_locode.dart`.
+2. **`XX…` y el color.** Leí la decisión 2 como la regla que ya rige (`DESIGN.md` 5.3): `XX…` no entra en la tabla fija y, como cualquier código que no está en ella, usa la ranura calculada (`ranuraCategorica`). **No cambié ningún color.** Si Yov quería que `XX…` se pinte neutro, sin color de categoría, es un cambio aparte en el plano, la leyenda y las estadísticas, y lo hago si lo pide.
+3. **La hoja de detalle de la Lista,** que no estaba en la propuesta. Mostraba solo la última DGS («Clase IMO», «Número ONU»). Con dos o más declaraciones, da una fila por cada una: «Declaración 1», «IMO 3 · UN 1993». Con una, la de siempre. Es el mismo defecto de H1 en otra pantalla; si Yov prefiere dejarlo fuera, se quita sin tocar lo demás.
+4. **Los textos compartidos van en `presentation/formatters/carga_especial.dart`** (nuevo), para que el detalle y la Lista no los dupliquen.
+5. **La búsqueda.** Una consulta de solo espacios ya no encuentra todos los contenedores por matrícula. Antes, «» estaba contenido en todo.
+
+### 2.3 Las pruebas existentes que cambian a propósito
+
+| Prueba | Por qué |
+|---|---|
+| `export_service_test.dart` | El CSV pasa de 24 a 25 columnas. |
+| `t112_csv_test.dart` | Los encabezados suman «DGS declarados» al final. |
+| `t103_smdg15_test.dart` | La 1.5 sintética se armaba con la 2.x cambiando solo el UNH, con LOC+9 y LOC+11. Una 1.5 declara 6 y 12 (guía 1.5, p. 20), así que ahora se arma con esos. Las expectativas no cambian. |
+| `t108_read_notices_test.dart` (dos pruebas) | Recorrían `BaplieReadNoticeKind.values` esperando un aviso de cada tipo; ahora recorren los cuatro de T-108, y los dos nuevos tienen su prueba en T-144. |
+
+### 2.4 Las validaciones
+
+| Validación | Resultado |
+|---|---|
+| `flutter analyze` (todo el paquete) | **0 avisos**, sin `// ignore:`. Al principio, 13:19; con todo, 13:40. A medio camino dio 5 avisos de estilo en mi prueba, y los corregí. |
+| Suite completa (`flutter test`) | **2202 de 2202**, sin omitidas (13:35 a 13:38). El piso era 2155 y suben las 47 de T-144. |
+| `test/t144_lector_volcado_test.dart` | 47 de 47: matrícula 7, la 1.5 4, LOC+83 5, peligrosas 11 (con 3 a 360 dp), DIM 13, UN/LOCODE 4 y la decisión 3 3. |
+| Fuzzing de T-141 (`dart run tool/t141_fuzz_baplie.dart`) | **180 mutantes, 0 fallas**: 112 rechazados con mensaje y 68 leídos, como en T-141. |
+| Volcado (`tool/t144_volcado_test.dart`) | 1 de 1. Las 10 huellas son las de `build/t140/resumen.json`. Hay un CSV por archivo y `resumen.json` en `build/t144/h1/` (fuera de Git). |
+
+**El volcado, frente a T-140.** Cuento las celdas que cambian, sin `id`. Las columnas que no aparecen no cambian.
+
+| Archivo | Contenedores | DGS dobles | Con destino final | Celdas que cambian | Avisos |
+|---|---|---|---|---|---|
+| A01 | 977 | 0 | 648 | Destino final 648 | 0 |
+| A02 | 806 | 1 | 481 | Destino final 481; Clase y ONU 1 | 0 |
+| A03 | 369 | 3 | 369 | Destino final 369; Clase y ONU 3 | 0 |
+| A03v | 369 | 3 | 369 | Destino final 369; Clase y ONU 3 | 0 |
+| A04 | 979 | 0 | 978 | Destino final 978 | 0 |
+| A05 | 736 | 0 | 626 | Destino final 626 (110 LOC+83 vacíos) | 0 |
+| A06 | 717 | 0 | 626 | Contenedor 717; Puerto de carga 717; Puerto de descarga 717; Destino final 626 | 0 |
+| A07 | 398 | 2 | 276 | Destino final 276; Clase y ONU 2 | 0 |
+| A08 | 405 (+55 reservas) | 0 | 185 | Destino final 185 | 0 |
+| A08v | 405 (+55 reservas) | 0 | 185 | Destino final 185 | 0 |
+
+- **Ningún DIM**, como se esperaba.
+- **Ningún aviso nuevo.** Los 30 `XXVSL` de A01 y los `*****` del LOC+61 no avisan, y los dígitos de control de A06 son todos válidos.
+- **El resto de cada CSV es idéntico al de T-140, más la columna nueva.**
+
+### 2.5 Lo que no se pudo y por qué
+
+- **La lista de países no salió de ISO.** Está explicado en 2.2.
+- **No abrí los tres clientes.** Lo que se ve está fijado por pruebas de widgets (el detalle, la Lista a 360 dp con letra 1.0, 1.45 y 2.0, y el resumen del viaje), no por capturas de Windows, la Web o el Honor. Los recorre la aceptación.
+- **Los viajes guardados antes de esta versión no ganan los puertos de la 1.5, el LOC+83 ni el DIM:** el almacén no guarda el `.edi`. Hay que volver a abrir el archivo (1.5).
+
+### 2.6 Los pasos del manual que cambian (propuesta, para el manual de la versión)
+
+- **Detalle del contenedor:** «Si el contenedor declara varias mercancías peligrosas, el detalle muestra una línea por cada una, con su clase IMO y su número ONU. Si el archivo trae el destino final, va en la fila "Destino final", tal como lo escribió la naviera. Un contenedor sobredimensionado muestra cuánto sobresale por el frente, atrás, a cada lado y por arriba.»
+- **La Lista:** «"IMO 3 +1" quiere decir clase 3 y una declaración más; el detalle las muestra todas.»
+- **Avisos de lectura:** dos más en el resumen del viaje. «Códigos de puerto que no son UN/LOCODE» (revisa esos puertos con la agencia) y «Medidas DIM revisadas» (revisa esas medidas antes de estibar). El archivo se abre igual.
+- **Búsqueda:** «El número se puede escribir con o sin espacios.»
+- **Viajes guardados antes de esta versión:** «Para ver el destino final, los puertos de una BAPLIE 1.5 o las medidas de sobredimensión, vuelve a abrir el archivo.»
+
+### 2.7 Los archivos
+
+**Nuevos:**
+- `lib/features/vessel/domain/services/container_number.dart`
+- `lib/features/vessel/domain/services/un_locode.dart`
+- `lib/features/vessel/presentation/formatters/carga_especial.dart`
+- `test/t144_lector_volcado_test.dart`
+- `tool/t144_volcado_test.dart`
+
+**Modificados:**
+- `DESIGN.md` (sección 17, nueva)
+- `docs/T144-RESULTADOS.md`
+- `lib/core/constants/baplie_constants.dart`
+- `lib/features/vessel/data/repositories/vessel_repository_impl.dart`
+- `lib/features/vessel/data/services/baplie_parser_service.dart`
+- `lib/features/vessel/data/services/export_service.dart`
+- `lib/features/vessel/domain/entities/container_unit.dart`
+- `lib/features/vessel/domain/entities/vessel_voyage.dart`
+- `lib/features/vessel/domain/services/departure_baplie_writer.dart`
+- `lib/features/vessel/presentation/widgets/container_search_delegate.dart`
+- `lib/features/vessel/presentation/widgets/containers_list_view.dart`
+- `lib/features/vessel/presentation/widgets/detalle_contenedor.dart`
+- `lib/features/vessel/presentation/widgets/voyage_summary_card.dart`
+- `test/export_service_test.dart`
+- `test/t103_smdg15_test.dart`
+- `test/t108_read_notices_test.dart`
+- `test/t112_csv_test.dart`
+
+**No cambian:**
+- `pubspec.yaml` ni `pubspec.lock`;
+- `lib/main.dart` ni los dos congelados;
+- las reglas, `firebase.json`, `windows/`, `android/` ni `web/`.
+
+Los cuatro archivos que Git ya marcaba al empezar no son míos y solo traen fin de línea: `test/t114_fase3_correccion_test.dart` y los tres `windows/flutter/generated_plugin*`. No van en el bloque.
+
+### 2.8 Las horas
+
+- **Fase 1:** ≈ 0.7 h. No la cronometré.
+- **Fase 2:** de 13:15 a 13:50, ≈ 0.6 h, con la suite, el fuzzing y el volcado.
+- **Total:** ≈ 1.3 h.
+
+---
+
+## 3. Git (lo ejecuta Carlos)
+
+```
+git add -- DESIGN.md
+git add -- docs/T144-RESULTADOS.md
+git add -- lib/core/constants/baplie_constants.dart
+git add -- lib/features/vessel/data/repositories/vessel_repository_impl.dart
+git add -- lib/features/vessel/data/services/baplie_parser_service.dart
+git add -- lib/features/vessel/data/services/export_service.dart
+git add -- lib/features/vessel/domain/entities/container_unit.dart
+git add -- lib/features/vessel/domain/entities/vessel_voyage.dart
+git add -- lib/features/vessel/domain/services/container_number.dart
+git add -- lib/features/vessel/domain/services/departure_baplie_writer.dart
+git add -- lib/features/vessel/domain/services/un_locode.dart
+git add -- lib/features/vessel/presentation/formatters/carga_especial.dart
+git add -- lib/features/vessel/presentation/widgets/container_search_delegate.dart
+git add -- lib/features/vessel/presentation/widgets/containers_list_view.dart
+git add -- lib/features/vessel/presentation/widgets/detalle_contenedor.dart
+git add -- lib/features/vessel/presentation/widgets/voyage_summary_card.dart
+git add -- test/export_service_test.dart
+git add -- test/t103_smdg15_test.dart
+git add -- test/t108_read_notices_test.dart
+git add -- test/t112_csv_test.dart
+git add -- test/t144_lector_volcado_test.dart
+git add -- tool/t144_volcado_test.dart
+git commit -m "Sprint 4: T-144, el lector y el volcado"
+git push
+```
+
+## 4. En tres líneas
+
+1. El lector lee todas las DGS en el volcado y en el detalle, el destino final (LOC+83), los puertos de la 1.5 (LOC+6 y LOC+12) y el DIM, y avisa los puertos que no son UN/LOCODE, sin rechazar el archivo.
+2. La matrícula se guarda sin espacios y en mayúsculas en todo el producto. Los avisos nuevos van en otra clave, para que la 1.0.0 siga abriendo «Recientes».
+3. La suite da 2202 de 2202, `analyze` cero y el fuzzing 180 y 0. El volcado de `build/t144/h1/` cambia frente a T-140 solo donde debía.
+
+## 5. Para Yov
+
+> Yov, T-144 fase 2 entregada (`docs/T144-RESULTADOS.md`, sección 2). Suite 2202/2202 sin omitidas (piso 2155 + 47), `analyze` cero, fuzzing 180/0, volcado en `build/t144/h1/` con las 10 huellas de T-140. Frente a T-140 solo cambian: «Destino final» donde hay LOC+83; Clase y ONU en los 9 casos de DGS dobles (A02 1, A03 3, A03v 3, A07 2); y en A06, Contenedor, Puerto de carga y Puerto de descarga en los 717. Cero avisos nuevos en el corpus. La decisión 3 va con `extraReadNotices` y `tryFromJson`, con prueba. Tres cosas para que mires: (1) la lista de ISO 3166‑1 sale de la M49 de la ONU (248) más TW, que agregué de memoria porque la OBP de ISO pide aceptar sus términos; confírmalo en la OBP. (2) `XX…` sigue con la ranura calculada, como cualquier código fuera de la tabla fija; no cambié colores. Si querías neutro, dime. (3) Agregué, fuera de la propuesta, una fila por declaración en la hoja de detalle propia de la Lista, que también mostraba solo la última DGS.

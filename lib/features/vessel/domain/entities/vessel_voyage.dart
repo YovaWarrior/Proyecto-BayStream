@@ -391,8 +391,20 @@ class VesselVoyage extends Equatable {
         if (includeBays)
           'bays': bays.map((k, v) => MapEntry(k.toString(), v.toJson())),
         if (metadata != null) 'metadata': metadata!.toJson(),
-        if (readNotices.isNotEmpty)
-          'readNotices': readNotices.map((notice) => notice.toJson(containers)).toList(),
+        // T-144 (10.123): `readNotices` guarda solo los cuatro tipos que lee la
+        // 1.0.0, cuyo `fromJson` lanza con un tipo desconocido; los nuevos van
+        // en otra clave, que la 1.0.0 no lee. Así una vuelta a la versión
+        // anterior (la Web de la 10.116) sigue abriendo «Recientes».
+        if (readNotices.any((notice) => notice.kind.readByV100))
+          'readNotices': [
+            for (final notice in readNotices)
+              if (notice.kind.readByV100) notice.toJson(containers),
+          ],
+        if (readNotices.any((notice) => !notice.kind.readByV100))
+          'extraReadNotices': [
+            for (final notice in readNotices)
+              if (!notice.kind.readByV100) notice.toJson(containers),
+          ],
         // Una sola vez para todo el buque: las bahias no la serializan.
         if (geometry != null) 'geometry': geometry!.toJson(),
         if (portOfCall != null) 'portOfCall': portOfCall,
@@ -441,9 +453,16 @@ class VesselVoyage extends Equatable {
             ?.map((s) => ReservedSlot.fromJson(s as Map<String, dynamic>)).toList()
             ?? const [],
         bays: bays,
-        readNotices: (json['readNotices'] as List<dynamic>?)
-            ?.map((value) => BaplieReadNotice.fromJson(
-                Map<String, dynamic>.from(value as Map), containers)).toList() ?? const [],
+        // T-144: un tipo que esta versión no conoce se salta, sin romper la
+        // lectura del viaje.
+        readNotices: [
+          for (final key in const ['readNotices', 'extraReadNotices'])
+            for (final value in (json[key] as List<dynamic>?) ?? const [])
+              if (BaplieReadNotice.tryFromJson(
+                      Map<String, dynamic>.from(value as Map), containers)
+                  case final notice?)
+                notice,
+        ],
         metadata: json['metadata'] != null
             ? BaplieMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
             : null,
@@ -551,7 +570,26 @@ class BaplieMetadata extends Equatable {
 
 
 /// Una entrada por tipo; los detalles identifican los contenedores afectados.
-enum BaplieReadNoticeKind { weight, position, checkDigit, incomplete }
+///
+/// T-144 suma [locode] (un código de puerto que no es UN/LOCODE) y
+/// [dimension] (un DIM que no se pudo leer entero). Esos dos no los conoce la
+/// 1.0.0: se guardan aparte (ver [readByV100]) y como texto.
+enum BaplieReadNoticeKind {
+  weight,
+  position,
+  checkDigit,
+  incomplete,
+  locode,
+  dimension;
+
+  /// Los cuatro tipos que la 1.0.0 sabe leer de `readNotices`.
+  bool get readByV100 => index <= incomplete.index;
+
+  /// Se guarda el texto del detalle y no el índice del contenedor: el de
+  /// [incomplete] nombra segmentos, y uno de [locode] puede ser de la cabecera.
+  bool get storedAsText =>
+      this == incomplete || this == locode || this == dimension;
+}
 
 class BaplieReadNotice extends Equatable {
   final BaplieReadNoticeKind kind;
@@ -568,7 +606,7 @@ class BaplieReadNotice extends Equatable {
         'kind': kind.name,
         'details': [
           for (final detail in details)
-            if (kind == BaplieReadNoticeKind.incomplete)
+            if (kind.storedAsText)
               detail
             else
               _reference(detail, containers),
@@ -588,10 +626,17 @@ class BaplieReadNotice extends Equatable {
   }
 
   factory BaplieReadNotice.fromJson(
+          Map<String, dynamic> json, List<ContainerUnit> containers) =>
+      tryFromJson(json, containers) ??
+      (throw ArgumentError.value(json['kind'], 'kind', 'Tipo de aviso desconocido'));
+
+  /// T-144 · `null` si el tipo lo escribió una versión posterior: se salta.
+  static BaplieReadNotice? tryFromJson(
       Map<String, dynamic> json, List<ContainerUnit> containers) {
-    final kind = BaplieReadNoticeKind.values.byName(json['kind'] as String);
+    final kind = BaplieReadNoticeKind.values.asNameMap()[json['kind']];
+    if (kind == null) return null;
     return BaplieReadNotice(kind, (json['details'] as List<dynamic>).map((value) {
-      if (kind == BaplieReadNoticeKind.incomplete) return value as String;
+      if (kind.storedAsText) return value as String;
       final reference = Map<String, dynamic>.from(value as Map);
       final number = containers[reference['containerIndex'] as int].containerId;
       final text = reference['text'] as String;

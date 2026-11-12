@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 
+import '../../domain/entities/dangerous_goods.dart';
 import '../../domain/entities/entities.dart';
 
 /// Formatos disponibles desde el único punto de exportación del viaje.
@@ -47,6 +48,8 @@ class ExportService {
     'Sobreancho derecho (cm)',
     'Sobrelongitud frontal (cm)',
     'Sobrelongitud trasera (cm)',
+    // T-144: al final, para que ninguna columna cambie de posición.
+    'DGS declarados',
   ];
 
   const ExportService();
@@ -72,8 +75,10 @@ class ExportService {
         container.finalDestination,
         container.operatorCode,
         _yesNo(container.isDangerous),
-        container.imdgClass,
-        container.unNumber,
+        _dangerousGoodsField(container, (d) => d.hazardClass) ??
+            container.imdgClass,
+        _dangerousGoodsField(container, (d) => d.unNumber) ??
+            container.unNumber,
         _yesNo(container.isReefer),
         container.temperature,
         container.temperatureUnit,
@@ -83,6 +88,7 @@ class ExportService {
         container.overWidthRight,
         container.overLengthFront,
         container.overLengthRear,
+        container.dangerousGoods?.length,
       ];
       buffer
         ..write(values.map(_escapeCsvField).join(','))
@@ -100,6 +106,22 @@ class ExportService {
       };
 
   static String _yesNo(bool value) => value ? 'sí' : 'no';
+
+  /// T-144 · Con dos o más DGS, todas las declaraciones en el orden del
+  /// archivo, separadas por « | », y «sin dato» donde falta, para que «Clase
+  /// IMDG» y «Número ONU» se emparejen por posición. Con una o ninguna devuelve
+  /// null y la celda queda como antes (10.123). La barra vertical no la lee
+  /// Excel ni como número ni como fecha, y no es separador de campo en ninguna
+  /// configuración regional (el «;» sí lo es en la española).
+  static String? _dangerousGoodsField(
+      ContainerUnit container, String? Function(DangerousGoods) value) {
+    final declarations = container.dangerousGoods;
+    if (declarations == null || declarations.length < 2) return null;
+    return declarations
+        .map((d) => value(d)?.trim())
+        .map((v) => v == null || v.isEmpty ? 'sin dato' : v)
+        .join(' | ');
+  }
 
   /// JSON completo del viaje, reutilizando la serialización del dominio.
   String serializeJson(VesselVoyage voyage) {

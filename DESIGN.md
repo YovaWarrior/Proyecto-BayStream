@@ -2633,3 +2633,36 @@ para que lo que está bajo el puntero quede donde estaba:
    desplazaba la columna.
 6. **La barra de Material sirvió fuera de su desplazable**, como pedía la propuesta probarlo: no hizo
    falta una propia.
+
+## 17. El lector y el volcado (T-144; 10.123)
+
+Lo que cambia en pantalla con T-144. El lector, el modelo y el CSV están en `docs/T144-RESULTADOS.md`.
+
+### 17.1 El detalle del contenedor (`DetalleContenedor`)
+
+- **Varias peligrosas.** Con una sola declaración DGS, la señal dice lo de siempre: «Carga peligrosa · IMO 3» y, debajo, «UN 1993». Con dos o más, el título dice «Carga peligrosa · 2 declaraciones» y va una línea por declaración, en el orden del archivo: «IMO 3 · UN 1993», «IMO 8 · UN 1760». Lo que falta se dice: «IMO sin clase», «sin número ONU». Es lo que ya hacían las celdas reservadas.
+- **«Destino final»** es una fila nueva, debajo de «Puerto de descarga», solo si el archivo trae LOC+83. Va **tal cual viene**, sin validar y sin color: en el corpus suele ser texto libre («US − USHOU», «COL»).
+- **Sobredimensionado.** La señal suma una línea con lo que declara el DIM, en el orden frente, atrás, izquierda, derecha y alto: «Frente 30 cm · Izquierda 20 cm · Alto 25 cm», con espacio duro antes de la unidad (11, regla 5). Si el DIM no trae medidas legibles: «Medidas no declaradas».
+- **La insignia de la celda, la leyenda «OOG», la Lista y las estadísticas** ya leían `isOverDimension`; desde T-144 el lector lo llena. La prioridad de la insignia no cambia: peligrosa, refrigerado y OOG. El detalle muestra las tres señales.
+
+### 17.2 La Lista
+
+- **La etiqueta de peligrosa** dice «IMO 3» con una declaración y «IMO 3 +1» con dos (la clase de la primera, en el orden del archivo). El lector de pantalla oye todas: «Carga peligrosa: IMO 3 e IMO 8». Probado a 360 dp con letra 1.0, 1.45 y 2.0, sin nada cortado.
+- **La hoja de detalle de la Lista,** con dos o más declaraciones, da una fila por declaración: «Declaración 1», «IMO 3 · UN 1993».
+
+### 17.3 La matrícula
+
+La matrícula se guarda **sin espacios y en mayúsculas** (`numeroDeContenedor`), como pide la guía SMDG 2.2.1 («one continuous string»), y se sigue mostrando agrupada con `formatearContenedor`: «BYSU 967209 5». La búsqueda acepta el número con o sin espacios. No se completa a 11 posiciones.
+
+### 17.4 Los avisos de lectura del resumen del viaje
+
+Dos tipos nuevos, con el mismo aspecto que los de T-108 (una línea de resumen y la fuente completa a un toque):
+
+| Tipo | Línea de resumen | Al tocarla |
+|---|---|---|
+| `locode` | «Códigos de puerto que no son UN/LOCODE: 2 contenedores · revisa esos puertos con la agencia» («casos» si alguno es de la cabecera o de una celda reservada) | «MSCU1234567: LOC+11 «ZZABC»: el país ZZ no existe en ISO 3166-1»; «Cabecera: LOC+5 «…»: no tiene la forma de un UN/LOCODE (2 letras de país y 3 de lugar)» |
+| `dimension` | «Medidas DIM revisadas: 1 contenedor · revisa esas medidas antes de estibar» | «MSCU1234567: DIM+9 en INH convertido a 25 cm» |
+
+Se validan los puertos con que opera la app (9, 11 y 13 en la 2.x; 6 y 12 en la 1.5; 5 y 61 en la cabecera). No se avisan el relleno de asteriscos (`*****`), los códigos de convenio `XX…` (`XXOPT`, `XXVSL`) ni los de la agencia 112 (US Census). `XX…` se muestra tal cual y no entra en la tabla fija de puertos (5.3): como cualquier código fuera de ella, usa la ranura calculada.
+
+Los dos tipos se guardan aparte (`extraReadNotices`), para que la 1.0.0 siga abriendo «Recientes» (10.123).

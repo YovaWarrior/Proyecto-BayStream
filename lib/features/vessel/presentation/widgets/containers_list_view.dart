@@ -3,6 +3,7 @@ import 'iconos_del_dominio.dart';
 import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
 import 'detail_text_row.dart';
+import '../formatters/carga_especial.dart';
 
 /// Widget que muestra la lista de contenedores en tarjetas
 class ContainersListView extends StatelessWidget {
@@ -140,7 +141,12 @@ class _ContainerCard extends StatelessWidget {
                   
                   // Indicadores especiales (IMO, Reefer)
                   if (container.isDangerous)
-                    Padding(
+                    // T-144: «IMO 3 +1» con más declaraciones; el lector de
+                    // pantalla oye todas las clases.
+                    Semantics(
+                      label: etiquetaAccesibleDePeligrosa(container),
+                      excludeSemantics: true,
+                      child: Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -155,7 +161,7 @@ class _ContainerCard extends StatelessWidget {
                             Icon(BsIconos.peligrosa, color: colorScheme.onErrorContainer, size: 14),
                             const SizedBox(width: 4),
                             Text(
-                              'IMO ${container.imdgClass ?? ""}',
+                              etiquetaDePeligrosa(container),
                               style: TextStyle(
                                 color: colorScheme.onErrorContainer,
                                 fontWeight: FontWeight.bold,
@@ -165,6 +171,7 @@ class _ContainerCard extends StatelessWidget {
                           ],
                         ),
                       ),
+                    ),
                     ),
                   if (container.isReefer)
                     Padding(
@@ -480,8 +487,15 @@ class _ContainerCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                _buildDetailRow(context, 'Clase IMO', container.imdgClass ?? 'N/A'),
-                _buildDetailRow(context, 'Número ONU', container.unNumber ?? 'N/A'),
+                // T-144: con dos o más DGS, una fila por declaración.
+                if ((container.dangerousGoods?.length ?? 0) > 1)
+                  for (final (i, d) in container.dangerousGoods!.indexed)
+                    _buildDetailRow(
+                        context, 'Declaración ${i + 1}', lineaDeDeclaracion(d))
+                else ...[
+                  _buildDetailRow(context, 'Clase IMO', container.imdgClass ?? 'N/A'),
+                  _buildDetailRow(context, 'Número ONU', container.unNumber ?? 'N/A'),
+                ],
               ],
               
               // Información de reefer

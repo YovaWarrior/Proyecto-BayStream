@@ -3,6 +3,7 @@ import 'iconos_del_dominio.dart';
 import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/container_number.dart';
 import '../providers/vessel_providers.dart';
 
 /// SearchDelegate para buscar contenedores por ID o puerto de descarga
@@ -78,10 +79,13 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
     }
 
     final normalizedQuery = query.toUpperCase().trim();
+    // T-144: la matrícula se busca sin espacios, como se guarda.
+    final numberQuery = numeroDeContenedor(query);
     
     // Buscar por ID de contenedor o puerto de descarga
     final results = containers.where((container) {
-      final matchesId = container.containerId.toUpperCase().contains(normalizedQuery);
+      final matchesId = numberQuery.isNotEmpty &&
+          container.containerId.toUpperCase().contains(numberQuery);
       final matchesPod = container.portOfDischarge?.toUpperCase().contains(normalizedQuery) ?? false;
       final matchesPol = container.portOfLoading?.toUpperCase().contains(normalizedQuery) ?? false;
       final matchesOperator = container.operatorCode?.toUpperCase().contains(normalizedQuery) ?? false;

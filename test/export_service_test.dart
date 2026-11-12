@@ -50,7 +50,8 @@ void main() {
 
     expect(csv.codeUnitAt(0), 0xfeff);
     expect(csv, startsWith('\ufeff${ExportService.csvHeaders.join(',')}\r\n'));
-    expect(ExportService.csvHeaders.length, 24);
+    // T-144: «DGS declarados» al final.
+    expect(ExportService.csvHeaders.length, 25);
     expect(csv, contains('Santo Tomás'));
     expect(csv, contains('"Puerto Quetzal, Guatemala"'));
     expect(csv, contains('"Línea ""Águila"", S.A."'));
