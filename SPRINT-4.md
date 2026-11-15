@@ -3592,4 +3592,26 @@ No se publica sola: sale con la versión del bloque 1 (10.117).
 
 **La reaceptación va a Codex, en el mismo chat,** sobre la punta con la corrección: el paso 0 sin el fuzzing (el lector no cambió), T144-ACC-01 con su propia sonda y los siete puntos que quedaron pendientes. El Honor, si Carlos lo reserva; si no, el emulador de Android, y el Honor pasa a la lista de la versión.
 
-La siguiente decisión es la **10.127**.
+### 10.127 · La reaceptación de T-144 no pasa por un P2: con letra 2.0, el título del detalle corta la matrícula; Timonel corrige otra vez (12-nov, 00:45; anotada el 15-nov)
+
+**Codex repitió la aceptación sobre `e488802`** («Reaceptación» de `docs/t144/aceptacion-codex.md`, commit `191f4e3`):
+- el paso 0 pasa: `analyze` en cero y la suite en 2213 de 2213, sin omitidas;
+- **T144-ACC-01 queda cerrado:** con su sonda, tres espacios, una tabulación y el espacio duro dan cero resultados y el estado inicial, y «bysu 967» encuentra su contenedor;
+- con un BAPLIE sintético propio de seis contenedores pasan, en la sonda funcional, las peligrosas (2, 3 y 1 DGS, en el detalle, la Lista y el CSV), el destino final y los avisos de UN/LOCODE, con `XXVSL` y los asteriscos sin aviso. Del DIM pasan las medidas en CMT e INH y sus avisos;
+- **T144-ACC-02 (P2):** en el emulador de Android (Android 8, 360 dp), con letra 2.0, el título del detalle muestra «TSTU 1440…» en vez de «TSTU 144000 2». Con 1.0 y 1.45 no se corta nada, y la Lista pasa con las tres. Codex se detuvo ahí: quedan A06 con la operación local, el resto del DIM (la insignia, la línea de medidas y la salida), la lectura con la 1.0.0, Windows y Chrome. El Honor pasa a la lista de la versión.
+
+**Lo que Yov comprobó:** el encabezado del detalle (el ícono, `BsNumeroDeContenedor` con `maxLines: 1` y elipsis, y la naviera a la derecha) es el de la 1.0.0, y T-144 no lo tocó. El defecto ya estaba, y sale ahora porque el punto 8 de la 10.124 pidió el detalle sin cortes con letra 2.0. Va contra RNF-003 y contra `DESIGN.md` («nada se corta»; el dato «envuelve si no cabe, nunca con elipsis»). `BsNumeroDeContenedor` solo se usa en ese título.
+
+**Se corrige dentro de T-144,** porque el archivo ya es de T-144, el carril de `lib/` sigue siendo suyo y la versión del bloque 1 no debe salir con la matrícula cortada. La corrección 2, con Timonel en el mismo chat:
+1. la matrícula del título nunca se corta ni lleva elipsis: si no cabe junto a la naviera, la naviera baja a la línea siguiente, y si tampoco cabe sola, envuelve por sus grupos;
+2. con letra 1.0 y 1.45, donde hoy cabe, se ve igual que ahora;
+3. las pruebas, a 360 y 600 dp con letra 1.0, 1.45 y 2.0, y la etiqueta accesible con la matrícula completa;
+4. un barrido de otras matrículas con elipsis en la presentación: se anotan, y no se cambian si están fuera de T-144.
+
+**Esta decisión se escribió tarde.** El 12-nov, Yov le dijo a Carlos que ya estaba anotada y le pasó su commit, pero no la había escrito en este archivo, así que ese commit no tuvo nada que subir. Se escribe el 15-nov con lo que se sabía el 12-nov, y con dónde quedó la corrección:
+- Timonel cambió `bs_numero_de_contenedor.dart` (sin `maxLines` ni elipsis: envuelve) y `detalle_contenedor.dart` (la matrícula y la naviera en un `OverflowBar`, que las deja igual mientras quepan y baja la naviera si no) el 12-nov a las 00:36, y se detuvo en el barrido;
+- faltan las pruebas, `analyze`, la suite, `DESIGN.md` si cambia lo que se ve, y la sección «Corrección 2» del informe. No hay nada en commits.
+
+**Después,** Codex retoma la aceptación donde quedó: T144-ACC-02 con su banco de Android y los puntos pendientes.
+
+La siguiente decisión es la **10.128**.
