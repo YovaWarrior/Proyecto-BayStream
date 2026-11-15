@@ -3614,4 +3614,17 @@ No se publica sola: sale con la versión del bloque 1 (10.117).
 
 **Después,** Codex retoma la aceptación donde quedó: T144-ACC-02 con su banco de Android y los puntos pendientes.
 
-La siguiente decisión es la **10.128**.
+### 10.128 · La corrección 2 de T-144, revisada: la matrícula del detalle ya no se corta; Codex retoma la aceptación (15-nov, 17:50)
+
+**Timonel terminó la corrección 2** (`docs/T144-RESULTADOS.md`, «Corrección 2», sobre `4aa8102`), sin commits:
+- `BsNumeroDeContenedor` pierde `maxLines: 1` y la elipsis, y envuelve por sus grupos sin partir ninguno. La regla va en el componente porque es del dato, no de una pantalla;
+- en el título del detalle, la matrícula y la naviera van en un `OverflowBar`: si caben juntas se ven como antes, y si no, la naviera baja. Con Plex Mono, una matrícula de 11 posiciones y una naviera de seis letras, solo cambia a 360 dp con letra 2.0;
+- 8 pruebas nuevas (`test/t144_titulo_sin_cortes_test.dart`), con las fuentes del producto: 360 y 600 dp con letra 1.0, 1.45 y 2.0, sin ningún párrafo cortado y con la etiqueta accesible completa, y la envoltura por grupos. Las 8 fallan contra el código anterior; las de 1.0 y 1.45, por `maxLines` y la clave nueva, no por un corte visible;
+- el barrido no encontró otra matrícula con elipsis ni `maxLines` en la presentación. Los otros textos que se recortan (el código de la celda, el buque y el viaje de la banda, la línea de resumen de Carga y la naviera del PDF) no son de T-144 y no cambian;
+- `analyze` en cero y la suite en 2221 de 2221, sin omitidas. `DESIGN.md` gana la sección 17.5.
+
+**Yov lo revisó contra `4aa8102`:** cambian exactamente esos cinco archivos (los dos de `lib/`, la prueba nueva, `DESIGN.md` y el informe). Los de `lib/` son los cambios del 12-nov, sin nada más, y las pruebas cargan las fuentes del producto (`t117CargarFuentes`), así que miden lo mismo que la aceptación en Android.
+
+**Codex retoma la aceptación** (la reaceptación 2) en `qa-r4`, sobre la punta con la corrección: el paso 0 sin el fuzzing, T144-ACC-02 con su banco de Android y los puntos que quedaron pendientes en la 10.127. El prompt está en el documento del proyecto `BayStream_T144_reaceptacion2_15nov.md`.
+
+La siguiente decisión es la **10.129**.
