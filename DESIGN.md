@@ -2666,3 +2666,13 @@ Dos tipos nuevos, con el mismo aspecto que los de T-108 (una línea de resumen y
 Se validan los puertos con que opera la app (9, 11 y 13 en la 2.x; 6 y 12 en la 1.5; 5 y 61 en la cabecera). No se avisan el relleno de asteriscos (`*****`), los códigos de convenio `XX…` (`XXOPT`, `XXVSL`) ni los de la agencia 112 (US Census). `XX…` se muestra tal cual y no entra en la tabla fija de puertos (5.3): como cualquier código fuera de ella, usa la ranura calculada.
 
 Los dos tipos se guardan aparte (`extraReadNotices`), para que la 1.0.0 siga abriendo «Recientes» (10.123).
+
+### 17.5 El título del detalle no corta la matrícula (corrección 2; 10.127)
+
+- **`BsNumeroDeContenedor` nunca se corta ni lleva elipsis.** Si no cabe en una línea, envuelve por sus grupos («TSTU» / «144000» / «2»), que es donde `formatearContenedor` pone los espacios; un grupo no se parte.
+- **En el título del detalle,** la matrícula y la naviera van en un `OverflowBar`:
+  - si caben juntas, se ven como antes: la matrícula a la izquierda y la naviera a la derecha, centradas en la misma línea;
+  - si no, la naviera baja a la línea siguiente, alineada a la izquierda;
+  - el ícono sigue a la izquierda.
+- **Con la matrícula de 11 posiciones y una naviera de seis letras,** con las fuentes del producto, solo a 360 dp con letra 2.0 baja la naviera. A 360 dp con 1.0 y 1.45, y a 600 dp con 1.0, 1.45 y 2.0, todo queda en una línea, como antes.
+- **La etiqueta accesible** lleva la matrícula completa («TSTU 144000 2»).

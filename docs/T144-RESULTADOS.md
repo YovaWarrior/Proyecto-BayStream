@@ -586,3 +586,106 @@ git push
 ### Para Yov
 
 > Yov, T-144 corrección 1 (T144-ACC-01) lista, sección «Corrección 1» de `docs/T144-RESULTADOS.md`, sobre `28438f0`. El buscador trata como vacía la consulta que queda vacía al quitarle todo espacio en blanco (`numeroDeContenedor(query).isEmpty`): estado inicial y ningún contenedor; los filtros no cambian. `searchContainers` devuelve `Right([])` sin leer los viajes. 11 pruebas nuevas: tres espacios, tabulación, espacio duro y todo junto, en los dos lugares, más «bysu 967»; 8 fallan contra los archivos de `HEAD`. `analyze` cero, suite 2213/2213 sin omitidas. El patrón no aparece en otro lugar de `lib/`. Una observación: el resaltado del resultado no marca «BYSU 967» porque compara con espacios contra la matrícula sin espacios (O-144-1, sin cambio). Corrijo además lo que dije en 2.2, punto 5: con solo espacios, antes solo la matrícula dejaba de coincidir.
+
+---
+
+## Corrección 2 (10.127) · La matrícula del detalle sin cortes
+
+**El hallazgo:** T144-ACC-02, P2 (`docs/t144/aceptacion-codex.md`, R1.5). En Android a 360 dp con letra 2.0, el título del detalle mostraba «TSTU 1440…» y no «TSTU 144000 2».
+- **La causa:** el encabezado venía de la 1.0.0. Era un `Row` con el ícono, `BsNumeroDeContenedor` en un `Expanded` y la naviera a la derecha, y el número llevaba `maxLines: 1` con elipsis.
+- **T-144 no lo causó,** pero el punto 8 de la 10.124 pide el detalle sin cortes con letra 2.0.
+
+Empecé el 12-nov sobre `e488802` y terminé el 15-nov sobre `4aa8102` (10.127). Los dos cambios de `lib/` son del 12-nov y no los rehice.
+
+### Dónde va el arreglo: en los dos lugares, cada uno con lo suyo
+
+1. **`BsNumeroDeContenedor`** (`lib/core/design/componentes/bs_numero_de_contenedor.dart`): pierde `maxLines: 1` y la elipsis, y envuelve (`softWrap`).
+   - Que el número nunca se corte es una regla **del dato**, así que va en el componente: el próximo que lo use no tiene que acordarse.
+   - Envuelve por sus grupos porque `formatearContenedor` pone los espacios entre el propietario, la serie y el dígito, y un grupo nunca se parte.
+   - Hoy solo lo usa ese título (y la vista previa del catálogo).
+2. **El encabezado del detalle** (`detalle_contenedor.dart`): la matrícula y la naviera van en un `OverflowBar` (`alignment: spaceBetween`, `spacing` = `espacioS` y `overflowSpacing` = `espacioXs`), dentro del mismo `Expanded`, con el ícono a la izquierda.
+   - Si las dos caben, el `OverflowBar` las pone en fila, como antes: la matrícula a la izquierda y la naviera a la derecha, centradas en la misma línea.
+   - Si no caben, baja la naviera a la línea siguiente, alineada a la izquierda.
+   - **Cómo se acomodan las dos piezas es del encabezado, no del número:** por eso esa parte va ahí.
+
+### Lo que se ve
+
+Medido con las fuentes del producto (Plex Mono), una matrícula de 11 posiciones (`TSTU144000` y su dígito) y la naviera «NAVIER»:
+
+| Ancho | Letra 1.0 | Letra 1.45 | Letra 2.0 |
+|---|---|---|---|
+| 360 dp | una línea, como antes | una línea, como antes | **la naviera baja**; la matrícula entera, en una línea |
+| 600 dp | una línea, como antes | una línea, como antes | una línea |
+
+`DESIGN.md` suma la sección 17.5 con esta regla.
+
+### Las pruebas
+
+Están en `test/t144_titulo_sin_cortes_test.dart`, que es nuevo: 8 pruebas, con las fuentes reales (`t117CargarFuentes`).
+- **Seis, a 360 y 600 dp con letra 1.0, 1.45 y 2.0:**
+  - sin excepciones de dibujo;
+  - **ningún párrafo del detalle con `didExceedMaxLines`**;
+  - la matrícula entera y agrupada, sin `maxLines` ni elipsis;
+  - la etiqueta accesible con «TSTU 144000 …» completa;
+  - con 1.0 y 1.45, la naviera en la misma línea, pegada al borde derecho y centrada con la matrícula, como antes; si baja, queda debajo y a la izquierda.
+- **Una más:** el caso de T144-ACC-02, 360 dp con letra 2.0, en el que la naviera baja.
+- **Y una del componente solo:** en 140 px, la matrícula envuelve en más de una línea, sin elipsis y sin partir ningún grupo.
+
+**Contra los dos archivos de `HEAD`** (puestos un momento y restaurados byte a byte), **fallan las 8**:
+- las de 1.0 y 1.45 fallan porque el `Text` de antes lleva `maxLines: 1` y elipsis, y porque el título no tiene la clave nueva; **no porque ahí se vea cortado**;
+- el corte real es el de 360 dp con letra 2.0, como encontró Codex.
+
+### El barrido de la presentación
+
+Revisé todas las elipsis (`TextOverflow.ellipsis`, `fade` y `clip`) y los `maxLines` de `lib/features` y `lib/core`. **Ninguno corta una matrícula:**
+- en `bs_celda.dart`, el código de la celda, el rótulo de la marca y la segunda línea (peso u «OR»);
+- en `bs_banda_muelle.dart`, el buque y el viaje;
+- en `loading_controls.dart`, la línea de resumen del modo, que se recoge a propósito y se abre con un toque (T-107);
+- en `vessel_overview_page.dart`, el nombre del buque;
+- en el PDF, la naviera de la celda.
+
+Los `TextField` con `maxLines: 4` son campos de motivo. **No cambié nada fuera de T-144.**
+
+### Las validaciones
+
+| Validación | Resultado |
+|---|---|
+| `flutter analyze` (todo el paquete) | **0 avisos**, sin `// ignore:` (15-nov, 17:22). |
+| `test/t144_titulo_sin_cortes_test.dart` | 8 de 8. |
+| Suite completa | **2221 de 2221**, sin omitidas (17:22 a 17:27). El piso era 2213. |
+
+El lector, el CSV y el volcado no cambian, así que el fuzzing y `build/t144/h1/` siguen valiendo. La sonda de las medidas la corrí desde `build/t144/c2/`, y la borré antes de `analyze`.
+
+### Los archivos
+
+- `lib/core/design/componentes/bs_numero_de_contenedor.dart` (modificado)
+- `lib/features/vessel/presentation/widgets/detalle_contenedor.dart` (modificado)
+- `test/t144_titulo_sin_cortes_test.dart` (nuevo)
+- `DESIGN.md` (17.5, nueva)
+- `docs/T144-RESULTADOS.md` (esta sección)
+
+`pubspec.*` no cambia. Los cuatro archivos que Git marca solo por el fin de línea siguen sin ser míos.
+
+**Horas:** ≈ 0.5 h (el 12-nov y el 15-nov).
+
+### Git (lo ejecuta Carlos)
+
+```
+git add -- lib/core/design/componentes/bs_numero_de_contenedor.dart
+git add -- lib/features/vessel/presentation/widgets/detalle_contenedor.dart
+git add -- test/t144_titulo_sin_cortes_test.dart
+git add -- DESIGN.md
+git add -- docs/T144-RESULTADOS.md
+git commit -m "Sprint 4: T-144, correccion 2, la matricula del detalle sin cortes"
+git push
+```
+
+### En tres líneas
+
+1. La matrícula nunca se corta: el componente envuelve por grupos, y en el título del detalle la naviera baja de línea cuando no caben juntas.
+2. Donde ya cabía, se ve como antes. Solo a 360 dp con letra 2.0 cambia: la naviera baja y la matrícula sale entera.
+3. Hay 8 pruebas con las fuentes reales; `analyze` da cero y la suite 2221 de 2221. El barrido no encontró otra matrícula cortada.
+
+### Para Yov
+
+> Yov, T-144 corrección 2 (T144-ACC-02) lista, sección «Corrección 2» de `docs/T144-RESULTADOS.md`, sobre `4aa8102`. `BsNumeroDeContenedor` pierde `maxLines: 1` y la elipsis y envuelve por sus grupos; en el título del detalle, la matrícula y la naviera van en un `OverflowBar` (`spaceBetween`), que las deja como antes si caben y baja la naviera si no. Con Plex Mono, TSTU144000 + dígito y naviera de 6 letras, solo a 360 dp con letra 2.0 baja la naviera; las otras cinco combinaciones quedan en una línea, como antes. 8 pruebas nuevas en `test/t144_titulo_sin_cortes_test.dart` (360 y 600 dp × 1.0, 1.45 y 2.0, sin ningún `didExceedMaxLines`, etiqueta accesible completa, y la envoltura por grupos); las 8 fallan contra `HEAD`, las de 1.0 y 1.45 por el `maxLines: 1` y la clave nueva, no por un corte visible. `analyze` cero, suite 2221/2221 sin omitidas. `DESIGN.md` 17.5 nueva. Barrido: ninguna otra matrícula con elipsis ni `maxLines` en la presentación.

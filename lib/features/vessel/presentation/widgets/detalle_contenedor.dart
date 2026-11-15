@@ -134,25 +134,39 @@ class DetalleContenedor extends ConsumerWidget {
             color: tema.colorScheme.onSurfaceVariant,
           ),
           SizedBox(width: medidas.espacioS),
+          // T-144, corrección 2 (10.127): la matrícula nunca se corta. Si cabe
+          // con la naviera, van como antes: la matrícula a la izquierda y la
+          // naviera a la derecha. Si no, la naviera baja a la línea siguiente
+          // y la matrícula, si tampoco cabe sola, envuelve por sus grupos.
           Expanded(
-            child: BsNumeroDeContenedor(
-              container.containerId,
-              estilo: textos.headlineSmall,
+            child: OverflowBar(
+              key: const ValueKey('detalle-contenedor-titulo'),
+              alignment: MainAxisAlignment.spaceBetween,
+              spacing: medidas.espacioS,
+              overflowSpacing: medidas.espacioXs,
+              children: <Widget>[
+                BsNumeroDeContenedor(
+                  container.containerId,
+                  estilo: textos.headlineSmall,
+                ),
+                if (container.operatorCode != null)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: medidas.espacioS,
+                        vertical: medidas.espacioXs),
+                    decoration: BoxDecoration(
+                      color: tema.colorScheme.surfaceContainerHigh,
+                      borderRadius:
+                          BorderRadius.circular(medidas.radioControl),
+                    ),
+                    child: Text(
+                      container.operatorCode!,
+                      style: textos.labelLarge,
+                    ),
+                  ),
+              ],
             ),
           ),
-          if (container.operatorCode != null)
-            Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: medidas.espacioS, vertical: medidas.espacioXs),
-              decoration: BoxDecoration(
-                color: tema.colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(medidas.radioControl),
-              ),
-              child: Text(
-                container.operatorCode!,
-                style: textos.labelLarge,
-              ),
-            ),
         ],
       ),
       subtitulo: subtitulo,
