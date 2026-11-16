@@ -3627,4 +3627,30 @@ No se publica sola: sale con la versión del bloque 1 (10.117).
 
 **Codex retoma la aceptación** (la reaceptación 2) en `qa-r4`, sobre la punta con la corrección: el paso 0 sin el fuzzing, T144-ACC-02 con su banco de Android y los puntos que quedaron pendientes en la 10.127. El prompt está en el documento del proyecto `BayStream_T144_reaceptacion2_15nov.md`.
 
-La siguiente decisión es la **10.129**.
+### 10.129 · Codex sale hasta nuevo aviso y entra GLM 5.3: la reaceptación 2 de T-144 pasa a GLM y T-145, a Timonel (15-nov, 17:52)
+
+**Carlos lo decidió** (15-nov, 17:42): Capitán Codex no se usa hasta nuevo aviso. En su lugar entra **GLM 5.3**, en Max o en Flash. Los programadores quedan en dos: Timonel y GLM.
+
+**Cómo queda el trabajo:**
+- **GLM hace el papel de Codex.** Le aplica todo `AGENTS.md`: donde dice «Capitán Codex» o «Codex», se lee GLM, como Timonel ya lee «el programador de turno» en `CLAUDE.md`. Mientras el cambio sea hasta nuevo aviso, `AGENTS.md` y `CLAUDE.md` no se tocan, y cada prompt para GLM lo dice al empezar. Si el cambio se queda, Yov los pone al día.
+- **La aceptación sigue cruzada:** lo que hace Timonel lo acepta GLM, y lo que hace GLM lo acepta Timonel.
+- **El modo de GLM va al final de cada prompt,** como el modelo y el esfuerzo de Timonel: Max para propuestas, código y aceptaciones; Flash para lo corto y mecánico, como repetir un script o comprobar un archivo.
+- **Las aceptaciones de GLM** van en `docs/<tarea>/aceptacion-glm.md`, junto a las de Codex, que no se tocan.
+
+**La reaceptación 2 de T-144 va a GLM, en Max,** en `qa-r4`. Carlos ya corrió el bloque de la 10.128: en GitHub están `caefc45` y `1ac6b62`, y `qa-r4` está en `1ac6b62`. Con el bloque de esta decisión, `qa-r4` pasa a la punta. El encargo es el de la 10.128, con dos cosas más:
+- la sonda funcional de Codex de la R1, otra vez, porque la corrección 2 tocó `lib/`;
+- la matrícula ya no tiene `maxLines`, así que la detección del banco de Android (`didExceedMaxLines`) ya no puede marcarla: GLM comprueba además, en la captura y en el árbol de widgets, que sale entera y sin desbordes.
+
+GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md` y `build/t144/aceptacion/`), y usa sus instrumentos solo después de leerlos.
+
+**T-145 pasa a Timonel,** en `baystream-t137`, rama `t137-instalador`, con el encargo de la 10.122 sin cambios (O-137-1 a O-137-8). Nadie la había empezado: la rama sigue en `dae3259`, y en la carpeta no hay informe, evidencia ni archivos tocados desde el 10-nov. Las observaciones salen de la revisión de T-137 que hizo Timonel (10.104); que ahora las arregle no cruza la regla, porque T-145 la acepta GLM.
+
+**Las dos van a la vez,** con las reglas de «Trabajo en paralelo» de `AGENTS.md`:
+- T-145 no toca `lib/`, `test/` ni `pubspec.*`, y la reaceptación no cambia código;
+- un comando de Flutter o de Dart a la vez en la máquina, con las líneas `SEMÁFORO:`; si coinciden, primero el `analyze` de Timonel, que es corto, y después la suite de GLM;
+- **Windows, por turnos, a través de Carlos:** mientras Timonel instala, desinstala o toma la huella del almacén real, GLM no abre BayStream en Windows; y mientras GLM la tiene abierta, Timonel no toma huellas. El emulador y el Honor, con la luz verde de Carlos;
+- si la reaceptación 2 no pasa, la corrección es de Timonel, en `baystream-rediseno`, y Carlos decide si pausa T-145 o si corrige al terminar la fase en curso.
+
+**Los prompts,** el de GLM y el de Timonel, están en el documento del proyecto `BayStream_T144_reaceptacion2_15nov.md`. Reemplazan el prompt para Codex de la 10.128, que no se usó, y el de T-145 para Codex de la 10.122 (`BayStream_Post_defensa_10nov.md`).
+
+La siguiente decisión es la **10.130**.
