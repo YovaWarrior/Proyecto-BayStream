@@ -3673,4 +3673,18 @@ GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md
 
 **Sigue la fase 2,** con la luz verde de Carlos para `pub get` y `analyze` cuando no corra otro comando de Flutter (GLM está en la reaceptación 2 de T-144), y Windows en el turno de Timonel, sin GLM en la app.
 
-La siguiente decisión es la **10.131**.
+### 10.131 · El `analyze` de T-145: en `baystream-t137` no puede dar cero en todo el paquete; se cuenta sobre todo el Dart versionado (15-nov, 21:48)
+
+**Timonel se detuvo en el paso 0** (18:31; `build/t145/pub-get-01.log` y `build/t145/analyze-01.log`), como pedía el prompt. `pub get` pasa, con `pubspec.*` intactos, y el `analyze` de todo el paquete da 7 incidencias. Ninguna está en un archivo de T-137 ni de T-145:
+- tres son O-126-1, que la 10.118 volvió a anotar como O-143-3: `tool/t124_main.dart` importa `build/t124/entradas/t124_entradas.dart`, la entrada generada de T-124, ignorada por Git, que solo existe en la carpeta del rediseño;
+- cuatro están en `build/t137/`, la evidencia local de T-137: dos errores en copias viejas del generador del arte, que importan `../test/support/t117_oficina_support.dart`, y dos avisos en el `pubspec.yaml` del negativo del SDK, sin sus fuentes.
+
+**Fue un error del prompt de Yov** (10.122 y 10.130): pidió `analyze` en cero en todo el paquete en una carpeta donde O-126-1 y la evidencia de `build/` lo impiden.
+
+**Se aprueba la propuesta de Timonel,** que es más estricta que el alcance acotado de T-137:
+- copia la entrada de T-124 desde `baystream-rediseno`, que solo lee, a `build/t124/entradas/t124_entradas.dart` de su carpeta, como hizo T-131 para su línea base (10.94). Queda fuera de Git y nunca se agrega;
+- el cero se cuenta con `flutter analyze --no-pub lib test tool integration_test`, todo el Dart versionado, al empezar y al cerrar, sin `// ignore:`;
+- al cerrar se corre también el de todo el paquete, y el informe declara sus incidencias: solo valen las cuatro de `build/t137/` y las de las copias de `build/t145/`. Ninguna puede estar en un archivo versionado;
+- `build/t137/` no se toca: es la evidencia de T-137. O-126-1 se arregla en el bloque 3, con O-143-3.
+
+La siguiente decisión es la **10.132**.
