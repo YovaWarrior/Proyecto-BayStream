@@ -12,6 +12,18 @@
 #if T137Variante != "produccion" && T137Variante != "prueba"
   #error Variante T-137 desconocida.
 #endif
+; T-145 (O-137-7b): el ensayo de la consulta colgada solo existe en la prueba.
+#if T137Ensayo != "" && T137Ensayo != "msix-colgada"
+  #error Ensayo T-145 desconocido.
+#endif
+#if T137Ensayo != "" && T137Variante != "prueba"
+  #error El ensayo T-145 solo se arma con la variante de prueba.
+#endif
+#if T137Variante == "produccion" || T137Ensayo == "msix-colgada"
+  #define T145ConsultaMsix
+#endif
+; Espera máxima de la consulta de la MSIX, en milisegundos.
+#define T145LimiteMsixMs 30000
 
 [Setup]
 ; El GUID viene de las dos constantes permanentes del programa de armado.
@@ -113,6 +125,17 @@ Name: "escritorio"; Description: "Crear un acceso en el escritorio"; Flags: unch
 [Files]
 Source: "{#T137AppDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[InstallDelete]
+; T-145 (O-137-6, 10.130): restos de compilación que traía el asistente
+; 1.0.0.9 de T-137 y que la carga ya no lleva. Al instalar encima se quitan.
+; Nombres exactos y solo en {app}: nunca comodines ni otra carpeta. La lista
+; es la de _excluidos en tool/t137_instalador.dart, que la comprueba.
+Type: files; Name: "{app}\baystream.exp"
+Type: files; Name: "{app}\baystream.lib"
+Type: files; Name: "{app}\cloud_firestore_plugin.lib"
+Type: files; Name: "{app}\firebase_auth_plugin.lib"
+Type: files; Name: "{app}\firebase_core_plugin.lib"
+
 [Icons]
 Name: "{userprograms}\{#T137AppName}"; Filename: "{app}\baystream.exe"; WorkingDir: "{app}"; IconFilename: "{app}\baystream.exe"
 Name: "{userdesktop}\{#T137AppName}"; Filename: "{app}\baystream.exe"; WorkingDir: "{app}"; IconFilename: "{app}\baystream.exe"; Tasks: escritorio
@@ -135,27 +158,121 @@ var
   QueTexto: TNewMemo;
   DetrasTexto: TNewMemo;
   AccesoEscritorio: TNewCheckBox;
+#ifdef T145ConsultaMsix
+  ConsultasMsix: Integer;
+#endif
+
+{ T-145: WMI por COM, sin PowerShell. Lo usan el límite de la consulta de
+  la MSIX (O-137-7b) y el desinstalador (O-137-8). }
+function ServicioWmi: Variant;
+var
+  Localizador: Variant;
+begin
+  Localizador := CreateOleObject('WbemScripting.SWbemLocator');
+  Result := Localizador.ConnectServer('.', 'root\CIMV2');
+end;
+
+#ifdef T145ConsultaMsix
+function ComillaPs(Texto: String): String;
+begin
+  Result := Texto;
+  StringChangeEx(Result, '''', '''''', True);
+end;
+
+{ Termina el PowerShell de la consulta vencida, buscado por la ruta única de
+  su resultado en la línea de comandos. Nunca toca otro proceso.
+  1: terminado; 0: ya no estaba; -1: WMI falló. }
+function TerminarConsulta(const Marca: String): Integer;
+var
+  Servicio, Lista, Proceso: Variant;
+  I, Cantidad: Integer;
+  Linea: String;
+begin
+  Result := 0;
+  try
+    Servicio := ServicioWmi;
+    Lista := Servicio.ExecQuery('SELECT * FROM Win32_Process WHERE Name = ''powershell.exe''');
+    Cantidad := Lista.Count;
+    for I := 0 to Cantidad - 1 do begin
+      Proceso := Lista.ItemIndex(I);
+      if not VarIsNull(Proceso.CommandLine) then begin
+        Linea := Proceso.CommandLine;
+        if Pos(Marca, Linea) > 0 then begin
+          Proceso.Terminate(0);
+          Result := 1;
+        end;
+      end;
+    end;
+  except
+    Log('T145_WMI_FALLO: ' + GetExceptionMessage);
+    Result := -1;
+  end;
+end;
+#endif
 
 function ErrorMsix: String;
-#if T137Variante == "produccion"
+#ifdef T145ConsultaMsix
 var
-  Codigo: Integer;
-  Comando: String;
+  Codigo, Espera, Terminada: Integer;
+  Comando, Resultado, Parcial: String;
+  Lectura: AnsiString;
 #endif
 begin
   Result := '';
-#if T137Variante == "produccion"
-  { Solo el registro de paquetes de esta cuenta; sin -AllUsers ni cambios. }
+#ifdef T145ConsultaMsix
+  { Solo el registro de paquetes de esta cuenta; sin -AllUsers ni cambios.
+    T-145 (O-137-7b): Exec no tiene límite de tiempo. PowerShell corre sin
+    esperar y deja su código en un archivo de la carpeta temporal del
+    asistente; si no llega a tiempo,
+    el asistente termina esa consulta y se detiene antes de copiar nada. }
+  ConsultasMsix := ConsultasMsix + 1;
+  Resultado := ExpandConstant('{tmp}\t145-msix-') + IntToStr(ConsultasMsix) + '.txt';
+  Parcial := Resultado + '.part';
   Comando := '-NoLogo -NoProfile -NonInteractive -Command "' +
-    '$ErrorActionPreference = ''Stop''; try { ' +
+    '$ErrorActionPreference = ''Stop''; $c = 20; try { ' +
+#if T137Ensayo == "msix-colgada"
+    'Start-Sleep -Seconds 600; $c = 0 ' +
+#else
     'if (@(Get-AppxPackage -Name ''{#T137IdentidadMsix}'' ' +
-    '-ErrorAction Stop).Count -gt 0) { exit 10 }; exit 0 ' +
-    '} catch { exit 20 }"';
+    '-ErrorAction Stop).Count -gt 0) { $c = 10 } else { $c = 0 } ' +
+#endif
+    '} catch { $c = 20 }; ' +
+    '[IO.File]::WriteAllText(''' + ComillaPs(Parcial) + ''', [string]$c); ' +
+    'Move-Item -LiteralPath ''' + ComillaPs(Parcial) + ''' -Destination ''' +
+    ComillaPs(Resultado) + '''; exit $c"';
   if not Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
-      Comando, '', SW_HIDE, ewWaitUntilTerminated, Codigo) then
+      Comando, ExpandConstant('{tmp}'), SW_HIDE, ewNoWait, Codigo) then
     Result := 'No se pudo comprobar si BayStream está instalado como MSIX.'#13#10#13#10 +
       'Cierra el asistente y vuelve a intentarlo. No se copió ningún archivo de la aplicación.'
-  else if Codigo = 10 then
+  else begin
+    Espera := 0;
+    while (not FileExists(Resultado)) and (Espera < {#T145LimiteMsixMs}) do begin
+      Sleep(100);
+      Espera := Espera + 100;
+    end;
+    Codigo := 20;
+    if FileExists(Resultado) then begin
+      if LoadStringFromFile(Resultado, Lectura) then
+        Codigo := StrToIntDef(Trim(String(Lectura)), 20);
+    end else begin
+      Terminada := TerminarConsulta(Resultado);
+      if Terminada = 0 then
+        Log('T145_MSIX_SIN_RESULTADO: la consulta terminó sin dejar su código.')
+      else begin
+        if Terminada = 1 then
+          Log('T145_MSIX_TERMINADA: la consulta superó el límite y se terminó.')
+        else
+          Log('T145_MSIX_NO_TERMINADA: la consulta superó el límite y no se pudo terminar.');
+        Result := 'Windows no respondió en {#T145LimiteMsixMs / 1000} segundos si BayStream ' +
+          'está instalado como paquete MSIX, y el asistente se detuvo para no ' +
+          'instalar en la duda.'#13#10#13#10 +
+          'Cierra el asistente y vuelve a intentarlo. Si se repite, reinicia Windows ' +
+          'y prueba otra vez. No se copió ningún archivo de la aplicación.';
+      end;
+    end;
+  end;
+  if Result = '' then begin
+  if Codigo = 10 then
     Result := 'BayStream ya está instalado como paquete MSIX en esta cuenta, ' +
       'y este asistente no lo reemplaza.'#13#10#13#10 +
       'Para saber dónde están tus datos, abre %LOCALAPPDATA%\Packages en el Explorador ' +
@@ -170,6 +287,7 @@ begin
   else if Codigo <> 0 then
     Result := 'Windows no pudo completar la consulta del paquete MSIX.'#13#10#13#10 +
       'Cierra el asistente y vuelve a intentarlo. No se copió ningún archivo de la aplicación.';
+  end;
 #endif
   if Result <> '' then Log('T137_BLOQUEO_MSIX: ' + Result);
 end;
@@ -321,6 +439,87 @@ begin
     estaba abierto. Esta comprobación precede a cualquier copia de la app. }
   Result := ErrorCarpeta;
   if Result = '' then Result := ErrorMsix;
+end;
+
+{ T-145 (O-137-8): procesos que corren desde la carpeta de la aplicación,
+  sin contar el desinstalador original, que sigue vivo mientras su copia en
+  TEMP desinstala. La carpeta va con su barra final (10.130): BayStream\ no
+  es el comienzo de BayStream-Prueba-T137\. False si WMI falló. }
+function ProcesosDeLaApp(var Cantidad: Integer): Boolean;
+var
+  Servicio, Lista, Proceso: Variant;
+  I, Total, Id: Integer;
+  Carpeta, Ruta: String;
+begin
+  Cantidad := 0;
+  Carpeta := AddBackslash(ExpandConstant('{app}'));
+  try
+    Servicio := ServicioWmi;
+    Lista := Servicio.ExecQuery('SELECT ProcessId, ExecutablePath FROM Win32_Process');
+    Total := Lista.Count;
+    for I := 0 to Total - 1 do begin
+      Proceso := Lista.ItemIndex(I);
+      if not VarIsNull(Proceso.ExecutablePath) then begin
+        Ruta := Proceso.ExecutablePath;
+        if PathStartsWith(Ruta, Carpeta, True) and
+           not WildcardMatch(LowerCase(ExtractFileName(Ruta)), 'unins*.exe') then begin
+          Id := Proceso.ProcessId;
+          Cantidad := Cantidad + 1;
+          Log('T145_PROCESO_ABIERTO: ' + IntToStr(Id) + ' ' + Ruta);
+        end;
+      end;
+    end;
+    Result := True;
+  except
+    Log('T145_WMI_FALLO: ' + GetExceptionMessage);
+    Result := False;
+  end;
+end;
+
+{ Antes de quitar nada. Nunca cierra la app: pide cerrarla, con Reintentar y
+  Cancelar. En silencio con /SUPPRESSMSGBOXES, Cancelar. }
+function InitializeUninstall: Boolean;
+var
+  Cantidad, Boton: Integer;
+  Abierta: Boolean;
+begin
+  Result := True;
+  Abierta := False;
+  while True do begin
+    if not ProcesosDeLaApp(Cantidad) then begin
+      Boton := SuppressibleTaskDialogMsgBox(
+        'No se pudo comprobar si {#T137AppName} está abierta',
+        'Si está abierta, ciérrala antes de seguir: mientras está abierta, ' +
+        'Windows no deja quitar todos sus archivos.'#13#10#13#10 +
+        'Pulsa Desinstalar para seguir o Cancelar para no desinstalar ahora. ' +
+        'Tus datos en %LOCALAPPDATA%\BayStream no se tocan.',
+        mbInformation, MB_OKCANCEL, ['Desinstalar', 'Cancelar'], 0, IDCANCEL);
+      Result := Boton = IDOK;
+      if not Result then Log('T145_DESINSTALAR_CANCELADO');
+      Exit;
+    end;
+    if Cantidad = 0 then begin
+      if Abierta then
+        Log('T145_APP_CERRADA')
+      else
+        Log('T145_SIN_PROCESOS: ninguna instancia corre desde ' + ExpandConstant('{app}'));
+      Exit;
+    end;
+    Abierta := True;
+    Log('T145_APP_ABIERTA: ' + IntToStr(Cantidad) + ' proceso(s)');
+    Boton := SuppressibleTaskDialogMsgBox(
+      '{#T137AppName} está abierta',
+      'Ciérrala para poder desinstalarla: mientras está abierta, Windows no ' +
+      'deja quitar todos sus archivos.'#13#10#13#10 +
+      'Cuando la hayas cerrado, pulsa Reintentar. Si prefieres no desinstalar ' +
+      'ahora, pulsa Cancelar. Tus datos en %LOCALAPPDATA%\BayStream no se tocan.',
+      mbInformation, MB_RETRYCANCEL, ['Reintentar', 'Cancelar'], 0, IDCANCEL);
+    if Boton <> IDRETRY then begin
+      Log('T145_DESINSTALAR_CANCELADO');
+      Result := False;
+      Exit;
+    end;
+  end;
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);

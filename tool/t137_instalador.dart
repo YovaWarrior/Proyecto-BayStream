@@ -11,7 +11,11 @@ dart run tool/t137_instalador.dart [opciones]
   --origen RUTA             Release, o raíz del proyecto que la compiló.
                             Por omisión: build/windows/x64/runner/Release.
   --variante produccion|prueba  Por omisión: produccion.
-  --salida RUTA             Por omisión: build/t137.
+  --salida RUTA             Dentro de build/t137 o build/t145.
+                            Por omisión: build/t137.
+  --ensayo msix-colgada     Solo con --variante prueba (T-145): la consulta
+                            de la MSIX no responde, para probar su límite.
+                            El instalador nunca se publica.
   --help                   Muestra esta ayuda sin empaquetar.
 
 No ejecuta Flutter, Dart, la app, un instalador ni una desinstalación.
@@ -23,6 +27,25 @@ La variante de prueba nunca se publica ni ofrece abrir la app.
 // Identidades permanentes. No regenerar estos GUID al cambiar la versión.
 const _appIdProduccion = 'D837B138-34EF-4B47-9B86-58295383D542';
 const _appIdPrueba = '71B5E2CB-F84C-46C9-A7CA-684EA57A5137';
+
+// T-145 (O-137-6, 10.130): restos de compilación que la app no usa al correr.
+// Lista cerrada, en la raíz de la Release. No se copian a la carga, y el .iss
+// los quita de {app} al instalar encima, con estos mismos nombres.
+const _excluidos = <String>{
+  'baystream.exp',
+  'baystream.lib',
+  'cloud_firestore_plugin.lib',
+  'firebase_auth_plugin.lib',
+  'firebase_core_plugin.lib',
+};
+
+// Avisos del armado: van a la consola y al manifiesto. No detienen nada.
+final _avisos = <String>[];
+
+void _avisar(String aviso) {
+  _avisos.add(aviso);
+  stdout.writeln('T-137: AVISO: $aviso');
+}
 
 Future<void> main(List<String> argumentos) async {
   try {
@@ -61,6 +84,7 @@ Map<String, String> _opciones(List<String> argumentos) {
     'origen': _ruta(Directory.current.path, 'build/windows/x64/runner/Release'),
     'variante': 'produccion',
     'salida': _ruta(Directory.current.path, 'build/t137'),
+    'ensayo': '',
   };
   final vistas = <String>{};
   for (var i = 0; i < argumentos.length; i++) {
@@ -92,6 +116,14 @@ Map<String, String> _opciones(List<String> argumentos) {
   if (!['produccion', 'prueba'].contains(opciones['variante'])) {
     throw const FormatException('--variante debe ser produccion o prueba.');
   }
+  if (!['', 'msix-colgada'].contains(opciones['ensayo'])) {
+    throw const FormatException('--ensayo solo admite msix-colgada.');
+  }
+  if (opciones['ensayo']!.isNotEmpty && opciones['variante'] != 'prueba') {
+    throw const FormatException(
+      '--ensayo solo se arma con --variante prueba; nunca en producción.',
+    );
+  }
   return opciones;
 }
 
@@ -111,6 +143,7 @@ Future<void> _armar(Map<String, String> opciones) async {
   _exigirArchivo(exe);
   final raizOrigen = _raizDeRelease(origen);
   final prueba = opciones['variante'] == 'prueba';
+  final ensayo = opciones['ensayo']!;
   final appId = prueba ? _appIdPrueba : _appIdProduccion;
   final salida = Directory(opciones['salida']!).absolute;
   _protegerSalida(salida, origen, proyecto);
@@ -118,13 +151,28 @@ Future<void> _armar(Map<String, String> opciones) async {
   // Todo el preflight precede a la primera escritura. En especial, se
   // compara el SDK extraído, no el nombre del zip que quedó en build/.
   final archivosOrigen = _archivos(origen);
+  bool excluido(File archivo) =>
+      _excluidos.contains(_relativa(archivo, origen).toLowerCase());
   await _exigirX64(exe);
   final metadatos = await _metadatos(raizOrigen, exe);
   final arte = await _comprobarArte(proyecto);
+  _comprobarGuion(guion);
+  _revisarExcluidos(archivosOrigen, origen);
+  _avisarRestos(origen, archivosOrigen);
   final iscc = await _buscarIscc();
   final dumpbin = await _buscarDumpbin();
   final runtime = await _buscarRuntime(origen);
   final antes = await _huellas(archivosOrigen);
+  final excluidos = <Map<String, Object?>>[
+    for (var i = 0; i < archivosOrigen.length; i++)
+      if (excluido(archivosOrigen[i]))
+        {
+          'archivo': _relativa(archivosOrigen[i], origen),
+          'bytes': antes[i]['bytes'],
+          'sha256': antes[i]['sha256'],
+          'motivo': 'biblioteca de enlace: la app no la usa al correr',
+        },
+  ];
   final fuentes = (metadatos['fuentes']! as List).cast<String>();
   final fuentesAntes = await _huellas(fuentes.map(File.new).toList());
 
@@ -137,9 +185,11 @@ Future<void> _armar(Map<String, String> opciones) async {
   final preparando = Directory(_ruta(corrida.path, 'app'))..createSync();
   stdout.writeln(
     'T-137: Release ${metadatos['version']} · '
-    '${opciones['variante']} · ${archivosOrigen.length} archivos de origen.',
+    '${opciones['variante']} · ${archivosOrigen.length} archivos de origen, '
+    '${excluidos.length} fuera de la carga.',
   );
   for (final archivo in archivosOrigen) {
+    if (excluido(archivo)) continue;
     final relativo = _relativa(archivo, origen);
     final copia = File(_ruta(preparando.path, relativo));
     copia.parent.createSync(recursive: true);
@@ -165,6 +215,12 @@ Future<void> _armar(Map<String, String> opciones) async {
   }
   for (var i = 0; i < archivosOrigen.length; i++) {
     final relativo = _relativa(archivosOrigen[i], origen).toLowerCase();
+    if (excluido(archivosOrigen[i])) {
+      if (porRuta.containsKey(relativo)) {
+        throw _Fallo('Un archivo excluido llegó a la carga: $relativo');
+      }
+      continue;
+    }
     if (porRuta[relativo]?['sha256'] != antes[i]['sha256']) {
       throw _Fallo('La copia no coincide con la Release: $relativo');
     }
@@ -198,7 +254,8 @@ Future<void> _armar(Map<String, String> opciones) async {
   }
   preparando.renameSync(app.path);
   final version = metadatos['version']! as String;
-  final nombre = 'BayStream_Setup_$version${prueba ? '_prueba' : ''}';
+  final nombre = 'BayStream_Setup_$version${prueba ? '_prueba' : ''}'
+      '${ensayo.isEmpty ? '' : '_ensayo-msix'}';
   final instalador = File(_ruta(salida.path, '$nombre.exe'));
   for (final extension in [
     '.exe',
@@ -214,6 +271,7 @@ Future<void> _armar(Map<String, String> opciones) async {
   final include = File(_ruta(corrida.path, 'compilacion.iss'));
   final constantes = <String, String>{
     'T137Variante': prueba ? 'prueba' : 'produccion',
+    'T137Ensayo': ensayo,
     'T137AppId': appId,
     'T137OtroAppId': prueba ? _appIdProduccion : _appIdPrueba,
     'T137AppName': prueba ? 'BayStream (prueba T-137)' : 'BayStream',
@@ -253,6 +311,7 @@ Future<void> _armar(Map<String, String> opciones) async {
   final manifiesto = <String, Object?>{
     'schema': 1,
     'variante': opciones['variante'],
+    if (ensayo.isNotEmpty) 'ensayo': ensayo,
     'publicable': !prueba,
     'appId': appId,
     'nombre': constantes['T137AppName'],
@@ -267,6 +326,8 @@ Future<void> _armar(Map<String, String> opciones) async {
     'dumpbin': dumpbin,
     'dependencias': dependencias,
     'archivos': carga,
+    'excluidos': excluidos,
+    'avisos': _avisos,
     'archivosDelMotor': {
       'nota': 'Inno genera unins000.exe y unins000.dat al instalar. '
           'No pertenecen a la Release; su huella se registra en la aceptación '
@@ -276,7 +337,11 @@ Future<void> _armar(Map<String, String> opciones) async {
       'Instalador y desinstalador sin firma de código comercial. SmartScreen puede avisar al descargarlos de internet.',
       'La inspección de importaciones no ejecuta la app ni prueba Windows limpio o bibliotecas cargadas dinámicamente.',
       'El tema claro u oscuro de Windows se toma al arrancar el asistente.',
+      'Las DLL de Visual C++ van junto al ejecutable: Windows Update no las actualiza.',
+      'El asistente y Aplicaciones muestran la versión de cuatro partes del recurso del ejecutable ($version); la MSIX muestra la suya.',
       if (prueba) 'Solo para aceptación T-137: no publicar ni abrir la app.',
+      if (ensayo.isNotEmpty)
+        'Ensayo T-145: la consulta de la MSIX no responde a propósito. No instalar ni publicar.',
     ],
   };
   _json(File(_ruta(corrida.path, 'preparacion.json')), manifiesto);
@@ -337,6 +402,9 @@ Future<void> _armar(Map<String, String> opciones) async {
       'Origen verificado sin cambios. '
       '${carga.length} archivos en la carga; ${dependencias.length} módulos PE.',
     );
+  if (_avisos.isNotEmpty) {
+    stdout.writeln('${_avisos.length} aviso(s): ver «avisos» en el manifiesto.');
+  }
 }
 
 class _Fallo implements Exception {
@@ -391,11 +459,16 @@ bool _dentro(String ruta, String raiz) {
   return a == b || a.startsWith(b.endsWith('/') ? b : '$b/');
 }
 
+// T-145 trabaja en build/t145; T-137 sigue en build/t137.
+const _salidasPermitidas = ['build/t137', 'build/t145'];
+
 void _protegerSalida(Directory salida, Directory origen, Directory proyecto) {
-  final permitida = _ruta(proyecto.path, 'build/t137');
-  if (!_dentro(salida.path, permitida)) {
+  final permitida = _salidasPermitidas
+      .map((carpeta) => _ruta(proyecto.path, carpeta))
+      .where((carpeta) => _dentro(salida.path, carpeta));
+  if (permitida.isEmpty) {
     throw const _Fallo(
-      '--salida debe estar dentro de build/t137 de T-137. '
+      '--salida debe estar dentro de build/t137 o build/t145. '
       'Puede usar subcarpetas para conservar distintas corridas.',
     );
   }
@@ -411,11 +484,10 @@ void _protegerSalida(Directory salida, Directory origen, Directory proyecto) {
     ancestro = ancestro.parent;
   }
   final real = _ruta(ancestro.resolveSymbolicLinksSync(), pendientes.join('/'));
-  final permitidaReal = _ruta(
-    proyecto.resolveSymbolicLinksSync(),
-    'build/t137',
-  );
-  if (!_dentro(real, permitidaReal) ||
+  final proyectoReal = proyecto.resolveSymbolicLinksSync();
+  if (!_salidasPermitidas.any(
+        (carpeta) => _dentro(real, _ruta(proyectoReal, carpeta)),
+      ) ||
       _dentro(real, origen.path) ||
       _dentro(origen.path, real)) {
     throw const _Fallo(
@@ -551,7 +623,13 @@ try {
   }
 }
 
-Future<List<Map<String, Object?>>> _huellas(List<File> archivos) async {
+/// Con [normalizar], la huella es la del texto con cada \r\n como \n (un \r
+/// suelto se conserva), igual que en tool/t137_arte_test.dart (O-137-1).
+/// ISO-8859-1 en .NET pasa cada byte a un carácter y de vuelta sin cambios.
+Future<List<Map<String, Object?>>> _huellas(
+  List<File> archivos, {
+  bool normalizar = false,
+}) async {
   final huellas = <Map<String, Object?>>[];
   for (var inicio = 0; inicio < archivos.length; inicio += 16) {
     final fin = inicio + 16 < archivos.length ? inicio + 16 : archivos.length;
@@ -564,12 +642,22 @@ $t137Rows = @(foreach ($t137Path in $t137Input.archivos) {
       ($t137File.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
     throw 'La huella solo admite archivos normales, sin enlaces.'
   }
-  $t137Stream = [IO.File]::OpenRead($t137Path)
   $t137Sha = [Security.Cryptography.SHA256]::Create()
   try {
-    $t137Hash = [BitConverter]::ToString($t137Sha.ComputeHash($t137Stream)).Replace('-', '').ToLowerInvariant()
+    if ($t137Input.normalizar) {
+      $t137Latin = [Text.Encoding]::GetEncoding(28591)
+      $t137Texto = $t137Latin.GetString([IO.File]::ReadAllBytes($t137Path))
+      $t137Digest = $t137Sha.ComputeHash($t137Latin.GetBytes($t137Texto.Replace("`r`n", "`n")))
+    } else {
+      $t137Stream = [IO.File]::OpenRead($t137Path)
+      try {
+        $t137Digest = $t137Sha.ComputeHash($t137Stream)
+      } finally {
+        $t137Stream.Dispose()
+      }
+    }
+    $t137Hash = [BitConverter]::ToString($t137Digest).Replace('-', '').ToLowerInvariant()
   } finally {
-    $t137Stream.Dispose()
     $t137Sha.Dispose()
   }
   [pscustomobject]@{
@@ -580,7 +668,10 @@ $t137Rows = @(foreach ($t137Path in $t137Input.archivos) {
 })
 ConvertTo-Json -InputObject @($t137Rows) -Compress -Depth 4
 ''',
-      {'archivos': lote.map((a) => a.absolute.path).toList()},
+      {
+        'archivos': lote.map((a) => a.absolute.path).toList(),
+        'normalizar': normalizar,
+      },
     );
     huellas.addAll((resultado! as List)
         .map((fila) => Map<String, Object?>.from(fila as Map))
@@ -713,6 +804,32 @@ Future<Map<String, Object?>> _metadatos(Directory raiz, File exe) async {
       'no se empaqueta y no se cambia extracted.',
     );
   }
+  // T-145 (O-137-2): extracted puede estar al día y el .exe ser de antes.
+  // Se exige la versión que el SDK enlazado escribió dentro del binario.
+  final enExe = RegExp(r'Firebase C\+\+ (\d+\.\d+\.\d+)')
+      .allMatches(latin1.decode(exe.readAsBytesSync()))
+      .map((m) => m.group(1)!)
+      .toSet();
+  if (enExe.isEmpty) {
+    throw const _Fallo(
+      'El ejecutable no trae la cadena «Firebase C++ x.y.z»; no se puede '
+      'comprobar el SDK enlazado. No se empaqueta.',
+    );
+  }
+  if (enExe.length > 1) {
+    throw _Fallo(
+      'El ejecutable trae más de una versión de Firebase C++ '
+      '(${(enExe.toList()..sort()).join(', ')}). No se empaqueta.',
+    );
+  }
+  if (enExe.single != pedido) {
+    throw _Fallo(
+      'El ejecutable enlaza Firebase C++ ${enExe.single}, pero firebase_core '
+      '${paquetes['firebase_core']} pide $pedido. Trampa de 10.99: no se '
+      'empaqueta. Hay que compilar la Release otra vez con el SDK que pide '
+      'firebase_core.',
+    );
+  }
   final cmakeGenerado = generada.readAsStringSync();
   // Flutter 3.38 escribe file(TO_CMAKE_PATH "C:\\flutter" FLUTTER_ROOT),
   // no set(FLUTTER_ROOT ...). Se leen ambas formas y se desescapan solo
@@ -762,6 +879,7 @@ Future<Map<String, Object?>> _metadatos(Directory raiz, File exe) async {
     ...paquetes,
     'firebaseCpp': cpp,
     'firebaseCppPedido': pedido,
+    'firebaseCppExe': enExe.single,
     'fuentes': [
       pubspec.path,
       lock.path,
@@ -904,6 +1022,28 @@ Future<void> _exigirX64(File archivo) async {
   }
 }
 
+// La versión de la carpeta de VC\Redist\MSVC (14.51.36231), o null si la
+// carpeta no es una versión (v145 y similares).
+List<int>? _versionRedist(String ruta) {
+  final partes = ruta.split(RegExp(r'[\\/]'));
+  final msvc = partes.indexWhere((p) => p.toLowerCase() == 'msvc');
+  if (msvc < 0 || msvc + 1 >= partes.length) return null;
+  final texto = partes[msvc + 1];
+  if (!RegExp(r'^\d+(\.\d+)+$').hasMatch(texto)) return null;
+  return texto.split('.').map(int.parse).toList();
+}
+
+int _compararVersiones(List<int> a, List<int> b) {
+  for (var i = 0; i < a.length || i < b.length; i++) {
+    final diferencia = (i < a.length ? a[i] : 0) - (i < b.length ? b[i] : 0);
+    if (diferencia != 0) return diferencia;
+  }
+  return 0;
+}
+
+// T-145 (O-137-3): la Release; si no, el redistribuible de Visual Studio, de
+// la versión más alta; System32 solo como último recurso, con aviso, porque
+// Windows Update cambia esas DLL sin que nadie elija la versión.
 Future<List<Map<String, Object?>>> _buscarRuntime(Directory origen) async {
   final resultado = <Map<String, Object?>>[];
   for (final nombre in [
@@ -911,49 +1051,165 @@ Future<List<Map<String, Object?>>> _buscarRuntime(Directory origen) async {
     'vcruntime140.dll',
     'vcruntime140_1.dll',
   ]) {
-    final existentes = <File>[
-      File(_ruta(origen.path, nombre)),
-      if (Platform.environment['SystemRoot'] case final String windows)
-        File(_ruta(windows, 'System32/$nombre')),
-    ];
     File? elegido;
-    for (final archivo in existentes) {
-      if (archivo.existsSync()) {
-        await _exigirX64(archivo);
-        elegido = archivo;
-        break;
+    var procedencia = 'Release';
+    final enRelease = File(_ruta(origen.path, nombre));
+    if (enRelease.existsSync()) elegido = enRelease;
+    if (elegido == null) {
+      // Un solo nivel (*): ** también bajaría a onecore\x64, que es otra
+      // compilación del runtime.
+      final candidatos = <({File archivo, List<int> version})>[
+        for (final ruta in await _visualStudio(
+          'VC\\Redist\\MSVC\\*\\x64\\Microsoft.VC*.CRT\\$nombre',
+        ))
+          if (_versionRedist(ruta) case final List<int> version)
+            if (!ruta.toLowerCase().contains('onecore') &&
+                File(ruta).existsSync())
+              (archivo: File(ruta), version: version),
+      ]..sort((a, b) {
+          final porVersion = _compararVersiones(a.version, b.version);
+          return porVersion != 0
+              ? porVersion
+              : a.archivo.path.compareTo(b.archivo.path);
+        });
+      if (candidatos.isNotEmpty) {
+        elegido = candidatos.last.archivo;
+        procedencia = r'VC\Redist';
       }
     }
     if (elegido == null) {
-      final visual = await _visualStudio(
-        'VC\\Redist\\MSVC\\**\\x64\\Microsoft.VC*.CRT\\$nombre',
-      );
-      for (final ruta in visual.reversed) {
-        final archivo = File(ruta);
-        if (archivo.existsSync()) {
-          await _exigirX64(archivo);
-          elegido = archivo;
-          break;
+      if (Platform.environment['SystemRoot'] case final String windows) {
+        final sistema = File(_ruta(windows, 'System32/$nombre'));
+        if (sistema.existsSync()) {
+          elegido = sistema;
+          procedencia = 'System32';
         }
       }
     }
     if (elegido == null) {
       throw _Fallo(
-        'Falta $nombre x64 en Release, System32 y el redistribuible de VS.',
+        'Falta $nombre x64 en la Release, en el redistribuible de VS y en '
+        'System32.',
       );
     }
+    await _exigirX64(elegido);
     final version = await _versionPe(elegido);
     final hash = (await _huellas([elegido])).single;
+    String? aviso;
+    if (procedencia == 'System32') {
+      aviso = '$nombre sale de System32 (${version['version']}) porque no '
+          r'está en la Release ni en VC\Redist. Copiada junto al .exe, '
+          'Windows Update no la actualiza.';
+      _avisar(aviso);
+    }
     resultado.add({
       'nombre': nombre,
       'origen': elegido.path,
+      'procedencia': procedencia,
       'version': version['version'],
       'sha256': hash['sha256'],
       'bytes': hash['bytes'],
-      'yaEnRelease': _dentro(elegido.path, origen.path),
+      'yaEnRelease': procedencia == 'Release',
+      if (aviso != null) 'aviso': aviso,
     });
   }
   return resultado;
+}
+
+// T-145 (O-137-6): la lista cerrada se compara con la Release. Si falta uno,
+// o aparece otro .lib o .exp, se avisa: lo primero no hace daño, y lo segundo
+// va en la carga como hasta hoy, hasta que alguien lo agregue a la lista.
+void _revisarExcluidos(List<File> archivos, Directory origen) {
+  final relativos = {
+    for (final archivo in archivos) _relativa(archivo, origen).toLowerCase(),
+  };
+  for (final nombre in _excluidos) {
+    if (!relativos.contains(nombre)) {
+      _avisar('la Release no trae $nombre, de la lista de excluidos.');
+    }
+  }
+  for (final relativo in relativos) {
+    if ((relativo.endsWith('.lib') || relativo.endsWith('.exp')) &&
+        !_excluidos.contains(relativo)) {
+      _avisar(
+        '$relativo es una biblioteca de enlace fuera de la lista de '
+        'excluidos: va en la carga.',
+      );
+    }
+  }
+}
+
+// T-145 (O-137-7c, 10.130): un archivo de data/flutter_assets que ningún
+// manifiesto de esta compilación nombra y que es más viejo que
+// AssetManifest.bin, que Flutter escribe en cada compilación, quedó de una
+// anterior. Solo se avisa: la Release publicada se empaqueta tal cual.
+void _avisarRestos(Directory origen, List<File> archivos) {
+  final assets = _ruta(origen.path, 'data/flutter_assets');
+  final referencia = File(_ruta(assets, 'AssetManifest.bin'));
+  final fuentes = File(_ruta(assets, 'FontManifest.json'));
+  if (!referencia.existsSync() || !fuentes.existsSync()) {
+    _avisar(
+      'no se pudo buscar restos de otra compilación: falta '
+      'AssetManifest.bin o FontManifest.json.',
+    );
+    return;
+  }
+  final nombrados = latin1.decode(referencia.readAsBytesSync()) +
+      fuentes.readAsStringSync();
+  final hora = referencia.lastModifiedSync();
+  final restos = <String>[];
+  for (final archivo in archivos) {
+    if (!_dentro(archivo.path, assets)) continue;
+    final relativo = _relativa(archivo, Directory(assets));
+    if (relativo == 'AssetManifest.bin' || nombrados.contains(relativo)) {
+      continue;
+    }
+    final fecha = archivo.lastModifiedSync();
+    if (hora.difference(fecha) > const Duration(minutes: 10)) {
+      restos.add('data/flutter_assets/$relativo (${_fecha(fecha)})');
+    }
+  }
+  if (restos.isEmpty) return;
+  final lista = restos.length == 1
+      ? restos.single
+      : '${restos.sublist(0, restos.length - 1).join(', ')} y ${restos.last}';
+  _avisar(
+    'la Release trae ${restos.length} archivo(s) que esta compilación no '
+    'escribió: $lista. Van en la carga y no estorban; se quitan con flutter '
+    'clean y una compilación nueva.',
+  );
+}
+
+String _fecha(DateTime fecha) {
+  const meses = 'ene feb mar abr may jun jul ago sep oct nov dic';
+  return '${fecha.day}-${meses.split(' ')[fecha.month - 1]}-${fecha.year}';
+}
+
+// T-145 (O-137-6): las líneas de [InstallDelete] del .iss tienen que ser
+// exactamente la lista de excluidos, solo en {app} y sin comodines.
+void _comprobarGuion(File guion) {
+  final lineas = guion.readAsLinesSync();
+  final inicio = lineas.indexWhere((l) => l.trim() == '[InstallDelete]');
+  if (inicio < 0) {
+    throw const _Fallo('El .iss no tiene [InstallDelete] para los excluidos.');
+  }
+  final nombres = <String>{};
+  for (final linea in lineas.skip(inicio + 1)) {
+    final texto = linea.trim();
+    if (texto.startsWith('[')) break;
+    if (texto.isEmpty || texto.startsWith(';')) continue;
+    final entrada = RegExp(
+      r'^Type:\s*files;\s*Name:\s*"\{app\}\\([A-Za-z0-9_.]+)"$',
+    ).firstMatch(texto);
+    if (entrada == null || !nombres.add(entrada.group(1)!.toLowerCase())) {
+      throw _Fallo('Entrada de [InstallDelete] no admitida: $texto');
+    }
+  }
+  if (nombres.length != _excluidos.length || !nombres.containsAll(_excluidos)) {
+    throw const _Fallo(
+      '[InstallDelete] del .iss no coincide con la lista de excluidos.',
+    );
+  }
 }
 
 Future<Map<String, Object?>> _comprobarArte(Directory proyecto) async {
@@ -968,8 +1224,14 @@ Future<Map<String, Object?>> _comprobarArte(Directory proyecto) async {
   final arte = Map<String, Object?>.from(
     jsonDecode(archivo.readAsStringSync()) as Map,
   );
-  if (arte['schema'] != 1 ||
-      arte['archivos'] is! List ||
+  if (arte['schema'] != 2) {
+    throw const _Fallo(
+      'El manifiesto del arte no es el de T-145 (schema 2, con el fin de '
+      'línea normalizado). Regenerarlo con flutter test '
+      'tool/t137_arte_test.dart, con el semáforo de Carlos.',
+    );
+  }
+  if (arte['archivos'] is! List ||
       (arte['archivos']! as List).length != 28 ||
       arte['fuentes'] is! List) {
     throw const _Fallo(
@@ -1033,7 +1295,9 @@ Future<Map<String, Object?>> _comprobarArte(Directory proyecto) async {
   }
   final fuentes = (arte['fuentes']! as List).cast<Map>();
   if (fuentes.isEmpty) throw const _Fallo('Falta la procedencia del arte.');
-  final archivosFuente = <File>[];
+  final textos = <File>[];
+  final binarios = <File>[];
+  final esTexto = <bool>[];
   for (final fuente in fuentes) {
     final ruta = fuente['archivo'];
     if (ruta is! String ||
@@ -1043,9 +1307,22 @@ Future<Map<String, Object?>> _comprobarArte(Directory proyecto) async {
         ruta.contains(':')) {
       throw const _Fallo('Ruta de procedencia no admitida en el arte.');
     }
-    archivosFuente.add(File(_ruta(proyecto.path, ruta)));
+    final texto = _fuenteDeTexto(ruta);
+    if (fuente['finDeLinea'] != (texto ? 'normalizado' : 'bytes')) {
+      throw _Fallo(
+        'El manifiesto del arte no declara bien el fin de línea de $ruta.',
+      );
+    }
+    esTexto.add(texto);
+    (texto ? textos : binarios).add(File(_ruta(proyecto.path, ruta)));
   }
-  final hashesFuente = await _huellas(archivosFuente);
+  // O-137-1: el texto se compara con \r\n como \n; lo binario, byte a byte.
+  final deTexto = (await _huellas(textos, normalizar: true)).iterator;
+  final deBinarios = (await _huellas(binarios)).iterator;
+  final hashesFuente = [
+    for (final texto in esTexto)
+      ((texto ? deTexto : deBinarios)..moveNext()).current,
+  ];
   for (var i = 0; i < fuentes.length; i++) {
     if (hashesFuente[i]['sha256'] != fuentes[i]['sha256']) {
       throw _Fallo(
@@ -1055,6 +1332,15 @@ Future<Map<String, Object?>> _comprobarArte(Directory proyecto) async {
     }
   }
   return arte;
+}
+
+// La misma regla que tool/t137_arte_test.dart (O-137-1): .dart es texto;
+// .ttf y .png, binarios; cualquier otra extensión detiene el armado.
+bool _fuenteDeTexto(String ruta) {
+  final extension = ruta.substring(ruta.lastIndexOf('.') + 1).toLowerCase();
+  if (extension == 'dart') return true;
+  if (extension == 'ttf' || extension == 'png') return false;
+  throw _Fallo('Fuente del arte sin regla de fin de línea: $ruta');
 }
 
 Map<String, String> _constantesArte(

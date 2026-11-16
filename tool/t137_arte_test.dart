@@ -185,19 +185,37 @@ void main() {
         'assets/fonts/Roboto-Medium.ttf',
       ]..sort();
       for (final ruta in rutas) {
-        final archivo = File.fromUri(proyecto.uri.resolve(ruta));
+        final bytes = await File.fromUri(proyecto.uri.resolve(ruta)).readAsBytes();
+        final texto = _fuenteDeTexto(ruta);
         fuentes.add({
           'archivo': ruta,
-          'sha256': (await sha256.bind(archivo.openRead()).first).toString(),
+          'finDeLinea': texto ? 'normalizado' : 'bytes',
+          'sha256': sha256.convert(texto ? _sinCrLf(bytes) : bytes).toString(),
         });
       }
       await File.fromUri(destino.uri.resolve('manifiesto.json')).writeAsString(
-        '${const JsonEncoder.withIndent('  ').convert({'schema': 1, 'generador': 'flutter test tool/t137_arte_test.dart', 'paletas': paletas, 'fuentes': fuentes, 'archivos': archivos})}\n',
+        '${const JsonEncoder.withIndent('  ').convert({'schema': 2, 'generador': 'flutter test tool/t137_arte_test.dart', 'paletas': paletas, 'fuentes': fuentes, 'archivos': archivos})}\n',
         flush: true,
       );
     });
   });
 }
+
+// T-145 (O-137-1): la huella de una fuente de texto no depende de
+// core.autocrlf. Cada \r\n cuenta como \n; un \r suelto se conserva. La
+// clase sale de la extensión, con una lista cerrada que repite el armador.
+bool _fuenteDeTexto(String ruta) {
+  final extension = ruta.substring(ruta.lastIndexOf('.') + 1).toLowerCase();
+  if (extension == 'dart') return true;
+  if (extension == 'ttf' || extension == 'png') return false;
+  throw StateError('Fuente del arte sin regla de fin de línea: $ruta');
+}
+
+List<int> _sinCrLf(List<int> bytes) => [
+  for (var i = 0; i < bytes.length; i++)
+    if (bytes[i] != 13 || i + 1 == bytes.length || bytes[i + 1] != 10)
+      bytes[i],
+];
 
 String _hex(Color color) =>
     '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';

@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "generador": "flutter test tool/t137_arte_test.dart",
   "paletas": {
     "claro": {
@@ -20,86 +20,107 @@
   "fuentes": [
     {
       "archivo": "assets/fonts/Roboto-Medium.ttf",
+      "finDeLinea": "bytes",
       "sha256": "f205cc511821ea56078a105557fcea6253129404d411c997e1866fbd006abb68"
     },
     {
       "archivo": "assets/fonts/Roboto-Regular.ttf",
+      "finDeLinea": "bytes",
       "sha256": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95"
     },
     {
       "archivo": "assets/fonts/plex/IBMPlexMono-Medium.ttf",
+      "finDeLinea": "bytes",
       "sha256": "98fbd727aae340b236955879dabed4d991aac9e8e90b3b2a67ce4a59221cc97c"
     },
     {
       "archivo": "assets/fonts/plex/IBMPlexMono-Regular.ttf",
+      "finDeLinea": "bytes",
       "sha256": "7c6fbddca4b700be918f5f6183d9bd4464fa427fe435f0b480d77fe2bb8c5a43"
     },
     {
       "archivo": "assets/fonts/plex/IBMPlexSans-Medium.ttf",
+      "finDeLinea": "bytes",
       "sha256": "331c8639d7598b2cde62a911a71db195e30cb655cd6bdf2e324a7e984955f907"
     },
     {
       "archivo": "assets/fonts/plex/IBMPlexSans-Regular.ttf",
+      "finDeLinea": "bytes",
       "sha256": "975dcda37d80f038dcd143c22e33ca2d97a0cc5a929aace1c749153b0fe1afa5"
     },
     {
       "archivo": "assets/fonts/plex/IBMPlexSans-SemiBold.ttf",
+      "finDeLinea": "bytes",
       "sha256": "a20caf8286023a6a7a85e40b1d2a4ae9fc3e3b1f9eda8f4c542dd4986af67bb1"
     },
     {
       "archivo": "assets/fonts/plex/IBMPlexSansCondensed-Medium.ttf",
+      "finDeLinea": "bytes",
       "sha256": "0c6b79ef4a7de76ffc6bf2091980e5f81a1a87ac3967566bc98aae0baa518f54"
     },
     {
       "archivo": "assets/fonts/plex/IBMPlexSansCondensed-SemiBold.ttf",
+      "finDeLinea": "bytes",
       "sha256": "acc2b1e3b9597ee13b08b767f845bd038fe120cbee806859af7c01b60fe6e9e6"
     },
     {
       "archivo": "lib/core/design/bs_categorico.dart",
-      "sha256": "c91c87ffee4416fa0dac68c6bb5e98bd13e32b6a1abd6ab5aa2b2602312d6a8d"
+      "finDeLinea": "normalizado",
+      "sha256": "a8974fd6935bef7c6f3c9501ba3cef47bf36d703aedff40f97e5888c3114a146"
     },
     {
       "archivo": "lib/core/design/bs_colores_semanticos.dart",
-      "sha256": "1be20d953ff006755ac791321deb1048c52929146dfcca234b9dad1f83dfbbe7"
+      "finDeLinea": "normalizado",
+      "sha256": "047c7362aa1d46914ed8a610cc033a12d57f94ddb85b1dd2e52c40c71107a835"
     },
     {
       "archivo": "lib/core/design/bs_ilustraciones.dart",
-      "sha256": "b5c21e01d7c60ff8ad8f11d0019011a3c8179bef074eb12073db8328d5c6a5f9"
+      "finDeLinea": "normalizado",
+      "sha256": "980a6fb121d969ef8d7d0c107684962113ce201bb96e27a235c5c770912fe2e9"
     },
     {
       "archivo": "lib/core/design/bs_medidas.dart",
-      "sha256": "25b5bb9bfed2ce59cb46d4e554e1c9cd1b1dbf611e2042f527475f35e077f006"
+      "finDeLinea": "normalizado",
+      "sha256": "c0ecc3ac64eb93ec0657ff645babccd1f8417f7bd3f628c3ffee0108de927957"
     },
     {
       "archivo": "lib/core/design/bs_paleta.dart",
-      "sha256": "d8e6b535e704809dea291ea257c4e6dade684aea53a41f0c8cd52c37e74d2bdd"
+      "finDeLinea": "normalizado",
+      "sha256": "618a02e821f60fe14f5345e328622bf1d55a5ead93a76c1c26ba091beb722fe4"
     },
     {
       "archivo": "lib/core/design/bs_tema.dart",
-      "sha256": "2c41b62d6598b33f75f384ada9409498ea7ac2213ed9e2a25a33088026b2397c"
+      "finDeLinea": "normalizado",
+      "sha256": "8cd3714a0440926b6095adab54b6c99c50aac141652c858706064cddb0dd5b8d"
     },
     {
       "archivo": "lib/core/design/bs_tipografia.dart",
-      "sha256": "d4500fbe06e3256f357be0c6b62810546be56a27baaed921f7c83a7b2eb277e9"
+      "finDeLinea": "normalizado",
+      "sha256": "8b7a2891d7ae0b5ce21b2efc4cc162b4b499eae58a3e53bd1da40a73ad2ba3b6"
     },
     {
       "archivo": "lib/core/design/componentes/bs_fondo_de_plano.dart",
-      "sha256": "077060056a99df08c023f328689d2a6e632f4399f57c494ebbc6eb09f1861adf"
+      "finDeLinea": "normalizado",
+      "sha256": "38f86e5fa2240de6b815d4425322d0dbd5330ef56c6a6a1d9991e69ee6e8ee10"
     },
     {
       "archivo": "lib/core/design/componentes/bs_ilustracion.dart",
-      "sha256": "e717c71fa2ed2d315bf712bb089c06ae0fbb4b73c3c73b74e1467dd19cf8dffb"
+      "finDeLinea": "normalizado",
+      "sha256": "fa7f669e1de4911825564b693aa856ce515290189e58a0e2a461e716989786f2"
     },
     {
       "archivo": "test/support/t117_oficina_support.dart",
-      "sha256": "9951694499237c796a3c5650fa1e4f7cd9c77c4d10b8290b6c486ee882e4da65"
+      "finDeLinea": "normalizado",
+      "sha256": "f552c25eaf4a10bf8c50c4371fbfb8d2e51cc223e72faef50be00e5d3a9a25cd"
     },
     {
       "archivo": "tool/t137_arte_test.dart",
-      "sha256": "fd84d4975a4b167df83de50f437819f64bc490ded060e44f7490a8b4a8f321e0"
+      "finDeLinea": "normalizado",
+      "sha256": "9165348c2d11be923b39ba55ec158dfe6a9835413fed28f1f127823c60f7cdcb"
     },
     {
       "archivo": "web/icons/Icon-512.png",
+      "finDeLinea": "bytes",
       "sha256": "37e29e43385b43a91446bca6320a417c4583c4a525d44856c677e21de8c22cf6"
     }
   ],
