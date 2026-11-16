@@ -3653,4 +3653,24 @@ GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md
 
 **Los prompts,** el de GLM y el de Timonel, están en el documento del proyecto `BayStream_T144_reaceptacion2_15nov.md`. Reemplazan el prompt para Codex de la 10.128, que no se usó, y el de T-145 para Codex de la 10.122 (`BayStream_Post_defensa_10nov.md`).
 
-La siguiente decisión es la **10.130**.
+### 10.130 · La propuesta de T-145, revisada: Carlos aprueba la opción A con `[InstallDelete]` y solo el aviso por los archivos viejos; una condición para O-137-8 (15-nov, 18:27)
+
+**Timonel entregó la fase 1** (`docs/T145-RESULTADOS.md`, en `baystream-t137`, sobre `dae3259`), sin tocar código ni correr Flutter. El paso 0 pasa: la rama trae solo los 35 archivos de T-137, la Release es la `1.0.0+9` con una sola cadena «Firebase C++ 13.13.1», e ISCC es la 7.1.1. Faltan `pub get` y `analyze`, que esperan la luz verde de Carlos.
+
+**Lo que Yov comprobó:**
+- **Los tamaños, en la Release 1.0.0:** los cinco `.lib` y `.exp` suman 36 910 272 bytes, 36.9 MB. La cifra de la 10.122, 36.3 MB, estaba mal. La carga baja de 91 114 641 a 54 204 369 bytes, que es la resta exacta.
+- **Los dos archivos viejos:** `NOTICES` y `AssetManifest.bin.json` son del 15-oct; `NOTICES.Z` y `AssetManifest.bin`, los que lee Windows según el código de Flutter que citó Timonel, son de la compilación del 4-nov.
+- **La ayuda de Inno Setup,** en su versión en línea: `CloseApplications` habla solo del instalador, y `AppMutex` lo revisan el instalador y el desinstalador, pero pide que la app cree el mutex. Coincide con lo que leyó Timonel en la ayuda de la 7.1.1: O-137-8 va con código propio.
+- **El criterio de O-137-1,** el mismo instalador desde las dos carpetas, se puede pedir: en la revisión de T-137, dos armados distintos ya dieron el mismo instalador, byte por byte (`b265d0af…`).
+- **Las DLL de Visual C++:** Timonel encontró que Windows actualizó las de System32 a la 14.51.36247.0. Con el orden de la 10.122 (la Release, `VC\Redist` y System32 al final) vuelven las del 1.0.0.9, la 14.51.36231.0. La fase 2 lo muestra con las tres huellas en el manifiesto.
+
+**Lo que decidió Carlos:**
+1. O-137-6, la opción **A**: los cinco se quitan en el armador, con su lista en `tool/t137_instalador.dart`, y el `.iss` lleva cinco líneas de `[InstallDelete]`, con los nombres exactos y solo en `{app}`, para que instalar encima del 1.0.0.9 también los quite. Yov retira su opción B: con A, la carga, el manifiesto y lo que se instala son una sola lista.
+2. O-137-7c: **solo el aviso**. La Release 1.0.0 publicada se sigue empaquetando tal cual. La versión del bloque 1 sale de una compilación limpia (`flutter clean` antes), y el aviso ya no debería aparecer.
+3. Su laptop tiene la **MSIX 1.0.0.0**: la aceptación corre como en T-137, y producción tiene que detenerse por la MSIX.
+
+**La condición de Yov para O-137-8:** las rutas se comparan contra la carpeta con su barra final. La carpeta de producción, `%LOCALAPPDATA%\Programs\BayStream`, es el comienzo de la de prueba, `%LOCALAPPDATA%\Programs\BayStream-Prueba-T137`: si se comparan como texto, el desinstalador de producción diría que BayStream está abierta cuando solo lo está la prueba. La aceptación lo prueba con el sustituto en una carpeta hermana que empieza igual (`…\BayStream-Prueba-T137-hermana\`): la desinstalación de la prueba sigue sin cuadro y el sustituto sigue vivo; después, el arnés lo cierra por su Id y borra esa carpeta.
+
+**Sigue la fase 2,** con la luz verde de Carlos para `pub get` y `analyze` cuando no corra otro comando de Flutter (GLM está en la reaceptación 2 de T-144), y Windows en el turno de Timonel, sin GLM en la app.
+
+La siguiente decisión es la **10.131**.
