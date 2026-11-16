@@ -3687,4 +3687,25 @@ GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md
 - al cerrar se corre también el de todo el paquete, y el informe declara sus incidencias: solo valen las cuatro de `build/t137/` y las de las copias de `build/t145/`. Ninguna puede estar en un archivo versionado;
 - `build/t137/` no se toca: es la evidencia de T-137. O-126-1 se arregla en el bloque 3, con O-143-3.
 
-La siguiente decisión es la **10.132**.
+### 10.132 · T-145 entregada y revisada: falta el recorrido de Carlos y la aceptación de GLM; el almacén de Windows no está donde se esperaba (15-nov, 22:45)
+
+**Timonel entregó la fase 2** (`docs/T145-RESULTADOS.md`, secciones 8 a 17, sobre `dae3259`, sin commit), en 3 h; 4.5 h con la fase 1. Pasaron el arte (las 28 imágenes, con sus huellas de antes), los armados, la copia en CRLF, los negativos y la aceptación por `.bat` y `explorer.exe` (`build/t145/aceptacion-05/`, los ocho pasos). `analyze` del Dart versionado da cero, como pide la 10.131. El instalador de producción pesa 18 488 262 bytes (`e4e7304c…`), contra los 20 211 174 del 1.0.0.9 de T-137.
+
+**Lo que Yov comprobó:**
+- **Los archivos:** contra `dae3259`, cambian exactamente cinco (`baystream.iss`, el `manifiesto.json` del arte, `t137_instalador.dart`, `t137_arte_test.dart` y `t137_aceptacion.ps1`), y hay dos nuevos (`tool/t145_copia_crlf.dart` y el informe): las siete rutas del bloque de Git. `lib/`, `test/`, `pubspec.*` y `tool/t93_msix.ps1` no cambian.
+- **O-137-8, en el código:** la carpeta se compara con su barra final (`AddBackslash`, la condición de la 10.130) y sin contar `unins*.exe`; los cuadros cancelan por omisión, así que en silencio cancelan; nada cierra la app. La aceptación lo probó con la carpeta hermana: no salió el cuadro.
+- **O-137-6:** el armador se detiene si `[InstallDelete]` no es exactamente la lista de excluidos, solo en `{app}` y sin comodines.
+- **O-137-7b:** el preprocesador impide el ensayo en producción, y al vencerse el límite solo se termina el PowerShell que lleva en su línea de comandos la ruta única de su resultado.
+- **El arnés** solo cierra, por su Id, los procesos que él abrió, y solo borra la carpeta hermana si no tiene otros archivos.
+
+**Una observación nueva, O-145-1 (P3), sin arreglo por ahora:** mientras espera la consulta de la MSIX, el asistente no atiende su ventana. Si la consulta se cuelga justo antes de instalar, Windows puede marcarlo «No responde» durante esos 30 segundos. Solo pasa cuando la consulta falla, y no se copia nada. Va a los límites del informe.
+
+**Lo que tiene que aclarar Carlos:** visto desde fuera del paquete, `%LOCALAPPDATA%\BayStream` no existe, y el 3-nov tenía 592 archivos (10.104 y 10.105). Por eso la huella «igual antes y después» de esta aceptación no protegió nada: en esa ruta no había nada. La copia del 3-nov sigue en `C:\Proyectos\respaldo-almacen-20261103-2103`. Si la carpeta se movió o se borró después, la MSIX 1.0.0.0 guarda lo nuevo dentro de su paquete (`%LOCALAPPDATA%\Packages\gt.cmartinez.baystream_…\LocalCache\Local\BayStream`, 10.37 de `SPRINT-3.md`), y eso se borra al desinstalarla.
+
+**Lo que sigue:**
+1. El commit de T-145 en `baystream-t137`, con el bloque del informe.
+2. El recorrido corto de Carlos en «BayStream Prueba» (sección 13 del informe), con capturas: anota si «BayStream está abierta» sale antes o después de la confirmación, y cómo se ve.
+3. La aceptación de GLM, en `baystream-t137`, cuando termine la reaceptación 2 de T-144. Corre también `-Preparar` del arnés, que Timonel no pudo correr porque PowerShell estaba deshabilitado en su sesión. El prompt está en el documento del proyecto `BayStream_T145_aceptacion_15nov.md`.
+4. Después, Carlos mezcla `t137-instalador` en `sprint-4`, y el primer armado desde `baystream-rediseno` comprueba O-137-1 en la carpeta real.
+
+La siguiente decisión es la **10.133**.
