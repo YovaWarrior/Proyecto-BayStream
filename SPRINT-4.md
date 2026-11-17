@@ -3708,4 +3708,25 @@ GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md
 3. La aceptación de GLM, en `baystream-t137`, cuando termine la reaceptación 2 de T-144. Corre también `-Preparar` del arnés, que Timonel no pudo correr porque PowerShell estaba deshabilitado en su sesión. El prompt está en el documento del proyecto `BayStream_T145_aceptacion_15nov.md`.
 4. Después, Carlos mezcla `t137-instalador` en `sprint-4`, y el primer armado desde `baystream-rediseno` comprueba O-137-1 en la carpeta real.
 
-La siguiente decisión es la **10.133**.
+### 10.133 · T-144 aceptada: la reaceptación 2 de GLM pasa; O-144-2, el `analyze` en una copia limpia; Carlos pregunta por Antigravity (16-nov, 21:10)
+
+**GLM terminó la reaceptación 2** (`docs/t144/aceptacion-glm.md`, en `qa-r4`, sobre `d32a6dd`): **PASA**, sin hallazgos nuevos. Fueron unas 5 h de trabajo, del 15-nov a las 17:55 al 16-nov a las 00:55, y más tiempo de reloj por los límites de sesión de su plan.
+- El paso 0 pasa: una copia limpia de 839 archivos y la suite en 2221 de 2221, sin omitidas, en una sola corrida.
+- **T144-ACC-02 queda cerrado:** en Android, a 360 dp y con letra 1.0, 1.45 y 2.0, la matrícula sale entera en el árbol, en la etiqueta accesible y en las capturas, y la naviera baja de línea solo con 2.0.
+- La sonda funcional de la R1 vuelve a pasar sobre la punta nueva, y la de búsqueda da 4 de 4.
+- A06 abre con 717 contenedores, los puertos de la 1.5 y GTPBR sin 0/0/0, y registra una carga y una descarga en el namespace `t144acc`, sin nube real.
+- El DIM pasa completo: la insignia, la línea de medidas y el BAPLIE de salida, con el grupo idéntico byte por byte.
+- La 1.0.0 lee los 4 viajes que guardó la versión nueva sin romperse, y abre el tour sin error.
+- Windows y Chrome pasan, con la interfaz 100 % en español. El Honor queda en la lista de la versión (10.126).
+
+**Yov comprobó en `qa-r4`** que ningún archivo versionado cambió: lo único nuevo para Git es el informe.
+
+**O-144-2 (P3), nueva:** en la copia limpia de la punta, `analyze` da 3 avisos `info` (`use_build_context_synchronously`) en `test/t112_localization_test.dart`, líneas 49, 50 y 67; en una variante sale uno más, en `test/t121_estadisticas_test.dart`. En `baystream-rediseno` (Timonel, 15-nov) y en la copia de la R1 (Codex, 11-nov) no salían. Según la bisección de GLM, aparecen cuando la copia trae los dos archivos de `lib/` de la corrección 2, aunque los avisos están en pruebas de T-112 y T-121; GLM lo atribuye a un no determinismo del analizador. No toca T-144, y la suite pasa. **Propuesta de Yov:** al preparar la versión del bloque 1, Timonel ajusta esas dos pruebas para que la regla no se dispare, sin `// ignore:`, y la versión exige `analyze` en cero también en una copia limpia. Va con O-143-3. Decide Carlos.
+
+**El bloque 1:** T-143 y T-144 aceptadas. Falta T-145: el recorrido de Carlos y la aceptación.
+
+**Carlos pregunta por Antigravity** (16-nov, 21:00): lo tiene con varios modelos, y GLM tarda por los límites de su plan. **Propuesta de Yov:** Antigravity puede hacer el mismo trabajo, porque lee el `AGENTS.md` de la carpeta, edita, corre comandos y tiene su propio navegador. Se prueba primero con la aceptación de T-145, con Gemini 4 Carbon en alto, los permisos en «Default» y en «Deny» las escrituras de Git, `git status` y `firebase`. GLM sigue en Max para lo que pide juicio, y en Flash para lo corto y mecánico. Decide Carlos.
+
+**La subida del informe de GLM** necesita un paso más, porque `sprint-4` avanzó con las 10.130 a 10.132: `qa-r4` pasa primero a la punta.
+
+La siguiente decisión es la **10.134**.
