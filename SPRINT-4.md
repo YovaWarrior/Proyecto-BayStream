@@ -3802,4 +3802,39 @@ Quién la acepta, GLM o Antigravity, lo decide Carlos cuando se entregue. El pro
 
 **T-146 empezó:** Carlos corrió la mezcla del instalador (`2ac872b`, con la 10.136 en `d10a83a`) y le pasó el prompt a Timonel.
 
-La siguiente decisión es la **10.138**.
+### 10.138 · T-146, fase 1: la propuesta de Timonel revisada, y lo que Yov propone en sus seis decisiones (17-nov, 00:45)
+
+**Timonel entregó la fase 1** (`docs/T146-RESULTADOS.md`, sobre `1c40d39`) y se detuvo. Trae el paso 0, la propuesta y seis decisiones para Carlos.
+
+**Lo que Yov comprobó en la carpeta:**
+- ningún archivo versionado cambió frente a `1c40d39`: lo único nuevo para Git es el informe;
+- el asistente de prueba armado desde `baystream-rediseno` da `5ef28b61…`: **O-137-1 queda comprobada en la carpeta real**;
+- O-144-2: el oráculo de Timonel (copiar `test/` y `tool/` dentro de `lib/` de una copia) da las cuatro líneas de GLM antes del cambio y cero después. El prototipo solo mueve el uso del contexto a funciones síncronas: quedan las mismas ocho comprobaciones en t112 y las mismas dos en t121, y pasan 95 de 95;
+- O-144-1: el filtro ya busca con `numeroDeContenedor(query)`, y el título se resalta con la consulta sin quitarle los espacios. El arreglo es una línea, y una consulta vacía no llega a los resultados (corrección 1 de T-144);
+- la versión: fuera de las dos líneas de `pubspec.yaml` no hay otro número que cambiar, y la prueba de T-93 lee la versión de ahí;
+- el manual: Yov buscó diez de los textos que cita la tabla y están en el código tal cual, entre ellos «Confirmado», «Publicada y cerrada», «N rechazados: la operación ya estaba cerrada» y, en el desinstalador, «BayStream está abierta»;
+- la mezcla del instalador (`2ac872b`) solo trajo `windows/installer/`, `tool/` y `docs/`: Android, la Web y la MSIX no dependen de ella.
+
+**O-146-1, la causa de O-144-2: lo que suma Yov.**
+- **La regla no corre en las carpetas de pruebas, y es a propósito.** En el código del SDK de Dart (rama estable), `use_build_context_synchronously` solo se registra `if (!context.isInTestDirectory)`, y carpeta de pruebas es `test`, `integration_test`, `test_driver` o `testing`, directamente bajo la raíz del paquete. Coincide con lo que midió Timonel, y explica por qué su oráculo sirve: `lib/zz_oraculo/test/` no está bajo `<raíz>/test`.
+- **Los registros de GLM descartan el SDK, el comando y el contenido.** El 15-nov, entre las 18:16 y las 18:35, con el mismo comando y con t112 y t121 idénticos byte por byte en sus tres copias, la copia de la R1 dio 0 avisos de la regla, la de la R2 dio 3 y la de la bisección, 4.
+- Yov descartó en disco un `pubspec.yaml` anidado, `.dart_tool/build` y diferencias de `analysis_options.yaml` o de `package_config.json` entre las tres copias.
+- **Hipótesis, sin comprobar:** esos avisos salieron de la caché del analizador, que comparten todos los analizadores de la cuenta. Otro servidor de análisis, el de un editor abierto sobre `baystream-qa-r4`, habría analizado esos archivos como archivos sueltos de la carpeta de fuera, donde no están bajo `<raíz>/test`, y `flutter analyze` habría reutilizado lo guardado. Timonel la prueba en 20 minutos, si le alcanza: analiza la copia de GLM tal cual y con una caché vacía. Si no se confirma, O-146-1 sigue abierta. El arreglo no depende de ella.
+
+**Lo que Yov propone en las seis decisiones.** Decide Carlos: quedan tomadas cuando le pasa la aprobación a Timonel, y si cambia alguna, la siguiente decisión lo dice.
+1. **La versión:** `1.0.1+10` y `msix_version: 1.0.1.0`.
+2. **O-144-2:** el cambio de las dos pruebas, y `tool/t146_oraculo.dart`. Es una herramienta de T-146, para que quien acepte vea las cuatro líneas antes y cero después; no pasa a ser un criterio nuevo. El criterio sigue siendo `flutter analyze` en cero en todo el paquete.
+3. **O-144-1:** se arregla aquí: una línea, seis pruebas, y el manual queda sin excepción.
+4. **El manual:** un archivo nuevo, `docs/MANUAL-USUARIO-1.0.1.md`; el de la 1.0.0 no se toca (10.117). Timonel vuelve a tomar las cinco capturas (13, 23, 24, 28 y 41). Con tres condiciones: la portada no lleva fecha de publicación hasta que se publique; el pie de las figuras 1 a 4 dice que son del asistente 1.0.0.9, y lo que no se recorra en esta edición se marca. Carlos autoriza que el bloque de Git lleve el manual y sus capturas, por ruta exacta.
+5. **Windows:** la opción C, la MSIX 1.0.1.0 y el asistente 1.0.1.10, de la misma Release. Nadie migra mientras la 10.132 siga abierta. **El recorrido de Carlos (10.136) se hace con el asistente 1.0.1.10 de producción, antes de repartirlo, y pasa a ser condición del asistente, no de toda la versión:** si encuentra algo, Android, la Web y la MSIX salen igual, y el asistente espera.
+6. **La lista de publicación,** que escribe Yov:
+   - **antes de `flutter clean` se aparta toda la carpeta `build\` de `proyecto-baystream`, no solo `build\t93`.** Timonel avisó que `flutter clean` borra las MSIX de la vuelta atrás. Yov miró la carpeta: tiene 91 entradas, y entre ellas 56 carpetas de evidencia de los Sprints 2 y 3 (`block2` a `block7b`, `t35` a `t122`, `recorrido-clientes`), la Web 1.0.0 y el `.zip` del SDK de C++ 13.13.1. Se renombra entera a `C:\Proyectos\baystream-publicaciones\`, que es instantáneo y no pierde nada, y las vueltas atrás apuntan ahí;
+   - las huellas de hoy en `build\t93`: la 1.0.0.0, `BA01DED7…`, y la 0.4.2.0, `D57F8E50…`, iguales a las anotadas. El `BayStream_1.0.1.0.msix` viejo, del 14-oct, es `ABBCD33B…`, y se renombra al apartarlo;
+   - **la vuelta de la MSIX sin desinstalar:** el parámetro existe. Según la documentación de Microsoft de `Add-AppxPackage`, `-ForceUpdateFromAnyVersion` fuerza que se instale una versión concreta del paquete aunque ya haya una mayor. La página no dice qué pasa con los datos: la copia de las dos carpetas va primero, y desinstalar y reinstalar queda de respaldo;
+   - la vuelta del asistente es desinstalar, que conserva los datos (T-137 y T-145), e instalar el 1.0.0.9. Instalar la versión menor encima queda sin probar, y no hace falta.
+
+**Quedan anotadas:** O-146-1 (P3), con lo de arriba, y O-146-2 (P3): `tool/t93_msix.ps1` trae `-Version 1.0.0.0` por omisión, y la lista pasa `-Version` siempre.
+
+**Lo que sigue:** Carlos aprueba y Timonel hace la fase 2. La acepta GLM 5.3 Flash, en Max (10.137). Yov escribe la lista de publicación de la 1.0.1.
+
+La siguiente decisión es la **10.139**.
