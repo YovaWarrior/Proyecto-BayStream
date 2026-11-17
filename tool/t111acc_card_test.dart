@@ -78,7 +78,7 @@ Future<Map<String, Object?>> _case(
   final texts = [
     'Contenedores',
     'Bahías',
-    'Peso Total',
+    'Peso total',
     voyage.totalContainers.toString(),
     voyage.bays.length.toString(),
     _weight(voyage.totalWeight),

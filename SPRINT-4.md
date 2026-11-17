@@ -2873,7 +2873,7 @@ La siguiente decisión es la **10.100**.
   - las imágenes del asistente las dibuja Flutter, con `BsPaleta` clara y oscura, IBM Plex, el ícono y la ilustración `inicio` (`DESIGN.md` 13), a los tamaños que pide Inno Setup para cada escala: la grande, de 202 × 386 a 534 × 1022, y la pequeña, de 58 × 58 a 159 × 159;
   - un programa de Dart, `tool/t137_instalador.dart`, arma el instalador. Lee la versión del `.exe`, las de `pubspec.lock`, la de Flutter y la del SDK de C++, y comprueba que el SDK enlazado es el que pide `firebase_core` (la trampa de la 10.99). Agrega junto al `.exe` el runtime de Visual C++ que pide la guía de Flutter, comprueba las DLL con `dumpbin` y deja el instalador con su huella y su manifiesto.
 - **La app no cambia.** Se empaqueta la misma Release que firma la MSIX, y la MSIX sigue de respaldo. Mientras T-136 no esté, Codex empaqueta la Release de la 0.4.2 que Carlos compila hoy en `proyecto-baystream`, sin cambiarla.
-- **La MSIX y el asistente no conviven.** Si la cuenta tiene la MSIX, el asistente se detiene antes de copiar nada y explica cómo quitarla. Los datos no corren riesgo: están fuera del paquete, en `%LOCALAPPDATA%\BayStream` (10.75), y el desinstalador no los toca.
+- **La MSIX y el asistente no conviven.** Si la cuenta tiene la MSIX, el asistente se detiene antes de copiar nada y explica cómo quitarla. Los datos no corren riesgo: están fuera del paquete, en `%LOCALAPPDATA%\BayStream` (10.75), y el desinstalador no los toca. *Corregido en la 10.104: eso es cierto en la laptop de Carlos, no en una PC sin BayStream previo (10.37 de `SPRINT-3.md`).*
 - **Dónde:** `C:\Proyectos\baystream-t137`, rama `t137-instalador` desde `sprint-4`, como T-132. Solo toca `windows/installer/`, `tool/t137_*`, `docs/T137-RESULTADOS.md` y `build/t137/`. No toca `lib/`, `test/`, `pubspec.*` ni `tool/t93_msix.ps1`, que son de T-136. Corre a la vez que T-136, con un comando de Flutter a la vez en la máquina.
 - **Las pruebas.** Windows 11 Home no trae Sandbox, así que:
   - en la cuenta de Carlos solo se instala, en silencio, una variante de prueba (otro AppId, otro nombre y otra carpeta), sin abrir la app y con la huella del almacén real igual antes y después;
@@ -2989,3 +2989,949 @@ Con eso, 1.18 (agregar el plan después de publicar) queda para el piloto.
 4. Carlos publica la 1.0.0 (10.102), esta noche o mañana temprano.
 
 La siguiente decisión es la **10.104**.
+
+### 10.104 · T-138 pasa; T-137 no pasa por el aviso de la MSIX, Timonel lo corrige y se corrige la 10.100; la 1.0.0 se publica esta noche (3-nov, 20:55)
+
+**T-138 pasa en la segunda revisión de Codex** (`docs/t138/revision-codex.md`, «Segunda revisión», sobre `32eac61` y `8e364a4`). El subtítulo dice «Sigue en Recientes; no se borra nada.», el previo no cambia y la prueba exige los dos textos. Prueba 6 de 6, suite 2107 de 2107 sin omitidas y `analyze` cero, en una copia limpia de 812 archivos idéntica a la punta. Sin Chrome ni clientes: el subtítulo nuevo es más corto que el que Codex miró a 360. Yov revisó la evidencia. **El código de la app de la 1.0.0 es el de `32eac61`.**
+
+**T-137 no pasó la revisión de Timonel, por un solo hallazgo** (`docs/t137/revision-timonel.md`, H1, P1). Cuando el asistente se detiene por la MSIX, el aviso decía «Tus datos se quedan: están fuera del paquete», y mandaba desinstalarla.
+- Es cierto en la laptop de Carlos, donde la carpeta existía antes de la MSIX. Timonel lo comprobó: el paquete no tiene `BayStream`.
+- Es falso en una PC sin BayStream previo, como la de la oficina o la del piloto: ahí el almacén vive dentro del paquete y se borra al desinstalar (`SPRINT-3.md` 10.37).
+
+**La frase venía de la 10.100, y el error es de Yov:** «Los datos no corren riesgo: están fuera del paquete». La 10.75 lo midió en la laptop, y Yov lo dio por general. **Queda corregida:** dónde guarda los datos la MSIX depende de si la carpeta existía antes, como dice la 10.37, y desinstalarla no los borra solo en un equipo como la laptop. Lo que la 10.100 dice de la laptop para el jueves sigue en pie.
+
+**Codex se quedó sin tokens: Timonel corrigió H1, con la autorización de Carlos, y Yov revisó la corrección.** Carlos y Yov eligieron el texto. El aviso nuevo tiene cuatro párrafos:
+- BayStream ya está instalado como paquete MSIX en esta cuenta, y el asistente no lo reemplaza;
+- para saber dónde están los datos, se busca una carpeta `BayStream` en `%LOCALAPPDATA%\Packages`, dentro de la carpeta que empieza por `gt.cmartinez.baystream`, en `LocalCache` y en `Local`. Si está, los datos viven dentro del paquete y se borran con él: si se necesitan, se sigue con la MSIX. Si no está, viven en `%LOCALAPPDATA%\BayStream` y se quedan. Timonel mostró que mirar solo la carpeta de afuera falla en dos casos: si la MSIX corrió antes de que esa carpeta existiera, y en Windows 10 anterior a 1903;
+- para cambiar al asistente, se abre cada operación publicada hasta que diga «Al día», porque con el plano cerrado nada lo dice, y después se desinstala la MSIX;
+- el asistente no desinstala la MSIX ni copia archivos.
+
+Con la misma regeneración, la confirmación de desinstalar pasa a «¿Seguro que quieres desinstalar %1? Tus datos en %LOCALAPPDATA%\BayStream se conservan.» (O-137-4).
+
+**Lo que Yov revisó:**
+- el `.iss` cambia solo en esos dos lugares;
+- los dos instaladores llevan la misma carga de 32 archivos, con las mismas huellas, los mismos metadatos y los mismos AppId. Producción es `0e4b8b07…` y prueba, `a8952666…`;
+- la aceptación automática pasó (`build/t137/aceptacion-04/`). La variante de prueba se instaló, se instaló encima y se desinstaló; producción se detuvo por la MSIX, con los cuatro párrafos en el registro; el almacén real quedó idéntico (592 archivos);
+- Carlos abrió el asistente de producción en su cuenta: se detuvo con el aviso nuevo, completo y legible, sin instalar nada.
+
+**Lo demás de la revisión de Timonel pasa:** los datos, la cuenta sin administrador, las dos variantes separadas, el bloqueo que se detiene si PowerShell falla, las versiones leídas de la compilación y el arte. Con una Release 1.0.0, el asistente dice 1.0.0.9, 6.10.2, 4.15.2 y 13.13.1. El armado de Timonel dio el mismo instalador que el de Codex.
+
+**Las observaciones quedan para después del 7-nov**, salvo lo que se indica:
+- **O-137-1:** el armado solo funciona desde `C:\Proyectos\baystream-t137`, porque la huella de las fuentes de texto del arte depende del fin de línea. Por eso **T-137 se queda en su rama** hasta arreglarlo, y la mezcla de la 1.0.0 lleva solo la app. El asistente de la 1.0.0 se arma desde esa carpeta, con los pasos de la revisión de Timonel;
+- **O-137-2:** la trampa del SDK se comprueba en `extracted` y no en el `.exe`. Mientras tanto, al publicar se busca la cadena `Firebase C++` dentro del `.exe`; la publicación de la 1.0.0 ya lo hace;
+- **O-137-3:** las DLL de Visual C++ salen de System32. Hoy son idénticas byte por byte a las de `VC\Redist`;
+- **O-137-5:** en oscuro, los cuadros de texto no llevan el color de BayStream; lo decide Carlos en su recorrido;
+- **O-137-6:** 36 MB de restos de compilación en la carga;
+- **O-137-7:** el asistente dice 1.0.0.9, PowerShell corre sin límite de tiempo, y la Release de `proyecto-baystream` trae dos archivos viejos.
+
+**Falta para aceptar T-137:** el recorrido de Carlos en «BayStream Prueba», en claro y en oscuro, con las cuatro comprobaciones que agregó Timonel. Después, el commit de T-137 y el de su revisión.
+
+**Carlos decidió publicar la 1.0.0 esta noche** (20:40): «lleguemos hoy hasta donde podamos». Lo que no se termine queda para mañana temprano.
+
+La siguiente decisión es la **10.105**.
+
+### 10.105 · La 1.0.0, publicada en los tres clientes, con la sesión nativa probada y la prueba corta del viaje S100 (3-nov, 21:35)
+
+**Carlos publicó la 1.0.0 esta noche**, en el orden de la 10.102:
+- **La mezcla:** `master` en `eddc388`, «Sprint 4: la 1.0.0, mezcla de sprint-4 a master», con la etiqueta `v1.0.0`. La guardia comprobó que el código de la app es el que Codex revisó en `32eac61`. T-137 no entró (10.104).
+- **Android, primero:** el AAB 1.0.0 (9), de 51.5 MB, firmado con la clave de subida, en la prueba interna de Play. Resolvió los paquetes de T-136: cloud_firestore 6.10.2, firebase_core 4.15.2, firebase_auth 6.7.1 y cloud_firestore_platform_interface 8.0.7. El Honor se actualizó a la 1.0.0 desde Play.
+- **Windows:** el MSIX 1.0.0.0, instalado encima de la 0.4.2.0 (`BA01DED75EB1E0DA80B1B30D9CE9B8649167683994B583683398A889246E764B`, con la firma válida de la huella `60BEF8F4…`).
+  - `tool/t93_msix.ps1` apartó el SDK 13.9.0 a `extracted-13.9.0`, la compilación extrajo el 13.13.1 y `-Verificar` pasó.
+  - Antes de instalar, el bloque comprobó dentro del `.exe` `1.0.0+9` y `Firebase C++ 13.13.1` (O-137-2).
+  - La copia del almacén está en `C:\Proyectos\respaldo-almacen-20261103-2103` (592 archivos).
+  - El enlazador dio un aviso, LNK4078, por las secciones `.voltbl` de las bibliotecas precompiladas del SDK. El `.exe` funciona.
+- **La sesión nativa, contra Firebase de verdad:** en Windows, «Cuenta autorizada», y después cerrar sesión y volver a entrar con la cuenta de oficina; en el Honor, la 1.0.0 con la sesión de muelle autorizada. Es lo que la aceptación de T-136 no pudo acreditar (10.102).
+- **La Web:** la 1.0.0 (9), con `version.json` comprobado antes de publicar, solo el SDK web 12.19.0 y `t92_verify` aprobado. Se publicó a las 21:09, solo Hosting.
+
+**La prueba corta pasó completa** (Carlos, 21:35). Usó la operación de prueba BUQUE MANUAL · S100 · GTSTC y las copias `S100_LLEGADA.edi` y `S100N_CARGA.edi`, que Yov sacó de las P130 cambiando el viaje en `TDT`, con sus huellas comprobadas. Pasaron todos los pasos:
+- publicar la llegada;
+- unirse y descargar desde el Honor;
+- agregar el plan S100N y cargar desde el Honor;
+- importar el listado;
+- «Volver al inicio» desde la marca del riel y reabrir el plano desde «Recientes»;
+- cerrar la operación al primer intento, y comprobar en la Web que ya no está abierta.
+
+**Al abrir `S100_LLEGADA.edi`, el plano abrió confirmado sin pedir nada.** Es la regla de publicación directa (`DESIGN.md` 7.2): el perfil de BUQUE MANUAL estaba guardado y GTSTC era su última escala confirmada. El paso 1 de la prueba corta suponía un previo, y el de la 0.8 también. **Queda un texto para después del 7-nov:** con el plano confirmado, la cabecera dice «Publicado» antes de que se publique la operación en la nube.
+
+**Para volver atrás, cliente por cliente:**
+- Windows: el MSIX 0.4.2.0 (`D57F8E50…`), desinstalando antes la 1.0.0.0;
+- Android: `v0.4.2` con el `versionCode` 10;
+- la Web: `v0.4.2`, con 0.4.2 (8).
+
+**Lo que sigue:**
+- **T-137:** el asistente de la 1.0.0 se arma desde `C:\Proyectos\baystream-t137` (10.104), y el recorrido de Carlos en «BayStream Prueba» se hace con ese instalador. Después, sus commits. El jueves, Carlos decide qué instalación lleva la laptop en la demostración.
+- **Después de la demostración:**
+  - borrar los SDK 13.9.0 apartados y su `.zip` en las tres carpetas, y las carpetas de prueba de `%TEMP%`;
+  - poner al día con la 1.0.0 la lista del piloto, que en 2.14 todavía dice «Cerrar el plano»;
+  - las observaciones O-136-1, O-134-2 y O-137-1 a O-137-7.
+
+La siguiente decisión es la **10.106**.
+
+### 10.106 · T-137 aceptada, con el recorrido de Carlos en el asistente de la 1.0.0 (3-nov, 22:25)
+
+**El asistente de la 1.0.0 se armó desde `C:\Proyectos\baystream-t137`**, contra la Release que firmó el MSIX (10.105), con los pasos de la revisión de Timonel:
+- `BayStream_Setup_1.0.0.9.exe`, `ef8f2bbb5bcf0fdf935b8fb2fed819204961ce295a793a777aefa1cf59d0aadb`, con el AppId de producción, 32 archivos en la carga y «Origen verificado sin cambios»;
+- el manifiesto dice 1.0.0.9, cloud_firestore 6.10.2, firebase_core 4.15.2, el SDK de C++ 13.13.1 pedido y extraído, Flutter 3.38.9, Dart 3.10.8 y Riverpod 3.1.0;
+- está en `C:\Users\Public\BayStream-T137\1.0.0.9`.
+
+Es el primer armado de producción contra `proyecto-baystream`, y salió a la primera.
+
+**Carlos lo recorrió en la cuenta estándar «BayStream Prueba», en claro y en oscuro.** Las 30 capturas están en `build/t137/capturas/carlos/`, fuera de Git, y Yov las revisó todas:
+- las seis páginas, con «OFICINA Y MUELLE», la bienvenida nueva, el trato de tú y las versiones de la 1.0.0 en «Lo que hay detrás»;
+- sin MSIX en la cuenta, el asistente siguió: es la primera vez que corre ese camino;
+- la carpeta del almacén, `…\AppData\Local\BayStream`, se rechaza con «Elige otra carpeta: la instalación debe quedar separada de %LOCALAPPDATA%\BayStream, donde viven tus datos.». También se rechaza después de que Windows pregunte si instalar en una carpeta que ya existe y se conteste que sí;
+- la instalación es por usuario, en `…\AppData\Local\Programs\BayStream`, con el acceso en Inicio y el del escritorio;
+- BayStream abrió desde el final del asistente, desde Inicio y desde el escritorio, con el almacén vacío de esa cuenta y sin iniciar sesión;
+- en Aplicaciones dice «BayStream · 1.0.0.9 · Carlos Martínez · 94.5 MB»;
+- la confirmación nueva de desinstalar se lee completa, y al final dice «Tus datos permanecen en %LOCALAPPDATA%\BayStream. El desinstalador no los borra.»;
+- en oscuro, el cuadro gris de O-137-5 no le molesta a Carlos.
+
+**Lo que mostró desinstalar con BayStream abierta (O-137-8, para después del 7-nov).** El desinstalador no detecta la app ni la cierra. Termina con «La desinstalación de BayStream terminó, aunque Windows no pudo quitar algunos archivos de la aplicación», y esos archivos se quedan en la carpeta de la aplicación: al reinstalar, Windows preguntó si instalar en una carpeta que ya existe. El aviso es veraz y los datos no se tocan. El arreglo es que el desinstalador pida cerrar BayStream antes de seguir; mientras tanto, se cierra BayStream antes de desinstalar.
+
+**T-137 queda aceptada:** la entrega de Codex, la revisión de Timonel con la corrección de H1 (10.104), el recorrido de Carlos y la revisión de Yov. Sigue en su rama, `t137-instalador`, hasta que se arregle O-137-1 (10.104); después entra a `sprint-4` y a `master`.
+
+**Lo que sigue:**
+- el jueves, Carlos decide qué instalación lleva la laptop en la demostración: el MSIX 1.0.0.0 o el asistente 1.0.0.9. Si elige el asistente, antes quita la MSIX, porque en la laptop los datos se quedan (10.104), y lo primero después de instalar es la sesión de oficina;
+- después de la demostración, las observaciones de la 10.104 y O-137-8.
+
+### 10.107 · Los dos documentos del 7-nov, la sesión con usuarios de COMAR y T-139, el manual de la 1.0.0 (4-nov, 13:00)
+
+**El tutor pide dos documentos impresos para la terna del sábado 7-nov** (Ing. Escobar, 2-nov):
+- el 1, de investigación, en blanco y negro: el PG I corregido y lo de PG II, con el instrumento, la recolección y la tabulación, la prueba de hipótesis, las conclusiones y las recomendaciones;
+- el 2, técnico, en color: la ERS, el Product Backlog y los Sprint Backlog, y el manual de usuario.
+
+Los escribe Yov el jueves. El plan y las fuentes están en el documento del proyecto `BayStream_Documentos_finales_7nov.md`.
+
+**La sesión con usuarios del 4-nov no se usa como evidencia de H2 y H6.** *Corregido el 4-nov a las 13:10: sus registros no son mediciones válidas, y se retiraron los resultados que se habían anotado aquí. Cómo se miden H2 y H6 se decide en la 10.108.*
+
+**T-139 · El manual de usuario de la 1.0.0.** El de T-100 (`docs/MANUAL-USUARIO.md` y sus 103 capturas en `docs/manual/`) es de `sprint3-cierre-2`, de antes del rediseño. Para el documento 2 hace falta una edición de la 1.0.0, más corta y para imprimir en color. La hace Timonel, con estas reglas:
+- usa los datos sintéticos de T-100 (BUQUE MANUAL, M100) y nada del corpus;
+- la nube va contra el emulador de Firebase, como en T-130 y T-129, y nunca contra producción ni con `baystream-privado`;
+- el teléfono, en el emulador de Android y no en el Honor;
+- no toca `lib/`, `test/` ni `pubspec.*`: lo que encuentre queda como observación;
+- las capturas de la instalación en Android y en la Web las toma Carlos en sus equipos. Las del asistente de Windows ya están en `build/t137/capturas/carlos/` (10.106).
+
+La entrega, el miércoles en la noche:
+- `docs/MANUAL-USUARIO-1.0.0.md`;
+- las capturas, en `docs/manual-1.0.0/`;
+- `docs/T139-RESULTADOS.md`.
+
+Versionar esas rutas de `docs/` requiere la autorización de Carlos (`AGENTS.md`), por nombre exacto; va en el prompt de T-139.
+
+### 10.108 · El título de los documentos; H2 y H6 van como escenario de referencia; T-140 mide H1 (4-nov, 13:30)
+
+**El título** de los dos documentos es «Ecosistema multiplataforma para la planificación de estiba de buques portacontenedores en tiempo real». Sale «optimización», porque BayStream no planifica la estiba de forma automática (10.80 de `SPRINT-3.md`).
+
+**H2 y H6 no se miden con usuarios antes del 7-nov** (Carlos). En el documento 1 van como un escenario de referencia, con una nota al inicio de la sección:
+- dice que esos valores no proceden de la aplicación con participantes;
+- dice que la medición con usuarios queda para la prueba de campo, sujeta al despliegue en muelle;
+- en la prueba de hipótesis, los dos quedan pendientes de contraste.
+
+El instrumento de la sesión va en blanco en los anexos.
+
+**T-140 · El volcado del lector para H1** (Timonel, ≈ 0.3 h). Corre el lector de la 1.0.0 sobre los 10 archivos del corpus y guarda en `build/t140/` el CSV que exporta la app, uno por archivo. Yov compara cada contenedor, campo por campo, con una lectura independiente del `.edi` y da la precisión con su intervalo de Wilson, contra el umbral del 99.5 %. Del corpus no entra nada al repositorio: solo el script `tool/t140_volcado_test.dart`.
+
+**H3, H4 y H5 van con sus datos reales:**
+- H3, con el piloto 3 (10.85);
+- H4, con el conteo de `m2-baseline` y el de T-99;
+- H5, con las series del 14-ago y del 25-ago (10.10 de `SPRINT-1.md`).
+
+### 10.109 · T-140 entregada: H1 medido con todo el corpus, 99.85 % (4-nov, 14:00)
+
+**El volcado** (Timonel, `tool/t140_volcado_test.dart`, 1 de 1 en verde). Leyó los 10 archivos con el lector de la 1.0.0 y dejó en `build/t140/` un CSV por archivo y `resumen.json`:
+- los contenedores son 977, 806, 369, 369, 979, 736, 717, 398, 405 y 405;
+- A08 y A08v traen 55 celdas reservadas;
+- A06 se leyó como la 1.5, con las reglas de la 2.x;
+- las huellas de los `.edi` coinciden con las de la carpeta del corpus.
+
+**El cotejo** (Yov). Cada contenedor se comparó campo por campo con una lectura independiente de su `.edi`, que no usa nada del código de BayStream. El script está en el proyecto, en `claude/herramientas/h1_cotejo.py`.
+
+| Medida | Correctos | Precisión | IC 95 % (Wilson) |
+|---|---|---|---|
+| Los 9 campos del instrumento: matrícula, tipo ISO, estado, posición, peso, operador, peligrosa, refrigerado y sobredimensionado | 6152 de 6161 | **99.85 %** | 99.72 % a 99.92 % |
+| Lo mismo, sin las dos variantes (8 operaciones) | 5381 de 5387 | 99.89 % | 99.76 % a 99.95 % |
+| Los 9 campos más los puertos de carga y descarga (OE «a») | 5435 de 6161 | 88.22 % | 87.39 % a 89.00 % |
+
+**H1 cumple el umbral del 99.5 %,** y también lo cumple el límite inferior del intervalo. Lo que falla está identificado:
+- **Las peligrosas con dos DGS.** Hay 5 contenedores con dos mercancías peligrosas (A02, A03 y A07; 9 casos con las variantes). El lector guarda solo la última: marca la peligrosa bien, pero pierde la otra clase y su número ONU. Con «una de las declaradas», los 9 campos dan 100 %.
+- **La 1.5 pierde los puertos.** En A06, los 717 contenedores salen sin puerto de carga ni de descarga: la 1.5 los declara en LOC+6 y LOC+12, y el lector los busca en LOC+9 y LOC+11. Sin A06, la medida con puertos da 99.83 %.
+- **El destino final (LOC+83) no se extrae en ningún archivo.** La columna «Destino final» del CSV sale vacía. No es parte de H1.
+- **Las matrículas con espacio de A06** (`BYSU 9672095`) se conservan tal cual vienen; el cotejo las compara sin el espacio.
+
+Las cuatro van como observaciones para después del 7-nov. En el documento 1 van como limitaciones de H1.
+
+La siguiente decisión es la **10.110**.
+
+### 10.110 · T-139 aceptada; H2 y H6 quedan como en la 10.108 (4-nov, 16:30)
+
+**T-139, aceptada** (Yov, 14:10; commit `36bdeda`). Son el manual de la 1.0.0 (`docs/MANUAL-USUARIO-1.0.0.md`), sus 43 capturas en `docs/manual-1.0.0/` y `docs/T139-RESULTADOS.md`. Antes del commit, Timonel hizo los cuatro retoques que pidió Yov:
+- las figuras 1 a 3 se recortaron a la ventana del asistente, que traía detrás el Explorador;
+- 3.3 distingue el «Publicado» del plano, confirmado en ese equipo, de la operación «Publicada» en la nube;
+- 7.11 dice lo que ve el muelle después del cierre;
+- el informe atribuye al prompt de T-139 la opción de recorrer el teléfono en la Web a 360 dp.
+
+Faltan las figuras 5 y 6, la instalación en Android y en la Web. Las toma Carlos, con los nombres de archivo que ya fija el manual.
+
+**Las observaciones de T-139:**
+- O-139-1, el muelle que sigue en «Publicada» y «Al día» después del cierre: el manual ya lo explica, y el arreglo va después del 7-nov;
+- O-139-2, O-139-3, O-139-6 y O-139-7: después del 7-nov, porque la 1.0.0 no cambia antes de la presentación;
+- O-139-4 y O-139-5: no son defectos.
+
+**H2 y H6 quedan como en la 10.108** (Carlos, 16:18). La sesión de la tarde, de 14:30 a 16:09, tampoco se usa como evidencia: sus registros no son mediciones válidas. Los dos van como escenario de referencia, con la nota neutra, y quedan pendientes de contraste con usuarios en la prueba de campo.
+
+La siguiente decisión es la **10.111**.
+
+### 10.111 · Los dos documentos del 7-nov, completos; T-141, las pruebas finales de seguridad de la 1.0.0 (4-nov, 20:15)
+
+**Los dos documentos del 7-nov quedaron escritos a las 17:50** y el Documento 2 incorporó a las 19:05 el capítulo III, «Diseño del Sistema», con diez diagramas UML levantados del código de la 1.0.0 (casos de uso, clases del dominio, componentes, despliegue, secuencia de una escala, estados y actividad). Están en `docs/entrega-7nov/` (commit `63b5ac8`: el Documento 1, de investigación, 120 páginas, y el Documento 2, técnico, 184 páginas); las fuentes y los diagramas quedan en `docs/entrega-7nov/fuentes/`, fuera del repositorio. Los dos pasan `verificar_formato.py` con 0 fallas y 0 avisos. Antes de imprimir: la revisión independiente en Claude Code (Opus 5.5), las correcciones que salgan y los índices en Word.
+
+**T-141, las pruebas finales de seguridad de la 1.0.0** (GLM, 4-nov, de 19:26 a 19:52; `docs/T141-SEGURIDAD-RESULTADOS.md` y los scripts `tool/t141_*`). Repite el método de T-113 sobre lo publicado (`eddc388`, `v1.0.0`):
+- las reglas publicadas son idénticas a `docs/T130-firestore.rules.propuesta` (`8B903949…`; la copia fresca de la consola del 4-nov, 20:03, es igual byte a byte a la del 3-nov). Contra ese texto, en el emulador: 69 de 69 (T-80), 25 de 25 (T-113), 31 de 31 (T-127), 38 de 38 (T-130) y 18 de 18 casos de abuso nuevos sobre lo que T-130 abrió (`tool/t141_reglas_abuso.mjs`);
+- 117 paquetes sin avisos vigentes en OSV y GitHub Advisory; SDK web 12.19.0 con la huella de `provenance.json`, BoM 34.19.0, C++ 13.13.1, Inno Setup 7.1.1;
+- 520 confirmaciones y 3 557 objetos de la historia sin ningún secreto nuevo; T113-06 cerrado (`output/` ignorado);
+- el APK de la 1.0.0 coincide con las declaraciones de Play (T-88); el MSIX verifica su firma; el instalador se instala por usuario sin administrador y va sin firma de código; la Web en vivo responde con TLS 1.3 y HSTS, sin las demás cabeceras (T113-04, confirmado en vivo);
+- fuzzing del lector BAPLIE: 180 mutantes, 0 fallas, 112 rechazados con mensaje con causa y acción (`tool/t141_fuzz_baplie.dart`).
+
+Ocho hallazgos, ninguno crítico ni alto. **Decisiones de Carlos:** T141-01, las cabeceras de seguridad del Hosting, con el parche escrito para `firebase.json`, va después del 7-nov; T141-06, la protección de enumeración de correos de Authentication, estaba activa en la consola (resuelto); T141-07 y T113-07, los contenedores del corpus anonimizado en documentos versionados, quedan aceptados con el argumento de la anonimización. Nada obliga a tocar la 1.0.0 antes de la presentación. Las pruebas se citan en el Documento 2, IV.F. T-141: 0.4 h.
+
+### 10.112 · La revisión independiente, aplicada a los dos documentos con seis decisiones de Carlos (4-nov, noche)
+
+**La revisión de Opus 5.5** (`docs/entrega-7nov/REVISION-INDEPENDIENTE.md`, 105 hallazgos: 53 del Doc 1 y 52 del Doc 2) se aplicó entera sobre las fuentes de los dos documentos, que se reconstruyeron, verificaron (`verificar_formato.py`: 0 fallas y 0 avisos en ambos) y renderizaron. Quedan en `docs/entrega-7nov/` con sus fuentes en `fuentes/`.
+
+**Las seis decisiones de Carlos (20:33):**
+1. **«Código abierto» sale** del objetivo general, la pregunta general, la introducción y la brecha. El repositorio es privado durante la evaluación y la publicación con licencia abierta queda prevista para después de la graduación; se declara como cambio frente a PG I (alcance 9 y tabla de cambios).
+2. **Las cifras de agosto se declaran:** los entregables del 14 y 23-ago reportaron 12 participantes (−74.6 %, −83.3 %, SUS 86.25) y 98.9 % de precisión; eran un ejercicio de simulación para ensayar los instrumentos (la hoja los rotula sintéticos) y se retiran. Va en IV.F, en la limitación 3 y en la conclusión 7.
+3. **Las tablas del escenario de referencia se quedan,** con su origen declarado (las preparó Codex el 3-nov con valores inventados, para ensayar el formato y el cálculo) y sin ninguna comparación con el umbral.
+4. **Los buques van con alias** en el Doc 1: buque A (pilotos 1 y 3) y buque B (piloto 2), sin nombres ni números de viaje.
+5. **Se conservan H1 a H6,** con la frase de correspondencia con los seis indicadores de la presentación (revisión del tutor del 17-oct).
+6. **El umbral de H1 sigue en 99.5 %,** citando la indicación del catedrático del 2-nov.
+
+**Lo demás que cambió en el Doc 1:** H1 con la causa real de las nueve discrepancias (el volcado exporta solo la última DGS; el lector conserva las dos), seis contenedores y no cinco, A07 en 99.497 %, cuatro limitaciones (más el espacio interno de las matrículas de A06) y la precisión por matrícula distinta (4 386; 99.86 %, IC 99.70–99.94); H3 con el denominador real (papel 102 celdas, 1 error de anotación; app 113 capturas del Honor, 0; 70 en ambos), los cinco defectos del escritor y el rodeo 26043X, las tres discrepancias de datos (no «errores de posición»), los cancelados 49 y 50 y los tres sin celda; H4 con los dos instrumentos declarados (`cloc` con plantillas; T-99 sin ellas) y la fila de la 3.0 en la misma base (65.9 %); H5 con la regla de decisión (mediana y P95 ≤ 3 s), C3 en diez ciclos, los crudos del 25-ago no tabulados y las condiciones de la medición; la nula general no se rechaza; H4 y H5 «cumplen el umbral» sin prueba inferencial; H2 cuasiexperimental; tabla de cambios frente al anteproyecto (Tabla 4); apartado nuevo IV.J, Limitaciones del Estudio (9); conclusión general y respuesta a las seis preguntas específicas; recomendaciones con criterio verificable; Gemini, GLM y Nube declarados en IV.H; versiones por indicador y la renumeración 0.x; línea base de H4 antes del 14-ago; Backlog del 23-ago; seis publicaciones; «prueba con usuarios en muelle» para lo pendiente; Bilican et al. y Van Twiller et al. con sus autores de Crossref; SMDG como Ship-planning Message Design Group y las guías 2.2.1 y 3.1.1 (verificado en smdg.org: la revisión decía 3.2 sobre D.21A y no se confirmó); sobreestiba frente a re-estiba; color por tabla fija de 15 puertos; orden de movimientos por hora del dispositivo, dispositivo y secuencia; exportaciones del plan frente al BAPLIE de salida; lo que revisa la carga antes de confirmar; Anexo E alineado con la ERS v2 (RF-001, 002, 009, 016, 021 y 033 redefinidos; RF-021 y 022 en OE2; RF-036 a 041 agregados); «Google LLC» y «Supabase, Inc.»; título real en las propiedades del archivo.
+
+**En el Doc 2** (aplicado antes, 10.111 y esta misma noche): el recuento de requisitos (32 hechos, 12 redefinidos, 2 parciales, 1 no; 17 de 18 MUST), T-72 restaurado con las horas del tablero, T-141 en el Sprint 4, la fila de asistentes de apoyo, el MSIX con la confianza del certificado, la salida solo con plan, y el diagrama de despliegue (se había cortado por el lienzo: corregido).
+
+**Pendiente de Carlos:** generar el índice en Word en los dos archivos finales antes de imprimir, y confirmar la fecha de la indicación del catedrático (2-nov) en II.D y en la Tabla 4 del Doc 1.
+
+### 10.113 · El material impreso para la terna y las dos cuentas de demostración (5-nov, tarde)
+
+**Lo que Carlos lleva impreso el 7-nov, además de los dos documentos** (todo en `docs/entrega-7nov/terna/` y `docs/entrega-7nov/`, hecho el 4 y el 5-nov):
+- **la hoja de ruta para la terna** (una página, a color): la pregunta, los seis indicadores con umbral, resultado, dictamen y página, lo que cambió frente al anteproyecto y dónde está cada cosa; y **la ficha de preguntas probables** (dos páginas, de uso personal), con diez preguntas y sus respuestas. Las páginas citadas son las del índice que Word generó en los archivos finales, no las del render de LibreOffice: difieren en una página en cada documento (Doc 1: +1 desde la introducción; Doc 2: −1 en el manual);
+- **las páginas a color** para imprimir aparte: `BayStream_Paginas_a_color.pdf` (64 páginas: las dos carátulas y las páginas 124 a 185 del Doc 2, apartados B a J del manual, cortadas del PDF que Word exportó) y el mismo contenido como Word (`BayStream_Paginas_a_color.docx`, construido desde el paquete del Doc 2, con la numeración 124–185 y la jerarquía del manual, no convertido desde el PDF);
+- **la presentación**, borrador 7 (`C:\Proyectos\baystream-presentacion\`): la apertura dura 15 s con el sonido vuelto a sintetizar para esa duración (`apertura15_sonido.mp4`), las cifras siguen a los documentos finales (2 107 pruebas, 99.85 %, 123/145, 0.26–0.79 s, sin «código abierto», H2 y H6 pendientes) y la última lámina lleva seis de los diez diagramas UML rehechos;
+- **el trifoliar** (carta apaisada, seis caras, con las marcas de doblez en 9.31 cm): producto y no ruta, con dibujos, un código QR a `baystream-app.web.app` y los tres pasos para abrir un BAPLIE en la Web. Fuente en `terna/fuente-trifoliar/`.
+
+**Las dos cuentas de demostración.** Carlos decidió que la terna pueda entrar a BayStream Web si quiere, con dos cuentas que crea él en la consola (Authentication, correo y contraseña; la app no tiene registro) y autoriza en `authorized/{uid}` con `active: true`, `role` y `name`: `oficina-prueba@baystream-app.web.app` (`office`) y `muelle-prueba@baystream-app.web.app` (`dock`), con una misma contraseña que va impresa en la contraportada del trifoliar y en ningún archivo del repositorio. Valen hasta el 14-nov; ese día se desactivan en Authentication o con `active: false`, que la app respeta de inmediato. Como entran al proyecto real (una cuenta autorizada lista todas las operaciones abiertas, la de oficina publica y cierra, la de muelle registra movimientos en la que se une), antes del sábado Carlos cierra las operaciones reales del piloto que sigan abiertas y deja publicada una operación de demostración desde oficina-prueba. **La carpeta `terna/` no entra en Git:** es material de impresión y el trifoliar lleva la contraseña.
+
+**Hecho el 5-nov, 19:10–19:30, desde el Chrome de Carlos:** él creó los dos usuarios en Authentication y Yov escribió los dos documentos de `authorized` (UID `c5pcMx54…` oficina, `ROTvVAGe…` muelle), comprobó que las 17 operaciones de la nube ya estaban cerradas (ninguna con `status: "open"`), verificó la sesión de oficina-prueba en la Web («Cuenta autorizada», «Operaciones abiertas en la nube») y publicó la operación de demostración: **BUQUE GOLF · VIAJE007A · GTSTC**, desde `CORPUS_A07.edi` (plano de llegada, 398 contenedores, 114 se descargan, perfil propuesto desde el archivo, sin límite por pila), documento `8f614ccb-9bc9-40b4-8464-d3eb70559b25`, `createdBy` = oficina-prueba. Queda pendiente probar «Unirse» con muelle-prueba desde un teléfono.
+
+La siguiente decisión es la **10.114**.
+
+### 10.114 · La presentación del 7-nov: las cuatro recomendaciones de la terna y lo que queda del sprint (10-nov, 18:25)
+
+**El sábado 7-nov Carlos presentó BayStream ante la terna.** Según su relato, no hubo preguntas técnicas, y la terna dejó cuatro recomendaciones:
+1. **Doble factor de autenticación.** Un ingeniero vio que se entra solo con correo y contraseña, y le pareció poca seguridad.
+2. **Capacitar al personal del sector** para que aprenda a usar la app.
+3. **Que la entienda quien no es del rubro.** El evaluador que no conoce de muelles dijo que la app está bien, pero que solo Carlos sabía a qué apartado entrar, por trabajar en el rubro, y que a algunos apartados se llega con muchos clics.
+4. **La estabilidad del buque según los pesos,** con una simulación en 3D que muestre en tiempo real cómo queda el buque con los contenedores y sus toneladas: que esa limitación del proyecto se vuelva un alcance nuevo de BayStream.
+
+**Lo que Yov verificó del doble factor (10-nov):**
+- Firebase lo da con la mejora a *Firebase Authentication with Identity Platform*, con el segundo factor por SMS o por TOTP (una app autenticadora). La guía de Flutter pide el correo verificado y advierte que el SMS es inseguro; enviar SMS, además, solo se puede en el plan Blaze (`firebase.google.com/docs/auth/flutter/multi-factor` y `/docs/auth/limits`).
+- **En Windows no hay:** la misma guía dice «Windows platform does not support multi-factor authentication». La oficina usa la app de Windows, así que Windows necesita otro camino.
+- Con la mejora, el plan Spark admite hasta 3 000 usuarios activos por día: de sobra para BayStream.
+- La API de FlutterFire trae el generador de TOTP; en qué plataformas funciona se comprueba en el diseño.
+
+**Cómo se aplican (propuesta de Yov; decide Carlos):**
+1. **Seguridad.** Hoy, T-142: las cabeceras de seguridad del Hosting (T141-01). Después, el doble factor por TOTP en la Web y en Android: el enrolamiento desde «Nube y cuenta» y reglas que exijan el segundo factor a la oficina. Para Windows hay dos caminos: que la oficina use la Web cuando trabaja con la nube, o un inicio de sesión por el navegador que devuelva un token propio (necesita Cloud Functions y el plan Blaze). Se diseña antes de tocar código, como T-130.
+2. **Capacitación.** Un paquete por rol, para oficina y para muelle: el manual de la 1.0.0, una guía de una página por rol, videos cortos por tarea y una operación de práctica con datos sintéticos (BUQUE MANUAL). La sesión de capacitación en COMAR es también la ocasión de medir H2 y H6 con el instrumento del 4-nov, que siguen pendientes de contraste con usuarios (10.108).
+3. **Usabilidad para quien no es del rubro.** Primero se mide: el mapa de clics de las tareas frecuentes de cada rol y una prueba con tres a cinco personas ajenas al puerto. Después se cambia: un inicio por rol con las acciones del día, los nombres del rubro explicados (OR, escala, reserva…), una ayuda «?» en cada pantalla y las acciones frecuentes fuera de «Más» y de «Acciones». Un ejemplo del mismo sábado: el mismo toque hace cosas distintas según el rol. En el muelle, tocar una celda reservada abre la elección del vacío; en la oficina abre «Mover» y «Cancelar embarque», y el vacío se asigna desde «Acciones» → «Asignar vacío». Va con RNF-002 (productivo en menos de 10 minutos sin capacitación, SUS ≥ 75), que quedó parcial.
+4. **Estabilidad y 3D, un alcance nuevo, por fases:**
+   - A, sin pedirle nada nuevo al buque: la vista 3D del buque con los contenedores coloreados por peso, que cambia en vivo con cada movimiento, y los indicadores de la carga: el peso a babor y a estribor, a proa y a popa, y el centro de gravedad vertical de la carga;
+   - B, con el cuadernillo de estabilidad del buque en su perfil (el peso en rosca, las tablas hidrostáticas y los tanques): calados, asiento, escora y GM;
+   - C, el cotejo con el computador de carga del buque en escalas reales.
+
+   Todo va como una estimación para planificar, rotulada PROVISIONAL: el cálculo de estabilidad que vale es el del computador de carga aprobado del buque (IACS UR L5; OMI MSC.1/Circ.1229). La técnica del 3D, un dibujo propio sin dependencias o una biblioteca que necesita autorización, se decide con una prueba corta.
+
+**Lo que queda del Sprint 4** (de las decisiones 10.105 a 10.113 y del alcance del sprint):
+- **Git:** `sprint-4` en GitHub sigue en `820f66e` (10.111). Faltan los commits de 10.112 a 10.114 y los documentos finales de `docs/entrega-7nov/`.
+- **El 14-nov:** desactivar las dos cuentas de demostración (10.113).
+- **Seguridad:** T141-01 pasa a T-142; T141-03, el cifrado del almacén local, sigue pendiente de decisión.
+- **Para una 1.0.1:**
+  - la cabecera que dice «Publicado» antes de que se publique en la nube (10.105);
+  - O-139-1 (el muelle sigue en «Publicada» y «Al día» después del cierre) y O-139-2, O-139-3, O-139-6 y O-139-7 (10.110);
+  - O-136-1, O-134-2 y O-137-1 a O-137-8 (10.105 y 10.106); al arreglar O-137-1, T-137 entra a `sprint-4`;
+  - las observaciones de H1: el volcado y el detalle con todas las DGS, el LOC+83, los puertos de la 1.5 y las matrículas con espacio (10.109 y 10.112).
+- **Requisitos:** RF-018, la búsqueda por tipo de carga especial, el único que no se construyó; RF-005 (sobredimensión) y RF-035 (tercer rol), parciales; los RNF que no cumplen (001, 005, 007 y 008) y los parciales (002, 003 y 004).
+- **Investigación:** H2 y H6 con usuarios, y la campaña de errores inyectados de H3.
+- **T-87,** la BAPLIE 3.1, espera un archivo real. **T-114** no tiene su cierre formal: la auditoría de `flutter-ui` en cero y RNF-002 y RNF-003 vueltos a medir.
+- **La limpieza de Carlos:** los SDK 13.9.0 apartados, las carpetas de prueba de `%TEMP%`, la lista del piloto (2.14) y, si quiere, devolver el almacén de Windows desde `BayStream_respaldo_*`.
+
+**T-142 · Las cabeceras de seguridad del Hosting (T141-01).** Hoy, con Timonel. Solo cambia `firebase.json`: se publica la misma Web 1.0.0, sin compilar, con las cabeceras que faltan, probadas en el emulador de Hosting y, por Carlos, en un canal de vista previa antes de producción. El prompt está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
+
+**Decide Carlos:** el orden de los cuatro frentes (Yov propone la seguridad primero, después la usabilidad junto con la capacitación, y la estabilidad como alcance aparte), si el doble factor entra en la siguiente versión y qué camino toma Windows.
+
+La siguiente decisión es la **10.115**.
+
+### 10.115 · T-142 revisada: las cabeceras pasan en el emulador y se publican desde `proyecto-baystream`, con la Web 1.0.0 que ya está en vivo (10-nov, 19:50)
+
+**El paso 0 encontró dos compilaciones 1.0.0+9.** El `build/web` de `baystream-rediseno` (armado el 3-nov a las 16:38; `main.dart.js` `07c9111b…`) no es la Web publicada. La publicada es la de `C:\Proyectos\proyecto-baystream\build\web` (`master`, `eddc388`), armada a las 21:09, el minuto de la publicación (10.105). Timonel se detuvo, Yov lo comprobó desde el equipo (el `main.dart.js` en vivo es `98a83241…`) y Carlos eligió probar con una copia de la publicada. Publicar desde el rediseño habría puesto en producción otra compilación con el mismo número.
+
+**Las huellas de la Web 1.0.0 publicada**, para cotejarlas antes de cualquier publicación:
+- `version.json`: `2139F1018590344D4A16E8CFB0795B4EAFB271C6457EF22B8928524C028388D0`;
+- `main.dart.js`: `98A83241F999FB23D89E21F1825B4879088972A0E3DB789504A6B649615CF91C`;
+- `flutter_bootstrap.js`: `3FCD39CC2D3D9383BD2B6E0461F84AA0849340F692D43A6B63448FF0B8ABEC41`.
+
+Propuesta de Yov para las próximas publicaciones (decide Carlos): cada publicación de la Web anota en su decisión las huellas de esos tres archivos, y cada compilación nueva lleva un número de compilación nuevo.
+
+**T-142, entregada (Timonel, Opus 5.5) y revisada por Yov** (`docs/T142-RESULTADOS.md`, `tool/t142_*` y las evidencias en `build/t142/`). Solo cambia `firebase.json`, sin compilar:
+- **La CSP:** `default-src 'self'`; `script-src 'self' 'wasm-unsafe-eval'`; `style-src 'self' 'unsafe-inline'`; `connect-src 'self'` con identitytoolkit, securetoken y firestore; `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` y `frame-ancestors 'none'`. No hace falta `'unsafe-eval'` ni compilar con `--csp`, y cada concesión tiene probado qué se rompe sin ella.
+- **Las demás:** `X-Content-Type-Options: nosniff` (antes se comprobaron en vivo los tipos que manda Hosting), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` y `Permissions-Policy` con el micrófono y el portapapeles solo para el sitio y lo demás apagado. HSTS ya lo pone Firebase.
+- **En el emulador de Hosting,** con la copia de la publicada y el proyecto `demo-t142`: 13 de 13 pasos sin sesión con 0 violaciones, 0 errores y ningún origen externo; la voz en `prompt` frente al `not-allowed` del control negativo; el service worker, en 4 de 4 casos; la carga, 1760 ms antes y 1734 ms después (mediana de 10).
+- **Yov comprobó en el equipo** las huellas, el `firebase.json`, los resúmenes de `build/t142/` y que la contraseña de las cuentas de demostración no aparece en ningún archivo de la tarea.
+
+**Lo que agrega la revisión:**
+- **Los navegadores móviles y Safari.** En móviles, en Safari y en iOS, el SDK de Auth 12.19.0 prepara por adelantado el inicio de sesión con ventana emergente (`_shouldInitProactively`) y pide `https://apis.google.com/js/api.js`. La CSP lo bloquea y el SDK ignora el fallo (`try … catch`). BayStream no usa ese inicio de sesión: en el Honor y en el iPhone **se espera una línea `Refused to load the script 'https://apis.google.com/js/api.js…'`**, que no detiene la publicación si la sesión se inicia con normalidad. Por eso no se abre `script-src` a Google. Las pruebas de Timonel se hicieron con Chrome de escritorio, donde esa línea no sale.
+- **Si algún día se inicia sesión con Google** (ventana emergente o redirección), hay que revisar `script-src`, `frame-src` y `X-Frame-Options`.
+- **Si el canal falla,** `master` no se deshace con `reset --hard`: el cherry-pick se queda local, sin subir, y la corrección llega en un commit nuevo.
+- **El SEMÁFORO de las 19:00 a las 19:03** no se anunció antes. Si nadie compilaba en ese rato, la medición vale.
+- **Hallazgo de herramienta:** en Windows, el emulador de Hosting no aplica las cabeceras con `"source": "**"`, porque el patrón se vuelve `\**`. Para probarlas ahí se usa `"regex": ".*"`. En Hosting real no pasa.
+
+**Lo que sigue (Carlos):**
+1. El bloque de Git de esta decisión y de T-142, en `baystream-rediseno`.
+2. En `proyecto-baystream`: el cherry-pick a `master`, las huellas, el canal `t142-cabeceras` con la lista de la sección 5 del informe (la laptop con oficina-prueba, el Honor con muelle-prueba y, si puede, el iPhone con Safari) y, si pasa, `firebase deploy --only hosting` y el push de `master`.
+3. Después de publicar, Yov anota la publicación y las cabeceras en vivo en la 10.116.
+
+La siguiente decisión es la **10.116**.
+
+### 10.116 · T-142 publicada: la Web 1.0.0 en producción ya manda las cabeceras de seguridad, y T141-01 queda cerrado (10-nov, 20:15)
+
+**El camino de la 10.115, completo** (Carlos):
+1. En `baystream-rediseno`, `3b738e9` (10.115) y `df15047` (T-142), subidos a `sprint-4`.
+2. En `proyecto-baystream`, `git cherry-pick -x df15047` → `8f2505e` en `master`, con los 8 archivos de T-142. Las huellas de `build/web` coincidieron con las de la Web publicada (10.115).
+3. El canal `t142-cabeceras` (`baystream-app--t142-cabeceras-6srivuki.web.app`, vence el 17-nov). Yov comprobó desde el equipo las cinco cabeceras, un solo HSTS, el `main.dart.js` `98a83241…` y que producción seguía sin CSP.
+4. La prueba de Carlos en el canal, en la laptop (Chrome en incógnito, con la consola abierta y «Conservar registro»): la sesión de oficina-prueba, «Operaciones abiertas en la nube», la operación BUQUE GOLF · VIAJE007A · GTSTC en Carga y la búsqueda por voz («Escuchando…», con el 8395 dictado). Con el filtro «Refused», la consola quedó vacía. Los dos avisos de «Issues» no son de T-142: `Intl.v8BreakIterator` obsoleto, del motor de Flutter (`main.dart.js`), y «Session History Item Has Been Marked Skippable», de Chrome, por la entrada de historial que agrega Flutter. Carlos: «funcionó todo».
+5. Producción: `firebase deploy --only hosting` desde `proyecto-baystream` (10-nov, 20:09; 56 archivos) y `git push origin master` (`eddc388..8f2505e`).
+
+**En vivo, comprobado por Carlos con `curl -sI` y por Yov desde el equipo:** `/` y `/privacidad.html` traen la CSP, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` y `Permissions-Policy`, con un solo `Strict-Transport-Security`. El `main.dart.js` sigue siendo `98a83241…` y `version.json` dice 1.0.0+9: la Web publicada es la misma 1.0.0, y solo cambiaron las cabeceras.
+
+**T141-01 (antes T113-04) queda cerrado.** Para volver atrás: en Hosting, el historial de versiones, la del 3-nov a las 21:09; o `git revert 8f2505e` en `master` y publicar desde `proyecto-baystream`.
+
+**Las pruebas en el Honor y en el iPhone** no quedaron registradas. Si al usar la Web desde un teléfono aparece algo distinto de la línea de `apis.google.com` (10.115), se revisa.
+
+**Lo que sigue:** el 14-nov, desactivar las cuentas de demostración (10.113), y las decisiones de Carlos de la 10.114: el orden de los cuatro frentes, el doble factor y el camino de Windows.
+
+La siguiente decisión es la **10.117**.
+
+### 10.117 · Carlos decide el orden después de la presentación: primero lo que faltó del proyecto, con el rediseño de oro; después usabilidad, estabilidad 3D, doble factor y capacitación (10-nov, 23:45)
+
+**Las respuestas de Carlos a la 10.114:**
+1. **Los documentos no se corrigen.** La terna dejó recomendaciones, no correcciones: los dos documentos quedan como se entregaron el 7-nov.
+2. **El orden.** Antes de las recomendaciones va todo lo que faltó del proyecto, incluido el rediseño de oro. Después, los cuatro frentes de la terna, en este orden:
+   1. la usabilidad para quien no es del rubro: el mapa de clics, el inicio por rol y las ayudas;
+   2. la estabilidad y el 3D (las fases A, B y C de la 10.114);
+   3. el doble factor;
+   4. la capacitación, con la medición de H2 y H6.
+3. **El doble factor, por ahora no.** Queda como riesgo aceptado: las cuentas las crea Carlos, no hay registro, los roles los exigen las reglas, la protección de enumeración está activa y la Web va con TLS, HSTS y, desde la 10.116, CSP. El camino de Windows se decide al llegar al tercer frente.
+4. **Las correcciones chicas de la 1.0.0** salen con el primer bloque, en una sola versión para los tres clientes.
+
+**El rediseño de oro** es lo que dejó pendiente la decisión del 27-oct: llevar a la app los metales de la presentación (el cobre y el oro sobre el cobalto) y el brillo de los videos de Blender. Hasta hoy, la única pieza con metal es el distintivo de rol (T-131, 10.86), con la regla de que el metal va en el filo y en el ícono, nunca de relleno.
+
+**Lo que faltó, en el orden que propone Yov:**
+- **Bloque 1 · Las deudas de la 1.0.0:**
+  - T-143, los estados y los textos de la operación: O-139-7 («Publicado» antes de la nube, el texto de la 10.105), O-139-1, O-139-3, O-139-6 y O-139-2;
+  - T-144, el lector y el volcado: todas las DGS en el volcado y en el detalle, el LOC+83, los puertos de la 1.5, las matrículas con espacio, el DIM de la sobredimensión (RF-005) y la validación de UN/LOCODE (RNF-008);
+  - T-145, el instalador con asistente: O-137-1 a O-137-8. Con O-137-1 resuelto, T-137 entra a `sprint-4`. No toca `lib/`, así que puede ir en paralelo, en su carpeta.
+- **Bloque 2 · Los requisitos que quedaron:** RF-018, la búsqueda por tipo de carga especial, y RF-035, el rol de administrador para autorizar y desactivar cuentas desde la app (toca las reglas de Firestore).
+- **Bloque 3 · La calidad:** RNF-001 y RNF-007 (la memoria, el tablero, el teléfono y buques sintéticos de 5 000 a 10 000 contenedores), RNF-005 (las once violaciones de capas y la documentación), la campaña de errores inyectados de H3 y Flutter al día (O-136-1).
+- **Bloque 4 · El rediseño de oro:**
+  - el diseño corre desde ya en paralelo, sin tocar `lib/`: el lienzo de Yov y las piezas de Nube, y Carlos elige;
+  - el código va por fases, como T-114, al final, sobre la base ya corregida;
+  - con él se cierra T-114: la auditoría de `flutter-ui` en cero y RNF-002 y RNF-003 vueltos a medir;
+  - el inicio se deja para el frente de usabilidad, que lo rehace por rol.
+- **Al cerrar los cuatro bloques:** una versión para los tres clientes, con las huellas de la Web anotadas (10.115). Yov propone que con ella cierre el Sprint 4 y que los frentes de la terna abran el Sprint 5.
+- **Fuera del orden:** T-87, la BAPLIE 3.1, sigue esperando un archivo real; T141-03, cifrar el almacén, se decide con el doble factor; el 14-nov se desactivan las cuentas de demostración.
+
+**Yov decide O-139-6 y O-139-2,** que la 10.110 dejó para Yov:
+- O-139-6: si el perfil guardado del buque ya resolvió el límite de apilamiento (con un valor o con «No lo tengo»), el diálogo lo trae resuelto y lo muestra, y el planificador lo puede cambiar. DESIGN.md 7.2 se actualiza.
+- O-139-2: los textos de la tarjeta del viaje pasan a tipo oración («Peso total», «Lleno», «Vacío»). En las exportaciones no cambian.
+
+**El prompt de T-143** (Timonel) está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
+
+La siguiente decisión es la **10.118**.
+
+### 10.118 · T-143 entregada y revisada; `analyze` vuelve a cero en todo el paquete; la excepción de «Confirmado» (11-nov, 01:35)
+
+**El paso 0 de T-143 encontró `analyze` con 6 avisos de nivel info, todos en `tool/`:** uno en `tool/t140_volcado_test.dart` (T-140) y cinco `avoid_print` en `tool/t141_fuzz_baplie.dart` (T-141). Esas dos tareas no corrieron `analyze` porque no tocaban `lib/` ni `test/`, así que desde el 4-nov la punta no cumplía la regla dura de la sección 2. **Carlos (con Yov) los mandó corregir en un commit aparte,** antes del de T-143: el comentario pasó a un bloque de código y los `print` a `stdout.writeln`, con la misma salida. **Regla desde hoy:** toda tarea que toque código Dart, también en `tool/`, corre `flutter analyze` sobre todo el paquete antes de entregar.
+
+**La propuesta de T-143, revisada por Yov y aprobada por Carlos** (11-nov, 00:10), con estos ajustes:
+- la píldora dice «Confirmado»;
+- «N/A» pasa a «Sin dato»;
+- bloquear el registro en el muelle después del cierre no entra: queda como **O-143-1**, para el frente de usabilidad;
+- la línea del límite dice «Del perfil guardado: …».
+
+**El ALTO de Timonel (00:48).** «Confirmado» mide 128.4 px con la letra a 2.0, 18.9 más que «Publicado», y no cabía en la línea única de 92 dp que T-131 fijó para 1366 dp. Carlos (con Yov) aceptó las dos líneas solo en «Confirmado» y solo cuando no cabe, con cinco condiciones, todas cumplidas:
+1. con «Publicada» y «Cerrada», la prueba de T-131 sigue exigiendo una línea de 92 dp;
+2. con «Confirmado», dos líneas de 144 dp a 1366 con la letra a 2.0, sin nada cortado, y una sola línea a 1920 con la letra a 2.0;
+3. al publicar, la cabecera vuelve a una línea y se conservan la bahía, el zoom y el desplazamiento de la rejilla;
+4. la excepción queda escrita en `DESIGN.md` 14.8;
+5. el censo de T-112 queda como **O-143-2**, para el bloque de calidad: en la punta ya se detenía con 143 cadenas sin decisión, de T-117 en adelante, y T-143 solo agrega las dos del aviso del cierre.
+
+**T-143, entregada** (Timonel, Opus 5.5, 3.0 h; `docs/T143-RESULTADOS.md`):
+- **La cabecera** dice «Sin confirmar», «Confirmado», «Publicada» o «Cerrada», con una sola regla para los tres clientes (`estadoDeLaOperacion`, en `formatters/operation_text.dart`), que también lee «Nube y cuenta».
+- **El muelle se entera del cierre sin registrar nada.** La escucha del documento de la operación (`watchOperation`, antes `watchSources`) trae también `closedAt`, sin lecturas nuevas ni cambios de reglas. Sale un aviso una vez, que no aparece en el equipo que cerró, y «Nube y cuenta» pasa a «Publicada y cerrada». Sin red, el cambio llega solo al volver la red.
+- **La cola después del cierre:** lo registrado antes entra. Lo de después dice «1 rechazado: la operación ya estaba cerrada», sin «Reintentar».
+- **La silueta** dice «sin operación» solo cuando no la hay.
+- **O-139-6 no se reproducía en la 1.0.0:** «No lo tengo» ya venía marcado. Solo cambian la línea «Del perfil guardado…» y `DESIGN.md` 7.2.
+- **Los textos:** «Peso total», «Lleno», «Vacío» y «Sin dato». Ninguna exportación cambia.
+- **Las validaciones:** `analyze` en cero; la suite, 2145 de 2145 sin omitidas (el piso era 2107, con 38 nuevas); las de T-131, 59 de 59. El cierre se probó contra el emulador `demo-t143` con dos teléfonos en la Web, y hay 35 capturas en `build/t143/`.
+
+**Yov revisó** la escucha del documento, `_markClosed` en el motor, el aviso, la regla del estado, `DESIGN.md` (7.2, 11 y 14.8) y que el bloque de Git coincide con los archivos tocados desde el inicio de la fase 2, sin `// ignore:` ni datos de cuentas.
+
+**Lo que sigue:**
+- Carlos: los dos bloques de Git del informe, primero el de `tool/` y después el de T-143, y la carpeta de Codex en la punta.
+- Codex: la aceptación de T-143, con Windows contra el emulador, que Timonel no pudo recorrer.
+- Los pasos del manual que cambian (sección 7 del informe) los aplica Yov al armar la versión, en el manual de esa versión.
+- El Honor, en la vuelta corta de esa versión.
+- Sigue T-144, el lector y el volcado.
+
+La siguiente decisión es la **10.119**.
+
+### 10.119 · La aceptación de T-143 no pasa por un P2: el cierre se guarda tres veces; Timonel corrige (11-nov, 02:45)
+
+**Codex (GPT-6.1 Sol), `docs/t143/aceptacion-codex.md`: NO PASA.**
+- **Lo que pasa:**
+  - `analyze` en cero en una copia aislada, y la suite en 2145 de 2145, sin omitidas: T-131 en 59 de 59 y T-143 en 31 de 31;
+  - la vuelta que Timonel no pudo dar, Windows como oficina (Release r4, contra `demo-t143`) y dos muelles en la Web a 360 dp. El muelle con red cambió solo y avisó una vez. El muelle sin red, al volver la red, confirmó lo de antes del cierre y rechazó lo de después con «1 rechazado: la operación ya estaba cerrada», sin «Reintentar». Al reabrirla, la operación conservó el cierre, sin otro aviso;
+  - la excepción de «Confirmado», con sus cinco condiciones, también en la Web;
+  - las exportaciones, sin cambios.
+- **T143-ACC-01 (P2).** Con el documento cerrado y dos rechazos que llegan a la vez, `_markClosed` guarda la operación cerrada **tres veces**, contra una exigida. Lo midió la sonda de Codex, dos veces, con Hive real y la nube falsa de T-79. Las llamadas se solapan antes de que termine la lectura local. En la sonda no se perdieron movimientos ni fuentes, pero queda abierta una carrera entre las escrituras del motor sobre la operación local: el cierre y el manifiesto de las fuentes.
+- **T143-ACC-02 (P3).** Con BUQUE MANUAL · A143B, un viaje de cinco caracteres, a 1366 con la letra a 2.0, «Publicada» también va en dos líneas. Con el viaje de cuatro caracteres del caso de T-131, cabe en una. No es una regresión de T-143.
+- **Del entorno de la aceptación.** `analyze` directo en la carpeta de aceptación dio 427 avisos: el instrumental viejo de `build/` y `tool/t124_main.dart`, que importa un archivo generado en `build/t124/`, ignorado por Git. En una copia limpia del repositorio, `analyze` no da cero sin ese archivo. Queda como **O-143-3**, para el bloque de calidad: que `tool/` no dependa de `build/`, y excluir `build/` del análisis.
+
+**Lo que decide Yov:**
+- **ACC-01 se corrige ahora.** El cierre se guarda una sola vez, con una sola persistencia en curso que comparten el documento y los rechazos. Las escrituras del motor sobre la operación local no se pisan con una copia vieja. La sonda de Codex pasa a ser una prueba permanente, más otra con un plan o un listado que llega a la vez que el cierre.
+- **ACC-02:** `DESIGN.md` 14.8 describe la identidad de referencia de T-131. Con un nombre o un viaje más largos, la cabecera puede ir en dos líneas también publicada o cerrada, por la regla general, sin nada cortado. Se escribe en 14.8, sin más cobertura: la cabecera se rehace en el frente de usabilidad.
+
+**Lo que sigue:** Carlos lleva el commit de la aceptación a `sprint-4` desde `baystream-qa-r4` y lo trae a `baystream-rediseno`; Timonel hace la corrección 1 en el chat de T-143; Yov la revisa y Codex la vuelve a aceptar.
+
+La siguiente decisión es la **10.120**.
+
+### 10.120 · La corrección 1 de T-143, revisada; la reaceptación no pasa por un P2 nuevo: un guardado fallido del cierre queda como hecho; Timonel corrige otra vez (11-nov, 03:10)
+
+**La corrección 1** (Timonel, `b336117`; sección 13 de `docs/T143-RESULTADOS.md`). Solo cambia `sync_engine.dart`:
+- el cierre se guarda una sola vez: el documento y los rechazos comparten una persistencia en curso (`_closing`);
+- el cierre, el listado y el plan escriben la operación local en una sola cola del motor (`_enCola`), y cada uno relee la operación en su turno.
+
+Lleva cuatro pruebas permanentes en `test/t143_cierre_una_vez_test.dart`, que fallaban contra `04cd717`. `DESIGN.md` 14.8 suma la frase de ACC-02. `analyze` en cero y la suite en 2149 de 2149. Yov la revisó contra `04cd717`: la lógica de antes se conserva caso por caso.
+
+**La reaceptación de Codex: NO PASA** (sección 11 de `docs/t143/aceptacion-codex.md`).
+- **Pasa:**
+  - ACC-01, con su sonda original en 1 guardado y las cuatro pruebas rojas contra el motor anterior;
+  - ACC-02;
+  - `analyze` en cero y la suite en 2149 de 2149, en una sola corrida.
+- **T143-ACC-03 (P2, nuevo).** `saveOperation` avisa los errores con un `Left`, no con una excepción. `_markClosed` no lo mira: memoriza la persistencia como hecha aunque haya fallado. Después, ni el rechazo siguiente, ni el documento (`!_closed`), ni `retry()` vuelven a guardar. El motor queda «Al día · operación cerrada» con la operación local abierta. Codex lo reprodujo con un fallo transitorio en el primer guardado: falla con la corrección 1 y pasa con el motor de `04cd717`, así que es una regresión de la corrección.
+
+**Lo que decide Yov:** se corrige ahora. El motor distingue el cierre que conoce del cierre que guardó. Un guardado fallido no se memoriza: la persistencia se vuelve a intentar con el siguiente rechazo, con el documento y con `retry()`, sin perder la garantía de un solo guardado concurrente. La prueba del fallo transitorio pasa a ser permanente.
+
+La siguiente decisión es la **10.121**.
+
+### 10.121 · T-143 aceptada (11-nov, 03:30)
+
+**La segunda reaceptación de Codex pasa** (sección «Reaceptación 2» de `docs/t143/aceptacion-codex.md`, sobre `235c7eb`):
+- ACC-03 queda cerrado y ACC-01 sigue cerrado;
+- las dos sondas de Codex y las diez pruebas permanentes pasan, y las seis de la corrección 2 fallan contra `b336117`;
+- con una sonda propia, Codex comprobó además que el listado y el plan también se recuperan de un guardado fallido;
+- `analyze` en cero y la suite en 2155 de 2155, en una sola corrida;
+- sin hallazgos nuevos.
+
+**T-143 queda aceptada**, en estos commits de `sprint-4`:
+- `b6374bf`, `analyze` en cero (`tool/` de T-140 y T-141);
+- `04cd717`, T-143;
+- `b336117`, la corrección 1 (el cierre se guarda una vez);
+- `235c7eb`, la corrección 2 (un guardado fallido se reintenta);
+- y las tres aceptaciones de Codex en `docs/t143/aceptacion-codex.md`.
+
+No se publica sola: sale con la versión del bloque 1 (10.117).
+
+**Lo que dejó:**
+- la regla de la 10.118: toda tarea que toque Dart corre `analyze`;
+- O-143-1, bloquear el registro en el muelle después del cierre, para el frente de usabilidad;
+- O-143-2, el censo de T-112, y O-143-3, `analyze` en una copia limpia depende de `build/t124/`, para el bloque de calidad;
+- los pasos del manual que cambian (3.3, 4.1, 7.3, 7.7, 7.10 y 7.11), que se aplican al armar la versión.
+
+**Sigue T-144,** el lector y el volcado, con Timonel en un chat nuevo. El prompt está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
+
+### 10.122 · T-144 con Timonel y T-145 con Codex, a la vez; el tablero encuentra cuatro pendientes sin bloque (11-nov, 13:00)
+
+**El tablero del Sprint 4 al 11-nov** (Yov, 03:33; su generador, `claude/herramientas/build_kanban_s4.py`, está en el proyecto de Yov): de las 32 tareas del sprint (T-114 a T-145) hay 27 terminadas. Faltan T-144 y T-145 (bloque 1), el cierre de T-114 (bloque 4), T-115 y T-120. Git, al día: en GitHub, `sprint-4` está en `f445d65` (10.121) y `master` en `8f2505e` (10.116).
+
+**Lo que encontró al armarlo:**
+- **Cuatro pendientes no tienen bloque en la 10.117:**
+  - T-115, los colores de puerto que asigna la oficina (10.6, unas 3 h): no se construyó, y hoy el color sale de la tabla fija de 15 puertos y de un cálculo;
+  - T-120, filtrar por destino en la Lista, que quedó para después con O-119-1, O-128-4, O1 y O2 de la entrega 1 y el arrastre entre dos monitores (10.76);
+  - RNF-004, la seguridad de los datos, parcial (10.114);
+  - O-134-2, un banco de Android que llegue al emulador (10.97).
+
+  Yov propone: T-115 y T-120 al bloque 2, con RF-018 y RF-035; O-134-2 al bloque 3; y RNF-004 al frente del doble factor, con T141-03.
+- **Los pies de las figuras 5 y 6 del manual** (`docs/MANUAL-USUARIO-1.0.0.md`) todavía dicen «Captura pendiente», aunque las dos capturas están en `docs/manual-1.0.0/` desde el 4-nov. Se corrigen con los pasos del manual de T-143, al armar la versión del bloque 1.
+
+**T-144 empieza con Timonel,** con el prompt de la 10.121, sin cambios.
+
+**T-145 va a la vez, con Codex,** en `C:\Proyectos\baystream-t137`, rama `t137-instalador`, como T-137 (10.100):
+- **La rama, comprobada por Yov en GitHub:** está en `dae3259`, sobre `8ea84bd` (10.100), y frente a `sprint-4` solo agrega los 35 archivos de T-137 (`windows/installer/`, `tool/t137_*`, `docs/T137-RESULTADOS.md` y `docs/t137/`). De las 21 fuentes del arte, las 20 que también están en `sprint-4` tienen el mismo contenido en `8ea84bd` y en `f445d65`, y la otra, `tool/t137_arte_test.dart`, llega con la rama: al mezclar solo cambia el fin de línea, que es O-137-1.
+- **Lo que hace** (10.104 y 10.106):
+  - O-137-1: la huella de las fuentes de texto del arte, con `\r\n` normalizado a `\n`. Con eso, T-137 entra a `sprint-4`;
+  - O-137-2: la versión del SDK de Firebase C++, leída dentro del `.exe`;
+  - O-137-3: las DLL de Visual C++ desde `VC\Redist`, y System32 solo como último recurso, con aviso;
+  - O-137-6: los 36.3 MB de `.lib` y `.exp`, fuera de la carga. Yov propone excluirlos con una lista cerrada; lo decide Carlos al aprobar la propuesta;
+  - O-137-7: un límite de tiempo para PowerShell en el aviso de la MSIX y un aviso por los archivos viejos de la Release; el 1.0.0.9 no cambia;
+  - O-137-8: el desinstalador pide cerrar BayStream si está abierta;
+  - O-137-4 ya quedó en la 10.104, y O-137-5 no cambia (10.106).
+- **Cómo convive con T-144:** no toca `lib/`, `test/` ni `pubspec.*`; empaqueta la Release 1.0.0 de `proyecto-baystream` sin compilar nada; va un comando de Flutter o de Dart a la vez en la máquina, con las líneas `SEMÁFORO:`; y en la cuenta de Carlos no abre BayStream ni ejecuta la variante de producción si ya no está la MSIX.
+- **La acepta Timonel,** en una pausa de T-144 o al terminarla, y Carlos repite el recorrido corto en «BayStream Prueba». Después, Carlos mezcla `t137-instalador` en `sprint-4`, y el primer armado desde `baystream-rediseno` comprueba O-137-1 en la carpeta real.
+- El prompt está en el documento del proyecto `BayStream_Post_defensa_10nov.md`.
+
+**Decide Carlos:** dónde van los cuatro pendientes sin bloque.
+
+### 10.123 · La propuesta de T-144, revisada: se aprueba con una condición, que la 1.0.0 siga leyendo lo que guarde la versión nueva (11-nov, 13:30)
+
+**Timonel entregó la fase 1** (`docs/T144-RESULTADOS.md`, sobre `7b1c56e`), sin tocar `lib/`, `test/` ni `tool/`. Leyó las guías de SMDG de la 2.2.1 (06/2016) y de la 1.5 (05/1993).
+
+**Lo que Yov comprobó:**
+- **El corpus, con un conteo propio** fuera del repositorio, en los 10 archivos de T-140. Todo coincide con la propuesta:
+  - las DGS dobles: A02 1, A03 3, A03v 3 y A07 2, es decir, seis contenedores y nueve casos;
+  - A06: LOC+6 y LOC+12 en sus 717 contenedores, ningún LOC+9 ni LOC+11, y 717 matrículas con espacio, todas con el dígito de control correcto;
+  - ningún DIM, 30 `XXVSL` en A01 y `*****` en el LOC+61 de A04 y de A06.
+
+  Una sola corrección: el LOC+83 trae texto libre en **7** de los 8 archivos de la carpeta, no en 6 (solo A02 trae únicamente UN/LOCODE), y también en A07 y A08.
+- **La guía 2.2.1:** los calificadores 9, 11, 83 y 97 (este con `XXOPT`), el número del contenedor como «one continuous string» y el DIM de 5 a 9, en CMT o INH.
+- **El código:** `MovementDraft.validate()` exige `^C:[A-Z0-9]{1,17}$` (`movement.dart:315`) y `append` lo aplica antes de anexar. Las reglas publicadas (`8B903949…`) exigen la misma forma en `validDischarge`, `validLoadFull` y `validCancel`. Es cierto que hoy no puede existir un movimiento con una matrícula con espacio, y que en la 1.0.0 los contenedores de A06 no se pueden descargar ni cargar.
+- **A07 y A08,** en el escritorio de Carlos, tienen las huellas de `build/t140/resumen.json`.
+
+**Lo que decide Yov:**
+1. **El CSV, aprobado:** « | » en «Clase IMDG» y «Número ONU», y «DGS declarados» al final. Con una sola declaración, o con ninguna, las dos celdas quedan como hoy, para que el volcado de un archivo sin DGS dobles sea idéntico al de T-140, salvo la columna nueva.
+2. **`XX…`, aprobado sin aviso:** son códigos de convenio (la guía define `XXOPT`), no errores de escritura. Se muestran tal cual y no toman color de la tabla fija (DESIGN.md 5.3).
+3. **Volver a la 1.0.0 no se acepta como riesgo.** No hace falta reinstalar a mano: volver a la versión anterior del Hosting es el camino de vuelta escrito en la 10.116, y la Web 1.0.0 leería el mismo almacén del navegador. `BaplieReadNotice.fromJson` lanza un error con un tipo que no conoce (`vessel_voyage.dart:592`), y `getAllVoyages` lee todos los viajes de una vez, así que un solo viaje con un aviso nuevo dejaría a la 1.0.0 sin «Recientes». Lo que se pide:
+   - `readNotices` guarda solo los cuatro tipos de hoy, y los dos nuevos (UN/LOCODE y DIM) van en otra clave, que la 1.0.0 no lee;
+   - desde esta versión, un tipo que no se conoce se salta, sin romper la lectura del viaje;
+   - una prueba que fije las dos cosas.
+4. **La etiqueta «IMO 3 +1» de la Lista, aprobada,** con dos condiciones: ningún texto cortado a 360 dp con letra 1.0, 1.45 y 2.0, y la etiqueta accesible con todas las clases.
+
+**Lo demás de la propuesta se aprueba como está,** incluido lo que precisa del prompt: la matrícula pierde los espacios y pasa a mayúsculas, pero no se completa a 11 posiciones.
+
+**Para la lista de la versión del bloque 1:** se publican los tres clientes juntos, y antes no queda abierta ninguna operación con una fuente 1.5 o con matrículas con espacio.
+
+**El prompt de T-144 le llegó cortado a Timonel,** desde «fuera del…», en las reglas: le faltaron el final de las reglas y la sección 6, «Cómo entregas». Carlos se lo pasa con estas decisiones.
+
+**Decide Carlos:** la aprobación de la propuesta, con las cuatro decisiones de arriba.
+
+### 10.124 · T-144 entregada y revisada: H1 da 100 % con el volcado nuevo; pasa a la aceptación de Codex (11-nov, 23:10)
+
+**Timonel entregó la fase 2** (`docs/T144-RESULTADOS.md`, sección 2), sin commits:
+- `analyze` en cero en todo el paquete y la suite en 2202 de 2202 (2155 más 47), sin omitidas;
+- el fuzzing de T-141, con 180 mutantes y 0 fallas;
+- el volcado del corpus en `build/t144/h1/`, con las 10 huellas de T-140;
+- las cuatro decisiones de la 10.123: el CSV con « | » y «DGS declarados», `XX…` sin aviso, los avisos nuevos en `extraReadNotices` con `tryFromJson`, y «IMO 3 +1» en la Lista;
+- 5 archivos nuevos y 16 cambiados (`DESIGN.md`, 11 de `lib/` y 4 pruebas), más su informe. `pubspec.*` no cambia.
+
+**Lo que Yov revisó:**
+- **El árbol, archivo por archivo,** contra `886fbb0`, con las huellas sin el fin de línea: cambian exactamente los 16 del informe, y en `lib/`, `test/` y `tool/` solo hay 5 archivos nuevos, los de T-144. Ni `lib/main.dart`, ni los congelados, ni `pubspec.*`.
+- **El código de lo delicado:**
+  - la matrícula normalizada (`numeroDeContenedor`) en el lector, en `ContainerUnit.fromJson`, en las búsquedas y en las claves del escritor;
+  - los avisos repartidos entre `readNotices` y `extraReadNotices`, y `tryFromJson`, que salta un tipo desconocido;
+  - el CSV, que con una o ninguna DGS escribe lo de antes;
+  - los calificadores 6 y 12, atados a la 1.5.
+- **El volcado contra el de T-140:** solo cambian las celdas que dice el informe, más la columna nueva:
+  - el destino final, en los 10 archivos;
+  - la clase y el número ONU, en los 9 casos de DGS dobles;
+  - en A06, la matrícula y los dos puertos de los 717 contenedores.
+- **H1 otra vez,** con el mismo oráculo independiente de la 10.109 (`h1_cotejo.py`, adaptado a « | »). Las peligrosas se comparan completas y en orden, y «DGS declarados» coincide en todos:
+
+| Medida (6161 contenedores) | T-140, 1.0.0 | T-144 |
+|---|---|---|
+| Los 9 campos del instrumento | 6152, 99.85 % | 6161, **100 %** (Wilson 95 %: 99.94 % a 100 %) |
+| Los 9 campos y los puertos de carga y descarga | 5435, 88.22 % | 6161, **100 %** |
+| Lo anterior y el destino final | — | 6161, **100 %** |
+
+- **La lista de países:** los 249 códigos de `un_locode.dart` son exactamente los de ISO 3166-1 en iso-codes (pycountry 26.2.16), TW incluido. Lo que Timonel agregó de memoria queda confirmado.
+- **`XX…`:** el color calculado es lo que pedía la 10.123, porque esos códigos están fuera de la tabla fija.
+- **La hoja de detalle de la Lista,** con una fila por declaración, no estaba en la propuesta. Se acepta: es el mismo defecto de H1 en otra pantalla.
+
+**Lo que falta es de la aceptación:** abrir los tres clientes. Timonel fijó lo que se ve con pruebas de widgets, sin capturas.
+
+**La aceptación va a Codex,** en `C:\Proyectos\baystream-qa-r4`, sobre la punta de `sprint-4` con T-144, como la de T-143. Si Codex no empezó T-145, hace primero esta aceptación. El prompt está en el documento del proyecto `BayStream_T144_aceptacion_11nov.md`.
+
+### 10.125 · La aceptación de T-144 no pasa por un P2: una búsqueda de solo espacios encuentra contenedores; Timonel corrige (11-nov, 23:25)
+
+**Codex aceptó sobre `2d91c54`** (`docs/t144/aceptacion-codex.md`, en `qa-r4`):
+- **El paso 0 pasa entero,** en una copia limpia de 838 archivos idéntica a la punta: `analyze` en cero, la suite en 2202 de 2202 sin omitidas, y el fuzzing de T-141 con 180 mutantes y 0 fallas.
+- **T144-ACC-01 (P2).** Con su propia prueba, un BAPLIE sintético de un contenedor con puertos, «bysu 967» encuentra BYSU9672095, pero tres espacios dan 1 resultado en vez de 0. `container_search_delegate.dart:77` solo mira `query.isEmpty`. Con espacios, la consulta normalizada queda vacía, y aunque `matchesId` ya exige texto, los filtros del puerto de carga, del de descarga y de la naviera siguen con `contains('')`, que es verdadero para cualquier valor.
+- Codex se detuvo al primer fallo, como pedía el encargo: los puntos 1 a 3 y 5 a 8 quedan para la reaceptación. Windows se reservó y se liberó; el Honor no estaba disponible.
+
+**Yov lo comprobó en el código.** Además, `searchContainers` de `vessel_repository_impl.dart` devuelve todos los contenedores con una consulta vacía. Hoy nadie lo llama, pero T-144 lo tocó y se corrige igual. El criterio del punto 4 es de Yov; el informe de Timonel lo decía solo de la matrícula (2.2, punto 5).
+
+**La corrección 1, con Timonel en el mismo chat:**
+1. en el buscador, una consulta que queda vacía al quitarle los espacios se trata como vacía: el estado inicial, con sus sugerencias, y ningún contenedor;
+2. `searchContainers` devuelve una lista vacía con una consulta vacía;
+3. las pruebas: tres espacios, una tabulación y el espacio duro, en los dos lugares, y «bysu 967» sigue encontrando su contenedor;
+4. una búsqueda del mismo patrón en lo que T-144 tocó; lo que aparezca fuera de T-144 se anota y no se cambia.
+
+**Después,** Yov revisa la corrección y Codex repite la aceptación completa. El Honor, si Carlos lo reserva; si no, el emulador de Android, y el Honor pasa a la lista de la versión.
+
+### 10.126 · La corrección 1 de T-144, revisada: una búsqueda vacía ya no encuentra nada; pasa a la reaceptación de Codex (11-nov, 23:35)
+
+**Timonel corrigió T144-ACC-01** (`docs/T144-RESULTADOS.md`, «Corrección 1», sobre `28438f0`), sin commits:
+- en el buscador, una consulta que queda vacía al quitarle los espacios, la tabulación o el espacio duro se trata como vacía: el estado inicial, con sus sugerencias, y ningún contenedor. Los filtros no cambian;
+- `searchContainers` devuelve una lista vacía, sin leer los viajes;
+- 11 pruebas nuevas, de las que 8 fallan sin la corrección: las de consulta vacía. `analyze` en cero y la suite en 2213 de 2213, sin omitidas;
+- el mismo patrón no aparece en otro lugar de `lib/`;
+- el informe corrige lo que decía en 2.2: antes de la corrección, con solo espacios, solo la matrícula dejaba de coincidir.
+
+**Yov lo revisó contra `28438f0`:** cambian exactamente los cuatro archivos del informe, y en los dos de `lib/` el cambio es la condición que pedía la 10.125, nada más.
+
+**O-144-1 (P3), sin cambio:** el buscador encuentra «BYSU 967», pero no lo resalta en el resultado, porque compara la consulta con espacios contra la matrícula sin ellos. No bloquea; se decide al armar la versión del bloque 1.
+
+**La reaceptación va a Codex, en el mismo chat,** sobre la punta con la corrección: el paso 0 sin el fuzzing (el lector no cambió), T144-ACC-01 con su propia sonda y los siete puntos que quedaron pendientes. El Honor, si Carlos lo reserva; si no, el emulador de Android, y el Honor pasa a la lista de la versión.
+
+### 10.127 · La reaceptación de T-144 no pasa por un P2: con letra 2.0, el título del detalle corta la matrícula; Timonel corrige otra vez (12-nov, 00:45; anotada el 15-nov)
+
+**Codex repitió la aceptación sobre `e488802`** («Reaceptación» de `docs/t144/aceptacion-codex.md`, commit `191f4e3`):
+- el paso 0 pasa: `analyze` en cero y la suite en 2213 de 2213, sin omitidas;
+- **T144-ACC-01 queda cerrado:** con su sonda, tres espacios, una tabulación y el espacio duro dan cero resultados y el estado inicial, y «bysu 967» encuentra su contenedor;
+- con un BAPLIE sintético propio de seis contenedores pasan, en la sonda funcional, las peligrosas (2, 3 y 1 DGS, en el detalle, la Lista y el CSV), el destino final y los avisos de UN/LOCODE, con `XXVSL` y los asteriscos sin aviso. Del DIM pasan las medidas en CMT e INH y sus avisos;
+- **T144-ACC-02 (P2):** en el emulador de Android (Android 8, 360 dp), con letra 2.0, el título del detalle muestra «TSTU 1440…» en vez de «TSTU 144000 2». Con 1.0 y 1.45 no se corta nada, y la Lista pasa con las tres. Codex se detuvo ahí: quedan A06 con la operación local, el resto del DIM (la insignia, la línea de medidas y la salida), la lectura con la 1.0.0, Windows y Chrome. El Honor pasa a la lista de la versión.
+
+**Lo que Yov comprobó:** el encabezado del detalle (el ícono, `BsNumeroDeContenedor` con `maxLines: 1` y elipsis, y la naviera a la derecha) es el de la 1.0.0, y T-144 no lo tocó. El defecto ya estaba, y sale ahora porque el punto 8 de la 10.124 pidió el detalle sin cortes con letra 2.0. Va contra RNF-003 y contra `DESIGN.md` («nada se corta»; el dato «envuelve si no cabe, nunca con elipsis»). `BsNumeroDeContenedor` solo se usa en ese título.
+
+**Se corrige dentro de T-144,** porque el archivo ya es de T-144, el carril de `lib/` sigue siendo suyo y la versión del bloque 1 no debe salir con la matrícula cortada. La corrección 2, con Timonel en el mismo chat:
+1. la matrícula del título nunca se corta ni lleva elipsis: si no cabe junto a la naviera, la naviera baja a la línea siguiente, y si tampoco cabe sola, envuelve por sus grupos;
+2. con letra 1.0 y 1.45, donde hoy cabe, se ve igual que ahora;
+3. las pruebas, a 360 y 600 dp con letra 1.0, 1.45 y 2.0, y la etiqueta accesible con la matrícula completa;
+4. un barrido de otras matrículas con elipsis en la presentación: se anotan, y no se cambian si están fuera de T-144.
+
+**Esta decisión se escribió tarde.** El 12-nov, Yov le dijo a Carlos que ya estaba anotada y le pasó su commit, pero no la había escrito en este archivo, así que ese commit no tuvo nada que subir. Se escribe el 15-nov con lo que se sabía el 12-nov, y con dónde quedó la corrección:
+- Timonel cambió `bs_numero_de_contenedor.dart` (sin `maxLines` ni elipsis: envuelve) y `detalle_contenedor.dart` (la matrícula y la naviera en un `OverflowBar`, que las deja igual mientras quepan y baja la naviera si no) el 12-nov a las 00:36, y se detuvo en el barrido;
+- faltan las pruebas, `analyze`, la suite, `DESIGN.md` si cambia lo que se ve, y la sección «Corrección 2» del informe. No hay nada en commits.
+
+**Después,** Codex retoma la aceptación donde quedó: T144-ACC-02 con su banco de Android y los puntos pendientes.
+
+### 10.128 · La corrección 2 de T-144, revisada: la matrícula del detalle ya no se corta; Codex retoma la aceptación (15-nov, 17:50)
+
+**Timonel terminó la corrección 2** (`docs/T144-RESULTADOS.md`, «Corrección 2», sobre `4aa8102`), sin commits:
+- `BsNumeroDeContenedor` pierde `maxLines: 1` y la elipsis, y envuelve por sus grupos sin partir ninguno. La regla va en el componente porque es del dato, no de una pantalla;
+- en el título del detalle, la matrícula y la naviera van en un `OverflowBar`: si caben juntas se ven como antes, y si no, la naviera baja. Con Plex Mono, una matrícula de 11 posiciones y una naviera de seis letras, solo cambia a 360 dp con letra 2.0;
+- 8 pruebas nuevas (`test/t144_titulo_sin_cortes_test.dart`), con las fuentes del producto: 360 y 600 dp con letra 1.0, 1.45 y 2.0, sin ningún párrafo cortado y con la etiqueta accesible completa, y la envoltura por grupos. Las 8 fallan contra el código anterior; las de 1.0 y 1.45, por `maxLines` y la clave nueva, no por un corte visible;
+- el barrido no encontró otra matrícula con elipsis ni `maxLines` en la presentación. Los otros textos que se recortan (el código de la celda, el buque y el viaje de la banda, la línea de resumen de Carga y la naviera del PDF) no son de T-144 y no cambian;
+- `analyze` en cero y la suite en 2221 de 2221, sin omitidas. `DESIGN.md` gana la sección 17.5.
+
+**Yov lo revisó contra `4aa8102`:** cambian exactamente esos cinco archivos (los dos de `lib/`, la prueba nueva, `DESIGN.md` y el informe). Los de `lib/` son los cambios del 12-nov, sin nada más, y las pruebas cargan las fuentes del producto (`t117CargarFuentes`), así que miden lo mismo que la aceptación en Android.
+
+**Codex retoma la aceptación** (la reaceptación 2) en `qa-r4`, sobre la punta con la corrección: el paso 0 sin el fuzzing, T144-ACC-02 con su banco de Android y los puntos que quedaron pendientes en la 10.127. El prompt está en el documento del proyecto `BayStream_T144_reaceptacion2_15nov.md`.
+
+### 10.129 · Codex sale hasta nuevo aviso y entra GLM 5.3: la reaceptación 2 de T-144 pasa a GLM y T-145, a Timonel (15-nov, 17:52)
+
+**Carlos lo decidió** (15-nov, 17:42): Capitán Codex no se usa hasta nuevo aviso. En su lugar entra **GLM 5.3**, en Max o en Flash. Los programadores quedan en dos: Timonel y GLM.
+
+**Cómo queda el trabajo:**
+- **GLM hace el papel de Codex.** Le aplica todo `AGENTS.md`: donde dice «Capitán Codex» o «Codex», se lee GLM, como Timonel ya lee «el programador de turno» en `CLAUDE.md`. Mientras el cambio sea hasta nuevo aviso, `AGENTS.md` y `CLAUDE.md` no se tocan, y cada prompt para GLM lo dice al empezar. Si el cambio se queda, Yov los pone al día.
+- **La aceptación sigue cruzada:** lo que hace Timonel lo acepta GLM, y lo que hace GLM lo acepta Timonel.
+- **El modo de GLM va al final de cada prompt,** como el modelo y el esfuerzo de Timonel: Max para propuestas, código y aceptaciones; Flash para lo corto y mecánico, como repetir un script o comprobar un archivo.
+- **Las aceptaciones de GLM** van en `docs/<tarea>/aceptacion-glm.md`, junto a las de Codex, que no se tocan.
+
+**La reaceptación 2 de T-144 va a GLM, en Max,** en `qa-r4`. Carlos ya corrió el bloque de la 10.128: en GitHub están `caefc45` y `1ac6b62`, y `qa-r4` está en `1ac6b62`. Con el bloque de esta decisión, `qa-r4` pasa a la punta. El encargo es el de la 10.128, con dos cosas más:
+- la sonda funcional de Codex de la R1, otra vez, porque la corrección 2 tocó `lib/`;
+- la matrícula ya no tiene `maxLines`, así que la detección del banco de Android (`didExceedMaxLines`) ya no puede marcarla: GLM comprueba además, en la captura y en el árbol de widgets, que sale entera y sin desbordes.
+
+GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md` y `build/t144/aceptacion/`), y usa sus instrumentos solo después de leerlos.
+
+**T-145 pasa a Timonel,** en `baystream-t137`, rama `t137-instalador`, con el encargo de la 10.122 sin cambios (O-137-1 a O-137-8). Nadie la había empezado: la rama sigue en `dae3259`, y en la carpeta no hay informe, evidencia ni archivos tocados desde el 10-nov. Las observaciones salen de la revisión de T-137 que hizo Timonel (10.104); que ahora las arregle no cruza la regla, porque T-145 la acepta GLM.
+
+**Las dos van a la vez,** con las reglas de «Trabajo en paralelo» de `AGENTS.md`:
+- T-145 no toca `lib/`, `test/` ni `pubspec.*`, y la reaceptación no cambia código;
+- un comando de Flutter o de Dart a la vez en la máquina, con las líneas `SEMÁFORO:`; si coinciden, primero el `analyze` de Timonel, que es corto, y después la suite de GLM;
+- **Windows, por turnos, a través de Carlos:** mientras Timonel instala, desinstala o toma la huella del almacén real, GLM no abre BayStream en Windows; y mientras GLM la tiene abierta, Timonel no toma huellas. El emulador y el Honor, con la luz verde de Carlos;
+- si la reaceptación 2 no pasa, la corrección es de Timonel, en `baystream-rediseno`, y Carlos decide si pausa T-145 o si corrige al terminar la fase en curso.
+
+**Los prompts,** el de GLM y el de Timonel, están en el documento del proyecto `BayStream_T144_reaceptacion2_15nov.md`. Reemplazan el prompt para Codex de la 10.128, que no se usó, y el de T-145 para Codex de la 10.122 (`BayStream_Post_defensa_10nov.md`).
+
+### 10.130 · La propuesta de T-145, revisada: Carlos aprueba la opción A con `[InstallDelete]` y solo el aviso por los archivos viejos; una condición para O-137-8 (15-nov, 18:27)
+
+**Timonel entregó la fase 1** (`docs/T145-RESULTADOS.md`, en `baystream-t137`, sobre `dae3259`), sin tocar código ni correr Flutter. El paso 0 pasa: la rama trae solo los 35 archivos de T-137, la Release es la `1.0.0+9` con una sola cadena «Firebase C++ 13.13.1», e ISCC es la 7.1.1. Faltan `pub get` y `analyze`, que esperan la luz verde de Carlos.
+
+**Lo que Yov comprobó:**
+- **Los tamaños, en la Release 1.0.0:** los cinco `.lib` y `.exp` suman 36 910 272 bytes, 36.9 MB. La cifra de la 10.122, 36.3 MB, estaba mal. La carga baja de 91 114 641 a 54 204 369 bytes, que es la resta exacta.
+- **Los dos archivos viejos:** `NOTICES` y `AssetManifest.bin.json` son del 15-oct; `NOTICES.Z` y `AssetManifest.bin`, los que lee Windows según el código de Flutter que citó Timonel, son de la compilación del 4-nov.
+- **La ayuda de Inno Setup,** en su versión en línea: `CloseApplications` habla solo del instalador, y `AppMutex` lo revisan el instalador y el desinstalador, pero pide que la app cree el mutex. Coincide con lo que leyó Timonel en la ayuda de la 7.1.1: O-137-8 va con código propio.
+- **El criterio de O-137-1,** el mismo instalador desde las dos carpetas, se puede pedir: en la revisión de T-137, dos armados distintos ya dieron el mismo instalador, byte por byte (`b265d0af…`).
+- **Las DLL de Visual C++:** Timonel encontró que Windows actualizó las de System32 a la 14.51.36247.0. Con el orden de la 10.122 (la Release, `VC\Redist` y System32 al final) vuelven las del 1.0.0.9, la 14.51.36231.0. La fase 2 lo muestra con las tres huellas en el manifiesto.
+
+**Lo que decidió Carlos:**
+1. O-137-6, la opción **A**: los cinco se quitan en el armador, con su lista en `tool/t137_instalador.dart`, y el `.iss` lleva cinco líneas de `[InstallDelete]`, con los nombres exactos y solo en `{app}`, para que instalar encima del 1.0.0.9 también los quite. Yov retira su opción B: con A, la carga, el manifiesto y lo que se instala son una sola lista.
+2. O-137-7c: **solo el aviso**. La Release 1.0.0 publicada se sigue empaquetando tal cual. La versión del bloque 1 sale de una compilación limpia (`flutter clean` antes), y el aviso ya no debería aparecer.
+3. Su laptop tiene la **MSIX 1.0.0.0**: la aceptación corre como en T-137, y producción tiene que detenerse por la MSIX.
+
+**La condición de Yov para O-137-8:** las rutas se comparan contra la carpeta con su barra final. La carpeta de producción, `%LOCALAPPDATA%\Programs\BayStream`, es el comienzo de la de prueba, `%LOCALAPPDATA%\Programs\BayStream-Prueba-T137`: si se comparan como texto, el desinstalador de producción diría que BayStream está abierta cuando solo lo está la prueba. La aceptación lo prueba con el sustituto en una carpeta hermana que empieza igual (`…\BayStream-Prueba-T137-hermana\`): la desinstalación de la prueba sigue sin cuadro y el sustituto sigue vivo; después, el arnés lo cierra por su Id y borra esa carpeta.
+
+**Sigue la fase 2,** con la luz verde de Carlos para `pub get` y `analyze` cuando no corra otro comando de Flutter (GLM está en la reaceptación 2 de T-144), y Windows en el turno de Timonel, sin GLM en la app.
+
+### 10.131 · El `analyze` de T-145: en `baystream-t137` no puede dar cero en todo el paquete; se cuenta sobre todo el Dart versionado (15-nov, 21:48)
+
+**Timonel se detuvo en el paso 0** (18:31; `build/t145/pub-get-01.log` y `build/t145/analyze-01.log`), como pedía el prompt. `pub get` pasa, con `pubspec.*` intactos, y el `analyze` de todo el paquete da 7 incidencias. Ninguna está en un archivo de T-137 ni de T-145:
+- tres son O-126-1, que la 10.118 volvió a anotar como O-143-3: `tool/t124_main.dart` importa `build/t124/entradas/t124_entradas.dart`, la entrada generada de T-124, ignorada por Git, que solo existe en la carpeta del rediseño;
+- cuatro están en `build/t137/`, la evidencia local de T-137: dos errores en copias viejas del generador del arte, que importan `../test/support/t117_oficina_support.dart`, y dos avisos en el `pubspec.yaml` del negativo del SDK, sin sus fuentes.
+
+**Fue un error del prompt de Yov** (10.122 y 10.130): pidió `analyze` en cero en todo el paquete en una carpeta donde O-126-1 y la evidencia de `build/` lo impiden.
+
+**Se aprueba la propuesta de Timonel,** que es más estricta que el alcance acotado de T-137:
+- copia la entrada de T-124 desde `baystream-rediseno`, que solo lee, a `build/t124/entradas/t124_entradas.dart` de su carpeta, como hizo T-131 para su línea base (10.94). Queda fuera de Git y nunca se agrega;
+- el cero se cuenta con `flutter analyze --no-pub lib test tool integration_test`, todo el Dart versionado, al empezar y al cerrar, sin `// ignore:`;
+- al cerrar se corre también el de todo el paquete, y el informe declara sus incidencias: solo valen las cuatro de `build/t137/` y las de las copias de `build/t145/`. Ninguna puede estar en un archivo versionado;
+- `build/t137/` no se toca: es la evidencia de T-137. O-126-1 se arregla en el bloque 3, con O-143-3.
+
+### 10.132 · T-145 entregada y revisada: falta el recorrido de Carlos y la aceptación de GLM; el almacén de Windows no está donde se esperaba (15-nov, 22:45)
+
+**Timonel entregó la fase 2** (`docs/T145-RESULTADOS.md`, secciones 8 a 17, sobre `dae3259`, sin commit), en 3 h; 4.5 h con la fase 1. Pasaron el arte (las 28 imágenes, con sus huellas de antes), los armados, la copia en CRLF, los negativos y la aceptación por `.bat` y `explorer.exe` (`build/t145/aceptacion-05/`, los ocho pasos). `analyze` del Dart versionado da cero, como pide la 10.131. El instalador de producción pesa 18 488 262 bytes (`e4e7304c…`), contra los 20 211 174 del 1.0.0.9 de T-137.
+
+**Lo que Yov comprobó:**
+- **Los archivos:** contra `dae3259`, cambian exactamente cinco (`baystream.iss`, el `manifiesto.json` del arte, `t137_instalador.dart`, `t137_arte_test.dart` y `t137_aceptacion.ps1`), y hay dos nuevos (`tool/t145_copia_crlf.dart` y el informe): las siete rutas del bloque de Git. `lib/`, `test/`, `pubspec.*` y `tool/t93_msix.ps1` no cambian.
+- **O-137-8, en el código:** la carpeta se compara con su barra final (`AddBackslash`, la condición de la 10.130) y sin contar `unins*.exe`; los cuadros cancelan por omisión, así que en silencio cancelan; nada cierra la app. La aceptación lo probó con la carpeta hermana: no salió el cuadro.
+- **O-137-6:** el armador se detiene si `[InstallDelete]` no es exactamente la lista de excluidos, solo en `{app}` y sin comodines.
+- **O-137-7b:** el preprocesador impide el ensayo en producción, y al vencerse el límite solo se termina el PowerShell que lleva en su línea de comandos la ruta única de su resultado.
+- **El arnés** solo cierra, por su Id, los procesos que él abrió, y solo borra la carpeta hermana si no tiene otros archivos.
+
+**Una observación nueva, O-145-1 (P3), sin arreglo por ahora:** mientras espera la consulta de la MSIX, el asistente no atiende su ventana. Si la consulta se cuelga justo antes de instalar, Windows puede marcarlo «No responde» durante esos 30 segundos. Solo pasa cuando la consulta falla, y no se copia nada. Va a los límites del informe.
+
+**Lo que tiene que aclarar Carlos:** visto desde fuera del paquete, `%LOCALAPPDATA%\BayStream` no existe, y el 3-nov tenía 592 archivos (10.104 y 10.105). Por eso la huella «igual antes y después» de esta aceptación no protegió nada: en esa ruta no había nada. La copia del 3-nov sigue en `C:\Proyectos\respaldo-almacen-20261103-2103`. Si la carpeta se movió o se borró después, la MSIX 1.0.0.0 guarda lo nuevo dentro de su paquete (`%LOCALAPPDATA%\Packages\gt.cmartinez.baystream_…\LocalCache\Local\BayStream`, 10.37 de `SPRINT-3.md`), y eso se borra al desinstalarla.
+
+**Lo que sigue:**
+1. El commit de T-145 en `baystream-t137`, con el bloque del informe.
+2. El recorrido corto de Carlos en «BayStream Prueba» (sección 13 del informe), con capturas: anota si «BayStream está abierta» sale antes o después de la confirmación, y cómo se ve.
+3. La aceptación de GLM, en `baystream-t137`, cuando termine la reaceptación 2 de T-144. Corre también `-Preparar` del arnés, que Timonel no pudo correr porque PowerShell estaba deshabilitado en su sesión. El prompt está en el documento del proyecto `BayStream_T145_aceptacion_15nov.md`.
+4. Después, Carlos mezcla `t137-instalador` en `sprint-4`, y el primer armado desde `baystream-rediseno` comprueba O-137-1 en la carpeta real.
+
+### 10.133 · T-144 aceptada: la reaceptación 2 de GLM pasa; O-144-2, el `analyze` en una copia limpia; Carlos pregunta por Antigravity (16-nov, 21:10)
+
+**GLM terminó la reaceptación 2** (`docs/t144/aceptacion-glm.md`, en `qa-r4`, sobre `d32a6dd`): **PASA**, sin hallazgos nuevos. Fueron unas 5 h de trabajo, del 15-nov a las 17:55 al 16-nov a las 00:55, y más tiempo de reloj por los límites de sesión de su plan.
+- El paso 0 pasa: una copia limpia de 839 archivos y la suite en 2221 de 2221, sin omitidas, en una sola corrida.
+- **T144-ACC-02 queda cerrado:** en Android, a 360 dp y con letra 1.0, 1.45 y 2.0, la matrícula sale entera en el árbol, en la etiqueta accesible y en las capturas, y la naviera baja de línea solo con 2.0.
+- La sonda funcional de la R1 vuelve a pasar sobre la punta nueva, y la de búsqueda da 4 de 4.
+- A06 abre con 717 contenedores, los puertos de la 1.5 y GTPBR sin 0/0/0, y registra una carga y una descarga en el namespace `t144acc`, sin nube real.
+- El DIM pasa completo: la insignia, la línea de medidas y el BAPLIE de salida, con el grupo idéntico byte por byte.
+- La 1.0.0 lee los 4 viajes que guardó la versión nueva sin romperse, y abre el tour sin error.
+- Windows y Chrome pasan, con la interfaz 100 % en español. El Honor queda en la lista de la versión (10.126).
+
+**Yov comprobó en `qa-r4`** que ningún archivo versionado cambió: lo único nuevo para Git es el informe.
+
+**O-144-2 (P3), nueva:** en la copia limpia de la punta, `analyze` da 3 avisos `info` (`use_build_context_synchronously`) en `test/t112_localization_test.dart`, líneas 49, 50 y 67; en una variante sale uno más, en `test/t121_estadisticas_test.dart`. En `baystream-rediseno` (Timonel, 15-nov) y en la copia de la R1 (Codex, 11-nov) no salían. Según la bisección de GLM, aparecen cuando la copia trae los dos archivos de `lib/` de la corrección 2, aunque los avisos están en pruebas de T-112 y T-121; GLM lo atribuye a un no determinismo del analizador. No toca T-144, y la suite pasa. **Propuesta de Yov:** al preparar la versión del bloque 1, Timonel ajusta esas dos pruebas para que la regla no se dispare, sin `// ignore:`, y la versión exige `analyze` en cero también en una copia limpia. Va con O-143-3. Decide Carlos.
+
+**El bloque 1:** T-143 y T-144 aceptadas. Falta T-145: el recorrido de Carlos y la aceptación.
+
+**Carlos pregunta por Antigravity** (16-nov, 21:00): lo tiene con varios modelos, y GLM tarda por los límites de su plan. **Propuesta de Yov:** Antigravity puede hacer el mismo trabajo, porque lee el `AGENTS.md` de la carpeta, edita, corre comandos y tiene su propio navegador. Se prueba primero con la aceptación de T-145, con Gemini 4 Carbon en alto, los permisos en «Default» y en «Deny» las escrituras de Git, `git status` y `firebase`. GLM sigue en Max para lo que pide juicio, y en Flash para lo corto y mecánico. Decide Carlos.
+
+**La subida del informe de GLM** necesita un paso más, porque `sprint-4` avanzó con las 10.130 a 10.132: `qa-r4` pasa primero a la punta.
+
+### 10.134 · Antigravity entra a prueba con la aceptación de T-145, con Claude Opus 4.6: Carbon no está en el plan de Carlos (16-nov, 21:25)
+
+**Carlos decidió probar Antigravity** (16-nov, 21:21). Ya lo abrió en `baystream-t137`, rama `t137-instalador`, con los permisos en «Default».
+
+**Los modelos de su cuenta, por su captura:** tiene Gemini 3.8 Flash, Claude Sonnet 4.6, Claude Opus 4.6 y GPT-OSS 120B. Gemini 4 Carbon, Argon e Hydrogen le salen «Unavailable». Esto corrige la 10.133, que proponía Carbon:
+- según la tabla de modelos de Antigravity, **Carbon es solo de los planes AI Ultra y Enterprise**: el plan AI Pro no lo trae;
+- Argon pide un plan AI Pro de pago, e Hydrogen, según su anuncio, se entrega primero a los planes Pro y Ultra de pago. Que los tres salgan sin acceso coincide con lo que reportan en el foro de Google los planes Pro de estudiante, de prueba o de promoción. Carlos revisa en Google One de qué tipo es el suyo;
+- **Claude Opus 4.6, Claude Sonnet 4.6 y GPT-OSS 120B salen de Antigravity el 18-nov:** es el aviso «Notice» del selector.
+
+**Cómo queda:**
+- la aceptación de T-145 la hace Antigravity con **Claude Opus 4.6 (Thinking)**, el más capaz de su lista, hoy o mañana, antes del 18-nov. El prompt de la 10.133 no cambia;
+- después del 18-nov, si su cuenta solo conserva Gemini 3.8 Flash, Antigravity queda para lo corto y mecánico, y GLM sigue como aceptador, en Max. Si le llegan Argon o Hydrogen, se vuelve a probar.
+
+### 10.135 · La aceptación de T-145 con Antigravity: lo comprobable coincide; faltan los registros de los negativos y el recorrido de Carlos. El banco de la 1.0.0 de GLM dejó dos archivos en el almacén real (16-nov, 23:05)
+
+**Antigravity entregó la aceptación** (`docs/t145/aceptacion-antigravity.md`, en `baystream-t137`, sobre `734f847`): PASA. Empezó hacia las 21:46 con Claude Opus 4.6 y terminó a las 22:56 con Gemini 3.8 Flash.
+
+**Lo que Yov comprobó en la carpeta:**
+- los tres instaladores que armó son idénticos a los de Timonel, por su huella: el de prueba (`5ef28b61…`), el de producción (`e4e7304c…`) y el del ensayo (`5e279822…`). El de prueba mide 18 486 858 bytes: el 18 486 844 del informe de Timonel era un error de escritura;
+- el armado desde su copia en CRLF da el mismo instalador de prueba;
+- la corrida de Windows (`build/t145/aceptacion-antigravity/aceptacion-01/`) trae los ocho pasos en `resultado.json` y las marcas esperadas en los registros: `T145_SIN_PROCESOS` con la carpeta hermana, `T145_DESINSTALAR_CANCELADO` en silencio, `T145_APP_CERRADA` después de Reintentar y `T145_MSIX_TERMINADA` en el ensayo. Corrió sin paquete (identidad 15700), lanzada desde la terminal de Antigravity, que no es una app empaquetada, y no con `explorer.exe`;
+- `analyze` del Dart versionado da cero, y ningún archivo versionado cambió: lo único nuevo es su informe.
+
+**Lo que falta para que el dictamen quede firme:**
+- **los cuatro negativos no dejaron ningún registro** en la carpeta de evidencia. Tres ya los había acreditado Timonel; el cuarto, el de `[InstallDelete]`, solo consta en el informe. Antigravity los repite con su salida guardada. Yov leyó `_comprobarGuion`: el armador se detiene con ese mensaje;
+- las horas del informe (2.0 h) no son las del reloj, y dice «Aceptador: Capitán Codex (Antigravity)»: se corrigen;
+- el recorrido de Carlos en «BayStream Prueba».
+
+**Cómo le fue a Antigravity, para decidir si se queda:**
+- Claude Opus 4.6 gastó en unos 10 minutos el límite de 5 horas y la mitad del semanal: con el plan de Carlos no alcanza;
+- con los permisos en «Default», `flutter analyze` se quedó colgado más de 30 minutos sin escribir nada, y con «Request Review» corre normal. Lo más probable es que el aislamiento de comandos no deje a Flutter escribir en su propia carpeta;
+- Gemini 3.8 Flash hizo la aceptación en unos 16 minutos, siguiendo el guion.
+
+**Propuesta de Yov:** Antigravity sirve para las aceptaciones con guion y huellas esperadas, siempre en «Request Review» y con la revisión de Yov contra la carpeta. Lo que pide juicio sigue con GLM en Max y con Timonel. Decide Carlos.
+
+**El almacén real de Windows: de dónde salieron sus dos archivos.** El 15-nov a las 22:24, la aceptación de Timonel vio que `%LOCALAPPDATA%\BayStream` no existía (10.132). Hoy, la de Antigravity lo encontró con dos archivos: `vessel_store\baystream_session.hive`, de 0 bytes, y su `.lock`. Por el código y por las horas, los dejó **el banco de la 1.0.0 de GLM** (`banco_v100.dart`, el 15-nov entre las 23:52 y las 00:02): redirige el plano y la bitácora al namespace `t144acc`, pero no la sesión, y la 1.0.0, con Firebase inicializado, abre `baystream_session` en el almacén por omisión. El informe de GLM dice que el almacén real no se tocó, y no es exacto. Queda como **O-144-3, del instrumental**: no cambia el dictamen de T-144 ni es un defecto del producto. No se perdió nada, porque la carpeta no existía y los dos archivos están vacíos. **Regla para los bancos:** un banco de Windows redirige todos los almacenes, también el de la sesión, y su informe lo comprueba con la huella del almacén real antes y después.
+
+**Lo que sigue:** Antigravity guarda los registros de los negativos y corrige su informe; Carlos hace su recorrido; después van el commit del informe y la mezcla de `t137-instalador` en `sprint-4`. Yov ya simuló la mezcla: entra sin conflictos, y las 20 fuentes del arte que están en `sprint-4` son iguales a las de la rama.
+
+### 10.136 · T-145 aceptada y el instalador entra a `sprint-4`: el bloque 1 queda completo; nace T-146, la 1.0.1 (16-nov, 23:15)
+
+**Antigravity completó su informe** (`2df2423`, en `t137-instalador`): repitió los cuatro negativos con sus registros en `build/t145/aceptacion-antigravity/negativos/` y corrigió las horas y su nombre. Yov comprobó los cuatro registros (salidas 1, 1, 64 y 1, sin carpeta de salida) y que los archivos versionados siguen idénticos a `734f847`. **T-145 queda aceptada.**
+
+**El orden cambia: la mezcla no espera al recorrido de Carlos.** La rama solo trae el instalador, sus herramientas y sus informes (38 rutas, ninguna de `lib/`), pasó la aceptación de Timonel y la de Antigravity, y mezclarla no publica nada. **El recorrido en «BayStream Prueba» queda como condición para publicar la 1.0.1.** Si encuentra algo, se corrige en `sprint-4`.
+
+**Carlos mezcla `t137-instalador` en `sprint-4`** con un commit de mezcla, como T-131 y T-132. Yov la simuló: entra sin conflictos.
+
+**El bloque 1 queda con sus tres tareas aceptadas:** T-143 (10.121), T-144 (10.133) y T-145.
+
+**Nace T-146 · La 1.0.1, la versión del bloque 1** (10.114 y 10.117), con Timonel, en `baystream-rediseno`, en dos fases, como T-144. Prepara la candidata; no publica. Lleva:
+- la versión `1.0.1+10` y el MSIX `1.0.1.0`, sin cambiar `pubspec.lock`;
+- O-144-2: las dos pruebas ajustadas para que `analyze` dé cero también en una copia limpia, sin `// ignore:`;
+- O-144-1: el resaltado de la búsqueda con espacios. Yov propone arreglarlo aquí, y lo decide Carlos al aprobar la propuesta;
+- el manual: los pasos que cambian con T-143 y con T-144, y los pies de las figuras 5 y 6;
+- el instalador: el primer armado desde `baystream-rediseno`, que comprueba O-137-1 en la carpeta real, y el asistente de la 1.0.1. Si Windows se reparte con la MSIX, con el asistente o con los dos, lo propone Timonel y lo decide Carlos;
+- lo que Yov necesita para la lista de publicación de la 1.0.1: los tres clientes juntos, ninguna operación abierta con una fuente 1.5 o con matrículas con espacio (10.123), una compilación limpia (10.130), el Honor (10.126) y la vuelta atrás a la 1.0.0.
+
+Quién la acepta, GLM o Antigravity, lo decide Carlos cuando se entregue. El prompt está en el documento del proyecto `BayStream_T146_la_1.0.1_16nov.md`.
+
+**Siguen pendientes de Carlos:** el recorrido de T-145; dónde van T-115, T-120, RNF-004 y O-134-2 (10.122); si Antigravity se queda como propone la 10.135; dónde viven sus datos de Windows (10.132), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+### 10.137 · Las aceptaciones van con GLM 5.3 Flash, en Max; T-146 empezó (16-nov, 23:20)
+
+**Carlos lo decidió** (16-nov, 23:19): las aceptaciones las hace **GLM 5.3 Flash, con el esfuerzo en Max**, porque rinde más dentro de los límites de sesión de su plan. Aclara la 10.129, que trataba «Max» y «Flash» como dos modos: son dos cosas distintas, el modelo (GLM 5.3 o GLM 5.3 Flash) y el esfuerzo (Max).
+
+**Cómo queda:**
+- las aceptaciones, con GLM 5.3 Flash en Max. Yov sigue comprobando cada dictamen contra la carpeta, como hizo con Antigravity (10.135), y cada punto pide su evidencia guardada;
+- si una aceptación encuentra algo que pide investigar a fondo, esa parte sube a GLM 5.3, en Max;
+- Yov propone que Antigravity quede de respaldo para las aceptaciones con guion, con Gemini 3.8 Flash y en «Request Review»;
+- Timonel sigue con Claude Opus 5.5, en Alto.
+
+**T-146 empezó:** Carlos corrió la mezcla del instalador (`2ac872b`, con la 10.136 en `d10a83a`) y le pasó el prompt a Timonel.
+
+### 10.138 · T-146, fase 1: la propuesta de Timonel revisada, y lo que Yov propone en sus seis decisiones (17-nov, 00:45)
+
+**Timonel entregó la fase 1** (`docs/T146-RESULTADOS.md`, sobre `1c40d39`) y se detuvo. Trae el paso 0, la propuesta y seis decisiones para Carlos.
+
+**Lo que Yov comprobó en la carpeta:**
+- ningún archivo versionado cambió frente a `1c40d39`: lo único nuevo para Git es el informe;
+- el asistente de prueba armado desde `baystream-rediseno` da `5ef28b61…`: **O-137-1 queda comprobada en la carpeta real**;
+- O-144-2: el oráculo de Timonel (copiar `test/` y `tool/` dentro de `lib/` de una copia) da las cuatro líneas de GLM antes del cambio y cero después. El prototipo solo mueve el uso del contexto a funciones síncronas: quedan las mismas ocho comprobaciones en t112 y las mismas dos en t121, y pasan 95 de 95;
+- O-144-1: el filtro ya busca con `numeroDeContenedor(query)`, y el título se resalta con la consulta sin quitarle los espacios. El arreglo es una línea, y una consulta vacía no llega a los resultados (corrección 1 de T-144);
+- la versión: fuera de las dos líneas de `pubspec.yaml` no hay otro número que cambiar, y la prueba de T-93 lee la versión de ahí;
+- el manual: Yov buscó diez de los textos que cita la tabla y están en el código tal cual, entre ellos «Confirmado», «Publicada y cerrada», «N rechazados: la operación ya estaba cerrada» y, en el desinstalador, «BayStream está abierta»;
+- la mezcla del instalador (`2ac872b`) solo trajo `windows/installer/`, `tool/` y `docs/`: Android, la Web y la MSIX no dependen de ella.
+
+**O-146-1, la causa de O-144-2: lo que suma Yov.**
+- **La regla no corre en las carpetas de pruebas, y es a propósito.** En el código del SDK de Dart (rama estable), `use_build_context_synchronously` solo se registra `if (!context.isInTestDirectory)`, y carpeta de pruebas es `test`, `integration_test`, `test_driver` o `testing`, directamente bajo la raíz del paquete. Coincide con lo que midió Timonel, y explica por qué su oráculo sirve: `lib/zz_oraculo/test/` no está bajo `<raíz>/test`.
+- **Los registros de GLM descartan el SDK, el comando y el contenido.** El 15-nov, entre las 18:16 y las 18:35, con el mismo comando y con t112 y t121 idénticos byte por byte en sus tres copias, la copia de la R1 dio 0 avisos de la regla, la de la R2 dio 3 y la de la bisección, 4.
+- Yov descartó en disco un `pubspec.yaml` anidado, `.dart_tool/build` y diferencias de `analysis_options.yaml` o de `package_config.json` entre las tres copias.
+- **Hipótesis, sin comprobar:** esos avisos salieron de la caché del analizador, que comparten todos los analizadores de la cuenta. Otro servidor de análisis, el de un editor abierto sobre `baystream-qa-r4`, habría analizado esos archivos como archivos sueltos de la carpeta de fuera, donde no están bajo `<raíz>/test`, y `flutter analyze` habría reutilizado lo guardado. Timonel la prueba en 20 minutos, si le alcanza: analiza la copia de GLM tal cual y con una caché vacía. Si no se confirma, O-146-1 sigue abierta. El arreglo no depende de ella.
+
+**Lo que Yov propone en las seis decisiones.** Decide Carlos: quedan tomadas cuando le pasa la aprobación a Timonel, y si cambia alguna, la siguiente decisión lo dice.
+1. **La versión:** `1.0.1+10` y `msix_version: 1.0.1.0`.
+2. **O-144-2:** el cambio de las dos pruebas, y `tool/t146_oraculo.dart`. Es una herramienta de T-146, para que quien acepte vea las cuatro líneas antes y cero después; no pasa a ser un criterio nuevo. El criterio sigue siendo `flutter analyze` en cero en todo el paquete.
+3. **O-144-1:** se arregla aquí: una línea, seis pruebas, y el manual queda sin excepción.
+4. **El manual:** un archivo nuevo, `docs/MANUAL-USUARIO-1.0.1.md`; el de la 1.0.0 no se toca (10.117). Timonel vuelve a tomar las cinco capturas (13, 23, 24, 28 y 41). Con tres condiciones: la portada no lleva fecha de publicación hasta que se publique; el pie de las figuras 1 a 4 dice que son del asistente 1.0.0.9, y lo que no se recorra en esta edición se marca. Carlos autoriza que el bloque de Git lleve el manual y sus capturas, por ruta exacta.
+5. **Windows:** la opción C, la MSIX 1.0.1.0 y el asistente 1.0.1.10, de la misma Release. Nadie migra mientras la 10.132 siga abierta. **El recorrido de Carlos (10.136) se hace con el asistente 1.0.1.10 de producción, antes de repartirlo, y pasa a ser condición del asistente, no de toda la versión:** si encuentra algo, Android, la Web y la MSIX salen igual, y el asistente espera.
+6. **La lista de publicación,** que escribe Yov:
+   - **antes de `flutter clean` se aparta toda la carpeta `build\` de `proyecto-baystream`, no solo `build\t93`.** Timonel avisó que `flutter clean` borra las MSIX de la vuelta atrás. Yov miró la carpeta: tiene 91 entradas, y entre ellas 56 carpetas de evidencia de los Sprints 2 y 3 (`block2` a `block7b`, `t35` a `t122`, `recorrido-clientes`), la Web 1.0.0 y el `.zip` del SDK de C++ 13.13.1. Se renombra entera a `C:\Proyectos\baystream-publicaciones\`, que es instantáneo y no pierde nada, y las vueltas atrás apuntan ahí;
+   - las huellas de hoy en `build\t93`: la 1.0.0.0, `BA01DED7…`, y la 0.4.2.0, `D57F8E50…`, iguales a las anotadas. El `BayStream_1.0.1.0.msix` viejo, del 14-oct, es `ABBCD33B…`, y se renombra al apartarlo;
+   - **la vuelta de la MSIX sin desinstalar:** el parámetro existe. Según la documentación de Microsoft de `Add-AppxPackage`, `-ForceUpdateFromAnyVersion` fuerza que se instale una versión concreta del paquete aunque ya haya una mayor. La página no dice qué pasa con los datos: la copia de las dos carpetas va primero, y desinstalar y reinstalar queda de respaldo;
+   - la vuelta del asistente es desinstalar, que conserva los datos (T-137 y T-145), e instalar el 1.0.0.9. Instalar la versión menor encima queda sin probar, y no hace falta.
+
+**Quedan anotadas:** O-146-1 (P3), con lo de arriba, y O-146-2 (P3): `tool/t93_msix.ps1` trae `-Version 1.0.0.0` por omisión, y la lista pasa `-Version` siempre.
+
+**Lo que sigue:** Carlos aprueba y Timonel hace la fase 2. La acepta GLM 5.3 Flash, en Max (10.137). Yov escribe la lista de publicación de la 1.0.1.
+
+### 10.139 · Carlos aprobó la propuesta de T-146 y Timonel empezó la fase 2; el último `versionCode` de Play es el 9; GLM no corre en un editor (17-nov, 00:55)
+
+**Carlos aprobó la propuesta** (17-nov, 00:49) con las seis decisiones de la 10.138, sin cambios, y le pasó la aprobación a Timonel. La punta es `c777c86` (la 10.138), sobre `15fe1b1` (el informe de la fase 1). Timonel ya empezó la fase 2.
+
+**Play:** Carlos miró en Play Console que el último `versionCode` subido es el **9**. La versión queda en `1.0.1+10`.
+
+**O-146-1: la hipótesis de la 10.138 pierde su fuente más probable.** Carlos mostró dónde corre GLM: en su app de escritorio, con `baystream-qa-r4` como proyecto, en «Full access» y con su propio navegador. No es un editor de tipo VS Code. Yov no sabe si esa app arranca por su cuenta un servidor de análisis de Dart. La sonda de Timonel decide igual, porque compara la copia de GLM con la caché de siempre y con una vacía, la haya llenado quien la haya llenado. Si no llega a hacerla o no confirma nada, O-146-1 sigue abierta, y el arreglo no depende de ella.
+
+### 10.140 · El tablero al 17-nov: 29 de 33 tareas terminadas y T-146 en curso; al armarlo aparece la pista de dónde están los datos de Windows (17-nov, 01:15)
+
+**Carlos pidió ver el tablero** (17-nov, 00:57). Yov lo puso al día y lo volvió a publicar en el mismo enlace; su generador, `claude/herramientas/build_kanban_s4.py`, sigue en el proyecto de Yov. El anterior era del 11-nov (10.122).
+
+**Cómo está el sprint:**
+- de las 33 tareas (T-114 a T-146) hay **29 terminadas**. Desde el 11-nov entraron T-144 y T-145, y el bloque 1 quedó completo el 16-nov;
+- **en curso, una:** T-146, la 1.0.1, con Timonel, en la fase 2;
+- **siguiente,** lo que falta para publicar la 1.0.1: la aceptación con GLM 5.3 Flash en Max, la lista de publicación y el recorrido de Carlos con el asistente 1.0.1.10;
+- **por hacer,** sin cambios: los bloques 2, 3 y 4, T-87 en espera y los cuatro pendientes sin bloque (T-115, T-120, RNF-004 y O-134-2), que siguen esperando la decisión de Carlos (10.122);
+- la suite está en 2221 pruebas y `analyze`, en cero.
+
+**Lo que encontró al armarlo: dónde están, muy probablemente, los datos de Windows (10.132).** El tablero del 11-nov traía entre lo pendiente «devolver el almacén de Windows desde `BayStream_respaldo_*`» (10.114). Viene de la preparación de la presentación: `BayStream_almacen_limpio.bat`, que está en el escritorio desde el 6-nov, cierra la app y renombra `%LOCALAPPDATA%\BayStream` y la carpeta del paquete (`%LOCALAPPDATA%\Packages\gt.cmartinez.baystream_*\LocalCache\Local\BayStream`) a `BayStream_respaldo_<número>`. No borra nada. Yov leyó hoy el `.bat`.
+- Si Carlos lo corrió antes del 7-nov, explica lo que vio la 10.132: el 15-nov, `%LOCALAPPDATA%\BayStream` no existía.
+- **Lo de antes del 6-nov** (los 592 archivos del 3-nov y lo que siguió) estaría en `%LOCALAPPDATA%\BayStream_respaldo_<número>` y, si la había, en la carpeta hermana dentro del paquete.
+- **Lo de después** (de la demostración del 7-nov en adelante) lo habría guardado la MSIX dentro de su paquete, porque la carpeta de fuera ya no existía (10.37 de `SPRINT-3.md`). **Eso es lo que se borra si se desinstala la MSIX.**
+- **Falta que Carlos lo confirme** en el Explorador, en `%LOCALAPPDATA%`: Yov no ve esa carpeta desde su sesión. La lista de publicación de la 1.0.1 copia las dos carpetas vivas y anota también las `BayStream_respaldo_*`.
+
+### 10.141 · T-146 entregada y revisada: la candidata 1.0.1 pasa a la aceptación de GLM 5.3 Flash; O-146-1 es la caché del analizador (17-nov, 01:25)
+
+**Timonel entregó la fase 2** (`docs/T146-RESULTADOS.md`, secciones 6 a 9, sin commit), en unos 25 minutos; 45 con la fase 1. La suite da 2227 de 2227 en una sola corrida, sin omitidas, y `analyze` da cero en la carpeta y en una copia limpia. No compiló ninguna Release ni publicó.
+
+**Lo que Yov comprobó contra la carpeta:**
+- **los archivos:** frente a `f50368a` cambian exactamente seis y hay nueve nuevos, las 15 rutas del bloque de Git. `pubspec.lock`, `lib/main.dart`, los congelados, el manual de la 1.0.0, `tool/t93_msix.ps1` y `windows/installer/` no cambian;
+- **el código:** `pubspec.yaml` cambia solo las dos líneas de la versión; el buscador, una línea y su comentario; t112 y t121 son idénticos al prototipo aprobado, por su huella; `DESIGN.md` suma una frase en 17.3. Ningún `// ignore:`;
+- **las pruebas del resaltado:** son las seis de la propuesta, con el espacio duro de verdad en la cuarta. Contra el buscador de `1c40d39` fallan justo la 1, la 3 y la 4;
+- **los registros:** la suite termina en `+2227: All tests passed!`, sin omitidas ni fallidas, y empezó después del último cambio de `lib/` y de `test/`. La copia limpia se analizó con los mismos siete archivos de la carpeta, por su huella;
+- **el oráculo:** Yov leyó `tool/t146_oraculo.dart`. Se niega a una copia dentro del repositorio y a escribir fuera de `build/t146`, y borra lo que copió. Da las cuatro líneas de GLM en `1c40d39` y cero en la punta;
+- **el manual:** las 46 figuras existen y van numeradas del 1 al 46; la portada no lleva fecha; las figuras 1 a 4 llevan su nota; 2.1 trae la opción C, y lo no recorrido está marcado. Los cambios son los de la tabla aprobada;
+- **las seis figuras, una por una:** la 13, la 23 y la 24 dicen «Confirmado»; la 23, «Peso total» y «Lleno»; la 28, «Publicada»; la 41 y la 42, «Publicada y cerrada» y «Al día · operación cerrada». Solo traen datos de BUQUE MANUAL, y los registros del banco solo nombran `127.0.0.1`.
+
+**O-146-1 queda explicada: es la caché del analizador.** En la copia de GLM, `flutter analyze --no-pub` sigue dando los 3 avisos; `dart analyze --cache` con una carpeta nueva da cero, y con la caché de siempre, otra vez 3. La copia de GLM no cambió. La regla no corre en las carpetas de pruebas (10.138), así que esos avisos estaban guardados. **Queda sin saber quién los guardó** (10.139). **Regla para las aceptaciones:** si `analyze` marca en una copia limpia algo que no marca en la carpeta de trabajo, se repite con `dart analyze --cache` en una carpeta nueva antes de investigar más, y se guardan los dos registros.
+
+**Para la lista de publicación (6.5 del informe):** CMake solo baja el `.zip` del SDK de C++ si no está en `build\windows\x64\`, y no comprueba su huella. Copiarlo de vuelta ahorra la descarga de 920 MB; la extracción de 8.5 GB, no. Su huella de hoy es `061508de…` (963 835 368 bytes). `extracted` no se copia: es la trampa de la 10.99.
+
+**Una observación nueva, O-146-3 (P3), del manual:** las figuras 41 y 42 salieron de un recorrido más corto que el de la 1.0.0 y dicen «Fuentes: llegada»; en el relato del manual, al cerrar, la operación ya tiene la carga y el listado. La 41 no hacía falta retomarla: esa pantalla no cambió, y la píldora «Cerrada» de la cabecera no sale en ninguna figura. No bloquea: Yov le suma una línea al pie de las dos cuando ponga la fecha de la portada, al publicar.
+
+**Lo que no se hizo, y queda dicho en el informe:** el aviso del cierre en el muelle no quedó en figura y va marcado «(no recorrido en esta edición)», y el resaltado no se miró en un cliente: lo mira quien acepte.
+
+**Lo que sigue:**
+1. El commit de T-146, con el bloque del informe, y el de esta decisión.
+2. `baystream-qa-r4` pasa a la punta. Yov comprobó que no tiene nada modificado ni nada sin seguir que choque.
+3. **La aceptación, con GLM 5.3 Flash en Max** (10.137): la sección 7 del informe, más el resaltado a la vista en la Web del banco. En `baystream-qa-r4`, el cero de `analyze` se cuenta sobre el Dart versionado, como en la 10.131, porque su `build/` guarda las copias de las aceptaciones anteriores; el de todo el paquete se pide en la copia limpia. El prompt está en el documento del proyecto `BayStream_T146_aceptacion_17nov.md`.
+4. La lista de publicación de la 1.0.1, que Yov cierra con el dictamen, porque lleva el commit aceptado.
+
+En `%TEMP%\t146-cache-vacia-0108` queda la caché vacía de la sonda: la puede borrar Carlos.
+
+### 10.142 · T-146 aceptada: GLM 5.3 Flash dice PASA y Yov lo comprobó contra la carpeta; la lista de publicación de la 1.0.1 (17-nov, 11:50)
+
+**GLM 5.3 Flash, en Max, aceptó T-146** (`docs/t146/aceptacion-glm.md`, en `baystream-qa-r4`, sobre `268e731`): **PASA, sin hallazgos nuevos**, en 25 minutos de reloj (17-nov, de 08:49 a 09:14).
+
+**Lo que Yov comprobó contra la carpeta:**
+- `baystream-qa-r4` sigue idéntica a `268e731`: lo único nuevo para Git es el informe;
+- la suite termina en `+2227: All tests passed!`, sin omitidas ni fallidas, en una copia limpia;
+- `analyze` da «No issues found!» en la copia limpia, con todo el paquete, y en el Dart versionado de la carpeta (10.131). No hizo falta repetir con `dart analyze --cache`;
+- el oráculo da las cuatro líneas en `1c40d39` (t112, 49:35, 50:47 y 67:7; t121, 574:14) y cero en la punta;
+- las seis pruebas del resaltado, contra el buscador de `1c40d39`: pasan tres y fallan la 1, la 3 y la 4;
+- las huellas de los siete archivos de código son las que Yov había tomado (10.141);
+- las dos capturas del banco Web, vistas: con «mnlu 000010 7», `MNLU0000107` sale entero resaltado; con «ushou», se resalta el puerto en «POD: USHOU» y la matrícula no. La página solo habló con `127.0.0.1:5939`;
+- el manual: las 46 rutas de imagen existen, la portada no lleva fecha y las seis figuras nuevas tienen las huellas del informe; el de la 1.0.0 no cambió;
+- el asistente de prueba que armó es el mismo, `5ef28b61…`.
+
+**T-146 queda aceptada, y la candidata 1.0.1 es `834af36`.**
+
+**O-146-1 queda cerrada como explicada.** La aceptación guardó los procesos al empezar y al terminar, y no había ningún servidor de análisis de Dart. Sigue sin saberse quién guardó aquellos avisos en la caché; la regla de la 10.141 se queda.
+
+**Dos notas del instrumental,** que no cambian el dictamen: el perfil de Chrome del banco traía guardada la operación M100, y el primer intento abrió esa en vez del previo; y dos clics cayeron bajo el pliegue de la página. **Regla para las aceptaciones con un banco Web:** el banco empieza con un perfil de navegador nuevo, y el informe lo dice.
+
+**Una observación nueva, O-146-4 (P3), del manual.** La encontró Yov al escribir la lista: en 3.3 y en 3.6, el manual de la 1.0.1 todavía dice «abre publicado sin previo» y «en el plano publicado», y desde T-143 la cabecera de ese plano dice «Confirmado». No estaba en la tabla de cambios de la propuesta, y no lo vieron ni la revisión de Yov ni la aceptación. No bloquea: Yov cambia las dos frases al publicar, cuando ponga la fecha de la portada y la línea de O-146-3.
+
+**La lista de publicación de la 1.0.1 está en `docs/piloto/PUBLICACION-1.0.1.md`.** Parte de 1.6 del informe de T-146, de la lista de la 0.4.2 y de la publicación de la 1.0.0 (10.102 y 10.105). Lo que Yov comprobó para escribirla:
+- **la mezcla,** simulada sobre `8f2505e`: entra sin conflictos, con 164 archivos, y el árbol que queda es el de `sprint-4`. En `proyecto-baystream`, los cinco documentos modificados de Carlos no cambian con ella, y ninguno de sus 60 archivos sin seguimiento choca. La guardia compara el código con `268e731`;
+- **lo que entra a las compilaciones:** entre `v1.0.0` y la punta no cambian `pubspec.lock`, `assets/`, `android/`, `web/` ni `windows/` (fuera de `windows/installer/`), y `pubspec.yaml` solo cambia las dos líneas de la versión;
+- **`build\` se aparta entera** a `C:\Proyectos\baystream-publicaciones\build-hasta-1.0.0` (precisa la 10.138, que solo nombraba la carpeta de arriba), y después va `flutter clean`. Ahí quedan las MSIX de la vuelta atrás y una copia de la Web 1.0.0 publicada: sus tres huellas en disco son las de la 10.115;
+- **el `.zip` del SDK de C++:** su huella, calculada hoy, sigue siendo `061508de…`. El bloque la comprueba antes de copiarlo de vuelta;
+- **la carga del asistente serán 25 archivos, no 27.** El 27 de 1.5 del informe es la carga del 1.0.0.9 de producción, que lleva los dos archivos viejos. La Release de la 1.0.0 trae 29 archivos; sin los dos viejos quedan 27; menos los 5 excluidos, más las tres DLL de Visual C++, 25. Es una cuenta de Yov, sin medir: la lista no se detiene por ella. Se detiene por la versión, por el SDK dentro del `.exe`, por los cinco excluidos y por cualquier aviso del armado;
+- **los datos de Windows:** un bloque que solo lee dice qué carpetas `BayStream*` hay fuera y dentro del paquete, con sus archivos y su último cambio. Es lo que faltaba de la 10.132. La copia de antes de instalar cubre las dos carpetas vivas;
+- **el registro:** los bloques anotan las huellas, los tamaños y las horas en `build\t146\publicacion\registro.txt` de `baystream-rediseno`, fuera de Git, y Yov lo lee al final;
+- **la prueba corta** usa el viaje S101. Las copias están en el escritorio de Carlos, en `BayStream_1.0.1_prueba_corta`: `S101_LLEGADA.edi` (`8762E850…`), `S101N_CARGA.edi` (`48747ABE…`) y `T100_LISTADO.xlsx` (`FEB12A90…`). Salen de los sintéticos de T-100 cambiando solo el viaje en `TDT`. Sus pasos 11 y 12, el aviso del cierre y el rechazo en el muelle, son los que el manual marca «(no recorrido en esta edición)»;
+- **la vuelta de la MSIX** con `-ForceUpdateFromAnyVersion` va escrita y **sin probar**. Si no instala, no se desinstala nada sin Yov: desinstalar borra los datos que vivan dentro del paquete.
+
+**Cómo se comprobaron los bloques de la lista.** Yov cotejó cada comando con su script (`tool/t93_msix.ps1`, `tool/t136_sdk_firebase.ps1`, `tool/t137_instalador.dart`, `tool/t92_verify.dart` y `tool/t113_reglas.mjs`), con el manifiesto del asistente 1.0.0.9 de producción, con el `.exe` y la Web de la 1.0.0 y con los textos del código de la punta. **No los corrió:** su sesión no tiene PowerShell. Revisó su estructura con una gramática de PowerShell, que no es el analizador de Windows. Si Carlos quiere una segunda comprobación, GLM los pasa por el analizador de PowerShell, sin ejecutarlos, antes de publicar.
+
+**Lo que sigue:**
+1. Carlos: el commit del informe de GLM, desde `baystream-qa-r4`, y el de esta decisión con la lista, en `baystream-rediseno`.
+2. La publicación, con la lista. Lo primero es su bloque 0.6, que solo lee.
+3. Yov anota la publicación en la decisión siguiente, pone la fecha en el manual y actualiza el tablero.
+
+**Siguen pendientes de Carlos:** el recorrido del asistente, que ahora es la sección 7 de la lista; dónde van T-115, T-120, RNF-004 y O-134-2 (10.122); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.143**.

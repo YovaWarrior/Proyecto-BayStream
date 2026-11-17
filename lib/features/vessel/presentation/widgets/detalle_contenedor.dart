@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
+import '../formatters/carga_especial.dart';
 import '../providers/discharge_provider.dart';
 import 'discharge_controls.dart';
 import 'iconos_del_dominio.dart';
@@ -71,12 +72,25 @@ class DetalleContenedor extends ConsumerWidget {
       BsFilaDeDetalle('Puerto de carga', container.portOfLoading ?? 'Sin declarar'),
       BsFilaDeDetalle(
           'Puerto de descarga', container.portOfDischarge ?? 'Sin declarar'),
+      // T-144: el LOC+83 tal cual viene; solo si el archivo lo declara.
+      if (container.finalDestination != null)
+        BsFilaDeDetalle('Destino final', container.finalDestination!),
       if (container.operatorCode != null)
         BsFilaDeDetalle('Naviera', container.operatorCode!),
     ];
 
     final secciones = <Widget>[
-      if (container.isDangerous)
+      if (container.isDangerous && (container.dangerousGoods?.length ?? 0) > 1)
+        // T-144: con dos o más DGS, una línea por declaración, en el orden
+        // del archivo (como las celdas reservadas).
+        _Senal(
+          icono: BsIconos.peligrosa,
+          color: semanticos.peligrosa.contorno,
+          titulo: 'Carga peligrosa · '
+              '${container.dangerousGoods!.length} declaraciones',
+          detalle: container.dangerousGoods!.map(lineaDeDeclaracion).join('\n'),
+        )
+      else if (container.isDangerous)
         _Senal(
           icono: BsIconos.peligrosa,
           color: semanticos.peligrosa.contorno,
@@ -99,6 +113,7 @@ class DetalleContenedor extends ConsumerWidget {
           icono: BsIconos.fueraDeMedida,
           color: semanticos.oog.contorno,
           titulo: 'Sobredimensionado',
+          detalle: medidasFueraDeGalibo(container),
         ),
       // T-75: estado en la escala, quién y cuándo, y deshacer.
       if (offersDischarge(voyage))
@@ -119,25 +134,39 @@ class DetalleContenedor extends ConsumerWidget {
             color: tema.colorScheme.onSurfaceVariant,
           ),
           SizedBox(width: medidas.espacioS),
+          // T-144, corrección 2 (10.127): la matrícula nunca se corta. Si cabe
+          // con la naviera, van como antes: la matrícula a la izquierda y la
+          // naviera a la derecha. Si no, la naviera baja a la línea siguiente
+          // y la matrícula, si tampoco cabe sola, envuelve por sus grupos.
           Expanded(
-            child: BsNumeroDeContenedor(
-              container.containerId,
-              estilo: textos.headlineSmall,
+            child: OverflowBar(
+              key: const ValueKey('detalle-contenedor-titulo'),
+              alignment: MainAxisAlignment.spaceBetween,
+              spacing: medidas.espacioS,
+              overflowSpacing: medidas.espacioXs,
+              children: <Widget>[
+                BsNumeroDeContenedor(
+                  container.containerId,
+                  estilo: textos.headlineSmall,
+                ),
+                if (container.operatorCode != null)
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: medidas.espacioS,
+                        vertical: medidas.espacioXs),
+                    decoration: BoxDecoration(
+                      color: tema.colorScheme.surfaceContainerHigh,
+                      borderRadius:
+                          BorderRadius.circular(medidas.radioControl),
+                    ),
+                    child: Text(
+                      container.operatorCode!,
+                      style: textos.labelLarge,
+                    ),
+                  ),
+              ],
             ),
           ),
-          if (container.operatorCode != null)
-            Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: medidas.espacioS, vertical: medidas.espacioXs),
-              decoration: BoxDecoration(
-                color: tema.colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(medidas.radioControl),
-              ),
-              child: Text(
-                container.operatorCode!,
-                style: textos.labelLarge,
-              ),
-            ),
         ],
       ),
       subtitulo: subtitulo,

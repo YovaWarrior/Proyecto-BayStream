@@ -642,14 +642,18 @@ class FirestoreRemoteMovementStore implements RemoteMovementStore {
   /// T-127 · El documento de la operación, por su manifiesto. Una escritura
   /// propia pendiente (la oficina que acaba de revisar o agregar) no cuenta
   /// hasta que el servidor la confirma; de la caché, sin red, llega lo último
-  /// visto. T-130: los tres tipos, no solo el listado.
+  /// visto. T-130: los tres tipos, no solo el listado. T-143 (O-139-1): y la
+  /// hora del cierre, del mismo documento y en la misma escucha; el cierre
+  /// propio, mientras está pendiente, tampoco cuenta (lo guarda `close`).
   @override
-  Stream<transport.SourceManifest> watchSources(String operationId) => _db
+  Stream<RemoteOperationDocument> watchOperation(String operationId) => _db
       .collection('operations')
       .doc(operationId)
       .snapshots(includeMetadataChanges: true)
       .where((snapshot) => !snapshot.metadata.hasPendingWrites)
-      .map((snapshot) => transport.SourceManifest.read(snapshot.data()?['sources']))
+      .map((snapshot) => RemoteOperationDocument(
+          transport.SourceManifest.read(snapshot.data()?['sources']),
+          closedAt: (snapshot.data()?['closedAt'] as Timestamp?)?.toDate()))
       .handleError((Object error) => throw _remoteError(error));
 
   /// T-130 · Los trozos `{tipo}-{i}` de un BAPLIE, del servidor: un índice de

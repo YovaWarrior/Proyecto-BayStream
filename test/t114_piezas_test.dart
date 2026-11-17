@@ -40,6 +40,8 @@ List<BsBahiaDeSilueta> _bahias() => <BsBahiaDeSilueta>[
           nivelesBodega: 3,
           avance: i < 2 ? 1.0 : (i == 2 ? 0.25 : null),
           conTrabajo: i >= 2 && i <= 4,
+          // T-143 (O-139-3): el motivo sin avance lo da quien arma la silueta.
+          sinAvance: i == 5 ? 'sin movimientos en GTSTC' : null,
         ),
     ];
 
@@ -137,7 +139,10 @@ void main() {
             hasTapAction: true,
           ));
       expect(tester.getSemantics(find.bySemanticsLabel(RegExp(r'^Bahía 22,'))).label,
-          'Bahía 22, 4 niveles en cubierta y 3 en bodega, sin operación');
+          'Bahía 22, 4 niveles en cubierta y 3 en bodega, sin movimientos en GTSTC');
+      // Sin motivo, la etiqueta no habla del avance (T-143).
+      expect(tester.getSemantics(find.bySemanticsLabel(RegExp(r'^Bahía 18,'))).label,
+          'Bahía 18, 3 niveles en cubierta y 3 en bodega');
       await tester.tap(find.text('14'));
       expect(elegida, 14);
       final tamano = tester.getSize(find.bySemanticsLabel(RegExp(r'^Bahía 14,')));

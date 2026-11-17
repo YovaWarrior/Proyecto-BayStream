@@ -78,6 +78,44 @@ class BaplieConstants {
   /// Puerto de transbordo (Port of Transhipment)
   static const String locPortOfTranshipment = '13';
 
+  /// T-144 · Destino final: «"83" = Place of delivery (to be used as final
+  /// destination…)» en la guía SMDG 2.2.1 (06/2016, p. 21), y el mismo
+  /// calificador en la 1.5 (05/1993, p. 20).
+  static const String locFinalDestination = '83';
+
+  /// T-144 · Puerto de carga de la 1.5: «Code "6" (Port of Loading)» (guía
+  /// SMDG 1.5, 05/1993, p. 20). En la 1.5 no existen el 9 ni el 11; en la 2.x
+  /// el 6 no es un puerto del contenedor, así que va atado a la versión.
+  static const String locPortOfLoadingV15 = '6';
+
+  /// T-144 · Puerto de descarga de la 1.5: «Code "12" (Port of Discharge)»
+  /// (guía SMDG 1.5, 05/1993, p. 20).
+  static const String locPortOfDischargeV15 = '12';
+
+  // ============================================
+  // CALIFICADORES DIM (T-144, RF-005)
+  // ============================================
+  //
+  // Guía SMDG 2.2.1 (06/2016, p. 18) y 1.5 (05/1993, p. 17): «Off-standard
+  // dims.» 5 frente, 6 atrás, 7 derecha, 8 izquierda y 9 alto. El valor va en
+  // el componente del largo (5 y 6), del ancho (7 y 8) o del alto (9) del
+  // C211, «as qualified». Unidad CMT (2.x, preferida) o INH; CM en la 1.5.
+
+  /// Sobrelongitud frontal.
+  static const String dimOverLengthFront = '5';
+
+  /// Sobrelongitud trasera.
+  static const String dimOverLengthRear = '6';
+
+  /// Sobreancho derecho.
+  static const String dimOverWidthRight = '7';
+
+  /// Sobreancho izquierdo.
+  static const String dimOverWidthLeft = '8';
+
+  /// Sobrealtura.
+  static const String dimOverHeight = '9';
+
   // ============================================
   // CALIFICADORES EQD (Equipment Qualifiers)
   // ============================================

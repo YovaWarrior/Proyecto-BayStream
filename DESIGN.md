@@ -387,7 +387,14 @@ perfil.» y «Para exportar, confirma el perfil del buque.».
    llegada propone como escala el puerto de salida, y sin esa coincidencia el plano no
    opera hasta que el planificador confirme.
 3. En `Previo`, la banda muestra la escala propuesta y «Confirmar». Confirmar abre
-   «Parámetros del buque» con la propuesta cargada y «No lo tengo» sin marcar; al
+   «Parámetros del buque» con la propuesta cargada. **El límite de apilamiento** (T-143,
+   10.117): si el perfil guardado de este buque ya lo resolvió, con un valor o con «No lo
+   tengo», viene resuelto y lo dice una línea bajo la explicación, «Del perfil guardado:
+   “No lo tengo”.» o «Del perfil guardado: 90 000 kg por pila.», con el valor que tenga;
+   el planificador lo puede cambiar, y entonces la línea se va. Con la propuesta del
+   archivo o con una plantilla de otro buque, «No lo tengo» empieza sin marcar y sin
+   línea, y sin elegir no se confirma (10.15, H1). «Resuelto» es un perfil del mismo buque
+   declarado por el usuario: con límite, ese valor; sin límite, «No lo tengo». Al
    confirmar, el viaje se publica y **se queda en el Plano**.
 4. Mientras no se confirme: los modos Carga y Descarga no aparecen; «Publicar
    operación», el listado, la salida y **exportar** dicen que falta confirmar; el peso por
@@ -781,6 +788,10 @@ en vertical.
 3. Nada en mayúsculas sostenidas: «Bahía 02», «Cubierta», «Baja», «Hecho», «Total». El rótulo
    de la tira de bahías que el conductor de T-99 busca («BAHÍA nn (») cambia con el
    conductor, en la misma entrega.
+   T-143 (O-139-2, 10.117) llevó a esta regla los tres textos de T-112 que la rompían en
+   pantalla: «Peso total» en la tarjeta del viaje y «Lleno» y «Vacío» en la Lista (y «Sin
+   dato» en lugar de «N/A», regla 4). Las exportaciones no cambian: el PDF ya decía «Peso
+   total», «Lleno» y «Vacío», y el CSV «lleno» y «vacío».
 4. Sin «N/A»: «sin dato», «no declarado», «sin posición».
 5. Los números son el dato principal: tabulares, agrupados («MSCU 123456 7», «28 650 kg»),
    una sola unidad en pantalla («28.7 t»), porcentaje con espacio («91 %»), posiciones
@@ -863,7 +874,7 @@ de selección.
 |---|---|---|---|---|
 | Papel / noche | `surface`, `scaffoldBackgroundColor` | `#F5F8FC` | `#07111F` | El fondo. De noche lleva la rejilla de plano: líneas cada 32 dp en acero al 5 % (`BsFondoDePlano`), solo en oscuro |
 | Hoja / panel | `surfaceContainerLowest` (día), `surfaceContainerLow` (noche) | `#FFFFFF` | `#0C1A31` | Tarjetas, paneles, hojas, el casco de la silueta |
-| Hoja alta / panel alto | `surfaceContainerHigh` | `#E9EFF7` | `#11223F` | Fila activa, chips de estado («Publicado»), la celda de paso, la banda de información |
+| Hoja alta / panel alto | `surfaceContainerHigh` | `#E9EFF7` | `#11223F` | Fila activa, chips de estado («Publicada»), la celda de paso, la banda de información |
 | Tinta | `onSurface` | `#10243F` | `#EAF0F9` | Texto, iconos, cifras |
 | Tinta suave | `onSurfaceVariant` | `#4A5B73` | `#A9B9D2` | Texto secundario, rótulos, el código de la celda atenuada |
 | Tinta tenue | `BsColoresSemanticos.tintaTenue` | `#566986` | `#8DA0BE` | Metadatos terciarios: el momento de un evento, «18 en la bahía 14», los números de bahía no seleccionados |
@@ -1092,7 +1103,7 @@ los valores de 13.1. Buques y números sintéticos (TSTU con dígito de control)
 **9.2 bis · Plano por bahía a 1920 px, de noche (la oficina)**
 ```
 ┌─────┬────────────────────────────────────────────────────────────────────────────────┬────────────────────┐
-│ [▣] │ BUQUE MANUAL  (Publicado)   Viaje M100 · Escala GTSTC     ◉ Descarga ○ Carga   │ ● Al día 3 equipos │ 56
+│ [▣] │ BUQUE MANUAL  (Publicada)   Viaje M100 · Escala GTSTC     ◉ Descarga ○ Carga   │ ● Al día 3 equipos │ 56
 │     │                                                           [ Número, OR o celda 🔍 ] │                    │
 │ ⌂   ├────────────────────────────────────────────────────────────────────────────────┴────────────────────┤
 │ In  │ ┌ Bahías de proa a popa ─ avance de la descarga en GTSTC bajo cada bahía ──────┐ ┌──────┐ ┌──────┐ │
@@ -1902,11 +1913,40 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
 
 ### 14.8 La cabecera y la franja de la bahía, medidas
 
-- **La cabecera** (`cabecera-de-oficina`): el buque y el viaje, el estado («Publicado» o «Sin
-  confirmar») y el selector de modo; siempre en el borde derecho, Buscar, la nube y el botón del
+- **La cabecera** (`cabecera-de-oficina`): el buque y el viaje, el estado y el selector de
+  modo; siempre en el borde derecho, Buscar, la nube y el botón del
   panel. Con `BsPrimeraQueCabe`: en una línea con los segmentos; si no caben, en una línea con el
   menú; si tampoco, en dos líneas, el título arriba y el estado con el menú abajo (la regla de la
   corrección de 10.21).
+- **El estado** (`cabecera-estado`; T-143, 10.117) es una sola regla para los tres clientes,
+  `estadoDeLaOperacion` en `formatters/operation_text.dart`, que también lee «Nube y cuenta».
+  La palabra de la nube va solo cuando la operación está en la nube:
+
+  | Cuándo | La píldora | La frase (descripción emergente y etiqueta) | «Nube y cuenta» |
+  |---|---|---|---|
+  | `Previo` | Sin confirmar | Sin confirmar: confirma el perfil del buque para operar | — |
+  | Confirmado aquí; la operación no está publicada, o no hay operación | Confirmado | Confirmado en este equipo: la operación todavía no está en la nube | Solo en este dispositivo |
+  | Operación publicada y abierta | Publicada | Publicada en la nube | Publicada |
+  | Operación cerrada (guardada aquí, o vista por el motor en la nube) | Cerrada | Cerrada por la oficina: ya no se registran movimientos | Publicada y cerrada |
+
+  La red no cambia el estado: sin red la operación sigue «Publicada» y el chip dice «Sin
+  conexión». El muelle se entera del cierre por la escucha del documento de la operación,
+  sin registrar nada; sin red, al volver la red. En el teléfono no hay píldora: el estado se
+  lee en «Nube y cuenta» y en la descripción del ícono de la nube.
+- **La excepción de «Confirmado»** (Carlos y Yov, 11-nov). La regla de T-131 fija la cabecera
+  de 1366 dp con la letra a 2.0 en una línea de 92 dp. «Confirmado» mide 128.4 px a esa letra,
+  18.9 más que el «Publicado» de antes, y ahí no cabe. **Solo en el estado «Confirmado» y solo
+  cuando no cabe**, la cabecera va en dos líneas (144 dp a 1366 con la letra a 2.0), sin nada
+  cortado. Es un estado de paso: al publicar, vuelve a una línea, con la misma bahía, el mismo
+  zoom y el mismo desplazamiento de la rejilla. Con «Publicada» (109.2 px) y «Cerrada» (87.3 px)
+  la línea de 92 dp sigue exigida, y a 1920 dp con la letra a 2.0, donde trabajan los
+  planificadores, «Confirmado» va en una línea (`test/t131_cabeceras_test.dart`, el grupo «el
+  estado “Confirmado” (T-143)»).
+  Todo esto vale para la identidad de referencia de T-131: BUQUE MANUAL con un viaje de cuatro
+  caracteres (V117). Con un nombre o un viaje más largos, la cabecera puede ir en dos líneas
+  también con «Publicada» o «Cerrada», por la regla general de 14.8, sin nada cortado (T-143,
+  corrección 1, T143-ACC-02: BUQUE MANUAL · A143B a 1366 con la letra a 2.0). La cabecera se
+  rehace en el frente de usabilidad.
 - **La franja de la bahía** (`franja-de-la-bahia`): ‹ y › (la bahía anterior y la siguiente,
   `bahia-anterior` y `bahia-siguiente`); el título «Bahía 10», que abre la lista de bahías
   (`bahia-elegir`); a la derecha «Colorear por» (`colorear-por`), el zoom (`ZoomDelPlano`), «OR /
@@ -2239,7 +2279,7 @@ códigos de puerto y de naviera; `formatearCuenta` donde una palabra concuerda (
 **1920 × 1080 · la oficina de noche, el panel lateral oculto; contenido a 1 440, centrado**
 ```
 ┌─────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│[▣]  │ BUQUE MANUAL  (Publicado)   Viaje M100 · Escala GTSTC                            Buscar · Nube · Panel   │
+│[▣]  │ BUQUE MANUAL  (Publicada)   Viaje M100 · Escala GTSTC                            Buscar · Nube · Panel   │
 │ ⌂   ├──────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ ▦   │   977                                                                         [ ▦ Ver como tabla ]       │
 │ ☰   │   contenedores a bordo                                                                                   │
@@ -2593,3 +2633,46 @@ para que lo que está bajo el puntero quede donde estaba:
    desplazaba la columna.
 6. **La barra de Material sirvió fuera de su desplazable**, como pedía la propuesta probarlo: no hizo
    falta una propia.
+
+## 17. El lector y el volcado (T-144; 10.123)
+
+Lo que cambia en pantalla con T-144. El lector, el modelo y el CSV están en `docs/T144-RESULTADOS.md`.
+
+### 17.1 El detalle del contenedor (`DetalleContenedor`)
+
+- **Varias peligrosas.** Con una sola declaración DGS, la señal dice lo de siempre: «Carga peligrosa · IMO 3» y, debajo, «UN 1993». Con dos o más, el título dice «Carga peligrosa · 2 declaraciones» y va una línea por declaración, en el orden del archivo: «IMO 3 · UN 1993», «IMO 8 · UN 1760». Lo que falta se dice: «IMO sin clase», «sin número ONU». Es lo que ya hacían las celdas reservadas.
+- **«Destino final»** es una fila nueva, debajo de «Puerto de descarga», solo si el archivo trae LOC+83. Va **tal cual viene**, sin validar y sin color: en el corpus suele ser texto libre («US − USHOU», «COL»).
+- **Sobredimensionado.** La señal suma una línea con lo que declara el DIM, en el orden frente, atrás, izquierda, derecha y alto: «Frente 30 cm · Izquierda 20 cm · Alto 25 cm», con espacio duro antes de la unidad (11, regla 5). Si el DIM no trae medidas legibles: «Medidas no declaradas».
+- **La insignia de la celda, la leyenda «OOG», la Lista y las estadísticas** ya leían `isOverDimension`; desde T-144 el lector lo llena. La prioridad de la insignia no cambia: peligrosa, refrigerado y OOG. El detalle muestra las tres señales.
+
+### 17.2 La Lista
+
+- **La etiqueta de peligrosa** dice «IMO 3» con una declaración y «IMO 3 +1» con dos (la clase de la primera, en el orden del archivo). El lector de pantalla oye todas: «Carga peligrosa: IMO 3 e IMO 8». Probado a 360 dp con letra 1.0, 1.45 y 2.0, sin nada cortado.
+- **La hoja de detalle de la Lista,** con dos o más declaraciones, da una fila por declaración: «Declaración 1», «IMO 3 · UN 1993».
+
+### 17.3 La matrícula
+
+La matrícula se guarda **sin espacios y en mayúsculas** (`numeroDeContenedor`), como pide la guía SMDG 2.2.1 («one continuous string»), y se sigue mostrando agrupada con `formatearContenedor`: «BYSU 967209 5». La búsqueda acepta el número con o sin espacios, y resalta en el resultado la parte que coincide, con o sin espacios (T-146, O-144-1). No se completa a 11 posiciones.
+
+### 17.4 Los avisos de lectura del resumen del viaje
+
+Dos tipos nuevos, con el mismo aspecto que los de T-108 (una línea de resumen y la fuente completa a un toque):
+
+| Tipo | Línea de resumen | Al tocarla |
+|---|---|---|
+| `locode` | «Códigos de puerto que no son UN/LOCODE: 2 contenedores · revisa esos puertos con la agencia» («casos» si alguno es de la cabecera o de una celda reservada) | «MSCU1234567: LOC+11 «ZZABC»: el país ZZ no existe en ISO 3166-1»; «Cabecera: LOC+5 «…»: no tiene la forma de un UN/LOCODE (2 letras de país y 3 de lugar)» |
+| `dimension` | «Medidas DIM revisadas: 1 contenedor · revisa esas medidas antes de estibar» | «MSCU1234567: DIM+9 en INH convertido a 25 cm» |
+
+Se validan los puertos con que opera la app (9, 11 y 13 en la 2.x; 6 y 12 en la 1.5; 5 y 61 en la cabecera). No se avisan el relleno de asteriscos (`*****`), los códigos de convenio `XX…` (`XXOPT`, `XXVSL`) ni los de la agencia 112 (US Census). `XX…` se muestra tal cual y no entra en la tabla fija de puertos (5.3): como cualquier código fuera de ella, usa la ranura calculada.
+
+Los dos tipos se guardan aparte (`extraReadNotices`), para que la 1.0.0 siga abriendo «Recientes» (10.123).
+
+### 17.5 El título del detalle no corta la matrícula (corrección 2; 10.127)
+
+- **`BsNumeroDeContenedor` nunca se corta ni lleva elipsis.** Si no cabe en una línea, envuelve por sus grupos («TSTU» / «144000» / «2»), que es donde `formatearContenedor` pone los espacios; un grupo no se parte.
+- **En el título del detalle,** la matrícula y la naviera van en un `OverflowBar`:
+  - si caben juntas, se ven como antes: la matrícula a la izquierda y la naviera a la derecha, centradas en la misma línea;
+  - si no, la naviera baja a la línea siguiente, alineada a la izquierda;
+  - el ícono sigue a la izquierda.
+- **Con la matrícula de 11 posiciones y una naviera de seis letras,** con las fuentes del producto, solo a 360 dp con letra 2.0 baja la naviera. A 360 dp con 1.0 y 1.45, y a 600 dp con 1.0, 1.45 y 2.0, todo queda en una línea, como antes.
+- **La etiqueta accesible** lleva la matrícula completa («TSTU 144000 2»).

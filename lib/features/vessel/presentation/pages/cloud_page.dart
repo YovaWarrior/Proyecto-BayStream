@@ -218,11 +218,13 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         operator.authorized &&
         operator.role == OperatorRole.office;
     final sync = ref.watch(operationSyncProvider).value;
+    // T-143 (O-139-1): el cierre que el motor vio en la nube cuenta aunque la
+    // operación local todavía no se haya vuelto a leer.
+    final closed = operationIsClosed(operation, status);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('${operation.vesselName} · ${voyageNumberLabel(operation.voyageNumber)} · ${operation.portOfCall}'),
-      Text(operation.published
-          ? (operation.closed ? 'Publicada y cerrada' : 'Publicada')
-          : 'Solo en este dispositivo'),
+      Text(textoDeLaOperacionEnLaNube(operation, status),
+          key: const ValueKey('cloud-operation-state')),
       // T-130: las fuentes, con el viaje que declara un plan agregado.
       Text(fuentesDeLaOperacion(operation),
           key: const ValueKey('cloud-sources')),
@@ -236,13 +238,14 @@ class _CloudPageState extends ConsumerState<CloudPage> {
             onPressed: _busy || sync == null ? null : () => _publish(operation),
             child: const Text('Publicar operación'),
           ),
-        if (office && operation.published && !operation.closed)
+        if (office && operation.published && !closed)
           OutlinedButton(
             key: const ValueKey('close-operation-button'),
             onPressed: _busy || sync == null ? null : () => _close(operation),
             child: const Text('Cerrar operación'),
           ),
-        if (operation.published && syncStatusNeedsAction(status))
+        // T-143: con la operación cerrada, reintentar se rechaza otra vez.
+        if (operation.published && !closed && syncStatusNeedsAction(status))
           OutlinedButton(
             key: const ValueKey('retry-button'),
             onPressed: _busy || sync == null
@@ -300,6 +303,8 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       ),
     );
     if (confirmed != true) return;
+    // T-143: el aviso del cierre es para quien no cerró.
+    ref.read(operacionesCerradasAquiProvider.notifier).anotar(operation.id);
     await _run(operation: 'cerrar la operación', () async {
       final sync = await ref.read(operationSyncProvider.future);
       return (await sync.close(operation.id)).fold((f) => f.message, (_) {

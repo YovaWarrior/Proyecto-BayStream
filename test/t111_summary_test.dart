@@ -91,7 +91,7 @@ void main() {
         for (final text in [
           'Contenedores',
           'Bahías',
-          'Peso Total',
+          'Peso total',
           _weight(voyage),
         ]) {
           _singleLine(tester, text, scale);
@@ -116,7 +116,7 @@ void main() {
         (tester) async {
       final voyage = _voyage();
       await _pump(tester, voyage, width: 1280, scale: scale);
-      final positions = ['Contenedores', 'Bahías', 'Peso Total']
+      final positions = ['Contenedores', 'Bahías', 'Peso total']
           .map((label) => tester.getCenter(find.text(label)))
           .toList();
       expect(positions[0].dy, positions[1].dy);

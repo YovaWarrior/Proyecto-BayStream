@@ -37,7 +37,11 @@ String syncStatusText(SyncStatus status) {
       SyncState.unconfirmed => 'Sesión sin confirmar desde las '
           '${_clock(status.since!)} · inicia sesión de nuevo',
     },
-    if (status.rejected > 0)
+    // T-143: con la operación cerrada, registrar de nuevo se rechaza otra vez.
+    if (status.rejected > 0 && status.closed)
+      '${_count(status.rejected, 'rechazado', 'rechazados')}: la operación ya '
+          'estaba cerrada'
+    else if (status.rejected > 0)
       status.rejected == 1
           ? '1 rechazado por la nube, fuera del plan: regístralo de nuevo si hace falta'
           : '${status.rejected} rechazados por la nube, fuera del plan: regístralos '

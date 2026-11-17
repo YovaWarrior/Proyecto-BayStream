@@ -1,5 +1,6 @@
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../entities/entities.dart';
+import 'container_number.dart';
 import 'departure_baplie_review.dart';
 
 /// T-82 · Salida local en la versión del plan de carga. Para lo que sigue a
@@ -689,10 +690,11 @@ class DepartureBaplieWriter {
             .split('+')
             .elementAtOrNull(2)
             ?.split(':')
-            .first
-            .replaceAll(' ', '')
-            .trim();
-        if (value != null && value.isNotEmpty) container = value;
+            .first;
+        // T-144: la misma clave que el plan (sin espacios y en mayúsculas).
+        if (value != null && value.trim().isNotEmpty) {
+          container = numeroDeContenedor(value);
+        }
       }
     }
     finish();
@@ -732,10 +734,9 @@ class DepartureBaplieWriter {
             .split('+')
             .elementAtOrNull(2)
             ?.split(':')
-            .first
-            .replaceAll(' ', '')
-            .trim();
-        if (id?.isNotEmpty == true) container = id;
+            .first;
+        // T-144: la misma clave que el plan (sin espacios y en mayúsculas).
+        if (id != null && id.trim().isNotEmpty) container = numeroDeContenedor(id);
       }
       start = i + 1;
     }

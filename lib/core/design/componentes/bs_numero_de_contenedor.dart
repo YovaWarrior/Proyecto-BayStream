@@ -8,6 +8,12 @@ import '../bs_tipografia.dart';
 ///
 /// El [estilo] solo cambia tamaño, peso o color: la familia mono y las cifras
 /// tabulares se mantienen siempre.
+///
+/// T-144, corrección 2 (10.127): **nunca se corta ni lleva elipsis**. Si no
+/// cabe en una línea, envuelve por sus grupos (propietario, serie y dígito),
+/// que es donde `formatearContenedor` pone los espacios: el número es el dato
+/// que identifica el contenedor y tiene que verse entero (RNF-003 en
+/// `DESIGN.md` 10, y 17.5).
 class BsNumeroDeContenedor extends StatelessWidget {
   /// Crea el número a partir del identificador tal como lo trae el archivo.
   const BsNumeroDeContenedor(this.numero, {super.key, this.estilo});
@@ -31,8 +37,7 @@ class BsNumeroDeContenedor extends StatelessWidget {
         fontFamilyFallback: BsFuentes.respaldo,
         fontFeatures: cifrasTabulares,
       ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+      softWrap: true,
       semanticsLabel: texto,
     );
   }

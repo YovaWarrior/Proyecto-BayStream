@@ -36,8 +36,12 @@ String _declared(String version) =>
 void main() {
   final parser = BaplieParserService();
   final smdg21 = File('test/fixtures/t86_smdg21.edi').readAsStringSync();
-  final smdg15 =
-      smdg21.replaceFirst('BAPLIE:D:95B:UN:SMDG21', smdg15MessageIdentifier);
+  // T-144: una 1.5 declara los puertos con LOC+6 y LOC+12 (guía SMDG 1.5,
+  // p. 20); con 9 y 11 el lector ya no los toma como puertos.
+  final smdg15 = smdg21
+      .replaceFirst('BAPLIE:D:95B:UN:SMDG21', smdg15MessageIdentifier)
+      .replaceFirst('LOC+9+', 'LOC+6+')
+      .replaceFirst('LOC+11+', 'LOC+12+');
   // Una 1.x sintética distinta de la 1.5.
   final smdg10 =
       smdg21.replaceFirst('BAPLIE:D:95B:UN:SMDG21', 'BAPLIE:1:911:UN:SMDG10');

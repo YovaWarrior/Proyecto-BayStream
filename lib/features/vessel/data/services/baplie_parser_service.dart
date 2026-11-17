@@ -5,7 +5,9 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../../../core/utils/voyage_number.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/entities/dangerous_goods.dart';
+import '../../domain/services/container_number.dart';
 import '../../domain/services/iso6346_check_digit.dart';
+import '../../domain/services/un_locode.dart';
 
 /// Servicio para parsear la familia BAPLIE 2.x (EDIFACT).
 /// 
@@ -67,7 +69,7 @@ class BaplieParserService {
   VesselVoyage _parseSegments(List<String> segments) {
     // La cabecera decide si este lector aplica, antes del buque o la carga.
     _readingTags = 'UNH';
-    _validateVersion(segments);
+    final smdg15 = _validateVersion(segments);
 
     // Extraer información del buque (TDT)
     _readingTags = 'TDT';
@@ -85,7 +87,8 @@ class BaplieParserService {
     if (missing.isNotEmpty) {
       notices[BaplieReadNoticeKind.incomplete] = missing;
     }
-    final cargo = _parseCargo(segments, notices);
+    _checkHeaderLocodes(segments, notices);
+    final cargo = _parseCargo(segments, notices, smdg15: smdg15);
     _readingIndex = null;
     _readingTags = 'BGM y LOC';
     final containers = cargo.containers;
@@ -139,7 +142,10 @@ class BaplieParserService {
   /// UNH/S009: tipo, versión, liberación, agencia y asociación SMDG.
   /// Mismo conjunto admitido por el escritor de salida de T-82, más la 1.5
   /// (T-103), que se lee con las reglas de 2.x y la pantalla lo avisa.
-  void _validateVersion(List<String> segments) {
+  ///
+  /// Devuelve si el mensaje es la 1.5, que declara los puertos del contenedor
+  /// con otros calificadores (T-144).
+  bool _validateVersion(List<String> segments) {
     final headers = segments.where((s) => s.startsWith('UNH+')).toList();
     final header = headers.firstOrNull;
     final firstCargo = segments.indexWhere((s) => s.startsWith('LOC+147+'));
@@ -156,7 +162,7 @@ class BaplieParserService {
         ((components.take(4).join(':') == 'BAPLIE:D:95B:UN' &&
                 {'SMDG20', 'SMDG21', 'SMDG22'}.contains(components[4])) ||
             identifier == smdg15MessageIdentifier)) {
-      return;
+      return identifier == smdg15MessageIdentifier;
     }
     final version = identifier == null || identifier.isEmpty
         ? 'sin UNH/S009 reconocible'
@@ -358,6 +364,29 @@ class BaplieParserService {
     return null;
   }
 
+  /// T-144 · RNF-008: los puertos de la cabecera (LOC+5 y LOC+61) que no son
+  /// UN/LOCODE se avisan, sin rechazar el archivo ni cambiar lo que se lee.
+  void _checkHeaderLocodes(List<String> segments,
+      Map<BaplieReadNoticeKind, List<String>> notices) {
+    for (final segment in segments) {
+      if (_getSegmentType(segment) != BaplieConstants.segmentLOC) continue;
+      final location = _parseLOC(segment);
+      if (location == null) continue;
+      if (location.qualifier == BaplieConstants.locStowageCell) break;
+      if (location.qualifier != BaplieConstants.locPlaceOfDeparture &&
+          location.qualifier != BaplieConstants.locNextPortOfCall) {
+        continue;
+      }
+      final problem =
+          problemaDeUnLocode(location.locationCode, agencia: location.agency);
+      if (problem != null) {
+        notices.putIfAbsent(BaplieReadNoticeKind.locode, () => []).add(
+            'Cabecera: LOC+${location.qualifier} «${location.locationCode}»: '
+            '$problem');
+      }
+    }
+  }
+
   /// Próxima escala declarada en la cabecera, antes de la primera celda.
   String? _findNextPortOfCall(List<String> segments) {
     for (final segment in segments) {
@@ -490,7 +519,16 @@ class BaplieParserService {
   /// Por esto, acumulamos los pesos temporalmente hasta encontrar el EQD
   ({List<ContainerUnit> containers, List<ReservedSlot> reservedSlots})
       _parseCargo(List<String> segments,
-          Map<BaplieReadNoticeKind, List<String>> notices) {
+          Map<BaplieReadNoticeKind, List<String>> notices,
+          {required bool smdg15}) {
+    // T-144: la 1.5 declara los puertos con 6 y 12 (guía SMDG 1.5, p. 20); la
+    // 2.x con 9 y 11 (guía 2.2.1, p. 21). El calificador va atado a la versión.
+    final loadingQualifier = smdg15
+        ? BaplieConstants.locPortOfLoadingV15
+        : BaplieConstants.locPortOfLoading;
+    final dischargeQualifier = smdg15
+        ? BaplieConstants.locPortOfDischargeV15
+        : BaplieConstants.locPortOfDischarge;
     final containers = <ContainerUnit>[];
     final reservedSlots = <ReservedSlot>[];
     
@@ -501,6 +539,12 @@ class BaplieParserService {
         notices.putIfAbsent(kind, () => []).add(detail);
     String? currentPortOfLoading;
     String? currentPortOfDischarge;
+    String? currentFinalDestination;
+    // T-144: códigos de puerto del grupo que no son UN/LOCODE (RNF-008).
+    final locodeProblems = <String>[];
+    // T-144: lecturas de DIM que llegan antes del EQD, y sus avisos.
+    final pendingDimensions = <_DimReading>[];
+    final dimensionNotices = <String>[];
     
     // Acumuladores temporales para pesos (pueden venir antes del EQD)
     double? pendingGrossWeight;
@@ -520,7 +564,8 @@ class BaplieParserService {
         if (builder.containerId != null) {
           final number = builder.containerId!;
           containers.add(builder.build(_uuid.v4(), currentPosition,
-              currentPortOfLoading, currentPortOfDischarge));
+              currentPortOfLoading, currentPortOfDischarge,
+              currentFinalDestination));
           if (rawPosition != null && currentPosition == null) {
             notice(BaplieReadNoticeKind.position, '$number: $rawPosition');
           }
@@ -531,9 +576,22 @@ class BaplieParserService {
             notice(BaplieReadNoticeKind.weight,
                 '$number: ${weightNotices.join('; ')}');
           }
+          if (locodeProblems.isNotEmpty) {
+            notice(BaplieReadNoticeKind.locode,
+                '$number: ${locodeProblems.join('; ')}');
+          }
+          if (dimensionNotices.isNotEmpty) {
+            notice(BaplieReadNoticeKind.dimension,
+                '$number: ${dimensionNotices.join('; ')}');
+          }
         } else if (currentPosition != null) {
           reservedSlots.add(builder.buildReserved(currentPosition,
               currentPortOfLoading, currentPortOfDischarge));
+          if (locodeProblems.isNotEmpty) {
+            notice(BaplieReadNoticeKind.locode,
+                'Celda reservada ${currentPosition.toIsoCode()}: '
+                '${locodeProblems.join('; ')}');
+          }
         }
       }
       containerBuilder = null;
@@ -556,8 +614,12 @@ class BaplieParserService {
                 currentPosition = locResult.coordinate;
                 rawPosition = _getElements(segment)[2].split(':').first;
                 weightNotices.clear();
+                locodeProblems.clear();
+                pendingDimensions.clear();
+                dimensionNotices.clear();
                 currentPortOfLoading = null;
                 currentPortOfDischarge = null;
+                currentFinalDestination = null;
                 // Reiniciar pesos pendientes
                 pendingGrossWeight = null;
                 pendingVgmWeight = null;
@@ -566,13 +628,42 @@ class BaplieParserService {
                 pendingOperatorCode = null;
                 pendingDangerousGoods.clear();
                 break;
-              case BaplieConstants.locPortOfLoading: // 9
-                currentPortOfLoading = locResult.locationCode;
+              case BaplieConstants.locFinalDestination: // 83
+                // T-144: tal cual viene; en el corpus suele ser texto libre.
+                currentFinalDestination = locResult.locationCode;
                 break;
-              case BaplieConstants.locPortOfDischarge: // 11
-                currentPortOfDischarge = locResult.locationCode;
-                break;
+              default:
+                final qualifier = locResult.qualifier;
+                final isPort = qualifier == loadingQualifier ||
+                    qualifier == dischargeQualifier ||
+                    qualifier == BaplieConstants.locPortOfTranshipment;
+                if (qualifier == loadingQualifier) {
+                  currentPortOfLoading = locResult.locationCode;
+                } else if (qualifier == dischargeQualifier) {
+                  currentPortOfDischarge = locResult.locationCode;
+                }
+                // RNF-008: solo dentro de un grupo; la cabecera va aparte.
+                final problem = isPort && rawPosition != null
+                    ? problemaDeUnLocode(locResult.locationCode,
+                        agencia: locResult.agency)
+                    : null;
+                if (problem != null) {
+                  locodeProblems.add(
+                      'LOC+$qualifier «${locResult.locationCode}»: $problem');
+                }
             }
+          }
+          break;
+
+        case 'DIM':
+          // T-144 · RF-005: la sobredimensión (OOG).
+          final dim = _parseDIM(segment);
+          if (dim == null) break;
+          final builder = containerBuilder;
+          if (builder != null) {
+            builder.applyDimension(dim, dimensionNotices);
+          } else {
+            pendingDimensions.add(dim);
           }
           break;
 
@@ -611,7 +702,9 @@ class BaplieParserService {
           if (eqdResult != null) {
             // Crear nuevo contenedor
             final builder = _ContainerBuilder()
-              ..containerId = eqdResult.containerId
+              ..containerId = eqdResult.containerId == null
+                  ? null
+                  : numeroDeContenedor(eqdResult.containerId!)
               ..isoSizeType = eqdResult.isoSizeType
               ..status = eqdResult.status
               ..operatorCode = pendingOperatorCode
@@ -638,6 +731,10 @@ class BaplieParserService {
               builder.temperature = pendingTemperature.temperature;
               builder.temperatureUnit = pendingTemperature.unit;
             }
+            for (final dim in pendingDimensions) {
+              builder.applyDimension(dim, dimensionNotices);
+            }
+            pendingDimensions.clear();
             containerBuilder = builder;
           }
           break;
@@ -721,6 +818,7 @@ class BaplieParserService {
 
     final c517Components = _getComponents(elements[2]);
     final locationCode = _safeGetComponent(c517Components, 0); // e3225
+    final agency = _safeGetComponent(c517Components, 2); // e3055
 
     IsoCoordinate? coordinate;
     if (qualifier == BaplieConstants.locStowageCell && locationCode != null) {
@@ -730,6 +828,7 @@ class BaplieParserService {
     return _LocParseResult(
       qualifier: qualifier,
       locationCode: locationCode,
+      agency: agency,
       coordinate: coordinate,
     );
   }
@@ -861,6 +960,56 @@ class BaplieParserService {
     return (qualifier: qualifier!, weight: weight, notice: warning);
   }
 
+  /// T-144 · Segmento DIM (RF-005): `DIM+<e6145>+<unidad>:<largo>:<ancho>:<alto>`.
+  ///
+  /// Solo los calificadores 5 a 9 (guía SMDG 2.2.1, 06/2016, p. 18; 1.5,
+  /// 05/1993, p. 17); el 1 (carga suelta) y el 10 (equipo fuera de norma) no
+  /// son sobredimensión y se ignoran. Cada calificador lee **su** componente:
+  /// 5 y 6 el largo, 7 y 8 el ancho, 9 el alto. Un valor en otro componente no
+  /// se busca: sería adivinar a qué lado sobresale.
+  _DimReading? _parseDIM(String segment) {
+    final elements = _getElements(segment);
+    final qualifier = _safeGetElement(elements, 1);
+    final index = switch (qualifier) {
+      BaplieConstants.dimOverLengthFront ||
+      BaplieConstants.dimOverLengthRear =>
+        1,
+      BaplieConstants.dimOverWidthRight ||
+      BaplieConstants.dimOverWidthLeft =>
+        2,
+      BaplieConstants.dimOverHeight => 3,
+      _ => null,
+    };
+    if (qualifier == null || index == null) return null;
+    final components = _getComponents(_safeGetElement(elements, 2) ?? '');
+    final unit = _safeGetComponent(components, 0)?.toUpperCase();
+    final text = _safeGetComponent(components, index);
+    if (text == null) {
+      return _DimReading(
+          qualifier, null, 'DIM+$qualifier sin valor en su componente');
+    }
+    final value = double.tryParse(text);
+    if (value == null || !value.isFinite || value < 0) {
+      return _DimReading(qualifier, null,
+          'DIM+$qualifier con un valor que no es una medida («$text»)');
+    }
+    switch (unit) {
+      case 'CMT':
+      case 'CM':
+        return _DimReading(qualifier, value, null);
+      case 'INH':
+        final cm = (value * 2.54).roundToDouble();
+        return _DimReading(qualifier, cm,
+            'DIM+$qualifier en INH convertido a ${cm.toStringAsFixed(0)} cm');
+      case null:
+        return _DimReading(
+            qualifier, null, 'DIM+$qualifier sin unidad; sin esa medida');
+      default:
+        return _DimReading(qualifier, null,
+            'DIM+$qualifier con unidad desconocida $unit; sin esa medida');
+    }
+  }
+
   /// Parsea segmento NAD (Name and Address)
   /// 
   /// Formato: NAD+CA+ZIM:172:20'
@@ -972,13 +1121,25 @@ class _VesselParseResult {
 class _LocParseResult {
   final String qualifier;
   final String? locationCode;
+  final String? agency;
   final IsoCoordinate? coordinate;
 
   _LocParseResult({
     required this.qualifier,
     this.locationCode,
+    this.agency,
     this.coordinate,
   });
+}
+
+/// T-144 · Una medida DIM leída: [centimeters] nulo si no se pudo tomar, y
+/// [notice] con la causa cuando hace falta avisar.
+class _DimReading {
+  final String qualifier;
+  final double? centimeters;
+  final String? notice;
+
+  _DimReading(this.qualifier, this.centimeters, this.notice);
 }
 
 class _EqdParseResult {
@@ -1022,6 +1183,52 @@ class _ContainerBuilder {
   bool isReefer = false;
   double? temperature;
   String? temperatureUnit;
+  bool isOverDimension = false;
+  double? overLengthFront;
+  double? overLengthRear;
+  double? overWidthRight;
+  double? overWidthLeft;
+  double? overHeight;
+
+  /// T-144 · Una medida DIM 5 a 9. El contenedor queda sobredimensionado si
+  /// la medida es mayor que cero o no se pudo leer (el DIM lo declara). Un
+  /// calificador repetido con otro valor deja el mayor, con aviso: es el
+  /// criterio conservador para estibar.
+  void applyDimension(_DimReading dim, List<String> notices) {
+    if (dim.notice != null) notices.add(dim.notice!);
+    final value = dim.centimeters;
+    if (value == null) {
+      isOverDimension = true;
+      return;
+    }
+    if (value == 0) return;
+    isOverDimension = true;
+    final current = switch (dim.qualifier) {
+      BaplieConstants.dimOverLengthFront => overLengthFront,
+      BaplieConstants.dimOverLengthRear => overLengthRear,
+      BaplieConstants.dimOverWidthRight => overWidthRight,
+      BaplieConstants.dimOverWidthLeft => overWidthLeft,
+      _ => overHeight,
+    };
+    if (current != null && current != value) {
+      notices.add('DIM+${dim.qualifier} repetido '
+          '(${current.toStringAsFixed(0)} y ${value.toStringAsFixed(0)} cm); '
+          'se tomó el mayor');
+    }
+    final kept = current == null || value > current ? value : current;
+    switch (dim.qualifier) {
+      case BaplieConstants.dimOverLengthFront:
+        overLengthFront = kept;
+      case BaplieConstants.dimOverLengthRear:
+        overLengthRear = kept;
+      case BaplieConstants.dimOverWidthRight:
+        overWidthRight = kept;
+      case BaplieConstants.dimOverWidthLeft:
+        overWidthLeft = kept;
+      default:
+        overHeight = kept;
+    }
+  }
 
   ReservedSlot buildReserved(IsoCoordinate position, String? portOfLoading,
       String? portOfDischarge) => ReservedSlot(
@@ -1046,6 +1253,7 @@ class _ContainerBuilder {
     IsoCoordinate? position,
     String? portOfLoading,
     String? portOfDischarge,
+    String? finalDestination,
   ) {
     return ContainerUnit(
       id: id,
@@ -1058,6 +1266,7 @@ class _ContainerBuilder {
       tareWeight: tareWeight,
       portOfLoading: portOfLoading,
       portOfDischarge: portOfDischarge,
+      finalDestination: finalDestination,
       operatorCode: operatorCode,
       isDangerous: isDangerous,
       imdgClass: imdgClass,
@@ -1066,6 +1275,12 @@ class _ContainerBuilder {
       isReefer: isReefer,
       temperature: temperature,
       temperatureUnit: temperatureUnit,
+      isOverDimension: isOverDimension,
+      overHeight: overHeight,
+      overWidthLeft: overWidthLeft,
+      overWidthRight: overWidthRight,
+      overLengthFront: overLengthFront,
+      overLengthRear: overLengthRear,
     );
   }
 }

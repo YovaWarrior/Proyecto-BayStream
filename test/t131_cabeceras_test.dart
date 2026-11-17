@@ -18,13 +18,19 @@
 // Buque y números sintéticos; las cuentas son sintéticas.
 import 'package:baystream/core/design/design.dart';
 import 'package:baystream/features/vessel/domain/repositories/session_repository.dart';
+import 'package:baystream/features/vessel/presentation/pages/vessel_overview_page.dart';
+import 'package:baystream/features/vessel/presentation/providers/movement_log_provider.dart';
+import 'package:baystream/features/vessel/presentation/providers/plano_providers.dart';
+import 'package:baystream/features/vessel/presentation/providers/vessel_providers.dart';
 import 'package:baystream/features/vessel/presentation/widgets/loading_plan_controls.dart'
     show SelectorDelModo;
 import 'package:flutter/foundation.dart' show precisionErrorTolerance;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/t117_oficina_support.dart' show t117TextosCortados;
 import 'support/t131_cabeceras_support.dart';
 
 /// La regla para caber (13.12), en el `BsPrimeraQueCabe` que eligió la forma:
@@ -217,15 +223,23 @@ void main() {
     });
 
     // Los controles mandan y la cabecera no crece por el distintivo (Carlos,
-    // 3-nov): con cualquier cuenta es la misma que sin cuenta.
+    // 3-nov): con cualquier cuenta es la misma que sin cuenta. T-143: con la
+    // operación publicada o cerrada; el plano solo confirmado aquí tiene sus
+    // propios casos (el grupo de «Confirmado», más abajo).
+    for (final cerrada in <bool>[false, true]) {
     for (final ancho in <double>[600, 1366]) {
       for (final letra in <double>[1.0, 2.0]) {
         testWidgets(
-            'la cabecera de la oficina a ${ancho.toInt()} con la letra a $letra '
+            'la cabecera de la oficina a ${ancho.toInt()} con la letra a $letra, '
+            '${cerrada ? 'cerrada' : 'publicada'}, '
             'es la misma que sin distintivo: el alto, las líneas y el selector',
             (tester) async {
+          final operacion = t131Operacion(cerrada: cerrada);
           final cambiar = await t131Pump(tester, T131Cabecera.cabecera,
-              tamano: Size(ancho, ancho == 600 ? 800 : 768), letra: letra);
+              tamano: Size(ancho, ancho == 600 ? 800 : 768),
+              letra: letra,
+              operacion: () => operacion);
+          expect(find.text(cerrada ? 'Cerrada' : 'Publicada'), findsOneWidget);
           final sinCuenta = _laCabecera(tester);
           if (ancho == 1366 && letra == 2.0) {
             expect(sinCuenta.alto, 92, reason: 'en 92 dp');
@@ -246,6 +260,7 @@ void main() {
           expect(tester.takeException(), isNull);
         });
       }
+    }
     }
 
     for (final (letra, forma) in <(double, String)>[
@@ -391,6 +406,85 @@ void main() {
         });
       }
     }
+  });
+
+  // T-143 (O-139-7; Carlos y Yov, 11-nov) · La píldora dice «Confirmado» con
+  // el plano solo confirmado aquí, una palabra más ancha que «Publicado». Es
+  // la única excepción a la línea de 92 dp: solo en ese estado y solo cuando
+  // no cabe, la cabecera va en dos líneas (DESIGN.md 14.8). Con «Publicada» y
+  // «Cerrada», los casos de arriba siguen exigiendo la línea de 92 dp.
+  group('el estado «Confirmado» (T-143)', () {
+    testWidgets('a 1366 con la letra a 2.0: dos líneas de 144 dp, nada cortado',
+        (tester) async {
+      await t131Pump(tester, T131Cabecera.cabecera,
+          tamano: const Size(1366, 768), letra: 2.0);
+      final cabecera = T131Cabecera.cabecera.donde;
+      expect(find.descendant(of: cabecera, matching: find.text('Confirmado')),
+          findsOneWidget);
+      final forma = _laCabecera(tester);
+      expect(forma.alto, 144, reason: 'en 144 dp');
+      expect(forma.lineas, Wrap, reason: 'en dos líneas');
+      expect(t117TextosCortados(tester, cabecera), isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a 1920 con la letra a 2.0, donde trabajan los planificadores: '
+        'una línea', (tester) async {
+      await t131Pump(tester, T131Cabecera.cabecera,
+          tamano: const Size(1920, 1080), letra: 2.0);
+      final cabecera = T131Cabecera.cabecera.donde;
+      expect(find.descendant(of: cabecera, matching: find.text('Confirmado')),
+          findsOneWidget);
+      final forma = _laCabecera(tester);
+      expect(forma.lineas, Row, reason: 'en una línea');
+      expect(forma.alto, 92, reason: 'el alto de la línea única');
+      expect(t117TextosCortados(tester, cabecera), isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'al publicar, la cabecera pasa de dos líneas a una sin perder la bahía, '
+        'el zoom ni el desplazamiento del plano', (tester) async {
+      var operacion = t131Operacion(publicada: false);
+      await t131Pump(tester, T131Cabecera.cabecera,
+          tamano: const Size(1366, 768),
+          letra: 2.0,
+          operacion: () => operacion);
+      final scope = ProviderScope.containerOf(
+          tester.element(find.byType(VesselOverviewPage)));
+      // El planificador mira la bahía 006 al 200 % y desplazó la rejilla.
+      scope.read(selectedBayProvider.notifier).select(6);
+      scope.read(planZoomProvider.notifier).fijar(2.0);
+      await tester.pumpAndSettle();
+      ScrollPosition rejilla() => tester
+          .state<ScrollableState>(find
+              .descendant(
+                  of: find.byKey(const ValueKey('rejilla-horizontal')),
+                  matching: find.byType(Scrollable))
+              .first)
+          .position;
+      expect(rejilla().maxScrollExtent, greaterThan(0),
+          reason: 'al 200 % la rejilla se desplaza');
+      rejilla().jumpTo(rejilla().maxScrollExtent / 2);
+      await tester.pumpAndSettle();
+      final desplazamiento = rejilla().pixels;
+      expect(_laCabecera(tester).lineas, Wrap);
+      expect(find.text('Confirmado'), findsOneWidget);
+
+      // Publicar: la oficina vuelve a leer la operación (cloud_page.dart).
+      operacion = t131Operacion();
+      scope.read(operationSourcesRevisionProvider.notifier).changed();
+      await tester.pumpAndSettle();
+      expect(find.text('Publicada'), findsOneWidget);
+      final forma = _laCabecera(tester);
+      expect(forma.lineas, Row, reason: 'una línea');
+      expect(forma.alto, 92);
+      expect(scope.read(selectedBayProvider), 6, reason: 'la misma bahía');
+      expect(scope.read(planZoomProvider), 2.0, reason: 'el mismo zoom');
+      expect(rejilla().pixels, desplazamiento,
+          reason: 'el mismo desplazamiento de la rejilla');
+      expect(tester.takeException(), isNull);
+    });
   });
 }
 

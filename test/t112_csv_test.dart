@@ -48,6 +48,8 @@ void main() {
       'Sobreancho derecho (cm)',
       'Sobrelongitud frontal (cm)',
       'Sobrelongitud trasera (cm)',
+      // T-144: al final, sin mover ninguna columna.
+      'DGS declarados',
     ]);
     final header = rows(service.serializeCsv(voyage(const []))).single;
     expect(header, ExportService.csvHeaders);

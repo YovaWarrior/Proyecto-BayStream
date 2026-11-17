@@ -3,6 +3,7 @@ import 'iconos_del_dominio.dart';
 import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
+import '../../domain/services/container_number.dart';
 import '../providers/vessel_providers.dart';
 
 /// SearchDelegate para buscar contenedores por ID o puerto de descarga
@@ -73,15 +74,22 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
   }
 
   Widget _buildSearchResults(BuildContext context) {
-    if (query.isEmpty) {
+    // T-144, corrección 1 (10.125): una consulta que queda vacía al quitarle
+    // los espacios (también la tabulación y el espacio duro) es una consulta
+    // vacía. Si no, los filtros de puerto y naviera harían `contains('')`,
+    // que es verdadero para cualquier valor.
+    if (numeroDeContenedor(query).isEmpty) {
       return _buildEmptyState(context);
     }
 
     final normalizedQuery = query.toUpperCase().trim();
+    // T-144: la matrícula se busca sin espacios, como se guarda.
+    final numberQuery = numeroDeContenedor(query);
     
     // Buscar por ID de contenedor o puerto de descarga
     final results = containers.where((container) {
-      final matchesId = container.containerId.toUpperCase().contains(normalizedQuery);
+      final matchesId = numberQuery.isNotEmpty &&
+          container.containerId.toUpperCase().contains(numberQuery);
       final matchesPod = container.portOfDischarge?.toUpperCase().contains(normalizedQuery) ?? false;
       final matchesPol = container.portOfLoading?.toUpperCase().contains(normalizedQuery) ?? false;
       final matchesOperator = container.operatorCode?.toUpperCase().contains(normalizedQuery) ?? false;
@@ -350,10 +358,12 @@ class _ContainerSearchResultTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: _buildLeadingIcon(colorScheme),
+      // T-146 (O-144-1): la matrícula se resalta con la consulta sin
+      // espacios, la misma con la que se filtró; el puerto, con la consulta.
       title: _buildHighlightedText(
         context,
         container.containerId,
-        query,
+        numeroDeContenedor(query),
         style: const TextStyle(
           fontFamily: 'monospace',
           fontWeight: FontWeight.bold,

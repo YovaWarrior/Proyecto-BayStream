@@ -81,6 +81,22 @@ final syncStatusProvider = StreamProvider<SyncStatus>((ref) async* {
   yield* sync.follow(operation);
 });
 
+/// T-143 (O-139-1) · Las operaciones que se cerraron desde este equipo en
+/// esta sesión. El aviso del cierre es para quien no cerró: la oficina que
+/// pulsó «Cerrar operación» ya lo sabe. Se anota antes de cerrar en la nube,
+/// porque la escucha del documento puede traer el cierre antes de que
+/// termine la escritura.
+final operacionesCerradasAquiProvider =
+    NotifierProvider<OperacionesCerradasAqui, Set<String>>(
+        OperacionesCerradasAqui.new);
+
+class OperacionesCerradasAqui extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+
+  void anotar(String operationId) => state = {...state, operationId};
+}
+
 /// Operaciones guardadas en este dispositivo, para saber a cuáles ya se unió.
 final localOperationsProvider =
     FutureProvider.autoDispose<List<Operation>>((ref) async {

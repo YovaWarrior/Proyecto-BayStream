@@ -113,8 +113,9 @@ void main() {
     final record = codec.encodeVoyage(voyage);
     expect(RegExp('CSQU3054384').allMatches(record), hasLength(1));
     final restored = codec.decodeVoyage(record);
+    // T-144: los cuatro tipos de T-108 (los de T-144 tienen su prueba).
     expect(restored.readNotices.map((notice) => notice.kind),
-        BaplieReadNoticeKind.values);
+        BaplieReadNoticeKind.values.where((k) => k.readByV100));
     expect(restored.readNotices, voyage.readNotices);
     expect(restored.copyWith(voyageNumber: 'OTRO').readNotices,
         voyage.readNotices);
@@ -150,7 +151,8 @@ void main() {
         home: Scaffold(
             body: SingleChildScrollView(
                 child: VoyageSummaryCard(voyage: voyage)))));
-    for (final kind in BaplieReadNoticeKind.values) {
+    // T-144: los cuatro tipos de T-108; los de T-144 tienen su prueba.
+    for (final kind in BaplieReadNoticeKind.values.where((k) => k.readByV100)) {
       final notice = find.byKey(ValueKey('voyage-${kind.name}-notice'));
       expect(notice, findsOneWidget);
       await tester.tap(notice);

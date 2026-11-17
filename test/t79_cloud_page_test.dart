@@ -144,9 +144,10 @@ void main() {
     expect(
         syncStatusText(const SyncStatus(SyncState.upToDate,
             rejected: 1, otherAuthor: 2, localOnly: 7, closed: true)),
-        'Al día · 1 rechazado por la nube, fuera del plan: regístralo de nuevo '
-        'si hace falta · 2 de otra cuenta esperan a su autor · '
-        '7 movimientos sin cuenta: solo aquí · operación cerrada');
+        // T-143: con la operación cerrada no se invita a registrar de nuevo.
+        'Al día · 1 rechazado: la operación ya estaba cerrada · 2 de otra '
+        'cuenta esperan a su autor · 7 movimientos sin cuenta: solo aquí · '
+        'operación cerrada');
   });
 
   for (final brightness in Brightness.values) {

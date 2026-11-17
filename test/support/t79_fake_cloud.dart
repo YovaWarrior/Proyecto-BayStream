@@ -90,6 +90,17 @@ class FakeServer {
     return packed.entry;
   }
 
+  /// T-143 · La oficina cierra: el documento de la operación cambia y los
+  /// dispositivos con red lo reciben en la misma escucha que las fuentes; los
+  /// que no tienen red lo reciben al volver. (Asignar [closedAtValue] a mano
+  /// solo cambia lo que el servidor contesta, como antes.)
+  void closeOperation(DateTime at) {
+    closedAtValue = at;
+    for (final client in List.of(_clients)) {
+      client._emitSources();
+    }
+  }
+
   RemoteStoreException? _check(Movement movement) {
     if (authorization[movement.author.uid] != RemoteAuthorization.active) {
       return const RemoteStoreException(
@@ -143,11 +154,17 @@ class FakeCloud implements RemoteMovementStore {
 
   final _queued = <(Movement, Completer<void>)>[];
   final _listeners = <StreamController<RemoteSnapshot>>[];
-  final _sourcesListeners = <StreamController<SourceManifest>>[];
+  final _sourcesListeners = <StreamController<RemoteOperationDocument>>[];
 
   /// T-127 · Lo último que este dispositivo vio del manifiesto: su caché, lo
   /// que el SDK entrega sin red.
   SourceManifest _seenSources = SourceManifest.empty;
+
+  /// T-143 · La hora del cierre que este dispositivo vio por última vez.
+  DateTime? _seenClosedAt;
+
+  RemoteOperationDocument get _document =>
+      RemoteOperationDocument(_seenSources, closedAt: _seenClosedAt);
 
   /// T-127 · Cuántas bajadas de trozos fallarán antes de responder, y
   /// cuántas se pidieron.
@@ -252,21 +269,26 @@ class FakeCloud implements RemoteMovementStore {
   void _emitSources() {
     if (!online) return;
     _seenSources = server.manifest;
+    _seenClosedAt = server.closedAtValue;
     for (final listener in List.of(_sourcesListeners)) {
-      listener.add(server.manifest);
+      listener.add(_document);
     }
   }
 
   /// T-127 · Al suscribirse, con red, lo que tiene el servidor; sin red, lo
-  /// último visto (la caché del SDK). T-130: el manifiesto entero.
+  /// último visto (la caché del SDK). T-130: el manifiesto entero. T-143: y
+  /// la hora del cierre, del mismo documento.
   @override
-  Stream<SourceManifest> watchSources(String operationId) {
-    late final StreamController<SourceManifest> controller;
-    controller = StreamController<SourceManifest>(
+  Stream<RemoteOperationDocument> watchOperation(String operationId) {
+    late final StreamController<RemoteOperationDocument> controller;
+    controller = StreamController<RemoteOperationDocument>(
       onListen: () {
         _sourcesListeners.add(controller);
-        if (online) _seenSources = server.manifest;
-        controller.add(_seenSources);
+        if (online) {
+          _seenSources = server.manifest;
+          _seenClosedAt = server.closedAtValue;
+        }
+        controller.add(_document);
       },
       onCancel: () {
         _sourcesListeners.remove(controller);
