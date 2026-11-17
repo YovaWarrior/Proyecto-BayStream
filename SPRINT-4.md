@@ -3790,4 +3790,16 @@ Quién la acepta, GLM o Antigravity, lo decide Carlos cuando se entregue. El pro
 
 **Siguen pendientes de Carlos:** el recorrido de T-145; dónde van T-115, T-120, RNF-004 y O-134-2 (10.122); si Antigravity se queda como propone la 10.135; dónde viven sus datos de Windows (10.132), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.137**.
+### 10.137 · Las aceptaciones van con GLM 5.3 Flash, en Max; T-146 empezó (16-nov, 23:20)
+
+**Carlos lo decidió** (16-nov, 23:19): las aceptaciones las hace **GLM 5.3 Flash, con el esfuerzo en Max**, porque rinde más dentro de los límites de sesión de su plan. Aclara la 10.129, que trataba «Max» y «Flash» como dos modos: son dos cosas distintas, el modelo (GLM 5.3 o GLM 5.3 Flash) y el esfuerzo (Max).
+
+**Cómo queda:**
+- las aceptaciones, con GLM 5.3 Flash en Max. Yov sigue comprobando cada dictamen contra la carpeta, como hizo con Antigravity (10.135), y cada punto pide su evidencia guardada;
+- si una aceptación encuentra algo que pide investigar a fondo, esa parte sube a GLM 5.3, en Max;
+- Yov propone que Antigravity quede de respaldo para las aceptaciones con guion, con Gemini 3.8 Flash y en «Request Review»;
+- Timonel sigue con Claude Opus 5.5, en Alto.
+
+**T-146 empezó:** Carlos corrió la mezcla del instalador (`2ac872b`, con la 10.136 en `d10a83a`) y le pasó el prompt a Timonel.
+
+La siguiente decisión es la **10.138**.
