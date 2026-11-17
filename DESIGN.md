@@ -2652,7 +2652,7 @@ Lo que cambia en pantalla con T-144. El lector, el modelo y el CSV están en `do
 
 ### 17.3 La matrícula
 
-La matrícula se guarda **sin espacios y en mayúsculas** (`numeroDeContenedor`), como pide la guía SMDG 2.2.1 («one continuous string»), y se sigue mostrando agrupada con `formatearContenedor`: «BYSU 967209 5». La búsqueda acepta el número con o sin espacios. No se completa a 11 posiciones.
+La matrícula se guarda **sin espacios y en mayúsculas** (`numeroDeContenedor`), como pide la guía SMDG 2.2.1 («one continuous string»), y se sigue mostrando agrupada con `formatearContenedor`: «BYSU 967209 5». La búsqueda acepta el número con o sin espacios, y resalta en el resultado la parte que coincide, con o sin espacios (T-146, O-144-1). No se completa a 11 posiciones.
 
 ### 17.4 Los avisos de lectura del resumen del viaje
 

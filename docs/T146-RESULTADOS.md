@@ -2,9 +2,9 @@
 
 **Lo hace** Timonel (Claude Code, Claude Opus 5.5, en Alto), en `C:\Proyectos\baystream-rediseno`,
 rama `sprint-4`. **Lo acepta** GLM 5.3 Flash en Max (10.137), o quien diga Carlos. **Estado:
-fase 1 entregada; ALTO: Yov revisa y Carlos aprueba.** No se tocó `lib/`, `test/`, `tool/`
-ni `pubspec.*`: lo único nuevo en el repositorio es este informe. La evidencia está en
-`build/t146/` y `build/t145/t146-paso0/`, fuera de Git.
+fase 2 entregada (sección 6), con la propuesta aprobada en la 10.138.** La fase 1 está en las
+secciones 0 a 5, como se aprobó, con dos agregados de la 10.138 marcados como tales (en 1.2 y
+en 1.6). La evidencia está en `build/t146/` y `build/t145/t146-paso0/`, fuera de Git.
 
 ---
 
@@ -80,6 +80,21 @@ montada: no hay riesgo real. Lo que pasa es que la forma del código es la que l
 - **En las corridas de GLM la regla sí corrió en `test/`,** y solo marcó esas cuatro líneas.
   No encontré qué hace que el analizador evalúe esta regla en `test/` en unas corridas y en
   otras no. **No lo adivino:** lo dejo como causa abierta, y el arreglo no depende de ella.
+
+**Agregado de la 10.138 (lo que encontró Yov, y la sonda de la fase 2):**
+- **La regla no corre en las carpetas de pruebas, y es a propósito.** En el SDK de Dart, rama
+  estable de hoy (no comprobado en la 3.10.8), `pkg/linter/lib/src/rules/use_build_context_synchronously.dart`
+  registra su visitante solo `if (!context.isInTestDirectory)`, y `pkg/analyzer/lib/src/workspace/workspace.dart`
+  llama carpeta de pruebas a `test`, `integration_test`, `test_driver` o `testing`, bajo la raíz
+  del paquete. Es lo que midieron mis sondas, y por eso sirve el oráculo: `lib/zz_oraculo/test/`
+  no está bajo `<raíz>/test`.
+- **La causa de que GLM sí los viera: avisos guardados en la caché del analizador.** En la copia
+  de GLM tal cual, `flutter analyze --no-pub` sigue dando los 3 avisos de `t112`; con `dart analyze
+  --cache=<carpeta nueva>`, **cero**; con `dart analyze` y la caché de siempre, otra vez los 3
+  (sección 6.6). El contenido, el SDK y el comando son los mismos: lo que cambia es la caché.
+  De dónde salieron esos avisos guardados (la hipótesis de Yov: otro servidor de análisis, el de
+  un editor abierto sobre `baystream-qa-r4`, que vio esos archivos desde la carpeta de fuera) no
+  lo comprobé.
 
 **El oráculo: una forma determinista de ver lo que marcaría la regla.** Copio `test/` y `tool/`
 dentro de `lib/zz_oraculo/` de la copia, donde la regla corre siempre, y corro `analyze`:
@@ -401,6 +416,20 @@ del cierre en el Honor.
 | Windows, asistente | El manifiesto: 1.0.1.10, 13.13.1, 27 + 5, sin aviso de archivos viejos; el recorrido de Carlos | En «BayStream Prueba», 1.0.1.10 en Aplicaciones, la app abre y la carpeta no tiene los cinco `.lib`/`.exp` |
 | Web | `version.json` 1.0.1 (10); `t92_verify`; las tres huellas anotadas | `version.json` en vivo; las cinco cabeceras y un solo HSTS; la sesión de oficina en incógnito |
 
+**Nota de la 10.138 (cambia lo de arriba en dos puntos):**
+- **Antes de `flutter clean` se aparta TODA la carpeta `build\` de `proyecto-baystream`**, renombrada
+  a `C:\Proyectos\baystream-publicaciones\`, no solo `build\t93`: tiene 91 entradas, con 56 carpetas
+  de evidencia de los Sprints 2 y 3, la Web 1.0.0 y el `.zip` del SDK de C++. Las vueltas atrás
+  apuntan ahí. El `BayStream_1.0.1.0.msix` viejo (`ABBCD33B…`) se renombra al apartarlo.
+- **La vuelta de la MSIX:** `-ForceUpdateFromAnyVersion` existe (documentación de Microsoft de
+  `Add-AppxPackage`), pero la página no dice qué pasa con los datos: primero la copia de las dos
+  carpetas, y desinstalar y reinstalar queda de respaldo. **La vuelta del asistente** es desinstalar
+  (conserva los datos) e instalar el 1.0.0.9; no hace falta probar una versión menor encima.
+- **El `.zip` del SDK, de vuelta (la lectura que pidió Yov, sección 6.5):** copiar
+  `firebase_cpp_sdk_windows_13.13.1.zip` a `build\windows\x64\` antes de compilar **sí ahorra la
+  descarga**, porque CMake solo baja el archivo si no existe, y no comprueba su huella. Lo que no
+  ahorra es la extracción (8.5 GB), porque `extracted` no existe en la `build\` nueva.
+
 ### 1.7 Las pruebas
 
 **Lo nuevo:**
@@ -456,10 +485,12 @@ O-144-1, 2221. `flutter analyze` en cero en todo el paquete, aquí y en la copia
 
 ## 3. Observaciones
 
-- **O-146-1 (P3), la causa de O-144-2 queda abierta.** No encontré por qué el analizador evalúa
-  `use_build_context_synchronously` en `test/` en unas corridas y en otras no. El arreglo no
-  depende de ello, y el oráculo lo vuelve comprobable. Si vuelve a pasar con otro archivo, el
-  oráculo lo encuentra antes.
+- **O-146-1 (P3), la causa de O-144-2.** *Fase 1:* no encontré por qué el analizador evalúa
+  `use_build_context_synchronously` en `test/` en unas corridas y en otras no. *Fase 2, con lo de
+  Yov (10.138):* la regla no corre en las carpetas de pruebas, a propósito, y los avisos que vio
+  GLM salen de la caché del analizador: con una caché vacía, la copia de GLM da cero (6.6). Queda
+  sin comprobar de dónde salió lo guardado. El arreglo no depende de ello, y el oráculo lo vuelve
+  comprobable.
 - **O-146-2 (P3):** `tool/t93_msix.ps1` tiene `-Version 1.0.0.0` por omisión. Si alguien lo
   olvida, sale una MSIX 1.0.0.0 con el código de la 1.0.1. Para después: que lo lea de
   `msix_version`. En T-146 no se toca; el bloque de la lista pasa `-Version` siempre.
@@ -502,3 +533,346 @@ git push origin sprint-4
 > trampas: `flutter clean` borra `build\t93` con las MSIX de la vuelta atrás, y ahí ya hay un
 > `BayStream_1.0.1.0.msix` del 14-oct. La vuelta de la Web es la versión de Hosting del 10-nov, con
 > las cabeceras, y la de Android usa el `versionCode` 11.
+
+---
+
+# Fase 2 · La candidata (aprobada en la 10.138)
+
+## 6. Lo hecho
+
+**La punta al empezar:** `c777c86` (10.138, solo `SPRINT-4.md`) sobre `15fe1b1` (la propuesta,
+solo este informe) sobre `1c40d39`. Carlos confirmó los carriles. La 10.138 y el mensaje de
+aprobación dicen lo mismo.
+
+### 6.1 Lo que cambió, archivo por archivo
+
+| Archivo | Cambio | De |
+|---|---|---|
+| `pubspec.yaml` | `version: 1.0.1+10` y `msix_version: 1.0.1.0`; nada más | 1.1 |
+| `test/t112_localization_test.dart` | El prototipo aprobado, idéntico (`2258a067…` sin CR): `_RutaEmpujada`, `_esperarEspanol` y `_abrirSelectorDeFecha` | 1.2 |
+| `test/t121_estadisticas_test.dart` | El prototipo aprobado, idéntico (`2db270a2…`): `_esperarElFocoEn` | 1.2 |
+| `lib/features/vessel/presentation/widgets/container_search_delegate.dart` | El título del resultado se resalta con `numeroDeContenedor(query)`, con un comentario de dos líneas | 1.3 |
+| `test/t146_resaltado_busqueda_test.dart` (nuevo) | Las seis pruebas de 1.3 | 1.3 |
+| `DESIGN.md` | 17.3, la matrícula: «…y resalta en el resultado la parte que coincide, con o sin espacios (T-146, O-144-1)» | 1.3 |
+| `tool/t146_oraculo.dart` (nuevo) | El oráculo (6.3) | 1.2 |
+| `docs/MANUAL-USUARIO-1.0.1.md` (nuevo) | El manual de la 1.0.1 (6.4) | 1.4 |
+| `docs/manual-1.0.1/` (seis PNG nuevos) | Las figuras 13, 23, 24, 28, 41 y 42 (6.4) | 1.4 |
+| `docs/T146-RESULTADOS.md` | Este informe | — |
+
+`pubspec.lock` no cambia (la misma huella, `b035f52c…`). No se tocaron `lib/main.dart`, los dos
+congelados, el manual de la 1.0.0, `tool/t93_msix.ps1`, `windows/installer/`, `tool/t137_*`, la
+lista del piloto ni los cuatro archivos de Yov. Ningún `// ignore:`.
+
+**Lo que hice distinto de la propuesta:**
+- **La prueba 5 de O-144-1 usa «pamit», no «gtstc».** El resultado solo muestra el puerto de
+  descarga («POD: PAMIT»); GTSTC es el de carga y no se dibuja. Comprueba lo mismo: el puerto se
+  resalta y la matrícula no.
+- **La frase de `DESIGN.md` va en 17.3, «La matrícula»,** que es donde está el párrafo; en la
+  propuesta dije 17.5 por error.
+- **El manual tiene una figura más, la 42** (6.4), así que las 42 a 45 de la 1.0.0 pasan a 43 a 46.
+  Sus archivos no cambian de nombre.
+
+### 6.2 Las validaciones
+
+Todo con un SEMÁFORO por ventana (00:50 a 00:58 las pruebas, la suite, las copias y el oráculo;
+00:58 a 01:05 el banco de las capturas; 01:06 a 01:08 la sonda de O-146-1).
+
+| Validación | Resultado | Evidencia (`build/t146/`) |
+|---|---|---|
+| Las pruebas nuevas y las tocadas: `t146_resaltado_busqueda_test.dart`, `t112`, `t93_msix_config_test.dart` | 14 de 14 | `pruebas-01.log` |
+| `t146_resaltado_busqueda_test.dart` contra el buscador de `1c40d39` (en la copia del antes) | **3 aprobadas y 3 fallidas: fallan exactamente la 1 («bysu 967»), la 3 («967 2095») y la 4 (espacio duro y tabulación)** | `pruebas-02-contra-1c40d39.log` |
+| `flutter analyze --no-pub`, todo el paquete, aquí | **0**. A medio camino dio dos `prefer_const_constructors` en el oráculo, corregidos | `analyze-02.log` a `analyze-04.log` |
+| **La suite completa, una sola corrida** (`flutter test --no-pub`) | **2227 de 2227, sin omitidas ni fallidas** (00:52:53 a 00:55:39). Antes, 2221; suben las 6 de T-146 | `suite-01.log` |
+| Copia limpia del después: `git -c core.autocrlf=false archive HEAD` (`c777c86`) más los 7 archivos de código de T-146 encima, en LF (`copia-despues-encima.sha256`), más la entrada de T-124 | `pub get --offline --enforce-lockfile` 0; **`flutter analyze --no-pub`: «No issues found!»** (24.4 s) | `copia-despues-*.log` |
+| El oráculo, antes: `dart run tool/t146_oraculo.dart --copia <copia de 1c40d39>` | Salida 1: **4 avisos, `t112` 49:35, 50:47 y 67:7 y `t121` 574:14**, las de GLM | `oraculo-antes/resumen.json`, `oraculo-antes.log` |
+| El oráculo, después: la misma herramienta sobre la copia del después | Salida 0: **0 avisos** | `oraculo-despues/resumen.json`, `oraculo-despues.log` |
+| El oráculo se niega a una copia dentro del repositorio y a una salida fuera de `build/t146` | Salida 2 las dos veces; nada escrito | `oraculo-negativo-*.log` |
+
+### 6.3 `tool/t146_oraculo.dart`
+
+Dart estándar, sin paquetes. `dart run tool/t146_oraculo.dart --copia RUTA [--salida RUTA]
+[--conservar]`:
+- la copia tiene que estar **fuera** del repositorio y tener su `pub get` hecho; si no, se detiene
+  (salida 2);
+- copia `test/` y `tool/` **de la copia** (no del repositorio) a su `lib/zz_oraculo/`, corre
+  `flutter analyze --no-pub` en ella y cuenta los avisos de `use_build_context_synchronously` por
+  archivo, con su línea y su columna;
+- borra `lib/zz_oraculo/` al terminar, salvo con `--conservar`;
+- escribe `resumen.json` y `analyze.log` solo dentro de `build/t146` (por omisión,
+  `build/t146/oraculo`);
+- salida 0 con cero avisos de la regla, 1 si hay alguno, 2 si no pudo correr. Los demás avisos son
+  el ruido de mover pruebas a `lib/` (unos 220, sobre todo `depend_on_referenced_packages`) y no
+  cuentan.
+
+Es una herramienta de T-146, no un criterio (10.138): el criterio sigue siendo `analyze` en cero.
+
+### 6.4 El manual y las capturas
+
+**`docs/MANUAL-USUARIO-1.0.1.md`** sale del de la 1.0.0 con 42 cambios, cada uno un reemplazo
+exacto que tenía que aparecer una sola vez (el armado se detenía si no). Son los de la tabla de
+1.4, con las condiciones de la 10.138:
+- **a)** la portada dice «Edición de la versión **1.0.1 (10)**, para los tres clientes…», sin fecha;
+- **b)** las figuras 1 a 4 se quedan, y su pie dice «La captura es del asistente 1.0.0.9; en la
+  1.0.1 solo cambia el número»;
+- **c)** lo que no recorrí está marcado «(no recorrido en esta edición)»: el desinstalador con
+  BayStream abierta (lo recorre Carlos), el detalle con varias peligrosas, el destino final y el
+  DIM, los avisos de UN/LOCODE y DIM (los datos de T-100 no los traen), y en el muelle el aviso
+  del cierre y el rechazo;
+- 2.1 lleva el texto de la opción C;
+- el ejemplo de la búsqueda con espacios es «MNLU 000010 7», un contenedor de los datos del manual.
+
+Las imágenes que no cambian se leen de `docs/manual-1.0.0/`; las 46 rutas existen.
+
+**Las capturas,** con el banco Web de T-139, como las de la 1.0.0:
+- la Web del banco: `flutter build web --release --no-pub --no-web-resources-cdn -t tool/t130_emu_main.dart
+  --dart-define=T130_HOST=127.0.0.1 --dart-define=T130_PROJECT=demo-t139 --output=build/t146/web-emu`
+  (49 s; `version.json` 1.0.1 y 10; `main.dart.js` `ffecd50f…`). Es una compilación del banco, no una
+  Release de publicación;
+- el emulador `demo-t139` (`tool/t139_emulador.py`, Auth 9399 y Firestore 8383, con las reglas de
+  T-130) y las cuentas sintéticas de oficina y muelle; el control de Playwright de T-139;
+- los datos: `T100_LLEGADA.edi`, regenerado en `%TEMP%\t139\sinteticos`, con la huella de T-100
+  (`9573cfd7…`);
+- **solo se habló con `127.0.0.1`** (5939, 9399 y 8383), leído en la página después de publicar.
+  Ni Firebase real ni el almacén real de Windows: el banco corre en Chrome con perfiles en `%TEMP%`.
+
+El recorrido: la llegada en previo → «Confirmar» → GTSTC y «No lo tengo» → «Confirmar y ver el
+plano» (**figura 13**, con «Confirmado») → Lista (**23**) → Estadísticas (**24**) → la sesión de
+oficina y «Publicar operación» → Estadísticas (**28**, con «Publicada», «Oficina» y «Al día») → el
+muelle a 360 dp: sesión, «Unirse», «Abrir plano de llegada» → la oficina cierra (**41**) → el
+«Nube y cuenta» del muelle (**42**, nueva).
+
+| Figura | Archivo | Tamaño | SHA-256 |
+|---|---|---|---|
+| 13 | `13-plano-confirmado.png` | 3840 × 1400 | `48e34e20ab10feb19c48648355e28bb804c40ca810eee708282890ad620ffe88` |
+| 23 | `23-lista.png` | 3840 × 2160 | `13e9b4420b1c74c35018108e1a208f9743475e8aadcc9b9fddd40e4093a07a83` |
+| 24 | `24-estadisticas.png` | 3840 × 2160 | `988ed31d22d9761904d950759e25ddca4f56d1d524ace2943219467d2e00873a` |
+| 28 | `28-cabecera-oficina-publicada.png` | 3840 × 340 | `c0342d397d5d7663687d4a2afbca6e8ee2fcf098c92cc64b8b7b3216103297a0` |
+| 41 | `41-operacion-cerrada.png` | 3840 × 1000 | `bf94526a4b0cfdd49dbc20815ad9984a5f6f68d1648c14820feef1575e60526b` |
+| 42 | `42-muelle-operacion-cerrada.png` | 720 × 960 | `09eb4a30167c0c497230dbd250070bd1396da957559000caa67650cc7f0597be` |
+
+Los recortes son los de T-139 (13: 0, 0, 1920, 700; 28: 0, 0, 1920, 170; 41: 0, 0, 1920, 500; 23 y
+24, la ventana entera); la 42, como la 29 (0, 0, 360, 480). Las crudas están en
+`build/t146/capturas/`.
+
+**La figura del aviso del cierre no salió.** El muelle estaba en una ventana detrás de la de la
+oficina, y Flutter no pinta una página que no se ve: el aviso salió y se fue sin dibujarse. El
+estado sí cambió solo («Al día · operación cerrada» en el chip, sin registrar nada). Repetirlo
+pedía otra operación, así que la figura 42 muestra lo que deja el cierre en el muelle, y el aviso
+queda marcado como no recorrido. Para la próxima: con dos clientes, el que tiene que mostrar algo
+va en primer plano.
+
+### 6.5 La lectura del `CMakeLists.txt` de `firebase_core` (para la lista)
+
+`C:\Users\Giova\AppData\Local\Pub\Cache\hosted\pub.dev\firebase_core-4.15.2\windows\CMakeLists.txt`
+(6 609 bytes, `0f4e9352…`; las líneas 1 a 55, copiadas en `build/t146/firebase_core-4.15.2-CMakeLists-1-55.txt`).
+Lo que decide la descarga y la extracción:
+
+```cmake
+set(FIREBASE_SDK_VERSION "13.13.1")
+
+if (EXISTS $ENV{FIREBASE_CPP_SDK_DIR}/include/firebase/version.h)
+    file(READ "$ENV{FIREBASE_CPP_SDK_DIR}/include/firebase/version.h" existing_version)
+    # … arma existing_version con MAJOR.MINOR.REVISION
+endif()
+
+if(existing_version VERSION_EQUAL FIREBASE_SDK_VERSION)
+    message(STATUS "Found Firebase SDK version ${existing_version}")
+    set(FIREBASE_CPP_SDK_DIR $ENV{FIREBASE_CPP_SDK_DIR})
+else()
+    set(firebase_sdk_url "https://dl.google.com/firebase/sdk/cpp/firebase_cpp_sdk_windows_${FIREBASE_SDK_VERSION}.zip")
+    set(firebase_sdk_filename "${CMAKE_BINARY_DIR}/firebase_cpp_sdk_windows_${FIREBASE_SDK_VERSION}.zip")
+    set(extracted_path "${CMAKE_BINARY_DIR}/extracted")
+    if(NOT EXISTS ${firebase_sdk_filename})
+        file(DOWNLOAD ${firebase_sdk_url} ${firebase_sdk_filename}
+             SHOW_PROGRESS
+             STATUS download_status
+             LOG download_log)
+        # … se detiene si la descarga falla
+    else()
+        message(STATUS "Using cached Firebase SDK zip file")
+    endif()
+
+    if(NOT EXISTS ${extracted_path})
+        file(MAKE_DIRECTORY ${extracted_path})
+        file(ARCHIVE_EXTRACT INPUT ${firebase_sdk_filename}
+             DESTINATION ${extracted_path})
+    else()
+        message(STATUS "Using cached extracted Firebase SDK")
+    endif()
+    set(FIREBASE_CPP_SDK_DIR "${extracted_path}/firebase_cpp_sdk_windows")
+endif()
+```
+
+**La respuesta: sí, copiar el `.zip` de vuelta ahorra la descarga.**
+- `CMAKE_BINARY_DIR` es `build\windows\x64` (`CMAKE_CACHEFILE_DIR` en el `CMakeCache.txt` de
+  `proyecto-baystream`). Si ahí ya está `firebase_cpp_sdk_windows_13.13.1.zip`, CMake dice «Using
+  cached Firebase SDK zip file» y no baja nada.
+- **No comprueba la huella** del `.zip` que encuentra (ni al bajarlo: `file(DOWNLOAD)` va sin
+  `EXPECTED_HASH`). Lo que se copie es lo que se extrae. La huella de hoy, para cotejarlo antes de
+  copiarlo: `061508de65535ef11e47dd7d0f1de5780aed58d19865b71504f70f66fd3f9954`, 963 835 368 bytes,
+  del 3-nov a las 21:01 (el de la 1.0.0). Después de compilar, la `version.h` de `extracted` y la
+  cadena del `.exe` siguen siendo la comprobación (`-Verificar` y O-137-2).
+- **La extracción no se ahorra:** con la `build\` nueva no existe `extracted`, así que se extraen
+  los 8.5 GB del `.zip`. Si se copiara también `extracted`, CMake usaría lo que haya sin mirar su
+  versión: es la trampa de la 10.99, y no lo recomiendo.
+- **La variable `FIREBASE_CPP_SDK_DIR`** gana a todo lo anterior si apunta a un SDK 13.13.1. Hoy
+  está vacía en esta cuenta; la lista puede comprobarlo antes de compilar.
+- El `.zip` se copia a `build\windows\x64\`, que hay que crear antes, porque `flutter clean` la
+  borró. Flutter configura CMake sobre esa carpeta aunque ya exista.
+
+### 6.6 La sonda de O-146-1
+
+Con la confirmación de Carlos de que GLM no usa `baystream-qa-r4` (01:06), y sin escribir ahí:
+la copia de GLM, `…\reaceptacion2\copia`, tiene la misma huella antes y después fuera de `build/`
+(`o1461-copia-glm-antes.sha256` y `-despues`).
+
+| Corrida, en esa copia | Avisos de la regla | Evidencia |
+|---|---|---|
+| `flutter analyze --no-pub`, tal cual | **3**: `t112` 49:35, 50:47 y 67:7 | `o1461-1-flutter-tal-cual.log` |
+| `dart analyze --cache=%TEMP%\t146-cache-vacia-0108` (una carpeta nueva) | **0** | `o1461-2-dart-cache-vacia.log` |
+| `dart analyze`, con la caché de siempre | **3**, los mismos | `o1461-3-dart-cache-normal.log` |
+
+En las tres sale además el aviso de estilo conocido de `build/t144acc/sintetico_test.dart`, que es
+de la evidencia de GLM. **Con la caché vacía la regla no marca nada, como manda el SDK**: los tres
+avisos estaban guardados en la caché del analizador. Lo que no comprobé es quién los guardó.
+`%TEMP%\t146-cache-vacia-0108` queda en el disco (unos MB); la puede borrar Carlos.
+
+### 6.7 Lo que no se pudo, y por qué
+
+- **El aviso del cierre en el muelle no quedó en una figura** (6.4).
+- **El desinstalador con BayStream abierta, en el manual,** sale de los textos de T-145; lo
+  recorre Carlos con el asistente 1.0.1.10 (10.138, 5).
+- **No compilé ninguna Release ni publiqué nada,** como pide el encargo.
+- **El resaltado no lo miré en un cliente:** lo fijan las seis pruebas. Quien acepte lo mira en
+  la Web del banco (6.8, paso 7).
+
+## 7. Lo que repite quien acepte (para GLM 5.3 Flash, en Max)
+
+En una carpeta de aceptación sobre la punta con el commit de T-146 (por ejemplo `baystream-qa-r4`,
+puesta al día por Carlos). Un comando de Flutter o de Dart a la vez, con su SEMÁFORO. La evidencia
+va en `build/t146/glm/` de esa carpeta y el informe en `docs/t146/aceptacion-glm.md`.
+
+1. **La punta.** `git log --oneline -3`: arriba, «Sprint 4: T-146, la candidata 1.0.1», sobre
+   `c777c86`. `git show --stat HEAD` trae las 15 rutas de 8.2, y ninguna más.
+2. **Las huellas de los archivos de código** (en LF, como los guarda Git; con `git show HEAD:<ruta> | sha256sum`):
+
+   | Ruta | SHA-256 |
+   |---|---|
+   | `pubspec.yaml` | `3b0fab242ca6218d4a176767777848b026de7abc836173f7b4af5588c502d8dd` |
+   | `test/t112_localization_test.dart` | `2258a0671c0d4b16607ea5bfaebd872332532931eb8e8e922fe3397dc7afc107` |
+   | `test/t121_estadisticas_test.dart` | `2db270a2fc0b0a4bed19faff7d183b47ce97149eadc73d1958adc604e6909973` |
+   | `lib/features/vessel/presentation/widgets/container_search_delegate.dart` | `b8bf6499678e23d2db80fa528f621dabc44f65ef5196cb098911e330ec80fa14` |
+   | `test/t146_resaltado_busqueda_test.dart` | `98bda013ef08ee114f8a5396818ecf2d4c3517b6540808b31e9323cb8611ba3d` |
+   | `tool/t146_oraculo.dart` | `aaf18c0a1a4bf26cf9260992b81245bb0f6ec79d0814d82aece77c3cdb9b4038` |
+   | `DESIGN.md` | `6878c7418d4e18f235658ed20c9a19d14785f05dc12b7c7f62c41f5f68451374` |
+
+   Y `git show HEAD:pubspec.lock | sha256sum` igual que en `c777c86`.
+3. **Dos copias limpias en `%TEMP%`**, fuera de la carpeta de aceptación:
+   ```
+   git -c core.autocrlf=false archive --format=tar HEAD    | tar -x -C %TEMP%\t146-glm-despues
+   git -c core.autocrlf=false archive --format=tar 1c40d39 | tar -x -C %TEMP%\t146-glm-antes
+   ```
+   En las dos, la entrada de T-124 (O-143-3): `build\t124\entradas\t124_entradas.dart`, copiada de
+   `C:\Proyectos\baystream-rediseno` (SHA-256 `d4384834fb9fc9cb18632b87180a7998cc3f91109edcbd33dbbf9787542d1162`).
+   En las dos, `flutter pub get --offline --enforce-lockfile` (salida 0).
+4. **`analyze` en cero.** En la copia del después y en la carpeta de aceptación:
+   `flutter analyze --no-pub` → «No issues found!». **Es el criterio.**
+5. **La suite,** una sola corrida, en la carpeta de aceptación o en la copia del después:
+   `flutter test --no-pub` → la última línea, `+2227: All tests passed!`, sin `~` (omitidas) ni `-`
+   (fallidas).
+6. **El oráculo,** desde la carpeta de aceptación (la herramienta no existe en `1c40d39`):
+   ```
+   dart run tool/t146_oraculo.dart --copia %TEMP%\t146-glm-antes   --salida build/t146/glm/oraculo-antes
+   dart run tool/t146_oraculo.dart --copia %TEMP%\t146-glm-despues --salida build/t146/glm/oraculo-despues
+   ```
+   Antes: salida 1 y `avisosDeLaRegla: 4` en `resumen.json` (`test/t112_localization_test.dart`
+   49:35, 50:47 y 67:7, y `test/t121_estadisticas_test.dart` 574:14). Después: salida 0 y `0`.
+7. **O-144-1 contra el código de antes:** copiar `test/t146_resaltado_busqueda_test.dart` a la
+   copia del antes y correr `flutter test --no-pub test/t146_resaltado_busqueda_test.dart` allí:
+   **3 aprobadas y 3 fallidas** («bysu 967», «967 2095» y el espacio duro con la tabulación).
+   Después, quitar ese archivo de la copia. *(Opcional, a la vista:* en la Web del banco de T-139,
+   con `T100_LLEGADA.edi`, la búsqueda «mnlu 000010 7» resalta `MNLU0000107`.)*
+8. **El manual.** `docs/MANUAL-USUARIO-1.0.0.md` igual que en `c777c86`; en el de la 1.0.1, las 46
+   rutas de imagen existen; la portada sin fecha; los pies de las figuras 1 a 4 con «asistente
+   1.0.0.9»; las seis figuras de `docs/manual-1.0.1/` con las huellas de 6.4.
+9. **Opcional, el instalador del paso 0:** `dart run tool/t137_instalador.dart --origen C:\Proyectos\proyecto-baystream
+   --variante prueba --salida build/t145/glm-t146` → `5ef28b613039b81f409b1ebb6e85b4159f45ee54a16451803b47a2f45136cf25`,
+   18 486 858 bytes. La Release de `proyecto-baystream` solo se lee.
+
+Lo que **no** se pide: compilar Releases, abrir BayStream en la cuenta de Carlos, tocar
+`%LOCALAPPDATA%\BayStream` ni Firebase real.
+
+## 8. Archivos y Git
+
+### 8.1 Horas
+
+Fase 2, por el reloj: del 17-nov a las 00:48 (la lectura de la 10.138) a las 01:11, unos
+**25 minutos**: el código, las pruebas, la suite, las copias y el oráculo, de 00:48 a 00:58; el
+banco y las seis capturas, de 00:58 a 01:05; la sonda, de 01:06 a 01:08; el manual, la lectura del
+CMake y el informe, el resto. Con la fase 1, unos **45 minutos**.
+
+### 8.2 Los archivos
+
+Cambian 6 y son nuevos 9, 15 rutas, todas de T-146:
+- `pubspec.yaml` (cambia; **`pubspec.lock` no**)
+- `lib/features/vessel/presentation/widgets/container_search_delegate.dart`
+- `test/t112_localization_test.dart`
+- `test/t121_estadisticas_test.dart`
+- `test/t146_resaltado_busqueda_test.dart` (nuevo)
+- `tool/t146_oraculo.dart` (nuevo)
+- `DESIGN.md`
+- `docs/MANUAL-USUARIO-1.0.1.md` (nuevo)
+- `docs/manual-1.0.1/13-plano-confirmado.png` (nuevo)
+- `docs/manual-1.0.1/23-lista.png` (nuevo)
+- `docs/manual-1.0.1/24-estadisticas.png` (nuevo)
+- `docs/manual-1.0.1/28-cabecera-oficina-publicada.png` (nuevo)
+- `docs/manual-1.0.1/41-operacion-cerrada.png` (nuevo)
+- `docs/manual-1.0.1/42-muelle-operacion-cerrada.png` (nuevo)
+- `docs/T146-RESULTADOS.md`
+
+Las rutas de `docs/` las autoriza Carlos en la 10.138 (4 d). Los cuatro archivos con solo el fin de
+línea cambiado (`test/t114_fase3_correccion_test.dart` y los tres `windows/flutter/generated_*`) no
+son de T-146 y no van. `build/` está ignorado y no va.
+
+### 8.3 Git, para Carlos
+
+```powershell
+Set-Location -LiteralPath C:\Proyectos\baystream-rediseno
+git add -- pubspec.yaml
+git add -- lib/features/vessel/presentation/widgets/container_search_delegate.dart
+git add -- test/t112_localization_test.dart
+git add -- test/t121_estadisticas_test.dart
+git add -- test/t146_resaltado_busqueda_test.dart
+git add -- tool/t146_oraculo.dart
+git add -- DESIGN.md
+git add -- docs/MANUAL-USUARIO-1.0.1.md
+git add -- docs/manual-1.0.1/13-plano-confirmado.png
+git add -- docs/manual-1.0.1/23-lista.png
+git add -- docs/manual-1.0.1/24-estadisticas.png
+git add -- docs/manual-1.0.1/28-cabecera-oficina-publicada.png
+git add -- docs/manual-1.0.1/41-operacion-cerrada.png
+git add -- docs/manual-1.0.1/42-muelle-operacion-cerrada.png
+git add -- docs/T146-RESULTADOS.md
+git commit -m "Sprint 4: T-146, la candidata 1.0.1"
+git push origin sprint-4
+```
+
+`pubspec.yaml` cambia (las dos líneas de la versión); `pubspec.lock`, no.
+
+## 9. En tres líneas y para Yov
+
+- La candidata dice 1.0.1+10 y MSIX 1.0.1.0; O-144-2 queda arreglado y comprobado (el oráculo da 4 antes y 0 después, `analyze` en cero aquí y en la copia limpia), y O-144-1 resalta la matrícula con espacios, con 6 pruebas que fallan 3 contra el código de antes.
+- La suite da 2227 de 2227, sin omitidas; nace `tool/t146_oraculo.dart`, y el manual de la 1.0.1 trae seis figuras nuevas del banco de T-139, con la opción C en 2.1 y lo no recorrido marcado.
+- O-146-1 se explica: la regla no corre en `test/` a propósito, y la copia de GLM da 3 con la caché del analizador y 0 con una vacía; y copiar el `.zip` del SDK de vuelta ahorra la descarga, no la extracción.
+
+> **Para Yov:** T-146, fase 2, en `docs/T146-RESULTADOS.md`, sección 6 (sin commit, sobre `c777c86`).
+> Lo de la 10.138, todo: la versión; t112 y t121 iguales al prototipo; el resaltado (una línea, 6
+> pruebas, 3 fallan contra `1c40d39`); `tool/t146_oraculo.dart`, que da 4 avisos en `1c40d39` y 0 en
+> la punta; `analyze` en cero aquí y en la copia limpia; la suite en 2227 de 2227. El manual de la
+> 1.0.1 es un archivo nuevo (42 cambios, la portada sin fecha, las figuras 1 a 4 con su nota) con las
+> figuras 13, 23, 24, 28 y 41 retomadas y una 42 nueva: «Nube y cuenta» del muelle tras el cierre.
+> El aviso del cierre no quedó en figura, porque la ventana del muelle estaba detrás, y va marcado.
+> Para la lista (6.5): CMake solo baja el `.zip` si no existe y no mira su huella, así que copiarlo
+> de vuelta (`061508de…`, 963 835 368 bytes) ahorra la descarga; la extracción de 8.5 GB no. O-146-1
+> (6.6): en la copia de GLM, `analyze` da los 3 avisos con la caché de siempre y 0 con
+> `--cache` en una carpeta nueva. Queda sin saber quién los guardó. Para GLM, la sección 7.

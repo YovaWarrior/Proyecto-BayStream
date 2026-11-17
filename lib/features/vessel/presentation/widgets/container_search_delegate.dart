@@ -358,10 +358,12 @@ class _ContainerSearchResultTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: _buildLeadingIcon(colorScheme),
+      // T-146 (O-144-1): la matrícula se resalta con la consulta sin
+      // espacios, la misma con la que se filtró; el puerto, con la consulta.
       title: _buildHighlightedText(
         context,
         container.containerId,
-        query,
+        numeroDeContenedor(query),
         style: const TextStyle(
           fontFamily: 'monospace',
           fontWeight: FontWeight.bold,

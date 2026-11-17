@@ -67,6 +67,17 @@ class _Semantica {
   }
 }
 
+/// El foco está en [boton]. El contexto del foco se lee y se usa en esta
+/// función síncrona, sin una espera de por medio (O-144-2).
+void _esperarElFocoEn(WidgetTester tester, Finder boton,
+    {required String reason}) {
+  final conFoco = tester.binding.focusManager.primaryFocus?.context;
+  expect(conFoco, isNotNull);
+  expect(find.descendant(of: boton, matching: find.byWidget(conFoco!.widget)),
+      findsOneWidget,
+      reason: reason);
+}
+
 Future<void> _cumpleLasPautas(WidgetTester tester) async {
   await expectLater(tester, meetsGuideline(textContrastGuideline));
   await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
@@ -570,11 +581,7 @@ void main() {
       // la tabla pide el foco a propósito.
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
-      final conFoco = tester.binding.focusManager.primaryFocus?.context;
-      expect(conFoco, isNotNull);
-      expect(
-          find.descendant(of: _verTabla, matching: find.byWidget(conFoco!.widget)),
-          findsOneWidget,
+      _esperarElFocoEn(tester, _verTabla,
           reason: 'el primer Tab enfoca «Ver como tabla»');
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
