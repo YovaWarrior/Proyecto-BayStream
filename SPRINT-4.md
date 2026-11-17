@@ -3729,4 +3729,17 @@ GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md
 
 **La subida del informe de GLM** necesita un paso más, porque `sprint-4` avanzó con las 10.130 a 10.132: `qa-r4` pasa primero a la punta.
 
-La siguiente decisión es la **10.134**.
+### 10.134 · Antigravity entra a prueba con la aceptación de T-145, con Claude Opus 4.6: Carbon no está en el plan de Carlos (16-nov, 21:25)
+
+**Carlos decidió probar Antigravity** (16-nov, 21:21). Ya lo abrió en `baystream-t137`, rama `t137-instalador`, con los permisos en «Default».
+
+**Los modelos de su cuenta, por su captura:** tiene Gemini 3.8 Flash, Claude Sonnet 4.6, Claude Opus 4.6 y GPT-OSS 120B. Gemini 4 Carbon, Argon e Hydrogen le salen «Unavailable». Esto corrige la 10.133, que proponía Carbon:
+- según la tabla de modelos de Antigravity, **Carbon es solo de los planes AI Ultra y Enterprise**: el plan AI Pro no lo trae;
+- Argon pide un plan AI Pro de pago, e Hydrogen, según su anuncio, se entrega primero a los planes Pro y Ultra de pago. Que los tres salgan sin acceso coincide con lo que reportan en el foro de Google los planes Pro de estudiante, de prueba o de promoción. Carlos revisa en Google One de qué tipo es el suyo;
+- **Claude Opus 4.6, Claude Sonnet 4.6 y GPT-OSS 120B salen de Antigravity el 18-nov:** es el aviso «Notice» del selector.
+
+**Cómo queda:**
+- la aceptación de T-145 la hace Antigravity con **Claude Opus 4.6 (Thinking)**, el más capaz de su lista, hoy o mañana, antes del 18-nov. El prompt de la 10.133 no cambia;
+- después del 18-nov, si su cuenta solo conserva Gemini 3.8 Flash, Antigravity queda para lo corto y mecánico, y GLM sigue como aceptador, en Max. Si le llegan Argon o Hydrogen, se vuelve a probar.
+
+La siguiente decisión es la **10.135**.
