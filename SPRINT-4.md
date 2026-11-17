@@ -3862,4 +3862,33 @@ Quién la acepta, GLM o Antigravity, lo decide Carlos cuando se entregue. El pro
 - **Lo de después** (de la demostración del 7-nov en adelante) lo habría guardado la MSIX dentro de su paquete, porque la carpeta de fuera ya no existía (10.37 de `SPRINT-3.md`). **Eso es lo que se borra si se desinstala la MSIX.**
 - **Falta que Carlos lo confirme** en el Explorador, en `%LOCALAPPDATA%`: Yov no ve esa carpeta desde su sesión. La lista de publicación de la 1.0.1 copia las dos carpetas vivas y anota también las `BayStream_respaldo_*`.
 
-La siguiente decisión es la **10.141**.
+### 10.141 · T-146 entregada y revisada: la candidata 1.0.1 pasa a la aceptación de GLM 5.3 Flash; O-146-1 es la caché del analizador (17-nov, 01:25)
+
+**Timonel entregó la fase 2** (`docs/T146-RESULTADOS.md`, secciones 6 a 9, sin commit), en unos 25 minutos; 45 con la fase 1. La suite da 2227 de 2227 en una sola corrida, sin omitidas, y `analyze` da cero en la carpeta y en una copia limpia. No compiló ninguna Release ni publicó.
+
+**Lo que Yov comprobó contra la carpeta:**
+- **los archivos:** frente a `f50368a` cambian exactamente seis y hay nueve nuevos, las 15 rutas del bloque de Git. `pubspec.lock`, `lib/main.dart`, los congelados, el manual de la 1.0.0, `tool/t93_msix.ps1` y `windows/installer/` no cambian;
+- **el código:** `pubspec.yaml` cambia solo las dos líneas de la versión; el buscador, una línea y su comentario; t112 y t121 son idénticos al prototipo aprobado, por su huella; `DESIGN.md` suma una frase en 17.3. Ningún `// ignore:`;
+- **las pruebas del resaltado:** son las seis de la propuesta, con el espacio duro de verdad en la cuarta. Contra el buscador de `1c40d39` fallan justo la 1, la 3 y la 4;
+- **los registros:** la suite termina en `+2227: All tests passed!`, sin omitidas ni fallidas, y empezó después del último cambio de `lib/` y de `test/`. La copia limpia se analizó con los mismos siete archivos de la carpeta, por su huella;
+- **el oráculo:** Yov leyó `tool/t146_oraculo.dart`. Se niega a una copia dentro del repositorio y a escribir fuera de `build/t146`, y borra lo que copió. Da las cuatro líneas de GLM en `1c40d39` y cero en la punta;
+- **el manual:** las 46 figuras existen y van numeradas del 1 al 46; la portada no lleva fecha; las figuras 1 a 4 llevan su nota; 2.1 trae la opción C, y lo no recorrido está marcado. Los cambios son los de la tabla aprobada;
+- **las seis figuras, una por una:** la 13, la 23 y la 24 dicen «Confirmado»; la 23, «Peso total» y «Lleno»; la 28, «Publicada»; la 41 y la 42, «Publicada y cerrada» y «Al día · operación cerrada». Solo traen datos de BUQUE MANUAL, y los registros del banco solo nombran `127.0.0.1`.
+
+**O-146-1 queda explicada: es la caché del analizador.** En la copia de GLM, `flutter analyze --no-pub` sigue dando los 3 avisos; `dart analyze --cache` con una carpeta nueva da cero, y con la caché de siempre, otra vez 3. La copia de GLM no cambió. La regla no corre en las carpetas de pruebas (10.138), así que esos avisos estaban guardados. **Queda sin saber quién los guardó** (10.139). **Regla para las aceptaciones:** si `analyze` marca en una copia limpia algo que no marca en la carpeta de trabajo, se repite con `dart analyze --cache` en una carpeta nueva antes de investigar más, y se guardan los dos registros.
+
+**Para la lista de publicación (6.5 del informe):** CMake solo baja el `.zip` del SDK de C++ si no está en `build\windows\x64\`, y no comprueba su huella. Copiarlo de vuelta ahorra la descarga de 920 MB; la extracción de 8.5 GB, no. Su huella de hoy es `061508de…` (963 835 368 bytes). `extracted` no se copia: es la trampa de la 10.99.
+
+**Una observación nueva, O-146-3 (P3), del manual:** las figuras 41 y 42 salieron de un recorrido más corto que el de la 1.0.0 y dicen «Fuentes: llegada»; en el relato del manual, al cerrar, la operación ya tiene la carga y el listado. La 41 no hacía falta retomarla: esa pantalla no cambió, y la píldora «Cerrada» de la cabecera no sale en ninguna figura. No bloquea: Yov le suma una línea al pie de las dos cuando ponga la fecha de la portada, al publicar.
+
+**Lo que no se hizo, y queda dicho en el informe:** el aviso del cierre en el muelle no quedó en figura y va marcado «(no recorrido en esta edición)», y el resaltado no se miró en un cliente: lo mira quien acepte.
+
+**Lo que sigue:**
+1. El commit de T-146, con el bloque del informe, y el de esta decisión.
+2. `baystream-qa-r4` pasa a la punta. Yov comprobó que no tiene nada modificado ni nada sin seguir que choque.
+3. **La aceptación, con GLM 5.3 Flash en Max** (10.137): la sección 7 del informe, más el resaltado a la vista en la Web del banco. En `baystream-qa-r4`, el cero de `analyze` se cuenta sobre el Dart versionado, como en la 10.131, porque su `build/` guarda las copias de las aceptaciones anteriores; el de todo el paquete se pide en la copia limpia. El prompt está en el documento del proyecto `BayStream_T146_aceptacion_17nov.md`.
+4. La lista de publicación de la 1.0.1, que Yov cierra con el dictamen, porque lleva el commit aceptado.
+
+En `%TEMP%\t146-cache-vacia-0108` queda la caché vacía de la sonda: la puede borrar Carlos.
+
+La siguiente decisión es la **10.142**.
