@@ -3742,4 +3742,30 @@ GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md
 - la aceptación de T-145 la hace Antigravity con **Claude Opus 4.6 (Thinking)**, el más capaz de su lista, hoy o mañana, antes del 18-nov. El prompt de la 10.133 no cambia;
 - después del 18-nov, si su cuenta solo conserva Gemini 3.8 Flash, Antigravity queda para lo corto y mecánico, y GLM sigue como aceptador, en Max. Si le llegan Argon o Hydrogen, se vuelve a probar.
 
-La siguiente decisión es la **10.135**.
+### 10.135 · La aceptación de T-145 con Antigravity: lo comprobable coincide; faltan los registros de los negativos y el recorrido de Carlos. El banco de la 1.0.0 de GLM dejó dos archivos en el almacén real (16-nov, 23:05)
+
+**Antigravity entregó la aceptación** (`docs/t145/aceptacion-antigravity.md`, en `baystream-t137`, sobre `734f847`): PASA. Empezó hacia las 21:46 con Claude Opus 4.6 y terminó a las 22:56 con Gemini 3.8 Flash.
+
+**Lo que Yov comprobó en la carpeta:**
+- los tres instaladores que armó son idénticos a los de Timonel, por su huella: el de prueba (`5ef28b61…`), el de producción (`e4e7304c…`) y el del ensayo (`5e279822…`). El de prueba mide 18 486 858 bytes: el 18 486 844 del informe de Timonel era un error de escritura;
+- el armado desde su copia en CRLF da el mismo instalador de prueba;
+- la corrida de Windows (`build/t145/aceptacion-antigravity/aceptacion-01/`) trae los ocho pasos en `resultado.json` y las marcas esperadas en los registros: `T145_SIN_PROCESOS` con la carpeta hermana, `T145_DESINSTALAR_CANCELADO` en silencio, `T145_APP_CERRADA` después de Reintentar y `T145_MSIX_TERMINADA` en el ensayo. Corrió sin paquete (identidad 15700), lanzada desde la terminal de Antigravity, que no es una app empaquetada, y no con `explorer.exe`;
+- `analyze` del Dart versionado da cero, y ningún archivo versionado cambió: lo único nuevo es su informe.
+
+**Lo que falta para que el dictamen quede firme:**
+- **los cuatro negativos no dejaron ningún registro** en la carpeta de evidencia. Tres ya los había acreditado Timonel; el cuarto, el de `[InstallDelete]`, solo consta en el informe. Antigravity los repite con su salida guardada. Yov leyó `_comprobarGuion`: el armador se detiene con ese mensaje;
+- las horas del informe (2.0 h) no son las del reloj, y dice «Aceptador: Capitán Codex (Antigravity)»: se corrigen;
+- el recorrido de Carlos en «BayStream Prueba».
+
+**Cómo le fue a Antigravity, para decidir si se queda:**
+- Claude Opus 4.6 gastó en unos 10 minutos el límite de 5 horas y la mitad del semanal: con el plan de Carlos no alcanza;
+- con los permisos en «Default», `flutter analyze` se quedó colgado más de 30 minutos sin escribir nada, y con «Request Review» corre normal. Lo más probable es que el aislamiento de comandos no deje a Flutter escribir en su propia carpeta;
+- Gemini 3.8 Flash hizo la aceptación en unos 16 minutos, siguiendo el guion.
+
+**Propuesta de Yov:** Antigravity sirve para las aceptaciones con guion y huellas esperadas, siempre en «Request Review» y con la revisión de Yov contra la carpeta. Lo que pide juicio sigue con GLM en Max y con Timonel. Decide Carlos.
+
+**El almacén real de Windows: de dónde salieron sus dos archivos.** El 15-nov a las 22:24, la aceptación de Timonel vio que `%LOCALAPPDATA%\BayStream` no existía (10.132). Hoy, la de Antigravity lo encontró con dos archivos: `vessel_store\baystream_session.hive`, de 0 bytes, y su `.lock`. Por el código y por las horas, los dejó **el banco de la 1.0.0 de GLM** (`banco_v100.dart`, el 15-nov entre las 23:52 y las 00:02): redirige el plano y la bitácora al namespace `t144acc`, pero no la sesión, y la 1.0.0, con Firebase inicializado, abre `baystream_session` en el almacén por omisión. El informe de GLM dice que el almacén real no se tocó, y no es exacto. Queda como **O-144-3, del instrumental**: no cambia el dictamen de T-144 ni es un defecto del producto. No se perdió nada, porque la carpeta no existía y los dos archivos están vacíos. **Regla para los bancos:** un banco de Windows redirige todos los almacenes, también el de la sesión, y su informe lo comprueba con la huella del almacén real antes y después.
+
+**Lo que sigue:** Antigravity guarda los registros de los negativos y corrige su informe; Carlos hace su recorrido; después van el commit del informe y la mezcla de `t137-instalador` en `sprint-4`. Yov ya simuló la mezcla: entra sin conflictos, y las 20 fuentes del arte que están en `sprint-4` son iguales a las de la rama.
+
+La siguiente decisión es la **10.136**.
