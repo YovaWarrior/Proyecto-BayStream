@@ -3837,4 +3837,12 @@ Quién la acepta, GLM o Antigravity, lo decide Carlos cuando se entregue. El pro
 
 **Lo que sigue:** Carlos aprueba y Timonel hace la fase 2. La acepta GLM 5.3 Flash, en Max (10.137). Yov escribe la lista de publicación de la 1.0.1.
 
-La siguiente decisión es la **10.139**.
+### 10.139 · Carlos aprobó la propuesta de T-146 y Timonel empezó la fase 2; el último `versionCode` de Play es el 9; GLM no corre en un editor (17-nov, 00:55)
+
+**Carlos aprobó la propuesta** (17-nov, 00:49) con las seis decisiones de la 10.138, sin cambios, y le pasó la aprobación a Timonel. La punta es `c777c86` (la 10.138), sobre `15fe1b1` (el informe de la fase 1). Timonel ya empezó la fase 2.
+
+**Play:** Carlos miró en Play Console que el último `versionCode` subido es el **9**. La versión queda en `1.0.1+10`.
+
+**O-146-1: la hipótesis de la 10.138 pierde su fuente más probable.** Carlos mostró dónde corre GLM: en su app de escritorio, con `baystream-qa-r4` como proyecto, en «Full access» y con su propio navegador. No es un editor de tipo VS Code. Yov no sabe si esa app arranca por su cuenta un servidor de análisis de Dart. La sonda de Timonel decide igual, porque compara la copia de GLM con la caché de siempre y con una vacía, la haya llenado quien la haya llenado. Si no llega a hacerla o no confirma nada, O-146-1 sigue abierta, y el arreglo no depende de ella.
+
+La siguiente decisión es la **10.140**.
