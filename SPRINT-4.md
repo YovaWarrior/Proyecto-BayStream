@@ -3845,4 +3845,21 @@ Quién la acepta, GLM o Antigravity, lo decide Carlos cuando se entregue. El pro
 
 **O-146-1: la hipótesis de la 10.138 pierde su fuente más probable.** Carlos mostró dónde corre GLM: en su app de escritorio, con `baystream-qa-r4` como proyecto, en «Full access» y con su propio navegador. No es un editor de tipo VS Code. Yov no sabe si esa app arranca por su cuenta un servidor de análisis de Dart. La sonda de Timonel decide igual, porque compara la copia de GLM con la caché de siempre y con una vacía, la haya llenado quien la haya llenado. Si no llega a hacerla o no confirma nada, O-146-1 sigue abierta, y el arreglo no depende de ella.
 
-La siguiente decisión es la **10.140**.
+### 10.140 · El tablero al 17-nov: 29 de 33 tareas terminadas y T-146 en curso; al armarlo aparece la pista de dónde están los datos de Windows (17-nov, 01:15)
+
+**Carlos pidió ver el tablero** (17-nov, 00:57). Yov lo puso al día y lo volvió a publicar en el mismo enlace; su generador, `claude/herramientas/build_kanban_s4.py`, sigue en el proyecto de Yov. El anterior era del 11-nov (10.122).
+
+**Cómo está el sprint:**
+- de las 33 tareas (T-114 a T-146) hay **29 terminadas**. Desde el 11-nov entraron T-144 y T-145, y el bloque 1 quedó completo el 16-nov;
+- **en curso, una:** T-146, la 1.0.1, con Timonel, en la fase 2;
+- **siguiente,** lo que falta para publicar la 1.0.1: la aceptación con GLM 5.3 Flash en Max, la lista de publicación y el recorrido de Carlos con el asistente 1.0.1.10;
+- **por hacer,** sin cambios: los bloques 2, 3 y 4, T-87 en espera y los cuatro pendientes sin bloque (T-115, T-120, RNF-004 y O-134-2), que siguen esperando la decisión de Carlos (10.122);
+- la suite está en 2221 pruebas y `analyze`, en cero.
+
+**Lo que encontró al armarlo: dónde están, muy probablemente, los datos de Windows (10.132).** El tablero del 11-nov traía entre lo pendiente «devolver el almacén de Windows desde `BayStream_respaldo_*`» (10.114). Viene de la preparación de la presentación: `BayStream_almacen_limpio.bat`, que está en el escritorio desde el 6-nov, cierra la app y renombra `%LOCALAPPDATA%\BayStream` y la carpeta del paquete (`%LOCALAPPDATA%\Packages\gt.cmartinez.baystream_*\LocalCache\Local\BayStream`) a `BayStream_respaldo_<número>`. No borra nada. Yov leyó hoy el `.bat`.
+- Si Carlos lo corrió antes del 7-nov, explica lo que vio la 10.132: el 15-nov, `%LOCALAPPDATA%\BayStream` no existía.
+- **Lo de antes del 6-nov** (los 592 archivos del 3-nov y lo que siguió) estaría en `%LOCALAPPDATA%\BayStream_respaldo_<número>` y, si la había, en la carpeta hermana dentro del paquete.
+- **Lo de después** (de la demostración del 7-nov en adelante) lo habría guardado la MSIX dentro de su paquete, porque la carpeta de fuera ya no existía (10.37 de `SPRINT-3.md`). **Eso es lo que se borra si se desinstala la MSIX.**
+- **Falta que Carlos lo confirme** en el Explorador, en `%LOCALAPPDATA%`: Yov no ve esa carpeta desde su sesión. La lista de publicación de la 1.0.1 copia las dos carpetas vivas y anota también las `BayStream_respaldo_*`.
+
+La siguiente decisión es la **10.141**.
