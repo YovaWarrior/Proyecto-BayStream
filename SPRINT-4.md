@@ -3891,4 +3891,47 @@ Quién la acepta, GLM o Antigravity, lo decide Carlos cuando se entregue. El pro
 
 En `%TEMP%\t146-cache-vacia-0108` queda la caché vacía de la sonda: la puede borrar Carlos.
 
-La siguiente decisión es la **10.142**.
+### 10.142 · T-146 aceptada: GLM 5.3 Flash dice PASA y Yov lo comprobó contra la carpeta; la lista de publicación de la 1.0.1 (17-nov, 11:50)
+
+**GLM 5.3 Flash, en Max, aceptó T-146** (`docs/t146/aceptacion-glm.md`, en `baystream-qa-r4`, sobre `268e731`): **PASA, sin hallazgos nuevos**, en 25 minutos de reloj (17-nov, de 08:49 a 09:14).
+
+**Lo que Yov comprobó contra la carpeta:**
+- `baystream-qa-r4` sigue idéntica a `268e731`: lo único nuevo para Git es el informe;
+- la suite termina en `+2227: All tests passed!`, sin omitidas ni fallidas, en una copia limpia;
+- `analyze` da «No issues found!» en la copia limpia, con todo el paquete, y en el Dart versionado de la carpeta (10.131). No hizo falta repetir con `dart analyze --cache`;
+- el oráculo da las cuatro líneas en `1c40d39` (t112, 49:35, 50:47 y 67:7; t121, 574:14) y cero en la punta;
+- las seis pruebas del resaltado, contra el buscador de `1c40d39`: pasan tres y fallan la 1, la 3 y la 4;
+- las huellas de los siete archivos de código son las que Yov había tomado (10.141);
+- las dos capturas del banco Web, vistas: con «mnlu 000010 7», `MNLU0000107` sale entero resaltado; con «ushou», se resalta el puerto en «POD: USHOU» y la matrícula no. La página solo habló con `127.0.0.1:5939`;
+- el manual: las 46 rutas de imagen existen, la portada no lleva fecha y las seis figuras nuevas tienen las huellas del informe; el de la 1.0.0 no cambió;
+- el asistente de prueba que armó es el mismo, `5ef28b61…`.
+
+**T-146 queda aceptada, y la candidata 1.0.1 es `834af36`.**
+
+**O-146-1 queda cerrada como explicada.** La aceptación guardó los procesos al empezar y al terminar, y no había ningún servidor de análisis de Dart. Sigue sin saberse quién guardó aquellos avisos en la caché; la regla de la 10.141 se queda.
+
+**Dos notas del instrumental,** que no cambian el dictamen: el perfil de Chrome del banco traía guardada la operación M100, y el primer intento abrió esa en vez del previo; y dos clics cayeron bajo el pliegue de la página. **Regla para las aceptaciones con un banco Web:** el banco empieza con un perfil de navegador nuevo, y el informe lo dice.
+
+**Una observación nueva, O-146-4 (P3), del manual.** La encontró Yov al escribir la lista: en 3.3 y en 3.6, el manual de la 1.0.1 todavía dice «abre publicado sin previo» y «en el plano publicado», y desde T-143 la cabecera de ese plano dice «Confirmado». No estaba en la tabla de cambios de la propuesta, y no lo vieron ni la revisión de Yov ni la aceptación. No bloquea: Yov cambia las dos frases al publicar, cuando ponga la fecha de la portada y la línea de O-146-3.
+
+**La lista de publicación de la 1.0.1 está en `docs/piloto/PUBLICACION-1.0.1.md`.** Parte de 1.6 del informe de T-146, de la lista de la 0.4.2 y de la publicación de la 1.0.0 (10.102 y 10.105). Lo que Yov comprobó para escribirla:
+- **la mezcla,** simulada sobre `8f2505e`: entra sin conflictos, con 164 archivos, y el árbol que queda es el de `sprint-4`. En `proyecto-baystream`, los cinco documentos modificados de Carlos no cambian con ella, y ninguno de sus 60 archivos sin seguimiento choca. La guardia compara el código con `268e731`;
+- **lo que entra a las compilaciones:** entre `v1.0.0` y la punta no cambian `pubspec.lock`, `assets/`, `android/`, `web/` ni `windows/` (fuera de `windows/installer/`), y `pubspec.yaml` solo cambia las dos líneas de la versión;
+- **`build\` se aparta entera** a `C:\Proyectos\baystream-publicaciones\build-hasta-1.0.0` (precisa la 10.138, que solo nombraba la carpeta de arriba), y después va `flutter clean`. Ahí quedan las MSIX de la vuelta atrás y una copia de la Web 1.0.0 publicada: sus tres huellas en disco son las de la 10.115;
+- **el `.zip` del SDK de C++:** su huella, calculada hoy, sigue siendo `061508de…`. El bloque la comprueba antes de copiarlo de vuelta;
+- **la carga del asistente serán 25 archivos, no 27.** El 27 de 1.5 del informe es la carga del 1.0.0.9 de producción, que lleva los dos archivos viejos. La Release de la 1.0.0 trae 29 archivos; sin los dos viejos quedan 27; menos los 5 excluidos, más las tres DLL de Visual C++, 25. Es una cuenta de Yov, sin medir: la lista no se detiene por ella. Se detiene por la versión, por el SDK dentro del `.exe`, por los cinco excluidos y por cualquier aviso del armado;
+- **los datos de Windows:** un bloque que solo lee dice qué carpetas `BayStream*` hay fuera y dentro del paquete, con sus archivos y su último cambio. Es lo que faltaba de la 10.132. La copia de antes de instalar cubre las dos carpetas vivas;
+- **el registro:** los bloques anotan las huellas, los tamaños y las horas en `build\t146\publicacion\registro.txt` de `baystream-rediseno`, fuera de Git, y Yov lo lee al final;
+- **la prueba corta** usa el viaje S101. Las copias están en el escritorio de Carlos, en `BayStream_1.0.1_prueba_corta`: `S101_LLEGADA.edi` (`8762E850…`), `S101N_CARGA.edi` (`48747ABE…`) y `T100_LISTADO.xlsx` (`FEB12A90…`). Salen de los sintéticos de T-100 cambiando solo el viaje en `TDT`. Sus pasos 11 y 12, el aviso del cierre y el rechazo en el muelle, son los que el manual marca «(no recorrido en esta edición)»;
+- **la vuelta de la MSIX** con `-ForceUpdateFromAnyVersion` va escrita y **sin probar**. Si no instala, no se desinstala nada sin Yov: desinstalar borra los datos que vivan dentro del paquete.
+
+**Cómo se comprobaron los bloques de la lista.** Yov cotejó cada comando con su script (`tool/t93_msix.ps1`, `tool/t136_sdk_firebase.ps1`, `tool/t137_instalador.dart`, `tool/t92_verify.dart` y `tool/t113_reglas.mjs`), con el manifiesto del asistente 1.0.0.9 de producción, con el `.exe` y la Web de la 1.0.0 y con los textos del código de la punta. **No los corrió:** su sesión no tiene PowerShell. Revisó su estructura con una gramática de PowerShell, que no es el analizador de Windows. Si Carlos quiere una segunda comprobación, GLM los pasa por el analizador de PowerShell, sin ejecutarlos, antes de publicar.
+
+**Lo que sigue:**
+1. Carlos: el commit del informe de GLM, desde `baystream-qa-r4`, y el de esta decisión con la lista, en `baystream-rediseno`.
+2. La publicación, con la lista. Lo primero es su bloque 0.6, que solo lee.
+3. Yov anota la publicación en la decisión siguiente, pone la fecha en el manual y actualiza el tablero.
+
+**Siguen pendientes de Carlos:** el recorrido del asistente, que ahora es la sección 7 de la lista; dónde van T-115, T-120, RNF-004 y O-134-2 (10.122); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.143**.
