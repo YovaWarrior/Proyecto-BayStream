@@ -3768,4 +3768,26 @@ GLM parte del informe y de la evidencia de Codex (`docs/t144/aceptacion-codex.md
 
 **Lo que sigue:** Antigravity guarda los registros de los negativos y corrige su informe; Carlos hace su recorrido; después van el commit del informe y la mezcla de `t137-instalador` en `sprint-4`. Yov ya simuló la mezcla: entra sin conflictos, y las 20 fuentes del arte que están en `sprint-4` son iguales a las de la rama.
 
-La siguiente decisión es la **10.136**.
+### 10.136 · T-145 aceptada y el instalador entra a `sprint-4`: el bloque 1 queda completo; nace T-146, la 1.0.1 (16-nov, 23:15)
+
+**Antigravity completó su informe** (`2df2423`, en `t137-instalador`): repitió los cuatro negativos con sus registros en `build/t145/aceptacion-antigravity/negativos/` y corrigió las horas y su nombre. Yov comprobó los cuatro registros (salidas 1, 1, 64 y 1, sin carpeta de salida) y que los archivos versionados siguen idénticos a `734f847`. **T-145 queda aceptada.**
+
+**El orden cambia: la mezcla no espera al recorrido de Carlos.** La rama solo trae el instalador, sus herramientas y sus informes (38 rutas, ninguna de `lib/`), pasó la aceptación de Timonel y la de Antigravity, y mezclarla no publica nada. **El recorrido en «BayStream Prueba» queda como condición para publicar la 1.0.1.** Si encuentra algo, se corrige en `sprint-4`.
+
+**Carlos mezcla `t137-instalador` en `sprint-4`** con un commit de mezcla, como T-131 y T-132. Yov la simuló: entra sin conflictos.
+
+**El bloque 1 queda con sus tres tareas aceptadas:** T-143 (10.121), T-144 (10.133) y T-145.
+
+**Nace T-146 · La 1.0.1, la versión del bloque 1** (10.114 y 10.117), con Timonel, en `baystream-rediseno`, en dos fases, como T-144. Prepara la candidata; no publica. Lleva:
+- la versión `1.0.1+10` y el MSIX `1.0.1.0`, sin cambiar `pubspec.lock`;
+- O-144-2: las dos pruebas ajustadas para que `analyze` dé cero también en una copia limpia, sin `// ignore:`;
+- O-144-1: el resaltado de la búsqueda con espacios. Yov propone arreglarlo aquí, y lo decide Carlos al aprobar la propuesta;
+- el manual: los pasos que cambian con T-143 y con T-144, y los pies de las figuras 5 y 6;
+- el instalador: el primer armado desde `baystream-rediseno`, que comprueba O-137-1 en la carpeta real, y el asistente de la 1.0.1. Si Windows se reparte con la MSIX, con el asistente o con los dos, lo propone Timonel y lo decide Carlos;
+- lo que Yov necesita para la lista de publicación de la 1.0.1: los tres clientes juntos, ninguna operación abierta con una fuente 1.5 o con matrículas con espacio (10.123), una compilación limpia (10.130), el Honor (10.126) y la vuelta atrás a la 1.0.0.
+
+Quién la acepta, GLM o Antigravity, lo decide Carlos cuando se entregue. El prompt está en el documento del proyecto `BayStream_T146_la_1.0.1_16nov.md`.
+
+**Siguen pendientes de Carlos:** el recorrido de T-145; dónde van T-115, T-120, RNF-004 y O-134-2 (10.122); si Antigravity se queda como propone la 10.135; dónde viven sus datos de Windows (10.132), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.137**.
