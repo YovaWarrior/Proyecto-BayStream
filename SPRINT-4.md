@@ -4076,4 +4076,45 @@ El tablero queda al día con esta decisión.
 
 **Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.147**.
+### 10.147 · T-120: la propuesta de Timonel, revisada; ocho decisiones para Carlos (17-nov, 21:55)
+
+**Timonel entregó el paso 0 y la fase 1** (`docs/T120-RESULTADOS.md`, 651 líneas, sin commit), en unos 20 minutos. No tocó `lib/` ni `test/`.
+
+**Lo que Yov comprobó contra la carpeta y GitHub:**
+- Carlos corrió el bloque de la 10.146: `sprint-4` está en `899e4e3`, y su `SPRINT-4.md` es el del disco;
+- frente a `899e4e3`, la carpeta solo tiene un archivo nuevo, el informe, y ningún archivo versionado cambió;
+- `pubspec.lock` es el de la punta (`B035F52C…`), y el registro de `analyze` dice «No issues found!» (`build/t120/paso0/`);
+- lo que el informe dice del código de hoy, en una muestra de unas veinticinco afirmaciones: las líneas de la Lista y de sus providers, el buscador, el `shrinkWrap`, `BsCajaDeCodigo`, las banderas de `ContainerUnit`, el dictado solo en el campo de OR, los instrumentos de memoria y los 510.5 MB de `REDISENO-RESULTADOS.md` 4.7, `_dejarQuieto` con su `jumpTo` y la descripción emergente de los segmentos. Todo coincide.
+
+**La propuesta, en corto:**
+- **dos entregas, cada una con su aceptación.** La 1, la Lista y el buscador (15.5 a 17 h): el filtro por destino con cuentas cruzadas, de Estadísticas a la Lista, RF-018 y la Lista perezosa con su medición. La 2, el plano y la oficina (8 h): O-119-1, O-128-4, O2 y los dos monitores, que Carlos sí tiene;
+- **el filtro por destino** reusa `BsCajaDeCodigo`. En la oficina son dos filas alineadas que envuelven; en el teléfono, dos líneas y «Ver los n destinos», medido con una pieza nueva, `BsFichasEnLineas`. `domain/` y `data/` no cambian;
+- **RF-018:** «reefer», «imo» y «oog», con sus equivalentes en español, como palabras enteras; además, la clase («imo 3») y el número ONU («un 1993»). El resto de la consulta se busca como hoy. Una línea arriba dice lo que se entendió, y cada resultado, por qué salió;
+- **la Lista perezosa:** un `CustomScrollView` con `SliverList.builder`. La memoria se mide antes y después con `tool/t114_ram_windows.ps1`, el instrumento de los 510 MB, con 977 y 5 000 contenedores sintéticos, en bancos `r4` compilados en `%TEMP%`. No dictamina RNF-001 ni RNF-007;
+- **O-119-1** va con una hipótesis (un `jumpTo` fuera del alcance arma un resorte) que una prueba roja tiene que confirmar antes de cambiar nada. Si no sale roja, Timonel se detiene.
+
+**Lo que Yov le pide a la fase 2,** además de lo propuesto:
+1. **el orden de los chips no cambia al elegir el otro filtro.** Se ordenan por el total del viaje; con las cuentas cruzadas solo cambian las cifras y se apagan los que quedan en cero. Si no, los chips saltan de lugar y «Ver los n» cambia lo que enseña;
+2. **el chip elegido se distingue sin depender solo del color del relleno,** en claro y en oscuro, ya que va sin la palomita;
+3. **`BsFichasEnLineas` entra como las demás piezas de la biblioteca** (T-114, fase 2): con su vista previa en `vistas_previas.dart`, su documentación y su prueba. La vista previa de `BsBarraDeMagnitud` enseña también la barra que se toca;
+4. **la fuente de RF-018 no es el prompt:** el criterio y la historia están en `docs/entrega-7nov/fuentes/DOC2.md`, en la tabla «RF‑018», escrita con el guion que no parte la línea;
+5. **la copia de «antes» con `git archive` vale:** solo lee y escribe fuera del repositorio. No está en la lista de permitidos de `.claude/settings.json`, así que Claude Code le pedirá permiso a Carlos.
+
+**Una observación nueva, O-120-1 (P3).** La encontró Timonel (D8) y Yov la miró en el código: la hoja de detalle de la Lista (`_showContainerDetails`, en `containers_list_view.dart`) es la de antes del rediseño. Dice «N/A», «Puerto Carga», «MERCANCÍA PELIGROSA» y «CONTENEDOR REFRIGERADO», contra las reglas 3 y 4 de `DESIGN.md` 11; un refrigerado sin temperatura sale «N/A°C»; y no trae las medidas de la sobredimensión ni el destino final, que el detalle del plano sí trae desde T-144. Las declaraciones de peligrosas sí están completas.
+
+**Decide Carlos** (sección 2 del informe). Yov coincide con Timonel en seis y propone otra cosa en dos:
+
+| | Pregunta | Timonel | Yov |
+|---|---|---|---|
+| D1 | ¿Una fila «Carga especial» en la Lista, con los nombres de la tarjeta al día? | Sí (1.5 h) | Sí: la ronda de revisión se hace mejor en la Lista |
+| D2 | ¿O1 aquí o con el frente de usabilidad? | Con el frente | Con el frente: aquí obliga a repetir la matriz de 90 combinaciones |
+| D3 | ¿Las navieras de más a menos, como los destinos? | Sí | Sí, con el orden fijo del punto 1 |
+| D4 | ¿Dos entregas, la Lista primero? | Sí | Sí |
+| D5 | ¿Se mide también en el Honor? | Solo si Carlos lo reserva | No por ahora: el teléfono se mide en el bloque 3 |
+| D6 | ¿«Sin destino» en la Lista y «Sin puerto» en Estadísticas? | Sí, cada uno en su pantalla | **Un solo nombre, «Sin destino», en las dos.** Ahora una barra lleva al chip, y es una sola constante |
+| D7 | ¿Varias categorías son «cualquiera de ellas», y el resto se cumple además? | Sí | Sí: es la historia, «los reefer o IMDG» |
+| D8 | ¿La hoja de detalle de la Lista se deja para el rediseño de oro? | Sí, dejarla | **Su rediseño, al bloque 4, como O-120-1. Aquí, solo dos renglones,** si se aprueba D1: las medidas del fuera de medida y la temperatura que falta, dicha con palabras, para que la ronda se pueda hacer desde la Lista |
+
+**Lo que sigue:** Carlos sube el informe de Timonel y esta decisión, y responde las ocho preguntas. Con sus respuestas, Yov anota la aprobación y Timonel empieza la entrega 1.
+
+La siguiente decisión es la **10.148**.
