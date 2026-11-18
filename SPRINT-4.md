@@ -3934,4 +3934,114 @@ En `%TEMP%\t146-cache-vacia-0108` queda la caché vacía de la sonda: la puede b
 
 **Siguen pendientes de Carlos:** el recorrido del asistente, que ahora es la sección 7 de la lista; dónde van T-115, T-120, RNF-004 y O-134-2 (10.122); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.143**.
+### 10.143 · La lista de publicación, comprobada por GLM en el analizador de Windows sin ejecutarla: se puede usar (17-nov, 12:20)
+
+**Carlos corrió el bloque de Git de la 10.142** (`b0d54bd`, el informe de GLM, y `07ac142`, la decisión con la lista) **y le pasó a GLM la comprobación opcional** (17-nov, 12:06). La evidencia está en `build/t146/glm/lista/` de `baystream-qa-r4`, fuera de Git; no hay informe versionado.
+
+**Lo que hizo GLM 5.3 Flash:**
+- sacó los 12 bloques de la lista a un `.ps1` cada uno y los pasó por el analizador de Windows PowerShell 5.1 (`Parser::ParseFile`), sin ejecutarlos: **cero errores de sintaxis en los 12**. En esa máquina no hay `pwsh` 7 ni `Invoke-ScriptAnalyzer`;
+- hizo tres lecturas, que no cambian nada: `Add-AppxPackage` tiene `-ForceUpdateFromAnyVersion`; las líneas de 4.1 que miran el `.exe`, sobre la Release de la 1.0.0, dan 1.0.0.9, 1.0.0+9 y una sola `Firebase C++ 13.13.1`; las de 4.2 que leen el manifiesto, sobre el del asistente 1.0.0.9 de producción, dan producción, publicable, 5 excluidos, 27 archivos, 1 aviso y la huella del instalador igual a la del manifiesto;
+- leyó los bloques buscando errores de lógica y no encontró nada que bloquee.
+
+**Lo que Yov comprobó contra la carpeta:**
+- los 12 `.ps1` son iguales, carácter por carácter, a los 12 bloques de la lista. Solo cambian el BOM, el fin de línea y la sangría de los dos que van dentro de una viñeta;
+- `parsear.ps1` solo analiza, y `lecturas.ps1` usa las mismas líneas de los bloques y solo lee;
+- `baystream-qa-r4` sigue idéntica a `b0d54bd`, y la lista y `SPRINT-4.md` de GitHub son los del disco.
+
+**Con esto, lo que la 10.142 dejaba sin comprobar queda así:** la sintaxis de los 12 bloques pasó por el analizador de la máquina que los va a ejecutar, y las líneas nuevas de 4.1 y de 4.2 corrieron de verdad sobre el `.exe` y el manifiesto de la 1.0.0. **Sigue sin probarse** lo que solo se prueba publicando, y la vuelta de la MSIX: el parámetro existe en este Windows, pero nadie la ha corrido.
+
+**Dos observaciones de GLM, P3, que no cambian la lista:**
+- **O-146-5.** Las guardias con `$LASTEXITCODE` heredan el valor anterior si el ejecutable no existe, porque PowerShell no lo actualiza. Yov siguió cada caso. Todos los ejecutables de la lista se usaron ya desde la consola de Carlos en las publicaciones anteriores, y, si faltara uno, lo detiene la comprobación siguiente. El peor caso es `firebase`: 5.1 anotaría «Web publicada» sin haber publicado, y 5.2 se detiene porque `version.json` en vivo sigue en la 1.0.0. **Para la próxima lista:** cada bloque comprueba al empezar que sus herramientas están en el PATH.
+- **O-146-6.** En 5.1, la guardia del destino de Hosting compara una ruta fija consigo misma y nunca falla. Viene tal cual del bloque de la 0.4.2 y de la 1.0.0. No estorba: el borrado que protege va sobre esa misma ruta fija.
+
+**La lista queda como está** (`b1ffd052…`, la de `07ac142`) **y se puede usar.** Esta decisión no lleva commit propio: va con el de la publicación, para que 0.1 de la lista siga diciendo la verdad.
+
+**Lo que sigue:** la publicación. Carlos empieza por 0.2 de la lista; 0.1 ya está.
+
+### 10.144 · La 1.0.1, publicada en los tres clientes, con la prueba corta del viaje S101; el manual ya lleva su fecha (17-nov, 16:30)
+
+**Carlos publicó la 1.0.1 esta tarde, con la lista** (`docs/piloto/PUBLICACION-1.0.1.md`, la de `07ac142`). Fue tramo por tramo: Yov revisó lo que dejó cada bloque antes de pasarle el siguiente. Las huellas, los tamaños y las horas están en `build\t146\publicacion\registro.txt` de `baystream-rediseno`, fuera de Git.
+- **Antes de empezar:** el último `versionCode` de Play era el 9, y nadie tocó las reglas en la consola desde el 4-nov, así que el cotejo de 0.4 se saltó, como permite la lista. La única operación abierta era BUQUE GOLF · VIAJE007A · GTSTC, la de la presentación: viene de BAPLIE 2.2 y 2.0 y no trae matrículas con espacio (10.123). Se queda abierta.
+- **La mezcla (14:28):** `master` en `37be8a5`, «Sprint 4: la 1.0.1, mezcla de sprint-4 a master», de `8f2505e` y `07ac142`, con la etiqueta anotada `v1.0.1`. Su árbol es el de `sprint-4`, y la guardia comprobó que el código es el de `268e731`, el que aceptó GLM.
+- **`build\`, apartada (15:09)** en `C:\Proyectos\baystream-publicaciones\build-hasta-1.0.0`, con las MSIX 1.0.0.0 y 0.4.2.0 en sus huellas. Después, `flutter clean` y el `.zip` del SDK 13.13.1, de vuelta.
+- **Android, primero (15:12):** el AAB 1.0.1 (10), de 54 026 115 bytes (`5045CAB5C73F7C7E0657D42AFABA0F0D1632FBDBF2D4FB0E5D0A444F35FBC595`), en la prueba interna de Play: «10 (1.0.1) · Disponible para testers internos», 17-nov, 15:17.
+- **Windows, la Release y la MSIX (15:22):** la Release 1.0.1.10 (`1.0.1+10`), con Firebase C++ 13.13.1 pedido, extraído y dentro del `.exe`. `BayStream_1.0.1.0.msix`, de 26 724 772 bytes (`CBB75D003742F025DEE662CF7C1605AD474818B09C6AABDD63D2A2C541222DCE`), con la firma válida de la huella `60BEF8F4…`.
+- **Windows, el asistente (15:40):** `BayStream_Setup_1.0.1.10.exe`, de 18 447 801 bytes (`D9174A1D9B95FDB194AEF99AFF39C5E051B9DC68F0B61B16D261F3B507B808AA`), de la misma Release. Su manifiesto dice producción, publicable, 24 archivos, 5 excluidos y ningún aviso; va sin firma de código, como el 1.0.0.9. Está en `C:\Users\Public\BayStream-1.0.1` y **no se reparte hasta que pase el recorrido** (sección 7 de la lista).
+- **Windows, la laptop (15:43):** la copia de las dos carpetas vivas (2 y 14 archivos), en `C:\Proyectos\respaldo-almacen-20261117-1543`, y la MSIX 1.0.1.0, instalada encima de la 1.0.0.0. Al abrir, seguían ahí los cinco recientes, el perfil guardado y la sesión de oficina, con «Cuenta autorizada»; el plano de BUQUE GOLF abrió con «Publicada» y «Al día».
+- **La Web, al final (15:46):** la 1.0.1 (10), con `t92_verify` aprobado (57 archivos), publicada solo a Hosting. En vivo, las cinco cabeceras de T-142 y un solo HSTS, en `/` y en `/privacidad.html`, y `version.json` dice 1.0.1 (10). En incógnito, la cuenta de oficina entra con «Cuenta autorizada». Sus huellas, anotadas antes de publicar (10.115):
+  - `version.json`: `F845ED7F3906BD01A95F013616ADA4D122A7069663BB27F08099550FB837E410`;
+  - `main.dart.js`: `812F236D9576BE2314AA8FB055C42FA8988FE6A73D2C852F1CB8AF996405BA58`;
+  - `flutter_bootstrap.js`: `F7A8C04FCEF9B49D22A1A446F2AD947DFAE22D4395F7B3BF00CE50B2B131585A`.
+
+**Lo que Yov comprobó desde el equipo,** entre las 16:17 y las 16:25:
+- en GitHub, `master`, la etiqueta y el árbol;
+- en `proyecto-baystream\build`, el AAB, la MSIX y el asistente tienen el tamaño y la huella del registro, y los dos `.sha256` coinciden. La Release tiene 26 archivos, y `build\web`, 57;
+- **las tres huellas de la Web en vivo son las del registro,** y `version.json` dice 1.0.1 (10).
+
+**La prueba corta pasó completa** (Carlos, 16:10), contra Firebase de verdad, con la operación de prueba BUQUE MANUAL · S101 · GTSTC. Los pasos 1 a 5, Yov los vio en las capturas de Carlos; del 6 al 13, Carlos dijo que todos salieron como dice la lista:
+- «Confirmado» antes de la nube y «Publicada» después (T-143);
+- unirse y descargar desde el Honor, agregar el plan S101N y cargar desde el Honor, e importar el listado;
+- la búsqueda con espacios (T-146) y el detalle con la letra del teléfono al máximo que dan sus ajustes (T-144). El tamaño de letra no quedó anotado;
+- «Volver al inicio» y reabrir desde «Recientes»;
+- el cierre al primer intento, con «Cerrada» en la cabecera, y la S101 fuera de las abiertas en la Web;
+- **en el Honor, el aviso del cierre y el rechazo de lo registrado después.** Es la primera vez que se ven en el teléfono de verdad: son los que el manual marca «(no recorrido en esta edición)». El aviso solo existe en la 1.0.1, así que el Honor ya la tenía.
+
+**Dónde viven los datos de Windows de Carlos** (bloque 0.6, a las 14:12). Era lo pendiente de la 10.132 y la 10.140:
+- **dentro del paquete de la MSIX,** en `%LOCALAPPDATA%\Packages\gt.cmartinez.baystream_bq33510ehc1x4\LocalCache\Local\BayStream`: 14 archivos, 1 138 950 bytes. **Es el almacén vivo desde el 7-nov.** A su lado hay 12 carpetas `BayStream_respaldo_<número>`, de 14 archivos cada una, del 6-nov a las 17:28 al 7-nov a las 13:25: los ensayos de `BayStream_almacen_limpio.bat`;
+- **fuera,** `%LOCALAPPDATA%\BayStream_respaldo_11283`: 592 archivos, 39 608 863 bytes, con el último cambio el 6-nov a las 00:27. Es el almacén real hasta que se apartó para la presentación, y la app no lo usa desde entonces;
+- **fuera,** `%LOCALAPPDATA%\BayStream`: 2 archivos, 18 bytes, del 16-nov a las 00:01, del banco de GLM (10.135). No estorbaron: con esa carpeta ahí, la MSIX siguió usando la del paquete.
+
+**Actualizar la MSIX encima conserva esos datos; desinstalarla los borra,** con los 12 respaldos. Pasar la laptop al asistente sigue siendo un paso aparte, y ahora se sabe qué hay que copiar antes. Los viajes y los perfiles de antes del 6-nov no están en la app: están en `BayStream_respaldo_11283`. Traerlos de vuelta, si Carlos los quiere, también es un paso aparte.
+
+**Lo que la lista decía y no era.** No detuvo nada:
+- **la mezcla trajo 166 archivos,** no los 164 de la 10.142;
+- **la Release limpia tiene 26 archivos, y la carga del asistente, 24,** no 25. La Release de la 1.0.0 arrastraba tres archivos viejos, no dos. El tercero es `native_assets.json`, en la raíz, y viajó en el asistente 1.0.0.9. La app trabaja sin él: la MSIX sale de esa misma Release. El registro dice «se esperan 25» porque el bloque lo traía escrito. **O-146-7 (P3):** el aviso de archivos viejos de `tool/t137_instalador.dart` solo mira `data/flutter_assets`. Con `build\` apartada y `flutter clean` en cada publicación (10.138), no se repite;
+- **el paso 6 de la prueba corta** no dice que «Listado de la agencia» solo sale con el plan de carga abierto (T-73). Carlos había reabierto el plano de llegada; con «Abrir plan de carga», en «Nube y cuenta», salió.
+
+**El manual de la 1.0.1 ya lleva su fecha** (`docs/MANUAL-USUARIO-1.0.1.md`, `c39f22fb…`). Yov hizo los tres cambios anunciados, y ninguno más:
+- la portada dice «publicada el 17 de noviembre de 2026 en los tres clientes»;
+- **O-146-3, cerrada:** los pies de las figuras 41 y 42 dicen que la captura es de un recorrido más corto, con solo el plano de llegada, y el de la 41, que la píldora «Cerrada» no sale en ninguna figura. La línea que cita, «Fuentes: llegada · carga · listado r1», es la de la figura 41 de la 1.0.0;
+- **O-146-4, cerrada:** en 3.3, «abre confirmado sin previo», y en 3.6, «en el plano confirmado». El nombre de la regla, «La regla de publicación directa», se queda: es el de `DESIGN.md` 7.2.
+
+Las 46 rutas de imagen siguen existiendo. La marca «(no recorrido en esta edición)» del aviso del cierre y del rechazo se queda, porque el recorrido del manual no los vio. Se puede quitar en la próxima edición, con lo que Carlos vio en el Honor.
+
+**Para volver a la 1.0.0:** la sección 9 de la lista. Las MSIX 1.0.0.0 (`BA01DED7…`) y 0.4.2.0 (`D57F8E50…`) están en `build-hasta-1.0.0`. La vuelta de la MSIX sigue sin probar (10.143).
+
+**Lo que sigue:**
+1. Carlos: el recorrido del asistente en «BayStream Prueba», que ya empezó. Su resultado va en la 10.145, y con él se sabe si el asistente 1.0.1.10 se reparte.
+2. Carlos: el commit de esta decisión, con la 10.143 y el manual, en `baystream-rediseno`.
+3. Yov: el tablero.
+
+**Siguen pendientes de Carlos:** dónde van T-115, T-120, RNF-004 y O-134-2 (10.122); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+### 10.145 · El asistente 1.0.1.10 pasa su recorrido en «BayStream Prueba» y se puede repartir (17-nov, 21:10)
+
+**Carlos hizo el recorrido de la sección 7 de la lista** en la cuenta estándar «BayStream Prueba», sin la MSIX, el 17-nov hacia las 20:52, y dijo que todos los pasos salieron como estaba previsto (20:56). Mandó siete fotos de la pantalla. Yov las revisó una por una y las guardó, con un índice, en `build\t146\publicacion\recorrido-asistente\` de `baystream-rediseno`, fuera de Git:
+- **el 1.0.1.10, instalado encima del 1.0.0.9:** Aplicaciones dice «BayStream · 1.0.1.10 · Carlos Martínez · 17/11/2026»;
+- **la carpeta de la aplicación,** `%LOCALAPPDATA%\Programs\BayStream`, con 9 elementos: ya no están `baystream.lib`, `baystream.exp` ni los tres `*_plugin.lib` que traía el 1.0.0.9 (O-137-6, de T-145);
+- **BayStream abre** desde Inicio en esa cuenta, sin sesión y sin datos: «Todavía no hay viajes guardados en este dispositivo.» y «Perfiles guardados (0)»;
+- **al desinstalar con BayStream abierta** sale «BayStream está abierta», con «Reintentar» y «Cancelar» (O-137-8, de T-145). **Sale antes de la confirmación,** por el orden de las fotos;
+- **la confirmación** dice «¿Seguro que quieres desinstalar BayStream? Tus datos en %LOCALAPPDATA%\BayStream se conservan.» (O-137-4);
+- **el final:** «BayStream se desinstaló correctamente. Tus datos permanecen en %LOCALAPPDATA%\BayStream. El desinstalador no los borra.» Es el mensaje de cuando el desinstalador quitó todo lo suyo, no el de «Windows no pudo quitar algunos archivos».
+
+De lo que no tiene foto vale lo que dijo Carlos: las páginas del asistente, «Reintentar» con la app todavía abierta, la carpeta ya borrada y la instalación del final, que deja la cuenta en la 1.0.1.10.
+
+**Con esto, el asistente 1.0.1.10 se puede repartir,** con su `.sha256` y su manifiesto: `BayStream_Setup_1.0.1.10.exe` (`D9174A1D…08AA`, 10.144), en `C:\Users\Public\BayStream-1.0.1` y en `build\t137\v1.0.1\` de `proyecto-baystream`. Era la condición del asistente, no de la versión (10.138). Va sin firma de código, así que SmartScreen puede avisar al descargarlo. **La 1.0.1 queda completa en los tres clientes,** y T-146, cerrada.
+
+**Una observación nueva, O-146-8 (P3).** En la foto de la carpeta sigue `native_assets.json`, del 26-oct: es el archivo viejo que traía el 1.0.0.9 (O-146-7). El 1.0.1.10 ya no lo lleva, pero instalar encima no borra lo que la versión nueva dejó de traer: `[InstallDelete]` solo nombra los cinco archivos de T-145. Lo mismo tiene que pasar con `AssetManifest.bin.json` y `NOTICES`, en `data\flutter_assets`, que la foto no muestra. No hace daño:
+- BayStream abrió con el archivo ahí;
+- al desinstalar se va: Inno anota la instalación nueva en el mismo registro de desinstalación (`UninstallLogMode=append`, el valor por omisión, y el `.iss` no lo cambia), así que también quita lo que solo instaló la versión anterior. Carlos no reportó que quedara nada;
+- solo le pasa a un equipo que ya tuviera el 1.0.0.9 del asistente.
+
+**Para el próximo asistente:** sumar esos tres nombres a `[InstallDelete]`, o sacar esa lista de comparar el manifiesto anterior con la carga nueva.
+
+**Lo que sigue:**
+1. Carlos: un solo commit con las decisiones 10.143 a 10.145 y el manual. En GitHub, `sprint-4` sigue en `07ac142`.
+2. La laptop de Carlos sigue con la MSIX 1.0.1.0. Pasarla al asistente es un paso aparte (10.144).
+3. El bloque 2, RF-018 y RF-035, cuando Carlos decida dónde van T-115, T-120, RNF-004 y O-134-2 (10.122).
+
+El tablero queda al día con esta decisión.
+
+**Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.146**.

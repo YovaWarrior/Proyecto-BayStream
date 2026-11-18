@@ -1,10 +1,11 @@
 # BayStream 1.0.1 · Manual de usuario
 
-Edición de la versión **1.0.1 (10)**, para los tres clientes: la app de Windows, la app
-de Android y la Web. Es el manual de la 1.0.0 (T-139) puesto al día por Timonel (T-146)
-con lo que cambia en la 1.0.1. Las capturas están en `docs/manual-1.0.0/` y, las seis que
-cambian, en `docs/manual-1.0.1/`, tomadas sobre el código de la 1.0.1; todas en tema claro
-y a escala 2 para imprimirse en color; la oficina a 1920 × 1080 y el muelle a 360 dp.
+Edición de la versión **1.0.1 (10)**, publicada el 17 de noviembre de 2026 en los tres
+clientes: la app de Windows, la app de Android y la Web. Es el manual de la 1.0.0 (T-139)
+puesto al día por Timonel (T-146) con lo que cambia en la 1.0.1. Las capturas están en
+`docs/manual-1.0.0/` y, las seis que cambian, en `docs/manual-1.0.1/`, tomadas sobre el
+código de la 1.0.1; todas en tema claro y a escala 2 para imprimirse en color; la oficina
+a 1920 × 1080 y el muelle a 360 dp.
 
 **Lo nuevo frente a la 1.0.0:** los estados de la operación en la cabecera («Confirmado»,
 «Publicada», «Cerrada»), el aviso del cierre en el muelle, todas las mercancías peligrosas de
@@ -243,7 +244,7 @@ De arriba abajo:
 *Figura 13. El plano confirmado: «Confirmado», la escala GTSTC en la cabecera y los modos Descarga y Carga ya disponibles.*
 
 **La regla de publicación directa.** Un viaje de un buque con perfil guardado abre
-publicado sin previo solo si el perfil cubre toda la carga **y** la escala propuesta
+confirmado sin previo solo si el perfil cubre toda la carga **y** la escala propuesta
 coincide con la última confirmada para ese buque. Si falta cualquiera de las dos, abre en
 previo y te pide confirmar. Así un plano de llegada, que propone el puerto de salida, no
 opera hasta que elijas tu puerto.
@@ -292,7 +293,7 @@ Volver al inicio. En el teléfono, además, Nube y cuenta y Parámetros.
 *Figura 16. La hoja «Más» en la oficina, con un plan de carga abierto.*
 
 En Android, el botón Atrás del sistema cierra primero las hojas y los menús; en el plano
-publicado, vuelve al inicio con **dos toques seguidos** («Toca Atrás otra vez para volver
+confirmado, vuelve al inicio con **dos toques seguidos** («Toca Atrás otra vez para volver
 al inicio»), para que un toque por error no te saque del plano **(no recorrido en esta
 edición)**.
 
@@ -676,7 +677,7 @@ nube».
 
 ![Figura 41](manual-1.0.1/41-operacion-cerrada.png)
 
-*Figura 41. La operación cerrada desde la oficina.*
+*Figura 41. La operación cerrada desde la oficina. La captura es de un recorrido más corto, con solo el plano de llegada: por eso dice «Fuentes: llegada», y no «Fuentes: llegada · carga · listado r1», como al cerrar con el plan de carga y el listado agregados. La píldora «Cerrada» de la cabecera del plano no sale en ninguna figura.*
 
 En el muelle, el cierre llega solo, sin registrar nada: sale el aviso «La oficina cerró la
 operación de GTSTC. Lo que registres desde ahora se rechazará.», «Nube y cuenta» dice
@@ -687,7 +688,7 @@ el rechazo; la figura 42 muestra el estado que deja el cierre.)**
 
 ![Figura 42](manual-1.0.1/42-muelle-operacion-cerrada.png)
 
-*Figura 42. El muelle después del cierre de la oficina: «Publicada y cerrada» y «Al día · operación cerrada».*
+*Figura 42. El muelle después del cierre de la oficina: «Publicada y cerrada» y «Al día · operación cerrada». Es del mismo recorrido corto: dice «Fuentes: llegada» porque esa operación solo tenía el plano de llegada.*
 
 ## 8. Exportar y el BAPLIE de salida
 
