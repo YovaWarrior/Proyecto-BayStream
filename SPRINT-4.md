@@ -4044,4 +4044,36 @@ El tablero queda al día con esta decisión.
 
 **Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.146**.
+### 10.146 · Carlos aprueba dónde van los cuatro pendientes sin bloque; el bloque 2 abre con T-120 (17-nov, 21:25)
+
+**Carlos corrió el bloque de Git de la 10.145** (`9364d1c`, «Sprint 4: decisiones 10.143 a 10.145, la 1.0.1 publicada con su manual y el asistente recorrido», 21:04). Yov comprobó en GitHub que `SPRINT-4.md` y el manual son los del disco.
+
+**Carlos aprobó toda la propuesta de la 10.122** (17-nov, 21:08):
+- **T-120, filtrar por destino en la Lista, va al bloque 2, junto con RF-018,** la búsqueda por tipo de carga especial: son las mismas pantallas, la Lista y el buscador. Trae lo que se le había dejado: O-119-1 y O-128-4, del pellizco (10.82 y 10.83), y O1, O2 y el arrastre entre dos monitores, de la entrega 1 (10.46);
+- **T-115, los colores de puerto que asigna la oficina, va al bloque 2, junto con RF-035,** el rol de administrador: los dos tocan `data/` y las reglas de Firestore (10.6), que así se diseñan y se publican una sola vez;
+- **O-134-2, el banco de Android que llegue al emulador, va al bloque 3;**
+- **RNF-004 va al frente del doble factor, con T141-03.** Lo que le falta es medir: instrumentar el tráfico para acreditar el «cero tráfico» y verificar en producción el registro de auditoría (H-06). Ese frente cambia la sesión y el almacén, así que se mide una sola vez, al final. Mientras tanto sigue declarado como limitación, como en los documentos del 7-nov.
+
+**El bloque 2 queda en dos tareas, en este orden:**
+1. **T-120, con RF-018.** No toca la nube.
+2. **RF-035, con T-115.** El diseño de las reglas se aprueba antes de programar, como en T-130. Yov escribe su ficha, con su número de tarea, cuando T-120 esté aceptada.
+
+**La ficha de T-120 · La Lista y el buscador: filtrar por destino y buscar por carga especial (RF-018).** La hace Timonel (Claude Opus 5.5, en Alto), en `baystream-rediseno`, y la acepta GLM 5.3 Flash, en Max (10.137). Va en dos fases, como T-146: la propuesta, que Yov revisa y Carlos aprueba, y el código.
+- **«Filtrar por destino»,** con el diseño que Carlos aprobó el 24-oct (10.38; `docs/T117-T121-RESULTADOS.md`, 0.8): la ficha de cada puerto con su cuenta, las cuentas cruzadas con la naviera, «Sin destino» y «Quitar filtros», en los tres clientes. El código cambió desde entonces, y la propuesta lo pone al día;
+- **desde Estadísticas,** tocar un puerto abre la Lista filtrada por ese destino (10.46);
+- **RF-018:** el buscador entiende la carga especial. El criterio de la especificación es que «reefer», «imo» y «oog» filtren los resultados; hoy compara la matrícula, los dos puertos y la naviera;
+- **la Lista perezosa (P10):** hoy construye todas sus tarjetas a la vez (`ListView` con `shrinkWrap`), que es el salto de 190 a 510 MB que midió T-99. Se mide antes y después con sus instrumentos. La medición formal de RNF-001 y RNF-007, con buques sintéticos, sigue en el bloque 3;
+- **lo que traía:** O-119-1 y O-128-4, con sus pruebas; O1 y O2, P3; y el arrastre entre dos monitores, si Carlos tiene el segundo monitor;
+- **no cambia la versión,** que sigue en `1.0.1+10`, ni compila ninguna Release. La versión del bloque 2 se decide al cerrarlo;
+- el informe es `docs/T120-RESULTADOS.md`. El prompt está en el documento del proyecto `BayStream_Bloque2_T120_17nov.md`.
+
+**El tablero queda al día:** ya no hay pendientes sin bloque.
+
+**Lo que sigue:**
+1. Carlos: el commit de esta decisión, y el prompt de T-120 a Timonel, en un chat nuevo.
+2. Timonel: el paso 0 y la fase 1, la propuesta.
+3. Yov revisa la propuesta y Carlos la aprueba.
+
+**Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.147**.
