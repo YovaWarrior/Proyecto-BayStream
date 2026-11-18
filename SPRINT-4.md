@@ -4117,4 +4117,35 @@ El tablero queda al día con esta decisión.
 
 **Lo que sigue:** Carlos sube el informe de Timonel y esta decisión, y responde las ocho preguntas. Con sus respuestas, Yov anota la aprobación y Timonel empieza la entrega 1.
 
-La siguiente decisión es la **10.148**.
+### 10.148 · Carlos aprueba la propuesta de T-120 con las ocho respuestas; empieza la entrega 1 (17-nov, 22:00)
+
+**Carlos corrió el bloque de la 10.147** (`9ec86b9`, el informe de Timonel, y `7ee5d9e`, la decisión). Yov comprobó en GitHub que el informe es el que revisó y que `SPRINT-4.md` es el del disco.
+
+**Carlos aprobó la propuesta** (17-nov, 21:50), con las recomendaciones de Yov de la 10.147:
+- **D1:** sí, la fila «Carga especial» en la Lista, con los nombres de la tarjeta al día («Peligrosa IMDG», «Refrigerado» y «Fuera de medida»);
+- **D2:** O1 va con el frente de usabilidad. T-120 no lo toca;
+- **D3:** sí, las navieras de más a menos, con el orden fijo por el total del viaje;
+- **D4:** dos entregas, cada una con su aceptación. Primero, la Lista y el buscador;
+- **D5:** no se mide en el Honor por ahora. El teléfono se mide en el bloque 3;
+- **D6:** un solo nombre, «Sin destino», en la Lista y en Estadísticas, donde hoy dice «Sin puerto»;
+- **D7:** sí, varias categorías son «cualquiera de ellas», y el resto de la consulta se cumple además;
+- **D8:** el rediseño de la hoja de detalle de la Lista queda para el bloque 4, como O-120-1. En la entrega 1, esa hoja gana solo dos renglones: las medidas del fuera de medida, y «El archivo no trae temperatura» en vez de «N/A°C».
+
+**También quedan aprobados los cinco puntos que Yov le pidió a la fase 2** (10.147): el orden fijo de los chips, el elegido que no depende solo del color, `BsFichasEnLineas` como pieza de la biblioteca, la fuente de RF-018 y la copia de «antes» con `git archive`.
+
+**La entrega 1 de T-120, la Lista y el buscador, empieza con Timonel** (Claude Opus 5.5, en Alto, en el mismo chat de la propuesta):
+- lleva 1.1 a 1.4 de la propuesta: el filtro por destino con cuentas cruzadas, la fila «Carga especial», de Estadísticas a la Lista, RF-018 y la Lista perezosa, con su medición de memoria antes y después;
+- la medición ocupa la máquina unos 75 minutos, en su ventana de `SEMÁFORO:`. Mientras tanto, nadie más compila ni abre la app;
+- la acepta GLM 5.3 Flash, en Max (10.137), con el prompt que escriba Yov al revisar la entrega. Timonel no empieza la entrega 2 hasta entonces;
+- el mensaje de arranque está en el documento del proyecto `BayStream_Bloque2_T120_17nov.md`.
+
+**La entrega 2, el plano y la oficina,** va después: O-119-1, O-128-4, O2 y los dos monitores, con unos 30 minutos de Carlos.
+
+**Lo que sigue:**
+1. Carlos: el commit de esta decisión, el mensaje a Timonel y la luz verde de cada ventana de Flutter.
+2. Timonel: la entrega 1.
+3. Yov revisa la entrega contra la carpeta y escribe el prompt de la aceptación.
+
+**Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.149**.
