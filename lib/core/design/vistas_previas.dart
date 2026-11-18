@@ -11,12 +11,14 @@ import 'componentes/bs_banda_muelle.dart';
 import 'componentes/bs_barra_de_magnitud.dart';
 import 'componentes/bs_barra_de_operacion.dart';
 import 'componentes/bs_buque_en_corte.dart';
+import 'componentes/bs_caja_de_codigo.dart';
 import 'componentes/bs_cartela.dart';
 import 'componentes/bs_casco_bodega.dart';
 import 'componentes/bs_celda.dart';
 import 'componentes/bs_cifra.dart';
 import 'componentes/bs_distintivo_de_rol.dart';
 import 'componentes/bs_ficha_de_cifra.dart';
+import 'componentes/bs_fichas_en_lineas.dart';
 import 'componentes/bs_fondo_de_plano.dart';
 import 'componentes/bs_hoja_de_detalle.dart';
 import 'componentes/bs_marca.dart';
@@ -884,7 +886,9 @@ Widget vistaPreviaPanelesDeEstadisticas() => _lienzo(Builder(
                   const SizedBox(height: 8),
                   BsBarraDeMagnitud(rotulo: 'USHOU', valor: 245, total: 977, maximo: 520, caja: semanticos.categorico('USHOU')),
                   const SizedBox(height: 8),
-                  BsBarraDeMagnitud(rotulo: 'PAMIT', valor: 130, total: 977, maximo: 520, caja: semanticos.categorico('PAMIT')),
+                  // T-120: la barra que se toca (abre la Lista filtrada): mide
+                  // el objetivo táctil y lleva el foco visible.
+                  BsBarraDeMagnitud(rotulo: 'PAMIT', valor: 130, total: 977, maximo: 520, caja: semanticos.categorico('PAMIT'), alTocar: () {}, ayudaAlTocar: 'Ver estos contenedores en la Lista'),
                   const SizedBox(height: 8),
                   const BsBarraDeMagnitud(rotulo: 'Otros 3 puertos', valor: 82, total: 977, maximo: 520),
                 ],
@@ -917,6 +921,65 @@ Widget vistaPreviaPanelesDeEstadisticas() => _lienzo(Builder(
                 ],
               ),
             ),
+          ],
+        );
+      },
+    ));
+
+/// T-120 · Las fichas en dos líneas (`DESIGN.md` 18.3): a 360 dp no caben los
+/// nueve destinos, así que van los que caben y «Ver los 9 destinos»; el
+/// elegido (PAMIT, el sexto) toma el último lugar. Debajo, las mismas fichas
+/// con el ancho de la oficina, donde caben todas y «Ver» no sale.
+@Preview(name: 'Fichas en líneas', group: 'Diseño', theme: bsTemaDeVistaPreviaOficina, size: Size(760, 360))
+Widget vistaPreviaFichasEnLineas() => _lienzo(Builder(
+      builder: (BuildContext context) {
+        final semanticos = BsColoresSemanticos.de(context);
+        const puertos = <(String, int)>[
+          ('GTSTC', 520), ('USHOU', 245), ('JMKIN', 82), ('JMKCT', 40),
+          ('COCTG', 30), ('PAMIT', 25), ('USMSY', 20), ('VELAG', 10), ('PACCT', 5),
+        ];
+        List<Widget> fichas() => <Widget>[
+              FilterChip(
+                showCheckmark: false,
+                label: const Text('Todos 977'),
+                selected: false,
+                onSelected: (_) {},
+              ),
+              for (final (codigo, cuenta) in puertos)
+                FilterChip(
+                  showCheckmark: false,
+                  selected: codigo == 'PAMIT',
+                  side: BorderSide(
+                    width: codigo == 'PAMIT' ? 2 : 1,
+                    color: codigo == 'PAMIT'
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.outline,
+                  ),
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      BsCajaDeCodigo(codigo: codigo, rol: semanticos.categorico(codigo)),
+                      const SizedBox(width: 6),
+                      Text('$cuenta'),
+                    ],
+                  ),
+                  onSelected: (_) {},
+                ),
+            ];
+        Widget ver() => ActionChip(
+              avatar: const Icon(Icons.expand_more),
+              label: Text('Ver los ${puertos.length} destinos'),
+              onPressed: () {},
+            );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            SizedBox(
+              width: 328,
+              child: BsFichasEnLineas(fichas: fichas(), verTodas: ver(), fija: 6),
+            ),
+            const SizedBox(height: 24),
+            BsFichasEnLineas(fichas: fichas(), verTodas: ver(), fija: 6),
           ],
         );
       },

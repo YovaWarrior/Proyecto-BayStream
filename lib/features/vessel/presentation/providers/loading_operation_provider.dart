@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/loading_operation.dart';
 import '../../domain/services/operation_sources.dart';
+import '../formatters/cuentas_de_los_filtros.dart';
 import '../formatters/vessel_error_message.dart';
 import 'movement_log_provider.dart';
 import 'vessel_providers.dart';
@@ -105,10 +106,26 @@ final carriersListProvider = Provider<List<String>>((ref) {
   return carriers;
 });
 
-/// Lo que va a bordo, filtrado por la naviera elegida.
+/// T-120 · Los filtros elegidos en la Lista: la naviera, el destino y la
+/// carga especial.
+final filtrosDeLaListaProvider = Provider<FiltrosDeLaLista>((ref) =>
+    FiltrosDeLaLista(
+      naviera: ref.watch(selectedCarrierProvider),
+      destino: ref.watch(selectedDischargePortProvider),
+      cargas: ref.watch(selectedSpecialCargoProvider),
+    ));
+
+/// T-120 · Las cuentas cruzadas de las tres filas de la Lista y lo que pasa
+/// los tres filtros, en una sola pasada (`DESIGN.md` 18.2).
+final cuentasDeLosFiltrosProvider = Provider<CuentasDeLosFiltros>((ref) =>
+    CuentasDeLosFiltros.de(
+        ref.watch(aboardContainersProvider), ref.watch(filtrosDeLaListaProvider)));
+
+/// Lo que va a bordo, filtrado por la naviera, el destino y la carga
+/// especial elegidos (T-120).
 final filteredContainersProvider = Provider<List<ContainerUnit>>((ref) {
   final containers = ref.watch(aboardContainersProvider);
-  final selectedCarrier = ref.watch(selectedCarrierProvider);
-  if (selectedCarrier == null) return containers;
-  return containers.where((c) => c.operatorCode == selectedCarrier).toList();
+  final filtros = ref.watch(filtrosDeLaListaProvider);
+  if (!filtros.activos) return containers;
+  return ref.watch(cuentasDeLosFiltrosProvider).filtrados;
 });

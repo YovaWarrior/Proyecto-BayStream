@@ -220,7 +220,9 @@ void main() {
       expect(d.pesoSinPosicionKg, 10000);
       expect(d.bahias, isEmpty);
       expect(d.bahiasConCarga, 0);
-      expect(d.puertos.single.rotulo, EstadisticasDelViaje.sinPuerto);
+      // T-120 (D6 de la 10.148): «Sin destino», el mismo nombre de la Lista.
+      expect(d.puertos.single.rotulo, EstadisticasDelViaje.sinDestino);
+      expect(d.puertos.single.rotulo, 'Sin destino');
       expect(d.parte(1), 0.5);
     });
 

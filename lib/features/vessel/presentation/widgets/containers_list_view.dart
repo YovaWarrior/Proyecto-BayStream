@@ -4,6 +4,7 @@ import '../../../../core/design/design.dart';
 import '../../domain/entities/entities.dart';
 import 'detail_text_row.dart';
 import '../formatters/carga_especial.dart';
+import '../formatters/consulta_de_busqueda.dart' show CargaEspecial;
 
 /// Widget que muestra la lista de contenedores en tarjetas
 class ContainersListView extends StatelessWidget {
@@ -38,11 +39,63 @@ class ContainersListView extends StatelessWidget {
   }
 }
 
+/// T-120 (P10; `DESIGN.md` 18.4) · La Lista perezosa: las mismas tarjetas,
+/// pero solo se construyen las que se ven y las de su margen. Va dentro del
+/// `CustomScrollView` de la pestaña Lista; [ContainersListView] se queda para
+/// donde se monta sola.
+///
+/// Cada tarjeta lleva la clave de su matrícula, para que al cambiar un filtro
+/// Flutter no confunda una con otra. Sin contenedores, el mensaje: con
+/// filtros, [sinResultados] (con «Quitar filtros»); sin ellos, el de siempre.
+class ContainersSliverList extends StatelessWidget {
+  /// Crea la lista.
+  const ContainersSliverList({
+    super.key,
+    required this.containers,
+    this.sinResultados,
+  });
+
+  /// Los contenedores, ya filtrados.
+  final List<ContainerUnit> containers;
+
+  /// Lo que se ve si la lista queda vacía por los filtros.
+  final Widget? sinResultados;
+
+  @override
+  Widget build(BuildContext context) {
+    if (containers.isEmpty) {
+      return SliverToBoxAdapter(
+        child: sinResultados ??
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Text('No hay contenedores en este viaje'),
+              ),
+            ),
+      );
+    }
+    return SliverList.builder(
+      key: const ValueKey<String>('lista-perezosa'),
+      itemCount: containers.length,
+      findChildIndexCallback: (Key clave) {
+        if (clave is! ValueKey<String>) return null;
+        final i = containers.indexWhere(
+            (ContainerUnit c) => 'tarjeta-${c.containerId}' == clave.value);
+        return i < 0 ? null : i;
+      },
+      itemBuilder: (BuildContext context, int index) => _ContainerCard(
+        key: ValueKey<String>('tarjeta-${containers[index].containerId}'),
+        container: containers[index],
+      ),
+    );
+  }
+}
+
 /// Tarjeta individual para mostrar un contenedor
 class _ContainerCard extends StatelessWidget {
   final ContainerUnit container;
 
-  const _ContainerCard({required this.container});
+  const _ContainerCard({super.key, required this.container});
 
   @override
   Widget build(BuildContext context) {
@@ -277,11 +330,16 @@ class _ContainerCard extends StatelessWidget {
                   spacing: 8,
                   children: [
                     if (container.isDangerous)
-                      _buildWarningChip(context, BsIconos.peligrosa, 'IMDG', colorScheme.error),
+                      // T-120 (D1): los nombres del plano, de Estadísticas
+                      // y del buscador (DESIGN.md 15.5).
+                      _buildWarningChip(context, BsIconos.peligrosa,
+                          CargaEspecial.peligrosa.rotulo, colorScheme.error),
                     if (container.isReefer)
-                      _buildWarningChip(context, BsIconos.refrigerado, 'Refrigerado', colorScheme.primary),
+                      _buildWarningChip(context, BsIconos.refrigerado,
+                          CargaEspecial.refrigerado.rotulo, colorScheme.primary),
                     if (container.isOverDimension)
-                      _buildWarningChip(context, BsIconos.fueraDeMedida, 'OOG', colorScheme.tertiary),
+                      _buildWarningChip(context, BsIconos.fueraDeMedida,
+                          CargaEspecial.fueraDeMedida.rotulo, colorScheme.tertiary),
                   ],
                 ),
               ],
@@ -346,12 +404,16 @@ class _ContainerCard extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+          // T-120: «Peligrosa IMDG» es más largo que «IMDG»; con la letra a
+          // 2.0 en 360 dp envuelve en vez de desbordarse.
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -469,6 +531,11 @@ class _ContainerCard extends StatelessWidget {
                 _buildDetailRow(context, 'Peso', 'El archivo no trae peso'),
               _buildDetailRow(context, 'Puerto Carga', container.portOfLoading ?? 'N/A'),
               _buildDetailRow(context, 'Puerto Descarga', container.portOfDischarge ?? 'N/A'),
+              // T-120 (D8): las medidas del fuera de medida, como el detalle
+              // del plano. El resto de esta hoja es O-120-1 (bloque 4).
+              if (container.isOverDimension)
+                _buildDetailRow(context, CargaEspecial.fueraDeMedida.rotulo,
+                    medidasFueraDeGalibo(container)),
               
               // Información de mercancías peligrosas
               if (container.isDangerous) ...[
@@ -515,10 +582,13 @@ class _ContainerCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
+                // T-120 (D8): sin TMP, lo dice con palabras, no «N/A°C».
                 _buildDetailRow(
                   context, 
                   'Temperatura', 
-                  '${container.temperature?.toStringAsFixed(1) ?? "N/A"}°${container.temperatureUnit ?? "C"}',
+                  container.temperature == null
+                      ? 'El archivo no trae temperatura'
+                      : '${container.temperature!.toStringAsFixed(1)}°${container.temperatureUnit ?? "C"}',
                 ),
               ],
               

@@ -34,6 +34,8 @@ class BsBarraDeMagnitud extends StatelessWidget {
     this.enMono = false,
     this.singular = 'contenedor',
     this.plural = 'contenedores',
+    this.alTocar,
+    this.ayudaAlTocar,
   });
 
   /// El rótulo («GTSTC», «Otros 3 puertos», «20 pies»).
@@ -60,6 +62,18 @@ class BsBarraDeMagnitud extends StatelessWidget {
   /// La palabra que concuerda con [valor], en singular y en plural.
   final String singular;
   final String plural;
+
+  /// T-120 · Con él, la barra entera es un botón (Estadísticas: tocar un
+  /// puerto abre la Lista filtrada, `DESIGN.md` 15.5): su zona táctil llega a
+  /// `objetivoTactil`, se activa con Intro y espacio y lleva el foco visible.
+  /// El nombre para el lector de pantalla sigue siendo [etiqueta], una sola
+  /// vez; [ayudaAlTocar] va en la descripción emergente, fuera de la
+  /// semántica (la regla de 10.45).
+  final VoidCallback? alTocar;
+
+  /// Lo que dice la descripción emergente de la barra que se toca; sin ella,
+  /// la [etiqueta].
+  final String? ayudaAlTocar;
 
   /// El alto de la barra: nunca más de 24.
   static const double altoDeBarra = 12;
@@ -142,13 +156,7 @@ class BsBarraDeMagnitud extends StatelessWidget {
       textAlign: TextAlign.end,
     );
 
-    return Semantics(
-      label: etiqueta,
-      excludeSemantics: true,
-      child: Tooltip(
-        message: etiqueta,
-        excludeFromSemantics: true,
-        child: LayoutBuilder(
+    final contenido = LayoutBuilder(
           builder: (BuildContext context, BoxConstraints restricciones) {
             // Sin ancho acotado (una Row sin Expanded, un desplazable
             // horizontal) la barra se da el ancho de una línea: la pista
@@ -222,6 +230,38 @@ class BsBarraDeMagnitud extends StatelessWidget {
               ],
             );
           },
+        );
+    final tocar = alTocar;
+    if (tocar == null) {
+      return Semantics(
+        label: etiqueta,
+        excludeSemantics: true,
+        child: Tooltip(
+          message: etiqueta,
+          excludeFromSemantics: true,
+          child: contenido,
+        ),
+      );
+    }
+    return Semantics(
+      button: true,
+      label: etiqueta,
+      excludeSemantics: true,
+      onTap: tocar,
+      child: Tooltip(
+        message: ayudaAlTocar ?? etiqueta,
+        excludeFromSemantics: true,
+        child: InkWell(
+          onTap: tocar,
+          borderRadius: BorderRadius.circular(medidas.radioControl),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: medidas.objetivoTactil),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              heightFactor: 1,
+              child: contenido,
+            ),
+          ),
         ),
       ),
     );

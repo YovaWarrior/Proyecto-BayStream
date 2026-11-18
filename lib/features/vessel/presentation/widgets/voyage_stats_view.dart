@@ -33,6 +33,7 @@ class VoyageStatsView extends ConsumerStatefulWidget {
     required this.voyage,
     required this.onBaySelected,
     this.vaciosAsignados = const <ContainerUnit>[],
+    this.onPuerto,
   });
 
   /// El viaje publicado o en previo.
@@ -44,6 +45,13 @@ class VoyageStatsView extends ConsumerStatefulWidget {
 
   /// Abre una bahía en el plano.
   final ValueChanged<int> onBaySelected;
+
+  /// T-120 (10.46) · Abre la Lista filtrada por un puerto de descarga: su
+  /// código, o `null` para «Sin destino». Sin esto, las barras no se tocan.
+  final ValueChanged<String?>? onPuerto;
+
+  /// Lo que dice la descripción emergente de la barra de un puerto.
+  static const String ayudaDelPuerto = 'Ver estos contenedores en la Lista';
 
   /// Cuántos puertos van a la vista antes de «Otros N puertos».
   static const int puertosALaVista = 7;
@@ -131,7 +139,11 @@ class _VoyageStatsViewState extends ConsumerState<VoyageStatsView> {
               medidas.anchoMaximo,
             ),
           );
-          return SingleChildScrollView(
+          // T-120: al volver de la Lista, Estadísticas sigue donde estaba (el
+          // desplazamiento se guarda bajo esta clave en el PageStorage).
+          return KeyedSubtree(
+            key: const PageStorageKey<String>('estadisticas'),
+            child: SingleChildScrollView(
             key: const ValueKey<String>('estadisticas-scroll'),
             padding: EdgeInsets.all(medidas.espacioL),
             child: Center(
@@ -170,11 +182,13 @@ class _VoyageStatsViewState extends ConsumerState<VoyageStatsView> {
                         onMagnitud: (BsMagnitudDeLaPila m) =>
                             setState(() => _magnitud = m),
                         onBahia: widget.onBaySelected,
+                        onPuerto: widget.onPuerto,
                       ),
                   ],
                 ),
               ),
             ),
+          ),
           );
         },
       ),
@@ -326,6 +340,7 @@ class _Graficos extends StatelessWidget {
     required this.magnitud,
     required this.onMagnitud,
     required this.onBahia,
+    this.onPuerto,
   });
 
   final EstadisticasDelViaje datos;
@@ -333,6 +348,7 @@ class _Graficos extends StatelessWidget {
   final BsMagnitudDeLaPila magnitud;
   final ValueChanged<BsMagnitudDeLaPila> onMagnitud;
   final ValueChanged<int> onBahia;
+  final ValueChanged<String?>? onPuerto;
 
   @override
   Widget build(BuildContext context) {
@@ -439,6 +455,15 @@ class _Graficos extends StatelessWidget {
         total: datos.total,
         caja: (CuentaPorCodigo fila) =>
             fila.codigo == null ? null : semanticos.categorico(fila.codigo!),
+        // T-120: un puerto, o «Sin destino», abre la Lista filtrada; «Otros
+        // N puertos» junta varios y no se toca.
+        alTocar: onPuerto == null
+            ? null
+            : (CuentaPorCodigo fila) => fila.codigo != null
+                ? () => onPuerto!(fila.codigo)
+                : fila.rotulo == EstadisticasDelViaje.sinDestino
+                    ? () => onPuerto!(null)
+                    : null,
       ),
     );
 
@@ -728,6 +753,7 @@ class _Barras extends StatelessWidget {
     this.caja,
     this.colores,
     this.enMono = false,
+    this.alTocar,
   });
 
   final List<CuentaPorCodigo> filas;
@@ -735,6 +761,9 @@ class _Barras extends StatelessWidget {
   final BsRol? Function(CuentaPorCodigo fila)? caja;
   final List<Color>? colores;
   final bool enMono;
+
+  /// T-120 · Qué hace tocar cada fila; `null` (o una fila con `null`), nada.
+  final VoidCallback? Function(CuentaPorCodigo fila)? alTocar;
 
   @override
   Widget build(BuildContext context) {
@@ -749,12 +778,17 @@ class _Barras extends StatelessWidget {
     }
     final maximo = filas.fold<int>(
         0, (int m, CuentaPorCodigo f) => math.max(m, f.cuenta));
+    final toques = <VoidCallback?>[
+      for (final fila in filas) alTocar?.call(fila),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         for (var i = 0; i < filas.length; i++) ...<Widget>[
-          if (i > 0) SizedBox(height: medidas.espacioS),
+          // La barra que se toca ya trae su aire: mide el objetivo táctil.
+          if (i > 0 && toques[i] == null && toques[i - 1] == null)
+            SizedBox(height: medidas.espacioS),
           BsBarraDeMagnitud(
             rotulo: filas[i].rotulo,
             valor: filas[i].cuenta,
@@ -763,6 +797,8 @@ class _Barras extends StatelessWidget {
             caja: caja?.call(filas[i]),
             color: colores == null || i >= colores!.length ? null : colores![i],
             enMono: enMono && filas[i].codigo != null,
+            alTocar: toques[i],
+            ayudaAlTocar: VoyageStatsView.ayudaDelPuerto,
           ),
         ],
       ],

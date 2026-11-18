@@ -218,6 +218,9 @@ void main() {
 
           // En Alertas: «sin evaluar», nunca «no hay resultados».
           await tester.ensureVisible(find.text('Alertas de estiba'));
+          // T-120: la Lista es un CustomScrollView (perezosa); sus slivers
+          // se vuelven a disponer en el cuadro siguiente al desplazarse.
+          await tester.pumpAndSettle();
           await tester.tap(find.text('Alertas de estiba'));
           await tester.pumpAndSettle();
           expect(find.byKey(const ValueKey('alerts-sin-evaluar')), findsOneWidget);

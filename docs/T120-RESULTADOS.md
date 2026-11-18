@@ -1,11 +1,17 @@
 # T-120 · La Lista y el buscador: filtrar por destino y buscar por carga especial (RF-018) · Resultados
 
 Timonel (Claude Code, Claude Opus 5.5). Rama `sprint-4`, carpeta del rediseño
-(`C:\Proyectos\baystream-rediseno`), punta `899e4e3` («Sprint 4: decision 10.146, el bloque 2 abre
-con T-120»). Ficha de la tarea: 10.146 de `SPRINT-4.md`. Lo acepta GLM 5.3 Flash, en Max (10.137).
+(`C:\Proyectos\baystream-rediseno`). Ficha de la tarea: 10.146 de `SPRINT-4.md`. Lo acepta GLM 5.3
+Flash, en Max (10.137).
 
-Este documento lleva, por ahora, el paso 0 y la **propuesta** (fase 1). No toqué `lib/` ni `test/`.
-Termina en «ALTO: Yov revisa y Carlos aprueba».
+- **Fase 1, la propuesta** (secciones 0 a 3), sobre `899e4e3`: subida en `9ec86b9` y revisada en la
+  10.147. **Carlos la aprobó en la 10.148** con las ocho respuestas de la sección 2 y los cinco puntos
+  de Yov (1.0).
+- **Entrega 1, la Lista y el buscador** (secciones 6 a 15), sobre `732334d` (la 10.148): lo hecho, las
+  validaciones, los archivos, el bloque de Git y el mensaje para Yov. Termina en «ALTO: Yov revisa y
+  GLM acepta».
+- **La entrega 2, el plano y la oficina** (O-119-1, O-128-4, O2 y los dos monitores), empieza cuando
+  GLM acepte la 1.
 
 ---
 
@@ -51,10 +57,11 @@ y `tool/t114_ram_windows.ps1`.
 que no cambian nada:
 - La sección 2 de `SPRINT-4.md` todavía dice «el piso es 1063»; el piso de hoy es el de la 10.141,
   **2227**, como dice el prompt.
-- El prompt cita «la historia» de RF-018 («listar todos los reefer o IMDG del viaje para hacer la
-  ronda de revisión»). En el repositorio solo encontré la fila de RF-018 en
-  `docs/entrega-7nov/fuentes/DOC1.md` (SHOULD, OE3, «No»); el criterio y la historia los tomo del
-  prompt.
+- La fuente de RF-018 es `docs/entrega-7nov/fuentes/DOC2.md`, la tabla «RF‑018» (escrita con el
+  guion que no parte la línea; por eso no la encontré en la fase 1, 10.147, punto 4). Su historia:
+  «Como planificador quiero listar todos los reefer o IMDG del viaje para hacer la ronda de
+  revisión»; su criterio: «Los términos "reefer", "imo" y "oog" filtran los resultados del
+  buscador». La carpeta no tiene seguimiento: solo la leí.
 
 ### 0.4 La sección 0.8 (24-oct) contra el código de hoy
 
@@ -79,6 +86,26 @@ cruzadas, ni nada de carga especial en el buscador.
 ---
 
 ## 1. Propuesta
+
+### 1.0 Lo aprobado (10.148)
+
+Carlos la aprobó el 17-nov a las 21:50. Lo que cambió respecto de lo propuesto abajo, y manda:
+
+- **D1:** sí a la fila «Carga especial» (1.3.6), con los nombres de la tarjeta al día.
+- **D2:** O1 va con el frente de usabilidad; T-120 no lo toca (1.6.2).
+- **D3:** las navieras, de más a menos, **con el orden fijo por el total del viaje**.
+- **D4:** dos entregas, cada una con su aceptación; primero la Lista y el buscador.
+- **D5:** no se mide en el Honor; el teléfono se mide en el bloque 3.
+- **D6: un solo nombre, «Sin destino», en la Lista y en Estadísticas**, donde decía «Sin puerto»
+  (cambia 1.1.6, punto 6).
+- **D7:** varias cargas son «cualquiera de ellas», y el resto se cumple además.
+- **D8:** el rediseño de la hoja de detalle de la Lista es O-120-1, del bloque 4. Aquí, solo dos
+  renglones: las medidas del fuera de medida y «El archivo no trae temperatura» en vez de «N/A°C».
+- **Los cinco puntos de Yov (10.147):** (1) el orden de los chips no cambia al elegir el otro filtro;
+  (2) el elegido se distingue sin depender solo del color, de día y de noche; (3) `BsFichasEnLineas`
+  entra como pieza de la biblioteca, con vista previa, documentación y prueba, y la vista previa de
+  `BsBarraDeMagnitud` enseña la barra que se toca; (4) la fuente de RF-018 es `DOC2.md`; (5) la copia
+  de «antes» con `git archive` vale.
 
 ### 1.1 El filtro por destino, al día
 
@@ -607,45 +634,411 @@ la 1.0.1. Nada de esto exige tocar `domain/` ni `data/`: las tres banderas y las
 
 ---
 
-## 2. Lo que decide Carlos
+## 2. Lo que decidió Carlos (10.148)
 
-| | Pregunta | Recomiendo |
+| | Pregunta | Recomendé | Decidió Carlos |
+|---|---|---|---|
+| **D1** | ¿La fila «Carga especial» en la Lista? | Sí | **Sí**, con los nombres de la tarjeta |
+| **D2** | ¿O1 aquí o con el frente de usabilidad? | Con el frente | **Con el frente** |
+| **D3** | ¿Las navieras de más a menos? | Sí | **Sí**, con el orden fijo |
+| **D4** | ¿Dos entregas, la Lista primero? | Sí | **Sí** |
+| **D5** | ¿Se mide en el Honor? | Si lo reservas | **No**: bloque 3 |
+| **D6** | ¿«Sin destino» y «Sin puerto», cada uno en su pantalla? | Sí | **No: «Sin destino» en las dos** |
+| **D7** | ¿Varias cargas son cualquiera de ellas? | Sí | **Sí** |
+| **D8** | ¿La hoja de detalle de la Lista se deja? | Dejarla | **O-120-1, bloque 4; aquí, dos renglones** |
+
+## 3. Horas de la fase 1
+
+Del reloj: de las 21:25 a las 21:42 del 17-nov, unos 20 minutos. Su bloque de Git se subió en
+`9ec86b9`.
+
+---
+
+## 6. Entrega 1 · La Lista y el buscador (17-nov)
+
+### 6.1 Resultado en tres líneas
+
+- **La Lista filtra por naviera, destino y carga especial**, con cuentas cruzadas en una pasada, el
+  orden fijo por el total del viaje, «Sin destino», «Quitar filtros», «Ver los n» en el teléfono y el
+  elegido que se distingue sin el color; desde Estadísticas, tocar un puerto abre la Lista filtrada y
+  Atrás vuelve una vez.
+- **RF-018:** el buscador entiende «reefer», «imo» y «oog» y sus equivalentes en español, la clase IMO
+  y el número ONU; dice lo que entendió y por qué salió cada resultado, y el resto se busca como
+  siempre.
+- **La Lista es perezosa** (P10): con 977 contenedores construye unas decenas de tarjetas en vez de
+  las 977; la memoria, medida antes y después con los instrumentos de T-99, está en 7.
+
+### 6.2 Base, luz verde y lo que se corrió
+
+- **La punta era `732334d`**, con la 10.147 y la 10.148 (`git log --oneline -5`, `git show --stat
+  HEAD`). El árbol traía lo de siempre que no es mío: los cuatro archivos que solo difieren en el fin
+  de línea y las carpetas sin seguimiento de `docs/`. No los toqué y no van en el bloque.
+- **Carlos dio dos luces verdes:** una ventana de Flutter abierta mientras programaba (17-nov, hacia las 22:05)
+  y la ventana de medición (hacia las 22:40). Cada una empezó y terminó con su línea `SEMÁFORO:`, y nunca corrí
+  dos comandos de Flutter o de Dart a la vez.
+- **No compilé ninguna Release de publicación, no cambié la versión (`1.0.1+10`) y no publiqué.** Los
+  dos bancos de la medición son compilaciones del banco de T-99 en `%TEMP%` (7.1).
+- No toqué Firebase, el almacén real, la MSIX de Carlos ni el Honor.
+
+### 6.3 Lo hecho
+
+**Los filtros de la Lista** (`DESIGN.md` 18.1 a 18.3):
+- `CuentasDeLosFiltros` (`formatters/cuentas_de_los_filtros.dart`, Dart puro) recorre lo que va a
+  bordo una sola vez y da, para cada chip, la cuenta con los otros dos filtros y el total del viaje,
+  que fija el orden; también lo que pasa los tres filtros. `FiltrosDeLaLista` lleva lo elegido y la
+  regla de «Sin destino» (sin `LOC+11` o con el código en blanco).
+- `selectedDischargePortProvider` y `selectedSpecialCargoProvider` (`vessel_providers.dart`), con la
+  forma de `selectedCarrierProvider`, que no cambia. Se sueltan donde se soltaba la naviera: el previo,
+  abrir un viaje guardado y el salto de Alertas a una celda.
+- `filtrosDeLaListaProvider`, `cuentasDeLosFiltrosProvider` y `filteredContainersProvider`, que ahora
+  filtra por los tres (`loading_operation_provider.dart`). `carriersListProvider` se queda.
+- `FilasDeFiltros` y `TituloDeLaLista` (`widgets/filtros_de_la_lista.dart`): las tres filas, en tabla en
+  la oficina y en `BsFichasEnLineas` en el teléfono, la hoja de «Ver los n», el chip (borde de 2 dp en
+  la tinta y texto en negrita cuando está elegido; un chip en cero, apagado), el título con lo que
+  filtra, la concordancia de «1 lleno», y «Quitar filtros».
+- **`BsFichasEnLineas`** (`lib/core/design/componentes/bs_fichas_en_lineas.dart`), una pieza de la
+  biblioteca con su vista previa («Fichas en líneas»), su documentación (18.3) y su prueba.
+- La tarjeta dice «Peligrosa IMDG», «Refrigerado» y «Fuera de medida» (D1); con el nombre más largo,
+  su chip envuelve en vez de desbordarse a 360 dp con la letra a 2.0. Su hoja suma los dos renglones de
+  D8.
+
+**De Estadísticas a la Lista** (18.5):
+- `BsBarraDeMagnitud` gana `alTocar` y `ayudaAlTocar`: la barra entera es un botón con zona táctil de
+  48 dp, Intro y espacio, foco visible y su nombre una vez. Su vista previa enseña la barra de PAMIT
+  como la que se toca.
+- `VoyageStatsView` gana `onPuerto`; en el panel de puertos, cada puerto y «Sin destino» abren la
+  Lista; «Otros N puertos» no. La página suelta la naviera y la carga especial, pone el destino, deja
+  la Lista arriba y anota «volver a Estadísticas» para Atrás; lo olvida si cambia la pestaña o el
+  filtro.
+- **D6:** `EstadisticasDelViaje.sinPuerto` pasa a `sinDestino` («Sin destino»), y un código en blanco
+  también cuenta ahí, como en la Lista. Cambia una línea de `t121_estadisticas_test.dart` y `DESIGN.md`
+  15.5, 15.8 y 15.11.
+- Las dos pantallas recuerdan dónde estaban: la Lista con su propio controlador (para que, desde
+  Estadísticas, empiece arriba sin un cuadro en el lugar viejo) y Estadísticas con un `PageStorageKey`
+  alrededor de su desplazable, que conserva la clave `estadisticas-scroll` que usan el conductor de
+  T-99 y las pruebas de T-121.
+
+**RF-018** (18.6):
+- `ConsultaDeBusqueda` y `CargaEspecial` (`formatters/consulta_de_busqueda.dart`, Dart puro): los
+  términos como palabras enteras, sin mayúsculas ni tildes; la frase «fuera de medida»; la clase («imo
+  3», «imdg 3», «imo3», «clase 3»; «imo 2» da la 2.1) y el número ONU («un 1993», «onu 1993»); varias
+  cargas, cualquiera de ellas; el resto, como siempre. También la línea de lo que se entendió y el
+  motivo de cada resultado.
+- En `ContainerSearchDelegate`: los resultados con su línea y sus motivos, el resaltado con el resto,
+  la sección «Carga especial» sin escribir nada y los textos nuevos del campo y la ayuda. La línea de
+  `t144_lector_volcado_test.dart` que buscaba la ayuda vieja se pone al día.
+
+**La Lista perezosa** (18.4): la pestaña es un `CustomScrollView` con lo de arriba en un
+`SliverToBoxAdapter` y las tarjetas en `ContainersSliverList` (`SliverList.builder`, cada tarjeta con
+la clave de su matrícula y `findChildIndexCallback`). Declara `semanticChildCount`. `ContainersListView`
+se queda para donde se monta sola.
+
+**Lo que cambió respecto de la propuesta** (además de lo de 1.0):
+1. **La carga especial no lleva «Todas»:** se eligen varias, y soltarlas todas es lo mismo que no
+   filtrar.
+2. **Estadísticas recuerda su desplazamiento con un `PageStorageKey` por fuera**, no en el
+   desplazable: cambiarle la clave rompía el conductor de T-99 y las pruebas de T-121.
+3. **La Lista recuerda el suyo con un controlador propio**, no con `PageStorage`: así, al llegar desde
+   Estadísticas, empieza arriba en el mismo cuadro.
+4. **Una prueba de T-114 gana una línea:** `t114_fase3_inicio_test.dart` desplazaba la Lista con
+   `ensureVisible` y tocaba «Alertas de estiba» en el mismo cuadro. Con el `SingleChildScrollView` de
+   antes eso alcanzaba, porque su desplazamiento se aplica al pintar; con los slivers de la Lista
+   perezosa hay que dejar pasar el cuadro. Se suma un `pumpAndSettle` con su comentario.
+5. **El contraste de los chips en la vista previa nocturna se mide aparte** (8.2).
+
+### 6.4 Las pruebas nuevas (99)
+
+| Archivo | Pruebas | Qué comprueba |
+|---|---:|---|
+| `t120_busqueda_carga_especial_test.dart` | 33 | Los 18 términos, tildes y mayúsculas, palabras enteras, la clase, el número ONU, varias cargas y el resto; lo que sale; que sin términos la búsqueda es la de antes; la línea de arriba y los motivos |
+| `t120_buscador_test.dart` | 6 | En el buscador: «reefer», «imo» y «oog» filtran; la línea y los motivos; el resaltado del resto; nada resaltado con solo carga; las sugerencias; el campo |
+| `t120_filtros_lista_test.dart` | 20 | Las cuentas a mano contra las cruzadas; el orden fijo; los chips en cero; la carga especial; «Sin destino»; en la Lista, las tres filas, el título, «Quitar filtros», el orden que no cambia, el elegido sin el color y su texto a 4.5:1 contra su fondo, de día y de noche (8.1), la semántica, el vacío con filtros; la tarjeta y la hoja (D1, D8) |
+| `t120_fichas_en_lineas_test.dart` | 11 | `BsFichasEnLineas`: todas, las que caben, la fija, lo oculto fuera del toque y de la semántica, una línea, el alto en seco; las dos vistas previas con las tres pautas, de día y de noche, y el contraste de cada chip contra su fondo |
+| `t120_filtros_matriz_test.dart` | 17 | 360, 599, 800, 1366 y 1920 dp con la letra a 1.0, 1.45 y 2.0, con las fuentes del producto: nada desbordado ni fuera de la pantalla, dos líneas en el teléfono, el elegido a la vista, la hoja |
+| `t120_estadisticas_a_lista_test.dart` | 8 | GTSTC, «Sin destino» y «Otros»; Intro; Atrás una vez y el doble Atrás después; Atrás olvidado al cambiar el filtro; los dos desplazamientos recordados |
+| `t120_lista_perezosa_test.dart` | 4 | Con 977, menos de 40 tarjetas construidas arriba y al final; `semanticChildCount`; un filtro no hace saltar lo de arriba |
+
+Y el ayudante `test/support/t120_lista_support.dart`: un buque sintético del tamaño que se pida
+(BUQUE LISTA, TSTU), leído por el lector del producto, con refrigerados con y sin `TMP`, peligrosas de
+dos clases, fuera de medida y tres sin `LOC+11`.
+
+**Rojas contra `899e4e3`** (`build/t120/e1/rojas-contra-899e4e3.txt`), en `%TEMP%\t120-antes`, una
+copia de `899e4e3` hecha con `git archive` con las pruebas encima:
+- **corren contra el código de antes** las de `t120_buscador_test.dart`, `t120_estadisticas_a_lista_test.dart`
+  y `t120_lista_perezosa_test.dart` (18), porque solo usan el buscador, claves y textos que ya
+  existían. **Fallan 17**, cada una en su comprobación: «reefer» no da nada, la barra no abre la Lista
+  ni es un botón, no hay `lista-scroll`, se construyen las 977 tarjetas. **Pasa una:** «elegir un filtro
+  no hace saltar lo de arriba», que ya se cumplía; es una guarda;
+- **no compilan contra el código de antes** las otras 81, porque usan las piezas nuevas
+  (`ConsultaDeBusqueda`, `CuentasDeLosFiltros`, `BsFichasEnLineas` y los providers del destino y la
+  carga).
+
+### 6.5 Validaciones y cifras
+
+| Qué | Resultado | Registro |
 |---|---|---|
-| **D1** | ¿La fila «Carga especial» en la Lista (1.3.6), con los nombres de la tarjeta al día? | **Sí** (1.5 h) |
-| **D2** | ¿O1 aquí o con el frente de usabilidad (1.6.2)? | **Con el frente de usabilidad** |
-| **D3** | ¿Las navieras, de más a menos, como los destinos (1.1.1)? | **Sí** |
-| **D4** | ¿Dos entregas, la Lista primero (1.8)? | **Sí** |
-| **D5** | ¿Se mide también en el Honor (1.4.3)? | Solo si lo reservas; si no, queda anotado |
-| **D6** | ¿«Sin destino» en la Lista y «Sin puerto» en Estadísticas, cada uno en su pantalla (1.1.6)? | **Sí** |
-| **D7** | ¿Varias categorías en el buscador son «cualquiera de ellas», y el resto se cumple además (1.3.2)? | **Sí** |
-| **D8** | Visto y **fuera del alcance**: la hoja de detalle de la Lista (`containers_list_view.dart:416-540`) dice «N/A», «Puerto Carga» y «MERCANCÍA PELIGROSA», contra las reglas 3 y 4. ¿Se deja para el rediseño de oro? | **Sí, dejarla:** no es de T-120 |
+| La suite completa, en una sola corrida, después del último cambio de `lib/` y `test/` | **2326 de 2326**, sin fallidas ni omitidas (el piso era 2227: +99) | `build/t120/e1/suite-4.txt` (de las 23:59 a las 00:01, después del último cambio) |
+| Las corridas anteriores | La tercera, 2326 de 2326, antes de un cambio de comentario; la segunda, 2324 de 2324, antes de la corrección de 8.1; la primera, 2322 y 2 fallidas, las dos mías: el chip «Peligrosa IMDG» se desbordaba 20 px a 360 dp con la letra a 2.0, y la prueba del inicio de 6.3, punto 4. Corregidas | `build/t120/e1/suite-1.txt` |
+| `flutter analyze --no-pub`, todo el paquete, en la carpeta | **«No issues found!»** | `build/t120/e1/analyze-6.txt` |
+| La copia limpia (el árbol sin `build/`, `.dart_tool/` ni `docs/`), `pub get` y `analyze` | En la primera (`%TEMP%\t120-limpia-2231`), 3 errores, todos de `tool/t124_main.dart`, que importa la entrada generada de T-124 (`build/t124/entradas/`), O-143-3; con esa entrada copiada, **«No issues found!»**, y lo mismo con `dart analyze --cache` en una carpeta nueva (10.141). Con el código final, una copia nueva (`%TEMP%\t120-limpia-final-2355`, con la entrada de T-124): **«No issues found!»** con `flutter analyze` y con `dart analyze --cache` nueva | `analyze-copia-limpia*.txt` |
+| `// ignore:` | Ninguno | |
+| `pubspec.yaml`, `pubspec.lock`, `lib/main.dart`, los congelados, `domain/`, `data/`, `web/`, `windows/` | **No cambian** | `git diff --stat` |
 
-## 3. Horas de esta fase
+Las sondas que usé para entender el contraste de los chips (8.2) vivieron en `build/t120/sonda/` y las
+borré antes de la suite: llevaban `// ignore:` y `analyze` lee `build/`.
 
-Del reloj: de las 21:25 a las 21:42 del 17-nov, unos 20 minutos (las lecturas, el paso 0 con su
-ventana de Flutter de un minuto y esta propuesta).
+## 7. La memoria, antes y después (RNF-001 y RNF-007, solo la Lista)
 
-## 4. Git
+### 7.1 Cómo se midió
 
-Para que lo ejecute Carlos. Solo este informe; nada de `lib/`, `test/` ni `pubspec.*` cambió.
+- **El instrumento, sin tocarlo:** `tool/t114_ram_windows.ps1`, que abre el banco con `explorer.exe`
+  desde un `.cmd` con las variables del conductor y llama a `tool/t99_ram_windows.ps1 -Accion seguir`
+  (cinco lecturas de `WorkingSet64` tras 5 s de reposo en cada paso del escenario `ram` de
+  `tool/t99_conductor.dart`: inicio, cargar, el plano, todas las bahías, Estadísticas, buscar y volver
+  a la Lista); el resumen, `tool/t99_ram_resumen.dart`. Es lo mismo que midió los 510 MB de
+  `REDISENO-RESULTADOS.md` 4.7.
+- **Los dos bancos:** «antes», de `899e4e3`, y «después», del árbol con T-120, cada uno en su copia
+  de `%TEMP%\t120-ram\` hecha con `tool/t99_copia.ps1` (la de «antes», con `git archive`, que solo lee;
+  10.147, punto 5), con la identidad `r4`, `-t tool/t99_main.dart`, `T99_NAMESPACE=r4` y su almacén en
+  `%TEMP%\t120-ram\almacen-*` (`T99_ALMACEN`). Sin Firebase: la sesión queda en el modo de un solo
+  dispositivo y no abre ningún almacén (10.135). **No son Releases de publicación.**
+- **Un tropiezo:** la guarda de `t99_ram_windows.ps1` solo acepta un banco cuya ruta diga «t99», y
+  los míos estaban en `t120-ram`. La primera serie se detuvo en la corrida 1; cerré ese banco por su
+  PID, comprobando su ruta, y copié las dos carpetas `Release` a `%TEMP%\t99-t120\`. Las cuatro series
+  válidas son de ahí.
+- **Los archivos:** `T99_SINTETICO_977.edi` (164 312 bytes, 977 `EQD+CN`), el mismo del rediseño,
+  sacado del Base64 de la entrada de T-124; y `T99_SINTETICO_5000.edi`, generado con
+  `tool/t99_sintetico.dart` desde la estructura de `CORPUS_A01.edi` («5000 leídos de 5000, 72
+  bahías»). Los dos en `%TEMP%`; nada del corpus entró al repositorio.
+- **Las corridas:** seis por banco y por archivo, la primera en frío y descartada; ninguna espera de
+  reposo vencida. De las 22:53 a las 23:46, la ventana maximizada en la pantalla de la laptop.
+- **El almacén real:** su listado desde esta consola es igual antes y después
+  (`build/t120/e1/ram/almacen-real-*.txt`). La consola de un agente empaquetado lo ve mezclado con la
+  copia de su paquete (AGENTS.md), así que vale como comparación, no como huella del almacén de Carlos.
+  Los bancos escribieron solo en sus carpetas `r4_*` de `%TEMP%`.
+
+### 7.2 Lo que dio
+
+**El estable y el pico** (`t99_ram_resumen.dart`; MB del SI; cinco corridas válidas por serie):
+
+| Archivo | Banco | Estable, mediana | Estable, máximo | Pico, mediana | Pico, máximo | Umbral |
+|---|---|---:|---:|---:|---:|---|
+| 977 | antes | 512.1 MB | 541.4 MB | 512.1 MB | 541.4 MB | < 200 MB |
+| 977 | **después** | **151.8 MB** | **165.1 MB** | **162.3 MB** | **170.8 MB** | < 200 MB |
+| 5 000 | antes | 1 929.9 MB | 1 939.6 MB | 1 930.0 MB | 1 939.6 MB | < 200 MB |
+| 5 000 | **después** | **214.2 MB** | **224.9 MB** | **224.8 MB** | **225.5 MB** | < 200 MB |
+
+**Paso por paso** (mediana de las 25 lecturas de las corridas 2 a 6, con su mínimo y su máximo):
+
+| Paso | 977, antes | 977, después | 5 000, antes | 5 000, después |
+|---|---:|---:|---:|---:|
+| inicio | 117.3 (110.9–137.6) | 114.5 (111.1–117.6) | 133.1 (120.3–145.0) | 131.8 (120.7–145.1) |
+| cargar | 154.3 (150.4–172.9) | 151.9 (148.5–163.1) | 200.3 (190.4–216.2) | 200.4 (188.6–216.2) |
+| el plano | 156.9 (151.3–175.0) | 154.9 (150.9–165.7) | 202.4 (193.8–215.4) | 202.4 (191.4–206.4) |
+| todas las bahías | 156.5 (150.1–179.2) | 155.1 (151.2–166.9) | 215.4 (210.9–224.8) | 220.0 (212.2–225.5) |
+| Estadísticas | 171.5 (151.1–191.9) | 156.9 (154.9–170.8) | 208.8 (196.6–213.8) | 204.8 (195.1–211.8) |
+| buscar | 179.9 (172.1–201.8) | 162.3 (152.4–166.5) | 196.6 (192.7–210.0) | 210.2 (197.5–223.6) |
+| **volver a la Lista** | **512.1 (502.0–541.4)** | **151.8 (149.7–165.1)** | **1 929.9 (1 917.3–1 939.6)** | **214.2 (202.1–224.9)** |
+
+**Lectura:**
+- **El salto de la Lista desaparece.** Con 977, la Lista pasa de 512 MB a 152, al nivel de los demás
+  pasos y por debajo de los 200 MB del umbral; con 5 000, de 1 930 MB a 214. Antes, la Lista crecía
+  unos 0.35 MB por contenedor ((1 929.9 − 512.1) / 4 023); después, ya no crece con ellos: queda
+  donde están el plano y las bahías de ese mismo archivo.
+- **Lo demás no cambia:** de inicio a buscar, las dos columnas de cada archivo quedan dentro del ruido
+  entre corridas (± 15 MB). Lo que se ve más bajo en Estadísticas y buscar con 977 es ruido, no un
+  efecto de T-120.
+- **Con 5 000, la app entera pasa de 200 MB** desde que carga el archivo (200 MB al cargar, 220 con
+  todas las bahías), igual antes y después: no es la Lista. **No dictamino RNF-001 ni RNF-007:** eso es
+  del bloque 3, con sus buques sintéticos y el Honor (D5).
+- **La corrección de 8.1 no cambia estas cifras:** cambia el estilo del texto de los chips, no qué se
+  construye. Se midió con el banco anterior a ella.
+
+Las lecturas, los resúmenes y los registros de cada serie están en `build/t120/e1/ram/`.
+
+## 8. Lo que no se pudo, lo que se encontró al mirar y lo que queda anotado
+
+### 8.1 Las capturas encontraron un defecto que las pruebas no vieron
+
+Con el banco de «después», el escenario `anchos` del conductor de T-99 (con `T99_ID=reefer`) tomó la
+Lista, el plano, Estadísticas y la búsqueda a 1366 × 690 y a 600 × 960 (y la Lista a 360 × 800). **De
+noche, el chip elegido («Todas», «Todos») salía como una caja clara sin texto**
+(`build/t120/e1/capturas/antes-de-la-correccion/1366x690_lista.png`):
+- **la causa:** el chip le ponía a su texto el estilo `labelLarge` del tema, con su color, y eso pisaba
+  el color que el tema le da al chip elegido (el texto de la selección; de noche, la noche sobre la
+  tinta). Es justo lo que avisa el comentario del `chipTheme` en `bs_tema.dart`;
+- **por qué no lo vieron las pruebas:** las de 6.4 miraban el grosor del borde y el peso del texto
+  del elegido, no su color; y la del contraste de la vista previa medía chips con un `Text` sin estilo;
+- **la corrección:** el texto del chip lleva solo el tamaño, el peso, la familia y las cifras
+  tabulares, y toma el color del chip;
+- **la prueba nueva** (en `t120_filtros_lista_test.dart`, de día y de noche): el texto de cada chip de
+  la Lista, elegido o no, pasa 4.5:1 contra su fondo. **Contra el código anterior falla de noche con
+  1.0:1** («Todas», elegido; `contraste-chip-contra-codigo-anterior.txt`); con la corrección pasa;
+- **la vi en pantalla:** el banco recompilado con la corrección dice «Todas 977» y «Todos 977» en el
+  chip elegido (`capturas/final/1366x690_lista.png`).
+
+Las demás capturas se ven como deben: la búsqueda de «reefer» dice «50 refrigerados» y cada resultado
+lleva su «Refrigerado, −20 °C» o «Refrigerado, el archivo no trae temperatura»; Estadísticas, las
+barras de los puertos con su zona táctil. El conductor no informó textos que no caben ni errores de
+Flutter en la Lista, Estadísticas ni la búsqueda.
+
+### 8.2 Lo demás
+
+- **A 360 dp el conductor de T-99 no llega a Estadísticas:** busca el destino «Estadísticas» y en la
+  barra inferior su rótulo es corto. Es del instrumento y viene de antes. La Lista a 360 dp sí se
+  capturó, sin textos que no caben. El teléfono lo cubren las pruebas de la matriz (17).
+- **No miré la Web ni Android en un cliente.** La semántica es la misma en los tres clientes y la cubren
+  las pruebas; lo mira quien acepte (sección 12).
+- **El contraste de la vista previa nocturna de `BsFichasEnLineas`:** la pauta de Flutter compara los
+  dos colores que más pintan en el rectángulo del nodo, y en un chip de 32 dp con zona táctil de 48
+  esos son el papel del lienzo y la hoja del chip (4.29:1), no el texto. La prueba mide aparte el texto
+  de cada chip contra su fondo; de día la pauta se aplica tal cual.
+- **El texto de los llenos y los vacíos del título** ya concuerda («1 lleno»); antes decía «1 llenos».
+- **Visto y fuera del alcance:** `portDistributionProvider`, `carrierDistributionProvider`,
+  `specialCargoStatsProvider` y `bayStatsProvider` siguen sin usarse (0.4); no los borré. O-120-1 (la
+  hoja de detalle de la Lista) es del bloque 4.
+- **La entrega 2 no empezó:** espera la aceptación de esta (10.148).
+
+## 9. Archivos de la entrega 1
+
+**Cambiados (14):**
+- `DESIGN.md`: la sección 18, nueva; 15.5, 15.8 y 15.11 («Sin destino» y el puerto que se toca); el
+  estado de arriba.
+- `lib/core/design/componentes/bs_barra_de_magnitud.dart`: `alTocar` y `ayudaAlTocar`.
+- `lib/core/design/design.dart`: exporta `bs_fichas_en_lineas.dart`.
+- `lib/core/design/vistas_previas.dart`: la vista previa «Fichas en líneas» y la barra que se toca en
+  la de los paneles de Estadísticas.
+- `lib/features/vessel/presentation/formatters/estadisticas_del_viaje.dart`: «Sin destino» (D6) y el
+  código en blanco.
+- `lib/features/vessel/presentation/pages/vessel_overview_page.dart`: la pestaña Lista
+  (`CustomScrollView`, filas, título y vacío), el paso desde Estadísticas con Atrás, el desplazamiento
+  recordado y la limpieza en `_openAlerts`.
+- `lib/features/vessel/presentation/providers/loading_operation_provider.dart`: los filtros, las
+  cuentas y el filtro triple.
+- `lib/features/vessel/presentation/providers/vessel_providers.dart`: el destino y la carga elegidos, y
+  su limpieza.
+- `lib/features/vessel/presentation/widgets/container_search_delegate.dart`: RF-018.
+- `lib/features/vessel/presentation/widgets/containers_list_view.dart`: `ContainersSliverList`, los
+  nombres de los chips y los dos renglones de la hoja (D8).
+- `lib/features/vessel/presentation/widgets/voyage_stats_view.dart`: `onPuerto` y el desplazamiento
+  recordado.
+- `test/t114_fase3_inicio_test.dart` (6.3, punto 4), `test/t121_estadisticas_test.dart` (D6) y
+  `test/t144_lector_volcado_test.dart` (el texto de ayuda): una línea cada una, con su comentario.
+
+**Nuevos (12):**
+- `lib/core/design/componentes/bs_fichas_en_lineas.dart`
+- `lib/features/vessel/presentation/formatters/consulta_de_busqueda.dart`
+- `lib/features/vessel/presentation/formatters/cuentas_de_los_filtros.dart`
+- `lib/features/vessel/presentation/widgets/filtros_de_la_lista.dart`
+- `test/support/t120_lista_support.dart`
+- `test/t120_buscador_test.dart`, `test/t120_busqueda_carga_especial_test.dart`,
+  `test/t120_estadisticas_a_lista_test.dart`, `test/t120_fichas_en_lineas_test.dart`,
+  `test/t120_filtros_lista_test.dart`, `test/t120_filtros_matriz_test.dart`,
+  `test/t120_lista_perezosa_test.dart`
+
+Y este informe. **`pubspec.yaml` y `pubspec.lock` no cambian.** Tampoco `domain/`, `data/`,
+`lib/main.dart`, los congelados, las opciones de Firebase, `web/`, `windows/`, `tool/` ni el manual de
+la 1.0.1.
+
+**Evidencia, fuera de Git:** `build/t120/paso0/` y `build/t120/e1/` (los `analyze`, las dos suites,
+las rojas y las corridas de cada archivo de pruebas) y, en `%TEMP%`, las copias y las lecturas de la
+medición (7.1).
+
+## 10. `DESIGN.md` y el manual
+
+- **`DESIGN.md` 18** dice lo que se ve, las cuentas y el orden, la oficina y el teléfono con la API de
+  `BsFichasEnLineas`, la Lista perezosa y el lector de pantalla, el paso desde Estadísticas y RF-018
+  con su tabla de términos y su fuente. 15.5 deja de decir «es T-120».
+- **El manual, en la versión siguiente** (el de la 1.0.1 no se tocó):
+  - **5.1 La búsqueda:** los términos de carga especial, la clase y el número ONU, la línea de arriba,
+    el motivo de cada resultado y la sección «Carga especial»; una figura con «reefer»;
+  - **5.2 La Lista:** las tres filas, las cuentas cruzadas, «Sin destino», «Quitar filtros» y «Ver los
+    n» en el teléfono; los nombres de los chips de la tarjeta; la figura de la Lista, nueva;
+  - **6.1 Estadísticas:** «Sin destino», y tocar un puerto abre la Lista filtrada; Atrás vuelve;
+  - **11 Glosario:** «OOG» y «fuera de medida», y que «reefer», «imo» y «oog» se buscan.
+
+## 11. Horas
+
+Del reloj, el 17-nov: de las 22:00 (la 10.148) a las 00:05 del 18-nov, unas 2 h. De ellas, la
+medición ocupó la máquina de las 22:44 a las 23:46, con los dos bancos y las cuatro series. La
+propuesta estimaba de 15.5 a 17 h para esta entrega.
+
+## 12. Para quien acepte
+
+1. **La suite y `analyze`** en una copia limpia de la punta con este bloque: 2326 aprobadas, sin
+   omitidas; `analyze` en cero, con la entrada de T-124 copiada (O-143-3) y, si la copia marca algo
+   que la carpeta no, otra vez con `dart analyze --cache` en una carpeta nueva (10.141).
+2. **Las rojas:** las tres pruebas que compilan contra `899e4e3` (6.4), en una copia de ese commit.
+3. **A la vista, en Windows y en la Web del banco** (perfil nuevo de Chrome, 10.142), con
+   `T99_SINTETICO_977.edi`, de día y de noche, a 360 y a 1366 dp, con la letra a 1.0 y 2.0:
+   - los tres filtros, las cuentas cruzadas, el orden que no cambia, el elegido legible, «Sin destino»,
+     «Quitar filtros» y, en el teléfono, «Ver los n destinos» con su hoja;
+   - de Estadísticas a la Lista por GTSTC (o el puerto que traiga el archivo) y «Sin destino», y Atrás
+     en Android si hay emulador;
+   - el buscador con «reefer», «imo 3», «oog» y «reefer USHOU».
+4. **La memoria:** basta una corrida de cada banco con 977 para ver el mismo orden de magnitud (512
+   contra 152 MB en la Lista); las 24 están en `build/t120/e1/ram/`.
+
+## 13. Git
+
+Para que lo ejecute Carlos. Fuera quedan los cuatro archivos que solo cambian el fin de línea
+(`test/t114_fase3_correccion_test.dart` y tres de `windows/flutter/`) y las carpetas sin seguimiento de
+`docs/`. **`pubspec.yaml` y `pubspec.lock` no cambian.**
 
 ```powershell
+git add -- DESIGN.md
+git add -- lib/core/design/componentes/bs_barra_de_magnitud.dart
+git add -- lib/core/design/componentes/bs_fichas_en_lineas.dart
+git add -- lib/core/design/design.dart
+git add -- lib/core/design/vistas_previas.dart
+git add -- lib/features/vessel/presentation/formatters/consulta_de_busqueda.dart
+git add -- lib/features/vessel/presentation/formatters/cuentas_de_los_filtros.dart
+git add -- lib/features/vessel/presentation/formatters/estadisticas_del_viaje.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/providers/loading_operation_provider.dart
+git add -- lib/features/vessel/presentation/providers/vessel_providers.dart
+git add -- lib/features/vessel/presentation/widgets/container_search_delegate.dart
+git add -- lib/features/vessel/presentation/widgets/containers_list_view.dart
+git add -- lib/features/vessel/presentation/widgets/filtros_de_la_lista.dart
+git add -- lib/features/vessel/presentation/widgets/voyage_stats_view.dart
+git add -- test/support/t120_lista_support.dart
+git add -- test/t114_fase3_inicio_test.dart
+git add -- test/t120_buscador_test.dart
+git add -- test/t120_busqueda_carga_especial_test.dart
+git add -- test/t120_estadisticas_a_lista_test.dart
+git add -- test/t120_fichas_en_lineas_test.dart
+git add -- test/t120_filtros_lista_test.dart
+git add -- test/t120_filtros_matriz_test.dart
+git add -- test/t120_lista_perezosa_test.dart
+git add -- test/t121_estadisticas_test.dart
+git add -- test/t144_lector_volcado_test.dart
 git add -- docs/T120-RESULTADOS.md
-git commit -m "Sprint 4: T-120, la propuesta de la Lista y el buscador"
+git commit -m "Sprint 4: T-120, entrega 1: la Lista filtra por naviera, destino y carga especial con cuentas cruzadas, Estadisticas abre la Lista por puerto, el buscador entiende reefer, imo y oog (RF-018) y la Lista es perezosa"
 git push
 ```
 
-## 5. Mensaje para Yov
+## 14. En tres líneas
 
-> Yov, la propuesta de T-120 está en `docs/T120-RESULTADOS.md` (paso 0 y fase 1). La punta es
-> `899e4e3`, con la 10.146; `pub get` no movió el lock y `analyze` dio cero. De la 0.8 casi todo sigue
-> igual: la Lista, los chips con desplazamiento horizontal, «Filtrar por Naviera», las cuentas por chip
-> y el `ListView` con `shrinkWrap`; cambió dónde vive el filtro (`loading_operation_provider.dart`,
-> sobre lo que va a bordo desde T-122) y ya existe la ficha del puerto (`BsCajaDeCodigo`). Propongo
-> dos entregas: la Lista y el buscador (15.5 a 17 h), con RF-018 en Dart puro y la Lista perezosa
-> medida con `t114_ram_windows.ps1` y 977 y 5 000 contenedores; y el plano y la oficina (8 h), con
-> una hipótesis para O-119-1 (un `jumpTo` fuera del alcance arma un resorte) que una prueba roja tiene
-> que confirmar antes de cambiar nada. Recomiendo O2 aquí y O1 con el frente de usabilidad. Carlos
-> tiene el segundo monitor. Quedan ocho decisiones para Carlos en la sección 2.
+- La Lista filtra por naviera, destino y carga especial, con cuentas cruzadas y el orden fijo; tocar
+  un puerto en Estadísticas abre la Lista filtrada; «Sin destino» es un solo nombre.
+- El buscador entiende «reefer», «imo» y «oog» (RF-018), con la clase IMO, el número ONU, lo que
+  entendió y por qué salió cada resultado.
+- La Lista es perezosa: con 977 contenedores baja de 512 a 152 MB, y con 5 000, de 1 930 a 214;
+  suite 2326/2326, `analyze` en cero aquí y en la copia limpia.
 
-**ALTO: Yov revisa y Carlos aprueba.**
+## 15. Mensaje para Yov
+
+> Yov, la entrega 1 de T-120 está en `docs/T120-RESULTADOS.md` (secciones 6 a 15), sobre `732334d`,
+> sin commit. La Lista filtra por naviera, destino y carga especial, con cuentas cruzadas en una
+> pasada y el orden fijo por el total del viaje; desde Estadísticas, un puerto abre la Lista filtrada
+> y Atrás vuelve una vez; «Sin destino» en las dos pantallas; el buscador entiende RF-018 (fuente:
+> `DOC2.md`). 99 pruebas nuevas; la suite da 2326 de 2326 en una corrida, sin omitidas; `analyze`,
+> cero aquí y en una copia limpia (con la entrada de T-124, O-143-3, y repetido con caché nueva).
+> Contra `899e4e3` corren 18 de las nuevas y fallan 17; la otra es una guarda. La memoria, con
+> `t114_ram_windows.ps1` y seis corridas por serie: la Lista pasa de 512.1 a 151.8 MB con 977 y de
+> 1 929.9 a 214.2 MB con 5 000; lo demás no cambia. Las capturas del banco encontraron un defecto que
+> las pruebas no vieron: de noche, el chip elegido no se leía (1.0:1); está corregido, con su prueba
+> roja, y visto en pantalla. Tres pruebas viejas cambian una línea cada una (6.3 y 6.4). No se
+> compiló ninguna Release de publicación ni se tocó la versión. La entrega 2 espera la aceptación.
+
+**ALTO: Yov revisa y GLM acepta.**

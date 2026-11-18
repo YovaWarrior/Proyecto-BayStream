@@ -17,7 +17,7 @@ lleva a `lib/core/design/` y a `lib/core/app.dart`: la noche, los estados de la 
 Estado, las fichas y la tabla reordenada, el tema por omisión según el equipo y las
 piezas nuevas. Donde la sección 13 y las secciones 4 y 5 digan cosas distintas, manda
 la 13. T-117 y T-118 (10.36 a 10.39) suman la sección 14: la oficina con más plano, el
-panel lateral que se oculta y el selector de modo único. T-119 (10.76) suma la sección 16: la rueda en la silueta, el zoom con el touchpad y Ctrl + rueda, y la barra horizontal de la rejilla. La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
+panel lateral que se oculta y el selector de modo único. T-119 (10.76) suma la sección 16: la rueda en la silueta, el zoom con el touchpad y Ctrl + rueda, y la barra horizontal de la rejilla. T-120 (10.146 a 10.148) suma la sección 18: los filtros de la Lista, la Lista perezosa y el buscador que entiende la carga especial (RF-018). La evidencia de contraste está en `docs/rediseno/fase2bis/contraste.md`, generada
 por `tool/rediseno_contraste.py`, y la del contraste compuesto de la celda en
 `test/t114_celda_contraste_test.dart` y `test/t114_fase2bis_test.dart`.
 Material 3 sigue siendo la base: el sistema son tokens, un `ColorScheme` ajustado,
@@ -2206,7 +2206,7 @@ tipo oración, encabezado para el lector de pantalla) y 16 dp de aire.
 
 | Panel | Qué lleva | Reglas |
 |---|---|---|
-| **Por puerto de descarga** | Una `BsBarraDeMagnitud` por puerto: **la caja del código** (`BsCajaDeCodigo`: el rol categórico, Plex Mono), la barra en `primary` sobre su pista, la cifra y «53 %» | Ordenados de más a menos; **pasados siete, «Otros N puertos»** con la suma (si sobra uno solo, se muestra él: 15.11, punto 9). Los contenedores sin puerto, «Sin puerto», sin caja. Tocar un puerto para ir a la Lista es T-120 (entrega 3) |
+| **Por puerto de descarga** | Una `BsBarraDeMagnitud` por puerto: **la caja del código** (`BsCajaDeCodigo`: el rol categórico, Plex Mono), la barra en `primary` sobre su pista, la cifra y «53 %» | Ordenados de más a menos; **pasados siete, «Otros N puertos»** con la suma (si sobra uno solo, se muestra él: 15.11, punto 9). Los contenedores sin puerto, «Sin destino» (el nombre de la Lista, D6 de la 10.148; un código en blanco también lo es), sin caja. **Tocar un puerto abre la Lista filtrada por ese destino** (T-120, 18.5); «Sin destino» abre su chip; «Otros N puertos» no se toca |
 | **Llenos y vacíos** | **El anillo de llenos** (`BsAnilloAvance` de 112 con la letra a 1.0, grosor 12, en `primary`) con «63 %» en el centro y, al lado, «612 llenos», «365 vacíos» y, si los hay, «N sin estado» | Un medidor de una razón, no una dona de dos porciones. El anillo lleva la etiqueta «63 % llenos». Su diámetro crece con la letra para que «100 %» quepa en el hueco: con 2.0 mide lo que pide el texto más el grosor y el aire |
 | **Por tamaño** | 20, 40 y 45 pies en los pasos 2, 3 y 4 de la rampa; «Otro» en el paso 1 si el tipo ISO no dice el largo | Van en orden; los rótulos dicen «20 pies», como la Lista |
 | **Carga especial** | Tarjetas de su rol (`BsTarjetaDeRol`): «Peligrosa IMDG» (`peligrosa`), «Refrigerado» (`refrigerado`) y «Fuera de medida» (`oog`), con el icono del paquete (13.11), la cifra a 28 y el rótulo en el texto del rol | Solo las que tienen carga; sin ninguna, «Sin carga especial». Los mismos nombres que el plano y la Lista: ya no «IMO / DG» ni «OOG» |
@@ -2272,7 +2272,7 @@ Tipo oración en todo («Por puerto de descarga», «contenedores a bordo»); «
 duro (`formatearPorcentaje`); «7 419.5 t» con `formatearToneladas`; Plex Mono para los
 códigos de puerto y de naviera; `formatearCuenta` donde una palabra concuerda («1 contenedor»,
 «Otros 3 puertos»). Nada por debajo de 11 en el teléfono (`labelSmall`); nada girado; ningún
-«N/A» ni mayúsculas sostenidas («Sin puerto», «Sin naviera»).
+«N/A» ni mayúsculas sostenidas («Sin destino», «Sin naviera»).
 
 ### 15.9 Wireframes
 
@@ -2405,7 +2405,7 @@ sale: su casco era otro buque (0.9.1) y lo sustituye la protagonista.
    cambia (su pie es solo el número).
 4. **«20 pies», «40 pies» y «45 pies»**, no «20'»: es como la Lista nombra el contenedor
    (13.11). «Otro» aparece solo si algún tipo ISO no dice el largo.
-5. **«Sin estado», «Sin puerto», «Sin naviera», «Sin posición»**: las cifras cuadran por
+5. **«Sin estado», «Sin destino» (antes «Sin puerto», T-120), «Sin naviera», «Sin posición»**: las cifras cuadran por
    construcción (el total es la suma de los llenos, los vacíos y los sin estado; de los
    puertos; de los tamaños; de las bahías más los sin posición) y la tabla las muestra.
    Antes, «N/A» y «SIN NAVIERA».
@@ -2676,3 +2676,133 @@ Los dos tipos se guardan aparte (`extraReadNotices`), para que la 1.0.0 siga abr
   - el ícono sigue a la izquierda.
 - **Con la matrícula de 11 posiciones y una naviera de seis letras,** con las fuentes del producto, solo a 360 dp con letra 2.0 baja la naviera. A 360 dp con 1.0 y 1.45, y a 600 dp con 1.0, 1.45 y 2.0, todo queda en una línea, como antes.
 - **La etiqueta accesible** lleva la matrícula completa («TSTU 144000 2»).
+
+## 18. La Lista y el buscador (T-120; 10.146 a 10.148)
+
+La propuesta y lo que Carlos decidió están en `docs/T120-RESULTADOS.md` (sección 1 y la 10.148);
+esta sección manda donde dicen cosas distintas. En los tres clientes. `domain/` y `data/` no
+cambian.
+
+### 18.1 Lo que se ve
+
+- **Tres filas de filtros**, encima del título de la Lista: «Filtrar por naviera» (en minúscula,
+  regla 3), «Filtrar por destino» y «Carga especial». Las navieras y los destinos llevan primero
+  «Todas» o «Todos»; la carga especial, solo las que el viaje tiene (sin ninguna, la fila no sale).
+- **El chip de un puerto** lleva su ficha (`BsCajaDeCodigo`, el relleno y el contorno de su ranura,
+  13.4) y su cuenta en cifras tabulares; el de una naviera, el código en Plex Mono sin caja; el de
+  una carga, su ícono del paquete (13.11) y su nombre: «Peligrosa IMDG», «Refrigerado», «Fuera de
+  medida» (15.5). **«Sin destino»** va al final de los destinos, solo si hay alguno: el contenedor
+  sin `LOC+11` o con el código en blanco. Es el mismo nombre en Estadísticas (D6).
+- **El elegido se distingue sin depender del color** (10.147, punto 2): su borde mide 2 dp en la
+  tinta del texto (`onSurface`), en vez de 1 en la línea, y su texto va en negrita, de día y de
+  noche. Va sin palomita, para no cambiar de ancho. Tocar el elegido lo suelta. En la carga
+  especial se eligen varias: **cualquiera de ellas** (D7).
+- **El título dice qué filtra:** «Contenedores (212), naviera LNA, destino GTSTC», «Contenedores
+  (1), sin destino», «…, refrigerado o fuera de medida»; a su lado, los llenos y los vacíos con su
+  concordancia, y **«Quitar filtros»** solo con algún filtro.
+- **Con filtros y sin resultados:** «Ningún contenedor coincide con estos filtros» y «Quitar
+  filtros» (regla 8).
+- **El lector de pantalla** oye cada chip una vez, con su nombre y su cuenta («USHOU, 30
+  contenedores»), como botón conmutable con su estado; un chip en cero dice «sin contenedores con
+  estos filtros». Ningún chip lleva descripción emergente en la semántica (10.45).
+- **Las celdas reservadas** siguen aparte, en «Celdas reservadas (n)», sin filtrar ni contar. Los
+  vacíos asignados a una reserva sí cuentan (T-122): llevan el puerto y la naviera de su reserva.
+- **La tarjeta** dice «Peligrosa IMDG», «Refrigerado» y «Fuera de medida» en sus chips de abajo. **Su
+  hoja de detalle** suma las medidas del fuera de medida (`medidasFueraDeGalibo`) y, sin `TMP`,
+  «El archivo no trae temperatura» en vez de «N/A°C» (D8). El resto de esa hoja es O-120-1, del
+  bloque 4.
+
+### 18.2 Las cuentas cruzadas y el orden fijo
+
+- `cuentasDeLosFiltrosProvider` (`CuentasDeLosFiltros`, en `formatters/cuentas_de_los_filtros.dart`)
+  recorre lo que va a bordo **una sola vez**: cada chip cuenta lo que pasa **los otros dos**
+  filtros (con una naviera, cada destino cuenta los de esa naviera, y al revés); «Todas» y «Todos»
+  llevan el total de los otros dos. **Un chip en cero se apaga** y no se toca; el elegido siempre se
+  puede soltar.
+- **El orden no cambia al elegir** (10.147, punto 1): de más a menos por el total del viaje, y a
+  igual cuenta por código; «Sin destino» al final; las cargas, en el orden de 15.5. Con las cuentas
+  cruzadas solo cambian las cifras y se apagan los que quedan en cero.
+- Los filtros viven en `selectedCarrierProvider` (el de siempre), `selectedDischargePortProvider` y
+  `selectedSpecialCargoProvider`, y se sueltan donde se soltaba la naviera: al abrir un previo, al
+  abrir un viaje guardado y al saltar de Alertas a una celda.
+
+### 18.3 La oficina, el teléfono y `BsFichasEnLineas`
+
+- **En la oficina** (desde 600 dp) las filas van en una tabla de dos columnas: el rótulo a la
+  izquierda, con el ancho del más largo, y los chips en un `Wrap` que envuelve en las líneas que
+  pida. Si el rótulo pasa del 30 % del ancho (la letra a 2.0 en una ventana angosta), va encima.
+- **En el teléfono**, el rótulo arriba y los chips en **hasta dos líneas**; si no caben, los que
+  caben y «Ver los 9 destinos» («Ver las 4 navieras»), que abre una hoja con todos, su ficha, su
+  cuenta y la palomita en el elegido. Elegir en la hoja la cierra y filtra. **El elegido siempre se
+  ve:** si no es de los primeros, toma el último lugar antes de «Ver los n».
+- **`BsFichasEnLineas({required List<Widget> fichas, required Widget verTodas, int maxLineas = 2,
+  double espacio = 8, double espacioEntreLineas = 8, int? fija})`**, en
+  `lib/core/design/componentes/bs_fichas_en_lineas.dart`: dispone las fichas como un `Wrap`
+  (centradas en vertical en cada línea) en hasta `maxLineas`; si no caben, deja las primeras que
+  caben con `verTodas` al final, medido con las fuentes y la letra de ese momento; `fija` siempre se
+  ve. Las que quedan fuera no se pintan, no se tocan y no están en la semántica. Con su vista previa
+  («Fichas en líneas») y `test/t120_fichas_en_lineas_test.dart`.
+- Probado con las fuentes del producto a 360, 599, 800, 1366 y 1920 dp, con la letra a 1.0, 1.45 y
+  2.0: nada desbordado ni fuera de la pantalla (`test/t120_filtros_matriz_test.dart`).
+
+### 18.4 La Lista perezosa (P10; RNF-001 y RNF-007 en lo que es de la interfaz)
+
+- La pestaña es un `CustomScrollView`: lo de arriba (el resumen, los botones, las reservas, los
+  filtros y el título) en un `SliverToBoxAdapter`, como antes, y las tarjetas en un
+  `SliverList.builder` (`ContainersSliverList`) que solo construye las que se ven y las de su
+  margen. Cada tarjeta lleva la clave de su matrícula. `ContainersListView` se queda para donde se
+  monta sola.
+- Lo de arriba no se fija: se desplaza con la lista. Al cambiar un filtro, nada salta.
+- **La Lista recuerda dónde estaba** al cambiar de pestaña, y empieza arriba al llegar desde
+  Estadísticas.
+- **El lector de pantalla:** el desplazable declara cuántas tarjetas hay (`semanticChildCount`), así
+  que TalkBack dice «elemento 3 de 977» y se desplaza solo. Lo que se pierde: en el modo de
+  lectura de Narrador, saltar a una tarjeta lejana sin desplazarse; para eso están los filtros y el
+  buscador.
+- La medición de memoria, antes y después, está en `docs/T120-RESULTADOS.md`.
+
+### 18.5 De Estadísticas a la Lista (10.46)
+
+- En el panel «Por puerto de descarga», **cada barra de un puerto es un botón**
+  (`BsBarraDeMagnitud.alTocar`): su zona táctil llega al objetivo táctil, se activa con Intro y
+  espacio y lleva el foco visible; su nombre para el lector de pantalla sigue siendo «GTSTC: 520
+  contenedores, 53 %», una vez, y la descripción emergente, «Ver estos contenedores en la Lista»,
+  va fuera de la semántica. «Sin destino» abre su chip; «Otros N puertos» no se toca; la tabla de
+  «Ver como tabla» tampoco.
+- **Al tocar**, el destino pasa a ese puerto, la naviera y la carga especial se sueltan (la barra
+  cuenta todas) y se va a la Lista, arriba.
+- **Cómo se vuelve:** por el riel o la barra, como siempre; y **Atrás de Android vuelve a
+  Estadísticas una vez** (se anota en `cerrablesDeAtrasProvider`, 8, y no cuenta como el primero del
+  doble Atrás); se olvida al cambiar de pestaña o de filtro. Estadísticas recuerda dónde estaba.
+
+### 18.6 El buscador entiende la carga especial (RF-018)
+
+La fuente es `docs/entrega-7nov/fuentes/DOC2.md`, la tabla «RF‑018»: «Los términos "reefer", "imo" y
+"oog" filtran los resultados del buscador»; la historia, «listar todos los reefer o IMDG del viaje
+para hacer la ronda de revisión».
+
+| Carga | Términos (palabras enteras, sin mayúsculas ni tildes) | De dónde sale |
+|---|---|---|
+| Refrigerado | reefer, reefers, refrigerado(s), refrigerada(s) | `isReefer`: el tipo ISO de refrigerado o un `TMP` |
+| Peligrosa IMDG | imo, imdg, peligrosa(s), peligroso(s) | `isDangerous`: algún `DGS`; las declaraciones, en orden (T-144) |
+| Fuera de medida | oog, sobredimensionado(s), sobredimensionada(s), «fuera de medida» | `isOverDimension`: un `DIM` 5 a 9 mayor que cero o ilegible (T-144) |
+
+- **La clase y el número ONU:** «imo 3», «imdg 3», «imo3» o «clase 3» dan las peligrosas con alguna
+  declaración de esa clase («imo 2» también la 2.1); «un 1993» u «onu 1993», las que lo declaran.
+- **La consulta se parte en dos** (`ConsultaDeBusqueda`, Dart puro, en
+  `formatters/consulta_de_busqueda.dart`): los términos y **el resto**, que se busca como siempre
+  (la matrícula sin espacios, los dos puertos y la naviera). **Varias cargas son cualquiera de
+  ellas, y el resto se cumple además** (D7). Sin términos, la búsqueda es la de antes.
+- **Arriba de los resultados**, una línea con lo que se entendió, con su concordancia: «12
+  refrigerados», «17 peligrosos o refrigerados», «3 peligrosos de clase 3», «5 refrigerados que
+  coinciden con «GTSTC»».
+- **En cada resultado, por qué salió**, solo con las cargas pedidas y con comas (regla 6):
+  «Refrigerado, −18 °C» o «Refrigerado, el archivo no trae temperatura»; «Peligrosa IMDG, IMO 3,
+  UN 1993» o «Peligrosa IMDG, IMO 3 +1»; «Fuera de medida: Frente 30 cm, Alto 25 cm».
+- **El resaltado de T-146 sigue al resto**, no a la consulta entera; una consulta de solo carga no
+  resalta nada.
+- **Sin escribir nada**, una sección «Carga especial» con un chip por carga que haya («Refrigerado
+  12») escribe el término de la especificación y busca. El campo dice «Buscar contenedor, puerto o
+  carga…», y la ayuda, «Busca por matrícula, puerto, naviera o carga especial».
+- **El dictado:** el buscador general no tiene dictado propio; en el teléfono, el micrófono del
+  teclado escribe los términos como cualquier texto. `VoiceSearchField` (el OR) no cambia.

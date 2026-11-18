@@ -24,6 +24,7 @@ import '../providers/plan_attach_provider.dart';
 import '../providers/plano_providers.dart';
 import '../providers/sync_providers.dart';
 import '../providers/voyage_ui_state.dart';
+import '../formatters/cuentas_de_los_filtros.dart';
 import '../formatters/operation_text.dart';
 import '../formatters/vessel_error_message.dart';
 import '../widgets/voyage_summary_card.dart';
@@ -34,6 +35,7 @@ import '../widgets/bay_plan_view.dart';
 import '../widgets/container_search_delegate.dart';
 import '../widgets/detalle_contenedor.dart';
 import '../widgets/en_vivo_del_viaje.dart';
+import '../widgets/filtros_de_la_lista.dart';
 import '../widgets/hatch_operation_controls.dart';
 import '../widgets/loading_plan_controls.dart'
     show BayPlanMode, SelectorDelModo;
@@ -100,12 +102,58 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
   static const Duration esperaDelBorde = Duration(milliseconds: 250);
   static const Duration esperaAlSalir = Duration(milliseconds: 400);
 
+  /// T-120 · El desplazamiento de la Lista, que recuerda dónde estaba al
+  /// cambiar de pestaña y empieza arriba al llegar desde Estadísticas.
+  final _DesplazamientoQueRecuerda _scrollDeLaLista =
+      _DesplazamientoQueRecuerda();
+
+  /// T-120 (`DESIGN.md` 18.5) · Al llegar a la Lista desde una barra de
+  /// Estadísticas, Atrás vuelve a Estadísticas una vez: se anota aquí y se
+  /// olvida al cambiar de pestaña o de filtro.
+  CerrablesDeAtras? _registroDeVolver;
+  late final VoidCallback _volverAEstadisticas = _alVolverAEstadisticas;
+
+  /// El destino que puso Estadísticas: mientras los filtros sigan así, Atrás
+  /// vuelve.
+  String? _destinoDeEstadisticas;
+
   @override
   void dispose() {
     _abrirPorElMouse?.cancel();
     _cerrarPorElMouse?.cancel();
     _registro?.olvidar(_cerrarAlVolver);
+    _registroDeVolver?.olvidar(_volverAEstadisticas);
+    _scrollDeLaLista.dispose();
     super.dispose();
+  }
+
+  /// T-120 (10.46) · Desde una barra de Estadísticas: la Lista filtrada por
+  /// ese puerto ([puerto] `null` es «Sin destino»), sin naviera ni carga
+  /// especial (la barra cuenta todas), arriba.
+  void _irALaListaPorPuerto(String? puerto) {
+    _olvidarVolver();
+    final destino = puerto ?? FiltrosDeLaLista.sinDestino;
+    ref.read(selectedCarrierProvider.notifier).clear();
+    ref.read(selectedSpecialCargoProvider.notifier).clear();
+    ref.read(selectedDischargePortProvider.notifier).select(destino);
+    _scrollDeLaLista.recordado = 0;
+    if (_scrollDeLaLista.hasClients) _scrollDeLaLista.jumpTo(0);
+    ref.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.lista);
+    _destinoDeEstadisticas = destino;
+    final registro = ref.read(cerrablesDeAtrasProvider.notifier);
+    _registroDeVolver = registro;
+    registro.anotar(_volverAEstadisticas);
+  }
+
+  void _alVolverAEstadisticas() {
+    _olvidarVolver();
+    ref.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.estadisticas);
+  }
+
+  void _olvidarVolver() {
+    _registroDeVolver?.olvidar(_volverAEstadisticas);
+    _registroDeVolver = null;
+    _destinoDeEstadisticas = null;
   }
 
   void _abrirFlotante(_PorQueFlota por) {
@@ -199,6 +247,20 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     }
 
     final destino = ref.watch(destinoDelViajeProvider);
+    // T-120: Atrás vuelve a Estadísticas solo mientras se sigue en la Lista
+    // con el filtro que ella puso.
+    ref.listen<DestinoDelViaje>(destinoDelViajeProvider, (_, ahora) {
+      if (ahora != DestinoDelViaje.lista) _olvidarVolver();
+    });
+    ref.listen<FiltrosDeLaLista>(filtrosDeLaListaProvider, (_, ahora) {
+      final puesto = _destinoDeEstadisticas;
+      if (puesto == null) return;
+      if (ahora.destino != puesto ||
+          ahora.naviera != null ||
+          ahora.cargas.isNotEmpty) {
+        _olvidarVolver();
+      }
+    });
     final destinos = <DestinoDelViaje>[
       DestinoDelViaje.plano,
       DestinoDelViaje.lista,
@@ -299,6 +361,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
                 onBaySelected: _openBayPlan,
                 // T-125 (10.68): lo que va a bordo, como la Lista.
                 vaciosAsignados: ref.watch(assignedEmptiesProvider),
+                // T-120 (10.46): un puerto abre la Lista filtrada.
+                onPuerto: _irALaListaPorPuerto,
               ),
           },
         ),
@@ -696,6 +760,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     );
     if (!mounted || position == null) return;
     ref.read(selectedCarrierProvider.notifier).clear();
+    ref.read(selectedDischargePortProvider.notifier).clear();
+    ref.read(selectedSpecialCargoProvider.notifier).clear();
     ref.read(selectedTypeFilterProvider.notifier).clear();
     _openBayPlan(position.bay);
     final matches =
@@ -1175,167 +1241,130 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     }
   }
 
-  /// Construye la pestaña de lista de contenedores
+  /// La pestaña Lista (`DESIGN.md` 18): lo de arriba (el resumen, los
+  /// botones, las reservas, los filtros y el título) y las tarjetas en una
+  /// lista perezosa (T-120, P10): solo se construyen las que se ven.
   Widget _buildContainersListTab(BuildContext context, VesselVoyage voyage) {
-    final carriers = ref.watch(carriersListProvider);
-    final selectedCarrier = ref.watch(selectedCarrierProvider);
     final filteredContainers = ref.watch(filteredContainersProvider);
-    // T-122 (H6): lo que va a bordo, con los vacíos asignados a una reserva.
-    final aboard = ref.watch(aboardContainersProvider);
+    final filtros = ref.watch(filtrosDeLaListaProvider);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Tarjeta resumen del viaje
-          VoyageSummaryCard(voyage: voyage),
-          Wrap(
-            children: [
-              if (voyage.portOfCall != null)
-                DepartureBaplieButton(voyage: voyage),
-              TextButton.icon(
-                icon: const Icon(Icons.fact_check),
-                label: const Text('Alertas de estiba'),
-                onPressed: () => _openAlerts(voyage),
-              ),
-              // T-96: el segundo archivo se lee sin el flujo de carga.
-              TextButton.icon(
-                key: const ValueKey('compare-baplie'),
-                icon: const Icon(BsIconos.compararBaplie),
-                label: const Text('Comparar con otro BAPLIE…'),
-                onPressed: () => compareWithAnotherBaplie(context, ref, voyage),
-              ),
-              // T-95: el orden sugerido, con las tapas del perfil vigente.
-              if (voyage.geometry != null &&
-                  DischargeSequence.dischargePorts(voyage).isNotEmpty)
-                TextButton.icon(
-                  key: const ValueKey('open-discharge-sequence'),
-                  icon: const Icon(Icons.low_priority),
-                  label: const Text('Orden de descarga'),
-                  onPressed: () => _openDischargeSequence(voyage),
-                ),
-              // T-73: el listado de la agencia se cruza con lo que se carga aquí.
-              if (voyage.portOfCall != null &&
-                  voyage.cargoCountsFor(voyage.portOfCall).loaded +
-                          voyage.reservedCountsFor(voyage.portOfCall).loaded >
-                      0)
-                TextButton.icon(
-                  key: const ValueKey('open-export-list'),
-                  icon: const Icon(BsIconos.listadoAgencia),
-                  label: const Text('Listado de la agencia'),
-                  onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                          builder: (_) => const ExportListImportPage())),
-                ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          if (voyage.reservedSlots.isNotEmpty) ...[
-            ReservedSlotsListView(reservedSlots: voyage.reservedSlots),
-            const SizedBox(height: 16),
-          ],
-          // Filtro por naviera
-          if (carriers.isNotEmpty) ...[
-            Text(
-              'Filtrar por Naviera',
-              style: Theme.of(context).textTheme.titleMedium,
+    final arriba = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Tarjeta resumen del viaje
+        VoyageSummaryCard(voyage: voyage),
+        Wrap(
+          children: [
+            if (voyage.portOfCall != null)
+              DepartureBaplieButton(voyage: voyage),
+            TextButton.icon(
+              icon: const Icon(Icons.fact_check),
+              label: const Text('Alertas de estiba'),
+              onPressed: () => _openAlerts(voyage),
             ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  // Chip "Todas"
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text('Todas (${aboard.length})'),
-                      selected: selectedCarrier == null,
-                      onSelected: (_) {
-                        ref.read(selectedCarrierProvider.notifier).clear();
-                      },
-                    ),
-                  ),
-                  // Chips por naviera
-                  ...carriers.map((carrier) {
-                    final count =
-                        aboard.where((c) => c.operatorCode == carrier).length;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text('$carrier ($count)'),
-                        selected: selectedCarrier == carrier,
-                        onSelected: (_) {
-                          ref.read(selectedCarrierProvider.notifier).select(
-                              selectedCarrier == carrier ? null : carrier);
-                        },
-                      ),
-                    );
-                  }),
-                ],
-              ),
+            // T-96: el segundo archivo se lee sin el flujo de carga.
+            TextButton.icon(
+              key: const ValueKey('compare-baplie'),
+              icon: const Icon(BsIconos.compararBaplie),
+              label: const Text('Comparar con otro BAPLIE…'),
+              onPressed: () => compareWithAnotherBaplie(context, ref, voyage),
             ),
-            const SizedBox(height: 16),
+            // T-95: el orden sugerido, con las tapas del perfil vigente.
+            if (voyage.geometry != null &&
+                DischargeSequence.dischargePorts(voyage).isNotEmpty)
+              TextButton.icon(
+                key: const ValueKey('open-discharge-sequence'),
+                icon: const Icon(Icons.low_priority),
+                label: const Text('Orden de descarga'),
+                onPressed: () => _openDischargeSequence(voyage),
+              ),
+            // T-73: el listado de la agencia se cruza con lo que se carga aquí.
+            if (voyage.portOfCall != null &&
+                voyage.cargoCountsFor(voyage.portOfCall).loaded +
+                        voyage.reservedCountsFor(voyage.portOfCall).loaded >
+                    0)
+              TextButton.icon(
+                key: const ValueKey('open-export-list'),
+                icon: const Icon(BsIconos.listadoAgencia),
+                label: const Text('Listado de la agencia'),
+                onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const ExportListImportPage())),
+              ),
           ],
+        ),
+        const SizedBox(height: 24),
 
-          // Título de la lista de contenedores
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                'Contenedores (${filteredContainers.length})',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              // Chip con estadísticas rápidas
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildStatChip(
-                    context,
-                    '${filteredContainers.where((c) => c.status == ContainerStatus.full).length} llenos',
-                    Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildStatChip(
-                    context,
-                    '${filteredContainers.where((c) => c.status == ContainerStatus.empty).length} vacíos',
-                    Theme.of(context).colorScheme.secondary,
-                  ),
-                ],
-              ),
-            ],
-          ),
+        // Las reservas se consultan aparte: no se filtran ni se cuentan.
+        if (voyage.reservedSlots.isNotEmpty) ...[
+          ReservedSlotsListView(reservedSlots: voyage.reservedSlots),
           const SizedBox(height: 16),
-
-          // Lista de contenedores filtrados
-          ContainersListView(containers: filteredContainers),
         ],
-      ),
+        // T-120: la naviera, el destino y la carga especial, con sus cuentas
+        // cruzadas.
+        const FilasDeFiltros(),
+        const SizedBox(height: 8),
+
+        // El título dice qué filtra, con «Quitar filtros».
+        const TituloDeLaLista(),
+        const SizedBox(height: 16),
+      ],
     );
+
+    return CustomScrollView(
+      key: const ValueKey<String>('lista-scroll'),
+      controller: _scrollDeLaLista,
+      semanticChildCount: filteredContainers.length,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          sliver: SliverToBoxAdapter(child: arriba),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          sliver: ContainersSliverList(
+            containers: filteredContainers,
+            sinResultados: filtros.activos
+                ? Padding(
+                    key: const ValueKey<String>('lista-sin-resultados'),
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Ningún contenedor coincide con estos filtros',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () => TituloDeLaLista.quitarFiltros(ref),
+                          child: const Text('Quitar filtros'),
+                        ),
+                      ],
+                    ),
+                  )
+                : null,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// T-120 · El desplazamiento de la Lista: al volver a la pestaña empieza
+/// donde se dejó ([recordado]), y no por `PageStorage`, para que al llegar
+/// desde Estadísticas empiece arriba sin un cuadro en el lugar viejo.
+class _DesplazamientoQueRecuerda extends ScrollController {
+  _DesplazamientoQueRecuerda() : super(keepScrollOffset: false) {
+    addListener(() {
+      if (positions.length == 1) recordado = offset;
+    });
   }
 
-  /// Construye un chip con estadísticas
-  Widget _buildStatChip(BuildContext context, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context)
-            .textTheme
-            .labelMedium
-            ?.copyWith(color: color, fontWeight: FontWeight.w500),
-      ),
-    );
-  }
+  /// Dónde se dejó la Lista.
+  double recordado = 0;
+
+  @override
+  double get initialScrollOffset => recordado;
 }
 
 /// El nombre del buque y, debajo, el viaje y la escala. Con una cuenta

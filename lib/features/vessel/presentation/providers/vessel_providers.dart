@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
+import '../formatters/consulta_de_busqueda.dart' show CargaEspecial;
 import '../formatters/vessel_error_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/vessel_repository_impl.dart';
@@ -429,6 +430,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
     ref.read(selectedBayProvider.notifier).clear();
     ref.read(highlightedContainerProvider.notifier).clear();
     ref.read(selectedCarrierProvider.notifier).clear();
+    ref.read(selectedDischargePortProvider.notifier).clear();
+    ref.read(selectedSpecialCargoProvider.notifier).clear();
     ref.read(selectedTypeFilterProvider.notifier).clear();
     state = AsyncValue.data(voyage
         .withGeometry(geometry)
@@ -669,6 +672,8 @@ class VoyageNotifier extends Notifier<AsyncValue<VesselVoyage?>> {
       ref.read(selectedBayProvider.notifier).clear();
       ref.read(highlightedContainerProvider.notifier).clear();
       ref.read(selectedCarrierProvider.notifier).clear();
+      ref.read(selectedDischargePortProvider.notifier).clear();
+      ref.read(selectedSpecialCargoProvider.notifier).clear();
       ref.read(selectedTypeFilterProvider.notifier).clear();
       state = AsyncValue.data(
           effective == geometry ? voyage : voyage.withGeometry(effective));
@@ -766,6 +771,52 @@ class SelectedCarrierNotifier extends Notifier<String?> {
 
   void clear() {
     state = null;
+  }
+}
+
+/// T-120 · El destino elegido en la Lista: el código del puerto de descarga,
+/// `FiltrosDeLaLista.sinDestino` (la cadena vacía) para «Sin destino», o
+/// `null` para todos. Con la misma forma que [selectedCarrierProvider].
+final selectedDischargePortProvider =
+    NotifierProvider<SelectedDischargePortNotifier, String?>(
+  SelectedDischargePortNotifier.new,
+);
+
+/// Notifier del destino elegido en la Lista.
+class SelectedDischargePortNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void select(String? port) {
+    state = port;
+  }
+
+  void clear() {
+    state = null;
+  }
+}
+
+/// T-120 · Las cargas especiales elegidas en la Lista: cualquiera de ellas
+/// (D7 de la 10.148). Vacío, sin filtro.
+final selectedSpecialCargoProvider =
+    NotifierProvider<SelectedSpecialCargoNotifier, Set<CargaEspecial>>(
+  SelectedSpecialCargoNotifier.new,
+);
+
+/// Notifier de las cargas especiales elegidas en la Lista.
+class SelectedSpecialCargoNotifier extends Notifier<Set<CargaEspecial>> {
+  @override
+  Set<CargaEspecial> build() => const <CargaEspecial>{};
+
+  /// La pone o la quita.
+  void toggle(CargaEspecial carga) {
+    state = state.contains(carga)
+        ? (Set<CargaEspecial>.of(state)..remove(carga))
+        : <CargaEspecial>{...state, carga};
+  }
+
+  void clear() {
+    state = const <CargaEspecial>{};
   }
 }
 

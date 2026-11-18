@@ -731,7 +731,7 @@ void main() {
         expect(find.byType(ListTile), findsNothing);
         expect(find.byKey(const ValueKey('busqueda-sin-resultados')),
             findsNothing);
-        expect(find.text('Busca por ID, puerto de descarga o naviera'),
+        expect(find.text('Busca por matrícula, puerto, naviera o carga especial'),
             findsOneWidget);
         expect(tester.takeException(), isNull);
       });

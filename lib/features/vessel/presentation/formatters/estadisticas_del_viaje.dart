@@ -5,7 +5,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/reference_bay.dart';
 
 /// Un código con su cuenta: un puerto de descarga o una naviera. Sin código,
-/// el rótulo dice que falta («Sin puerto», «Sin naviera») o junta el resto
+/// el rótulo dice que falta («Sin destino», «Sin naviera») o junta el resto
 /// («Otros 3 puertos»).
 @immutable
 class CuentaPorCodigo {
@@ -19,7 +19,7 @@ class CuentaPorCodigo {
   /// El código, si lo hay («GTSTC»).
   final String? codigo;
 
-  /// Cómo se escribe: el código, o «Sin puerto», «Otros 3 puertos».
+  /// Cómo se escribe: el código, o «Sin destino», «Otros 3 puertos».
   final String rotulo;
 
   /// Cuántos contenedores.
@@ -127,7 +127,10 @@ class EstadisticasDelViaje {
       if (contenedor.isOverDimension) fueraDeMedida++;
       final peso = contenedor.effectiveWeight ?? 0;
       pesoKg += peso;
-      puertos.update(contenedor.portOfDischarge, (int v) => v + 1,
+      // T-120: un código en blanco también es «Sin destino», como en la Lista.
+      final puerto = contenedor.portOfDischarge?.trim();
+      puertos.update(puerto == null || puerto.isEmpty ? null : puerto,
+          (int v) => v + 1,
           ifAbsent: () => 1);
       navieras.update(contenedor.operatorCode, (int v) => v + 1,
           ifAbsent: () => 1);
@@ -191,7 +194,7 @@ class EstadisticasDelViaje {
       bahias: bahias,
       sinPosicion: sinPosicion,
       pesoSinPosicionKg: pesoSinPosicionKg,
-      puertos: _ordenadas(puertos, sinPuerto),
+      puertos: _ordenadas(puertos, sinDestino),
       navieras: _ordenadas(navieras, sinNaviera),
       de20: de20,
       de40: de40,
@@ -203,8 +206,9 @@ class EstadisticasDelViaje {
     );
   }
 
-  /// El rótulo de los contenedores sin puerto de descarga.
-  static const String sinPuerto = 'Sin puerto';
+  /// El rótulo de los contenedores sin puerto de descarga: «Sin destino», el
+  /// mismo de la Lista, a la que lleva su barra (T-120; D6 de la 10.148).
+  static const String sinDestino = 'Sin destino';
 
   /// El rótulo de los contenedores sin código de naviera.
   static const String sinNaviera = 'Sin naviera';

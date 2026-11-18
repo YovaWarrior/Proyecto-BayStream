@@ -4,9 +4,11 @@ import '../../../../core/design/design.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/container_number.dart';
+import '../formatters/consulta_de_busqueda.dart';
 import '../providers/vessel_providers.dart';
 
-/// SearchDelegate para buscar contenedores por ID o puerto de descarga
+/// SearchDelegate para buscar contenedores por matrícula, puerto, naviera o
+/// carga especial (T-120, RF-018: `ConsultaDeBusqueda`, `DESIGN.md` 18.6).
 class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
   final List<ContainerUnit> containers;
   final WidgetRef ref;
@@ -18,7 +20,7 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
     required this.ref,
     this.onIrAlPlano,
   }) : super(
-          searchFieldLabel: 'Buscar contenedor o puerto...',
+          searchFieldLabel: 'Buscar contenedor, puerto o carga…',
           searchFieldStyle: const TextStyle(fontSize: 16),
         );
 
@@ -82,31 +84,42 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
       return _buildEmptyState(context);
     }
 
-    final normalizedQuery = query.toUpperCase().trim();
-    // T-144: la matrícula se busca sin espacios, como se guarda.
-    final numberQuery = numeroDeContenedor(query);
-    
-    // Buscar por ID de contenedor o puerto de descarga
-    final results = containers.where((container) {
-      final matchesId = numberQuery.isNotEmpty &&
-          container.containerId.toUpperCase().contains(numberQuery);
-      final matchesPod = container.portOfDischarge?.toUpperCase().contains(normalizedQuery) ?? false;
-      final matchesPol = container.portOfLoading?.toUpperCase().contains(normalizedQuery) ?? false;
-      final matchesOperator = container.operatorCode?.toUpperCase().contains(normalizedQuery) ?? false;
-      return matchesId || matchesPod || matchesPol || matchesOperator;
-    }).toList();
+    // T-120 (RF-018): los términos de carga especial se separan del resto,
+    // que se busca como siempre (T-144: la matrícula sin espacios). Sin
+    // términos, `coincide` es la búsqueda de antes.
+    final consulta = ConsultaDeBusqueda.interpretar(query);
+    final results = containers.where(consulta.coincide).toList();
 
     if (results.isEmpty) {
       return _buildNoResults(context);
     }
 
+    // El resaltado sigue al resto, no a la consulta entera: en «reefer
+    // GTSTC» se resalta GTSTC.
+    final resto = consulta.resto.toUpperCase().trim();
+    final resumen = consulta.resumen(results.length);
+    final arriba = resumen == null ? 0 : 1;
     return ListView.builder(
-      itemCount: results.length,
+      itemCount: results.length + arriba,
       itemBuilder: (context, index) {
-        final container = results[index];
+        if (index < arriba) {
+          return Padding(
+            key: const ValueKey<String>('busqueda-resumen'),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                resumen!,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+          );
+        }
+        final container = results[index - arriba];
         return _ContainerSearchResultTile(
           container: container,
-          query: normalizedQuery,
+          query: resto,
+          motivos: consulta.motivos(container),
           onTap: () => _onContainerSelected(context, container),
         );
       },
@@ -156,6 +169,12 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
         .take(5)
         .toList();
 
+    // T-120 (RF-018): cuántos hay de cada carga especial, para sugerirla.
+    final cargas = <CargaEspecial, int>{
+      for (final carga in CargaEspecial.values)
+        carga: containers.where(carga.en).length,
+    }..removeWhere((_, int cuenta) => cuenta == 0);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -185,7 +204,7 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Busca por ID, puerto de descarga o naviera',
+                  'Busca por matrícula, puerto, naviera o carga especial',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -262,6 +281,41 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
             const SizedBox(height: 20),
           ],
           
+          // T-120 (RF-018): la carga especial, como atajos que escriben el
+          // término de la especificación.
+          if (cargas.isNotEmpty) ...[
+            Text(
+              'Carga especial',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final MapEntry(key: carga, value: cuenta)
+                    in cargas.entries)
+                  ActionChip(
+                    key: ValueKey<String>('sugerencia-${carga.name}'),
+                    avatar: Icon(switch (carga) {
+                      CargaEspecial.peligrosa => BsIconos.peligrosa,
+                      CargaEspecial.refrigerado => BsIconos.refrigerado,
+                      CargaEspecial.fueraDeMedida => BsIconos.fueraDeMedida,
+                    }),
+                    label: Text('${carga.rotulo} $cuenta'),
+                    onPressed: () {
+                      query = carga.termino;
+                      showResults(context);
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+
           // Tip de búsqueda
           Container(
             padding: const EdgeInsets.all(12),
@@ -276,7 +330,7 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Consejo: Escribe parte del ID del contenedor (ej: "MSKU123") para encontrarlo rápidamente',
+                    'Escribe parte de la matrícula, como «MSKU123», o «reefer», «imo» u «oog».',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -345,10 +399,15 @@ class _ContainerSearchResultTile extends StatelessWidget {
   final String query;
   final VoidCallback onTap;
 
+  /// T-120 (RF-018): por qué salió, una línea por carga pedida
+  /// («Refrigerado, −18 °C»).
+  final List<String> motivos;
+
   const _ContainerSearchResultTile({
     required this.container,
     required this.query,
     required this.onTap,
+    this.motivos = const <String>[],
   });
 
   @override
@@ -405,6 +464,16 @@ class _ContainerSearchResultTile extends StatelessWidget {
             Text(
               'Posición: ${container.stowagePosition!.displayFormat}',
               style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+            ),
+          for (final motivo in motivos)
+            Text(
+              motivo,
+              key: const ValueKey<String>('busqueda-motivo'),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
             ),
         ],
       ),
@@ -473,8 +542,9 @@ class _ContainerSearchResultTile extends StatelessWidget {
   }) {
     final normalizedText = text.toUpperCase();
     final normalizedQuery = query.toUpperCase();
-    
-    if (!normalizedText.contains(normalizedQuery)) {
+
+    // T-120: una consulta de solo carga especial no resalta nada.
+    if (normalizedQuery.isEmpty || !normalizedText.contains(normalizedQuery)) {
       return Text(text, style: style);
     }
 
