@@ -4199,4 +4199,53 @@ La evidencia va en `build/t120/e1c1/`. **GLM acepta la entrega 1 después de la 
 
 **Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.150**.
+### 10.150 · T-120, entrega 1: la corrección 1, revisada; Carlos aprobó D9 y D10; va a la aceptación de GLM (18-nov, 14:00)
+
+**Carlos corrió el bloque de la 10.149** (`02169fc`, la entrega 1 de Timonel con sus 27 rutas, y `d182649`, la decisión) **y pasó el prompt de la corrección con D9 y D10: quedan aprobadas.** Yov comprobó en GitHub que `SPRINT-4.md` es el del disco.
+
+**Timonel entregó la corrección 1** (18-nov, de 12:27 a 13:05; `docs/T120-RESULTADOS.md`, C1.1 a C1.12, sin commit).
+
+**Lo que Yov comprobó contra la carpeta, la evidencia y GitHub:**
+- frente a `d182649`, la carpeta tiene 11 archivos cambiados y 5 nuevos, y son las 16 rutas del bloque de Timonel. No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados, `web/` ni `windows/`, y no hay ningún `// ignore:`;
+- **las tres lecturas de la 10.149 eran ciertas,** y cada una tiene su roja contra el código de la entrega (`build/t120/e1c1/rojas-contra-la-entrega.txt`, de las 12:27:52, antes del primer cambio de `lib/`): R1, el ícono del chip de carga elegido daba 1.0:1 de noche; R2, «Duplicate keys found»; R3, el foco caía en un chip oculto, en las dos pruebas;
+- contra `02169fc`, de las 14 pruebas nuevas fallan 11 y pasan 3: R1 de día y las dos guardas (`rojas-contra-02169fc.txt`);
+- **la suite:** 2340 de 2340 en una sola corrida, sin fallidas ni omitidas (`suite-2.txt`, de 12:52:11 a 12:54:02), después del último cambio de `lib/` y `test/` (12:51:43);
+- **`analyze`:** «No issues found!» en la carpeta y en la copia limpia de las 12:54, que esta vez se hizo después del último cambio: sus 538 archivos Dart son idénticos a los de la carpeta. También con `dart analyze --cache` en una carpeta nueva (10.141);
+- **el banco de las capturas finales** (`%TEMP%\t99-t120-c1\copia-final-2`, compilado a las 12:57) tiene `lib/`, `test/` y `tool/` idénticos a la carpeta. Su recorrido termina en «fin», con 94 capturas y sin textos que no caben ni errores de Flutter en el registro;
+- **Yov miró 23 de las 94 capturas** y contó los segmentos de `T120_BUQUE_LISTA_977.edi` (124 100 bytes, `664de202…4a58`). Los nueve puertos y «Sin destino», las cuatro navieras, PAMIT cruzado con cada naviera (42, 28, 14 y 14), los refrigerados por naviera (41, 28, 14 y 14), «reefer imo» (130) y «oog» (19) son los que se ven en pantalla;
+- **los cambios, leídos en el código:**
+  - R1: el ícono toma el color del texto del chip, que el tema resuelve por estado. El tema no se tocó;
+  - R2: cada motivo lleva su clave (`busqueda-motivo-0`, `-1`);
+  - R3: `BsFichasEnLineas` envuelve en `ExcludeFocus` las fichas que no caben, en el cuadro siguiente a cada disposición que cambia lo que se ve. Su API no cambia;
+  - D9: al llegar desde una barra, `Scrollable.ensureVisible` lleva el título arriba en el cuadro siguiente;
+  - D10: «Toca un puerto para verlo en la Lista», debajo de las barras;
+- **al mirar, Timonel encontró una cosa más:** la ayuda del campo del buscador, que él había alargado en la entrega, no cabía a 360 dp. Ahora dice «Matrícula, puerto o carga», y «Buscar» si no cabe (la letra a 2.0 en un teléfono). La encontró el registro de su conductor, y tiene su roja;
+- **R4:** `tool/t120_buque.dart` escribe el buque de las pruebas en `%TEMP%` y lo verifica con el lector. El generador es uno solo: las pruebas lo toman de ahí. `tool/t120_conductor.dart`, `tool/t120_main.dart` y `tool/t120_capturas_windows.ps1` recorren el banco de Windows, y solo aceptan rutas y un almacén de `%TEMP%`.
+
+**La corrección está bien hecha y la entrega 1 va a la aceptación.**
+
+**Observaciones nuevas.** No detienen la aceptación: se deciden con su dictamen y van, si acaso, con la entrega 2:
+- **O-120-4 (P3) · D9 pinta un cuadro con la Lista arriba antes de saltar al título.** Lo anotó Timonel: la Lista todavía no está dispuesta cuando se toca la barra. Quien acepte mira si ese parpadeo se ve en Windows y en la Web. Si se ve, la salida es no enseñar la Lista hasta que haya saltado;
+- **O-120-5 (P3) · En el teléfono, la fila «Carga especial» esconde su tercer chip.** A 360 dp con la letra a 1.0 se ven dos cargas y «Ver las 3 cargas»: una hoja para llegar a un solo chip, «Fuera de medida» (`build/t120/e1c1/capturas/final/360x800_claro_letra1.0_2a_ver_los_n_destinos.png`). Yov propone que esa fila, que tiene tres chips como mucho, los enseñe siempre. Decide Carlos. Con ella va lo que anotó Timonel: «Ver los n» lleva el rótulo más chico que los chips;
+- **O-120-1 suma dos cosas que anotó Timonel,** las dos de antes de T-120: con la letra a 2.0, la matrícula de un resultado del buscador se parte («TSTU00000 / 10»), porque ese título no usa `BsNumeroDeContenedor`; y la hoja de detalle de la Lista lleva dos asas de arrastre.
+
+**La aceptación de la entrega 1 la hace GLM 5.3 Flash, en Max** (10.137), en `C:\Proyectos\baystream-qa-r4`, que hoy está en `b0d54bd` sin nada modificado. Su informe es `docs/t120/entrega1/aceptacion-glm.md`, y su evidencia, `build/t120/glm-e1/`. Lleva, en este orden:
+1. la suite y `analyze` en una copia limpia de la punta;
+2. las rojas: las de la corrección contra `02169fc` y las de la entrega contra `899e4e3`;
+3. Windows: el buque generado por él, con la misma huella; el banco y las 94 capturas, repetidas y miradas; y el árbol accesible de los chips y de las barras;
+4. la Web del banco, con un perfil nuevo de Chrome (10.142) y solo contra `127.0.0.1`;
+5. dos archivos reales del corpus, `CORPUS_A01` y `CORPUS_A03`: las cuentas de los filtros y del buscador contra los segmentos, contados aparte;
+6. la memoria: una corrida medida de cada banco con 977 contenedores;
+7. lo que el programador no pensó, y tres mediciones, para O-120-2, O-120-4 y O-120-5.
+
+Android queda como opcional: Atrás está en las pruebas, y el teléfono se mide en el bloque 3 (D5 de la 10.148).
+
+**Lo que sigue:**
+1. Carlos: el commit de la corrección (las 16 rutas de Timonel) y el de esta decisión; mover `baystream-qa-r4` a la punta; y el prompt a GLM.
+2. GLM: la aceptación. Mientras tanto, Timonel no corre Flutter.
+3. Yov comprueba el dictamen contra la carpeta.
+4. La entrega 2 de T-120, el plano y la oficina, empieza con la entrega 1 aceptada.
+
+**Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.151**.
