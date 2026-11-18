@@ -226,7 +226,7 @@ class ConsultaDeBusqueda {
   }
 
   /// La línea de arriba de los resultados, con lo que se entendió: «12
-  /// refrigerados», «17 refrigerados o peligrosos», «3 peligrosos de clase
+  /// refrigerados», «17 peligrosos o refrigerados», «3 peligrosos de clase
   /// 3», «5 refrigerados que coinciden con «GTSTC»». Sin cargas, `null`.
   String? resumen(int cuantos) {
     if (!conCargas) return null;

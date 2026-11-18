@@ -136,8 +136,8 @@ void main() {
     semantica.dispose();
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
-  testWidgets('la Lista recuerda dónde estaba y, desde Estadísticas, empieza '
-      'arriba', (tester) async {
+  testWidgets('la Lista recuerda dónde estaba y, desde Estadísticas, se abre '
+      'con su título arriba (D9, 10.149)', (tester) async {
     final semantica = tester.ensureSemantics();
     final scope = await t120Pump(tester);
     _scroll(tester, 'lista-scroll').position.jumpTo(900);
@@ -154,7 +154,15 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(_barra('USHOU'));
     await tester.pumpAndSettle();
-    expect(_scroll(tester, 'lista-scroll').position.pixels, 0);
+    // Antes de D9 empezaba arriba, en el resumen del viaje (0); ahora el
+    // título queda arriba de lo que se ve.
+    final ushou = t120Viaje()
+        .containers
+        .where((c) => c.portOfDischarge == 'USHOU')
+        .length;
+    final titulo = find.text('Contenedores ($ushou), destino USHOU');
+    final lista = tester.getRect(find.byKey(const ValueKey('lista-scroll')));
+    expect(tester.getTopLeft(titulo).dy - lista.top, inInclusiveRange(0, 24));
     semantica.dispose();
   });
 

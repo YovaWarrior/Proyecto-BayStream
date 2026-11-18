@@ -12,59 +12,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../tool/t120_buque.dart';
 import 't117_oficina_support.dart';
 
-/// Los puertos de descarga, con el peso de cada uno en el reparto: el primero
-/// lleva la mitad, como GTSTC en el corpus.
-const t120Puertos = <String>[
-  'GTSTC', 'GTSTC', 'GTSTC', 'GTSTC', 'GTSTC', 'GTSTC', 'GTSTC', 'GTSTC',
-  'USHOU', 'USHOU', 'USHOU', 'USHOU',
-  'PAMIT', 'PAMIT',
-  'JMKIN', 'COCTG', 'USMSY', 'VELAG', 'PACCT', 'JMKCT',
-];
-
-/// Las navieras, repartidas de más a menos.
-const t120Navieras = <String>['LNA', 'LNA', 'LNA', 'LNB', 'LNB', 'LNC', 'LND'];
-
-/// Un número de contenedor sintético de once posiciones (no se valida el
-/// dígito de control en la Lista).
-String t120Numero(int i) => 'TSTU${i.toString().padLeft(7, '0')}';
-
-/// El BAPLIE 2.2 de un buque de [n] contenedores, en bahías pares de 48
-/// celdas (8 filas, 6 niveles de cubierta). Cada 10.º es refrigerado (con
-/// temperatura salvo cada 30.º, que no trae `TMP`), cada 15.º peligroso de
-/// clase 3 (UN 1993) y cada 40.º de clase 2.1, cada 50.º fuera de medida, y
-/// los tres primeros múltiplos de 97 vienen sin `LOC+11` (Sin destino).
-String t120Baplie(int n, {List<String> puertos = t120Puertos}) {
-  final grupos = StringBuffer();
-  for (var i = 1; i <= n; i++) {
-    final celda = (i - 1) % 48;
-    final bahia = 2 + 4 * ((i - 1) ~/ 48);
-    final fila = (celda % 8 + 1).toString().padLeft(2, '0');
-    final nivel = 82 + 2 * (celda ~/ 8);
-    final posicion = '${bahia.toString().padLeft(3, '0')}$fila$nivel';
-    final sinDestino = i % 97 == 0 && i <= 291;
-    final puerto = puertos[i % puertos.length];
-    final naviera = t120Navieras[i % t120Navieras.length];
-    final refrigerado = i % 10 == 0;
-    final iso = refrigerado ? '45R1' : (i.isEven ? '42G1' : '22G1');
-    grupos
-      ..write("LOC+147+$posicion::5'")
-      ..write("MEA+AAE+VGM+KGM:${18000 + i % 7 * 1000}'")
-      ..write("LOC+9+HNPCR:139:6'")
-      ..write(sinDestino ? '' : "LOC+11+$puerto:139:6'")
-      ..write("EQD+CN+${t120Numero(i)}+$iso+++5'")
-      ..write("NAD+CA+$naviera:172:20'");
-    if (refrigerado && i % 30 != 0) grupos.write("TMP+2+-18:CEL'");
-    if (i % 15 == 0) grupos.write("DGS+IMD+3+1993'");
-    if (i % 40 == 0) grupos.write("DGS+IMD+2.1+1950'");
-    if (i % 50 == 0) grupos.write("DIM+5+CMT:30'DIM+9+CMT:::25'");
-  }
-  return "UNB+UNOA:2+TEST+TEST+261117:1200+T120'UNH+T120+BAPLIE:D:95B:UN:SMDG22'"
-      "BGM++T120+9'TDT+20+V120+++TEST:172:20+++:::BUQUE LISTA'"
-      "LOC+5+HNPCR:139:6'LOC+61+GTSTC:139:6'$grupos"
-      "UNT+1+T120'UNZ+1+T120'";
-}
+// El generador del buque vive en tool/t120_buque.dart, que también lo escribe
+// a un archivo para mirarlo en un banco (corrección 1, R4): uno solo.
+export '../../tool/t120_buque.dart'
+    show t120Baplie, t120Navieras, t120Numero, t120Puertos;
 
 final Map<int, VesselVoyage> _leidos = <int, VesselVoyage>{};
 

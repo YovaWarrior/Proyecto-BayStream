@@ -10,6 +10,7 @@ Flash, en Max (10.137).
 - **Entrega 1, la Lista y el buscador** (secciones 6 a 15), sobre `732334d` (la 10.148): lo hecho, las
   validaciones, los archivos, el bloque de Git y el mensaje para Yov. Termina en «ALTO: Yov revisa y
   GLM acepta».
+- **Corrección 1 de la entrega 1** (al final), sobre `d182649` (la 10.149): R1 a R4, D9 y D10.
 - **La entrega 2, el plano y la oficina** (O-119-1, O-128-4, O2 y los dos monitores), empieza cuando
   GLM acepte la 1.
 
@@ -1040,5 +1041,272 @@ git push
 > las pruebas no vieron: de noche, el chip elegido no se leía (1.0:1); está corregido, con su prueba
 > roja, y visto en pantalla. Tres pruebas viejas cambian una línea cada una (6.3 y 6.4). No se
 > compiló ninguna Release de publicación ni se tocó la versión. La entrega 2 espera la aceptación.
+
+**ALTO: Yov revisa y GLM acepta.**
+
+---
+
+## Corrección 1 de la entrega 1 (18-nov; 10.149)
+
+### C1.1 Resultado en tres líneas
+
+- **R1, R2 y R3, confirmadas y corregidas, cada una con su roja:** de noche, el ícono del chip de
+  carga elegido daba 1.0:1; dos motivos de un resultado repetían su clave («Duplicate keys found»); y
+  el foco caía, con Tab, en un chip que no se ve. **D9 y D10** también, con sus pruebas.
+- **R4, mirado:** el buque de las pruebas ya es un archivo (`tool/t120_buque.dart`) y un conductor
+  propio (`tool/t120_conductor.dart`) recorre en el banco los cinco puntos, de día y de noche, a 1366 ×
+  690 y a 360 × 800 con la letra a 1.0 y a 2.0: 94 capturas, ninguna con textos cortados ni errores.
+- **Al mirar apareció una cosa más,** el texto de ayuda del buscador, que yo había alargado en la
+  entrega y no cabía a 360 dp: corregido, con su roja. Suite 2340/2340; `analyze` en cero aquí y en
+  una copia limpia.
+
+### C1.2 Paso 0 y lo que se corrió
+
+- **La punta es `d182649`** («decision 10.149»), encima de `02169fc`, el commit de la entrega 1
+  (`git log --oneline -5`, `git show --stat HEAD`). Solo cambia `SPRINT-4.md`.
+- **Carlos confirmó** (18-nov, hacia las 12:27) que nadie más tiene abiertos `lib/`, `test/` ni
+  `pubspec.*`, y dio luz verde a una ventana de Flutter abierta mientras corregía. Empezó y terminó con
+  su `SEMÁFORO:`; un comando a la vez.
+- **Las rojas, contra el código de la entrega:** una copia de `02169fc` hecha con `git archive` en
+  `%TEMP%\t120-e1c1-entrega`, con la entrada de T-124 (O-143-3) y la prueba nueva encima.
+- **El banco:** copias del árbol con `tool/t99_copia.ps1 -Arbol -Sufijo r4`, compiladas con
+  `-t tool/t120_main.dart`, `T99_NAMESPACE=r4` y el almacén en `%TEMP%\t99-t120-c1\almacen-*`, sin
+  Firebase, abiertas con `explorer.exe`. **No son Releases de publicación.** No toqué el almacén real,
+  la MSIX de Carlos, Firebase ni el Honor, ni cambié la versión.
+- **La memoria no se repitió:** nada de esto cambia lo que la Lista construye (R1 y R2 son estilos y
+  claves; R3 envuelve las fichas en `ExcludeFocus`, sin render propio; D9 desplaza; D10 es una línea
+  en Estadísticas).
+
+### C1.3 Cada punto
+
+**R1 · De noche, el chip elegido de «Carga especial» perdía su ícono.**
+- **Qué era:** el ícono iba en el rótulo del chip con el color de los íconos de la app
+  (`iconTheme`, la tinta, `bs_tema.dart:113`), y de noche el relleno del elegido es la tinta
+  (`:99`, `:187`). Es de la familia de 8.1: el texto ya tomaba el color del chip, el ícono no.
+- **La roja:** la prueba de contraste ahora elige primero las tres cargas y después una naviera y un
+  destino, de día y de noche, y mide cada texto a 4.5:1 y cada ícono a 3:1 contra el fondo de su
+  chip. Contra la entrega, de noche: **«el ícono de filtro-carga-peligrosa, elegido» da 1.0:1**
+  (`build/t120/e1c1/rojas-contra-la-entrega.txt`); de día pasa.
+- **El cambio:** el ícono toma el color del texto del chip (`DefaultTextStyle.of(context)` dentro de un
+  `Builder` en el rótulo), que el tema resuelve por estado. No hizo falta tocar el tema.
+- **Cómo lo vi:** `capturas/final/1366x690_oscuro_letra1.0_1b_carga_elegida.png`: el copo de
+  «Refrigerado 97», elegido, se lee de noche.
+
+**R2 · Dos motivos de un mismo resultado con la misma clave.**
+- **La roja:** un refrigerado peligroso con «reefer imo»: contra la entrega, **«Duplicate keys
+  found»**.
+- **El cambio:** cada motivo lleva su clave, `busqueda-motivo-0`, `-1`… (`container_search_delegate.dart`).
+- **Cómo lo vi:** `capturas/final/*_5_buscar_reefer_imo.png`: «TSTU0000030» con «Peligrosa IMDG, IMO
+  3, UN 1993» y «Refrigerado, el archivo no trae temperatura», sin errores en el registro.
+
+**R3 · Los chips que no caben tomaban el foco.**
+- **La roja, dos pruebas a 360 dp:** con Tab por toda la Lista, **en el octavo Tab el foco caía en un
+  chip oculto**; y pedirle el foco a uno oculto (`filtro-destino-PAMIT`) **lo tomaba**. La hipótesis de
+  Yov era cierta.
+- **El cambio:** `BsFichasEnLineas` pasa a ser un widget con estado. Qué fichas caben solo se sabe al
+  disponerlas: después de cada disposición que cambia lo que se ve, envuelve las que quedan fuera en
+  `ExcludeFocus` (en el cuadro siguiente, porque durante la disposición no se puede reconstruir).
+  `ExcludeFocus` no tiene render propio, así que la disposición no cambia, y si una ficha tenía el
+  foco, lo suelta. Su API no cambia.
+- **Ahora:** en 80 Tabs el foco nunca cae en un chip oculto y sí recorre los que se ven; el oculto no
+  toma el foco, y ni Intro ni espacio lo activan.
+
+**R4 · Lo que nadie había visto en una pantalla.**
+- **El archivo:** `tool/t120_buque.dart` tiene ahora el generador de las pruebas (`t120Baplie`, que
+  `test/support/t120_lista_support.dart` reexporta: uno solo) y un `main` que lo escribe en una
+  carpeta nueva de `%TEMP%` y lo verifica con el lector: `T120_BUQUE_LISTA_977.edi`, **977 leídos de
+  977, 9 puertos, 3 sin destino, 97 refrigerados, 81 peligrosos, 19 fuera de medida y 48 refrigerados
+  peligrosos** (`build/t120/e1c1/buque.txt`). El corpus no se tocó.
+- **El instrumento:** el escenario `anchos` del conductor de T-99 solo toca pestañas, y no llega a
+  ninguno de los cinco estados. Escribí uno propio, sin tocar los de T-99:
+  - `tool/t120_main.dart`: la app con los almacenes del banco (`t99App`, sin Firebase) y el conductor;
+  - `tool/t120_conductor.dart`: publica el archivo y, por tema, tamaño y letra, elige con los chips (o
+    con la hoja, si el chip no cabe), abre con los botones, escribe en el campo y guarda una captura de
+    cada estado, con los textos que no caben y los errores de Flutter;
+  - `tool/t120_capturas_windows.ps1`: abre el banco con `explorer.exe` desde un `.cmd`, espera el fin
+    del recorrido y lo cierra por su PID.
+- **Lo que se vio** (`build/t120/e1c1/capturas/final/`, 94 capturas; claro y oscuro; 1366 × 690 con la
+  letra a 1.0, y 360 × 800 con la letra a 1.0 y a 2.0):
+  1. las tres filas con PAMIT elegido y con «Refrigerado» elegido (`1a`, `1b`). Con PAMIT, las tres
+     cargas en cero y apagadas: en este buque ningún contenedor de PAMIT trae carga especial;
+  2. en el teléfono, «Ver los 10 destinos» y su hoja (`2a`, `2b`); la hoja cerrada sin elegir (`2c`);
+     JMKCT, un destino chico elegido desde la hoja, a la vista (`2d`), también con la letra a 2.0;
+  3. «Sin destino» en la Lista (`3a`); en Estadísticas, «Otros 3 puertos» y la línea de D10 (`3b`);
+     «Sin destino» en «Ver como tabla», donde están todos (`3c`), porque en las barras cae dentro de
+     «Otros 3 puertos»; y de la barra de PAMIT a la Lista, con el título arriba (`3d`, D9);
+  4. la tarjeta de un fuera de medida, con «Refrigerado» y «Fuera de medida» (`4a`), su hoja (`4b`) y,
+     bajando en la hoja, «Fuera de medida: Frente 30 cm · Alto 25 cm» (`4c`);
+  5. el buscador con «oog», «imo 3», «reefer imo» y «reefer GTSTC» (`5_*`).
+- **Lo que el instrumento no alcanza:** Windows y nada más. La Web y Android no se miraron en un
+  cliente, Atrás de Android tampoco (está en las pruebas), y el teléfono es la ventana de Windows a
+  360 × 800 lógicos, no un teléfono. Queda para quien acepte (C1.7).
+
+**Al mirar · El texto de ayuda del buscador no cabía en el teléfono.** Lo encontró el registro del
+conductor, no los ojos: la ayuda que puse en la entrega 1, «Buscar contenedor, puerto o carga…»,
+excedía su línea a 360 dp.
+- **La roja:** a 360 dp con las fuentes del producto, la ayuda se corta con la letra a 1.0 y a 1.45
+  (`ayuda-del-buscador-roja.txt` y las rojas contra `02169fc`).
+- **El cambio:** la ayuda es **«Matrícula, puerto o carga»**, que cabe a 360 dp con la letra a 1.0 y a
+  1.45. Con la letra a 2.0 no cabe ninguna ayuda útil en un campo de una línea (tampoco la de antes de
+  T-120), así que la página elige la que cabe: `ContainerSearchDelegate.ayudaPara` la mide con la letra
+  del tema y el ancho del campo vacío, y si no cabe pone **«Buscar»**.
+- **Cómo lo vi:** en las 94 capturas finales, ningún texto que no cabe.
+
+**D9 · Desde Estadísticas, la Lista se abre con su título arriba.** Al llegar desde una barra, en el
+cuadro siguiente la Lista lleva su título («Contenedores (98), destino PAMIT», con «Quitar filtros»)
+arriba de lo que se ve, con las tarjetas debajo (`Scrollable.ensureVisible` del título). Por el riel o
+la barra, la Lista sigue recordando dónde estaba. La prueba de la entrega que esperaba la Lista arriba
+(`t120_estadisticas_a_lista_test.dart`) ahora pide el título arriba. **Visto:** `3d`, a 1366 y a 360 dp.
+Va un cuadro con la Lista arriba antes del salto: la Lista todavía no está dispuesta cuando se toca la
+barra.
+
+**D10 · El panel de puertos dice que se toca.** Debajo de las barras, «Toca un puerto para verlo en la
+Lista», con el estilo de la línea del panel de bahías. Sin `onPuerto`, no sale. **Visto:** `3b`.
+
+**De paso:** el comentario de `consulta_de_busqueda.dart` dice ahora «17 peligrosos o refrigerados»,
+como el código y `DESIGN.md` 18.6.
+
+### C1.4 Las pruebas
+
+**Nuevas, en `test/t120_correccion1_test.dart` (14):** R1 de día y de noche (2); R2 (1); R3 (2); la
+ayuda del buscador a 360 dp con la letra a 1.0 y 1.45 (2) y desde la página a 1.0, 1.45 y 2.0 (3); D9
+(1) y la guarda de la Lista que recuerda (1); D10 (1) y su guarda sin `onPuerto` (1). Solo usan piezas
+que ya estaban en la entrega, así que compilan contra ella.
+
+**Rojas contra `02169fc`** (`build/t120/e1c1/rojas-contra-02169fc.txt`): **fallan 11 de 14**, cada una
+en su comprobación; pasan las tres que ya se cumplían: R1 de día y las dos guardas.
+
+**Cambian:**
+- `t120_estadisticas_a_lista_test.dart`: «empieza arriba» pasa a «se abre con su título arriba» (D9);
+- `t120_buscador_test.dart`: la ayuda nueva;
+- `test/support/t120_lista_support.dart`: el generador sale a `tool/t120_buque.dart` y se reexporta.
+
+### C1.5 Validaciones y cifras
+
+| Qué | Resultado | Registro (`build/t120/e1c1/`) |
+|---|---|---|
+| La suite completa, en una sola corrida, después del último cambio de `lib/` y `test/` | **2340 de 2340**, sin fallidas ni omitidas (2326 de la entrega + 14) | `suite-2.txt` (12:52:11 a 12:54:02) |
+| `flutter analyze --no-pub`, todo el paquete, en la carpeta | **«No issues found!»** | `analyze-2.txt` |
+| La copia limpia (`%TEMP%\t120-e1c1-limpia-1254`: el árbol sin `build/`, `.dart_tool/` ni `docs/`, con la entrada de T-124, O-143-3) | **«No issues found!»** con `flutter analyze` y con `dart analyze --cache` en una carpeta nueva (10.141) | `analyze-copia-limpia*.txt` |
+| El banco final y sus capturas | 94 capturas, ningún texto que no cabe, ningún error de Flutter | `capturas/final/pasos.jsonl` |
+| `// ignore:` | Ninguno | |
+| `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados, `web/`, `windows/` | **No cambian** | `git diff --stat` |
+
+### C1.6 Lo que queda anotado
+
+- **Visto al mirar, no es de esta corrección:**
+  - con la letra a 2.0 en el teléfono, la matrícula del resultado del buscador se parte por la mitad
+    («TSTU00000 / 10»): el título del resultado es un `RichText` que envuelve, y no usa
+    `BsNumeroDeContenedor`, que nunca parte la matrícula (17.5). Viene de antes de T-120;
+  - la hoja de detalle de la Lista lleva dos asas de arrastre, la suya y la de la hoja: va con O-120-1
+    (bloque 4);
+  - en el teléfono, «Ver los n» lleva el rótulo más chico que los chips (es `ActionChip`, con
+    `labelMedium`). Se lee y no se corta.
+- **D9 va con un cuadro de la Lista arriba** antes del salto (C1.3).
+- La entrega 2 no empezó.
+
+### C1.7 Para quien acepte (pone al día la sección 12)
+
+1. **La suite y `analyze`** en una copia limpia de la punta con este bloque: 2340 aprobadas, sin
+   omitidas; `analyze` en cero con la entrada de T-124 copiada (O-143-3) y, si la copia marca algo que
+   la carpeta no, otra vez con `dart analyze --cache` en una carpeta nueva (10.141).
+2. **Las rojas:** `t120_correccion1_test.dart` en una copia de `02169fc` (11 de 14 fallan); y las de la
+   entrega, en una copia de `899e4e3` (17 de 18; 6.4).
+3. **El archivo, que ahora es el que hay que mirar:**
+   ```powershell
+   dart tool/t120_buque.dart "$env:TEMP\t120-buque-glm" 977
+   ```
+   Escribe `T120_BUQUE_LISTA_977.edi` en esa carpeta nueva y dice lo que trae; se niega a escribir
+   fuera de `%TEMP%` o dentro del repositorio. `T99_SINTETICO_977.edi` ya no sirve para esto: no trae
+   «Sin destino», fuera de medida ni dos cargas en un contenedor.
+4. **A la vista, en Windows y en la Web del banco** (perfil nuevo de Chrome, 10.142), con ese archivo,
+   de día y de noche, a 360 y a 1366 dp, con la letra a 1.0 y a 2.0: lo de la sección 12, punto 3, y
+   además el chip de carga elegido con su ícono de noche, Tab por las filas a 360 dp (el foco nunca
+   en un chip que no se ve), «reefer imo» con dos motivos, la ayuda del campo vacío, D9 y D10. Atrás en
+   Android, si hay emulador.
+5. **El recorrido de capturas, si se quiere repetir en Windows:**
+   ```powershell
+   ./tool/t99_copia.ps1 -Destino "$env:TEMP\t99-glm-t120\copia" -Arbol -Sufijo r4 -Entradas "$env:TEMP\t120-buque-glm\T120_BUQUE_LISTA_977.edi"
+   ```
+   y, en esa copia, `flutter pub get` y `flutter build windows --release --no-pub -t
+   tool/t120_main.dart --dart-define=T99_ALMACEN=$env:TEMP\t99-glm-t120\almacen
+   --dart-define=T99_NAMESPACE=r4`; después
+   ```powershell
+   ./tool/t120_capturas_windows.ps1 -Exe "$env:TEMP\t99-glm-t120\copia\build\windows\x64\runner\Release\baystream.exe" -Salida "$env:TEMP\t99-glm-t120\capturas"
+   ```
+   Unos 3 minutos, con la máquina quieta.
+6. **La memoria** no se repite (C1.2).
+
+### C1.8 Archivos
+
+**Cambiados (10):**
+- `DESIGN.md`: 15.5 (D10) y 18.1, 18.3, 18.4, 18.5 y 18.6 (R1, R3, D9, D10, R2 y la ayuda).
+- `lib/core/design/componentes/bs_fichas_en_lineas.dart`: R3.
+- `lib/features/vessel/presentation/formatters/consulta_de_busqueda.dart`: el comentario.
+- `lib/features/vessel/presentation/pages/vessel_overview_page.dart`: D9 y la ayuda que cabe.
+- `lib/features/vessel/presentation/widgets/container_search_delegate.dart`: R2 y la ayuda.
+- `lib/features/vessel/presentation/widgets/filtros_de_la_lista.dart`: R1.
+- `lib/features/vessel/presentation/widgets/voyage_stats_view.dart`: D10.
+- `test/support/t120_lista_support.dart`, `test/t120_buscador_test.dart` y
+  `test/t120_estadisticas_a_lista_test.dart`.
+
+**Nuevos (5):** `test/t120_correccion1_test.dart`, `tool/t120_buque.dart`, `tool/t120_conductor.dart`,
+`tool/t120_main.dart` y `tool/t120_capturas_windows.ps1`.
+
+Y este informe. **`pubspec.yaml` y `pubspec.lock` no cambian.**
+
+### C1.9 Horas
+
+Del reloj, el 18-nov: de las 12:27 a las 13:05, unos 40 minutos; de ellos, unos 10 de compilar el
+banco y recorrerlo (tres veces).
+
+### C1.10 Git
+
+Para que lo ejecute Carlos. Fuera quedan los cuatro archivos que solo cambian el fin de línea y las
+carpetas sin seguimiento de `docs/`.
+
+```powershell
+git add -- DESIGN.md
+git add -- lib/core/design/componentes/bs_fichas_en_lineas.dart
+git add -- lib/features/vessel/presentation/formatters/consulta_de_busqueda.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/widgets/container_search_delegate.dart
+git add -- lib/features/vessel/presentation/widgets/filtros_de_la_lista.dart
+git add -- lib/features/vessel/presentation/widgets/voyage_stats_view.dart
+git add -- test/support/t120_lista_support.dart
+git add -- test/t120_buscador_test.dart
+git add -- test/t120_correccion1_test.dart
+git add -- test/t120_estadisticas_a_lista_test.dart
+git add -- tool/t120_buque.dart
+git add -- tool/t120_capturas_windows.ps1
+git add -- tool/t120_conductor.dart
+git add -- tool/t120_main.dart
+git add -- docs/T120-RESULTADOS.md
+git commit -m "Sprint 4: T-120, entrega 1, correccion 1: el icono del chip elegido se lee de noche, una clave por motivo, el foco no cae en un chip oculto, la Lista se abre en su titulo desde Estadisticas, el panel de puertos dice que se toca, la ayuda del buscador cabe y el buque de las pruebas se mira en el banco"
+git push
+```
+
+### C1.11 En tres líneas
+
+- R1, R2 y R3 confirmadas con sus rojas y corregidas: el ícono del chip elegido se lee de noche, cada
+  motivo lleva su clave y el foco no cae en un chip oculto; D9 y D10 hechos.
+- El buque de las pruebas es un archivo y un conductor propio lo recorre en el banco: 94 capturas sin
+  textos cortados; al mirar, la ayuda del buscador no cabía a 360 dp y se corrigió.
+- Suite 2340/2340, `analyze` en cero aquí y en la copia limpia; 11 de las 14 pruebas nuevas fallan
+  contra la entrega.
+
+### C1.12 Mensaje para Yov
+
+> Yov, la corrección 1 de la entrega 1 de T-120 está al final de `docs/T120-RESULTADOS.md`, sobre
+> `d182649`, sin commit. Las tres se confirmaron: R1 daba 1.0:1 de noche en el ícono del chip de carga
+> elegido (ahora toma el color del texto del chip, sin tocar el tema); R2, «Duplicate keys found»
+> (una clave por motivo); R3, el foco caía en un chip oculto al octavo Tab (las fichas que no se ven
+> van en `ExcludeFocus`). D9 y D10, hechos. R4: `tool/t120_buque.dart` escribe el buque de las
+> pruebas (9 puertos, 3 sin destino, 19 fuera de medida, 48 con dos cargas) y un conductor propio lo
+> recorre en el banco: 94 capturas, claro y oscuro, 1366 y 360 dp, letra 1.0 y 2.0, sin textos
+> cortados ni errores. Al mirar apareció la ayuda del buscador, que yo había alargado y no cabía a
+> 360 dp: ahora es «Matrícula, puerto o carga», y «Buscar» si no cabe. 14 pruebas nuevas, 11 rojas
+> contra `02169fc`; suite 2340/2340; `analyze` en cero aquí y en una copia limpia. La memoria no se
+> repitió. La entrega 2 espera.
 
 **ALTO: Yov revisa y GLM acepta.**

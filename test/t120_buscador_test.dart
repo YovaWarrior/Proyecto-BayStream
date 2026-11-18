@@ -167,7 +167,8 @@ void main() {
 
     testWidgets('el campo dice que también busca carga', (tester) async {
       await abrir(tester, '');
-      expect(find.text('Buscar contenedor, puerto o carga…'), findsOneWidget);
+      // Corrección 1: el de la entrega 1 no cabía a 360 dp.
+      expect(find.text('Matrícula, puerto o carga'), findsOneWidget);
     });
   });
 }

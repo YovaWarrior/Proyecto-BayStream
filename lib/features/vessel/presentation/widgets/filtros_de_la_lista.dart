@@ -330,7 +330,13 @@ class _Ficha extends StatelessWidget {
               BsCajaDeCodigo(codigo: datos.rotulo, rol: datos.caja!)
             else ...<Widget>[
               if (datos.icono != null) ...<Widget>[
-                Icon(datos.icono, size: 18),
+                // El color del texto del chip, que el tema resuelve por
+                // estado: con el de los íconos de la app (la tinta), de noche
+                // el elegido quedaba tinta sobre tinta (corrección 1, R1).
+                Builder(
+                  builder: (BuildContext context) => Icon(datos.icono,
+                      size: 18, color: DefaultTextStyle.of(context).style.color),
+                ),
                 SizedBox(width: medidas.espacioXs),
               ],
               Text(datos.rotulo, style: estiloRotulo),

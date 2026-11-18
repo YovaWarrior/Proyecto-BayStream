@@ -19,10 +19,45 @@ class ContainerSearchDelegate extends SearchDelegate<ContainerUnit?> {
     required this.containers,
     required this.ref,
     this.onIrAlPlano,
+    String ayuda = ayudaDelCampo,
   }) : super(
-          searchFieldLabel: 'Buscar contenedor, puerto o carga…',
-          searchFieldStyle: const TextStyle(fontSize: 16),
+          searchFieldLabel: ayuda,
+          searchFieldStyle: const TextStyle(fontSize: _tamanoDelCampo),
         );
+
+  /// T-120, corrección 1 (al mirar) · El texto de ayuda del campo. El de la
+  /// entrega 1, «Buscar contenedor, puerto o carga…», no cabía a 360 dp.
+  static const String ayudaDelCampo = 'Matrícula, puerto o carga';
+
+  /// El que va cuando [ayudaDelCampo] no cabe (la letra a 2.0 en un
+  /// teléfono): el campo es de una línea y nada se corta.
+  static const String ayudaCorta = 'Buscar';
+
+  static const double _tamanoDelCampo = 16;
+
+  /// El texto de ayuda que cabe en el campo con el ancho y la letra de
+  /// [context]. La ayuda solo se ve con el campo vacío, cuando no está el
+  /// botón de limpiar: el campo deja el ancho de la pantalla menos el botón
+  /// de volver (56) y el aire del título (16).
+  static String ayudaPara(BuildContext context) {
+    final ancho = MediaQuery.sizeOf(context).width - 56 - 16;
+    final pintor = TextPainter(
+      text: TextSpan(
+        text: ayudaDelCampo,
+        // La letra del campo: la del tema (Plex) a 16, como `searchFieldStyle`.
+        style: Theme.of(context)
+            .textTheme
+            .bodyLarge
+            ?.merge(const TextStyle(fontSize: _tamanoDelCampo)),
+      ),
+      textScaler: MediaQuery.textScalerOf(context),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final cabe = pintor.width <= ancho;
+    pintor.dispose();
+    return cabe ? ayudaDelCampo : ayudaCorta;
+  }
 
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -465,10 +500,12 @@ class _ContainerSearchResultTile extends StatelessWidget {
               'Posición: ${container.stowagePosition!.displayFormat}',
               style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
             ),
-          for (final motivo in motivos)
+          // Una clave por motivo: un refrigerado peligroso con «reefer imo»
+          // lleva dos (corrección 1, R2).
+          for (final (i, motivo) in motivos.indexed)
             Text(
               motivo,
-              key: const ValueKey<String>('busqueda-motivo'),
+              key: ValueKey<String>('busqueda-motivo-$i'),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

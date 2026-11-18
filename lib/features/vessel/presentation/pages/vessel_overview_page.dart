@@ -117,6 +117,10 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
   /// vuelve.
   String? _destinoDeEstadisticas;
 
+  /// D9 (10.149) · El título de la Lista: desde Estadísticas, la Lista se
+  /// abre con él arriba de lo que se ve.
+  final GlobalKey _tituloDeLaLista = GlobalKey(debugLabel: 'titulo-de-la-lista');
+
   @override
   void dispose() {
     _abrirPorElMouse?.cancel();
@@ -143,6 +147,15 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     final registro = ref.read(cerrablesDeAtrasProvider.notifier);
     _registroDeVolver = registro;
     registro.anotar(_volverAEstadisticas);
+    // D9 (10.149): con el título («Contenedores (25), destino PAMIT», con
+    // «Quitar filtros») arriba y las tarjetas debajo, no con el resumen del
+    // viaje. La Lista se dispone en el cuadro siguiente: ahí se lleva el
+    // título arriba. Por el riel o la barra, la Lista recuerda dónde estaba.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final titulo = _tituloDeLaLista.currentContext;
+      if (!mounted || titulo == null) return;
+      Scrollable.ensureVisible(titulo, alignment: 0);
+    });
   }
 
   void _alVolverAEstadisticas() {
@@ -740,6 +753,9 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         // T-122 (H6): también los vacíos asignados a una reserva.
         containers: ref.read(aboardContainersProvider),
         ref: ref,
+        // T-120, corrección 1: con la letra grande en el teléfono, la ayuda
+        // corta, para que nada se corte.
+        ayuda: ContainerSearchDelegate.ayudaPara(context),
         onIrAlPlano: () => ref
             .read(destinoDelViajeProvider.notifier)
             .ir(DestinoDelViaje.plano),
@@ -1306,7 +1322,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         const SizedBox(height: 8),
 
         // El título dice qué filtra, con «Quitar filtros».
-        const TituloDeLaLista(),
+        TituloDeLaLista(key: _tituloDeLaLista),
         const SizedBox(height: 16),
       ],
     );

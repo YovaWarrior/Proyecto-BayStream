@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -12,24 +13,34 @@ import 'package:flutter/widgets.dart';
 /// - **La ficha `fija` siempre se ve:** si no es de las primeras (un puerto
 ///   chico elegido desde Estadísticas), toma el último lugar antes de
 ///   `verTodas`.
-/// - Las que quedan fuera no se pintan, no se tocan y no están en la
-///   semántica: para el lector de pantalla no existen; están en lo que abre
-///   `verTodas`.
+/// - Las que quedan fuera no se pintan, no se tocan, no están en la semántica
+///   y **no toman el foco** (corrección 1, R3): para el teclado y el lector de
+///   pantalla no existen; están en lo que abre `verTodas`.
 /// - Si caben todas, `verTodas` no sale.
 /// - Cada línea centra sus fichas en vertical, como
 ///   `WrapCrossAlignment.center`.
-class BsFichasEnLineas extends MultiChildRenderObjectWidget {
+///
+/// Qué fichas caben solo se sabe al disponerlas. Después de cada disposición
+/// que cambia lo que se ve, las que quedan fuera se envuelven en
+/// `ExcludeFocus`, que no tiene render propio: la disposición no cambia, y si
+/// una tenía el foco, lo suelta.
+class BsFichasEnLineas extends StatefulWidget {
   /// Crea las fichas.
-  BsFichasEnLineas({
+  const BsFichasEnLineas({
     super.key,
-    required List<Widget> fichas,
-    required Widget verTodas,
+    required this.fichas,
+    required this.verTodas,
     this.maxLineas = 2,
     this.espacio = 8,
     this.espacioEntreLineas = 8,
     this.fija,
-  })  : assert(maxLineas >= 1),
-        super(children: <Widget>[...fichas, verTodas]);
+  }) : assert(maxLineas >= 1);
+
+  /// Las fichas, en su orden.
+  final List<Widget> fichas;
+
+  /// La ficha del final cuando no caben todas («Ver los 9 destinos»).
+  final Widget verTodas;
 
   /// Cuántas líneas como mucho.
   final int maxLineas;
@@ -44,11 +55,67 @@ class BsFichasEnLineas extends MultiChildRenderObjectWidget {
   final int? fija;
 
   @override
+  State<BsFichasEnLineas> createState() => _BsFichasEnLineasState();
+}
+
+class _BsFichasEnLineasState extends State<BsFichasEnLineas> {
+  /// Los índices de las fichas que se ven (el último, `verTodas`), según la
+  /// última disposición; `null` antes de la primera.
+  Set<int>? _visibles;
+
+  void _alDisponer(List<int> fichas, bool verTodas) {
+    final visibles = <int>{...fichas, if (verTodas) widget.fichas.length};
+    if (_visibles != null && setEquals(_visibles, visibles)) return;
+    // Durante la disposición no se puede reconstruir: en el cuadro siguiente.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _visibles = visibles);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hijos = <Widget>[...widget.fichas, widget.verTodas];
+    final visibles = _visibles;
+    return _FichasEnLineas(
+      maxLineas: widget.maxLineas,
+      espacio: widget.espacio,
+      espacioEntreLineas: widget.espacioEntreLineas,
+      fija: widget.fija,
+      alDisponer: _alDisponer,
+      children: <Widget>[
+        for (var i = 0; i < hijos.length; i++)
+          ExcludeFocus(
+            excluding: visibles != null && !visibles.contains(i),
+            child: hijos[i],
+          ),
+      ],
+    );
+  }
+}
+
+class _FichasEnLineas extends MultiChildRenderObjectWidget {
+  const _FichasEnLineas({
+    required this.maxLineas,
+    required this.espacio,
+    required this.espacioEntreLineas,
+    required this.fija,
+    required this.alDisponer,
+    required super.children,
+  });
+
+  final int maxLineas;
+  final double espacio;
+  final double espacioEntreLineas;
+  final int? fija;
+  final void Function(List<int> fichas, bool verTodas) alDisponer;
+
+  @override
   RenderObject createRenderObject(BuildContext context) => RenderBsFichasEnLineas(
         maxLineas: maxLineas,
         espacio: espacio,
         espacioEntreLineas: espacioEntreLineas,
         fija: fija,
+        alDisponer: alDisponer,
       );
 
   @override
@@ -58,7 +125,8 @@ class BsFichasEnLineas extends MultiChildRenderObjectWidget {
       ..maxLineas = maxLineas
       ..espacio = espacio
       ..espacioEntreLineas = espacioEntreLineas
-      ..fija = fija;
+      ..fija = fija
+      ..alDisponer = alDisponer;
   }
 }
 
@@ -80,6 +148,7 @@ class RenderBsFichasEnLineas extends RenderBox
     required double espacio,
     required double espacioEntreLineas,
     int? fija,
+    this.alDisponer,
   })  : _maxLineas = maxLineas,
         _espacio = espacio,
         _espacioEntreLineas = espacioEntreLineas,
@@ -112,6 +181,10 @@ class RenderBsFichasEnLineas extends RenderBox
     _fija = valor;
     markNeedsLayout();
   }
+
+  /// A quién se le dice, después de cada disposición, qué fichas se ven:
+  /// el widget saca del foco las demás (R3).
+  void Function(List<int> fichas, bool verTodas)? alDisponer;
 
   /// Los índices de las fichas que se ven, sin `verTodas`;
   /// y si `verTodas` se ve.
@@ -244,6 +317,7 @@ class RenderBsFichasEnLineas extends RenderBox
     }
     _visibles = eleccion.fichas;
     _conVerTodas = eleccion.verTodas;
+    alDisponer?.call(eleccion.fichas, eleccion.verTodas);
     size = constraints.constrain(Size(
         constraints.hasBoundedWidth
             ? constraints.maxWidth

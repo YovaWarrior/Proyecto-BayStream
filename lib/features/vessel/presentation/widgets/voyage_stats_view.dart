@@ -53,6 +53,10 @@ class VoyageStatsView extends ConsumerStatefulWidget {
   /// Lo que dice la descripción emergente de la barra de un puerto.
   static const String ayudaDelPuerto = 'Ver estos contenedores en la Lista';
 
+  /// D10 (10.149) · Lo que dice a la vista el panel de puertos cuando sus
+  /// barras se tocan, como «Toca una bahía para abrirla en el plano».
+  static const String lineaDeLosPuertos = 'Toca un puerto para verlo en la Lista';
+
   /// Cuántos puertos van a la vista antes de «Otros N puertos».
   static const int puertosALaVista = 7;
 
@@ -446,7 +450,11 @@ class _Graficos extends StatelessWidget {
     final puertos = BsPanel(
       key: const ValueKey<String>('estadisticas-puertos'),
       titulo: 'Por puerto de descarga',
-      child: _Barras(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _Barras(
         filas: EstadisticasDelViaje.conElResto(
           datos.puertos,
           VoyageStatsView.puertosALaVista,
@@ -464,6 +472,17 @@ class _Graficos extends StatelessWidget {
                 : fila.rotulo == EstadisticasDelViaje.sinDestino
                     ? () => onPuerto!(null)
                     : null,
+          ),
+          // D10 (10.149): dice a la vista que las barras se tocan, como el
+          // panel de bahías. Sin onPuerto no se tocan, y la línea no sale.
+          if (onPuerto != null) ...<Widget>[
+            SizedBox(height: medidas.espacioS),
+            Text(
+              VoyageStatsView.lineaDeLosPuertos,
+              style: textos.bodySmall?.copyWith(color: esquema.onSurfaceVariant),
+            ),
+          ],
+        ],
       ),
     );
 
