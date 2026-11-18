@@ -4148,4 +4148,55 @@ El tablero queda al día con esta decisión.
 
 **Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.149**.
+### 10.149 · T-120, entrega 1: revisada contra la carpeta; antes de la aceptación, una corrección corta (18-nov, 12:30)
+
+**Timonel entregó la entrega 1, la Lista y el buscador** (17-nov, de 22:00 a 00:05; `docs/T120-RESULTADOS.md`, secciones 6 a 15, sin commit): los tres filtros con cuentas cruzadas, de Estadísticas a la Lista, RF-018 y la Lista perezosa, con 99 pruebas nuevas.
+
+**Lo que Yov comprobó contra la carpeta, la evidencia y GitHub:**
+- la punta de `sprint-4` es `732334d` (la 10.148) y `SPRINT-4.md` es el del disco;
+- frente a `732334d`, la carpeta tiene 15 archivos cambiados y 12 nuevos, y son las 27 rutas del bloque de Timonel. No cambian `domain/`, `data/`, `pubspec.*`, `lib/main.dart`, los congelados, `web/`, `windows/` ni `tool/`, y no hay ningún `// ignore:`;
+- **la suite:** 2326 de 2326 en una sola corrida, sin fallidas ni omitidas (`build/t120/e1/suite-4.txt`, de 23:59:36 a 00:01:30). El último cambio de `lib/` y `test/` es de las 23:59:21, así que corrió después. El piso sigue en 2227 hasta que se acepte;
+- **`analyze`:** «No issues found!» en la carpeta (23:59:35) y en la copia limpia de las 23:55, con `flutter analyze` y con `dart analyze --cache` en una carpeta nueva (10.141). La copia tiene los 534 archivos Dart de la carpeta y difiere de ella en una sola línea, un comentario de `filtros_de_la_lista.dart`. Necesita copiada la entrada de T-124 (O-143-3);
+- **las rojas:** contra `899e4e3`, de las 18 pruebas que compilan fallan 17 y pasa la guarda (`rojas-contra-899e4e3.txt`);
+- **la memoria:** Yov recalculó las dos tablas del informe desde las lecturas (`ram-windows.csv`, 210 por serie) y coinciden todas las cifras. Al volver a la Lista, la mediana pasa de 512.1 a 151.8 MB con 977 contenedores y de 1 929.9 a 214.2 MB con 5 000; los demás pasos no cambian. Con 5 000, la app entera pasa de 200 MB desde que carga el archivo, antes y después. RNF-001 y RNF-007 se dictaminan en el bloque 3;
+- **el defecto que Timonel encontró al mirar** (8.1 del informe): de noche, el chip elegido salía como una caja clara sin texto. Las dos capturas lo muestran antes y después, y su prueba falla contra el código anterior con 1.0:1;
+- **lo aprobado en la 10.148 y los cinco puntos de la 10.147,** leídos en el código: el orden fijo por el total del viaje, el elegido con borde de 2 dp y negrita, `BsFichasEnLineas` con su vista previa, su documentación y su prueba, la barra que se toca en su vista previa, la fuente de RF-018 citada, «Sin destino» en las dos pantallas y los dos renglones de D8, sin más cambios en esa hoja.
+
+**El informe es fiel a la carpeta.** La lectura del código y de las capturas encontró cuatro cosas que ni las pruebas ni las capturas vieron. Se corrigen antes de la aceptación, para que GLM no acepte algo que ya se sabe que cambia:
+
+1. **R1 · De noche, el chip elegido de «Carga especial» pierde su ícono.** Es de la familia del defecto de 8.1. El ícono va dentro del rótulo del chip (`filtros_de_la_lista.dart:333`) y toma el color de los íconos de la app, la tinta (`bs_tema.dart:113`); de noche, el relleno del chip elegido también es la tinta (`:99` y `:187`). Su texto sí se lee. La prueba de contraste elige solo un destino, así que nunca midió una carga elegida. **Está leído en el código, no visto en pantalla:** lo confirma una prueba.
+2. **R2 · En el buscador, dos motivos de un mismo resultado llevan la misma clave** (`container_search_delegate.dart:468` a `471`). Un refrigerado que además es peligroso, con «reefer imo», pone dos textos con la clave `busqueda-motivo` en la misma columna: Flutter lo rechaza en las pruebas y en depuración («Duplicate keys found»); en una Release no lanza nada. Ninguna prueba lo cubre: las del buscador usan contenedores con una sola carga.
+3. **R3 · Los chips que no caben siguen recibiendo el foco del teclado.** `BsFichasEnLineas` no los pinta, no los deja tocar y los saca de la semántica, pero siguen en el árbol: con Tab, el foco puede caer en un chip que no se ve, e Intro lo activaría. Pasa con el teclado en una ventana angosta (Windows y la Web por debajo de 600 dp). **Es una hipótesis leída en el código:** se comprueba con una prueba y se corrige si sale roja.
+4. **R4 · Lo que nadie ha visto en una pantalla.** El archivo del banco, `T99_SINTETICO_977.edi`, trae tres puertos, dos navieras, 50 refrigerados y 4 peligrosos. Con él no se pueden ver «Ver los n destinos» ni su hoja, «Sin destino», «Fuera de medida» (el chip, la tarjeta, el renglón de la hoja y la búsqueda «oog»), «Otros N puertos» ni un resultado con dos motivos. El corpus tampoco sirve: en los diez archivos de su carpeta ninguno trae `DIM`, todos los contenedores traen su puerto de descarga y ninguno tiene dos cargas especiales. Todo eso solo lo vieron las pruebas de widgets, y el informe le pide a quien acepte que mire con ese mismo archivo. Hace falta el buque de las pruebas (`t120Baplie`: nueve puertos, «Sin destino», cuatro navieras y las tres cargas) escrito a un archivo, y mirarlo.
+
+**Dos propuestas de Yov, que decide Carlos.** Salen de mirar las capturas:
+- **D9 · Desde Estadísticas, la Lista se abre en su título, no arriba.** Hoy se abre arriba, como proponía la fase 1, y a 360 × 800 lo que se ve es el resumen del viaje y los cinco botones: las filas de filtros, el título que dice «destino PAMIT» y las tarjetas quedan a más de una pantalla (`build/t120/e1/capturas/antes-de-la-correccion/360x800_lista.png`). A 1366 × 690, las filas de filtros quedan al pie y no se ve ninguna tarjeta. Yov propone que, al llegar desde una barra, el título («Contenedores (25), destino PAMIT», con «Quitar filtros») quede arriba de lo que se ve, con las tarjetas debajo. La entrada por el riel o por la barra no cambia;
+- **D10 · Que el panel de puertos diga que se toca.** La barra de un puerto es un botón, pero a la vista nada lo dice: solo la descripción emergente, que en el teléfono pide mantener el dedo. El panel de bahías sí lo dice («Toca una bahía para abrirla en el plano»). Yov propone una línea igual en «Por puerto de descarga».
+
+Carlos las decide al pasar el prompt de la corrección, y Yov anota su respuesta en la decisión siguiente.
+
+**La corrección 1 de la entrega 1 va con Timonel,** en el mismo chat, sobre el commit de la entrega:
+- R1, R2 y R3, cada una con una prueba que falle contra el código de la entrega;
+- el buque de las pruebas escrito a un archivo de `%TEMP%` con un script `tool/t120_*.dart`, y sus capturas en el banco (R4);
+- D9 y D10, si Carlos las aprueba;
+- el comentario de `consulta_de_busqueda.dart:229`, que dice «refrigerados o peligrosos» donde el código y `DESIGN.md` dicen «peligrosos o refrigerados».
+
+La evidencia va en `build/t120/e1c1/`. **GLM acepta la entrega 1 después de la corrección,** con el archivo nuevo.
+
+**Observaciones que quedan anotadas:**
+- **O-120-2 (P3), con el frente de usabilidad.** En el teléfono, la Lista abre con el resumen del viaje y los cinco botones; a 360 × 800 la primera fila de filtros asoma al pie y la primera tarjeta queda a más de una pantalla. Viene de antes; T-120 suma dos filas. Va con O1, al frente que rehace la cabecera. Quien acepte mide a cuántos dp queda la primera tarjeta con la letra a 1.0 y a 2.0;
+- **O-120-3 (P3), con el bloque 4.** El buscador no entiende la clase con letra de compatibilidad: «imo 1.4» no encontraría un contenedor declarado «1.4S», y «imo 1.4s» no se reconoce. En el corpus la clase 1.4 viene sin letra (8 declaraciones, en `CORPUS_A03` y su variante), así que hoy no falla con ningún archivo real;
+- **O-120-1 (10.147) suma tres cosas de la Lista:** la tarjeta del refrigerado sin `TMP` dice «?°C»; la temperatura se escribe de cuatro maneras (la tarjeta, la hoja de la Lista, el detalle del plano y el buscador); y el detalle del plano dice «Sin temperatura declarada» donde la hoja y el buscador dicen «El archivo no trae temperatura»;
+- **«imo» sola ya no busca matrículas:** es la carga peligrosa, como pide RF-018. «imou» sigue buscando la matrícula, con su prueba;
+- `carriersListProvider` se quedó sin uso en `lib/`. No se borra: sería refactorizar de paso;
+- en el registro del conductor a 360 dp, el plano informa un texto que no cabe (la etiqueta de la bahía 01, de T-124). No es de la Lista: Timonel lo mira en la entrega 2, que va al plano.
+
+**Lo que sigue:**
+1. Carlos: el commit de la entrega 1 (las 27 rutas de Timonel) y el de esta decisión; después, el prompt de la corrección a Timonel, con su respuesta a D9 y D10.
+2. Timonel: la corrección 1.
+3. Yov revisa la corrección contra la carpeta y escribe el prompt de la aceptación para GLM 5.3 Flash, en Max.
+4. La entrega 2 sigue esperando la aceptación de la 1.
+
+**Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.150**.
