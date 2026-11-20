@@ -287,3 +287,123 @@ copias, bancos y capturas de `%TEMP%` (`t120-glm-*`, `t99-glm-t120\`,
 > duplicada no excepciona en filtros ni buscador; la Lista no llegué a
 > construirla en la sonda. Android y la grabación del parpadeo quedaron sin
 > presupuesto. La corrección de T120-ACC-01 va antes de la reaceptación.
+
+---
+
+## Revisión del 19-nov (10.152)
+
+Yov repasó mi aceptación contra la carpeta (10.152): lo comprobable coincide.
+Dos puntos de mi informe no se sostenían como estaban escritos, y esta sección
+los vuelve a medir, con sus cifras. La punta de esta carpeta al empezar era
+`d51646f` (`f29fa2a` más el commit de mi informe), sin cambios versionados
+míos; cada ventana de Flutter con su `SEMÁFORO:`, un comando a la vez (hay otra
+tarea abierta en la máquina, T-147).
+
+### T120-ACC-01, vuelto a medir: se retira el P2
+
+Yov leyó en el código lo que mi sonda de ayer no dijo: la sonda de «Sin
+destino» y la de PAMIT corrieron **sin llevar el tamaño a `t120Pump`**, así que
+las dos corrieron a 1366 × 690 (la omisión, en
+`test/support/t120_lista_support.dart:42`); el salto es el mismo código para un
+puerto y para «Sin destino» (`vessel_overview_page.dart:137-158`); y lo que
+cambió fue el largo de la lista: 98 tarjetas contra una. `ensureVisible` no
+desplaza más allá del final.
+
+Medición nueva, con las tres sondas pedidas, cada una a 1366 × 690 y a
+360 × 800, letra 1.0, con el tamaño llevado a `t120Pump` de forma explícita
+(`revision/sonda-acc01.txt` y `revision/sonda-acc01-b.txt`):
+
+| Caso | Tamaño | Título a (dp) | pixels | maxScrollExtent | La última tarjeta |
+|---|---|---:|---:|---:|---|
+| A · «Sin destino» con lista larga (30 sin destino de 120) | 1366 × 690 | **74.0** | 712.0 | 4276.0 | cortada por abajo |
+| A · «Sin destino» con lista larga | 360 × 800 | **56.0** | 972.0 | 7564.0 | cortada por abajo |
+| B · «Sin destino» con lista corta (1 tarjeta, dos puertos) | 1366 × 690 | 483.0 | **247.0 = máximo** | 247.0 | a la vista, cortada por abajo |
+| B · «Sin destino» con lista corta | 360 × 800 | 366.0 | **662.0 = máximo** | 662.0 | a la vista, cortada por abajo |
+| C · un puerto con lista corta (2 tarjetas de VELAG) | 1366 × 690 | 346.0 | **384.0 = máximo** | 384.0 | a la vista, cortada por abajo |
+| C · un puerto con lista corta | 360 × 800 | 66.0 | **962.0 = máximo** | 962.0 | a la vista, cortada por abajo |
+
+- **A deja el título arriba, como PAMIT**: 74.0 dp a 1366 × 690 y 56.0 dp a
+  360 × 800, con `pixels` por debajo del máximo (hay con qué desplazar).
+- **B y C quedan con `pixels` igual a `maxScrollExtent`**: el desplazamiento
+  está clavado en su tope; no hay con qué subir el título, y el título y la
+  tarjeta ya están a la vista. Es lo que leyó Yov.
+- Lo que se describe tal cual: en los cuatro casos de lista corta, la última
+  tarjeta queda visible pero cortada por el borde de abajo de la vista (unos
+  40 a 48 dp): el desplazamiento tope la deja en su sitio, no la baja hasta
+  verse entera.
+- Una nota del instrumental: en mi caso B nuevo con diez puertos, la barra de
+  «Sin destino» no salió porque la fila cae dentro de «Otros N puertos» (la
+  nota que ya tenía Timonel en el informe); la repetí con dos puertos, donde
+  «Sin destino» tiene su barra, y esa es la que se reporta.
+
+**La lectura de Yov se confirma: T120-ACC-01 se retira.** No es un defecto del
+producto: es el límite físico de `Scrollable.ensureVisible` con contenido más
+corto que la vista. Mi medición original midió cierto (483 dp), pero su
+conclusión de defecto era un artefacto de dos cosas: la sonda a 1366 × 690 sin
+decirlo, y una lista de una tarjeta donde el desplazamiento ya estaba en su
+tope. Como decidió la 10.152 (punto 2): **la entrega 1 queda aceptada con
+observaciones**; D9 se precisa en `DESIGN.md` 18.5 («arriba, o toda la lista a
+la vista cuando no hay más que desplazar»), y la prueba de la lista corta entra
+con la entrega 2.
+
+### El conteo del corpus, corregido: se retiran los dos «datos para O-120-1»
+
+Mi script cortaba los bloques en `EQD`; el formato BAPLIE abre el bloque en
+`LOC+147`, y el `TMP` y el `LOC+11` de cada contenedor vienen **antes** de su
+`EQD`. Así le atribuí cada `TMP` y cada `LOC+11` al contenedor equivocado. El
+conteo nuevo, con los bloques cortados en `LOC+147`
+(`revision/corpus-loc147.txt`):
+
+| Archivo | Bloques | Refrigerados (ISO R o TMP) | Con `TMP` | Bloques sin `LOC+11` | Destinos |
+|---|---:|---:|---:|---:|---|
+| CORPUS_A01.edi | 977 | **50** | 43, los 43 en contenedores de tipo refrigerado | **0** | USHOU 907, USMSY 40, XXVSL 30 |
+| CORPUS_A03.edi | 369 | **10** | 1, en contenedor de tipo refrigerado | **0** | GTPBR 267, USHOU 102 |
+
+Es exactamente lo que contó Yov (10.152) y lo que da el producto. Los
+«92 refrigerados» y el «contenedor truncado sin `LOC+11`» de mi informe de ayer
+eran artefactos de ese corte; la variante «EQD, LOC+147, TMP» de mi sonda de
+orden no es un contenedor: es el final de uno y el principio del siguiente, y
+el lector sí aplica el `TMP` que llega antes del `EQD` (`pendingTemperature`).
+**Se retiran los dos «datos para O-120-1»: O-120-1 queda como estaba, y no
+nace ningún hallazgo del lector.**
+
+### La Lista con una matrícula repetida (lo opcional)
+
+Lo intenté de nuevo con `t120Pump` completo a 1366 × 690
+(`revision/sonda-duplicada.txt`): la Lista sigue sin construir tarjetas con el
+viaje de la matrícula repetida (0 tarjetas, 0 textos de la matrícula, sin
+excepción). No concluyente, igual que ayer: queda para la entrega 2 con su
+prueba, como lo dejó anotado la 10.152.
+
+### Dictamen, dicho de nuevo
+
+**PASA, con observaciones.** Se retira el P2 (T120-ACC-01) y se retiran los dos
+«datos para O-120-1»; lo demás de la aceptación de ayer queda como está
+escrito, y lo que Yov comprobó coincide. La entrega 2 de T-120 espera a T-147
+(10.151).
+
+### Evidencia de la revisión
+
+`build/t120/glm-e1/revision/`: `sonda-acc01.txt` (A y C, los cuatro tamaños),
+`sonda-acc01-b.txt` (B corregida, los dos tamaños), `corpus-loc147.txt` (el
+conteo corregido), `sonda-duplicada.txt` (el intento opcional). Las sondas
+viven en `%TEMP%\t120-glm-t120\` y las copias en `%TEMP%\t120-glm-despues\`.
+
+### Git, para que lo ejecute Carlos (revisión)
+
+Desde esta carpeta. La punta se trae primero, para que el commit quede sobre
+ella; mi informe modificado se queda (si Carlos todavía no hubiera subido el
+commit del informe original, los dos cambios van en este mismo commit):
+
+```powershell
+git fetch origin
+git checkout --detach origin/sprint-4
+git add -- docs/t120/entrega1/aceptacion-glm.md
+git commit -m "Sprint 4: revision de la aceptacion de la entrega 1 de T-120, T120-ACC-01 retirado"
+git push origin HEAD:sprint-4
+```
+
+Horas del reloj de esta revisión: los 20 minutos previstos por el encargo, en
+tres ventanas de `SEMÁFORO:` (la sonda A/B/C y la repetición de B, el conteo
+del corpus y la sonda opcional); el reloj del sistema al cerrar marca 20-nov,
+08:58.
