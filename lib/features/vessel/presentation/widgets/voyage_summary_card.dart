@@ -328,6 +328,8 @@ class _ReadNotice extends StatelessWidget {
         BaplieReadNoticeKind.incomplete => 'Archivo posiblemente incompleto',
         BaplieReadNoticeKind.locode => 'Códigos de puerto que no son UN/LOCODE',
         BaplieReadNoticeKind.dimension => 'Medidas DIM revisadas',
+        BaplieReadNoticeKind.noNumber => 'Celdas sin matrícula en EQD',
+        BaplieReadNoticeKind.duplicate => 'Matrículas repetidas en EQD',
       };
 
   String get summary {
@@ -336,11 +338,18 @@ class _ReadNotice extends StatelessWidget {
       final missing = count == 1 ? 'falta 1 segmento' : 'faltan $count segmentos';
       return '$title: $missing (${notice.details.join(', ')})';
     }
+    // T-147: cada detalle ya trae su cuenta («NO» en 271 celdas).
+    if (notice.kind == BaplieReadNoticeKind.noNumber) {
+      return '$title: ${notice.details.join(', ')} · se leyeron como celdas '
+          'reservadas';
+    }
     final action = switch (notice.kind) {
       BaplieReadNoticeKind.weight => 'revisa esos pesos antes de operar',
       BaplieReadNoticeKind.position => 'pide una exportación corregida',
       BaplieReadNoticeKind.locode => 'revisa esos puertos con la agencia',
       BaplieReadNoticeKind.dimension => 'revisa esas medidas antes de estibar',
+      BaplieReadNoticeKind.duplicate =>
+        'revisa esas celdas con quien hizo el plan',
       _ => 'revisa esos números con la agencia',
     };
     // T-144: un aviso de UN/LOCODE puede ser de la cabecera o de una celda
@@ -375,6 +384,23 @@ class _ReadNotice extends StatelessWidget {
                 if (notice.kind == BaplieReadNoticeKind.incomplete)
                   const Text('El archivo puede venir incompleto. '
                       'Revisa los segmentos que faltan:'),
+                if (notice.kind == BaplieReadNoticeKind.noNumber)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text(
+                        'El archivo trae un texto donde va la matrícula. Esas '
+                        'celdas se leyeron como reservadas, con su tipo, sus '
+                        'puertos, su línea y su peso: el vacío de cada una se '
+                        'asigna al cargar.'),
+                  ),
+                if (notice.kind == BaplieReadNoticeKind.duplicate)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text(
+                        'La misma matrícula viene en más de una celda. Un '
+                        'contenedor solo puede estar en una: pide el plan '
+                        'corregido antes de operar esas celdas.'),
+                  ),
                 for (final detail in notice.details)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),

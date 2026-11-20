@@ -72,6 +72,14 @@ class CodeEquivalences extends Equatable {
 /// Una fila de contenedor del listado. Los códigos `list*` son los del Excel;
 /// [type], [pot], [pod] y [line] son los vigentes, ya traducidos cuando la
 /// lista pasó por [ExportList.normalized].
+///
+/// T-147 (10.151, hallazgo 3) · [pod] es el puerto con que la fila se cruza
+/// con el plan: donde el contenedor baja del buque. El plan trae ese puerto
+/// en su `LOC+11`, y el listado lo trae en la columna POT cuando la llena; su
+/// columna POD es entonces el destino final. Por eso [pod] sale del POT si la
+/// fila lo trae y, si no, del POD, como hasta la 1.0.1 ([listCrossPort]). La
+/// fila conserva los dos como vinieron, en [listPot] y [listPod], y la forma
+/// guardada no cambia: la 1.0.1 lee el grupo de `pod`, igual que antes.
 class ExportListRow extends Equatable {
   /// Fila de la hoja, contada desde 1 como la ve el usuario en Excel.
   final int sheetRow;
@@ -130,9 +138,17 @@ class ExportListRow extends Equatable {
     Iterable<String> unNumbers = const [],
   })  : type = type ?? listType,
         pot = pot ?? listPot,
-        pod = pod ?? listPod,
+        pod = pod ?? listPot ?? listPod,
         line = line ?? listLine,
         unNumbers = List.unmodifiable(unNumbers);
+
+  /// T-147 · El código de puerto del Excel con que la fila se cruza con el
+  /// plan: el POT si la fila lo trae; si no, el POD.
+  String get listCrossPort => listPot ?? listPod;
+
+  /// T-147 · Si el Excel trae en esta fila un POT distinto del POD: la
+  /// pantalla enseña entonces los dos.
+  bool get potDiffersFromPod => listPot != null && listPot != listPod;
 
   /// T-122 (H4, 10.51) · La fila que el listado no trae: **un lleno** del plan
   /// de carga, armado desde el plan para cargarlo por su número de
@@ -185,7 +201,7 @@ class ExportListRow extends Equatable {
         listLine: listLine,
         type: equivalences.translate(EquivalenceKind.type, listType),
         pot: listPot == null ? null : equivalences.translate(EquivalenceKind.port, listPot!),
-        pod: equivalences.translate(EquivalenceKind.port, listPod),
+        pod: equivalences.translate(EquivalenceKind.port, listCrossPort),
         line: equivalences.translate(EquivalenceKind.line, listLine),
         tareKg: tareKg,
         vgmKg: vgmKg,

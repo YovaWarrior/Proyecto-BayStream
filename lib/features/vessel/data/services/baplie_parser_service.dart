@@ -557,6 +557,12 @@ class BaplieParserService {
 
     _ContainerBuilder? containerBuilder;
 
+    // T-147 (10.151, hallazgo 2): los textos que el archivo trae donde va la
+    // matrícula, y en cuántas celdas se leyó cada uno como «sin número».
+    final placeholders = _placeholderNumbers(segments);
+    final withoutNumber = <String, int>{};
+    String? currentPlaceholder;
+
     // Cierra ambos tipos de grupo sin fabricar un número para una reserva.
     void finishGroup() {
       final builder = containerBuilder;
@@ -587,6 +593,10 @@ class BaplieParserService {
         } else if (currentPosition != null) {
           reservedSlots.add(builder.buildReserved(currentPosition,
               currentPortOfLoading, currentPortOfDischarge));
+          final placeholder = currentPlaceholder;
+          if (placeholder != null) {
+            withoutNumber[placeholder] = (withoutNumber[placeholder] ?? 0) + 1;
+          }
           if (locodeProblems.isNotEmpty) {
             notice(BaplieReadNoticeKind.locode,
                 'Celda reservada ${currentPosition.toIsoCode()}: '
@@ -595,6 +605,7 @@ class BaplieParserService {
         }
       }
       containerBuilder = null;
+      currentPlaceholder = null;
     }
 
     for (int i = 0; i < segments.length; i++) {
@@ -700,11 +711,18 @@ class BaplieParserService {
         case 'EQD':
           final eqdResult = _parseEQD(segment);
           if (eqdResult != null) {
+            // T-147: «NO», o un texto sin forma de matrícula que se repite
+            // en más de una celda, es «sin número»: el grupo se lee como si
+            // el EQD viniera en blanco, o sea, como una celda reservada.
+            final number = eqdResult.containerId == null
+                ? null
+                : numeroDeContenedor(eqdResult.containerId!);
+            final isPlaceholder =
+                number != null && placeholders.contains(number);
+            currentPlaceholder = isPlaceholder ? number : null;
             // Crear nuevo contenedor
             final builder = _ContainerBuilder()
-              ..containerId = eqdResult.containerId == null
-                  ? null
-                  : numeroDeContenedor(eqdResult.containerId!)
+              ..containerId = isPlaceholder ? null : number
               ..isoSizeType = eqdResult.isoSizeType
               ..status = eqdResult.status
               ..operatorCode = pendingOperatorCode
@@ -791,8 +809,78 @@ class BaplieParserService {
     // Guardar último contenedor si no fue procesado por UNT
     finishGroup();
 
+    // T-147: un solo aviso con la cuenta, no uno por celda.
+    for (final text in withoutNumber.keys.toList()..sort()) {
+      final cells = withoutNumber[text]!;
+      notice(BaplieReadNoticeKind.noNumber,
+          '«$text» en $cells ${cells == 1 ? 'celda' : 'celdas'}');
+    }
+    // T-147: la misma matrícula, con forma de matrícula, en más de una
+    // celda. Se avisa con sus celdas; la lectura no cambia.
+    final cellsByNumber = <String, List<String>>{};
+    for (final container in containers) {
+      if (Iso6346CheckDigit.isValid(container.containerId) == null) continue;
+      cellsByNumber
+          .putIfAbsent(container.containerId, () => [])
+          .add(_cellLabel(container.stowagePosition));
+    }
+    for (final entry in cellsByNumber.entries) {
+      final cells = entry.value;
+      if (cells.length < 2) continue;
+      notice(
+          BaplieReadNoticeKind.duplicate,
+          '${entry.key}: '
+          '${cells.sublist(0, cells.length - 1).join(', ')} y ${cells.last}');
+    }
+
     return (containers: containers, reservedSlots: reservedSlots);
   }
+
+  /// T-147 · La celda como la lee el planificador: `BBB-RR-TT`.
+  static String _cellLabel(IsoCoordinate? position) => position == null
+      ? 'sin posición'
+      : '${position.bayPadded}-${position.rowPadded}-${position.tierPadded}';
+
+  /// T-147 (10.151, regla 2) · Los textos del EQD que no son una matrícula
+  /// sino la marca de que no la hay.
+  ///
+  /// El plan de carga del piloto 4 (caso A09), salido de la herramienta de
+  /// planificación de la línea, trae `EQD+CN+NO+45G1+++4` en sus 271 celdas
+  /// reservadas, donde el caso A08 trae el número en blanco
+  /// (`EQD+CN++22G1+++4`). La regla tiene dos partes:
+  ///
+  /// - «NO» siempre, aunque venga en una sola celda;
+  /// - cualquier otro texto que no tenga la forma de una matrícula ISO 6346
+  ///   (cuatro letras y siete cifras) **y** venga en más de una celda. Un
+  ///   contenedor no puede estar en dos celdas, así que un texto repetido
+  ///   que tampoco tiene forma de matrícula no identifica a ninguno.
+  ///
+  /// Un número sin esa forma que viene una sola vez sigue siendo un
+  /// contenedor (T-144: «EU876»), y una matrícula bien formada repetida
+  /// también: esa se avisa aparte ([BaplieReadNoticeKind.duplicate]).
+  Set<String> _placeholderNumbers(List<String> segments) {
+    final cells = <String, Set<int>>{};
+    var cell = 0;
+    for (final segment in segments) {
+      if (segment.startsWith('LOC+147+')) {
+        cell++;
+        continue;
+      }
+      if (!segment.startsWith('EQD+')) continue;
+      final id = _parseEQD(segment)?.containerId;
+      if (id == null) continue;
+      cells.putIfAbsent(numeroDeContenedor(id), () => {}).add(cell);
+    }
+    return {
+      for (final entry in cells.entries)
+        if (entry.key == _noNumber ||
+            (entry.value.length > 1 &&
+                Iso6346CheckDigit.isValid(entry.key) == null))
+          entry.key
+    };
+  }
+
+  static const _noNumber = 'NO';
 
   /// Obtiene el tipo de segmento (primeros 3 caracteres)
   String _getSegmentType(String segment) {
