@@ -68,7 +68,7 @@ al final desde el equipo: no hace falta copiarle nada, salvo lo que se detenga.
 
 | # | Qué | Lo que se tiene que ver |
 |---|---|---|
-| 0.1 | Los dos bloques de Git de la 10.155 ya corrieron: el informe de GLM, en `t147-piloto4`; `SPRINT-4.md` y esta lista, en `sprint-4` | En `baystream-rediseno`, `git log --oneline -1` muestra «Sprint 4: decision 10.155, …». El bloque 1 comprueba lo del informe |
+| 0.1 | Los bloques de Git de la 10.155 y la 10.156 ya corrieron: el informe de GLM, en `t147-piloto4`; `SPRINT-4.md` y esta lista, en `sprint-4` | En `baystream-rediseno`, `git log --oneline -1` muestra «Sprint 4: decision 10.156, …». El bloque 1 comprueba lo del informe |
 | 0.2 | Ningún agente trabaja: Timonel y GLM, cerrados o en espera | Nadie corre Flutter ni Dart |
 | 0.3 | Play Console: el último `versionCode` subido sigue siendo el **10** | Si alguien subió el 11, parar: la versión pasa a `1.0.2+12` y vuelve a la aceptación |
 | 0.4 | Las reglas publicadas siguen siendo las de T-130 (bloque 0.4). Si nadie las tocó en la consola desde el 4-nov, se puede saltar | «Lo publicado son las reglas de T-130» |
@@ -162,7 +162,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Parar: git fetch fallo; revisar la red' }
 git merge-base --is-ancestor 57497db origin/t147-piloto4
 if ($LASTEXITCODE -ne 0) { throw 'Parar: en GitHub, t147-piloto4 no contiene 57497db, la entrega aceptada; avisar' }
 git cat-file -e 'origin/t147-piloto4:docs/t147/entrega1/aceptacion-glm.md'
-if ($LASTEXITCODE -ne 0) { throw 'Parar: en GitHub, t147-piloto4 todavia no trae el informe de GLM; falta su bloque de Git (10.155)' }
+if ($LASTEXITCODE -ne 0) { throw 'Parar: en GitHub, t147-piloto4 todavia no trae el informe de GLM; falta su bloque de Git (10.156)' }
 if (-not (git show origin/t147-piloto4:pubspec.yaml | Select-String -Pattern '^version: 1\.0\.2\+11' -Quiet)) { throw 'Parar: t147-piloto4 no trae la 1.0.2+11' }
 git diff --quiet 57497db origin/t147-piloto4 -- lib test integration_test tool android windows web assets pubspec.yaml pubspec.lock firebase.json
 if ($LASTEXITCODE -ne 0) { throw 'Parar: t147-piloto4 trae codigo que GLM no acepto (10.155); avisar' }

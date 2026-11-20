@@ -4546,4 +4546,44 @@ Windows, con un recorrido y una medición, va si queda sesión. Android no entra
 
 **Siguen pendientes de Carlos:** cerrar la operación publicada del piloto, que ahora es el punto 0.5 de la lista; revisar en el iPhone las equivalencias que digan «Guardada en este dispositivo» (10.151); decir si las cuatro notas de la columna MARCHAMO significan siempre que la fila no se carga en este buque, y si el BAPLIE de salida tiene que llevar el destino final (10.153); O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.156**.
+### 10.156 · GLM corrigió su informe de la aceptación de T-147 y Yov lo comprobó; dos respuestas de Carlos para la entrega 2: las filas con nota de cancelación no se cargan, y el destino final sale en el BAPLIE de salida (20-nov)
+
+**Carlos corrió el bloque de la 10.155** (`4833b69`) **y le pasó a GLM la corrección de su informe.** Mientras GLM corregía, respondió las dos preguntas de la 10.153 (17:22).
+
+**GLM corrigió las cuatro cosas de la 10.155** (20-nov, 17:26; `docs/t147/entrega1/aceptacion-glm.md`, ahora de 616 líneas, con una sección 16, «Revisión del 20-nov», de once puntos). Yov comparó el informe con su versión anterior, línea por línea:
+- **la tabla de la medición** dice lo que dicen los registros, en el orden de las corridas. Al releerlos, GLM corrigió además el orden de otras dos filas;
+- **la matrícula repetida** es `XJZU5616792`. El informe dice ahora que la sonda tocó el hueco y no la pieza, y que qué pasa al tocar la pieza queda sin mirar. De la bahía dice lo que se ve, 140.3 t donde el plan trae 148.2 t, sin explicación;
+- **las horas salen de sus archivos,** cada tramo con el archivo que lo respalda: de las 11:57 a las 13:17. Dice cuáles tramos no dejaron archivo;
+- **lo que quedó en `%TEMP%`** es lo que hay: las dos copias limpias sin carpeta `build`, sus ocho sondas y cuatro archivos sueltos, nada del caso.
+
+El dictamen, la tabla de los puntos y los hallazgos no cambiaron. En `baystream-qa-r4` sigue cambiando solo el informe; la evidencia no se tocó (234 archivos, ninguno modificado después de las 13:19), y el informe sigue sin fugas. **El informe va al commit.** Su SHA-256 es `a70d439daf6fc64622b424ed53cfefb26ba28f786f839fa89709e1bd3f469743`, y el bloque de Git lo comprueba antes de agregarlo.
+
+**Las dos respuestas de Carlos no cambian la 1.0.2.** Son de la entrega 2 de T-147, que lleva su propuesta antes.
+
+**1. Las cuatro notas de la columna MARCHAMO significan siempre que la fila no se carga en este buque.** En palabras de Carlos: «esos contenedores quedaron cancelados y no se cargarán». Son «ROLEADO - CANCEL», «YA EMBARCADO -CANCEL», «CANCELADO» y «REEMPLAZO - CANCEL». El hallazgo 4 de la 10.151 queda confirmado como defecto. Lo que Yov contó en el caso A09, y que sirve de oráculo para la entrega 2:
+- son 40 filas: 24 «ROLEADO - CANCEL», 7 «YA EMBARCADO -CANCEL», 7 «CANCELADO» y 2 «REEMPLAZO - CANCEL». 37 son llenos y 3, vacíos;
+- **los 37 llenos cancelados son exactamente los 37 «llenos del listado que no están en el plan»:** ninguno está en el plan, y los otros 135 están todos;
+- los 3 vacíos cancelados son los OR 156, 168 y 182, de 40HC a COTRB. **Hoy la hoja de los vacíos los ofrece:** el recorrido de la entrega 1 asigna el OR 156;
+- **sin las 40, el listado trae 135 llenos y 273 vacíos: los 408 movimientos que el plan carga en GTSTC, exactos.**
+
+Lo que la propuesta de la entrega 2 tiene que decir: cómo se reconoce una fila cancelada, y qué se hace con una nota parecida que no sea una de las cuatro; dónde se ve, en el resumen del listado, en el cruce y en la hoja de los vacíos, que no la puede ofrecer; y qué pasa si una fila cancelada ya se cargó.
+
+**2. El destino final del listado tiene que salir en el BAPLIE de salida.** En palabras de Carlos: «sí, hagamos que salga». Es trabajo nuevo. Lo que Yov comprobó para la propuesta:
+- **el segmento es `LOC+83`.** El manual de BAPLIE 2.2.1 de SMDG (06/2016) lo define como lugar de entrega, para el destino final. Es la misma cita que ya lleva `BaplieConstants.locFinalDestination`, de T-144;
+- **el plan del piloto ya lo usa así:** los 301 contenedores de paso traen `LOC+83`, y en 273 es distinto de su `LOC+11`. Por ejemplo, `LOC+11` JMKIN con `LOC+83` BSNAS. Ninguno de los 408 que cargan en GTSTC lo trae;
+- **en el caso son 169 de las 408 filas que se cargan:** 109 llenos y 60 vacíos traen un POD distinto del POT;
+- **la app ya lo lee y lo enseña:** el lector guarda `LOC+83` en `finalDestination`, y el detalle del contenedor lo muestra como «Destino final», desde la 1.0.1. Lo que falta es escribirlo: `departure_baplie_writer.dart` escribe `LOC+9`, `LOC+11` y, con una fila guardada por la 1.0.1, `LOC+13`, y nada más.
+
+Lo que la propuesta tiene que decir: `LOC+83` con el POD del listado cuando es distinto del POT, y si vale igual para los vacíos; qué manda si el plan ya trae un `LOC+83` distinto del listado; qué ve la 1.0.1 de un viaje que guarde la versión nueva; y cómo cambia la prueba de fidelidad de T-132. `LOC+11` sigue siendo el POT (10.153).
+
+**Con estas dos respuestas, la propuesta de la entrega 2 ya no espera nada más de Carlos,** fuera de lo que anote en el iPhone en la prueba corta de la 1.0.2 (10.155). Sigue pendiente O-120-5, que es de T-120 (10.154).
+
+**La lista de publicación cambia en dos líneas:** el punto 0.1 y el mensaje de una guardia del bloque 1 nombran ahora esta decisión, que es la que trae el bloque de Git del informe.
+
+**Lo que sigue:**
+1. Carlos: dos commits. El informe de GLM, desde `baystream-qa-r4` a `t147-piloto4`; y esta decisión con la lista, en `sprint-4`.
+2. Carlos publica la 1.0.2 con la lista. Mientras compila, ningún agente corre Flutter.
+3. Yov lee el registro y anota la publicación. Pone 17.6 en `DESIGN.md` y el manual al día.
+4. La propuesta de la entrega 2 de T-147 (Timonel), ya con estas dos respuestas. Después, la entrega 2 de T-120 (10.154).
+
+La siguiente decisión es la **10.157**.
