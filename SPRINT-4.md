@@ -4248,4 +4248,88 @@ Android queda como opcional: Atrás está en las pruebas, y el teléfono se mide
 
 **Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.151**.
+### 10.151 · La cuarta prueba piloto, cancelada: con 271 celdas reservadas, la hoja de los vacíos se traba; el caso A09 y T-147 (18 y 19-nov)
+
+**El piloto (miércoles 18-nov, de 22:00 a 22:40):** una escala real en GTSTC, con la Web 1.0.1 (`37be8a5`) en el iPhone de Carlos, primero como Oficina y después como Muelle. Yov lo acompañó desde el chat, sin acceso a la computadora. Los archivos reales no entran al repositorio: aquí van solo posiciones, códigos y conteos, y el caso queda anonimizado como A09 (`docs/S4-CASO-A09.md`). El registro de esa noche está en el proyecto de Yov (`BayStream_Piloto4_18nov.md`).
+- **El plan de carga** trae 709 posiciones; en la escala se cargan 408: 135 llenos y 273 vacíos. **El listado** trae 448 filas: 172 llenos y 276 vacíos.
+- **La operación quedó publicada en unos 20 minutos, con dos rodeos de Yov:** una copia del plan con el número en blanco en las 271 celdas que traían «NO» (hallazgo 2), y las trece equivalencias dictadas, cuatro de ellas de puerto, sacadas de la columna POT (hallazgo 3). El cruce de la pantalla coincidió con el cálculo de Yov en todas sus cifras (4.4 del caso).
+- **Al cargar el primer vacío, la app se trabó** unos 6 segundos por toque, y siguió trabada (hallazgo 1). El otro camino, «Acciones» → «Asignar vacío», pide primero el contenedor y después la celda: en el muelle es al revés, y atrasaba a Carlos.
+- **A las 22:39 Carlos siguió la operación con el plano impreso. El piloto quedó cancelado.** La operación publicada de esa escala sigue abierta en la nube.
+
+**Los hallazgos:**
+1. **P1 · La hoja «Vacíos del listado» se traba al tocar una celda reservada.** Carlos: «un serio defecto». La causa está leída en el código y **no está medida:**
+   - `_LoadingPickerState.build` (`loading_controls.dart:299-306`) llama a `candidateSlots` por cada vacío del listado;
+   - `candidateSlots` y `slots` (`loading_operation.dart:288` y `:180`) leen `occupancy` dentro del recorrido de las celdas (`:197` y `:307`), y `OperationState.occupancy` (`operation.dart:585`) rehace el mapa completo en cada lectura. Además, `free.contains(slot)` (`:303`) compara con la igualdad de Equatable;
+   - con 276 vacíos, 271 celdas y 709 piezas son unas 75 000 reconstrucciones del mapa dentro de `build`, y se repiten cada vez que la hoja se redibuja, por ejemplo al abrirse el teclado;
+   - el caso más grande que se había probado, el A08, trae 56 vacíos y 55 reservas: unas 25 veces menos trabajo. **El corpus no tenía un caso de esta escala.**
+2. **P1 · El plan trae «NO» donde no hay matrícula, y la app lo lee como 271 contenedores.** El lector solo arma una celda reservada cuando el número viene en blanco (`baplie_parser_service.dart:561-590`). En la operación, la clave `C:<matrícula>` (`operation.dart:310`) deja los 271 en una sola pieza, sin avisar. El archivo salió de CAPSTAN3, la herramienta de planificación de la línea.
+3. **P2 · El listado se cruza por el POD, que es el destino final. El plan trae el puerto donde el contenedor baja del buque, que en el listado es el POT.** De los 137 contenedores que están en el plan con su matrícula, el POT coincide en los 137 y el POD en 28. El lector guarda el POT y no lo usa (`export_list_parser_service.dart:268`; `export_list_cross_checker.dart:268`). Por eso quedaron cuatro puertos pendientes, tres de ellos sin ninguna sugerencia. En el caso A08, POT y POD son iguales en las 176 filas.
+   - **Queda en el iPhone de Carlos:** la importación guarda en el dispositivo toda equivalencia que no sea una identidad deducida (`tableOf`, `export_list_cross_checker.dart:341`; `export_list_providers.dart:295`), y lo guardado manda. Por esa regla quedaron 33 de puerto, 32 de ellas de «destino final → trasbordo», que solo valen para ese viaje. Falta mirarlo en el teléfono. Es el hallazgo 3 de la 10.85, que sigue abierto.
+4. **P2 · El listado marca 40 filas canceladas, y la app las cuenta como carga.** La columna MARCHAMO trae «ROLEADO - CANCEL» (24), «YA EMBARCADO -CANCEL» (7), «CANCELADO» (7) y «REEMPLAZO - CANCEL» (2): 37 llenos y 3 vacíos. Son exactamente los 37 llenos «que no están en el plan» y los 3 vacíos que sobran en 45G1 · COTRB. Sin esas filas, el listado y el plan cuadran: 135 llenos y 273 vacíos. **Yov no lo vio esa noche:** le dijo a Carlos que preguntara por un plan V2, y la respuesta estaba en el listado.
+5. **P3 · Tres filas del listado que el lector no reconoce:** «… COD. 00-000-001» (dice «COD.» y no «CODIGO»), «TRANSBORDOS» y «VACIOS». Salen como «3 filas sin entender», y 334 filas quedan sin agencia (`export_list_parser_service.dart:61` y `:206`).
+6. **Observación · Un tipo del listado, varios códigos ISO en el plan.** El listado dice 40HC y el plan separa 45G1 y 45G0; pasa igual con 45HC, 40RF, 20OT, 40HF, 40ST y las cisternas. La equivalencia es de uno a uno: 16 celdas quedan como «otro grupo» y piden motivo. Toca lo mismo que el hallazgo 6 de la 10.85.
+7. **Observación · Si el plan se corrige después de publicar,** la operación no lo acepta, y una vez cerrada tampoco deja abrir otra con el mismo buque, viaje y puerto (`OperationSources.save`). En el piloto no hizo falta, porque el plan corregido entró antes de publicar. Sigue abierto desde T-130 (10.85 y 10.90).
+
+**El caso A09** ya está en la carpeta del corpus, fuera del repositorio: `CORPUS_A09.edi`, el plan con sus 271 «NO», y `LISTADO_A09.xlsx`, el listado con su estructura real. `docs/S4-CASO-A09.md` dice cómo se anonimizaron, qué traen, lo que hace la 1.0.1 con ellos y lo que deben dar con T-147. Yov comprobó que el par anonimizado da las mismas cuentas que el real y que reproduce la pantalla del piloto: las trece pendientes, el cruce y «Bahía 01 · 4 contenedores · 3 celdas reservadas · 116.0 t».
+
+**Regla nueva para las aceptaciones:** lo que recorre las filas del listado contra las celdas del plan se acepta también con el caso A09, mirando la pantalla.
+
+**Nace T-147 · Los defectos del piloto 4.** La hace Timonel (Claude Opus 5.5, en Alto) y la acepta GLM 5.3 Flash, en Max (10.137). Yov no programa: su sesión no compila ni corre Flutter, y quien revisa no es quien escribe.
+- **Va en su propia carpeta y rama, desde lo publicado:** `C:\Proyectos\baystream-t147`, rama `t147-piloto4`, desde `v1.0.1` (`37be8a5`), como T-132 y T-137. Así la versión siguiente lleva solo el arreglo, y T-120 sigue su camino en `sprint-4`. Después de publicarla, `master` se mezcla en `sprint-4`: las 34 rutas que hoy separan a `sprint-4` de `master` son de T-120 y de los documentos, y ninguna es de las que toca T-147.
+- **Entrega 1, la que se publica primero:** los hallazgos 1, 2, 3 y 5, sin fase de propuesta, con las reglas de abajo. Lleva la versión `1.0.2+11` y el MSIX `1.0.2.0`.
+- **Entrega 2, con su propuesta antes:** el hallazgo 4, las equivalencias guardadas (hallazgo 3 de la 10.85) y el hallazgo 6. El 7 se evalúa ahí.
+- El informe es `docs/T147-RESULTADOS.md`. El prompt está en el documento del proyecto `BayStream_T147_piloto4_19nov.md`.
+
+**Las reglas de la entrega 1. Las propone Yov y quedan aprobadas cuando Carlos le pasa el prompt a Timonel:**
+1. **La hoja de los vacíos (hallazgo 1).** No cambia lo que ofrece ni su orden: cambia lo que tarda. La ocupación se calcula una vez por estado, y la hoja abierta desde una celda decide una sola vez si esa celda admite un vacío, no una vez por fila. Timonel busca el mismo patrón en el resto de la carga y de la descarga. Se mide antes y después con el caso A09, y queda una prueba de escala que no dependa del reloj.
+2. **«NO» es «sin número» (hallazgo 2).** Un grupo cuyo `EQD` trae «NO» se lee como si viniera en blanco: es una celda reservada, con su tipo, sus puertos, su línea y su peso. Vale también para cualquier otro texto que no tenga forma de matrícula y se repita en más de una celda. El lector lo avisa una sola vez, con la cuenta. Ningún otro archivo del corpus cambia su lectura.
+3. **Una matrícula repetida se avisa (hallazgo 2).** Si el plan trae la misma matrícula, con forma de matrícula, en dos celdas, el lector lo dice. Lo que la operación hace con ellas no cambia en esta entrega: Timonel lo deja escrito.
+4. **El cruce va por el POT (hallazgo 3).** Con la columna POT llena, el puerto de la fila es el POT; si viene vacía, el POD, como hoy. La pantalla enseña los dos cuando son distintos.
+5. **Un código sin respaldo que el plan carga con ese mismo código se propone como identidad,** no como pendiente.
+6. **Los separadores (hallazgo 5):** «COD.» vale como «CODIGO», y «TRANSBORDOS» y «VACIOS» son encabezados de sección, como «AGREGADOS».
+
+**Lo que sigue:**
+1. Carlos: los bloques de Git y la carpeta de T-147.
+2. Carlos le pasa el prompt a Timonel, en un chat nuevo abierto en `baystream-t147`.
+3. Yov revisa la entrega 1, GLM la acepta y Yov escribe la lista de publicación de la 1.0.2.
+4. Carlos: cerrar la operación publicada del piloto. En el próximo listado, revisar en el iPhone las equivalencias de puerto que digan «Guardada en este dispositivo».
+
+### 10.152 · T-120, entrega 1: la aceptación de GLM dice «no pasa» por un P2; Yov lo revisó y el hallazgo no se sostiene como está; GLM lo vuelve a medir (19-nov)
+
+**GLM 5.3 Flash, en Max, terminó la aceptación** (`docs/t120/entrega1/aceptacion-glm.md`, en `baystream-qa-r4`, sobre `f29fa2a`; 18-nov, de 13:36 a 15:30). **Dictamen: no pasa, por un P2,** T120-ACC-01: desde la barra de «Sin destino» en Estadísticas, la Lista no se abre con su título arriba; queda a 483 dp, contra 74 dp con PAMIT.
+
+**Lo que Yov comprobó contra la carpeta:**
+- `baystream-qa-r4` y `baystream-rediseno` siguen idénticas a `f29fa2a`: 673 y 672 archivos de `lib/`, `test/`, `tool/` y la raíz, comparados sin saltos de línea, y ninguno distinto. Lo único nuevo para Git es el informe;
+- la suite termina en `+2340: All tests passed!`, sin omitidas, y `analyze` da «No issues found!» en la copia limpia y en el Dart versionado;
+- las rojas: `+3 -11` contra `02169fc` y `+1 -17` contra `899e4e3`;
+- el recorrido del banco: 94 capturas y «fin», sin textos que no caben ni errores;
+- la memoria: 505.5 MB antes y 159.0 MB después, una corrida por banco;
+- **O-120-2 sí se midió a 360 × 800:** la primera tarjeta queda a unos 1 109 dp con la letra a 1.0 y a unos 2 021 dp con la letra a 2.0.
+
+**T120-ACC-01 no se sostiene como está escrito.** Lo medido es cierto; las condiciones y la causa, no:
+- **la sonda no corrió a 360 × 800.** `t120Pump` va sin `tamano`, y su valor por omisión es 1366 × 690 (`test/support/t120_lista_support.dart:42`). La de PAMIT, igual;
+- **el salto es el mismo código para un puerto y para «Sin destino»** (`vessel_overview_page.dart:137-158`): `puerto ?? FiltrosDeLaLista.sinDestino`, y después `Scrollable.ensureVisible(titulo, alignment: 0)`;
+- **lo que cambia es el largo de la lista.** Con PAMIT había 98 tarjetas; con «Sin destino», en el buque de pocos puertos, una. `ensureVisible` no desplaza más allá del final: con una tarjeta no hay con qué subir el título, y el título y la tarjeta ya están a la vista;
+- es una lectura del código: **Yov no lo ejecutó.** Lo decide una medición. Con un «Sin destino» de muchos contenedores, el título tiene que quedar arriba, como con PAMIT. Con una lista corta, de «Sin destino» o de un puerto, el desplazamiento tiene que quedar en su tope y la última tarjeta, a la vista.
+
+**Los dos «datos para O-120-1» no son del lector: son del conteo de GLM.** Su script corta los bloques en `EQD`, y el formato los abre en `LOC+147`. Así le atribuye cada `TMP` y cada `LOC+11` al contenedor anterior.
+- Yov contó los dos archivos con los bloques bien cortados. `CORPUS_A01.edi`: 977 bloques, 50 con tipo ISO de refrigerado y 43 con `TMP`, que son 43 de esos 50; ningún bloque sin `LOC+11`; USHOU 907, USMSY 40 y XXVSL 30. `CORPUS_A03.edi`: 10 refrigerados y 1 `TMP`; GTPBR 267 y USHOU 102. **Es lo que da el producto.** Cortando en `EQD` salen los 92, los 11 y el «Sin destino» del informe.
+- El lector aplica el `TMP` que llega antes del `EQD`: lo guarda y lo pone al crear el contenedor (`pendingTemperature`, en `baplie_parser_service.dart`). La variante «EQD, LOC+147, TMP» de la sonda no es un contenedor: es el final de uno y el principio del siguiente.
+- **O-120-1 queda como estaba,** y no nace ningún hallazgo del lector.
+
+**Lo que propone Yov; decide Carlos:**
+1. **GLM vuelve a medir T120-ACC-01** con las tres sondas de arriba, a 1366 × 690 y a 360 × 800, corrige su conteo del corpus y agrega una sección de revisión a su informe, sin borrar lo anterior. Son unos 20 minutos. Mientras tanto no hay nada que corregir en el código.
+2. Si la medición confirma la lectura, **T120-ACC-01 se retira y la entrega 1 queda aceptada con observaciones.** D9 se precisa en `DESIGN.md` 18.5 («arriba, o toda la lista a la vista cuando no hay más que desplazar»), y la prueba de la lista corta entra con la entrega 2.
+3. Si no la confirma, el P2 se queda, y va la corrección de Timonel con su reaceptación.
+4. **La entrega 2 de T-120 espera a T-147,** que va primero (10.151).
+
+**Queda anotado, de la aceptación:** la Lista con una matrícula repetida no se llegó a construir en la sonda, y entra en la entrega 2 con su prueba. Android y la grabación del parpadeo de D9 (O-120-4) quedaron sin hacer.
+
+**Lo que sigue:**
+1. Carlos: el commit del informe de GLM, desde `baystream-qa-r4`, y el de las decisiones 10.151 y 10.152 con el caso A09, en `baystream-rediseno`.
+2. Carlos le pasa a GLM el prompt de la revisión, cuando Flutter esté libre.
+3. Yov lee la revisión contra la carpeta y anota el resultado.
+
+**Siguen pendientes de Carlos:** cerrar la operación publicada del piloto (10.151); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.153**.
