@@ -204,6 +204,17 @@ class _ListSummary extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             for (final entry in agencies.entries) Text('${entry.key}: ${entry.value}'),
+            // T-147 (10.151, hallazgo 3): con POT y POD distintos, el cruce
+            // usa el POT. Se dice aquí, antes de las equivalencias.
+            if (list.rows.any((r) => r.potDiffersFromPod)) ...[
+              const SizedBox(height: 8),
+              Text(
+                '${_count(list.rows.where((r) => r.potDiffersFromPod).length, 'fila trae', 'filas traen')} '
+                'POT y POD distintos: el cruce con el plan usa el POT, donde '
+                'el contenedor baja del buque.',
+                key: const ValueKey('export-list-pot'),
+              ),
+            ],
             const SizedBox(height: 8),
             if (list.issues.isEmpty)
               const Text('Todas las filas se entendieron.',
@@ -283,6 +294,11 @@ class _EquivalenceTile extends StatelessWidget {
             : 'Guardada en este dispositivo.';
       case EquivalenceOrigin.chosen:
         return p.contradicted ? 'Elegida por ti; el plan dice $seen.' : 'Elegida por ti.';
+      case EquivalenceOrigin.samePlanCode:
+        // T-147 (10.151, regla 5): la identidad se propone, y se dice por qué.
+        return 'Propuesta: el plan carga ${p.planCode} en esta escala con ese '
+            'mismo código. Ningún contenedor de ${p.listCode} está en el '
+            'listado y en el plan (${p.rows} ${p.rows == 1 ? 'fila' : 'filas'}).';
       case EquivalenceOrigin.pending:
         return p.observed.length > 1
             ? 'Los contenedores no coinciden: $seen. Elige el código del plan.'
@@ -565,8 +581,12 @@ class _RowsCard extends StatelessWidget {
                   Text('OR ${r.order} · ${r.containerId} · ${r.isFull ? 'lleno' : 'vacío'}',
                       style: theme.textTheme.titleSmall),
                   Text('${r.type} · ${r.pod} · ${r.line}'
-                      '${r.type != r.listType || r.pod != r.listPod || r.line != r.listLine ? ' (listado: ${r.listType} · ${r.listPod} · ${r.listLine})' : ''}'
+                      '${r.type != r.listType || r.pod != r.listCrossPort || r.line != r.listLine ? ' (listado: ${r.listType} · ${r.listCrossPort} · ${r.listLine})' : ''}'
                       ' · ${r.agency ?? 'sin agencia'}'),
+                  // T-147: el POD es el destino final cuando la fila trae
+                  // otro POT; se enseñan los dos, como vienen en el Excel.
+                  if (r.potDiffersFromPod)
+                    Text('POT ${r.listPot} · POD ${r.listPod}'),
                   Text([
                     if (r.vgmKg != null) 'VGM ${formatKg(r.vgmKg!)} kg',
                     'tara ${formatKg(r.tareKg)} kg',

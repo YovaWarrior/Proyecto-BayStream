@@ -295,15 +295,15 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
     // T-77: desde una reserva se ofrecen primero los vacíos de su grupo; los
     // de otros grupos van después y piden motivo al confirmar.
     final slot = widget.slot;
-    final rows = query == null ? <ExportListRow>[] : data
-            ?.search(query!, empties: widget.empties)
-            .where((row) =>
-                slot == null ||
-                data
-                    .candidateSlots(row, otherGroups: true)
-                    .any((s) => s.key == slot.key))
-            .toList() ??
-        [];
+    // T-147 (10.151, hallazgo 1): desde una celda, si admite un vacío se
+    // decide una vez (`rowsFor`), no con `candidateSlots` por cada fila del
+    // listado; con 276 vacíos y 271 celdas eso trababa la hoja cada vez que
+    // se dibujaba. Ofrece las mismas filas, en el mismo orden.
+    final rows = query == null || data == null
+        ? <ExportListRow>[]
+        : slot == null
+            ? data.search(query!, empties: widget.empties)
+            : data.rowsFor(slot, query!, empties: widget.empties);
     if (slot != null) {
       rows.sort((a, b) =>
           (_sameGroup(slot, a) ? 0 : 1).compareTo(_sameGroup(slot, b) ? 0 : 1));
@@ -581,6 +581,11 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                   Text(row.label,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text('${row.type} · ${row.pod} · ${row.line}'),
+                  // T-147: con otro POT, el POD del listado es el destino
+                  // final; el muelle ve los dos.
+                  if (row.potDiffersFromPod)
+                    Text('POT ${row.listPot} · POD ${row.listPod}',
+                        key: const ValueKey('loading-pot-pod')),
                   if (row.isEmpty)
                     Text('Tara real: ${row.tareKg.toStringAsFixed(0)} kg'),
                   if (alternatives.isNotEmpty)

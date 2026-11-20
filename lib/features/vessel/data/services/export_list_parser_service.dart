@@ -58,7 +58,19 @@ class ExportListParserService {
   /// T-122 (H3, 10.50) · La agencia agrega contenedores al final del Excel
   /// bajo una fila «AGREGADOS». Es un encabezado de sección, como los de
   /// «CODIGO», y no una fila sin entender.
-  static final _sectionHeader = RegExp(r'^AGREGADOS?$');
+  ///
+  /// T-147 (10.151, hallazgo 5) · «TRANSBORDOS» y «VACIOS» también: en el
+  /// listado del piloto 4 (caso A09) separan los llenos de trasbordo y los
+  /// vacíos dentro de una agencia.
+  static final _sectionHeader =
+      RegExp(r'^(AGREGADOS?|TRANSBORDOS?|VACIOS?)$');
+
+  /// T-147 (10.151, hallazgo 5) · El separador de agencia: su nombre y su
+  /// código. Una agencia escribe «CODIGO» y otra «COD.». «CODIGO» se busca
+  /// como hasta ahora, en cualquier parte del texto; «COD.», como palabra y
+  /// con su punto, para no confundirlo con otra que empiece igual.
+  static final _agencyCode =
+      RegExp(r'C[OÓ]DIGO|\bC[OÓ]D\.', caseSensitive: false);
 
   /// Lee la primera hoja que tenga la fila de encabezados.
   ExportList parseXlsx(List<int> bytes, {String fileName = 'listado.xlsx'}) {
@@ -203,7 +215,7 @@ class ExportListParserService {
       if (order == null) {
         final text = _rowText(row);
         final name = normalizeHeader(text);
-        if (name.contains('CODIGO')) {
+        if (_agencyCode.hasMatch(name)) {
           agency = text.substring(0, _codigoStart(text)).trim();
           if (agency.isEmpty) agency = text.trim();
           continue;
@@ -310,7 +322,7 @@ class ExportListParserService {
       .replaceAll(RegExp(r'\s+'), ' ');
 
   static int _codigoStart(String text) {
-    final match = RegExp('C[OÓ]DIGO', caseSensitive: false).firstMatch(text);
+    final match = _agencyCode.firstMatch(text);
     return match?.start ?? text.length;
   }
 

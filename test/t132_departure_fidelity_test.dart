@@ -217,16 +217,32 @@ void main() {
     }
   });
   test('T-132 POT igual al POD quita LOC+13; distinto lo escribe', () {
+    // T-147 (10.151, regla 4) cambia esta prueba a propósito. Con POT en la
+    // fila, el puerto de la fila es el POT: sale en LOC+11, que es donde el
+    // contenedor baja del buque y lo que trae el plan, y no queda LOC+13 que
+    // escribir. Antes salía LOC+11 con el POD (el destino final) y LOC+13
+    // con el POT.
     for (final pot in ['PAMIT', 'JMKWL']) {
       final f = T132Fixture(
         cargo: t132Group(1, extra: "LOC+13+OLD:139:6'"),
         rows: [t132Row(1, pot: pot)],
       );
       final text = f.output().text;
-      expect(text.contains('LOC+13+'), pot != 'PAMIT');
-      if (pot != 'PAMIT') expect(text, contains('LOC+13+JMKWL:139:6'));
-      expect(text, isNot(contains('LOC+13+OLD')));
+      expect(text, contains('LOC+11+$pot:139:6'));
+      expect(text, isNot(contains('LOC+13+')));
     }
+    // La regla de T-132 sigue en el escritor para una fila cuyo puerto no es
+    // su POT: la de un listado que guardó la 1.0.1, con el POD como puerto.
+    final guardada = ExportListRow.fromJson(
+        {...t132Row(1, pot: 'JMKWL').toJson(), 'pod': 'PAMIT'});
+    final f = T132Fixture(
+      cargo: t132Group(1, extra: "LOC+13+OLD:139:6'"),
+      rows: [guardada],
+    );
+    final text = f.output().text;
+    expect(text, contains('LOC+11+PAMIT:139:6'));
+    expect(text, contains('LOC+13+JMKWL:139:6'));
+    expect(text, isNot(contains('LOC+13+OLD')));
   });
   test(
     'T-132 lo que sigue a bordo: tildes, escapes y CRLF idénticos byte a byte',
