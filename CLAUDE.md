@@ -90,13 +90,29 @@ verificado por conteo directo de segmentos. El fixture de `test/` tiene 7
 contenedores, todos en bodega y en niveles pares: **no sirve para validar nada
 que dependa de cubierta, de paridad de niveles o de escala.**
 
-Desde el 6 de octubre la carpeta trae también **el caso de una escala real**,
-anonimizado por Yov: `CORPUS_A07.edi` (plano de llegada, 398 contenedores),
-`CORPUS_A08.edi` y `CORPUS_A08v_VGM.edi` (plan de carga, 460 posiciones con 55
-celdas reservadas), `LISTADO_A08.xlsx` (el listado de la agencia) y la operación
-completa en `CASO_A08_EVENTOS.json` y `CASO_A08_ESTADO_FINAL.csv`. Qué es cada uno
-y cómo se usa: `SPRINT-3.md`, 2.4, y `docs/S3-CASO-MAGELLAN-STAR.md`. **Nada de esa
-carpeta se copia al repositorio**, que es público.
+Desde el 6 de octubre hay también **el caso de una escala real**, anonimizado
+por Yov: `CORPUS_A07.edi` (plano de llegada, 398 contenedores), `CORPUS_A08.edi`
+y `CORPUS_A08v_VGM.edi` (plan de carga, 460 posiciones con 55 celdas reservadas),
+`LISTADO_A08.xlsx` (el listado de la agencia) y la operación completa en
+`CASO_A08_EVENTOS.json` y `CASO_A08_ESTADO_FINAL.csv`. Qué es cada uno y cómo se
+usa: `SPRINT-3.md`, 2.4, y `docs/S3-CASO-MAGELLAN-STAR.md`.
+
+**Tres de esos archivos no están en la carpeta:** `CORPUS_A07.edi`,
+`CORPUS_A08.edi` y `LISTADO_A08.xlsx` están sueltos en el Escritorio de Carlos
+(10.123 y 10.153 de `SPRINT-4.md`):
+
+```
+C:\Users\Giova\OneDrive\Documentos\OneDrive\Desktop\
+```
+
+Desde el 19 de noviembre la carpeta trae **el caso A09**, el de la cuarta prueba
+piloto: `CORPUS_A09.edi` (709 posiciones; 271 traen «NO» donde va la matrícula) y
+`LISTADO_A09.xlsx` (448 filas, con POT y POD). **Es el caso de escala:** lo que
+recorra las filas del listado contra las celdas del plan se acepta también con
+él, mirando la pantalla (10.151 de `SPRINT-4.md`). Qué trae y qué tiene que dar:
+`docs/S4-CASO-A09.md`.
+
+**Nada de esas carpetas se copia al repositorio**, que es público.
 
 ## Estado al abrir el Sprint 4 (21 de octubre)
 

@@ -4332,4 +4332,130 @@ Android queda como opcional: Atrás está en las pruebas, y el teléfono se mide
 
 **Siguen pendientes de Carlos:** cerrar la operación publicada del piloto (10.151); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.153**.
+### 10.153 · T-147, entrega 1: revisada contra la carpeta y sin correcciones; con la CPU frenada la hoja abre en 0.2 s donde tardaba 5.7; va a la aceptación de GLM (19 y 20-nov)
+
+**Carlos corrió los bloques de la 10.151 y la 10.152** (`d51646f`, el informe de GLM; `60bfc8c`, las dos decisiones con el caso A09; y la carpeta `baystream-t147`, en la rama `t147-piloto4`, desde `37be8a5`) **y le pasó el prompt a Timonel: las seis reglas de la entrega 1 quedan aprobadas.**
+
+**Timonel entregó la entrega 1** (19-nov, hasta las 20:30; `docs/T147-RESULTADOS.md`, sin commit). Es la candidata `1.0.2+11`, con el MSIX `1.0.2.0`.
+
+**La causa de la 10.151 quedó medida.** Con un perfil de CPU de Chrome, `candidateSlots` por cada fila es el 99.7 % del armado de la hoja. Dentro, rehacer la ocupación es el 71 % y comparar las celdas campo por campo, el 20 %. Con solo guardar la ocupación habría quedado casi un tercio: hacían falta las dos partes de la regla 1.
+
+**La medición, de soltar el dedo a la hoja dibujada.** Con el caso A09 a 360 × 800, tres corridas de cada una y el mismo instrumento antes y después:
+
+| | Antes (`37be8a5`) | Después |
+|---|---|---|
+| Web · tocar la celda | 1.33 a 1.36 s | 34 a 37 ms |
+| Web · al abrirse el teclado | 1.43 a 1.50 s | 145 a 148 ms |
+| Web · una tecla | 140 a 152 ms | 20 a 23 ms |
+| Web con la CPU frenada 4 veces · tocar la celda | 5.58 a 5.74 s | 160 a 198 ms |
+| Web con la CPU frenada · al abrirse el teclado | 6.15 a 6.34 s | 698 a 735 ms |
+| Web con la CPU frenada · una tecla | 601 a 614 ms | 98 a 128 ms |
+| Windows · tocar la celda | 1.45 a 1.50 s | 18 a 51 ms |
+| Windows · al abrirse el teclado | 1.49 a 1.53 s | 79 a 101 ms |
+| Windows · una tecla | 162 a 343 ms | 47 a 71 ms |
+
+Con la CPU frenada 4 veces, la 1.0.1 da lo que Carlos vio en el iPhone: unos 6 segundos. Es una aproximación. **No se midió en un teléfono,** y el teclado de la medición es simulado.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia** (`build/t147/e1/`). El 19-nov, sobre la copia limpia que dejó Timonel; el 20-nov, con la carpeta ya conectada:
+- **la carpeta es `37be8a5` más las 30 rutas del bloque de Timonel:** 12 archivos cambiados (diez de `lib/`, las dos líneas de versión de `pubspec.yaml` y una prueba de T-132), 17 nuevos (cinco de `test/` y doce de `tool/`) y el informe. Yov comparó con la copia limpia los 2 003 archivos de `lib/`, `test/`, `tool/`, `docs/`, las plataformas y la raíz, sin contar los saltos de línea: ninguno distinto, y en la carpeta solo sobra el informe. `pubspec.lock`, `lib/main.dart` y los congelados no cambian, y no hay ningún `// ignore:`;
+- **los cambios, leídos completos en el código:**
+  - regla 1: `OperationState.occupancy` se calcula una vez por estado. `rowsFor` y `admitsEmpty` deciden una sola vez si la celda admite un vacío, y dan las mismas filas que el filtro por fila de la 1.0.1, porque esa condición no dependía de la fila. El orden no se tocó. La prueba de escala, con 300 vacíos y 300 reservas, cuenta lecturas y no mira el reloj;
+  - reglas 2 y 3: «NO» es siempre «sin número»; otro texto sin forma de matrícula, solo si viene en más de una celda. Un solo aviso, con la cuenta. La matrícula repetida se avisa con sus celdas, y la lectura no cambia. Los dos avisos se guardan aparte: la 1.0.0 no los lee y la 1.0.1 salta el tipo que no conoce (`tryFromJson`);
+  - regla 4: con POT, el puerto de la fila es el POT. El listado guardado conserva sus claves, y la 1.0.1 arma con él los mismos grupos;
+  - reglas 5 y 6: la identidad propuesta dice de dónde sale y no se guarda en el dispositivo; «COD.», «TRANSBORDOS» y «VACIOS» se reconocen;
+- **la suite:** `+2280: All tests passed!`, sin omitidas, en la carpeta y en la copia limpia: 2227 más 53 nuevas. **`analyze`:** «No issues found!» en las dos;
+- **las rojas,** en una copia pura de `37be8a5`: `+19 -3`, `+3 -12` y `+6 -10`. Las 28 que pasan en los dos lados fijan lo que no debía cambiar;
+- **las cifras del caso son las de 5.1 de `S4-CASO-A09.md`, todas** (`caso/despues-como-vino.json`): 438 contenedores y 271 celdas reservadas, con un aviso; 408 pendientes, 135 llenos y 273 vacíos; 448 filas y ninguna sin entender; ningún puerto pendiente, con COCTG, COTRB, JMKIN y COBAQ por identidad con respaldo; los nueve tipos pendientes; y el cruce de 4.4, con «datos distintos» en 17, los 17 por el tipo. Con el lector de la 1.0.1 y la copia en blanco salen las de 4.2 a 4.4;
+- **la medición:** las 54 cifras de `medicion.json` son las de los registros de las 18 corridas, una por una. Todas tocan la misma celda, 018-10-88, a 360 × 800. `_medir`, `_cronometrar` y `_celdaReservada` son idénticos, carácter por carácter, en el conductor que midió «antes» y en el de la entrega. En las 21 corridas de la Web no hubo ninguna petición fuera de `127.0.0.1`;
+- **el corpus:** la comparación de Timonel dice «igual» en los otros doce `.edi` y en `LISTADO_A08.xlsx`. Yov lo contó aparte en los segmentos: ninguno de los doce trae «NO», ni un texto sin forma de matrícula, ni una matrícula repetida. Las reglas 2 y 3 solo pueden tocar el A09;
+- **las capturas:** 176, ocho recorridos de 22, en la Web y en Windows, a 360 × 800 y a 1366 × 690, de día y de noche. **Yov miró 15:** el aviso y su diálogo, el resumen del listado, las equivalencias, el cruce, la bahía 18 en Carga, la hoja desde una celda, «Asignar vacío» en su grupo y en otro grupo con su motivo, «Confirmar carga» con «POT JMKIN · POD BSNAS», y la carga al final. Dicen lo que dice el informe;
+- **sin fugas:** ningún nombre, matrícula ni prefijo real del piloto en los 29 archivos ni en el informe;
+- **Yov no ejecutó Flutter:** la suite, `analyze`, las rojas y la medición son las de Timonel, leídas en sus registros. Las repite GLM.
+
+**La entrega está bien hecha y va a la aceptación, sin correcciones.**
+
+**Los cuatro puntos que Timonel pidió mirar:**
+1. **La prueba de T-132 que cambió a propósito: de acuerdo.** Con POT, el BAPLIE de salida lleva el POT en `LOC+11` y no escribe `LOC+13`. Lo fuerza la compatibilidad: la 1.0.1 arma los grupos con el `pod` de la fila guardada, y su escritor lee ese mismo `pod`. **Y es lo que dice el plan:** en el caso A09, el `LOC+11` del plan es el POT en los 137 contenedores que cruzan por matrícula, no hay ningún `LOC+13` y ninguno de los 408 grupos que cargan en GTSTC trae `LOC+83`. La regla vieja sigue viva para una fila guardada por la 1.0.1.
+2. **Una reserva sin asignar no se escribe en el BAPLIE de salida: de acuerdo, y el encargo de Yov estaba mal.** Decía que salía con el número en blanco. El escritor salta la pieza que no tiene contenedor: lo que no subió no está a bordo. Quedó fijado con una prueba, con un plan que trae «NO».
+3. **`DESIGN.md` no se editó, y está bien:** `sprint-4` ya lo cambió, y habría conflicto al mezclar. El texto está en la sección 9.3 del informe, como 17.6. **Lo pone Yov cuando `master` se mezcle en `sprint-4`.**
+4. **O-147-1 no entra en la 1.0.2.** Es lo que queda al abrirse el teclado: 0.15 s, y 0.7 s con la CPU frenada.
+   - No es de la hoja. Es redibujar el plano de debajo, y un tercio de ese trabajo es la huella del viaje entero (`hashCode` de `VesselVoyage`), que se calcula en cada `ref.watch(loadingOperationProvider(voyage))`: 1.7 ms por lectura con el caso.
+   - Ya estaba en la 1.0.1, y crece con el tamaño del plan.
+   - Arreglarlo toca una entidad que usa toda la app, y quita un tercio, no todo.
+   - **Va primero en la entrega 2, con su propuesta y su medida.** Antes, Carlos lo prueba con la 1.0.2 en el iPhone: es la primera medida en un teléfono.
+
+**Lo que la entrega deja anotado.** No detiene la aceptación; va a la propuesta de la entrega 2:
+- **O-147-2 · La hoja ofrece vacíos que no caben.** Desde una celda de 40 pies ofrece también los de 20, como «Otro grupo: pide motivo», y después el diálogo no los deja registrar. Viene de la 1.0.1;
+- **O-147-3 · El orden de la hoja no es el mismo en todos los clientes.** Dentro de un grupo, la Web va por OR y Windows no: el `sort` de la hoja no desempata. En las capturas de Windows se ve: OR 269, 284, 250, 251. Android usa la misma máquina virtual de Dart que Windows; no se comprobó. Viene de la 1.0.1;
+- **O-147-4 · «448 filas en 5 agencias».** El resumen cuenta como agencias las secciones «TRANSBORDOS», «VACIOS» y «AGREGADOS», y las filas de una sección pierden el nombre de su agencia. Viene de T-122, y la regla 6 de Yov lo extendió;
+- **O-147-5 · Un grupo «sin número» con la posición mal formada se pierde sin aviso,** igual que con el número en blanco;
+- **O-147-6 · Textos que no caben a 360 dp en las celdas de carga** («L5G1 C…»). Yov vio otros dos al mirar las capturas, en «Asignar vacío»: «…puerto y línea.» toca el rótulo «Celda reservada», y el rótulo de «Motivo» pisa el borde de «Marchamo». El código de esas partes no cambió: los tres vienen de la 1.0.1, y van con el frente de usabilidad del teléfono;
+- **la matrícula repetida:** hoy la operación deja las dos celdas en una sola pieza, la de la última celda. Timonel propone que un plan así no se pueda publicar sin corregir. Decide Carlos, con la entrega 2;
+- **una pregunta para Carlos, que no bloquea:** el destino final del listado, el POD cuando es distinto del POT, no sale en ninguna parte del BAPLIE de salida. El plan tampoco lo trae para lo que carga aquí. ¿Hace falta? Sería `LOC+83`, y es trabajo nuevo.
+
+**Para la lista de publicación de la 1.0.2** (9.1 y 9.2 del informe):
+- **los tres clientes se publican juntos, y un plan con «NO» no se opera con versiones mezcladas.** La operación guarda el BAPLIE como vino y cada dispositivo lo lee con su versión: la 1.0.1 lee una pieza `C:NO` donde la 1.0.2 lee 271 reservas;
+- un viaje guardado en «Recientes» por la 1.0.1 desde un plan con «NO» conserva sus 709 contenedores hasta que se vuelve a abrir el archivo;
+- el manual cambia en siete secciones: 3.2, 5.2, 7.8, 7.9, 8.2, 10 y el glosario. Lo pone al día Yov, con la 1.0.2 publicada.
+
+**`CLAUDE.md`, corregido.** Decía que `CORPUS_A07.edi`, `CORPUS_A08.edi` y `LISTADO_A08.xlsx` están en la carpeta del corpus. Están sueltos en el Escritorio de Carlos, como anotó la 10.123, y ahí los encontró Timonel. Ahora lo dice, y nombra el caso A09.
+
+**La aceptación de la entrega 1 la hace GLM 5.3 Flash, en Max** (10.137), en `C:\Proyectos\baystream-qa-r4`, movida a la punta de `t147-piloto4`. Su informe es `docs/t147/entrega1/aceptacion-glm.md`, y su evidencia, `build/t147/glm-e1/`. Con el caso A09 y mirando la pantalla (10.151). Lleva, en este orden:
+1. la suite y `analyze` en una copia limpia de la punta;
+2. las rojas contra `37be8a5`: 3, 12 y 10;
+3. las cifras del caso contra 5.1, con el lector del producto;
+4. el corpus, antes y después, con las dos copias suyas;
+5. la Web del banco, el teléfono primero: 360 × 800 de día y de noche, y 1366 × 690 de noche. Los 22 pasos de cada recorrido, repetidos y mirados;
+6. la medición en la Web: «después», sin frenar y con la CPU frenada 4 veces; y «antes», con la CPU frenada. El criterio: con la CPU frenada, la hoja está dibujada en menos de medio segundo;
+7. lo que nadie miró en pantalla: un plan sintético con una matrícula repetida, con su aviso y sus dos celdas en Carga;
+8. lo que el programador no pensó: «NO» en una sola celda, otro texto repetido y un listado con el POT vacío en unas filas; que la 1.0.1 abre el listado del caso que guarda la 1.0.2 y arma los mismos 23 grupos; y el BAPLIE de salida del caso después de tres cargas.
+
+Windows, con un recorrido y una medición, va si queda sesión. Android no entra en esta aceptación.
+
+**Lo que sigue:**
+1. Carlos: el commit de la entrega (las 30 rutas de Timonel), el del informe de GLM de T-120 (10.154) y el de estas dos decisiones; mover `baystream-qa-r4` a la punta de `t147-piloto4`; y el prompt a GLM.
+2. GLM: la aceptación. Mientras tanto, Timonel no corre Flutter.
+3. Yov comprueba el dictamen contra la carpeta y escribe la lista de publicación de la 1.0.2.
+4. Carlos publica la 1.0.2. Después, `master` se mezcla en `sprint-4`, y Yov pone 17.6 en `DESIGN.md` y el manual al día.
+5. La entrega 2 de T-147, con su propuesta antes: las filas canceladas, las equivalencias guardadas, un tipo con varios códigos ISO, O-147-1 a O-147-5 y la matrícula repetida. El hallazgo 7 de la 10.151 se evalúa ahí.
+
+**Siguen pendientes de Carlos:** cerrar la operación publicada del piloto y revisar en el iPhone las equivalencias de puerto que digan «Guardada en este dispositivo» (10.151); decir si las cuatro notas de la columna MARCHAMO significan siempre que la fila no se carga en este buque, que hace falta para la entrega 2; si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+### 10.154 · T-120, entrega 1: GLM volvió a medir, T120-ACC-01 se retira y la entrega queda aceptada con observaciones (20-nov)
+
+**GLM 5.3 Flash, en Max, hizo la revisión que pedía la 10.152** (20-nov, hasta las 08:58; la sección «Revisión del 19-nov» de `docs/t120/entrega1/aceptacion-glm.md`, en `baystream-qa-r4`, sin commit; evidencia en `build/t120/glm-e1/revision/`). **Su dictamen, dicho de nuevo: pasa, con observaciones.**
+
+**T120-ACC-01 se retira.** Las tres sondas, cada una a 1366 × 690 y a 360 × 800, con la letra a 1.0 y el tamaño dicho en la sonda:
+
+| Caso | Tamaño | El título queda a | `pixels` | `maxScrollExtent` |
+|---|---|---:|---:|---:|
+| A · «Sin destino» con 30 contenedores | 1366 × 690 | 74 dp | 712 | 4 276 |
+| A | 360 × 800 | 56 dp | 972 | 7 564 |
+| B · «Sin destino» con una tarjeta | 1366 × 690 | 483 dp | 247 | 247 |
+| B | 360 × 800 | 366 dp | 662 | 662 |
+| C · un puerto con dos tarjetas | 1366 × 690 | 346 dp | 384 | 384 |
+| C | 360 × 800 | 66 dp | 962 | 962 |
+
+- con una lista larga, «Sin destino» deja el título arriba, igual que un puerto;
+- con una lista corta, de «Sin destino» o de un puerto, el desplazamiento queda en su tope: no hay más que subir, y el título y las tarjetas están a la vista. **Era la lectura de la 10.152.** El defecto era de la sonda de la aceptación: corrió a 1366 × 690 sin decirlo, y con una lista de una tarjeta.
+
+**El conteo del corpus, corregido, coincide.** Con los bloques cortados en `LOC+147`: `CORPUS_A01.edi`, 977 bloques, 50 refrigerados, 43 con `TMP` y los 43 de tipo refrigerado, ningún bloque sin `LOC+11`; USHOU 907, USMSY 40 y XXVSL 30. `CORPUS_A03.edi`, 10 refrigerados y 1 `TMP`; GTPBR 267 y USHOU 102. **Se retiran los dos «datos para O-120-1».**
+
+**Lo que Yov comprobó contra la carpeta:**
+- las cifras de las dos tablas son las de los cuatro registros de `revision/`, una por una;
+- la primera corrida de B falló, y el registro lo enseña: con diez puertos, «Sin destino» cae en «Otros N puertos» y no tiene barra. GLM la repitió con dos puertos;
+- `baystream-qa-r4` sigue idéntica a `d51646f` en 1 890 archivos de `lib/`, `test/`, `tool/`, `docs/` y la raíz. Lo único cambiado es su informe: 120 líneas más, sin borrar ninguna.
+
+**Una frase de la revisión no se sostiene: «la última tarjeta queda cortada unos 40 a 48 dp».** La sonda compara el borde de abajo de la tarjeta, medido desde arriba de la ventana, con el alto de la vista, y no con su borde de abajo: 674 − 626 = 48 y 704 − 664 = 40. Con el desplazamiento en su tope, el final de la lista coincide con el borde de la vista. **Es una lectura de Yov, no una medición:** la prueba de la lista corta, en la entrega 2, comprueba también que la última tarjeta se ve entera.
+
+**Queda decidido, como decía el punto 2 de la 10.152:**
+- **la entrega 1 de T-120 queda aceptada con observaciones;**
+- con la entrega 2 van: D9 precisado en `DESIGN.md` 18.5 («arriba, o toda la lista a la vista cuando no hay más que desplazar»); la prueba de la lista corta; y la prueba de la Lista con una matrícula repetida, que la sonda tampoco llegó a construir esta vez (0 tarjetas, sin excepción). Desde la 10.153 el lector avisa esa matrícula;
+- **siguen abiertas, con la entrega 2:** O-120-4, el parpadeo de D9, que nadie ha mirado en pantalla; y O-120-5, que en el teléfono la fila «Carga especial» enseñe siempre sus tres chips. La propone Yov y la decide Carlos al pasar el prompt de la entrega 2;
+- **la entrega 2 de T-120 sigue esperando a T-147** (10.151). Yov propone este orden cuando la 1.0.2 esté publicada: primero la propuesta de la entrega 2 de T-147, que es lo que necesita el próximo piloto, y después la entrega 2 de T-120. Decide Carlos.
+
+**Lo que sigue:**
+1. Carlos: el commit del informe de GLM, desde `baystream-qa-r4`, antes de mover esa carpeta a T-147 (10.153).
+2. La entrega 2 de T-120, en el orden que decida Carlos.
+
+La siguiente decisión es la **10.155**.
