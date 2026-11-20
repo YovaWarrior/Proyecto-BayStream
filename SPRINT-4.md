@@ -4458,4 +4458,92 @@ Windows, con un recorrido y una medición, va si queda sesión. Android no entra
 1. Carlos: el commit del informe de GLM, desde `baystream-qa-r4`, antes de mover esa carpeta a T-147 (10.153).
 2. La entrega 2 de T-120, en el orden que decida Carlos.
 
-La siguiente decisión es la **10.155**.
+### 10.155 · T-147, entrega 1: GLM la acepta sin hallazgos nuevos y Yov lo comprobó contra su carpeta; la 1.0.2 va a publicación, con su lista (20-nov)
+
+**Carlos corrió los cuatro bloques de la 10.153 y la 10.154** (`57497db`, la entrega de Timonel, en `t147-piloto4`; `8fbc560`, la revisión de GLM de T-120; `87fd712`, las dos decisiones y `CLAUDE.md`; y `baystream-qa-r4`, movida a la punta de `t147-piloto4`) **y le pasó el prompt a GLM, en un chat nuevo.**
+
+**El dictamen de GLM 5.3 Flash, en Max: PASA, sin hallazgos nuevos** (20-nov; `docs/t147/entrega1/aceptacion-glm.md`, sin commit; evidencia en `build/t147/glm-e1/`, 234 archivos, fuera de Git). Sobre dos copias limpias, una de `57497db` y otra de `37be8a5`, repitió:
+- la suite, `+2280: All tests passed!`, y `analyze`, «No issues found!», en la copia limpia y en el Dart versionado;
+- las rojas contra `37be8a5`: `+19 -3`, `+3 -12` y `+6 -10`. La prueba de escala cuenta 15.1 millones de lecturas donde el tope es 24 000;
+- las cifras del caso, todas las de 5.1 de `S4-CASO-A09.md`, y un conteo suyo de segmentos: 709 bloques, 271 con «NO», 408 que cargan en GTSTC y ningún `LOC+13`;
+- el corpus: «igual» en los otros doce `.edi` y en `LISTADO_A08.xlsx`, y distinto solo en los dos archivos del caso;
+- tres recorridos de 22 capturas en la Web del banco (360 × 800 de día y de noche, y 1366 × 690 de noche) y uno en Windows, de noche;
+- la medición, con el instrumento de Timonel;
+- la matrícula repetida en pantalla, con un plan sintético;
+- sus sondas: cinco planes y cuatro listados sintéticos, el listado que guarda la 1.0.2 abierto por la 1.0.1 y el BAPLIE de salida del caso después de tres cargas.
+
+**La medición, de soltar el dedo a la hoja dibujada.** El caso A09 a 360 × 800, la celda 018-10-88, tres corridas de cada una en la Web y una en Windows. Las cifras son las de los registros de cada corrida:
+
+| | GLM (20-nov, a mediodía) | Timonel (19-nov, de noche) |
+|---|---|---|
+| Web · tocar la celda | 40 a 42 ms | 34 a 37 ms |
+| Web · al abrirse el teclado | 181 a 197 ms | 145 a 148 ms |
+| Web · una tecla | 25 a 28 ms | 20 a 23 ms |
+| **Web con la CPU frenada 4 veces · tocar la celda** | **237 a 261 ms** | 160 a 198 ms |
+| Web con la CPU frenada · al abrirse el teclado | 1.15 a 1.17 s | 698 a 735 ms |
+| Web con la CPU frenada · una tecla | 161 a 167 ms | 98 a 128 ms |
+| Antes (`37be8a5`), con la CPU frenada · tocar la celda | 10.28 a 10.65 s | 5.58 a 5.74 s |
+| Antes, con la CPU frenada · al abrirse el teclado | 11.09 a 11.75 s | 6.15 a 6.34 s |
+| Antes, con la CPU frenada · una tecla | 1.02 a 1.09 s | 601 a 614 ms |
+| Windows · tocar la celda | 59 ms | 18 a 51 ms |
+| Windows · al abrirse el teclado | 115 ms | 79 a 101 ms |
+| Windows · una tecla | 67 ms | 47 a 71 ms |
+
+**El criterio de la aceptación se cumple en las tres corridas:** con la CPU frenada 4 veces, la hoja está dibujada en menos de medio segundo. Es la misma laptop, el mismo Chrome (157.0.8103.79), la misma celda y el mismo instrumento. A mediodía corrió más lenta que la noche anterior: en las medias, entre 1.2 y 1.3 veces sin frenar, y entre 1.4 y 1.8 con la CPU frenada. Por eso el «antes» de GLM casi dobla al de Timonel. Entre antes y después, la hoja abre de 28 a 43 veces más rápido, según la sesión. **Sigue sin medirse en un teléfono:** es el paso 6 de la prueba corta.
+
+**Lo que queda al abrirse el teclado (O-147-1)** midió 1.15 a 1.17 s con la CPU frenada en la sesión de GLM, contra 0.7 s en la de Timonel. En el teléfono puede notarse. Carlos lo mira en el paso 7 de la prueba corta, antes de la propuesta de la entrega 2.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia** (20-nov, de 16:40 a 17:15):
+- **`baystream-qa-r4` es `57497db` más el informe:** los 2 127 archivos versionados que Yov comparó son iguales, y lo único nuevo para Git es `docs/t147/entrega1/aceptacion-glm.md`;
+- **las dos copias limpias son los dos commits:** en `lib/`, `test/`, `tool/`, `integration_test/`, `assets/`, `web/`, `windows/runner/` y los dos `pubspec`, 718 archivos iguales a `57497db` y 701 iguales a `37be8a5`. Encima solo hay sondas de GLM y, en la de antes, lo que pedía el encargo: los cinco archivos de las rojas, `t147_corpus.dart` y las nueve herramientas de la evidencia de Timonel, iguales byte a byte. El banco de «antes» es el código de la 1.0.1 con el instrumento de Timonel;
+- **los registros:** la suite termina en `+2280: All tests passed!`, a los 2 min 23 s; los dos `analyze`, sin incidencias; las tres rojas, con los nombres de las 25 pruebas que fallan;
+- **las cifras del caso:** `caso/glm-despues-como-vino.json` es igual al de Timonel en todo, menos en 16 tiempos;
+- **el conteo de segmentos y la comparación del corpus,** leídos en sus archivos. En el «antes», el cruce del listado da 271 del plan fuera del listado donde el de Timonel da 0: GLM cruzó contra el plan como vino, y la 1.0.1 cuenta ahí las 271 «NO»; con el plan como vino no puede dar 0, así que Timonel cruzó contra la copia en blanco. Las otras siete cifras del cruce y las tres huellas son las mismas;
+- **la medición:** las nueve corridas de la Web y la de Windows, una por una. Todas a 360 × 800 y en la celda 018-10-88; en la Web, la hoja ofrece las mismas filas antes y después;
+- **los recorridos:** los tres de la Web y el de Windows tienen 22 capturas, terminan en «fin» y no registran errores de Flutter. En la Web, 84 peticiones servidas y ninguna cortada. Los textos de cada paso son los del caso: de «Carga: 408 pendientes, 135 llenos, 273 vacíos» a 405, 134 y 271 después de las tres cargas, con «POT JMKIN · POD BSNAS» y «Posición planificada: 018-02-82» en el lleno;
+- **las capturas:** Yov miró ocho. Las cuatro de la matrícula repetida, la hoja y «Asignar vacío» con su motivo a 360 × 800, la hoja de noche en Windows y la tarjeta del plan con una «NO» fuera de la escala;
+- **las sondas:** los cinco archivos dicen lo que dice el informe. El lleno de la salida es el OR 1, que en el listado trae POT COCTG y POD SAJED;
+- **sin fugas:** ningún nombre, matrícula ni prefijo real del piloto en el informe ni en los 14 archivos de evidencia que Yov revisó;
+- **la limpieza:** en `%TEMP%` no queda ningún archivo del caso ni la copia en blanco, y la carpeta de los perfiles de Chrome está vacía;
+- **Yov no ejecutó Flutter.**
+
+**T-147, entrega 1, queda aceptada. La candidata 1.0.2 es `57497db`.**
+
+**Cuatro cosas del informe de GLM que no son como dice.** Ninguna toca un criterio ni cambia el dictamen. GLM las corrige en su mismo chat, sin correr nada, antes del commit del informe:
+1. **Tres cifras de la tabla de la medición.** Dice 40.1 · 40.1 · 42.0, 181.1 · 181.1 · 197.2 y 1145.8 · 1145.8 · 1167.3. Sus registros dicen 41.2 · 40.1 · 42.0, 183.2 · 181.1 · 197.2 y 1167.7 · 1145.8 · 1167.3: en las tres filas, la primera corrida quedó con el número de la segunda. La fila del criterio está bien.
+2. **La matrícula repetida** (el punto 13 del encargo):
+   - la matrícula repetida es `XJZU5616792`, no `XKLU3034357`: su plan sintético cambió la segunda por la primera;
+   - el informe dice que la pieza única no se puede operar. La sonda no la tocó: buscó la matrícula que ya no existe en ese plan. En su captura, la celda 018-00-82 se ve como cualquier carga pendiente;
+   - dice que «el peso repetido se cuenta una vez». La bahía sigue diciendo 9 contenedores y pesa 140.3 t, donde el plan trae 148.2 t. Cuadra con sumar dos veces el peso de la última celda (20.6 t) en lugar de 28.5 y 20.6; la fila 82 dice 51.3 t por lo mismo.
+3. **Las horas no son las del reloj.** La tabla va de 11:55 a 14:35, en tramos redondos. Sus archivos dicen otra cosa: `analyze` a las 11:57, la suite a las 12:00, la medición de 12:16 a 12:26, Windows de 13:08 a 13:16 y el informe a las 13:17. De las 11:55 a las 13:18 va menos de hora y media, no las 2 h 40 min de la tabla.
+4. **Lo que quedó en `%TEMP%`.** Dice que los bancos compilados y la entrada de T-124 siguen dentro de las copias limpias. Ninguna de las dos tiene ya carpeta `build`. Quedan, y no lo dice, cuatro archivos suyos en `%TEMP%\t147-glm\` y sus ocho sondas en `tool\` de las copias. Nada de eso es del caso.
+
+**La matrícula repetida, como quedó vista** (va a la propuesta de la entrega 2, con la regla que propuso Timonel en la 10.153):
+- la tarjeta del viaje avisa «Matrículas repetidas en EQD: 1 contenedor · revisa esas celdas con quien hizo el plan», y el diálogo nombra las dos celdas;
+- en Carga, la primera celda queda vacía y no responde al tocarla. El resumen cuenta una carga donde el plan trae dos: 407 pendientes y 134 llenos;
+- la línea de la bahía cuenta 9 contenedores y suma dos veces el peso de la última celda;
+- **qué pasa al tocar la segunda celda no se miró.**
+
+**La lista de publicación de la 1.0.2 es `docs/piloto/PUBLICACION-1.0.2.md`** (735 líneas, 13 bloques de PowerShell). Sale de la lista de la 1.0.1, que corrió completa el 17-nov (10.144). Lo que cambia:
+- **se mezcla `t147-piloto4` en `master`,** no `sprint-4`, que trae T-120 a medias. Entran las 30 rutas de la entrega y el informe de GLM, sin conflictos posibles: la rama sale de `v1.0.1`. Yov comprobó que ninguna de esas rutas está cambiada ni existe sin seguimiento en `proyecto-baystream`;
+- **las versiones:** Android `1.0.2` con el `versionCode` 11; la MSIX 1.0.2.0, encima de la 1.0.1.0; el asistente 1.0.2.11; la Web `1.0.2`, compilación 11;
+- **la carpeta `build\` de la 1.0.1 se aparta entera** en `C:\Proyectos\baystream-publicaciones\build-1.0.1`, con su MSIX (`CBB75D00…`) y su Web, para volver;
+- **antes de empezar se coteja la Web en vivo.** Yov lo hizo el 20-nov, hacia las 17:00: `version.json`, `main.dart.js` y `flutter_bootstrap.js` tienen las tres huellas de la 10.144;
+- **los tres clientes salen el mismo día, y un plan con «NO» no se opera con versiones mezcladas** (10.153). La lista lo pone arriba, en lo que hay que mirar antes de empezar y en la vuelta atrás;
+- **la prueba corta es el caso A09, contra Firebase de verdad:** la laptop publica BUQUE HOTEL · VIAJE009A · GTSTC e importa el listado; **el iPhone, que es donde se trabó el piloto, abre la hoja de los vacíos** y asigna uno; el Honor carga un lleno; la laptop cierra la operación. Carlos anota cuánto tarda la hoja y qué pasa al subir el teclado. Los dos archivos están en el escritorio, en `BayStream_1.0.2_prueba_corta`, copiados del corpus;
+- **el asistente:** el guion es el de la 1.0.1, que ya pasó su recorrido (10.145). Basta con instalarlo encima del 1.0.1.10 y abrir;
+- **al terminar, `master` se mezcla en `sprint-4`** (8.2). Las dos ramas no cambiaron ninguna ruta en común desde la 1.0.1. La suite con T-120 y T-147 juntos no se corrió: es el paso 0 del siguiente prompt de programación;
+- las observaciones O-146-5 y O-146-6 de la lista anterior, atendidas: cada bloque comprueba sus herramientas al empezar, y el de la Web lee de `firebase.json` qué carpeta publica.
+
+**Yov no puede ejecutar PowerShell.** Los 13 bloques pasaron por un analizador de gramática, que no marca nada nuevo frente a los de la 1.0.1. No es el analizador de PowerShell. GLM lo puede correr sin ejecutar nada, como en la 10.143: es opcional, y lo decide Carlos.
+
+**Lo que sigue:**
+1. GLM corrige su informe, en el mismo chat. Yov lo comprueba.
+2. Carlos: el commit de esta decisión con la lista, en `sprint-4`, y el del informe de GLM, en `t147-piloto4`.
+3. Carlos publica la 1.0.2 con la lista. Mientras compila, ningún agente corre Flutter.
+4. Yov lee el registro y anota la publicación. Pone 17.6 en `DESIGN.md` y el manual al día.
+5. La propuesta de la entrega 2 de T-147 (Timonel), con lo que Carlos anote en el iPhone y con la matrícula repetida como quedó descrita aquí. Después, la entrega 2 de T-120 (10.154).
+
+**Siguen pendientes de Carlos:** cerrar la operación publicada del piloto, que ahora es el punto 0.5 de la lista; revisar en el iPhone las equivalencias que digan «Guardada en este dispositivo» (10.151); decir si las cuatro notas de la columna MARCHAMO significan siempre que la fila no se carga en este buque, y si el BAPLIE de salida tiene que llevar el destino final (10.153); O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.156**.
