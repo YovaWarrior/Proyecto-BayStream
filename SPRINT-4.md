@@ -4940,4 +4940,91 @@ El mensaje de arranque está en el documento del proyecto `BayStream_T147_e2b_ar
 - se pueden borrar ya las copias de GLM: las de esta aceptación (`t147-glm2a-*`, unos 11 GB) y las de la entrega 1 (`t147-glm`, 0.7 GB);
 - cuando termine la entrega 2, las de Timonel: `t147-e2` (2.9 GB), `t147-e2a` y `t147` (0.4 GB cada una).
 
-La siguiente decisión es la **10.164**.
+### 10.164 · T-147, entrega 2, parte 2b: Yov la revisó contra la carpeta y el código se sostiene; una comprobación no corrió la versión que dice, y con otro archivo la operación cerrada deja de verse sin aviso: corrección corta antes de la aceptación (21-nov, 12:10)
+
+**Carlos corrió los tres bloques de la 10.163** (09:21): el informe de GLM quedó en `t147-piloto4` (`912daac`), la carpeta de Timonel en esa punta y la decisión en `sprint-4` (`5d25a46`). **Timonel entregó la parte 2b a las 11:23,** sin commit: 32 rutas sobre `912daac`, con su informe en `docs/T147-RESULTADOS.md` («Entrega 2 · Parte 2b», E2b-0 a E2b-17).
+
+**P8 a), las tres decisiones de Timonel, que Carlos confirmó** («Sí, así quedan», 11:33): la operación nueva lleva los planos y no el listado, que se importa de nuevo; al empezarla, la cerrada deja de verse en ese equipo, y el diálogo lo dice antes; y se distingue de la cerrada por una fecha posterior al cierre, sin guardar nada nuevo.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia** (`build/t147/e2b/`):
+- **las rutas:** son 32 por su blob contra `912daac`, 26 que cambian y 6 nuevas, y ninguna más. No cambian `pubspec.yaml`, `pubspec.lock`, `lib/main.dart`, los congelados, `firestore.rules`, `DESIGN.md` ni los tres archivos que Timonel evita. Ninguno de los 23 de `lib/` está entre los 14 de `lib/` que separan `sprint-4` de `v1.0.2`;
+- **la suite y `analyze`:** `+2412: All tests passed!`, en una sola corrida, sin omitidas ni fallidas, en la carpeta (11:16) y en la copia limpia (11:19); «No issues found!» en las dos. Todo, después del último cambio de `lib/` (10:37). La copia limpia es `912daac` con los 31 archivos de código, iguales a los de la carpeta;
+- **las rojas:** con el informe en JSON de cada corrida, fallan 10, 9, 1 y 6 de las 40 contra `v1.0.2`, y 12 de las 15 contra la punta de la 2a. Ninguna es de compilación;
+- **el caso:** los 268 valores de `caso-2a.json` salen iguales en `caso-2b.json`, uno por uno. Los 23 nuevos son los del informe: 2 agencias, con 334 (141, 6 y 187) y 53, y 61 en «AGREGADOS»; 169 filas que se cargan con POT y POD distintos, y 33 canceladas; el lápiz, con los 14 grupos cuadrando;
+- **el corpus:** los trece `.edi` y `LISTADO_A08.xlsx` leen igual que en la 2a y que en `v1.0.2`. `LISTADO_A09.xlsx` cambia solo en las agencias y en la huella de sus filas guardadas;
+- **la medición:** las 30 corridas son las de su tabla, alternadas por la hora de sus carpetas, con la CPU frenada ÷ 4 y a 360 × 800. Medianas del teclado, con la 1.0.2, la 2a y la 2b: 664, 666 y 379 ms en la serie 1, y 999, 1005 y 498 ms en la serie 2. De tocar la celda a la hoja: 159, 158 y 134 ms, y 215, 211 y 168 ms. Una de las 30 no corrió lo que dice: va abajo;
+- **los recorridos:** las ocho corridas terminan en «fin», sin errores de Flutter. Las seis de la Web usaron un perfil nuevo y cargaron el programa del banco final, que se compiló después del último cambio;
+- **el código:** Yov leyó entero el cambio de `lib/` (833 líneas que entran y 89 que salen), las cinco pruebas nuevas y la que cambia. Ningún `// ignore:` y ninguna dependencia nueva. En `tool/` solo entran líneas: el instrumento de la medición no se tocó;
+- **nombres y matrículas reales:** ninguno en las 32 rutas;
+- **en `%TEMP%`** no quedó nada del caso ni ningún perfil de Chrome.
+
+**Lo que Yov miró en pantalla:** 29 de las 81 capturas, entre ellas las diez de la nube. Dicen lo que dice el informe:
+- **el listado:** «448 filas en 2 agencias», cada agencia con sus secciones y «AGREGADOS» aparte; «169 filas que se cargan traen POT y POD distintos (y 33 canceladas)». La tarjeta de las celdas sin dueño, con sus seis códigos y las tres fichas de cada uno en una línea, a 360 dp. El lápiz: 40HC queda en 45G0, con «También llena: 45G1»;
+- **el motivo:** en los tres casos, el aviso, «Motivo (obligatorio)» y «Confirmar carga» se ven sin desplazar a 360 × 800, de día y de noche, y en Windows;
+- **los textos:** el detalle de la celda, sin la frase que sobraba; el avance, con «40 no se cargan y 1 está a bordo»; la salida, con «1 conflicto vigente»;
+- **la matrícula repetida:** la ficha en su línea, sobre el resumen; la bahía con 148.2 t; la primera celda responde «Matrícula repetida»; la segunda se carga como cualquier lleno, y la salida lo avisa con las dos celdas. En la Web y en Windows;
+- **la nube, contra el emulador:** «Publicar operación» apagado, con su «No se publica: …»; la cerrada, con «Empezar una operación nueva» y su diálogo; la operación nueva, antes y después de publicarla; otro archivo, que entra como operación nueva, y «No se agrega: …», con su botón apagado.
+
+**Lo que Timonel pidió mirar, y queda como está:**
+- **las tres pruebas de la entrega 1 que cambian** (`test/t147_listado_test.dart`): afirmaban la regla que la 10.161 cambió. Ahora fijan la nueva, y ninguna se afloja en lo demás;
+- **los dos textos que no son los de la propuesta:** «Celda reservada sin matrícula: «…»», que empieza así para que el resumen lo cuente como un caso también en la 1.0.2, y la ayuda del motivo, «Viaja con el movimiento.»;
+- **el lápiz, con la salvedad que eligió Carlos:** el código anterior no se queda como «también» si otro tipo ya lo tiene de principal;
+- **la ficha del plan repetido,** en una línea propia a 360 dp.
+
+**Lo que Yov encontró, 1: «la 1.0.2 abre lo que guarda la 2b», en pantalla, no corrió la 1.0.2.**
+- El banco de la Web lleva un *service worker*, que guarda el programa en el perfil de Chrome. Cuando se sirve otra compilación en el mismo puerto y con el mismo perfil, la primera carga corre la compilación guardada, que es la anterior, mientras Chrome instala la nueva por detrás.
+- Así salió la comprobación de E2b-9. Se sirvió el banco de `v1.0.2` sobre el perfil que había preparado la 2b, pero la app arrancó antes de que el servidor entregara `main.dart.js`, y la consola empieza con «Loading from existing service worker.», con la versión del banco de la 2b (`entre-versiones/la-102-abre-lo-de-la-2b`: `servidor.log` y `consola.log`). **Lo que corrió fue la 2b.**
+- Pasó igual en una corrida de la medición: la primera de la 2a en la serie 1, la de 985 ms. Corrió el programa de la 1.0.2 mientras se instalaba el de la 2a. El informe la explica como «el paso lento de la máquina», y no lo es.
+- **Las otras 29 corridas corrieron lo que dicen,** y se ve en sus registros. En la serie 1, la primera corre el banco que preparó el perfil, y desde la tercera cada carga actualiza el programa antes de arrancar. En la serie 2, cada banco tiene su perfil.
+- **Lo que se sostiene:**
+  - el teclado baja a la mitad con la huella, y la hoja no quedó más lenta: las diez corridas de la 2b y las diez de la 1.0.2 valen;
+  - la 2a no dejó el teclado más lento que la 1.0.2. Sin la corrida mal rotulada, su mediana de la serie 1 sigue en 666 ms, contra 664; en la serie 2, 1005 contra 999;
+  - la comprobación «con el código» sí vale: el listado que guarda la 2b, leído con el código de `v1.0.2`, da los mismos 41 valores que daba con lo que guardaba la 2a.
+- **Lo que queda sin ver:** la 1.0.2, de verdad, abriendo en pantalla un almacén que guardó la 2b.
+- **La medición de GLM en la 2a** (10.163) compartió un solo perfil entre sus seis corridas y no guardó esos registros. Por la misma causa, una de las seis tuvo que correr el otro banco, y sin esos registros no se puede saber cuál. Sus dos corridas lentas de la 2a (899 y 916 ms) siguen sin explicación. Las corridas válidas de Timonel, que son más, no muestran diferencia, y la 1.0.3 sale con la huella.
+- **Regla desde hoy:** cada compilación del banco, con su perfil nuevo. Una corrida de la Web vale si el `main.dart.js` que cargó la página es el de la carpeta que se sirve. `tool/t147_web.py` lo va a comprobar.
+
+**Lo que Yov encontró, 2: con otro archivo, la operación cerrada deja de verse sin que nadie lo avise.**
+- Con el botón «Empezar una operación nueva» hay un diálogo que lo dice. Es lo que Carlos confirmó.
+- Hay otro camino. Con la operación cerrada, confirmar otro BAPLIE del mismo buque, viaje y puerto abre una operación nueva sin preguntar: es la regla de D14 (10.160). Desde ahí, ese equipo enseña la nueva, y la cerrada no se puede volver a ver en él: la app enseña una operación por escala, no tiene un selector y nada borra la nueva. Sus datos siguen guardados, en el equipo y en la nube.
+- **El caso que preocupa:** la oficina cierra, guarda el BAPLIE de salida y lo abre en la misma laptop para revisarlo. Es otro archivo de la misma escala. Al confirmarlo, la operación cerrada, con su avance y su salida, deja de verse en la laptop. La 1.0.2 rechazaba ese archivo con un mensaje, sin cambiar nada.
+- Yov lo leyó en el código, y no se corrió. La búsqueda del previo solo mira operaciones abiertas (`OperationSources.lookup`), y `OperationSources.save`, con la operación cerrada y otro BAPLIE, crea la nueva.
+- Cuando Yov le dijo a Carlos «Sí, así quedan», miraba el botón. Esto no lo había visto.
+- **Yov propone una sola puerta.** Con la operación cerrada, otro BAPLIE no abre nada: se rechaza, como ya se rechaza otro listado, y el mensaje manda a «Empezar una operación nueva», que avisa. Con la nueva empezada, ese archivo entra a ella por el camino de siempre. De paso, la nueva conserva el otro plano de la cerrada, que por este camino hoy no pasa. Cambia la regla de D14 en ese punto: **lo decide Carlos.**
+- **O-147-11, nueva:** ver una operación cerrada después de empezar otra de la misma escala, con un selector en «Nube y cuenta». Es otra tarea, para después de la 1.0.3. Mientras tanto, lo dice el manual: antes de empezar otra, se guarda de la cerrada lo que haga falta.
+
+**Detalles:**
+- en el `recorrido2b`, las capturas `09-salida` y `10-salida-avisos` son la misma imagen en las cinco corridas;
+- en «Asignar vacío», con dos avisos, el diálogo se desplaza para enseñar el motivo, y la cabecera con el OR queda fuera de la vista. El segundo aviso nombra el OR;
+- «AGREGADOS» seguido de otra sección, sin filas en medio, contaría como agencia. En el caso no pasa;
+- sigue O-147-6: «Reservas libres: primero las de su grupo.» se monta sobre el rótulo «Celda reservada». Lo anota Timonel.
+
+**Lo que nadie ha visto en pantalla todavía,** y va primero en la aceptación:
+- **el muelle frente a la operación nueva.** El recorrido del emulador fue solo como oficina. Falta, con las dos cuentas: el muelle ve la cerrada con su mensaje y sin botón, se une a la nueva, y su movimiento llega a ella;
+- **la 1.0.2, de verdad,** con lo que guardó la 2b; y un muelle en la 1.0.2 frente a la operación nueva, que Timonel leyó en el código;
+- **Descarga con la matrícula repetida:** solo tiene pruebas de widget;
+- **la nube a 360 × 800** y de noche: el recorrido fue a 1920 × 1080 y de día;
+- **el teléfono de verdad,** que es de la prueba corta de la 1.0.3.
+
+**La parte 2b queda revisada y entra a `t147-piloto4` como la entregó Timonel.** El piso de la rama es 2412. Nada de lo programado se rehace: lo que falta es corregir una evidencia y, si Carlos lo aprueba, un ajuste.
+
+**Antes de la aceptación, una corrección corta de Timonel,** en el mismo chat:
+1. P8 a): otro archivo en una escala cerrada ya no abre una operación sola. **Solo si Carlos lo aprueba.** Si no, se queda como está y GLM lo mira como observación;
+2. «la 1.0.2 abre lo que guarda la 2b», repetida con la 1.0.2 corriendo de verdad, y una nota en E2b-9 y en E2b-6 del informe que diga qué corrió;
+3. `tool/t147_web.py` comprueba qué programa cargó la página, y la corrida falla si no es el de la carpeta que se sirve;
+4. los detalles, si salen baratos.
+
+El mensaje está en el documento del proyecto `BayStream_T147_e2b_revision_21nov.md`.
+
+**Lo que sigue:**
+1. Carlos: dos bloques. La parte 2b, a `t147-piloto4`, y esta decisión, en `sprint-4`. Después, el mensaje a Timonel, con el punto 1 o sin él.
+2. Timonel corrige. Mientras tanto, ningún otro agente corre Flutter.
+3. Yov revisa la corrección y prepara el prompt de GLM con esa punta.
+4. GLM acepta la parte 2b en un chat nuevo (10.137).
+5. La lista de publicación de la 1.0.3, con las dos partes.
+
+**Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** está al 93 %, con 73 GB libres: las copias de GLM ya no están. Quedan las de Timonel, para cuando termine la entrega 2: `t147-e2` (2.9 GB), `t147-e2b` (0.8 GB), `t147-e2a` y `t147` (0.4 GB cada una), y `build\windows` de su carpeta (9.6 GB).
+
+La siguiente decisión es la **10.165**.
