@@ -4806,4 +4806,74 @@ Hoy la app cuenta los cinco títulos como agencias: «448 filas en 5 agencias».
 
 **Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.162**.
+### 10.162 · T-147, entrega 2, parte 2a: revisada por Yov, sin correcciones; va a la aceptación de GLM, con dos observaciones para la 2b (21-nov, 00:20)
+
+**Carlos corrió el bloque de las 10.160 y 10.161** (`4e44598`) **y le pasó a Timonel el mensaje de arranque.** Timonel leyó las decisiones 10.159 a 10.161, programó y validó la parte 2a entre las 21:42 y las 23:02, en una sola ventana de Flutter, y la entregó sin commit. No empezó la 2b.
+
+**Lo que trae:** las filas canceladas (P1), «también llena» (P4), las equivalencias guardadas (P3), el destino final en `LOC+83` (P2) y la hoja (O-147-2 y O-147-3), con los cuatro cambios de la 10.160. Son 13 archivos de `lib/`, las dos líneas de la versión (`1.0.3+12` y `1.0.3.0`), 77 pruebas nuevas en cinco archivos, con su soporte y su accesorio, cuatro archivos de pruebas que ya existían, tres herramientas y la parte «Entrega 2 · Parte 2a» de `docs/T147-RESULTADOS.md`.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia** (`build/t147/e2a/`):
+- **las rutas.** Contra `adbbefd`, por su blob, cambian 19 archivos y el informe, y hay 9 nuevos: son las 29 de su bloque y ninguna más. `pubspec.lock`, `lib/main.dart`, los dos congelados y los tres archivos que tenía que evitar no cambian. Ninguna de las 29 está entre las 39 rutas que separan a `sprint-4` de `v1.0.2`;
+- **la suite y `analyze`, después del último cambio.** El último archivo es de las 22:30 y las corridas van de las 22:50 a las 22:55: `+2357: All tests passed!`, sin omitidas ni fallidas, y «No issues found!», en la carpeta y en la copia limpia. Los 28 archivos del manifiesto de la copia limpia tienen la huella que tienen hoy en la carpeta. **El piso de `t147-piloto4` sube de 2280 a 2357.** Al mezclar con `sprint-4` se esperan 2470, que son 2393 más 77; se comprueba entonces;
+- **las rojas contra `v1.0.2`:** fallan 20, 11, 10, 11 y 8, y pasan 4, 3, 3, 5 y 2. Son 60 y 17;
+- **las cifras del caso** (`caso-2a.json`): las de la 10.159, todas. Y lo que era cuenta ya está corrido:
+  - 408 cargas registradas, 137 por su número y 271 vacíos asignados, sin ningún conflicto;
+  - la salida, con 709 contenedores, **470 `LOC+83`** y ningún `LOC+13`;
+  - **408 de 408 cargas con el código ISO del plan,** 16 de ellas vacíos en una celda de otro código de su tipo;
+  - la herramienta compara el texto de la salida con el plan, no consigo misma;
+- **la 1.0.2 abre lo que guarda la nueva.** El listado del caso, con sus 11 códigos declarados en la clave nueva `typeFamilies`, leído por el código de `v1.0.2`, da sus cifras de siempre: 135 de 172, 23 grupos, cuadran 7, y 17 con datos distintos;
+- **el corpus:** los trece `.edi` y `LISTADO_A08.xlsx`, iguales. Yov leyó aparte ese listado: su columna MARCHAMO viene vacía y su CONTENIDO no trae ninguna de las tres notas;
+- **la medición:** las 18 corridas de `medicion.json` son las de la tabla, y las horas de sus pasos dicen que la última serie se alternó de verdad. Con la CPU frenada, de tocar la celda a la hoja dibujada: 151 a 156 ms con la 1.0.2, y 153 a 159 ms con la 2a;
+- **nombres y matrículas reales:** ninguno en las 29 rutas. El listado guardado de las pruebas es sintético;
+- ningún `// ignore:` nuevo y ninguna dependencia nueva.
+
+**El código, leído entero:** el diff de los trece archivos de `lib/`, unas 1 270 líneas nuevas. Los cuatro cambios están como se aprobaron:
+1. **La cancelación** sale de una sola expresión, `ExportListRow.cancellationNote`: CANCEL con sus formas, «ROLEADO» y «YA EMBARCADO», con femenino y plural, enteras, sobre el texto en mayúsculas y sin tildes, en MARCHAMO y, si no está, en CONTENIDO. Se calcula de lo que la fila ya guarda: el listado no gana ninguna clave por esto.
+2. **Una fila cancelada no se ofrece, pero se carga con motivo.** La búsqueda la deja fuera, salvo que se escriba su OR o el final de su matrícula. La revisión de la carga suma un aviso que pide motivo y no bloquea. El conflicto «cancelado en el listado» lo deriva cada equipo, igual si la carga fue antes de la revisión que la cancela.
+3. **El código ISO de la salida** sale de un solo lugar, `OperationPlan.shippedType`: el del plan, si es del grupo del tipo de la fila; si no, el de la fila, como hasta la 1.0.2.
+4. **Un código del plan, un solo tipo.** Mientras haya un choque, «Confirmar e importar» queda apagado y la pantalla dice cuáles son.
+
+Además:
+- lo declarado en «también llena» viaja dentro del listado, que sube a la nube como texto en trozos. Las reglas de Firestore (`docs/T130-firestore.rules.propuesta`) validan el nombre, la huella y el tamaño de cada fuente, no las claves del listado: **no hay que tocarlas;**
+- los tres valores nuevos de enumeraciones (el conflicto, el aviso de la revisión y el origen «revisión anterior») no se guardan en ninguna parte: una 1.0.2 no se los encuentra;
+- la hoja deja de ordenar por su cuenta. El orden lo da `rowsFor`: primero el grupo de la celda y después los demás, por OR.
+
+**Las tres confirmaciones que pidió Timonel:**
+1. **«Un código del plan, un solo tipo»: su lectura es la buena.** Lo que no puede pasar es que un código del plan caiga en dos grupos. Dos tipos del listado con el mismo código principal son un solo grupo y no chocan; chocan cuando un código lo reclaman dos principales distintos. Así, un listado que usa dos nombres para el mismo tipo se sigue pudiendo importar.
+2. **«Guardada en este dispositivo» sale en el próximo viaje.** En una segunda importación de la misma operación manda la revisión anterior del listado, que es la fila 2 de la tabla que Carlos aprobó (E2-P3). Es lo correcto: lo que la oficina eligió para esta operación viaja con el listado y vale en todos los equipos.
+3. **Las cuatro pruebas que ya existían.** Yov las leyó línea por línea, y ninguna se afloja:
+   - las dos de T-132 ganan las esperas de `LOC+83` y la nota en «no cargaron», y no pierden ninguna;
+   - las dos referencias de la hoja de la entrega 1 llevan el desempate por OR y el largo, que es justo lo que la 2a cambia a propósito;
+   - la de T-73 fijaba que lo guardado mandaba, que es lo que el hallazgo 3 de la 10.85 pidió quitar.
+
+**Lo que Yov miró en pantalla:** 31 de las 174 capturas, 23 del recorrido del teléfono de día y ocho de los otros cinco. Timonel había mirado cinco de las definitivas. Dicen lo que dice el informe:
+- el resumen, con las 40 canceladas y sus cuatro cuentas;
+- las tres propuestas repartidas, la tarjeta de las 11 celdas y el cruce con sus 14 grupos;
+- la hoja por OR, sin cancelados y sin lo que no cabe, igual en la Web y en Windows;
+- el OR 156 al buscarlo, con «Cancelado en el listado: pide motivo»;
+- el vacío 40HC en la celda 45G0, sin motivo y «Cargado»;
+- la revisión que cancela el OR 1 ya cargado, su celda en «Revisar», su línea en Conflictos y la salida con su aviso.
+
+**Lo que nadie ha visto todavía en pantalla,** y va primero en la aceptación:
+- **cargar una fila cancelada con su motivo.** El recorrido la busca y no la carga. Tampoco toca, antes de cargarlo, un lleno que el plan trae y el listado cancela. Las dos cosas están probadas como regla, no miradas;
+- el «Destino final» en el detalle del contenedor; el mensaje de un código que dos tipos declaran; la nota sin reconocer, y quitar una equivalencia guardada;
+- un teléfono de verdad. No se probó en el iPhone ni en el Honor: queda para la prueba corta de la 1.0.3.
+
+**Dos observaciones nuevas.** No detienen la aceptación; van con la parte 2b:
+- **O-147-7 · La tarjeta de las celdas sin dueño sale antes de tiempo, y es larga en el teléfono.**
+  - Mientras quedan tipos pendientes, cuenta como «sin dueño» las celdas que esos tipos van a llenar. Con el caso dice 95 celdas en 12 códigos, diez con «Ningún tipo del listado se le parece.», hasta que la oficina elige los seis pendientes. Entonces quedan las 11 de verdad.
+  - A 360 dp, con seis códigos, pasa de una pantalla: las tres fichas de cada código no caben en una línea. Lo dice Timonel.
+  - Yov propone que salga cuando no quede ningún tipo pendiente, y con fichas más cortas.
+- **O-147-8 · Tres textos que no cuadran:**
+  - el resumen del listado dice «202 filas traen POT y POD distintos» y cuenta las canceladas; la salida dice 169, que son las que se cargan;
+  - el avance dice «41 filas canceladas, que no se cargan» cuando una de ellas está a bordo y sale en Conflictos;
+  - la página de la salida dice «1 conflictos vigentes». Este es de antes de la 2a.
+
+**Lo que sigue:**
+1. Carlos: dos commits, la parte 2a en `t147-piloto4` y esta decisión en `sprint-4`, y la carpeta `baystream-qa-r4` en la punta nueva.
+2. GLM acepta la parte 2a, en un chat nuevo (10.137).
+3. Con su dictamen, Yov escribe el arranque de la parte 2b, con D13 (10.161) y las observaciones.
+
+**Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113). Las copias de `%TEMP%\t147-e2a\` (410 MB) y las de `%TEMP%\t147-e2\` (2.9 GB) se pueden borrar cuando termine la entrega 2.
+
+La siguiente decisión es la **10.163**.
