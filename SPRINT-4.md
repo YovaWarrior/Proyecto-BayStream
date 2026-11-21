@@ -4876,4 +4876,68 @@ Además:
 
 **Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113). Las copias de `%TEMP%\t147-e2a\` (410 MB) y las de `%TEMP%\t147-e2\` (2.9 GB) se pueden borrar cuando termine la entrega 2.
 
-La siguiente decisión es la **10.163**.
+### 10.163 · T-147, entrega 2, parte 2a: GLM la acepta sin hallazgos nuevos y Yov lo comprobó contra su carpeta; dos observaciones más, y empieza la parte 2b (21-nov, 08:30)
+
+**Carlos corrió los tres bloques de la 10.162** (00:19): la parte 2a quedó en `t147-piloto4` (`1c2d86d`), la decisión en `sprint-4` (`2363d64`) y `baystream-qa-r4` en la punta nueva. **GLM aceptó la parte 2a en un chat nuevo: «PASA, sin hallazgos nuevos».** Su informe es `docs/t147/entrega2a/aceptacion-glm.md`, todavía sin commit. Su evidencia está en `build/t147/glm-e2a/` y va de las 00:23 a las 02:16, por la hora de sus archivos.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia:**
+- **solo entra el informe.** `baystream-qa-r4` es `1c2d86d` en sus 2140 archivos, por su blob, y lo único nuevo sin ignorar es el informe. Sus dos copias limpias son lo que dice: la «después» es la punta, y la «antes», `v1.0.2` con las cinco pruebas nuevas, su soporte y su accesorio;
+- **la suite y `analyze`:** `+2357: All tests passed!`, en una sola corrida de la copia limpia (00:27), sin omitidas ni fallidas; «No issues found!» en la copia y en la carpeta;
+- **las rojas contra `v1.0.2`:** fallan 20, 11, 10, 11 y 8, y pasan 4, 3, 3, 5 y 2. Las 17 que pasan, sacadas de sus registros, son las que nombra el informe;
+- **las cifras del caso:** su `C-otra.json` es, byte por byte, el `caso-2a.json` de Timonel, y lo generó su copia limpia a las 00:33. Su cuenta aparte es un programa de Python sobre el texto de la salida y sobre el Excel, leído sin el lector del producto. Yov lo leyó, y cuenta lo que dice:
+  - 709 bloques en el plan y en la salida, 470 `LOC+83` y ningún `LOC+13`;
+  - los 301 contenedores de paso, con su grupo igual byte por byte;
+  - las 137 cargas con número y las 271 asignadas, con el código ISO del plan; las 271, en una celda reservada;
+  - 169 cargas con `LOC+83` detrás de `LOC+11`, con el POD del Excel, y 239 sin él;
+- **el corpus:** entre `antes.json` y `despues.json` cambian ocho valores, y los ocho son de `LISTADO_A09.xlsx`. Los trece `.edi` y `LISTADO_A08.xlsx`, iguales;
+- **las sondas:** su salida dice lo que el informe. La expresión reconoce las doce notas y deja cinco sin reconocer; la 1.0.2 abre lo que guarda la punta y deriva su bitácora sin excepción; los cinco casos de la salida, y «también llena»;
+- **los recorridos:** los nueve de la Web y el de Windows terminan en «fin», sin errores de Flutter, y los de la Web, sin peticiones cortadas. Los cuatro del `recorrido2a` traen 29 capturas y la hoja en el mismo orden. El conductor de GLM es el de Timonel con 433 líneas más, las de su escenario: del original no cambia ninguna;
+- **la medición:** las seis corridas son las de su tabla, y sus horas dicen que se alternaron, de las 01:57 a las 02:01, con la CPU frenada, a 360 × 800. De tocar la celda a la hoja dibujada: 187 a 206 ms con la 1.0.2, y 197 a 210 ms con la 2a;
+- **nombres y matrículas reales:** ninguno en el informe. Las matrículas van como «‹matrícula›»;
+- **en `%TEMP%`** no quedó ninguna copia del caso ni ningún perfil de Chrome.
+
+**Lo que Yov miró en pantalla:** 22 de las 31 capturas de los seis casos que nadie había visto (10.162), y seis de sus recorridos. Dicen lo que dice el informe:
+- **el vacío cancelado** (OR 156) no sale en la hoja. Al buscarlo, sale con «Cancelado en el listado: pide motivo»; se carga con su motivo; la celda queda en «Revisar», con su línea en «Conflictos · 1», y la salida lo avisa. Al deshacer la carga, la hoja vuelve a ser la misma: la captura de antes y la de después son idénticas;
+- **el lleno que el plan trae y el listado cancela** (OR 1): su celda dice «Revisar» antes de cargarse, y el diálogo pide motivo;
+- **«Destino final»** en el detalle: SAJED en el lleno y BRPNG en el vacío;
+- **el código que declaran dos tipos:** el mensaje al pie, con los dos tipos, y «Confirmar e importar» apagado;
+- **la nota sin reconocer,** en rojo y con su OR;
+- **lo guardado en el dispositivo:** la tarjeta con 16, «Quitar», 15, y «Y 1 de puerto, que ya no se usa.»
+
+**Con esto queda visto lo que la 10.162 dejó sin mirar,** menos el teléfono de verdad, que es de la prueba corta de la 1.0.3.
+
+**Lo que Yov suma al informe de GLM:**
+- **O-147-9, nueva: en el teléfono, cuando la carga pide motivo, el campo del motivo no está a la vista.** Yov lo vio en dos capturas de GLM (`glm-a-03` y `glm-b-04`).
+  - A 360 × 800, el diálogo enseña el aviso «Pide motivo…» y «Confirmar carga» apagado. Pero «Motivo (obligatorio)» queda debajo de «Hora», «Fecha» y «Marchamo», fuera de la pantalla: hay que desplazar el diálogo para encontrarlo. GLM leyó el rótulo en los controles, no en la imagen.
+  - No nace con la 2a: es el orden del diálogo desde que una carga pide motivo (`loading_controls.dart:696-742`). Pero la 2a suma un caso en que el muelle lo va a necesitar.
+  - Yov propone que, cuando la carga pide motivo, su campo vaya justo debajo del aviso que lo pide.
+- **El teclado, en su medición.** El criterio era la hoja al tocar la celda, y se cumple. Pero dos de sus tres corridas «después» tardan más al abrirse el teclado: 899 y 916 ms, contra 786 a 795 ms de las tres «antes». La tercera «después» dio 770 ms. El informe trae los números y no los comenta. La serie alternada de Timonel no muestra diferencia: 648 a 667 ms contra 654 a 664. Con tres corridas no se puede decir más. Se mide en la 2b, que es donde cambia el teclado (P6).
+- **La observación del lápiz** (5.3 de su informe), **precisada: O-147-10.**
+  - Al cambiar con el lápiz el código principal de un tipo, los demás «también» se conservan (`export_list_cross_checker.dart:89-98`). El que se pierde es el código que deja de ser principal: sus celdas vuelven a la tarjeta de las celdas sin dueño. En la sonda de GLM no quedó ninguno porque el único declarado pasó a ser el principal.
+  - Yov propone que el código que deja de ser principal se quede como «también» cuando el plan lo respalda. Es la regla de la 10.160: manda el plan.
+- **Dos detalles.** Las dos capturas del código que declaran dos tipos son la misma imagen, la del pie: el aviso de arriba de las equivalencias no quedó capturado. Yov lo había leído en el código (10.162). Y en `%TEMP%` quedan, además de las tres carpetas que dice el informe, 16 archivos sueltos: los registros que ya copió a su evidencia y tres de compilación.
+
+**La parte 2a queda aceptada.** El piso de `t147-piloto4` es 2357. No se publica sola: la 1.0.3 lleva las dos partes (10.160).
+
+**La parte 2b,** que programa Timonel en el mismo chat:
+- **lo aprobado** (10.160 y 10.161), en este orden: la matrícula repetida (P5); abrir otra operación después de cerrar una del mismo buque, viaje y puerto (P8 a); la huella del viaje (P6); las agencias y sus secciones (O-147-4), con D13, y el aviso de la celda sin matrícula mal formada (O-147-5);
+- **P8 a), con una suma de Yov: también con el mismo archivo.** La regla de la propuesta abre una operación nueva cuando el archivo es otro. Con el mismo archivo se sigue cayendo en la cerrada, y eso deja sin salida a quien ensaya con el archivo de verdad y cierra, o cierra por error. También a la prueba corta de la 1.0.3: la laptop ya cerró BUQUE HOTEL · VIAJE009A con ese mismo plan, así que lo que dijo la 10.160 solo vale con esta suma. La cerrada se sigue viendo, con una acción a la vista para empezar una operación nueva con esos planos. Si no cabe, Timonel lo dice antes de programarla y Yov prepara el caso con otro viaje;
+- **las observaciones:** O-147-7 y O-147-8 (10.162), O-147-9 y O-147-10. O-147-6 sigue fuera: va con el frente de usabilidad, y se lleva las líneas de resumen que GLM vio recortadas a 360 dp;
+- **la medición,** en tres bancos (`v1.0.2`, la 2a y la 2b), alternados y con la CPU frenada: cuánto baja el teclado con la huella, y si la 2a lo dejó más lento;
+- la versión no cambia: `1.0.3+12`.
+
+El mensaje de arranque está en el documento del proyecto `BayStream_T147_e2b_arranque_21nov.md`.
+
+**Lo que sigue:**
+1. Carlos: tres bloques. El informe de GLM, a `t147-piloto4`; la carpeta de Timonel, a esa punta, y esta decisión, en `sprint-4`. Después, el mensaje de arranque a Timonel.
+2. Timonel programa la 2b. Mientras tanto, ningún otro agente corre Flutter.
+3. Yov la revisa contra la carpeta y el caso; GLM la acepta en un chat nuevo (10.137).
+4. La lista de publicación de la 1.0.3, con las dos partes.
+
+**Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop está al 94 %,** con 65 GB libres. De T-147 hay unos 16 GB en `%TEMP%`:
+- se pueden borrar ya las copias de GLM: las de esta aceptación (`t147-glm2a-*`, unos 11 GB) y las de la entrega 1 (`t147-glm`, 0.7 GB);
+- cuando termine la entrega 2, las de Timonel: `t147-e2` (2.9 GB), `t147-e2a` y `t147` (0.4 GB cada una).
+
+La siguiente decisión es la **10.164**.
