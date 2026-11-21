@@ -4672,4 +4672,78 @@ Lo que la propuesta tiene que decir: `LOC+83` con el POD del listado cuando es d
 
 **Siguen pendientes de Carlos:** revisar en el iPhone las equivalencias que digan «Guardada en este dispositivo» (10.151); O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.159**.
+### 10.159 · T-147, entrega 2: la propuesta de Timonel, revisada; `sprint-4` da 2393 con T-120 y T-147 juntos; dieciséis decisiones para Carlos (20-nov, 21:20)
+
+**Carlos corrió el bloque de la 10.158** (`461f8e3`, 19:30) **y le pasó a Timonel el prompt de la propuesta, con la línea de la 10.158.** Timonel entregó a las 20:48: la parte «Entrega 2 · Propuesta» de `docs/T147-RESULTADOS.md`, 761 líneas al final del informe, todavía sin commit, con la evidencia en `build/t147/e2/propuesta/`. No programó: es la fase 1.
+
+**Lo que Yov comprobó contra la carpeta, el código y el caso:**
+- **solo cambió el informe.** `lib/`, `test/`, `tool/`, `integration_test/` y `pubspec.*` de `baystream-t147` son los de `99995db` (673 archivos, comparados por su blob), y las 500 líneas de la entrega 1 siguen igual;
+- **el paso 0.** La copia limpia es `9d6c199` (689 archivos de código, por su blob). `analyze` da «No issues found!», y la suite, `+2393: All tests passed!`, sin omitidas (20:09 a 20:11). **T-120 y T-147 conviven, y el piso de `sprint-4` es 2393;**
+- **las cifras del caso, contadas aparte por Yov** desde los dos archivos anonimizados, sin el lector del producto. Coinciden todas:
+  - las 40 canceladas: 24, 7, 7 y 2; 37 llenos y 3 vacíos; ninguna trae cifras, CONTENIDO no dice CANCEL en ninguna fila, y el plan no trae ninguna;
+  - los tipos y los POT, con ellas y sin ellas. Sin ellas, lo que el listado carga por puerto es lo que el plan descarga: COTRB 213, JMKIN 123, COCTG 66 y COBAQ 6;
+  - las 169 filas con el POD distinto del POT, 109 llenos y 60 vacíos (52 de JMKIN a CNTAO y 8 de COCTG a BRPNG), y los 36 POD del listado, todos con forma de UN/LOCODE;
+  - los 301 `LOC+83` del plan: su lugar, detrás de `LOC+11` (198 antes de `LOC+76` y 103 antes de `RFF`); los dos que no tienen forma, «CO» y «JM»; y los 40 vacíos de paso que lo traen;
+  - las 16 celdas sin dueño, código por código, y los llenos de cada tipo en el plan (20TK: 22K2 5, 22T1 3, 22T0 2 y 22T6 1; 40HC: 45G1 60 y 45G0 10; 20ST: 22G1 19 y 22G0 1);
+  - los 14 grupos unidos: cuadran los 14;
+- **la medida de O-147-1:** las 12 corridas de `medicion-o147-1.json` son las de la tabla. La copia del prototipo volvió a `99995db` (403 archivos de `lib/` y `test/`);
+- **la matrícula repetida, en sus capturas.** Yov miró dos: la segunda celda abre «Confirmar carga», con «sin OR en el listado», y queda «Cargado»; la de al lado queda vacía;
+- **una veintena de citas del código de `v1.0.2`,** todas ciertas. Entre ellas: lo guardado manda sobre los contenedores, el dispositivo guarda una sola tabla, `find` devuelve la operación cerrada, y la app pide «cierra la operación y publica una nueva», que hoy no se puede hacer;
+- **el caso A08 no cambia con las canceladas:** su listado no trae ninguna nota con CANCEL;
+- ninguno de los 24 archivos que propone tocar está entre las 39 rutas que separan a `sprint-4` de `v1.0.2`. Son 39 y no 38, por el manual de la 1.0.2;
+- **el informe no trae nombres ni matrículas reales.**
+
+**Lo que la propuesta enseña y no estaba anotado:**
+- **las 16 celdas «de otro grupo» son exactamente lo que les sobra a siete grupos** (P4). Si un tipo del listado puede llenar más de un código del plan, los 23 grupos quedan en 14 y los 14 cuadran. Con las canceladas fuera, el cruce del caso sale limpio;
+- **la importación del caso guarda 16 equivalencias en el dispositivo, no nueve:** los nueve tipos elegidos, seis deducidos y una línea. La 10.157 decía nueve;
+- **O-147-2 es peor desde una celda de 20 pies:** la hoja ofrece 274 vacíos, y 250 no caben;
+- **la matrícula repetida** (P5): la segunda celda se carga como cualquier lleno y la primera no responde nunca. Las 7.9 t que faltan en Carga salen de la proyección, que pone dos veces el contenedor de la última celda;
+- **el hallazgo 7 son dos cosas.** Una es un callejón: cerrada una operación, no se puede publicar otra del mismo buque, viaje y puerto, y eso es justo lo que la app manda hacer cuando el plan cambia. La otra, corregir el plan de una operación abierta, es del tamaño de T-127 y toca las reglas de Firestore;
+- **O-147-1 tiene un arreglo corto:** guardar la huella del viaje. Medido en el banco, el teclado baja de 153 a 81 ms, y de 679 a 391 ms con la CPU frenada.
+
+**La propuesta, en corto.** Dos partes en la misma rama, cada una con su revisión y su aceptación, y la versión `1.0.3+12`:
+- **2a, lo que necesita el próximo piloto** (8.5 h de Timonel): las filas canceladas (P1); «también llena», que deja a un tipo del listado llenar varios códigos del plan (P4); las equivalencias guardadas, que dejan de mandar sobre el plan (P3); el destino final en `LOC+83` (P2), y la hoja, que deja de ofrecer lo que no cabe y va por OR (O-147-2 y O-147-3);
+- **2b, el resto** (7.5 h): la matrícula repetida (P5), abrir otra operación después de cerrar (P8 a), la huella del viaje (P6), las agencias y sus secciones (O-147-4) y el aviso de la celda sin número mal formada (O-147-5);
+- `DESIGN.md` va en su informe, como 17.7, y lo pone Yov al mezclar;
+- **nada de lo que guarda deja de abrirlo la 1.0.2.** Lo que no se opera con versiones mezcladas sigue siendo el plan con «NO» y, con P8 a), una operación publicada después de cerrar otra de la misma escala.
+
+**Lo que no se comprobó,** y el informe lo dice: el orden de la hoja en Android, porque la app mínima no se instaló en los emuladores; lo guardado en el iPhone y en la laptop; P8, leído y no ejecutado; las reglas de P1 a P5, que están probadas como cuentas sobre el caso y no como código, y Windows, sin banco en esta fase.
+
+**Lo que Yov propone distinto, o suma:**
+1. **D2: con motivo, no bloqueado.** Timonel propone que el muelle no pueda registrar un lleno que el plan trae y el listado cancela, como pasa con lo que cancela la oficina. La diferencia es quién lo destraba. Una cancelación de la oficina la deshace la oficina en segundos; una del listado solo sale con un Excel corregido. Si el contenedor llega al gancho, el muelle tiene que poder registrar lo que subió. Yov propone que pida motivo y quede como conflicto para la oficina: es el mismo conflicto que la propuesta ya define para la fila que se cargó antes de la revisión.
+2. **D16, nueva: el código ISO del vacío en el BAPLIE de salida.** Con «también llena», un vacío 40HC puede quedar en una celda que el plan reservó como 45G0. La propuesta lo escribe con el código principal de su tipo, 45G1, que es lo que pasa hoy. Yov propone que salga con el código de la celda cuando es uno de los declarados: es lo que la línea planificó para esa posición, y el listado no sabe más. En el caso son 16 celdas.
+3. **Un código del plan, un solo tipo del listado.** La propuesta no dice qué pasa si dos tipos declaran el mismo código. Yov propone que no se pueda: los grupos dejarían de contarse bien.
+4. **D1: qué palabras, solas, quieren decir que no se carga.** La regla de Timonel es prudente: sin CANCEL, la fila se carga y el resumen la avisa. Pero «ROLEADO» o «YA EMBARCADO», sin más, parecen decir lo mismo que con CANCEL. Lo sabe Carlos.
+5. **P8 a) pesa más de lo que parece.** Mientras no salga, publicar y cerrar una operación con el archivo de verdad, como ensayo, impide operarla después. Y la prueba corta de la versión siguiente no puede repetir BUQUE HOTEL · VIAJE009A en la laptop, que ya la cerró: Yov prepara el caso con otro viaje, o P8 a) entra en la primera parte.
+6. **D15 depende de la fecha del próximo piloto,** que Yov no sabe.
+
+**Las decisiones.** De D1 a D15 son las de Timonel (E2-9.7 de su informe); D16 es de Yov.
+
+| | La decisión | Timonel recomienda | Yov |
+|---|---|---|---|
+| D1 | Una nota en MARCHAMO que no dice CANCEL ni parece un marchamo | Se carga y se avisa | De acuerdo. Carlos dice si «ROLEADO» o «YA EMBARCADO», solos, también son «no se carga» |
+| D2 | Un lleno que el plan trae y el listado cancela, en el muelle | No se registra | **Con motivo,** y queda como conflicto para la oficina |
+| D3 | Reconocer la cancelación también en CONTENIDO | Sí | Sí |
+| D4 | `LOC+83` también para los vacíos | Sí | Sí |
+| D5 | Un POD sin forma de UN/LOCODE | No se escribe, y se avisa | Sí |
+| D6 | El plan trae un `LOC+83` distinto del listado | Manda el listado, con un aviso | Sí |
+| D7 | A qué se atan las equivalencias guardadas | Al dispositivo; solo tipos y líneas; nunca contra el plan | Sí |
+| D8 | Las 33 de puerto del iPhone | Dejan de usarse y se quitan desde una tarjeta; no se borran solas | Sí |
+| D9 | Un tipo con varios códigos | «También llena», declarado al importar | Sí, con un solo tipo por código |
+| D10 | El respaldo repartido (40HC: 60 y 10) | Se propone sola, con el más frecuente como principal | Sí |
+| D11 | La matrícula repetida | No entra a la nube; en el dispositivo solo, se opera con una banda | Sí |
+| D12 | O-147-1 | La huella guardada, en la 2b | Sí |
+| D13 | ¿«TRANSBORDOS» y «VACIOS» son de la agencia de arriba? | Cree que sí, y lo pregunta | Lo sabe Carlos |
+| D14 | El hallazgo 7 | Abrir otra después de cerrar, en la 2b; corregir el plan de una operación abierta, en su tarea | Sí |
+| D15 | Una versión o dos | Dos partes; una sola 1.0.3 si el piloto da tiempo, y 1.0.4 para la 2b si no | Sí. Falta la fecha del piloto |
+| D16 | El código ISO, en la salida, de un vacío en una celda de otro código declarado | El principal de su tipo, como hoy | **El de la celda** |
+
+**Lo que sigue:**
+1. Carlos: dos commits. La propuesta, en `t147-piloto4`; esta decisión, en `sprint-4`.
+2. Carlos responde las dieciséis.
+3. Yov escribe la decisión con las respuestas y el mensaje de arranque de la parte 2a, para el mismo chat de Timonel.
+4. Timonel programa la 2a, Yov la revisa y GLM la acepta. Después, la 2b.
+
+**Siguen pendientes de Carlos:** revisar en el iPhone las equivalencias que digan «Guardada en este dispositivo» (10.151); O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113). Las dos copias de `%TEMP%\t147-e2\`, de 2.9 GB, se pueden borrar cuando termine la entrega 2.
+
+La siguiente decisión es la **10.160**.
