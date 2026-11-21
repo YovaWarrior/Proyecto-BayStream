@@ -602,6 +602,14 @@ class BaplieParserService {
                 'Celda reservada ${currentPosition.toIsoCode()}: '
                 '${locodeProblems.join('; ')}');
           }
+        } else if (rawPosition != null) {
+          // T-147, entrega 2, parte 2b (O-147-5): un grupo sin matrícula con
+          // la posición mal formada no es ni un contenedor ni una celda
+          // reservada, y se perdía sin aviso. Empieza por «Celda reservada»
+          // para que el resumen lo cuente como un caso, no como un
+          // contenedor, también en la 1.0.1 y la 1.0.2.
+          notice(BaplieReadNoticeKind.position,
+              'Celda reservada sin matrícula: «$rawPosition»');
         }
       }
       containerBuilder = null;

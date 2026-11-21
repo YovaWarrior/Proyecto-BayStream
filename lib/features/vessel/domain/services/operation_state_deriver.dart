@@ -10,6 +10,18 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 /// T-80: primero obtiene el plan efectivo; después evalúa las operaciones
 /// contra ese plan final, incluso si la aprobación se registró más tarde.
 class OperationStateDeriver {
+  /// Cómo se deshace una carga que quedó en conflicto. O-147-8 (d): el
+  /// detalle de la celda, que es donde se deshace, no lo repite.
+  static const cellRemedy =
+      'Si el registro fue un error, deshazlo desde el detalle de la celda.';
+
+  /// El mensaje de un conflicto como se lee dentro del detalle de la celda:
+  /// sin la frase que manda a ese mismo detalle.
+  static String messageInCellDetail(String message) =>
+      message.endsWith(' $cellRemedy')
+          ? message.substring(0, message.length - cellRemedy.length - 1)
+          : message;
+
   const OperationStateDeriver();
 
   OperationState derive(OperationPlan plan, Iterable<Movement> movements) {
@@ -330,7 +342,7 @@ class _Run {
         MovementType.cancelItem =>
           'Si la cancelación fue un error, la oficina la deshace desde el detalle '
               'de la celda.',
-        _ => 'Si el registro fue un error, deshazlo desde el detalle de la celda.',
+        _ => OperationStateDeriver.cellRemedy,
       };
 
   void _discharge(Movement m) {

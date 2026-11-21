@@ -1776,3 +1776,565 @@ Son 29 rutas. `windows/flutter/generated_plugin_registrant.*` y `generated_plugi
 | 9 | 22:56 a 23:02 | La limpieza de `%TEMP%` y este informe |
 
 Toda la parte corrió en una sola ventana de Flutter y de Dart, con la luz verde de Carlos y su línea `SEMÁFORO:` al empezar (21:45) y al terminar (22:56). Una prueba se quedó colgada una vez, por una espera mía mal escrita: la detuve, cerré el proceso que dejó y la corregí.
+
+# Entrega 2 · Parte 2b
+
+21 de noviembre de 2026. Timonel (Claude Code), en `C:\Proyectos\baystream-t147`, rama `t147-piloto4`, sobre `912daac`. Sin commit: lo ejecuta Carlos (E2b-14).
+
+Lo anterior de este informe no se reescribe. Donde la 2b cambia algo que la propuesta o la 2a decían, va dicho aquí.
+
+## E2b-0. En corto
+
+- **Los nueve puntos están programados,** en el orden del encargo, cada uno con su roja guardada.
+- **Suite 2412 de 2412** (2357 más 55 nuevas), sin omitidas, en una sola corrida, y `analyze` en cero, aquí y en una copia limpia, después del último cambio.
+- **Las rojas:** de las 40 pruebas de P5, P8 a), P6, O-147-4 y O-147-5, **26 fallan contra `v1.0.2`**; de las 15 de O-147-7 a O-147-10, **12 fallan contra la punta de la 2a**. Las que pasan en los dos lados son los controles.
+- **La huella quita la mitad de lo que tardaba el teclado:** con la CPU frenada, de 664 a 379 ms en una serie y de 999 a 498 ms en la otra.
+- **La 2a no dejó el teclado más lento que la 1.0.2:** 664 contra 666 ms, y 999 contra 1005 ms. Lo que vio GLM es el ruido de la máquina, que también me salió (E2b-6).
+- **La hoja, al tocar la celda, no quedó más lenta:** 159 ms con la 1.0.2 y 134 ms con la 2b.
+- **El caso da las mismas cifras que en la 2a,** todas, y suma las de la 2b: «448 filas en 2 agencias», 334 (141, más 6 y 187), 53 y 61 en «AGREGADOS»; 169 filas que se cargan con POT y POD distintos.
+- **P8 a) cupo sin tocar ninguno de los tres archivos que evito y en menos de una hora.** Dónde va y cómo se llama, en E2b-3.2, con tres decisiones mías que Carlos confirmó al recibir la entrega.
+- **O-147-10 lleva una salvedad que Carlos aprobó** antes de programarla (E2b-3.9).
+- **La nube se miró contra el emulador de Firebase:** no se publica ni se agrega un plan con una matrícula repetida, y después de cerrar se abrió y se publicó otra operación, con el mismo archivo y con otro.
+- **Tres pruebas de la entrega 1 cambian a propósito** (E2b-3.10). **Pido que Yov las mire.**
+- **Lo que no hice,** en E2b-12: Descarga con la matrícula repetida en pantalla, el teléfono de verdad, y la operación nueva vista desde un muelle en la 1.0.2.
+
+## E2b-1. Paso 0
+
+- La punta de la rama era `912daac`, «Sprint 4: aceptacion de la parte 2a de la entrega 2 de T-147», y debajo, `1c2d86d`. El árbol, limpio, salvo los tres archivos de `windows/flutter/`, que cambian solo de fin de línea y no entran al bloque de Git.
+- Leí las decisiones 10.161, 10.162 y 10.163 de `SPRINT-4.md`, en `C:\Proyectos\baystream-rediseno`. No lo edité.
+- **El semáforo:** Carlos dio luz verde a toda la 2b. Corrí un comando de Flutter o de Dart a la vez, y avisé al empezar y al terminar la ventana de medición.
+- **Dos preguntas en el camino:** la luz verde, y el lápiz (E2b-3.9), que el encargo pedía decir antes de programar.
+
+## E2b-2. Las rojas
+
+Los registros están en `build/t147/e2b/registros/`.
+
+| Contra | Archivo de pruebas | Pruebas | Fallan ahí | Registro |
+|---|---|---:|---:|---|
+| `v1.0.2` (`99995db`) | `t147e2b_repetida_test.dart` (P5) | 17 | 10 | `rojas-contra-v102.log` y `.json` |
+| | `t147e2b_otra_operacion_test.dart` (P8 a) | 11 | 9 | |
+| | `t147e2b_huella_test.dart` (P6) | 2 | 1 | |
+| | `t147e2b_listado_test.dart` (O-147-4 y O-147-5) | 10 | 6 | |
+| | **Suma** | **40** | **26** | |
+| La punta de la 2a (`912daac`) | `t147e2b_revision_test.dart` (O-147-7 a O-147-10) | 15 | 12 | `rojas-contra-la-2a.log` y `.json` |
+
+- Las dos copias salen de `git archive`, fuera del repositorio, con `pub get --offline --enforce-lockfile`. A la de `v1.0.2` le copié el soporte de la 2a (`test/support/t147e2_support.dart`) y los cuatro archivos; a la de la 2a, el quinto.
+- **Ninguna roja es de compilación.** Lo que la versión anterior no tiene se lee a través de `dynamic`, o se mira en la pantalla.
+- **Las que pasan en los dos lados son controles:** el plan corregido sí se publica y sí se agrega; una vez en la llegada y una vez en la carga no es repetida; con el mismo archivo se sigue viendo la cerrada; la copia local de antes del cierre no la tapa; dos viajes iguales siguen siendo iguales; un listado guardado por la 1.0.2 se lee como entonces; sin nada que pida motivo, el diálogo queda como estaba.
+
+## E2b-3. Lo que cambia, punto por punto
+
+### 3.1 P5 · La matrícula repetida (D11)
+
+**La regla.** Un plan con una matrícula en más de una celda no entra a la nube; en el equipo que opera solo se deja operar, con el defecto a la vista. «Repetida» es lo mismo que ya avisa el lector: con forma de matrícula ISO 6346 y en más de una celda **del mismo archivo**. Una vez en la llegada y una vez en la carga no es repetida.
+
+| Dónde | Qué pasa ahora | Dónde está |
+|---|---|---|
+| «Publicar operación» | El botón queda apagado y debajo dice: «No se publica: el plan de carga («‹archivo›») trae 1 matrícula en más de una celda: ‹matrícula› en 018-01-82 y 018-00-82. Un contenedor solo puede estar en una. Pide el plan corregido a quien lo hizo y ábrelo de nuevo.» Si aun así se llega a publicar, se detiene antes de subir nada | `publishRefusalProvider` (`sync_providers.dart`) y `cloud_page.dart` |
+| «Agregar a la operación» (T-130) | El diálogo dice el mismo motivo, con «No se agrega», y su botón queda apagado. La regla está también en el dominio: `OperationSources.save` lo rechaza | `dialogo_agregar_plan.dart` y `operation_sources.dart` |
+| El plano de llegada | Lo mismo, con «el plano de llegada» | los mismos |
+| Carga y Descarga, en el equipo solo | Una ficha fija, en el color de Revisar: «Plan con 1 matrícula repetida: una carga no se puede registrar. Pide el plan corregido.» (en Descarga, «una descarga»). **En el teléfono va en una línea propia, encima del resumen recogido:** la primera versión la dejaba dentro del resumen, y a 360 dp no se veía sin abrirlo; lo vi en la captura y lo cambié | `resumen_del_modo.dart`, `PlanSummaryLine` |
+| La primera celda | Se ve con su contenedor, como la trae el archivo, y al tocarla responde: «Matrícula repetida» · «El plan trae ‹matrícula› también en 018-00-82. Esta celda no se puede operar hasta abrir el plan corregido.» | `bay_plan_view.dart` |
+| La bahía | Pesa lo del archivo: 148.2 t donde la 1.0.2 decía 140.3 t | `LoadingOperation.build` |
+| El BAPLIE de salida | «Avisos de la salida» dice: «‹matrícula›: el plan de carga lo trae en 2 celdas (018-01-82 y 018-00-82). Un contenedor solo puede estar en una: la salida escribe un solo grupo para esa matrícula. Pide el plan corregido.» | `departure_baplie_writer.dart` |
+
+- La regla de dominio es `RepeatedContainers` (`repeated_containers.dart`, nuevo): de cada repetida, la operación se queda con la última celda del archivo, que es la que ya guardaba, y las demás no se pueden operar.
+- **No cambia nada guardado** ni la clave de ninguna pieza.
+- **Lo que la propuesta no miró, ahora mirado:**
+  - **con el listado importado:** igual que sin él. La ficha, la primera celda y la salida dicen lo mismo, y la otra celda se carga como cualquier lleno (`rep-360-dia`, con listado; `rep-1366-noche`, sin él);
+  - **el BAPLIE de salida:** escribe un solo grupo, y ahora lo avisa con las dos celdas;
+  - **Windows:** E2b-5.
+- **Una operación que ya se publicó así con la 1.0.2** no se puede retirar. La versión nueva la enseña con su ficha y con la primera celda que responde.
+
+### 3.2 P8 a) · Abrir otra operación después de cerrar (D14), también con el mismo archivo
+
+**Cupo sin tocar ninguno de los tres archivos que evito, y en menos de una hora.** La regla vive en `operation_sources.dart` y el botón, en `cloud_page.dart`.
+
+| Caso | Hasta la 1.0.2 | Ahora |
+|---|---|---|
+| Se abre **otro archivo** del mismo buque, viaje y puerto, con la operación cerrada | «…ya está cerrada y sus BAPLIE no cambian. Para trabajar con este archivo, ábrelo como una operación nueva.» No había cómo | **Nace una operación nueva,** en este equipo y sin publicar, con ese archivo. La cerrada no cambia |
+| Se abre **el mismo archivo** | Se veía la cerrada, y no había salida | Se sigue viendo la cerrada, solo para mirar. En «Nube y cuenta» dice «Se sigue viendo, solo para mirar. Para trabajar esta escala otra vez, empieza una operación nueva con sus planos.» y hay un botón: **«Empezar una operación nueva»** |
+| Otro listado en la cerrada | «…abre el plan de carga como una operación nueva» | Se rechaza igual, y dice por dónde: «…empieza una operación nueva desde «Nube y cuenta».» |
+
+**Dónde va y cómo se llama (mi propuesta, ya programada).**
+
+- **«Empezar una operación nueva»,** en «Nube y cuenta», en «Operación de la escala abierta», en el sitio donde estaba «Cerrar operación». Es la misma página donde se publica y se cierra.
+- Pide confirmar: «Empieza de cero con los planos de la operación cerrada: el plano de llegada («‹archivo›») y el plan de carga («‹archivo›»). El listado de la agencia se importa de nuevo. Lo registrado se queda en la operación cerrada, que deja de verse en este equipo.» · «Cancelar» · «Empezar».
+- Después dice «Operación nueva, en este dispositivo. Publícala para que el muelle la reciba.», aparece «Publicar operación» y una línea: «Es una operación nueva: la anterior de esta escala se cerró el ‹fecha› y lo registrado se quedó en ella.»
+- **No la ofrece al muelle,** que no publica: a él le dice «Si la oficina publica otra operación de esta escala, únete a ella desde «Operaciones abiertas en la nube».» Sin cuenta sí se ofrece: es el equipo que opera solo.
+
+**Tres decisiones mías. Carlos las confirmó el 21-nov, al recibir la entrega («Sí, así quedan»):**
+
+1. **La operación nueva lleva los planos y no el listado.** El encargo dice «con esos planos». El listado se importa de nuevo, y sus equivalencias salen de lo guardado en el dispositivo. Llevarlo también es una línea.
+2. **Al empezar la nueva, la cerrada deja de verse en ese equipo.** Sus datos siguen guardados, pero la app enseña una operación por escala y no tiene un selector. El diálogo lo dice antes de confirmar. Un selector de operaciones de la misma escala es otra tarea.
+3. **Cómo sabe la app cuál se ve** (`OperationSources.current`): la publicada y abierta; si no hay, la que se empezó después del cierre; si no, la cerrada más reciente; sin ninguna publicada, la local, como siempre. La nueva nace con una fecha posterior al cierre aunque el reloj del equipo vaya atrasado. **No se guarda nada nuevo.** Así se distingue de la copia local que el muelle abrió antes de unirse, que es anterior al cierre y no tapa a la cerrada.
+
+- **Un borde que encontré con la suite:** la oficina confirma «Agregar a la operación» y, mientras tanto, la operación se cierra. Ahí no se abre otra a sus espaldas: se rechaza con «…ya está cerrada y sus BAPLIE no cambian: el plan no se agregó. Vuelve a abrir este archivo y empezará una operación nueva.» La prueba de T-130 que lo cubría sigue igual.
+- Publicar la nueva ya estaba permitido: la guarda de T-130 mira solo las abiertas. Las reglas de Firestore no se tocan.
+
+### 3.3 P6 · La huella del viaje (D12)
+
+- `VesselVoyage.hashCode` se calcula una vez por objeto y se guarda fuera de él, en un `Expando`, porque el constructor es `const`. El `==` sigue siendo el de siempre, campo por campo.
+- Dos pruebas: la huella no vuelve a recorrer los contenedores (una lista que cuenta sus lecturas), y dos viajes iguales siguen siendo iguales, uno distinto no, y la copia con un cambio nace con otra huella.
+- La medida, en E2b-6.
+
+### 3.4 O-147-4 · Las secciones son de la agencia de arriba (10.161)
+
+- **Cómo distingue el lector una sección de una agencia:** el separador de agencia trae su código («CODIGO» o «COD.»); el título de una sección es una de tres palabras, sola en una fila sin OR: «TRANSBORDOS», «VACIOS» o «AGREGADOS», en singular o plural, con o sin tilde.
+- «TRANSBORDOS» y «VACIOS» ya no pisan la agencia: la fila guarda su sección aparte (`ExportListRow.section`, clave nueva `section`) y conserva su agencia. Una agencia nueva cierra la sección de la anterior.
+- «AGREGADOS» se sigue contando sola (10.50): va en el lugar de la agencia, como hasta hoy, y no cuenta como agencia.
+- **Un título que no conoce:** se informa como hoy, «No es un contenedor ni un separador de agencia: «…»», y **no cambia ni la agencia ni la sección** de las filas de debajo. El lector no sabe si esa fila es un título o una nota. Lo que sí cambia: en la 1.0.2 esas filas quedaban en la «agencia» de la sección; ahora quedan en su agencia de verdad.
+- **Un listado guardado por la 1.0.2** no trae secciones: se lee como entonces, cinco «agencias», hasta que se vuelve a importar. No se migra nada.
+- En pantalla: «448 filas en 2 agencias · …» y, debajo, «‹agencia 1›: 334 (TRANSBORDOS 6, VACIOS 187)», «‹agencia 2›: 53» y «AGREGADOS: 61». En la lista de filas, la sección va después de la agencia.
+
+### 3.5 O-147-5 · El grupo sin matrícula con la posición mal formada
+
+- Ya no se pierde sin aviso. El lector suma un aviso de posición: «Celda reservada sin matrícula: «01A0282»».
+- Empieza por «Celda reservada» a propósito: así el resumen lo cuenta como «1 caso» y no como «1 contenedor», **también en la 1.0.1 y la 1.0.2,** que ya leen esa clase de aviso. En la propuesta decía «Celda sin matrícula»; lo cambié por esto.
+- La celda sigue sin poder dibujarse: no hay dónde ponerla.
+
+### 3.6 O-147-7 · La tarjeta de las celdas sin dueño
+
+- **Sale cuando ya no queda ningún tipo por elegir** (`orphanTypeCodes`). Con el caso: sin tarjeta mientras faltan los seis; elegidos, 11 celdas en 6 códigos.
+- **A 360 dp las tres fichas van en una línea:** «Sí», «Otro tipo…» y **«No»**. «No: piden motivo» no cabía; lo que pasa después lo dice la tarjeta arriba, la ayuda de la ficha y la línea del código al elegirlo («… pide motivo al cargar.»).
+
+### 3.7 O-147-8 · Cuatro textos
+
+| | Antes | Ahora |
+|---|---|---|
+| (a) El resumen del listado | «202 filas traen POT y POD distintos…» | «169 filas que se cargan traen POT y POD distintos (y 33 canceladas): el cruce con el plan usa el POT…». Sin canceladas, la frase de antes |
+| (b) El avance | «Listado: 41 filas canceladas, que no se cargan (…).», con una a bordo | «Listado: 41 filas canceladas (38 llenos y 3 vacíos): 40 no se cargan y 1 está a bordo.» Sin ninguna a bordo, la frase de antes |
+| (c) La salida | «1 conflictos vigentes.» | «1 conflicto vigente.» |
+| (d) El detalle de la celda | «…lo marca cancelado («…»). Si el registro fue un error, deshazlo desde el detalle de la celda.» | «…lo marca cancelado («…»).» El avance lo sigue diciendo entero: el mensaje derivado no cambia |
+
+### 3.8 O-147-9 · El motivo, a la vista
+
+- Cuando la revisión de la carga pide motivo, su campo va **justo debajo del panel que lo pide,** antes de la hora, la fecha y el marchamo. Sin nada que pida motivo, el diálogo queda como estaba; en una corrección, el «Motivo de la corrección» sigue al final.
+- **Dos cosas más, mías,** para que quepan el aviso, el campo y «Confirmar carga»:
+  - en cuanto la carga empieza a pedir motivo, el diálogo lleva el campo a la vista. Solo desplaza si hace falta;
+  - la ayuda del campo pasa de «Viaja con el movimiento y deja el conflicto a la vista.» a **«Viaja con el movimiento.»**, en una línea. Lo del conflicto ya lo dice el aviso de encima.
+- **El diálogo de la descarga no tiene ese orden:** el de motivo (`_ReasonDialog`, `discharge_controls.dart`) trae solo el mensaje, la razón rápida y el campo, que queda justo debajo. No lo cambié.
+
+### 3.9 O-147-10 · El lápiz, con la salvedad que aprobó Carlos
+
+- Al cambiar el código principal de un tipo, el que deja de serlo **se queda como «también llena» si el plan lo respalda** (está en `observed`). Si no lo respalda, se pierde y sus celdas vuelven a la tarjeta, como en la 2a.
+- **El caso en que estorbaba, dicho antes de programarlo:** la oficina usa el lápiz para separar dos tipos que compartían código. Si el anterior se quedara siempre, lo reclamarían dos tipos con principales distintos, y la importación se detendría con «un código del plan, un solo tipo». **Salvedad:** no se queda si otro tipo del listado ya lo tiene de principal. Carlos eligió «Con la salvedad».
+- Con el caso: 40HC, de 45G1 (también 45G0) a 45G0 (también 45G1); 14 de 14 grupos cuadran antes y después, ningún choque y ninguna celda sin dueño.
+
+### 3.10 Las pruebas que ya existían y cambian a propósito
+
+Tres, en `test/t147_listado_test.dart`, de la entrega 1. Afirmaban la regla que la 10.161 cambia:
+
+| Prueba | Decía | Dice |
+|---|---|---|
+| «COD. vale como CODIGO, y TRANSBORDOS y VACIOS son secciones» | cinco agencias; la fila de «TRANSBORDOS» tiene esa «agencia» | tres entradas (dos agencias y «AGREGADOS»); la fila conserva su agencia y lleva `section` |
+| «el separador se reconoce con espacios, punto y tilde» | bajo una sección, la agencia deja de ser la de arriba | la agencia es la de arriba, salvo «AGREGADOS», y la fila lleva su sección |
+| «lo que guarda la 1.0.2 tiene las mismas claves» | ninguna clave que la 1.0.1 no lea | una sola clave nueva, `section`, que la 1.0.1 y la 1.0.2 ignoran |
+
+Ninguna se afloja en lo demás. **Pido que Yov las mire,** como las de la 2a.
+
+## E2b-4. El caso A09
+
+`tool/t147e2_caso.dart`, con el lector del producto (`build/t147/e2b/caso/caso-2b.json`):
+
+- **Las 184 cifras de la 2a salen iguales, una por una.** Comparé los dos archivos clave por clave: ninguna distinta.
+- La herramienta suma un bloque, `parte2b`, con lo de esta parte:
+
+| Qué | Cifra |
+|---|---|
+| Agencias | **2**, y «AGREGADOS» aparte |
+| La primera agencia | **334**: 141 sin sección, 6 de «TRANSBORDOS» y 187 de «VACIOS» |
+| La segunda | **53** |
+| «AGREGADOS» | **61** |
+| Filas con POT y POD distintos | **169** que se cargan y 33 canceladas (las 202 de antes) |
+| Con los seis tipos por elegir | 0 códigos y 0 celdas sin dueño |
+| Elegidos los seis | 11 celdas en 6 códigos, como en la 2a |
+| El lápiz, 40HC de 45G1 a 45G0 | queda 45G0 con «también» 45G1; **14 de 14 grupos cuadran,** antes y después; ningún choque y ninguna celda sin dueño |
+| Matrículas repetidas en el plan del caso | 0: el caso no trae ninguna |
+
+## E2b-5. En pantalla
+
+### 5.1 El recorrido del banco
+
+Dos escenarios nuevos en el conductor (`tool/t147_conductor.dart`), con toques de verdad: `recorrido2b` y `repetida2b`. El instrumento de la medición no se tocó. Cada corrida deja sus capturas y, en `pasos.jsonl`, lo que el banco leyó en cada paso. Todo en `build/t147/e2b/recorrido/`.
+
+| Corrida | Escenario | Capturas | Errores de Flutter |
+|---|---|---:|---:|
+| Web · 360 × 800 · día | `recorrido2b` | 10 | 0 |
+| Web · 360 × 800 · noche | `recorrido2b` | 10 | 0 |
+| Web · 1366 × 690 · día | `recorrido2b` | 10 | 0 |
+| Web · 1366 × 690 · noche | `recorrido2b` | 10 | 0 |
+| Windows · 1366 × 690 · día | `recorrido2b` | 10 | 0 |
+| Web · 360 × 800 · día, con el listado | `repetida2b` | 7 | 0 |
+| Web · 1366 × 690 · noche, sin listado | `repetida2b` | 7 | 0 |
+| Windows · 360 × 800 · noche, con el listado | `repetida2b` | 7 | 0 |
+
+- Las cuatro corridas Web de `recorrido2b` son del banco final: las repetí después del último cambio.
+- Chrome, solo contra `127.0.0.1`, con un perfil nuevo por corrida. Windows, con la compilación del banco copiada a `%TEMP%` y su almacén ahí.
+
+**Lo que dicen las ocho, igual en todas:**
+
+| Paso | Lo que se ve |
+|---|---|
+| El resumen | «448 filas en 2 agencias · 408 para cargar: 135 llenos y 273 vacíos» · «AGENCIA 1 S.A.: 334 (TRANSBORDOS 6, VACIOS 187)» · «AGENCIA 2 S.A.: 53» · «AGREGADOS: 61» · «169 filas que se cargan traen POT y POD distintos (y 33 canceladas): el cruce con el plan usa el POT…» |
+| Con seis tipos por elegir | La tarjeta de las celdas sin dueño **no está** |
+| Elegidos | «Celdas reservadas que ningún tipo del listado llena (11)», seis códigos, y en los seis las tres fichas van en una línea, también a 360 dp |
+| El lápiz | 40HC queda «45G0», «También llena: 45G1»; 14 de 14 grupos cuadran; ningún choque |
+| El vacío cancelado | «Asignar vacío»: el aviso «Pide motivo: el listado lo marca cancelado («CANCELADO»)…», «Motivo (obligatorio)» y «Confirmar carga», a la vista sin desplazar |
+| Una celda de otro grupo | lo mismo, con «Pide motivo: La reserva 018-10-88 es de otro grupo…» |
+| El lleno cancelado | «Confirmar carga»: lo mismo. Se escribe el motivo y se confirma |
+| El detalle de la celda | «OR 1 · ‹matrícula› se cargó y el listado lo marca cancelado («CANCELADO»).», sin la frase del detalle |
+| El avance | «Listado: 41 filas canceladas (38 llenos y 3 vacíos): 40 no se cargan y 1 está a bordo.» |
+| La salida | «1 conflicto vigente. Revisa el avance de la operación…» |
+
+**El motivo, a 360 × 800, en píxeles desde arriba** (`pasos.jsonl`, pasos `motivo-…`):
+
+| Caso | El aviso | El motivo | La hora | «Confirmar carga» |
+|---|---|---|---|---|
+| El vacío cancelado | 266 a 350 | 555 a 632 | 644 | 704 a 752 |
+| Una celda de otro grupo | 341 a 467 | 538 a 615 | 627 | 704 a 752 |
+| El lleno cancelado | 277 a 361 | 432 a 509 | 521 | 704 a 752 |
+
+- En los tres, el banco comprueba que el aviso se ve y que el dedo alcanza el campo y el botón. A 1366 × 690 y en Windows, igual.
+- En la captura del vacío cancelado hay **dos avisos:** la celda de la que partió la hoja era de otro grupo. El campo queda debajo de los dos. Entre los avisos y el campo va la línea del peso de la pila, que es parte del mismo panel.
+- **Las capturas de GLM** (`glm-a-03` y `glm-b-04`) son el «antes»: el aviso y «Confirmar carga» apagado, sin el campo.
+
+**La matrícula repetida, en el equipo que opera solo** (`repetida2b`):
+
+| Paso | Lo que se ve |
+|---|---|
+| Lista | «Matrículas repetidas en EQD: 1 contenedor…», como en la 1.0.2 |
+| Carga, bahía 18 | La ficha «Plan con 1 matrícula repetida: una carga no se puede registrar. Pide el plan corregido.», en su línea, sobre el resumen. «9 contenedores · 73 celdas reservadas · **148.2 t**». 407 pendientes |
+| La primera celda, 018-01-82 | «Matrícula repetida» · «El plan trae ‹matrícula› también en 018-00-82. Esta celda no se puede operar hasta abrir el plan corregido.» · «Entendido» |
+| La segunda, 018-00-82 | «Confirmar carga», como cualquier lleno. Se confirma: cargado, 406 pendientes, ningún conflicto |
+| La salida | «‹matrícula›: el plan de carga lo trae en 2 celdas (018-01-82 y 018-00-82). Un contenedor solo puede estar en una: la salida escribe un solo grupo para esa matrícula. Pide el plan corregido.» |
+
+- **Con el listado importado y sin él dice lo mismo.** En Windows, también.
+- El plan repetido es sintético: sale del caso cambiando un solo `EQD`, y vive en `%TEMP%`.
+
+### 5.2 La nube, contra el emulador de Firebase
+
+El emulador de T-143 (`tool/t143_emulador.py`: proyecto `demo-t143`, Auth 9399 y Firestore 8383, las reglas de T-130 sin tocar, dos cuentas sintéticas) y el banco de T-130 (`tool/t130_emu_main.dart`), compilado desde la 2b y servido en `127.0.0.1:5943` desde `%TEMP%`. Lo conduje con `tool/t143_control_web.py`, como oficina, a 1920 × 1080. **Nunca producción ni `baystream-privado`.** Diez capturas en `build/t147/e2b/nube/`.
+
+| Paso | Lo que se ve | Captura |
+|---|---|---|
+| Se abre el plan repetido y se va a «Nube y cuenta» | «Publicar operación» apagado, y debajo: «No se publica: el plan de carga («PLAN_REPETIDO.edi») trae 1 matrícula en más de una celda: ‹matrícula› en 018-01-82 y 018-00-82. Un contenedor solo puede estar en una. Pide el plan corregido a quien lo hizo y ábrelo de nuevo.» | `01` |
+| Se abre el plan corregido (el del caso) | Reemplaza al anterior en la misma operación; «Publicar operación» se enciende; «Operación publicada.» | `02` |
+| «Cerrar operación» | «Publicada y cerrada» · «Se sigue viendo, solo para mirar. Para trabajar esta escala otra vez, empieza una operación nueva con sus planos.» · **«Empezar una operación nueva»** | `03` |
+| Se pulsa | El diálogo: «…los planos de la operación cerrada: el plan de carga («CORPUS_A09.edi»). El listado de la agencia se importa de nuevo. Lo registrado se queda en la operación cerrada, que deja de verse en este equipo.» | `04` |
+| «Empezar» | «Operación nueva, en este dispositivo. Publícala para que el muelle la reciba.» · «Solo en este dispositivo» · «Es una operación nueva: la anterior de esta escala se cerró el 21-nov, 11:09 y lo registrado se quedó en ella.» · «Publicar operación» | `05` |
+| «Publicar operación» | **«Operación publicada.»:** la nube acepta la segunda operación del mismo buque, viaje y puerto | `06` |
+| Se cierra esa, y se abre **otro archivo:** un plano de llegada del mismo buque y viaje | Entra sin preguntar, como operación nueva: «Solo en este dispositivo» · «Es una operación nueva: la anterior de esta escala se cerró el 21-nov, 11:10…» · «Fuentes: llegada» | `07` |
+| Se publica | «Operación publicada.» | `08` |
+| Se abre el plan repetido, que es el plan de carga que le falta | El previo, con «Confirmar» | `09` |
+| «Confirmar» y «Confirmar y ver el plano» | «Agregar el plan de carga a la operación publicada» · «Se cargan 137 contenedores y 271 celdas reservadas; se descargan 0.» · **«No se agrega: el plan de carga («PLAN_REPETIDO.edi») trae 1 matrícula en más de una celda…»** · «Agregar a la operación VIAJE009A», apagado | `10` |
+
+- Con esto quedan a la vista los dos casos de P8 a): **con el mismo archivo** (pasos 3 a 6) y **con otro** (pasos 7 y 8).
+- El plano de llegada es sintético: la cabecera del caso y tres de sus llenos, con los puertos cambiados. Vive en `%TEMP%`.
+- Al terminar apagué el emulador y el control. Lo de `%TEMP%` que sale del caso lo borro al cerrar la entrega.
+
+## E2b-6. La medición
+
+El instrumento de la entrega 1 (`escenario=medir`, sin tocarlo), el caso A09, la celda 018-10-88, 360 × 800, Chrome y **la CPU frenada ÷ 4**. Tres bancos Web, compilados con el mismo comando, cada uno en su copia: `v1.0.2` (`99995db`), la punta de la 2a (`912daac`) y la 2b. Milisegundos, de soltar el dedo a la pantalla dibujada. Cinco corridas de cada uno, **alternadas** (1.0.2, 2a, 2b, 1.0.2, …). `build/t147/e2b/medicion.json`.
+
+**Serie 1 · El mismo perfil de Chrome para los tres,** con la operación preparada una vez, con la 1.0.2:
+
+| | 1.0.2 | 2a | 2b |
+|---|---|---|---|
+| Tocar la celda | 161 · 159 · 154 · 160 · 153 | 213 · 158 · 155 · 156 · 160 | 135 · 134 · 132 · 130 · 142 |
+| mediana | **159** | **158** | **134** |
+| El teclado | 664 · 673 · 661 · 705 · 656 | 985 · 666 · 666 · 642 · 694 | 381 · 378 · 379 · 367 · 384 |
+| mediana | **664** | **666** | **379** |
+| Una tecla | 95 · 96 · 98 · 97 · 94 | 138 · 131 · 97 · 93 · 100 | 84 · 74 · 74 · 72 · 74 |
+| mediana | **96** | **100** | **74** |
+
+**Serie 2 · Un perfil propio por banco,** cada uno con la operación que preparó su propio código:
+
+| | 1.0.2 | 2a | 2b |
+|---|---|---|---|
+| Tocar la celda | 222 · 208 · 229 · 215 · 203 | 211 · 211 · 209 · 209 · 214 | 168 · 186 · 168 · 165 · 163 |
+| mediana | **215** | **211** | **168** |
+| El teclado | 1006 · 999 · 1002 · 978 · 989 | 1024 · 1010 · 1005 · 1001 · 996 | 502 · 498 · 491 · 501 · 491 |
+| mediana | **999** | **1005** | **498** |
+| Una tecla | 142 · 141 · 140 · 138 · 140 | 136 · 139 · 144 · 138 · 137 | 98 · 96 · 98 · 98 · 98 |
+| mediana | **140** | **138** | **98** |
+
+**Las dos respuestas.**
+
+1. **Cuánto baja el teclado con la huella:** de 664 a 379 ms en la serie 1 (**43 %**) y de 999 a 498 ms en la serie 2 (**50 %**). Es lo que midió el prototipo de la propuesta (42 %).
+2. **Si la 2a lo dejó más lento que la 1.0.2: no.** 664 contra 666 ms, y 999 contra 1005 ms: menos del 1 %, dentro de lo que varía cada banco de una corrida a otra.
+
+**Lo que explica lo que midió GLM.**
+
+- La máquina tiene dos pasos. **La serie 2 entera salió una vez y media más lenta que la serie 1,** para los tres bancos por igual: la 1.0.2, preparada igual en las dos, dio 664 ms en una y 999 ms en la otra.
+- En la serie 1, la primera corrida de la 2a cayó en el paso lento: 985 ms, donde las otras cuatro dieron de 642 a 694.
+- Los 770, 899 y 916 ms que GLM midió con la 2a, contra 786 a 795 con la 1.0.2, tienen esa forma: unas corridas en un paso y otras en el otro. **Por eso hay que alternar** y mirar la mediana.
+- **No sé qué cambia el paso de la máquina.** La serie 1 la lancé en primer plano y la serie 2, en segundo; no lo comprobé más allá de eso.
+
+**La hoja, al tocar la celda, no quedó más lenta que en la 1.0.2:** 159 ms contra 134 ms en la serie 1 y 215 contra 168 ms en la serie 2. Con la 2a, 158 y 211.
+
+- **No lo medí** en Windows, en un teléfono ni con un plan más grande que el del caso. El teclado del banco es simulado, como en la entrega 1.
+
+## E2b-7. El corpus, antes y después
+
+`tool/t147_corpus.dart`, con las dos carpetas y los dos listados. Comparé la lectura de la 2b con la de la 2a y con la de `v1.0.2` (`build/t147/e2b/corpus/`):
+
+| Archivo | Contra la 2a | Contra `v1.0.2` |
+|---|---|---|
+| Los trece `.edi` | **igual** | **igual** |
+| `LISTADO_A08.xlsx` contra A08 | **igual** | **igual** |
+| `LISTADO_A09.xlsx` | distinto: de 5 «agencias» a 3 entradas (dos agencias y «AGREGADOS»), y las filas guardadas, que ahora llevan `section` | lo de la 2a, más esto |
+
+- Del listado del caso **no cambian** ni las equivalencias ni el cruce: su huella es la de la 2a.
+- **O-147-5 no cambia la lectura de ningún `.edi` del corpus:** ninguno trae un grupo sin matrícula con la posición mal formada.
+- `LISTADO_A08.xlsx` no trae secciones.
+
+## E2b-8. Las validaciones
+
+Todo después del último cambio (`build/t147/e2b/registros/`):
+
+| Dónde | `flutter analyze` | `flutter test`, en una sola corrida |
+|---|---|---|
+| Esta carpeta | **0** incidencias (`final-analyze.log`) | **2412 de 2412,** sin omitidas (`final-suite.log`) |
+| Copia limpia: `912daac` más los 31 archivos de la 2b, en `%TEMP%\t147-e2b\limpia` | **0** (`limpia-analyze.log`) | **2412 de 2412** (`limpia-suite.log`) |
+
+- El piso era 2357. Suben 55: 17 de P5, 11 de P8 a), 2 de P6, 10 de O-147-4 y O-147-5, y 15 de O-147-7 a O-147-10.
+- Ningún `// ignore:`, ninguna dependencia nueva. **`pubspec.yaml` y `pubspec.lock` no cambian:** la versión sigue en `1.0.3+12`.
+- No toqué `lib/main.dart`, los congelados, ni `vessel_overview_page.dart`, `vessel_providers.dart` o `loading_operation_provider.dart`.
+- Una corrida intermedia de la suite dio 2411 de 2412: falló una prueba de T-130 que cubre agregar un plan a una operación que se cerró mientras tanto. Tenía razón ella; lo corregí en el código (E2b-3.2) y la prueba quedó como estaba.
+
+## E2b-9. Entre versiones
+
+**La 1.0.2 abre lo que guarda la 2b.** Dos comprobaciones, corridas de verdad (`build/t147/e2b/entre-versiones/`):
+
+- **En pantalla:** el banco de `v1.0.2` abrió el perfil de Chrome en que el banco de la 2b había guardado la operación con su listado. Entró a Carga, tocó la celda y la hoja ofreció sus filas (OR 250, 251, 252…), sin ningún error de Flutter.
+- **Con el código:** el listado del caso, guardado por la 2b con «también llena» declarado, leído con el código de `v1.0.2`. Da **lo mismo que dio con la 2a,** cifra por cifra: 448 filas, 135 llenos que cruzan, 23 grupos.
+- **Lo único nuevo que se guarda es la clave `section`,** en 254 filas del caso. La 1.0.2 la ignora y ve **3** entradas en el lugar de las agencias (334, 61 y 53), donde antes veía 5.
+- **La operación nueva no guarda nada distinto:** es una operación como las demás, con otro identificador.
+
+**Lo que no se opera con versiones mezcladas:**
+
+| Qué | Por qué |
+|---|---|
+| **La operación nueva de una escala que ya se cerró** | Un equipo en la 1.0.2 que tuvo la cerrada puede seguir encontrándola a ella y no a la nueva, aunque se una. Para trabajar la nueva, todos los equipos en la 1.0.3. **Leído en el código de la 1.0.2; no lo corrí** con un muelle en la 1.0.2 contra el emulador |
+| **El plan con una matrícula repetida** | La regla vive en el cliente: una oficina en la 1.0.2 todavía puede publicarlo o agregarlo. La 1.0.3 que se une lo enseña con su ficha |
+| Lo de la 2a | Sigue igual: lo que la 1.0.2 no lee de «también llena» y de las canceladas (E2a-9) |
+
+## E2b-10. `DESIGN.md` y el manual
+
+### 10.1 `DESIGN.md`
+
+**No lo edité.** El texto que suma la 2b a 17.7, para que Yov lo ponga al mezclar:
+
+> **17.7, parte 2b (T-147; 10.161 a 10.163)**
+>
+> **La matrícula repetida.** Un plan con una matrícula en más de una celda no entra a la nube. En «Nube y cuenta», «Publicar operación» queda apagado y debajo va el motivo, en el color del texto: «No se publica: el plan de carga («…») trae 1 matrícula en más de una celda: … en 018-01-82 y 018-00-82. Un contenedor solo puede estar en una. Pide el plan corregido a quien lo hizo y ábrelo de nuevo.» El diálogo «Agregar el plan…» dice lo mismo con «No se agrega» y apaga su botón. En Carga y en Descarga, una ficha en el color de Revisar (14.7): «Plan con 1 matrícula repetida: una carga no se puede registrar. Pide el plan corregido.» En el teléfono va en una línea propia, encima del resumen recogido. La celda que la operación no guarda se dibuja con su contenedor y, al tocarla, abre un diálogo «Matrícula repetida» con «Entendido». El BAPLIE de salida lo dice en «Avisos de la salida».
+>
+> **Después de cerrar.** La operación cerrada se sigue viendo, solo para mirar. En «Nube y cuenta» dice «Se sigue viendo, solo para mirar. Para trabajar esta escala otra vez, empieza una operación nueva con sus planos.» y ofrece un botón lleno, «Empezar una operación nueva», que pide confirmar. La operación nueva lo dice con una línea: «Es una operación nueva: la anterior de esta escala se cerró el … y lo registrado se quedó en ella.» Al muelle no se le ofrece: se le dice que se una a la que publique la oficina. Abrir otro archivo de la misma escala, con la operación cerrada, empieza una nueva sin preguntar.
+>
+> **El listado de la agencia.** Las secciones no son agencias: «N filas en M agencias», y cada agencia con las suyas entre paréntesis, «AGENCIA: 334 (TRANSBORDOS 6, VACIOS 187)». «AGREGADOS» va en su línea y no cuenta como agencia. Con filas canceladas, la línea del POT dice «169 filas que se cargan traen POT y POD distintos (y 33 canceladas)». La tarjeta «Celdas reservadas que ningún tipo del listado llena» sale cuando ya no queda ningún tipo por elegir, y sus tres fichas son «Sí», «Otro tipo…» y «No», en una línea a 360 dp. Con el lápiz, el código que deja de ser el principal de un tipo se queda en «También llena» si el plan lo respalda y ningún otro tipo lo tiene de principal.
+>
+> **La carga que pide motivo.** El campo «Motivo (obligatorio)» va justo debajo del aviso que lo pide, antes de la hora, la fecha y el marchamo, y el diálogo lo lleva a la vista. Su ayuda es «Viaja con el movimiento.» En el detalle de la celda, la línea del conflicto no manda al detalle de la celda.
+>
+> **El avance y la salida.** Con una cancelada a bordo: «Listado: 41 filas canceladas (38 llenos y 3 vacíos): 40 no se cargan y 1 está a bordo.» En la salida, «1 conflicto vigente», en singular.
+>
+> **El lector de BAPLIE.** Un grupo sin matrícula con la posición mal formada suma un aviso de posición: «Celda reservada sin matrícula: «…»».
+
+### 10.2 Los pasos del manual que cambian (no lo edité)
+
+| Sección | Qué cambia con la 2b |
+|---|---|
+| 3.2 Abrir un BAPLIE | El aviso «Celda reservada sin matrícula» entre las posiciones mal formadas; qué quiere decir «Matrículas repetidas» para la operación |
+| 5.2 Nube y cuenta | Un plan con una matrícula repetida no se publica ni se agrega; «Empezar una operación nueva» después de cerrar, y qué pasa al abrir otro archivo de una escala cerrada |
+| 7.3 El modo Carga y 7.7 El modo Descarga | La ficha del plan con una matrícula repetida y la celda que responde |
+| 7.8 El listado de la agencia | Las agencias con sus secciones; la tarjeta de las celdas sin dueño, que sale al elegir el último tipo, con «Sí», «Otro tipo…» y «No»; el lápiz, que conserva el código anterior como «también llena» |
+| 7.9 Cargar por OR desde el muelle | El motivo, justo debajo del aviso que lo pide |
+| 7.11 Cerrar la operación | La cerrada se sigue viendo; cómo se empieza otra |
+| 8.2 El BAPLIE de salida | El aviso de la matrícula repetida; «1 conflicto vigente» |
+| 10. Mensajes y qué hacer | Los mensajes nuevos, con su acción |
+
+## E2b-11. Para quien acepte
+
+Todo corre con el semáforo. `<corpus>` es la carpeta del corpus; el caso nunca se copia al repositorio.
+
+**1. Las rojas (E2b-2).** En una copia de `v1.0.2` de fuera del repositorio, copiar `test/support/t147e2_support.dart` y los cuatro archivos `test/t147e2b_repetida_test.dart`, `test/t147e2b_otra_operacion_test.dart`, `test/t147e2b_huella_test.dart` y `test/t147e2b_listado_test.dart`, y correrlos: fallan 26 de 40. En una copia de `912daac`, copiar `test/t147e2b_revision_test.dart`: fallan 12 de 15. Las dos copias que usé siguen en `%TEMP%\t147-e2b\v102` y `%TEMP%\t147-e2b\p2a`.
+
+**2. Las cifras del caso (E2b-4):**
+
+```powershell
+dart run tool/t147e2_caso.dart --plan "<corpus>\CORPUS_A09.edi" --listado "<corpus>\LISTADO_A09.xlsx" --salida build/t147/e2b/caso/otra.json
+```
+
+Todo menos `parte2b` tiene que ser igual a `build/t147/e2a/caso/caso-2a.json`.
+
+**3. El corpus (E2b-7):** `tool/t147_corpus.dart` como en la entrega 1, y `--comparar` contra `build/t147/e2a/corpus/despues.json`. Solo cambia `LISTADO_A09.xlsx`.
+
+**4. El banco y los dos recorridos (E2b-5):**
+
+```powershell
+flutter build web --release --no-pub --no-web-resources-cdn -t tool/t147_main.dart --output=build/t147/e2b/banco/web
+```
+
+```powershell
+python -X utf8 tool/t147e2_listado_revisado.py --origen "<corpus>\LISTADO_A09.xlsx" --salida "$env:TEMP\t147-e2b\caso\LISTADO_A09_REVISADO.xlsx" --orden 1
+```
+
+```powershell
+python -X utf8 tool/t147_web.py --web build/t147/e2b/banco/web --caso "<corpus>" --caso2 "$env:TEMP\t147-e2b\caso" --salida build/t147/e2b/recorrido/otra-360-dia --perfil otra-360-dia --perfil-nuevo --ancho 360 --alto 800 --consulta "escenario=recorrido2b&plan=CORPUS_A09.edi&listado=LISTADO_A09.xlsx&listado2=LISTADO_A09_REVISADO.xlsx&escala=GTSTC&tema=dia&bahia=18&prefijo=otra-&elegir=tipo:45HC=L5G1,tipo:20OT=22U1,tipo:40FF=42P3,tipo:40HF=45P3,tipo:40OT=42U1,tipo:40RF=42R1"
+```
+
+- `escenario=repetida2b` con `plan=` un plan con una matrícula en dos celdas, en la carpeta de `--caso2`. El mío sale del caso cambiando un solo `EQD` (`build/t147/e2b/herramientas/plan_repetido.py.txt`). Con `listado=` vacío, lo corre sin listado.
+- Cada corrida va en su carpeta y con su perfil. Cambiar `--ancho 1366 --alto 690` y `tema=noche` para las otras combinaciones.
+- `pasos.jsonl` dice, en cada paso, lo que el banco leyó: las agencias, si la tarjeta sale, si las tres fichas van en una línea, el lápiz, y si el aviso, el motivo y «Confirmar carga» están a la vista.
+
+**5. La medición (E2b-6):** los tres bancos se compilan con el mismo comando, en la copia de cada versión. El guion que usé está en `build/t147/e2b/herramientas/medir2b.sh.txt`: prepara y después alterna `escenario=medir` con `--cpu 4`.
+
+**6. La nube (E2b-5):** contra el emulador, nunca contra producción.
+
+```powershell
+python -I tool/t143_emulador.py iniciar
+```
+
+```powershell
+flutter build web --release --no-pub --no-web-resources-cdn -t tool/t130_emu_main.dart --dart-define=T130_HOST=127.0.0.1 --dart-define=T130_PROJECT=demo-t143 --output=build/t147/e2b/web-emu
+```
+
+Servir esa carpeta en `127.0.0.1:5943`, levantar `python tool/t143_control_web.py servidor` y conducirlo con `tool/t143_banco.py`, como en T-143.
+
+**Lo que conviene mirar con ojos propios:**
+- las tres decisiones de E2b-3.2: el listado no viaja a la operación nueva, la cerrada deja de verse al empezar otra, y cómo se elige la que se ve;
+- las tres pruebas de la entrega 1 que cambian (E2b-3.10);
+- la ayuda del motivo, que acorté (E2b-3.8);
+- el texto de O-147-5, que no es el de la propuesta (E2b-3.5).
+
+## E2b-12. Lo que no hice o no pude
+
+- **Descarga con la matrícula repetida, en pantalla.** Está probada con sus pruebas de widget (la ficha y la primera celda que responde, a 360 dp), pero no la recorrí en el banco: el caso no trae plano de llegada.
+- **El teléfono de verdad.** Todo lo de 360 × 800 es la Web del banco en Chrome y la app de Windows a ese tamaño. No toqué el Honor.
+- **Un muelle en la 1.0.2 frente a la operación nueva.** Lo que digo en E2b-9 sale de leer su código.
+- **La nube, a 360 × 800 y de noche.** El recorrido del emulador fue como oficina, a 1920 × 1080 y de día.
+- **La medición en Windows, en un teléfono y con un plan más grande.**
+- **Qué cambia el paso de la máquina entre una serie y otra** (E2b-6). Lo vi y lo cuento; no lo expliqué.
+- **Un selector de operaciones de la misma escala.** Al empezar una operación nueva, la cerrada deja de verse en ese equipo (E2b-3.2).
+- **`DESIGN.md`, el manual, `SPRINT-4.md`, `AGENTS.md`, `CLAUDE.md` y `README.md`:** no los edité. El texto para `DESIGN.md` y los pasos del manual están en E2b-10.
+- **Git, las Release de publicación y publicar:** no ejecuté ninguna escritura de Git ni `git status`, no compilé ninguna Release de publicación y no publiqué nada.
+- En la cuenta de Carlos no abrí la BayStream instalada ni toqué `%LOCALAPPDATA%\BayStream` ni la carpeta de la MSIX.
+
+**Una cosa que vi y no es de esta parte:** en «Asignar vacío», a 360 dp, la línea «Reservas libres: primero las de su grupo.» se monta sobre el rótulo de «Celda reservada». Ya estaba en la 2a. No lo toqué.
+
+## E2b-13. Los archivos
+
+**`lib/`, modificados (22):**
+
+- `lib/features/vessel/data/services/baplie_parser_service.dart`
+- `lib/features/vessel/data/services/export_list_parser_service.dart`
+- `lib/features/vessel/domain/entities/export_list.dart`
+- `lib/features/vessel/domain/entities/vessel_voyage.dart`
+- `lib/features/vessel/domain/services/departure_baplie_writer.dart`
+- `lib/features/vessel/domain/services/discharge_progress.dart`
+- `lib/features/vessel/domain/services/export_list_cross_checker.dart`
+- `lib/features/vessel/domain/services/loading_operation.dart`
+- `lib/features/vessel/domain/services/operation_sources.dart`
+- `lib/features/vessel/domain/services/operation_state_deriver.dart`
+- `lib/features/vessel/presentation/pages/cloud_page.dart`
+- `lib/features/vessel/presentation/pages/departure_baplie_page.dart`
+- `lib/features/vessel/presentation/pages/export_list_import_page.dart`
+- `lib/features/vessel/presentation/pages/operation_progress_page.dart`
+- `lib/features/vessel/presentation/providers/discharge_provider.dart`
+- `lib/features/vessel/presentation/providers/export_list_providers.dart`
+- `lib/features/vessel/presentation/providers/sync_providers.dart`
+- `lib/features/vessel/presentation/widgets/bay_plan_view.dart`
+- `lib/features/vessel/presentation/widgets/dialogo_agregar_plan.dart`
+- `lib/features/vessel/presentation/widgets/loading_controls.dart`
+- `lib/features/vessel/presentation/widgets/loading_plan_controls.dart`
+- `lib/features/vessel/presentation/widgets/resumen_del_modo.dart`
+
+**`lib/`, nuevo (1):** `lib/features/vessel/domain/services/repeated_containers.dart`
+
+**`test/`, nuevos (5):** `test/t147e2b_repetida_test.dart`, `test/t147e2b_otra_operacion_test.dart`, `test/t147e2b_huella_test.dart`, `test/t147e2b_listado_test.dart` y `test/t147e2b_revision_test.dart`
+
+**`test/`, modificado a propósito (1):** `test/t147_listado_test.dart` (E2b-3.10)
+
+**`tool/`, modificados (2):** `tool/t147_conductor.dart` (los escenarios `recorrido2b` y `repetida2b`; `medir` no se tocó) y `tool/t147e2_caso.dart` (el bloque `parte2b`)
+
+**`docs/`:** este informe, `docs/T147-RESULTADOS.md`
+
+- **`pubspec.yaml` y `pubspec.lock` no cambian.**
+- La evidencia, en `build/t147/e2b/` (no se versiona): `registros/`, `caso/`, `corpus/`, `recorrido/`, `nube/`, `medicion/` con `medicion.json`, `entre-versiones/`, `herramientas/` y los bancos.
+- Fuera del repositorio quedan `%TEMP%\t147-e2b\v102` y `%TEMP%\t147-e2b\p2a`, las copias de las rojas, y `%TEMP%\t147-e2b\limpia`. Lo que salía del caso (la revisión del listado, el plan repetido, el plano de llegada, el listado guardado y los perfiles de Chrome) lo borré.
+
+## E2b-14. Git (lo ejecuta Carlos)
+
+```powershell
+git add -- lib/features/vessel/data/services/baplie_parser_service.dart
+git add -- lib/features/vessel/data/services/export_list_parser_service.dart
+git add -- lib/features/vessel/domain/entities/export_list.dart
+git add -- lib/features/vessel/domain/entities/vessel_voyage.dart
+git add -- lib/features/vessel/domain/services/departure_baplie_writer.dart
+git add -- lib/features/vessel/domain/services/discharge_progress.dart
+git add -- lib/features/vessel/domain/services/export_list_cross_checker.dart
+git add -- lib/features/vessel/domain/services/loading_operation.dart
+git add -- lib/features/vessel/domain/services/operation_sources.dart
+git add -- lib/features/vessel/domain/services/operation_state_deriver.dart
+git add -- lib/features/vessel/domain/services/repeated_containers.dart
+git add -- lib/features/vessel/presentation/pages/cloud_page.dart
+git add -- lib/features/vessel/presentation/pages/departure_baplie_page.dart
+git add -- lib/features/vessel/presentation/pages/export_list_import_page.dart
+git add -- lib/features/vessel/presentation/pages/operation_progress_page.dart
+git add -- lib/features/vessel/presentation/providers/discharge_provider.dart
+git add -- lib/features/vessel/presentation/providers/export_list_providers.dart
+git add -- lib/features/vessel/presentation/providers/sync_providers.dart
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/widgets/dialogo_agregar_plan.dart
+git add -- lib/features/vessel/presentation/widgets/loading_controls.dart
+git add -- lib/features/vessel/presentation/widgets/loading_plan_controls.dart
+git add -- lib/features/vessel/presentation/widgets/resumen_del_modo.dart
+git add -- test/t147_listado_test.dart
+git add -- test/t147e2b_repetida_test.dart
+git add -- test/t147e2b_otra_operacion_test.dart
+git add -- test/t147e2b_huella_test.dart
+git add -- test/t147e2b_listado_test.dart
+git add -- test/t147e2b_revision_test.dart
+git add -- tool/t147_conductor.dart
+git add -- tool/t147e2_caso.dart
+git add -- docs/T147-RESULTADOS.md
+git commit -m "Sprint 4: T-147, entrega 2, parte 2b: la matricula repetida no entra a la nube, otra operacion despues de cerrar, la huella del viaje, las secciones del listado, el motivo a la vista y el lapiz"
+git push origin t147-piloto4
+```
+
+- Los tres archivos de `windows/flutter/` siguen modificados solo de fin de línea: no entran.
+- `docs/T147-RESULTADOS.md` es mi informe de la tarea, por su nombre exacto.
+
+## E2b-15. En tres líneas
+
+1. Un plan con una matrícula en dos celdas ya no entra a la nube, y en el equipo solo se opera con el defecto a la vista; después de cerrar una operación se puede empezar otra de la misma escala, con el mismo archivo o con otro.
+2. La huella del viaje se calcula una vez y el teclado tarda la mitad; el listado cuenta dos agencias y no cinco; el motivo queda a la vista en el teléfono; el lápiz conserva el código anterior, con una salvedad.
+3. Suite 2412 de 2412 y `analyze` en cero, aquí y en copia limpia; 26 de 40 rojas contra `v1.0.2` y 12 de 15 contra la 2a; el caso, igual que en la 2a.
+
+## E2b-16. Para Yov
+
+> Yov: está la parte 2b de la entrega 2 de T-147, en `docs/T147-RESULTADOS.md` («Entrega 2 · Parte 2b», E2b-0 a E2b-17), sin commit. Los nueve puntos, en orden, cada uno con su roja guardada: 26 de 40 contra `v1.0.2` y 12 de 15 contra `912daac`. Suite 2412 de 2412 (2357 más 55) y `analyze` en cero, aquí y en copia limpia. `pubspec` no cambia.
+>
+> La medición, alternada y con la CPU ÷ 4: el teclado baja de 664 a 379 ms con la huella (y de 999 a 498 en la otra serie), y la 2a no quedó más lenta que la 1.0.2 (664 contra 666; 999 contra 1005). Lo de GLM es el paso de la máquina: una serie entera me salió una vez y media más lenta para los tres bancos, y una corrida suelta de la 2a, también (E2b-6).
+>
+> Cuatro cosas para que mires:
+> 1. **P8 a)** (E2b-3.2): el botón es «Empezar una operación nueva», en «Nube y cuenta». Tres decisiones mías, que Carlos ya confirmó: la operación nueva lleva los planos y no el listado; al empezarla, la cerrada deja de verse en ese equipo; y se distingue por una fecha posterior al cierre, sin guardar nada nuevo. Con otro archivo, la nueva nace sola.
+> 2. **O-147-10** (E2b-3.9): vi un caso en que la regla estorbaba, lo pregunté antes de programar y Carlos eligió «con la salvedad»: el código anterior no se queda si otro tipo ya lo tiene de principal.
+> 3. **Tres pruebas de la entrega 1 cambian a propósito** (E2b-3.10), por la 10.161.
+> 4. **Dos textos que no son los de la propuesta:** el aviso de O-147-5 es «Celda reservada sin matrícula: «…»», para que la 1.0.2 lo cuente como caso; y la ayuda del motivo quedó en «Viaja con el movimiento.» (E2b-3.5 y 3.8).
+>
+> La nube se miró contra el emulador (`demo-t143`), con diez capturas en `build/t147/e2b/nube/`. Lo que no hice está en E2b-12: Descarga con la repetida en pantalla, el Honor, y un muelle en la 1.0.2 frente a la operación nueva.
+
+## E2b-17. Las horas del reloj
+
+| Tramo | De | A |
+|---|---|---|
+| Paso 0, lectura y diseño de P5 y P8 a) | 09:23 | 09:32 |
+| Programar los nueve puntos, con sus pruebas | 09:32 | 10:19 |
+| La suite, las copias, las rojas, el corpus y el caso | 10:19 | 10:29 |
+| Los bancos y los recorridos Web | 10:29 | 10:40 |
+| La medición, dos series | 10:40 | 11:02 |
+| Windows, el emulador y la nube | 11:02 | 11:12 |
+| Las validaciones finales y el informe | 11:12 | 11:23 |
+
+**Unas dos horas de reloj,** contra las 7.5 que estimé en la propuesta para menos puntos. P8 a), que estimé en 2.5 horas, salió en menos de una.

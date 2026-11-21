@@ -352,10 +352,20 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
     final plan = _plan;
     final code = planCode.trim().toUpperCase();
     if (plan == null || code.isEmpty) return;
+    // O-147-10: el código que deja de ser principal se queda como «también»,
+    // salvo que otro tipo del listado ya lo tenga de principal.
+    bool takenByOther(String? former) =>
+        former != null &&
+        state.proposals.any((o) =>
+            o.kind == EquivalenceKind.type &&
+            o.listCode != listCode &&
+            o.planCode == former);
     state = _withCrossCheck(
         state.copyWith(proposals: [
           for (final p in state.proposals)
-            p.kind == kind && p.listCode == listCode ? p.choose(code) : p,
+            p.kind == kind && p.listCode == listCode
+                ? p.choose(code, keepFormer: !takenByOther(p.planCode))
+                : p,
         ]),
         plan);
   }

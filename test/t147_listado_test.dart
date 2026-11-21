@@ -131,17 +131,22 @@ void main() {
       final lista = t147Listado();
       expect(lista.issues, isEmpty);
       expect(lista.rows, hasLength(8));
+      // T-147, entrega 2, parte 2b (O-147-4; 10.161): «TRANSBORDOS» y
+      // «VACIOS» son de la agencia de arriba. Hasta la 1.0.2 la pisaban, y
+      // esta prueba esperaba cinco agencias.
       expect(lista.agencies, {
-        'AGENCIA UNO S.A.': 2,
-        'TRANSBORDOS': 1,
-        'VACIOS': 3,
+        'AGENCIA UNO S.A.': 6,
         'AGENCIA DOS S.A.': 1,
         'AGREGADOS': 1,
       });
       expect(lista.byOrder(1)!.agency, 'AGENCIA UNO S.A.');
-      expect(lista.byOrder(3)!.agency, 'TRANSBORDOS');
-      expect(lista.byOrder(7)!.agency, 'VACIOS');
+      expect(lista.byOrder(1)!.section, isNull);
+      expect(lista.byOrder(3)!.agency, 'AGENCIA UNO S.A.');
+      expect(lista.byOrder(3)!.section, 'TRANSBORDOS');
+      expect(lista.byOrder(7)!.agency, 'AGENCIA UNO S.A.');
+      expect(lista.byOrder(7)!.section, 'VACIOS');
       expect(lista.byOrder(4)!.agency, 'AGENCIA DOS S.A.');
+      expect(lista.byOrder(4)!.section, isNull);
     });
 
     test('el separador se reconoce con espacios, punto y tilde', () {
@@ -165,7 +170,11 @@ void main() {
           _vacio(1, 11, '45G1', 'COTRB', 'LNH'),
         ]));
         expect(lista.issues, isEmpty, reason: seccion);
-        expect(lista.rows.single.agency, isNot('AGENCIA UNO S.A.'),
+        // O-147-4 (10.161): la sección se guarda aparte. Solo «AGREGADOS»
+        // sigue contándose sola, en el lugar de la agencia (10.50).
+        expect(lista.rows.single.section, isNotNull, reason: seccion);
+        expect(lista.rows.single.agency,
+            seccion == 'AGREGADOS' ? 'AGREGADOS' : 'AGENCIA UNO S.A.',
             reason: seccion);
       }
     });
@@ -324,10 +333,19 @@ void main() {
           // Ninguna clave que la 1.0.1 no sepa leer (las de su `fromJson`);
           // `agency` aparece ahora donde antes faltaba, porque el separador
           // «COD.» ya se entiende (R6), y la 1.0.1 la lee.
-          expect(b.keys.toSet().difference(_clavesDeLa101), isEmpty,
+          // T-147, entrega 2, parte 2b (O-147-4; 10.161): `section` es la
+          // única clave que la 1.0.1 y la 1.0.2 no leen. La ignoran, y la
+          // fila les llega con su agencia de verdad.
+          expect(
+              b.keys.toSet().difference({..._clavesDeLa101, 'section'}),
+              isEmpty,
               reason: 'OR ${a['order']}');
-          expect(b.keys.toSet().difference(a.keys.toSet()),
-              anyOf(isEmpty, {'agency'}));
+          expect(
+              b.keys
+                  .toSet()
+                  .difference(a.keys.toSet())
+                  .difference({'agency', 'section'}),
+              isEmpty);
           for (final clave in a.keys) {
             expect(b[clave].runtimeType, a[clave].runtimeType,
                 reason: 'OR ${a['order']}, $clave');

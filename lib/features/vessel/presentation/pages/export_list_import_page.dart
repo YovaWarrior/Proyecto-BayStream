@@ -194,6 +194,13 @@ class _Banner extends StatelessWidget {
 
 String _count(int n, String one, String many) => '$n ${n == 1 ? one : many}';
 
+/// O-147-8 (a) · Cuántas filas traen POT y POD distintos: las que se cargan,
+/// que son las que cuenta la salida, y aparte las canceladas.
+String _potAndPod(int loading, int cancelled) => cancelled == 0
+    ? '${_count(loading, 'fila trae', 'filas traen')} POT y POD distintos'
+    : '${_count(loading, 'fila que se carga trae', 'filas que se cargan traen')} '
+        'POT y POD distintos (y ${_count(cancelled, 'cancelada', 'canceladas')})';
+
 /// «0100282» → «010-02-82».
 String _cell(String? position) => position == null
     ? 'sin posición'
@@ -230,7 +237,10 @@ class _ListSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final agencies = list.agencies;
+    // T-147, entrega 2, parte 2b (O-147-4; 10.161): las secciones no son
+    // agencias, y «AGREGADOS» se cuenta sola.
+    final agencies = list.agencyGroups;
+    final agencyCount = list.agencyCount;
     // T-147, entrega 2 (P1): las filas que el listado cancela no se cargan.
     final cancelled = list.cancelledRows.toList();
     final loading = list.loadRows.toList();
@@ -247,9 +257,9 @@ class _ListSummary extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               cancelled.isEmpty
-                  ? '${list.rows.length} filas en ${agencies.length} agencias · '
+                  ? '${list.rows.length} filas en $agencyCount agencias · '
                       '${list.fulls.length} llenos · ${list.empties.length} vacíos'
-                  : '${list.rows.length} filas en ${agencies.length} agencias · '
+                  : '${list.rows.length} filas en $agencyCount agencias · '
                       '${loading.length} para cargar: '
                       '${_count(loading.where((r) => r.isFull).length, 'lleno', 'llenos')} y '
                       '${_count(loading.where((r) => r.isEmpty).length, 'vacío', 'vacíos')}',
@@ -302,14 +312,17 @@ class _ListSummary extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 4),
-            for (final entry in agencies.entries) Text('${entry.key}: ${entry.value}'),
+            for (final agency in agencies)
+              Text(agency.label,
+                  key: ValueKey('export-list-agency-${agency.name}')),
             // T-147 (10.151, hallazgo 3): con POT y POD distintos, el cruce
             // usa el POT. Se dice aquí, antes de las equivalencias.
-            if (list.rows.any((r) => r.potDiffersFromPod)) ...[
+            // O-147-8 (a): se cuentan las que se cargan, como en la salida.
+            if (loading.any((r) => r.potDiffersFromPod)) ...[
               const SizedBox(height: 8),
               Text(
-                '${_count(list.rows.where((r) => r.potDiffersFromPod).length, 'fila trae', 'filas traen')} '
-                'POT y POD distintos: el cruce con el plan usa el POT, donde '
+                '${_potAndPod(loading.where((r) => r.potDiffersFromPod).length, cancelled.where((r) => r.potDiffersFromPod).length)}: '
+                'el cruce con el plan usa el POT, donde '
                 'el contenedor baja del buque.',
                 key: const ValueKey('export-list-pot'),
               ),
@@ -662,10 +675,15 @@ class _OrphansCardState extends State<_OrphansCard> {
                           label: const Text('Otro tipo…'),
                           onPressed: () => _other(orphan),
                         ),
+                        // O-147-7: «No», a secas, para que las tres fichas
+                        // quepan en una línea a 360 dp. Lo que pasa después
+                        // lo dice la tarjeta arriba, y la línea del código al
+                        // elegirlo.
                         if (!_dismissed.contains(orphan.code))
                           ActionChip(
                             key: ValueKey('orphan-no-${orphan.code}'),
-                            label: const Text('No: piden motivo'),
+                            tooltip: 'No: piden motivo al cargar',
+                            label: const Text('No'),
                             onPressed: () =>
                                 setState(() => _dismissed.add(orphan.code)),
                           ),
@@ -997,7 +1015,8 @@ class _RowsCard extends StatelessWidget {
                       style: theme.textTheme.titleSmall),
                   Text('${r.type} · ${r.pod} · ${r.line}'
                       '${r.type != r.listType || r.pod != r.listCrossPort || r.line != r.listLine ? ' (listado: ${r.listType} · ${r.listCrossPort} · ${r.listLine})' : ''}'
-                      ' · ${r.agency ?? 'sin agencia'}'),
+                      ' · ${r.agency ?? 'sin agencia'}'
+                      '${r.section == null || r.section == r.agency ? '' : ' · ${r.section}'}'),
                   // T-147: el POD es el destino final cuando la fila trae
                   // otro POT; se enseñan los dos, como vienen en el Excel.
                   if (r.potDiffersFromPod)

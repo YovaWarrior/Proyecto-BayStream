@@ -142,7 +142,8 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
             'Las cargas pendientes y los cancelados quedan fuera; lo que todavía no se descargó sigue a bordo.'),
       if (data.state.conflicts.isNotEmpty)
         Text(
-            '${data.state.conflicts.length} conflictos vigentes. Revisa el avance de la operación; '
+            // O-147-8 (c): «1 conflicto vigente», en singular.
+            '${operationCount(data.state.conflicts.length, 'conflicto vigente', 'conflictos vigentes')}. Revisa el avance de la operación; '
             'la salida usa las posiciones físicas registradas.'),
       // T-122, corrección 1 (10.57): los llenos cargados sin fila (H4).
       if (output.withoutRow.isNotEmpty)

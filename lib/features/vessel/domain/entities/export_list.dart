@@ -109,6 +109,13 @@ class ExportListRow extends Equatable {
   final String? seal;
   final String? agency;
 
+  /// T-147, entrega 2, parte 2b (O-147-4; 10.161) · La sección del Excel en
+  /// que viene la fila: «TRANSBORDOS» o «VACIOS», que son de la agencia de
+  /// arriba y no la pisan, o «AGREGADOS», que se cuenta sola (10.50) y por
+  /// eso va también en [agency]. Nula fuera de una sección, y en los listados
+  /// que guardó la 1.0.2, donde la sección quedó escrita como agencia.
+  final String? section;
+
   /// Leídos del texto libre de CONTENIDO.
   final String? imdgClass;
   final List<String> unNumbers;
@@ -134,6 +141,7 @@ class ExportListRow extends Equatable {
     this.hour,
     this.seal,
     this.agency,
+    this.section,
     this.imdgClass,
     Iterable<String> unNumbers = const [],
   })  : type = type ?? listType,
@@ -268,6 +276,7 @@ class ExportListRow extends Equatable {
         hour: hour,
         seal: seal,
         agency: agency,
+        section: section,
         imdgClass: imdgClass,
         unNumbers: unNumbers,
       );
@@ -276,7 +285,7 @@ class ExportListRow extends Equatable {
   List<Object?> get props => [
         sheetRow, order, containerId, status, listType, listPot, listPod, listLine,
         type, pot, pod, line, tareKg, vgmKg, reeferTemperature, origin, contents,
-        hour, seal, agency, imdgClass, unNumbers,
+        hour, seal, agency, section, imdgClass, unNumbers,
       ];
 
   Map<String, dynamic> toJson() => {
@@ -301,6 +310,7 @@ class ExportListRow extends Equatable {
         if (hour != null) 'hour': hour,
         if (seal != null) 'seal': seal,
         if (agency != null) 'agency': agency,
+        if (section != null) 'section': section,
         if (imdgClass != null) 'imdgClass': imdgClass,
         if (unNumbers.isNotEmpty) 'unNumbers': unNumbers,
       };
@@ -327,9 +337,36 @@ class ExportListRow extends Equatable {
         hour: json['hour'] as String?,
         seal: json['seal'] as String?,
         agency: json['agency'] as String?,
+        section: json['section'] as String?,
         imdgClass: json['imdgClass'] as String?,
         unNumbers: (json['unNumbers'] as List<dynamic>?)?.cast<String>() ?? const [],
       );
+}
+
+/// T-147, entrega 2, parte 2b (O-147-4) · Una agencia del listado: sus filas
+/// y, de ellas, las de cada sección («TRANSBORDOS», «VACIOS»).
+class ExportListAgency {
+  final String name;
+  int _rows = 0;
+  bool _added = false;
+  final Map<String, int> _sections = {};
+
+  ExportListAgency._(this.name);
+
+  int get rows => _rows;
+
+  /// Es la sección «AGREGADOS», que se cuenta sola (10.50): no es una
+  /// agencia.
+  bool get added => _added;
+
+  /// Las secciones de la agencia, en el orden del listado, con sus filas.
+  Map<String, int> get sections => Map.unmodifiable(_sections);
+
+  /// «AGENCIA UNO S.A.: 334 (TRANSBORDOS 6, VACIOS 187)».
+  String get label => '$name: $_rows'
+      '${_sections.isEmpty ? '' : ' (${[
+          for (final s in _sections.entries) '${s.key} ${s.value}'
+        ].join(', ')})'}';
 }
 
 /// Una fila que no se entendió: se informa con su número, nunca se descarta
@@ -433,6 +470,31 @@ class ExportList extends Equatable {
     }
     return result;
   }
+
+  /// T-147, entrega 2, parte 2b (O-147-4; 10.161) · Las agencias en el orden
+  /// del listado, con sus filas y las de cada sección suya. «AGREGADOS» sale
+  /// aparte, marcada ([ExportListAgency.added]): se cuenta sola y no es una
+  /// agencia. En un listado que guardó la 1.0.2 no hay secciones: cada una
+  /// sale como una agencia, igual que antes, hasta que se vuelve a importar.
+  List<ExportListAgency> get agencyGroups {
+    final result = <String, ExportListAgency>{};
+    for (final row in rows) {
+      final name = row.agency ?? 'Sin agencia';
+      final group = result.putIfAbsent(name, () => ExportListAgency._(name));
+      group._rows++;
+      final section = row.section;
+      if (section == null) continue;
+      if (section == name) {
+        group._added = true;
+      } else {
+        group._sections[section] = (group._sections[section] ?? 0) + 1;
+      }
+    }
+    return result.values.toList();
+  }
+
+  /// Cuántas agencias trae el listado, sin contar «AGREGADOS».
+  int get agencyCount => agencyGroups.where((g) => !g.added).length;
 
   ExportListRow? byContainer(String containerId) {
     for (final row in rows) {

@@ -91,7 +91,7 @@ class OperationProgressBody extends ConsumerWidget {
                     // una pieza del plan ni cuenta en la columna «Cancelados»,
                     // que es de lo que cancela la oficina.
                     if (operation.list?.cancelledRows.isNotEmpty ?? false)
-                      Text(_cancelledInList(operation.list!),
+                      Text(_cancelledInList(operation.list!, operation.state),
                           key: const ValueKey('progress-list-cancelled')),
                     const Text(
                         'Hechos y pendientes según el estado de la operación. Las re‑estibas se muestran aparte.'),
@@ -263,13 +263,29 @@ class OperationProgressBody extends ConsumerWidget {
   }
 
   /// «Listado: 40 filas canceladas, que no se cargan (37 llenos y 3 vacíos).»
-  String _cancelledInList(ExportList list) {
+  ///
+  /// O-147-8 (b) · Si alguna subió a bordo, lo dice: «Listado: 41 filas
+  /// canceladas (37 llenos y 4 vacíos): 40 no se cargan y 1 está a bordo.»
+  String _cancelledInList(ExportList list, OperationState state) {
     final rows = list.cancelledRows.toList();
-    return 'Listado: '
-        '${operationCount(rows.length, 'fila cancelada', 'filas canceladas')}, '
-        'que no se ${rows.length == 1 ? 'carga' : 'cargan'} '
+    final count =
+        operationCount(rows.length, 'fila cancelada', 'filas canceladas');
+    final kinds =
         '(${operationCount(rows.where((r) => r.isFull).length, 'lleno', 'llenos')} y '
-        '${operationCount(rows.where((r) => r.isEmpty).length, 'vacío', 'vacíos')}).';
+        '${operationCount(rows.where((r) => r.isEmpty).length, 'vacío', 'vacíos')})';
+    final aboard = {
+      for (final c in state.conflicts)
+        if (c.kind == ConflictKind.cancelledInList) c.key
+    }.length;
+    if (aboard == 0) {
+      return 'Listado: $count, que no se '
+          '${rows.length == 1 ? 'carga' : 'cargan'} $kinds.';
+    }
+    final left = rows.length - aboard;
+    final onBoard = aboard == 1 ? '1 está a bordo' : '$aboard están a bordo';
+    return 'Listado: $count $kinds: '
+        '${left <= 0 ? '' : '$left no se ${left == 1 ? 'carga' : 'cargan'} y '}'
+        '$onBoard.';
   }
 
   String _discharge(BayOperationProgress row) =>

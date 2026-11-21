@@ -2,6 +2,8 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../entities/entities.dart';
 import 'container_number.dart';
 import 'departure_baplie_review.dart';
+import 'iso6346_check_digit.dart';
+import 'repeated_containers.dart';
 import 'un_locode.dart';
 
 /// T-82 · Salida local en la versión del plan de carga. Para lo que sigue a
@@ -46,6 +48,17 @@ class DepartureBaplieWriter {
     final decisions = <DepartureDecision>[];
     final warnings = <String>[];
     final errors = <String>[];
+    // T-147, entrega 2, parte 2b (P5): una matrícula que el plan trae en más
+    // de una celda sale en un solo grupo. La salida lo dice, con sus celdas.
+    for (final repeated in _repeated(source.content)) {
+      warnings.add(RepeatedContainers.departureWarning(repeated,
+          sourceName: 'plan de carga'));
+    }
+    for (final repeated in _repeated(
+        operation.source(OperationSourceKind.arrivalBaplie)?.content ?? '')) {
+      warnings.add(RepeatedContainers.departureWarning(repeated,
+          sourceName: 'plano de llegada'));
+    }
     final rows = {
       for (final row in list?.rows ?? <ExportListRow>[]) row.containerId: row,
     };
@@ -769,6 +782,34 @@ class DepartureBaplieWriter {
     finish();
     return result;
   }
+
+  /// T-147, entrega 2, parte 2b (P5) · Las matrículas que [source] trae en
+  /// más de una celda, con la regla del lector: con forma de matrícula ISO
+  /// 6346. Se leen de los mismos grupos de segmentos que escribe la salida.
+  List<RepeatedContainer> _repeated(String source) {
+    if (source.trim().isEmpty) return const [];
+    final cells = <String, List<String>>{};
+    String? position;
+    for (final segment in _segments(source)) {
+      if (segment.startsWith('LOC+147+')) {
+        position = segment.split('+').elementAtOrNull(2)?.split(':').first;
+      } else if (segment.startsWith('UNT+') || segment.startsWith('UNZ+')) {
+        position = null;
+      } else if (position != null && segment.startsWith('EQD+CN+')) {
+        final value = segment.split('+').elementAtOrNull(2)?.split(':').first;
+        if (value == null || value.trim().isEmpty) continue;
+        final container = numeroDeContenedor(value);
+        if (Iso6346CheckDigit.isValid(container) == null) continue;
+        cells.putIfAbsent(container, () => []).add(position);
+        position = null;
+      }
+    }
+    return [
+      for (final entry in cells.entries)
+        if (entry.value.length > 1) RepeatedContainer(entry.key, entry.value)
+    ];
+  }
+
   Map<String, String> _rawGroups(String source) {
     final result = <String, String>{};
     int? groupStart;

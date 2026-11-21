@@ -5,6 +5,7 @@ import '../entities/operation.dart';
 import '../entities/vessel_voyage.dart';
 import '../repositories/movement_log_repository.dart';
 import '../repositories/operation_sync_repository.dart';
+import 'repeated_containers.dart';
 
 /// T-130 · Lo que la oficina encuentra al confirmar un plano en una escala:
 /// la operación publicada y abierta de ese buque en ese puerto, con
@@ -90,16 +91,97 @@ class OperationSources {
       VesselVoyage voyage, String port) async {
     final operations = (await repository.getOperations())
         .fold((failure) => throw failure, (operations) => operations);
+    return current([
+      for (final operation in operations)
+        if (operation.vesselName == voyage.vessel.name &&
+            operation.portOfCall == port &&
+            operation.matchesVoyage(voyage.voyageNumber))
+          operation
+    ]);
+  }
+
+  /// T-147, entrega 2, parte 2b (P8 a; 10.160, D14) · De las operaciones de
+  /// una misma escala que tiene este equipo ([ofTheCall]), la que se ve:
+  ///
+  /// 1. la publicada y abierta, como siempre;
+  /// 2. si no hay, y hay una cerrada, la que se empezó **después** de ese
+  ///    cierre ([startNew], o [save] con otro archivo): nace con una fecha
+  ///    posterior al cierre, y por eso se distingue de la copia local que el
+  ///    muelle abrió antes de unirse, que es anterior y no cuenta;
+  /// 3. si no, la cerrada, la más reciente: se sigue viendo, solo para mirar;
+  /// 4. sin ninguna publicada, la local, como siempre.
+  ///
+  /// Hasta la 1.0.2 una operación cerrada tapaba a cualquier otra de su
+  /// escala, y no había cómo empezar de nuevo.
+  static Operation? current(Iterable<Operation> ofTheCall) {
     Operation? local;
-    for (final operation in operations) {
-      if (operation.vesselName == voyage.vessel.name &&
-          operation.portOfCall == port &&
-          operation.matchesVoyage(voyage.voyageNumber)) {
-        if (operation.published) return operation;
+    Operation? closed;
+    for (final operation in ofTheCall) {
+      if (operation.published && !operation.closed) return operation;
+      if (!operation.published) {
         local ??= operation;
+      } else if (closed == null ||
+          operation.closedAt!.isAfter(closed.closedAt!)) {
+        closed = operation;
       }
     }
-    return local;
+    if (closed == null) return local;
+    Operation? next;
+    for (final operation in ofTheCall) {
+      if (operation.published ||
+          !operation.createdAt.isAfter(closed.closedAt!)) {
+        continue;
+      }
+      if (next == null || operation.createdAt.isAfter(next.createdAt)) {
+        next = operation;
+      }
+    }
+    return next ?? closed;
+  }
+
+  /// T-147, entrega 2, parte 2b (P8 a) · Empieza una operación nueva, en este
+  /// equipo y sin publicar, con los planos de [closed]: su plano de llegada y
+  /// su plan de carga, tal cual. No lleva el listado de la agencia, que se
+  /// importa de nuevo, ni lo registrado, que se queda en la cerrada. La
+  /// cerrada no cambia; desde aquí, [find] da la nueva.
+  static Future<Operation> startNew(
+      MovementLogRepository repository, Operation closed,
+      {DateTime Function()? clock}) async {
+    if (!closed.closed) {
+      throw const ValidationFailure(
+          field: 'operation',
+          message: 'La operación de esta escala sigue abierta: solo se empieza '
+              'otra cuando la oficina la cierra.');
+    }
+    final operation = _after(closed,
+        vesselName: closed.vesselName,
+        voyageNumber: closed.voyageNumber,
+        sources: closed.sources
+            .where((s) => s.kind != OperationSourceKind.exportList),
+        clock: clock);
+    (await repository.saveOperation(operation))
+        .fold((failure) => throw failure, (_) {});
+    return operation;
+  }
+
+  /// Una operación local de la misma escala que [closed], con otro
+  /// identificador y una fecha posterior a su cierre aunque el reloj del
+  /// equipo vaya atrasado: es lo que [current] mira.
+  static Operation _after(Operation closed,
+      {required String vesselName,
+      required String voyageNumber,
+      required Iterable<OperationSource> sources,
+      DateTime Function()? clock}) {
+    final now = (clock ?? DateTime.now)();
+    final floor = closed.closedAt!.add(const Duration(seconds: 1));
+    return Operation(
+      id: const Uuid().v4(),
+      vesselName: vesselName,
+      voyageNumber: voyageNumber,
+      portOfCall: closed.portOfCall,
+      createdAt: now.isAfter(floor) ? now : floor,
+      sources: sources,
+    );
   }
 
   /// T-130 · Las operaciones publicadas y abiertas de ese buque en esa escala
@@ -206,15 +288,35 @@ class OperationSources {
     if (existing != null && existing.published) {
       if (existing.source(source.kind)?.content == source.content) return existing;
       if (existing.closed) {
-        throw ValidationFailure(
-            field: 'source',
-            message: source.kind == OperationSourceKind.exportList
-                ? 'La operación de esta escala ya está cerrada y su listado no '
-                    'cambia. Para trabajar con otro listado, abre el plan de '
-                    'carga como una operación nueva.'
-                : 'La operación de esta escala ya está cerrada y sus BAPLIE no '
-                    'cambian. Para trabajar con este archivo, ábrelo como una '
-                    'operación nueva.');
+        if (source.kind == OperationSourceKind.exportList) {
+          throw const ValidationFailure(
+              field: 'source',
+              message: 'La operación de esta escala ya está cerrada y su '
+                  'listado no cambia. Para trabajar con otro listado, empieza '
+                  'una operación nueva desde «Nube y cuenta».');
+        }
+        // T-130: la oficina confirmó «Agregar a la operación» y, mientras
+        // tanto, la operación se cerró. No se agrega, ni se abre otra a sus
+        // espaldas: al abrir el archivo otra vez, nace la nueva.
+        if (attachTo != null) {
+          throw const ValidationFailure(
+              field: 'source',
+              message: 'La operación de esta escala ya está cerrada y sus '
+                  'BAPLIE no cambian: el plan no se agregó. Vuelve a abrir '
+                  'este archivo y empezará una operación nueva.');
+        }
+        // T-147, entrega 2, parte 2b (P8 a; 10.160, D14): otro BAPLIE en una
+        // escala que ya se cerró abre una operación nueva, con otro
+        // identificador. Hasta la 1.0.2 se rechazaba con «ábrelo como una
+        // operación nueva», y no había cómo. La cerrada no cambia.
+        final operation = _after(existing,
+            vesselName: voyage.vessel.name,
+            voyageNumber: voyage.voyageNumber,
+            sources: [source],
+            clock: clock);
+        (await repository.saveOperation(operation))
+            .fold((failure) => throw failure, (_) {});
+        return operation;
       }
       if (source.kind == OperationSourceKind.exportList) {
         if (sync == null) {
@@ -238,6 +340,15 @@ class OperationSources {
             message: 'La operación de esta escala ya está publicada y no tiene '
                 'este ${sourceName(source.kind)}: para agregarlo, confirma el '
                 'plano desde la banda y acepta «Agregar a la operación».');
+      }
+      // T-147, entrega 2, parte 2b (P5; 10.160, D11): un plan con una
+      // matrícula en más de una celda no entra a la nube.
+      final repeated = RepeatedContainers.refusal('No se agrega',
+          sourceName: sourceName(source.kind),
+          fileName: source.fileName,
+          repeated: RepeatedContainers.of(voyage));
+      if (repeated != null) {
+        throw ValidationFailure(field: 'source', message: repeated);
       }
       if (sync == null) {
         throw const ValidationFailure(

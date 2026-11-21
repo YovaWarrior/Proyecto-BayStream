@@ -6,6 +6,7 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/loading_plan_progress.dart';
 import '../../domain/services/reference_bay.dart';
+import '../../domain/services/repeated_containers.dart';
 import '../formatters/operation_text.dart';
 import '../formatters/vessel_error_message.dart';
 import '../providers/discharge_provider.dart';
@@ -126,6 +127,11 @@ List<Widget> fichasDelResumen(
                       '${operationCount(data.discharge.restows, 're‑estiba', 're‑estibas')}',
                 ),
               ],
+              // T-147, entrega 2, parte 2b (P5): la ficha fija del plan con
+              // una matrícula en más de una celda.
+              if (RepeatedContainers.band(data.repeated, what: 'carga')
+                  case final repetidas?)
+                revisar('plan-repetido', repetidas),
               // T-122 (H4, 10.51): sin listado, los llenos del plan se
               // cargan por su número; los vacíos esperan su fila.
               if (data.list == null)
@@ -192,6 +198,10 @@ List<Widget> fichasDelResumen(
           rotulo: 'Carga',
           valor: operationCount(carga.total, 'pendiente', 'pendientes'),
         ),
+      // T-147, entrega 2, parte 2b (P5): lo mismo, en el plano de llegada.
+      if (RepeatedContainers.band(data.repeated, what: 'descarga')
+          case final repetidas?)
+        revisar('plan-repetido', repetidas),
       if (!data.canRegister)
         revisar(
             'discharge-sin-operacion',
@@ -260,6 +270,13 @@ List<Widget> fichasDelResumen(
         ),
   ];
 }
+
+/// T-147, entrega 2, parte 2b (P5) · De las fichas del resumen, la que va
+/// fija en el teléfono, sobre la línea recogida: la del plan con una
+/// matrícula en más de una celda. Nula si el plan no trae ninguna.
+Widget? fichaFijaDelResumen(List<Widget> fichas) => fichas
+    .where((ficha) => ficha.key == const ValueKey<String>('plan-repetido'))
+    .firstOrNull;
 
 /// T-124 (10.65, P2) · El nombre del grupo de la par que cuenta [bahia], si
 /// es otro que la bahía sola: «grupo 22 (21, 22 y 23)». Es nulo si [grupo] es

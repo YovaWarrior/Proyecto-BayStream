@@ -1,5 +1,6 @@
 import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../entities/entities.dart';
+import 'repeated_containers.dart';
 
 /// T-75 · Cómo se ve cada contenedor del plano de llegada en el modo Descarga.
 enum DischargeMark {
@@ -38,11 +39,24 @@ class DischargeProgress {
   final Map<String, Movement> movements;
   final Map<int, BayDischargePending> bays;
 
-  DischargeProgress._(
-      this.plan, this.state, this.operationId, this.movements, this.bays);
+  /// T-147, entrega 2, parte 2b (P5) · Las matrículas que el plano de llegada
+  /// trae en más de una celda. La operación se queda con la última celda de
+  /// cada una; las demás ([repeatedAt]) no se pueden operar.
+  final List<RepeatedContainer> repeated;
+  final Map<String, RepeatedContainer> _repeatedCells;
+
+  DischargeProgress._(this.plan, this.state, this.operationId, this.movements,
+      this.bays, this.repeated)
+      : _repeatedCells = RepeatedContainers.extraCells(repeated);
+
+  /// La matrícula repetida de la celda [position] (código ISO), si es una de
+  /// las que la operación no puede operar.
+  RepeatedContainer? repeatedAt(String position) => _repeatedCells[position];
 
   factory DischargeProgress.build(OperationPlan plan, OperationState state,
-      {String? operationId, Iterable<Movement> movements = const []}) {
+      {String? operationId,
+      Iterable<Movement> movements = const [],
+      List<RepeatedContainer> repeated = const []}) {
     final bays = <int, BayDischargePending>{};
     for (final item in plan.arrival.values) {
       final status = state[item.key];
@@ -70,7 +84,8 @@ class DischargeProgress {
         state,
         operationId,
         Map.unmodifiable({for (final m in movements) m.id: m}),
-        Map.unmodifiable(bays));
+        Map.unmodifiable(bays),
+        List.unmodifiable(repeated));
   }
 
   bool get canRegister => operationId != null;

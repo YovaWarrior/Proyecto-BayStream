@@ -32,6 +32,7 @@ import 'package:baystream/features/vessel/domain/entities/entities.dart';
 import 'package:baystream/features/vessel/domain/services/departure_baplie_review.dart';
 import 'package:baystream/features/vessel/domain/services/departure_baplie_writer.dart';
 import 'package:baystream/features/vessel/domain/services/export_list_cross_checker.dart';
+import 'package:baystream/features/vessel/domain/services/repeated_containers.dart';
 import 'package:baystream/features/vessel/domain/services/load_check.dart';
 import 'package:baystream/features/vessel/domain/services/loading_operation.dart';
 
@@ -447,6 +448,61 @@ void main(List<String> argumentos) {
             (p.kind == EquivalenceKind.port && p.listCode == 'COTRB'))
           _describir(p)
     ],
+  };
+
+  // Parte 2b: las agencias (O-147-4), el POT y el POD de lo que se carga
+  // (O-147-8), la tarjeta con tipos por elegir (O-147-7), el lápiz (O-147-10)
+  // y las matrículas repetidas (P5). Las claves de arriba no cambian.
+  final sinElegir = ExportListCrossChecker.orphanTypeCodes(iniciales, plan,
+      portOfCall: escala);
+  final hc = propuestas.firstWhere(
+      (p) => p.kind == EquivalenceKind.type && p.listCode == '40HC');
+  final conElLapiz = [
+    for (final p in propuestas) identical(p, hc) ? p.choose('45G0') : p
+  ];
+  final cambiada = conElLapiz.firstWhere(
+      (p) => p.kind == EquivalenceKind.type && p.listCode == '40HC');
+  final cruceDelLapiz = ExportListCrossChecker.crossCheck(
+      lista.normalized(ExportListCrossChecker.tableOf(conElLapiz),
+          typeFamilies: ExportListCrossChecker.familiesOf(conElLapiz)),
+      plan,
+      escala);
+  r['parte2b'] = {
+    'agencias': lista.agencyCount,
+    'porAgencia': [
+      for (final g in lista.agencyGroups)
+        {
+          'filas': g.rows,
+          'secciones': g.sections,
+          'esAgregados': g.added,
+        }
+    ],
+    'potYPodDistintos': {
+      'queSeCargan': cargan.where((x) => x.potDiffersFromPod).length,
+      'canceladas': canceladas.where((x) => x.potDiffersFromPod).length,
+    },
+    'conTiposPorElegir': {
+      'tiposPorElegir': iniciales
+          .where((p) => p.kind == EquivalenceKind.type && p.needsUser)
+          .length,
+      'codigosSinDuenio': sinElegir.length,
+      'celdasSinDuenio': sinElegir.fold<int>(0, (s, h) => s + h.cells),
+    },
+    'elLapizDe40HC': {
+      'antes': [hc.planCode, ...hc.also],
+      'despues': [cambiada.planCode, ...cambiada.also],
+      'gruposQueCuadranAntes': cruce.groups.where((g) => g.balanced).length,
+      'gruposQueCuadranDespues':
+          cruceDelLapiz.groups.where((g) => g.balanced).length,
+      'grupos': cruceDelLapiz.groups.length,
+      'celdasSinDuenioDespues': ExportListCrossChecker.orphanTypeCodes(
+              conElLapiz, plan,
+              portOfCall: escala)
+          .map((h) => h.code)
+          .toList(),
+      'conflictos': ExportListCrossChecker.familyConflicts(conElLapiz).length,
+    },
+    'matriculasRepetidasEnElPlan': RepeatedContainers.of(plan).length,
   };
 
   final texto = const JsonEncoder.withIndent(' ').convert(r);

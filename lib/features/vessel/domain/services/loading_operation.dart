@@ -5,6 +5,7 @@ import 'load_check.dart';
 import 'loading_plan_progress.dart';
 import 'operation_state_deriver.dart';
 import 'reference_bay.dart';
+import 'repeated_containers.dart';
 
 /// T-76: selección de carga y reservas sobre la misma bitácora de descarga.
 class LoadingOperation {
@@ -18,6 +19,12 @@ class LoadingOperation {
   final LoadingPlanProgress progress;
   final DischargeProgress discharge;
 
+  /// T-147, entrega 2, parte 2b (P5) · Las matrículas que el plan de carga
+  /// trae en más de una celda. La operación se queda con la última celda de
+  /// cada una; las demás ([repeatedAt]) no se pueden operar.
+  final List<RepeatedContainer> repeated;
+  final Map<String, RepeatedContainer> _repeatedCells;
+
   LoadingOperation._(
       this.operationId,
       this.loading,
@@ -27,7 +34,13 @@ class LoadingOperation {
       this.movements,
       this.state,
       this.progress,
-      this.discharge);
+      this.discharge,
+      this.repeated)
+      : _repeatedCells = RepeatedContainers.extraCells(repeated);
+
+  /// La matrícula repetida de la celda [position] (código ISO), si es una de
+  /// las que la operación no puede operar.
+  RepeatedContainer? repeatedAt(String position) => _repeatedCells[position];
 
   factory LoadingOperation.build({
     String? operationId,
@@ -47,13 +60,23 @@ class LoadingOperation {
         list: list);
     final state = const OperationStateDeriver().derive(plan, events);
     final effective = state.effectivePlan!;
+    // T-147, entrega 2, parte 2b (P5): de una matrícula repetida, el plan
+    // guarda una sola pieza. Las demás celdas se quedan como las trae el
+    // archivo: sin esto la proyección ponía dos veces el contenedor de la
+    // última celda, y la bahía pesaba otra cosa que el archivo.
+    final repeated = RepeatedContainers.of(loading);
+    final extras = RepeatedContainers.extraCells(repeated);
     // La fuente publicada permanece intacta. Esta proyección se reconstruye
     // también en otra bahía, con sus sombras de 40 pies y sus reservas.
     final projected = VesselVoyage.fromJson({
       ...loading.toJson(includeBays: false),
       'containers': [
         for (final c in loading.containers)
-          (effective.loading['C:${c.containerId}']?.container ?? c).toJson()
+          (extras.isNotEmpty &&
+                      extras.containsKey(c.stowagePosition?.toIsoCode())
+                  ? c
+                  : effective.loading['C:${c.containerId}']?.container ?? c)
+              .toJson()
       ],
       'reservedSlots': [
         for (final s in loading.reservedSlots)
@@ -70,7 +93,10 @@ class LoadingOperation {
         state,
         LoadingPlanProgress.build(projected, state, list: list),
         DischargeProgress.build(effective, state,
-            operationId: operationId, movements: events));
+            operationId: operationId,
+            movements: events,
+            repeated: RepeatedContainers.of(arrival)),
+        repeated);
   }
 
   PlanItem? numbered(ExportListRow row) {

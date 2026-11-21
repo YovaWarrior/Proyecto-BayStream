@@ -86,17 +86,39 @@ class EquivalenceProposal extends Equatable {
   bool get contradicted =>
       planCode != null && observed.isNotEmpty && !observed.containsKey(planCode);
 
-  EquivalenceProposal choose(String code) => EquivalenceProposal(
-        kind: kind,
-        listCode: listCode,
-        planCode: code,
-        origin: EquivalenceOrigin.chosen,
-        rows: rows,
-        observed: observed,
-        candidates: candidates,
-        also: also.where((c) => c != code),
-        discarded: discarded,
-      );
+  /// El lápiz: la oficina elige [code] como el código del plan de este
+  /// código del listado.
+  ///
+  /// T-147, entrega 2, parte 2b (O-147-10) · Al cambiar el principal de un
+  /// tipo, el que deja de serlo se queda como «también llena» si el plan lo
+  /// respalda (está en [observed]): sus celdas siguen siendo de este tipo y
+  /// el cruce sigue cuadrando. Si el plan no lo respalda, se pierde, como
+  /// hasta la 1.0.3 de la parte 2a, y sus celdas vuelven a la tarjeta de las
+  /// que nadie llena. Con [keepFormer] en falso tampoco se queda: es el caso
+  /// en que otro tipo del listado ya lo tiene de principal, y guardarlo aquí
+  /// sería reclamarlo dos veces («un código del plan, un solo tipo»).
+  EquivalenceProposal choose(String code, {bool keepFormer = true}) {
+    final former = planCode;
+    final keeps = keepFormer &&
+        kind == EquivalenceKind.type &&
+        former != null &&
+        former != code &&
+        observed.containsKey(former);
+    return EquivalenceProposal(
+      kind: kind,
+      listCode: listCode,
+      planCode: code,
+      origin: EquivalenceOrigin.chosen,
+      rows: rows,
+      observed: observed,
+      candidates: candidates,
+      also: [
+        if (keeps) former,
+        ...also.where((c) => c != code && c != former),
+      ],
+      discarded: discarded,
+    );
+  }
 
   /// La misma propuesta con otros códigos de «también llena».
   EquivalenceProposal withAlso(Iterable<String> codes) => EquivalenceProposal(
@@ -622,9 +644,18 @@ class ExportListCrossChecker {
   /// escala que ningún tipo del listado llena, con su sugerencia: el grupo
   /// que ya llena un código con los mismos tres primeros caracteres. Es una
   /// sugerencia, no una regla: la decide la oficina.
+  ///
+  /// T-147, entrega 2, parte 2b (O-147-7) · Mientras quede un tipo del
+  /// listado por elegir no hay nada que decir: sus celdas todavía no tienen
+  /// dueño porque nadie lo eligió, no porque no lo tengan. Con el caso A09 la
+  /// tarjeta decía 95 celdas en 12 códigos hasta elegir los seis tipos, y
+  /// entonces las 11 de verdad.
   static List<OrphanTypeCode> orphanTypeCodes(
       Iterable<EquivalenceProposal> proposals, VesselVoyage plan,
       {required String portOfCall}) {
+    if (proposals.any((p) => p.kind == EquivalenceKind.type && p.needsUser)) {
+      return const [];
+    }
     final types = [
       for (final p in proposals)
         if (p.kind == EquivalenceKind.type && p.planCode != null) p

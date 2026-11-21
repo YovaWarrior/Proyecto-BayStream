@@ -7,6 +7,7 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
 import '../../domain/services/loading_operation.dart';
+import '../../domain/services/operation_state_deriver.dart';
 import '../formatters/vessel_error_message.dart';
 import '../pages/change_requests_page.dart';
 import '../providers/discharge_provider.dart';
@@ -119,11 +120,16 @@ class LoadingControls extends ConsumerWidget {
     final search = busquedaDeCarga(context, ref, voyage, selectedBay,
         disponible: data != null);
     if (compact) {
+      final fija = fichaFijaDelResumen(summary);
       return PlanSummaryLine(
           trailing: busquedaEnLaTira ? null : search,
+          fixed: fija,
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: summary));
+              children: [
+                for (final ficha in summary)
+                  if (!identical(ficha, fija)) ficha
+              ]));
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ...summary,
@@ -148,10 +154,16 @@ class LoadingControls extends ConsumerWidget {
 /// quede sin espacio; otro lo recoge. Recogido, el resumen sigue en el árbol,
 /// recortado a su primera línea, así que sus textos y sus claves de prueba no
 /// cambian.
+///
+/// T-147, entrega 2, parte 2b (P5) · [fixed] va siempre a la vista, encima
+/// de la línea, recogida o abierta: es la ficha del plan con una matrícula
+/// repetida, que en el teléfono quedaba dentro del resumen recogido.
 class PlanSummaryLine extends StatefulWidget {
   final Widget child;
   final Widget? trailing;
-  const PlanSummaryLine({super.key, required this.child, this.trailing});
+  final Widget? fixed;
+  const PlanSummaryLine(
+      {super.key, required this.child, this.trailing, this.fixed});
   @override
   State<PlanSummaryLine> createState() => _PlanSummaryLineState();
 }
@@ -161,6 +173,15 @@ class _PlanSummaryLineState extends State<PlanSummaryLine> {
 
   @override
   Widget build(BuildContext context) {
+    final fixed = widget.fixed;
+    if (fixed == null) return _line(context);
+    return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [fixed, _line(context)]);
+  }
+
+  Widget _line(BuildContext context) {
     // El alto de una línea con la letra y la escala que usará el resumen.
     final painter = TextPainter(
         text: TextSpan(text: 'Ág', style: DefaultTextStyle.of(context).style),
@@ -393,6 +414,11 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
   final _hour = TextEditingController();
   final _reason = TextEditingController();
 
+  /// O-147-9: el campo del motivo, para llevarlo a la vista cuando la carga
+  /// empieza a pedirlo.
+  final _reasonKey = GlobalKey();
+  bool _reasonAsked = false;
+
   /// T-77: un lleno que quedó en otra celda que la planificada.
   final _cell = TextEditingController();
 
@@ -559,6 +585,38 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
         : data.check(row, validPosition, correcting: widget.correcting);
     final needsReason =
         widget.correcting != null || (review?.needsReason ?? false);
+    final reasonUnderWarning = review?.needsReason ?? false;
+    // O-147-9: en cuanto la carga pide motivo (al abrir, o al elegir una
+    // celda de otro grupo), el campo se lleva a la vista. Solo desplaza si
+    // hace falta: en un teléfono más bajo, o con la letra más grande.
+    if (reasonUnderWarning && !_reasonAsked) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final field = _reasonKey.currentContext;
+        if (!mounted || field == null) return;
+        Scrollable.ensureVisible(field,
+            alignment: 1,
+            alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd);
+      });
+    }
+    _reasonAsked = reasonUnderWarning;
+    final reasonField = !needsReason
+        ? null
+        : KeyedSubtree(
+            key: _reasonKey,
+            child: TextField(
+                key: ValueKey(widget.correcting != null
+                    ? 'loading-correction-reason'
+                    : 'loading-reason'),
+                controller: _reason,
+                enabled: !busy,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                    labelText: widget.correcting != null
+                        ? 'Motivo de la corrección'
+                        : 'Motivo (obligatorio)',
+                    helperText: reasonUnderWarning
+                        ? 'Viaja con el movimiento.'
+                        : null)));
     final occupant = review?.dischargeFirst;
     final alternatives = widget.correcting?.type == MovementType.assignEmpty
         ? data?.list?.empties
@@ -695,6 +753,12 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                   if (review != null)
                     _LoadCheckPanel(
                         check: review, portOfCall: widget.voyage.portOfCall),
+                  // O-147-9: cuando la carga pide motivo, su campo va justo
+                  // debajo del aviso que lo pide. En el teléfono quedaba
+                  // debajo de la hora, la fecha y el marchamo, fuera de la
+                  // pantalla, con «Confirmar carga» apagado y sin decir por
+                  // qué.
+                  if (reasonField != null && reasonUnderWarning) reasonField,
                   const SizedBox(height: 12),
                   TextField(
                       key: const ValueKey('loading-hour'),
@@ -725,22 +789,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                       enabled: !busy,
                       decoration: const InputDecoration(
                           labelText: 'Marchamo (opcional)')),
-                  if (needsReason)
-                    TextField(
-                        key: ValueKey(widget.correcting != null
-                            ? 'loading-correction-reason'
-                            : 'loading-reason'),
-                        controller: _reason,
-                        enabled: !busy,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                            labelText: widget.correcting != null
-                                ? 'Motivo de la corrección'
-                                : 'Motivo (obligatorio)',
-                            helperText: review?.needsReason == true
-                                ? 'Viaja con el movimiento y deja el conflicto a la vista.'
-                                : null,
-                            helperMaxLines: 2)),
+                  if (reasonField != null && !reasonUnderWarning) reasonField,
                   if (error != null)
                     Text(error!,
                         key: const ValueKey('loading-error'),
@@ -877,7 +926,11 @@ Future<void> showLoadingDetails(
                         for (final conflict in data?.state.conflicts
                                 .where((c) => c.key == key) ??
                             <OperationConflict>[])
-                          Text(conflict.message,
+                          // O-147-8 (d): aquí ya se está en el detalle de
+                          // la celda; la frase que manda a él sobra.
+                          Text(
+                              OperationStateDeriver.messageInCellDetail(
+                                  conflict.message),
                               style: TextStyle(
                                   color: Theme.of(context).colorScheme.error)),
                       ])),

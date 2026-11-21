@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/repositories/operation_sync_repository.dart';
 import '../../domain/repositories/session_repository.dart';
+import '../../domain/services/operation_sources.dart';
 import '../formatters/vessel_error_message.dart';
 import '../formatters/operation_text.dart';
 import '../providers/movement_log_provider.dart';
@@ -12,6 +13,7 @@ import '../providers/sync_providers.dart';
 import '../providers/vessel_providers.dart';
 import '../widgets/sync_status_chip.dart';
 import 'privacy_policy_page.dart';
+import '../../../../core/utils/fecha_corta.dart';
 import '../../../../core/utils/voyage_number.dart';
 
 /// T-79 · Cuenta, operación de la escala y operaciones abiertas en la nube.
@@ -221,10 +223,47 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     // T-143 (O-139-1): el cierre que el motor vio en la nube cuenta aunque la
     // operación local todavía no se haya vuelto a leer.
     final closed = operationIsClosed(operation, status);
+    // T-147, entrega 2, parte 2b (P5): un plan con una matrícula en más de
+    // una celda no se publica; el botón queda apagado, con el motivo debajo.
+    final repetidas = office && !operation.published
+        ? ref.watch(publishRefusalProvider).value
+        : null;
+    // T-147, entrega 2, parte 2b (P8 a): la operación cerrada se sigue
+    // viendo, solo para mirar, y desde aquí se empieza otra con sus planos.
+    // El muelle no la empieza: se une a la que publique la oficina.
+    final puedeEmpezar =
+        operation.closed && operator?.role != OperatorRole.dock;
+    final anterior = operation.closed
+        ? null
+        : (ref.watch(localOperationsProvider).value ?? const <Operation>[])
+            .where((o) =>
+                o.id != operation.id &&
+                o.closed &&
+                o.vesselName == operation.vesselName &&
+                o.portOfCall == operation.portOfCall &&
+                o.matchesVoyage(operation.voyageNumber) &&
+                operation.createdAt.isAfter(o.closedAt!))
+            .firstOrNull;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('${operation.vesselName} · ${voyageNumberLabel(operation.voyageNumber)} · ${operation.portOfCall}'),
       Text(textoDeLaOperacionEnLaNube(operation, status),
           key: const ValueKey('cloud-operation-state')),
+      if (anterior != null)
+        Text(
+            'Es una operación nueva: la anterior de esta escala se cerró el '
+            '${fechaCorta(anterior.closedAt!)} y lo registrado se quedó en '
+            'ella.',
+            key: const ValueKey('previous-closed')),
+      if (operation.closed)
+        Text(
+            puedeEmpezar
+                ? 'Se sigue viendo, solo para mirar. Para trabajar esta '
+                    'escala otra vez, empieza una operación nueva con sus '
+                    'planos.'
+                : 'Se sigue viendo, solo para mirar. Si la oficina publica '
+                    'otra operación de esta escala, únete a ella desde '
+                    '«Operaciones abiertas en la nube».',
+            key: const ValueKey('closed-hint')),
       // T-130: las fuentes, con el viaje que declara un plan agregado.
       Text(fuentesDeLaOperacion(operation),
           key: const ValueKey('cloud-sources')),
@@ -235,8 +274,16 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         if (office && !operation.published)
           FilledButton(
             key: const ValueKey('publish-button'),
-            onPressed: _busy || sync == null ? null : () => _publish(operation),
+            onPressed: _busy || sync == null || repetidas != null
+                ? null
+                : () => _publish(operation),
             child: const Text('Publicar operación'),
+          ),
+        if (puedeEmpezar)
+          FilledButton(
+            key: const ValueKey('new-operation-button'),
+            onPressed: _busy ? null : () => _startNew(operation, office),
+            child: const Text('Empezar una operación nueva'),
           ),
         if (office && operation.published && !closed)
           OutlinedButton(
@@ -257,6 +304,11 @@ class _CloudPageState extends ConsumerState<CloudPage> {
             child: const Text('Reintentar'),
           ),
       ]),
+      if (repetidas != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(repetidas, key: const ValueKey('publish-refusal')),
+        ),
     ]);
   }
 
@@ -264,6 +316,9 @@ class _CloudPageState extends ConsumerState<CloudPage> {
     var kept = 0;
     const done = 'Operación publicada.';
     await _run(operation: 'publicar la operación', () async {
+      // T-147, entrega 2, parte 2b (P5): se detiene antes de subir nada.
+      final repetidas = await ref.read(publishRefusalProvider.future);
+      if (repetidas != null) return repetidas;
       final profile = ref.read(voyageNotifierProvider.notifier).publishedProfile;
       if (profile == null) {
         return 'No hay un plano abierto con perfil de buque: abre el plano de la '
@@ -312,6 +367,54 @@ class _CloudPageState extends ConsumerState<CloudPage> {
         return null;
       });
     }, done: 'Operación cerrada.');
+  }
+
+  /// T-147, entrega 2, parte 2b (P8 a) · «Empezar una operación nueva»: con
+  /// los planos de la cerrada, en este equipo y sin publicar.
+  Future<void> _startNew(Operation closed, bool office) async {
+    final planos = [
+      for (final kind in const [
+        OperationSourceKind.arrivalBaplie,
+        OperationSourceKind.loadingBaplie
+      ])
+        if (closed.source(kind) case final source?)
+          'el ${OperationSources.sourceName(kind)} («${source.fileName}»)'
+    ].join(' y ');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const ValueKey('new-operation-dialog'),
+        title: const Text('Empezar una operación nueva'),
+        content: SingleChildScrollView(
+          child: Text(
+              'Empieza de cero con los planos de la operación cerrada: '
+              '$planos. El listado de la agencia se importa de nuevo.\n\n'
+              'Lo registrado se queda en la operación cerrada, que deja de '
+              'verse en este equipo.',
+              key: const ValueKey('new-operation-text')),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              key: const ValueKey('new-operation-confirm'),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Empezar')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await _run(operation: 'empezar la operación nueva', () async {
+      final log = await ref.read(movementLogRepositoryProvider.future);
+      await OperationSources.startNew(log, closed);
+      _changed();
+      return null;
+    },
+        done: office
+            ? 'Operación nueva, en este dispositivo. Publícala para que el '
+                'muelle la reciba.'
+            : 'Operación nueva, en este dispositivo.');
   }
 
   Widget _openOperations(BuildContext context) {

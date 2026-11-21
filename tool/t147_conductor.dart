@@ -25,6 +25,17 @@
 //              su tipo; por omisión, 45G0
 //   cancelado  (recorrido2a) el OR de un vacío cancelado que se busca en
 //              la hoja; por omisión, 156
+//
+// Entrega 2, parte 2b:
+//   recorrido2b  el resumen con las agencias, la tarjeta de las celdas sin
+//                dueño, el lápiz, el motivo a la vista (el vacío cancelado,
+//                la celda de otro grupo y el lleno cancelado) y los textos
+//                del detalle de la celda, del avance y de la salida. Usa
+//                `listado2`, `lleno` y `cancelado` como recorrido2a.
+//   repetida2b   un plan con una matrícula en dos celdas, en el equipo que
+//                opera solo: la ficha, la primera celda que responde, la
+//                otra que se opera y el aviso de la salida. Con `listado`,
+//                lo importa antes.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
@@ -136,6 +147,12 @@ class T147Conductor {
         case 'recorrido2a':
           _quieto.value = true;
           await _recorrido2a();
+        case 'recorrido2b':
+          _quieto.value = true;
+          await _recorrido2b();
+        case 'repetida2b':
+          _quieto.value = true;
+          await _repetida2b();
         default:
           throw StateError('Escenario desconocido: $escenario');
       }
@@ -741,6 +758,413 @@ class T147Conductor {
       }, textos: RegExp('Conflictos ·|se cargó y el listado|Motivo'));
       await _salida('salida-con-la-cancelada-a-bordo');
     }
+  }
+
+  /// Entrega 2, parte 2b · El recorrido del listado, el motivo y los textos.
+  Future<void> _recorrido2b() async {
+    final contenedor = _contenedor();
+    await _asentar();
+    if (await _abrirElPlan()) await _confirmarElPlan();
+    ExportListImportNotifier importacion() =>
+        contenedor.read(exportListImportProvider.notifier);
+    ExportListImportState estado() => contenedor.read(exportListImportProvider);
+    final nombre = parametro('listado');
+    LoadingOperation datos() =>
+        contenedor.read(loadingOperationProvider(_viaje())).value!;
+    bool hay(String clave) =>
+        _buscarElemento((e) => e.widget.key == ValueKey(clave),
+            aLaVista: false) !=
+        null;
+    EquivalenceProposal tipo(String codigo) => estado().proposals.firstWhere(
+        (p) => p.kind == EquivalenceKind.type && p.listCode == codigo);
+
+    // 1. El resumen: las agencias, y el POT y el POD de lo que se carga.
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.lista);
+    await _asentar();
+    await _tocarALaVista(() => _conClave('open-export-list'));
+    await _asentar();
+    await importacion().loadBytes(await leerDelCaso(nombre), fileName: nombre);
+    await _asentar();
+    _sinAvisos();
+    await _asentar();
+    final lista = estado().list!;
+    await _registrar('resumen', {
+      'filas': lista.rows.length,
+      'agencias': lista.agencyCount,
+      'por_agencia': [
+        for (final g in lista.agencyGroups)
+          {'filas': g.rows, 'secciones': g.sections, 'agregados': g.added}
+      ],
+      'pot_y_pod_de_las_que_se_cargan':
+          lista.loadRows.where((r) => r.potDiffersFromPod).length,
+      'pot_y_pod_de_las_canceladas':
+          lista.cancelledRows.where((r) => r.potDiffersFromPod).length,
+      'tipos_por_elegir': estado()
+          .proposals
+          .where((p) => p.kind == EquivalenceKind.type && p.needsUser)
+          .length,
+      'tarjeta_de_las_celdas_sin_duenio': hay('orphan-codes'),
+      'codigos_sin_duenio': estado().orphans.length,
+    });
+    await _capturar('resumen',
+        textos: RegExp(r'filas en|: \d+|POT y POD|para cargar'));
+
+    // 2. Elegidos los tipos, sale la tarjeta, con sus fichas en una línea.
+    for (final par in parametro('elegir').split(',')) {
+      if (par.trim().isEmpty) continue;
+      final partes = RegExp(r'^(\w+):([^=]+)=(.+)$').firstMatch(par.trim())!;
+      importacion().choose(EquivalenceKind.type, partes[2]!, partes[3]!);
+    }
+    await _asentar();
+    bool esLaTarjeta(Element e) =>
+        e.widget.key == const ValueKey('orphan-codes');
+    await _capturarDonde('celdas-sin-duenio', esLaTarjeta,
+        textos: RegExp(r'ningún tipo|celdas?[.:]| · \d+ celda|^Sí$|Otro tipo|'
+            r'^No$'));
+    double? arriba(String clave) {
+      final e = _buscarElemento((e) => e.widget.key == ValueKey(clave),
+          aLaVista: false);
+      if (e == null) return null;
+      return (e.renderObject! as RenderBox).localToGlobal(Offset.zero).dy;
+    }
+
+    await _registrar('celdas-sin-duenio', {
+      'tarjeta': hay('orphan-codes'),
+      'codigos': estado().orphans.length,
+      'celdas': estado().orphans.fold<int>(0, (s, o) => s + o.cells),
+      'fichas_en_una_linea': {
+        for (final o in estado().orphans)
+          o.code: {
+            for (final c in ['yes', 'other', 'no'])
+              arriba('orphan-$c-${o.code}')
+          }.whereType<double>().toSet().length <= 1
+      },
+    });
+    var aceptadas = 0;
+    bool esSi(Element e) {
+      final k = e.widget.key;
+      return k is ValueKey<String> && k.value.startsWith('orphan-yes-');
+    }
+
+    while (_buscarElemento(esSi, aLaVista: false) != null) {
+      final si = await _traer(esSi, 'una sugerencia');
+      await _tocar(si);
+      await _asentar();
+      if (++aceptadas > 40) throw StateError('Las sugerencias no se acaban.');
+    }
+
+    // 3. El lápiz: el principal de 40HC pasa a 45G0, y vuelve.
+    Map<String, Object?> delLapiz() => {
+          'principal': tipo('40HC').planCode,
+          'tambien': tipo('40HC').also,
+          'grupos': estado().crossCheck!.groups.length,
+          'cuadran':
+              estado().crossCheck!.groups.where((g) => g.balanced).length,
+          'conflictos': estado().conflicts.length,
+          'celdas_sin_duenio': [for (final o in estado().orphans) o.code],
+        };
+    await _registrar('lapiz-antes', delLapiz());
+    importacion().choose(EquivalenceKind.type, '40HC', '45G0');
+    await _asentar();
+    await _registrar('lapiz', delLapiz());
+    await _capturarDonde(
+        'lapiz', (e) => e.widget.key == const ValueKey('equivalence-type-40HC'),
+        textos: RegExp('40HC|También llena|45G'));
+    importacion().choose(EquivalenceKind.type, '40HC', '45G1');
+    await _asentar();
+    await _registrar('lapiz-de-vuelta', delLapiz());
+    _sinAvisos();
+    await _asentar();
+    await _tocarALaVista(() => _conClave('export-list-confirm'));
+    await _asentar();
+    _sinAvisos();
+    await _volver();
+
+    // 4. El motivo, a la vista: el vacío cancelado y una celda de otro grupo.
+    final bahia = int.tryParse(parametro('bahia')) ?? 18;
+    await _aCarga(bahia);
+    var celda = _celdaPorCargar('loading-R:');
+    await _tocar(celda);
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await _asentar();
+    final cancelado =
+        parametro('cancelado').isEmpty ? '156' : parametro('cancelado');
+    await _escribirEnLaHoja(cancelado);
+    await _tocar(_conClave('loading-or-$cancelado'));
+    await _asentar();
+    await _motivoALaVista('motivo-vacio-cancelado');
+    await _volver();
+
+    celda = _celdaPorCargar('loading-R:');
+    final suCelda = datos()
+        .loading
+        .reservedSlots
+        .firstWhere((s) => s.key == _clave(celda).substring(8));
+    await _tocar(celda);
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await _asentar();
+    await _tocar(await _filaDeLaHoja(
+        otroGrupo: true,
+        largo: (suCelda.isoSizeType ?? '4').startsWith('2') ? '2' : '4L'));
+    await _asentar();
+    await _motivoALaVista('motivo-otro-grupo');
+    await _volver();
+
+    // 5. La revisión cancela un lleno del plan: «Confirmar carga» pide motivo.
+    final revision = parametro('listado2');
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.lista);
+    await _asentar();
+    await _tocarALaVista(() => _conClave('open-export-list'));
+    await _asentar();
+    await importacion().loadBytes(await leerDelCaso(revision),
+        fileName: revision);
+    await _asentar();
+    _sinAvisos();
+    await _asentar();
+    await _tocarALaVista(() => _conClave('export-list-confirm'));
+    await _asentar();
+    _sinAvisos();
+    await _volver();
+    final orden = int.tryParse(parametro('lleno')) ?? 1;
+    final lleno = datos().list!.byOrder(orden)!;
+    final suPieza = datos().numbered(lleno)!;
+    await _aCarga(datos().bayOf(suPieza.plannedPosition));
+    await _tocar(await _celdaDe('loading-${suPieza.key}'));
+    await _asentar();
+    await _motivoALaVista('motivo-lleno-cancelado');
+    final campo = _exigir(
+        _buscarElemento((e) =>
+            e is StatefulElement &&
+            e.state is EditableTextState &&
+            _tieneAncestro(
+                e, (w) => w.key == const ValueKey('loading-reason'))),
+        'el campo del motivo');
+    const motivo = 'Llegó al gancho y subió';
+    ((campo as StatefulElement).state as EditableTextState).updateEditingValue(
+        const TextEditingValue(
+            text: motivo,
+            selection: TextSelection.collapsed(offset: motivo.length)));
+    await _asentar();
+    await _tocarALaVista(() => _conClave('loading-confirm'));
+    await _asentar();
+    _sinAvisos();
+    await _asentar();
+
+    // 6. Los textos: el detalle de la celda, el avance y la salida.
+    await _tocar(await _celdaDe('loading-${suPieza.key}'));
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await _asentar();
+    await _registrar('detalle-de-la-celda', {
+      'conflicto': _textosConLaMatricula(
+          RegExp('lo marca cancelado'), lleno.containerId),
+      'conflictos': datos().state.conflicts.length,
+    });
+    await _capturar('detalle-de-la-celda',
+        textos: RegExp('lo marca cancelado|Cargado|Motivo|deshazlo|'
+            'Deshacer carga'));
+    await _volver();
+    contenedor
+        .read(destinoDelViajeProvider.notifier)
+        .ir(DestinoDelViaje.avance);
+    await _asentar();
+    await _capturar('avance', textos: RegExp('Listado:|Hechos y pendientes'));
+    await _salidaConAvisos('salida',
+        RegExp('conflictos? vigentes?|a bordo en la salida|está a bordo'),
+        matricula: lleno.containerId);
+  }
+
+  /// Entrega 2, parte 2b · El plan con una matrícula en dos celdas, en el
+  /// equipo que opera solo.
+  Future<void> _repetida2b() async {
+    final contenedor = _contenedor();
+    await _asentar();
+    if (await _abrirElPlan()) await _confirmarElPlan();
+    ExportListImportNotifier importacion() =>
+        contenedor.read(exportListImportProvider.notifier);
+    LoadingOperation datos() =>
+        contenedor.read(loadingOperationProvider(_viaje())).value!;
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.lista);
+    await _asentar();
+    await _capturar('rep-lista',
+        textos: RegExp('Matrículas repetidas|contenedores ·'));
+    final nombre = parametro('listado');
+    if (nombre.isNotEmpty) {
+      await _tocarALaVista(() => _conClave('open-export-list'));
+      await _asentar();
+      await importacion()
+          .loadBytes(await leerDelCaso(nombre), fileName: nombre);
+      await _asentar();
+      for (final par in parametro('elegir').split(',')) {
+        if (par.trim().isEmpty) continue;
+        final partes = RegExp(r'^(\w+):([^=]+)=(.+)$').firstMatch(par.trim())!;
+        importacion().choose(EquivalenceKind.type, partes[2]!, partes[3]!);
+      }
+      await _asentar();
+      _sinAvisos();
+      await _asentar();
+      await _tocarALaVista(() => _conClave('export-list-confirm'));
+      await _asentar();
+      _sinAvisos();
+      await _volver();
+    }
+    final repetidas = datos().repeated;
+    if (repetidas.isEmpty) throw StateError('El plan no trae repetidas.');
+    final repetida = repetidas.first;
+    final primera = repetida.extras.first;
+    final bahia = datos().bayOf(primera);
+    await _aCarga(bahia);
+    final deLaBahia = datos()
+        .loading
+        .containers
+        .where((c) => c.stowagePosition?.bay == bahia);
+    await _registrar('rep-carga', {
+      'con_listado': nombre.isNotEmpty,
+      'repetidas': repetidas.length,
+      'celdas': repetida.cells,
+      'ficha': _textosConLaMatricula(
+          RegExp('matrícula repetida'), repetida.containerId),
+      'contenedores_de_la_bahia': deLaBahia.length,
+      'peso_de_la_bahia_kg':
+          deLaBahia.fold<double>(0, (s, c) => s + (c.effectiveWeight ?? 0)),
+      'pendientes': datos().progress.total,
+    });
+    await _capturar('rep-carga',
+        textos: RegExp('matrícula repetida|contenedores|pendientes'));
+    await _tocar(await _celdaDe('repeated-$primera'));
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await _asentar();
+    await _registrar('rep-primera-celda', {
+      'responde': _textosConLaMatricula(
+          RegExp('también en'), repetida.containerId),
+    });
+    await _capturar('rep-primera-celda',
+        textos: RegExp('Matrícula repetida|también en|Entendido'));
+    await _volver();
+    await _tocar(await _celdaDe('loading-C:${repetida.containerId}'));
+    await _asentar();
+    await _capturar('rep-segunda-celda',
+        textos: RegExp('Confirmar carga|Posición planificada|Revisado|'
+            'Pide motivo|No se registra'));
+    await _tocarALaVista(() => _conClave('loading-confirm'));
+    await _asentar();
+    _sinAvisos();
+    await _asentar();
+    await _registrar('rep-cargada', {
+      'estado': datos().state['C:${repetida.containerId}']?.state.name,
+      'conflictos': datos().state.conflicts.length,
+      'pendientes': datos().progress.total,
+    });
+    await _capturar('rep-cargada',
+        textos: RegExp('matrícula repetida|Cargado|pendientes'));
+    await _salidaConAvisos('rep-salida', RegExp('un solo grupo'),
+        matricula: repetida.containerId);
+  }
+
+  /// Los textos a la vista que casan con [patron], con la matrícula tapada.
+  List<String> _textosConLaMatricula(RegExp patron, String matricula) {
+    final textos = <String>[];
+    void visitar(Element e) {
+      final w = e.widget;
+      final texto = w is Text
+          ? w.data ?? w.textSpan?.toPlainText() ?? ''
+          : w is SelectableText
+              ? w.data ?? ''
+              : '';
+      if (texto.contains(patron) && _visible(e)) {
+        textos.add(texto.replaceAll(matricula, '‹matrícula›'));
+      }
+      e.visitChildren(visitar);
+    }
+
+    WidgetsBinding.instance.rootElement?.visitChildren(visitar);
+    return textos;
+  }
+
+  /// Captura el diálogo de la carga que pide motivo y anota si el aviso, el
+  /// campo del motivo y «Confirmar carga» están a la vista sin desplazar.
+  Future<void> _motivoALaVista(String pantalla) async {
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await _asentar();
+    Element? de(bool Function(Element e) cumple) =>
+        _buscarElemento(cumple, aLaVista: false);
+    List<double>? caja(Element? e) {
+      if (e == null) return null;
+      final c = e.renderObject! as RenderBox;
+      final o = c.localToGlobal(Offset.zero);
+      return [o.dy, o.dy + c.size.height];
+    }
+
+    final aviso = de((e) {
+      final w = e.widget;
+      return w is Text && (w.data ?? '').startsWith('Pide motivo');
+    });
+    final motivo =
+        de((e) => e.widget.key == const ValueKey('loading-reason'));
+    final hora = de((e) => e.widget.key == const ValueKey('loading-hour'));
+    final confirmar =
+        de((e) => e.widget.key == const ValueKey('loading-confirm'));
+    final vista = WidgetsBinding.instance.platformDispatcher.implicitView!;
+    await _registrar(pantalla, {
+      'alto_de_la_pantalla': vista.physicalSize.height / vista.devicePixelRatio,
+      'titulo': _textosConLaMatricula(
+          RegExp(r'^(Asignar vacío|Confirmar carga)$'), '—'),
+      'aviso': caja(aviso),
+      'motivo': caja(motivo),
+      'hora': caja(hora),
+      'confirmar': caja(confirmar),
+      'aviso_a_la_vista': aviso != null && _visible(aviso),
+      'motivo_al_alcance': motivo != null && _alAlcance(motivo),
+      'confirmar_al_alcance': confirmar != null && _alAlcance(confirmar),
+    });
+    await _capturar(pantalla,
+        textos: RegExp('Pide motivo|Motivo|Confirmar carga|Asignar vacío'));
+  }
+
+  /// Abre «Generar BAPLIE de salida», captura la página y anota los textos
+  /// que casan con [patron]; después baja a «Avisos de la salida».
+  Future<void> _salidaConAvisos(String pantalla, RegExp patron,
+      {String matricula = '—'}) async {
+    _contenedor()
+        .read(destinoDelViajeProvider.notifier)
+        .ir(DestinoDelViaje.lista);
+    await _asentar();
+    await _tocarALaVista(() => _conClave('departure-baplie-button'));
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await _asentar();
+    await _capturar(pantalla, textos: patron);
+    bool esElAviso(Element e) {
+      final w = e.widget;
+      final texto = w is Text
+          ? w.data ?? ''
+          : w is SelectableText
+              ? w.data ?? ''
+              : '';
+      return texto.contains(patron);
+    }
+
+    Element? aviso = _buscarElemento(esElAviso, aLaVista: false);
+    if (aviso == null) {
+      try {
+        aviso = await _traer(esElAviso, 'el aviso de la salida');
+      } on StateError {
+        aviso = null;
+      }
+    }
+    if (aviso != null) {
+      await Scrollable.ensureVisible(aviso,
+          alignment: 0.2, duration: Duration.zero);
+      await _asentar();
+      await _capturar('$pantalla-avisos', textos: patron);
+    }
+    await _registrar(pantalla, {
+      'textos': _textosConLaMatricula(patron, matricula),
+    });
+    await _volver();
   }
 
   /// Va a Carga y elige la bahía.
