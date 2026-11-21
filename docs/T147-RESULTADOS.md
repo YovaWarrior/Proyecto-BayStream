@@ -498,3 +498,764 @@ Son 30 rutas. `windows/flutter/generated_plugin_registrant.*` y `generated_plugi
 | 5 | 20:24 a 20:30 | Este informe |
 
 Entre tramos esperé la luz verde de Carlos. Un descuido: a las 18:43 corrí un `dart run` de 8 segundos fuera de una ventana anunciada; se lo dije a Carlos en el mensaje siguiente.
+
+---
+
+# Entrega 2 · Propuesta
+
+Timonel · 20-nov-2026 · carpeta `C:\Proyectos\baystream-t147`, rama `t147-piloto4`, en `v1.0.2` (`99995db`). **Es solo la propuesta:** no cambié `lib/`, `test/`, `tool/` ni `pubspec.*` de la carpeta, no cambié la versión y no ejecuté ninguna escritura de Git. Lo que hizo falta para mirar o medir (dos sondas, un escenario más en el conductor y un prototipo de tres líneas) vive en dos copias limpias de `%TEMP%\t147-e2\`. La evidencia está en `build/t147/e2/propuesta/`, fuera de Git.
+
+Las citas `archivo:línea` son del código de `v1.0.2`. Las cifras del caso salen de leer `CORPUS_A09.edi` y `LISTADO_A09.xlsx` con los lectores del producto (`sonda-caso.json`), salvo donde digo otra cosa. Lo de la entrega 1, de la sección 0 a la 15, queda como estaba.
+
+## E2-0. En corto
+
+- **Paso 0, limpio.** En una copia de `9d6c199`, con T-120 y T-147 juntos: `analyze` sin incidencias y **2393 de 2393** pruebas, sin omitidas.
+- **Las 40 filas canceladas se reconocen por la palabra CANCEL** en MARCHAMO (o en CONTENIDO). Sin ellas, el caso da 408 filas, 135 de 135 llenos que cruzan y 273 vacíos para 273 celdas. No hace falta guardar nada nuevo: la nota ya viaja en el listado guardado.
+- **El destino final sale en `LOC+83`,** llenos y vacíos, con el POD del Excel. Lo que sigue a bordo ya conserva el suyo: los 301 grupos de paso salen enteros, byte por byte.
+- **Lo guardado deja de mandar.** Primero el plan; lo guardado solo vale si el plan no lo contradice, y los puertos ya no se guardan. Las del iPhone se ven y se quitan desde una tarjeta nueva.
+- **Un hallazgo que cambia la lectura de P4:** las 16 celdas «de otro grupo» son exactamente lo que les sobra a siete grupos. Si la oficina declara qué códigos llena también cada tipo, los 23 grupos quedan en 14 y **los 14 cuadran.** Con P1 y P4 juntos, el cruce del caso sale limpio.
+- **La matrícula repetida, mirada en pantalla:** la segunda celda se carga como cualquier lleno y la primera no responde nunca. Propongo que un plan así no entre a la nube, ni al publicar ni al agregar.
+- **O-147-1 tiene un arreglo corto:** cinco líneas en `vessel_voyage.dart`. Medido con el instrumento de la entrega 1, quita entre el 42 y el 47 % de lo que queda al abrirse el teclado. No es lo que necesita el próximo piloto (10.158): lo pongo en la segunda parte.
+- **Dos cosas que no sabía y la sonda enseñó:** la hoja abierta desde una celda de 20 pies ofrece 274 vacíos y **250 no caben**; y la importación del caso guarda en el dispositivo 16 equivalencias, no nueve.
+- **Propongo dos partes en una rama:** la 2a con lo que necesita el próximo piloto (P1, P3, P4, P2 y la hoja) y la 2b con el resto. Quince decisiones para Carlos, en E2-9.7.
+
+## E2-1. Paso 0
+
+| Comprobación | Resultado |
+|---|---|
+| Punta de la rama (`git log`, `git show --stat`) | `99995db`, «Sprint 4: la 1.0.2, mezcla de t147-piloto4 a master» |
+| `CORPUS_A09.edi` | 123 619 bytes, `450219fe…f07e`: la huella de la tabla del caso |
+| `LISTADO_A09.xlsx` | 64 524 bytes, `df40cd6f…aad0`: la huella de la tabla del caso |
+| Copia limpia de `9d6c199` (`git -c core.autocrlf=false archive`, en `%TEMP%\t147-e2\s4`) | 2 149 archivos cotejados con sus blobs: ninguno distinto |
+| Entrada de T-124 | copiada de `build\t124\entradas\`, huella `d4384834…`; fuera de Git |
+| `flutter pub get --offline --enforce-lockfile` (19:39) | pasa; `pubspec.lock` no cambia |
+| `flutter analyze`, todo el paquete (19:40) | **«No issues found!»** |
+| Suite completa, una corrida (20:09 a 20:11) | **`+2393: All tests passed!`**, sin omitidas ni fallidas |
+
+- Es lo que se esperaba: las 2340 de `sprint-4` más las 53 de T-147. **T-120 y T-147 conviven.**
+- Registros: `build/t147/e2/propuesta/paso0/` (`01-pub-get.log`, `02-analyze.log`, `03-suite.log` y `horas.txt`).
+- La copia de `9d6c199` trae la versión `1.0.2+11`, como la rama.
+- `origin/sprint-4` está hoy en `461f8e3` (la decisión 10.158, que solo cambia `SPRINT-4.md`). La suite corrió en `9d6c199`, que es lo que pedía el encargo.
+- **Las rutas que separan a `sprint-4` de `v1.0.2` son 39** (`git diff --stat v1.0.2 origin/sprint-4`), no 38: la 10.157 sumó el manual de la 1.0.2. Las de `lib/` son 14; las nombro en E2-9.4.
+
+## E2-P1. Las filas canceladas del listado
+
+### Qué pasa hoy
+
+- El lector guarda la nota como si fuera un marchamo (`export_list_parser_service.dart:289`), y la fila guardada la lleva en `seal` (`export_list.dart:245`). **Nadie la lee.**
+- El resumen cuenta las 448 (`export_list_import_page.dart:200-201`; `ExportList.fulls` y `empties`, `export_list.dart:322-323`).
+- Las equivalencias cuentan las 448 (`export_list_cross_checker.dart:294-301`).
+- El cruce las recorre todas (`:409`): los 37 llenos caen en «Llenos del listado que no están en el plan» (`:421-423`) y los 3 vacíos, en su grupo (`:411-414`).
+- La hoja de los vacíos y «Asignar vacío» las ofrecen (`loading_operation.dart:133-153` y `:395-402`). Con el caso, la hoja ofrece los OR 156, 168 y 182 desde cualquier celda.
+- La carga por OR no ofrece los 37 llenos porque el plan no los trae (`:136-140`), no porque estén cancelados.
+- En el BAPLIE de salida, «Filas del listado que no cargaron» busca CANCEL **en CONTENIDO** (`departure_baplie_writer.dart:186-189`), no en MARCHAMO. Con el caso, las 40 salen como «sin celda en el plan» (37) y «sin celda asignada en el plan» (3); ninguna, como «cancelado en el listado».
+- En «Filas del listado», la fila dice «Marchamo ROLEADO - CANCEL» (`export_list_import_page.dart:603-607`).
+
+### Lo que propongo
+
+**1. Cómo se reconoce.** Una fila está cancelada si su MARCHAMO o su CONTENIDO trae la palabra CANCEL, entera, sin mirar mayúsculas ni tildes: CANCEL, CANCELADO, CANCELADA, sus plurales, CANCELLED y CANCELED.
+- Es la expresión que T-132 ya usa sobre CONTENIDO. Las cuatro notas de Carlos la traen.
+- En el caso, MARCHAMO trae algo en 40 filas y son esas 40; ninguna trae una cifra, y CONTENIDO no dice CANCEL en ninguna fila.
+- **Se calcula de lo que ya está guardado** (`seal` y `contents`). No hay ninguna clave nueva en el listado.
+- **Descarto** una lista cerrada con los cuatro textos exactos: un espacio de más la rompe, y «YA EMBARCADO -CANCEL» ya trae el guion pegado. **Descarto** el color de relleno: el lector no lee estilos, y un color no es un dato.
+
+**2. Una nota parecida que no es una de las cuatro.**
+- Si trae CANCEL («CANCELADO POR LA LÍNEA»), es una cancelación.
+- Si no la trae y tampoco parece un marchamo, porque no tiene ninguna cifra («ROLEADO», «PENDIENTE», «NO EMBARCAR»): **la fila se sigue cargando y el resumen la avisa.**
+- Un texto con cifras sigue siendo un marchamo.
+- **Por qué no la doy por cancelada:** si me equivoco hacia «cancelada», el muelle no encuentra una fila que sí sube. Si me equivoco hacia «se carga», pasa lo de hoy, y la oficina lo arregla con el listado corregido, que ya entra en una operación publicada (T-127). Es la decisión D1.
+
+**3. Qué ve el planificador.**
+
+| Dónde | Texto |
+|---|---|
+| Resumen del listado | «448 filas en 5 agencias · 408 para cargar: 135 llenos y 273 vacíos» (dirá «2 agencias» cuando entre O-147-4) |
+| | «40 canceladas en el listado, que no se cargan: 37 llenos y 3 vacíos» |
+| | «ROLEADO - CANCEL 24 · YA EMBARCADO -CANCEL 7 · CANCELADO 7 · REEMPLAZO - CANCEL 2» |
+| Su desplegable | «Canceladas en el listado (40)», con «OR 22 · ‹matrícula› · lleno · «ROLEADO - CANCEL»» |
+| Una nota sin reconocer | «2 filas traen en MARCHAMO una nota que no se reconoce: «ROLEADO» (OR 12 y 31). Se cargan. Si no se cargan en este buque, pide a la agencia que diga CANCELADO y vuelve a importar el listado.» |
+| Equivalencias | cuentan solo lo que se carga: «Tipo 40HC (125 filas)». Un código que solo traen filas canceladas no pide equivalencia |
+| Cruce | «135 de 135 llenos cruzan con el plan» y «273 de 273 vacíos en 23 grupos de reservas». La sección de los llenos que no están en el plan no sale |
+| Cruce, solo si pasa | «2 canceladas en el listado que el plan todavía carga», con «OR n · ‹matrícula› · 010-02-82» y «Cancela su embarque desde el detalle de la celda o pide el plan corregido.» En el caso son 0 |
+| Filas del listado | «Cancelada en el listado: «ROLEADO - CANCEL»», donde hoy dice «Marchamo …» |
+| Hoja de los vacíos y «Asignar vacío» | no las ofrecen. Si se busca su OR exacto, una fila apagada: «OR 156 · ‹matrícula› · Cancelado en el listado: no se carga» |
+| Carga por OR | igual. Al tocar en el plano un lleno que el plan trae y el listado cancela: «No se registra: el listado lo marca cancelado («ROLEADO - CANCEL»). Si sí se carga, la agencia corrige el listado y la oficina lo vuelve a importar.» |
+| Esa celda, en Carga | la marca «Revisar»; su etiqueta accesible dice «cancelado en el listado, revisar» |
+| Avance | bajo las notas del encabezado: «Listado: 40 filas canceladas, que no se cargan (37 llenos y 3 vacíos).» Las columnas no cambian |
+| BAPLIE de salida | en «Filas del listado que no cargaron»: «OR 22 · ‹matrícula› · cancelado en el listado («ROLEADO - CANCEL»)» |
+
+Que el muelle no pueda cargar un lleno que el plan trae y el listado cancela es la decisión D2: Carlos dijo que esas filas no se cargan, y por eso propongo bloquear. La otra salida es dejarlo con motivo.
+
+**4. Cómo convive con los cancelados que ya hay.** Son dos cosas distintas y la pantalla las nombra distinto, siempre igual:
+
+| | Cancelado **en el listado** (nuevo) | Cancelado **en la operación** (T-81) |
+|---|---|---|
+| Quién | la agencia, en el Excel | la oficina, con «Cancelar embarque» y su motivo |
+| Sobre qué | una fila del listado | una pieza del plan: un contenedor o una celda reservada |
+| Cómo viaja | dentro del listado, que es una fuente | un movimiento de la bitácora |
+| Dónde se ve | resumen, cruce, hoja, línea del avance y «Filas que no cargaron» | la marca «Cancel.» de la celda, la columna «Cancelados» del avance y «Cancelados vigentes» de la salida |
+
+- **Ninguno se convierte en el otro solo.** La bitácora es de solo anexar y una cancelación es de la oficina, con su motivo: el listado no escribe movimientos.
+- **Lo que los une es el cruce,** que nombra las canceladas del listado que el plan todavía carga. La oficina las cancela una por una, como hoy. Un botón para cancelarlas todas a la vez no entra: en el caso no hay ninguna.
+- La columna «Cancelados» y «Cancelados vigentes» no cambian su cuenta. En el caso siguen en 0.
+- Una fila con las dos cosas sale en las dos listas de la salida, cada una con su motivo. Ya pasa así desde T-132.
+
+**5. Si la fila ya se cargó cuando llega la revisión que la cancela.**
+- **La carga no se toca ni se anula sola.** Lo que subió, subió.
+- Al importar, la tarjeta «Lo ya operado con el listado nuevo» (T-127; `export_list_cross_checker.dart:220-257`) gana una línea: «1 contenedor ya cargado queda cancelado en el listado nuevo», con su lista.
+- En el plano, la celda pasa a «Revisar», y el avance la lista en Conflictos: «OR 156 · ‹matrícula› se cargó y el listado lo marca cancelado («CANCELADO»). Si el registro fue un error, deshazlo desde el detalle de la celda.»
+- Es un conflicto que cada equipo deriva del listado, como ya hace con «vacío de otro grupo» (`operation.dart:333-336` y `operation_state_deriver.dart:481-491`). No es un movimiento ni se guarda.
+- En la salida va a bordo, porque manda la posición física (T-82), con una línea en «Avisos de la salida»: «OR 156 · ‹matrícula›: está a bordo y el listado lo marca cancelado.»
+- «Deshacer carga» la deja como cualquier cancelada: no se ofrece.
+
+### Entre versiones
+
+- **La forma del listado guardado no cambia.** La versión nueva lee como cancelada una fila que guardó la 1.0.1 o la 1.0.2, sin volver a importar.
+- La 1.0.2 lee el listado que guarde la nueva y cuenta las 40 como carga, igual que hoy.
+- **Con versiones mezcladas,** un muelle en la 1.0.2 puede asignar un vacío cancelado, y la oficina en la nueva lo ve como conflicto. No se pierde nada, pero no conviene: los tres clientes salen juntos.
+
+### Las pruebas
+
+Con listados sintéticos (`test/support/t147_listado_support.dart`). Las rojas corren contra una copia de `v1.0.2`, como en la entrega 1.
+
+- Las cuatro notas, en minúsculas, con tilde, «CANCELLED» y en CONTENIDO: canceladas. «ROLEADO» solo: se carga y se avisa. «AB123456»: marchamo.
+- El resumen cuenta «para cargar» y «canceladas»; las equivalencias cuentan sin las canceladas; un código que solo traen filas canceladas no queda pendiente.
+- El cruce: un lleno cancelado que no está en el plan no sale en «no están en el plan»; un vacío cancelado no entra en su grupo; una cancelada que el plan carga sale en su lista.
+- La hoja, «Asignar vacío» y «Corregir carga» no la ofrecen, y la carga armada a mano se rechaza con su texto.
+- La fila ya cargada y la revisión que la cancela: la tarjeta la cuenta, el estado derivado da el conflicto, y «Deshacer carga» lo quita.
+- La salida: el motivo con la nota; MARCHAMO vale igual que CONTENIDO; la cancelada que está a bordo sale con su aviso.
+- Un listado guardado por la 1.0.2, con sus notas en `seal`, se lee cancelado sin reimportar.
+- **Las que no deben cambiar:** un listado sin notas, como el del caso A08, da lo mismo que hoy.
+
+### Lo que debe dar el caso A09
+
+| | Hoy (1.0.2) | Con P1 |
+|---|---|---|
+| Filas | 448: 172 llenos y 276 vacíos | 408 para cargar, 135 y 273; 40 canceladas, 37 y 3 |
+| Canceladas, por nota | no se cuentan | 24, 7, 7 y 2 |
+| Llenos que cruzan | 135 de 172 | **135 de 135** |
+| Llenos del listado que no están en el plan | 37 | **0** |
+| Del plan que no están en el listado | 0 | 0 |
+| Vacíos en grupos | 276 de 276 en 23 | **273 de 273** en 23 |
+| Grupos que cuadran | 7 de 23 | 7 de 23 (con P4, 14 de 14) |
+| Llenos con datos distintos | 17, por el tipo | 17, por el tipo (con P4, 0) |
+| Tipos, en filas | 20ST 31, 40HC 156, 40RA 9, 40RH 62 | 20ST 30, 40HC 125, 40RA 6, 40RH 57 |
+| POT, en filas | COTRB 231, JMKIN 123, COCTG 88, COBAQ 6 | COTRB 213, JMKIN 123, COCTG 66, COBAQ 6: **lo mismo que descarga el plan** |
+| Pendientes | los nueve tipos | los nueve tipos |
+| Canceladas que el plan trae | — | 0 de 40 |
+| La hoja, desde 018-10-88 | 274 filas, con los OR 156, 168 y 182 | 271 filas, sin ellos |
+| Salida sin cargas: «no cargaron» | 448: 137 «carga no registrada», 274 «sin celda asignada», 37 «sin celda en el plan» | 448: 137, 271, 0 y **40 «cancelado en el listado»** |
+
+Los tres vacíos cancelados son 40HC · COTRB · `LGH`, de la sección «VACIOS». Las otras 37 son de «AGENCIA 1» (33) y «AGENCIA 2» (4).
+
+**Los 23 grupos, con las 40 y sin ellas.** Cambia una sola línea:
+
+| Grupo (ISO · descarga · línea) | Celdas | Vacíos, con las 40 | Vacíos, sin ellas |
+|---|---:|---:|---:|
+| 42G1 · COTRB · LNH | 62 | 63 | 63 |
+| L5G1 · COTRB · LNH | 61 | 64 | 64 |
+| 45R1 · JMKIN · LNH | 43 | 43 | 43 |
+| **45G1 · COTRB · LNH** | 28 | **34** | **31** |
+| 45G1 · JMKIN · LNJ | 24 | 24 | 24 |
+| 22G1 · JMKIN · LNJ | 10 | 10 | 10 |
+| 42U1 · JMKIN · LNH | 8 | 8 | 8 |
+| 42R1 · JMKIN · LNH | 6 | 9 | 9 |
+| 22U1 · JMKIN · LNH | 5 | 6 | 6 |
+| 22K2 · COCTG · LNH | 4 | 8 | 8 |
+| 42P3 · JMKIN · LNH | 3 | 3 | 3 |
+| 42R0 · JMKIN · LNH | 3 | 0 | 0 |
+| 45G0 · COTRB · LNH | 3 | 0 | 0 |
+| L5G0 · COTRB · LNH | 3 | 0 | 0 |
+| 22T4 · COCTG · LNH | 2 | 0 | 0 |
+| 22P3 · JMKIN · LNH | 1 (ya con número) | 1 | 1 |
+| 22R1 · JMKIN · LNH | 1 (ya con número) | 1 | 1 |
+| 22T0 · COCTG · LNH | 1 | 0 | 0 |
+| 22T1 · COCTG · LNH | 1 | 0 | 0 |
+| 22U0 · JMKIN · LNH | 1 | 0 | 0 |
+| 42G0 · COTRB · LNH | 1 | 0 | 0 |
+| 45P3 · JMKIN · LNH | 1 | 2 | 2 |
+| 45P4 · JMKIN · LNH | 1 | 0 | 0 |
+| **Total** | **273** | **276** | **273** |
+
+Coincide con 5.2 de `S4-CASO-A09.md` en todo.
+
+## E2-P2. El destino final en el BAPLIE de salida
+
+### Qué pasa hoy
+
+- Una carga armada con su fila (`_loaded`, `departure_baplie_writer.dart:305-579`) escribe `LOC+9` (`:414-416`), `LOC+11` con el puerto de la fila, que desde la 1.0.2 es el POT (`:417-419`), y `LOC+13` solo con una fila guardada por la 1.0.1 (`:420-423`). **El POD del Excel, `listPod`, no se escribe en ninguna parte.**
+- Lo que sigue a bordo conserva su grupo del plan (`_aboard`, `:243-303`), y si solo cambió de celda, sus bytes (`:140-155`).
+
+**Lo comprobé con el caso** (`sonda-caso.json`, `p2Salida`):
+- **Un contenedor que sigue a bordo conserva el `LOC+83` que traía.** Sin ninguna carga, la salida trae 301 contenedores y 301 `LOC+83`, y los 301 grupos del plan que lo traen están enteros en la salida, byte por byte.
+- Con dos cargas cuyo POD es distinto de su POT, siguen siendo 301 `LOC+83` y ningún `LOC+13`:
+
+| | En el plan | En la salida de la 1.0.2 |
+|---|---|---|
+| OR 1, lleno · POT COCTG · POD SAJED | `LOC+147`, `MEA+VGM`, `LOC+9+GTSTC`, `LOC+11+COCTG`, `LOC+76+GTSTC`, `RFF+BM`, `EQD`, `NAD` | lo mismo, con el VGM y la tara del listado. **Sin SAJED** |
+| OR 400, vacío · POT JMKIN · POD CNTAO | no tiene grupo propio: va a una celda reservada | `LOC+147`, `MEA+WT`, `MEA+T`, `LOC+9+GTSTC`, `LOC+11+JMKIN`, `RFF+BM`, `EQD`, `NAD`. **Sin CNTAO** |
+
+### Lo que propongo
+
+**La regla.** Una carga armada con su fila lleva `LOC+83+<POD>:139:6` cuando se cumplen las tres:
+1. la fila trae POT y POD distintos en el Excel (`potDiffersFromPod`, `export_list.dart:151`);
+2. el POD tiene forma de UN/LOCODE (`formaDeUnLocode`, `un_locode.dart:17`: dos letras y tres letras o cifras);
+3. el POD no es el código que ya sale en `LOC+11`.
+
+**El POD va como viene en el Excel,** sin pasar por las equivalencias de puerto. Esas equivalencias llevan al puerto del plan donde el contenedor baja; el destino final no tiene contraparte en el plan. Con una equivalencia «destino final → trasbordo» de las que quedaron en el iPhone, traducirlo escribiría el trasbordo dos veces.
+
+**Vale igual para los vacíos** (D4). El plan del caso lo hace: 40 de sus vacíos de paso traen `LOC+83`. En el caso son 60 vacíos: 52 con POT JMKIN y POD CNTAO, y 8 con COCTG y BRPNG.
+
+**El lugar en el grupo:** justo después de `LOC+11`, o de `LOC+13` si lo hay, y antes de `LOC+76` y de `RFF`.
+- Es el orden del plan del caso: en sus 301 grupos, `LOC+83` va detrás de `LOC+11`; después viene `LOC+76` en 198 y `RFF+BM` en 103 (`plan-a09-loc83.json`).
+- EDIFACT no fija un orden entre los `LOC` repetidos del grupo. La inserción de hoy lo pondría detrás de `LOC+76`, porque trata igual a todos los `LOC` (`:384-399`): por eso va con su lugar explícito.
+- **La forma, `:139:6`,** es la de `LOC+9` y `LOC+11` del escritor y la de los 301 del plan.
+
+**Si el POD no tiene forma de UN/LOCODE,** no se escribe `LOC+83` y la página lo dice: «OR n · ‹matrícula›: el POD «XXX» del listado no tiene forma de UN/LOCODE; el destino final no se escribió.» (D5).
+- No se inventa un código ni se escribe un texto libre con `139:6`, que declara la lista de UN/LOCODE.
+- En el caso, los 36 POD del listado tienen la forma.
+- El plan sí trae dos códigos que no la tienen, «CO» y «JM», en `LOC+83` de contenedores de paso. Se conservan como vienen: son del plan.
+- Un carácter que no cabe en el juego del `UNB` ya impide guardar, con su fila (`:336-344`). El plan del caso es UNOA.
+
+**Si el plan ya trae un `LOC+83` distinto del listado,** manda el listado y la página lo dice: «OR n · ‹matrícula›: destino final SAJED, del listado; el plan decía XXXXX.» (D6).
+- El listado es lo que la agencia declara de lo que carga aquí. Ya manda así sobre el POD, el POT, el tipo, la línea y los pesos (T-132).
+- Si el listado no da destino final (POT y POD iguales, o sin columna POT), el `LOC+83` del plan se conserva.
+- No lo pongo como «Datos por confirmar», que es lo que T-132 hace con las peligrosas y la temperatura: aquello cambia cómo se estiba; esto es un dato comercial.
+- **En el caso no pasa:** ninguno de los 408 que cargan en GTSTC trae `LOC+83` en el plan.
+
+**Qué ve el planificador,** en la página del BAPLIE de salida:
+- una línea con la cuenta: «169 cargas llevan su destino final (LOC+83), tomado del POD del listado.»;
+- en «Avisos de la salida», los dos textos de arriba, cuando pasan.
+
+### Con un listado guardado por la 1.0.1 y por la 1.0.2
+
+La regla es una sola y da lo correcto en los dos casos, porque mira el POD del Excel, que las dos versiones guardan igual:
+
+| La fila la guardó | `LOC+11` | `LOC+13` | `LOC+83` |
+|---|---|---|---|
+| La 1.0.2 o la nueva (el puerto de la fila es el POT) | el POT | no sale | **el POD** |
+| La 1.0.1, sin equivalencia de puerto (el puerto de la fila es el POD) | el POD | el POT, por la regla de T-132 | no sale: ya está en `LOC+11` |
+| La 1.0.1, con «destino final → trasbordo» elegida, como en el piloto 4 | el trasbordo | no sale | **el POD** |
+| Cualquiera, sin columna POT | el POD | no sale | no sale |
+
+### Lo que guarde la versión nueva
+
+- **El listado guardado no cambia de forma.** La 1.0.1 y la 1.0.2 lo abren y generan su salida como hoy, sin `LOC+83` para lo cargado.
+- **El BAPLIE de salida de la nueva lo abre cualquier versión.** La 1.0.1 y la 1.0.2 leen `LOC+83` (`baplie_parser_service.dart:642-645`) y lo enseñan como «Destino final» en el detalle del contenedor (`detalle_contenedor.dart:75-77`).
+- La salida la genera la oficina: que la genere con la versión nueva.
+
+### La prueba de fidelidad de T-132
+
+- «T-132 POT igual al POD quita LOC+13; distinto lo escribe» (`test/t132_departure_fidelity_test.dart:219`) **gana esperas, no pierde ninguna:** con la fila de la 1.0.2, `LOC+11` con el POT, sin `LOC+13` y `LOC+83` con el POD justo detrás de `LOC+11`; con la fila de la 1.0.1, `LOC+11` con el POD, `LOC+13` con el POT y sin `LOC+83`; con POT igual al POD, ninguno de los dos.
+- **`LOC+11` sigue siendo el POT** (10.153).
+- Pruebas nuevas, rojas contra `v1.0.2`: el vacío asignado con POD distinto; el POD sin forma, con su aviso; el plan con un `LOC+83` distinto (manda el listado y avisa), igual (el grupo no cambia) y sin destino en el listado (se conserva); el contenedor de paso, entero; el lugar del segmento, con `LOC+76` y sin él; y la salida releída con el lector, que da el POD como destino final.
+
+### Lo que debe dar el caso A09
+
+- **169 de las 408 filas que se cargan** traen el POD distinto del POT: **109 llenos y 60 vacíos.** Los 36 POD tienen forma de UN/LOCODE.
+- Sin cargas: 301 `LOC+83`, los del plan, enteros.
+- Con el lleno OR 1 y el vacío OR 400 cargados: 303 `LOC+83`, con `LOC+83+SAJED:139:6` y `LOC+83+CNTAO:139:6` detrás de su `LOC+11`.
+- **Con las 408 cargadas: 470 `LOC+83`** (301 más 169) y ningún `LOC+13`. Es lo que da la regla; la sonda no registró las 408 cargas.
+- La fuente es el manual de BAPLIE 2.2.1 de SMDG, la cita de `BaplieConstants.locFinalDestination` (`baplie_constants.dart:81-84`).
+
+## E2-P3. Las equivalencias guardadas
+
+### Qué pasa hoy
+
+- Al confirmar la importación se guarda en el dispositivo todo lo que no sea una identidad deducida o propuesta (`tableOf`, `export_list_cross_checker.dart:365-374`; `export_list_providers.dart:291-296`).
+- Va a una sola tabla por dispositivo, sin buque ni viaje (`hive_vessel_data_source.dart:150-158`).
+- En la importación siguiente, lo guardado manda sobre lo que digan los contenedores (`export_list_cross_checker.dart:305-315`). La pantalla solo le suma una frase en gris: «Guardada en este dispositivo, pero el plan dice …» (`export_list_import_page.dart:291-294`).
+- **No hay dónde verlas ni quitarlas.** Solo el lápiz, una por una, y solo cuando sale en una importación.
+
+**Con el caso** (`sonda-caso.json`, `p3` y `loQueSeGuardaEnElDispositivo`):
+- **La importación del caso guarda 16, no nueve:** los nueve tipos elegidos, los seis que se deducen y traducen (40ST, 40RA, 40RC, 40RH, 20FF y 20RF) y la línea `LGH` → `LNH`. Ningún puerto.
+- **Lo guardado manda aunque el plan diga otra cosa.** Con «COTRB → JMKIN» sembrada, la importación usa JMKIN aunque 55 contenedores del plan digan COTRB, y no pregunta. Con «40ST → 45G1», usa 45G1 aunque el plan diga 42G1.
+
+### La regla nueva
+
+**1. El orden de quién manda:**
+
+| | De dónde sale | La pantalla dice |
+|---|---|---|
+| 1 | El plan: los contenedores que están en el listado y en el plan dan un solo código | «Propuesta: N contenedores están en el listado y en el plan.» (como hoy) |
+| 2 | La revisión anterior del listado de **esta misma operación**. Ya viaja dentro del listado guardado (`export_list.dart:367`), así que es igual en todos los equipos | «De la revisión anterior de este listado.» |
+| 3 | El dispositivo, **solo si el plan no lo contradice** | «Guardada en este dispositivo.» |
+| 4 | El plan carga ese mismo código (T-147, regla 5) | «Propuesta: el plan carga … con ese mismo código.» (como hoy) |
+| 5 | Nada de lo anterior | pendiente, con sus sugerencias (como hoy) |
+
+«No lo contradice» quiere decir dos cosas: el plan carga ese código en la escala, y los contenedores no dan otro. Si lo contradice, no se usa, la fila queda pendiente y lo dice: «En este dispositivo estaba guardada 40ST → 45G1, y el plan dice 42G1 (1 contenedor): no se usó.»
+
+**2. Qué se guarda en el dispositivo:** solo tipos y líneas, y solo lo que la importación confirmada usó. **Los puertos no se guardan nunca:** con el cruce por POT salen por identidad, y los que no, son de ese viaje.
+
+**3. Atado a qué** (D7). Tres salidas:
+
+| | Qué gana | Qué cuesta |
+|---|---|---|
+| **A · Al dispositivo, con la regla de no contradecir (la que propongo)** | el próximo listado de la misma agencia entra con cero o pocas pendientes | una equivalencia mala sigue guardada, pero ya no puede imponerse a un plan que dice otra cosa |
+| B · Al buque | no pasa de un buque a otro | con un buque nuevo, la oficina elige otra vez los nueve tipos, que son de la agencia y no del buque |
+| C · Al buque y al viaje | nada pasa de un viaje a otro | no ahorra nada: dentro de una operación ya lo cubre la fila 2 de la tabla |
+
+**4. Lo que ya está guardado en los equipos.**
+- **La versión nueva deja de leer y de escribir los puertos del dispositivo.** Las 33 del iPhone dejan de mandar en cuanto la Web se actualice.
+- **Se ven y se quitan desde una tarjeta nueva,** al final de «Listado de la agencia», esté o no leído un listado:
+
+| Texto |
+|---|
+| «Equivalencias guardadas en este dispositivo (16)» |
+| «Tipo 40HC → 45G1», con «Quitar» en cada una |
+| «De puerto, de versiones anteriores (33): ya no se usan.», con «Quitar las 33» |
+| «Quitar todas» |
+| «Quitar una equivalencia no cambia ningún listado ya importado.» |
+
+- **No las borro solas** (D8): son datos que alguien eligió, y Carlos las quiere mirar (10.151).
+- **Lo que no vi:** el iPhone y el almacén de la laptop. No abrí la BayStream instalada ni `%LOCALAPPDATA%\BayStream`. Por el código, si la prueba corta eligió los nueve tipos de 4.4, en la laptop quedaron las 16 de arriba.
+
+### Entre versiones
+
+- La tabla del dispositivo conserva su forma. La versión nueva no toca los puertos que encuentra: si se vuelve a la 1.0.2 en ese equipo, los vuelve a leer.
+- El listado guardado ya trae sus equivalencias desde la 1.0.0. No hay clave nueva.
+
+### Las pruebas
+
+Rojas contra `v1.0.2`: lo guardado que el plan contradice no se usa y lo dice; lo guardado sin respaldo se usa si el plan carga ese código, y queda pendiente si no; los puertos guardados se ignoran; confirmar no guarda puertos; la revisión anterior de la operación manda sobre el dispositivo; quitar una y quitar todas; y una tabla guardada por la 1.0.2, con sus puertos, se lee sin fallar.
+
+### Lo que debe dar el caso A09
+
+- En un equipo limpio, lo mismo que hoy: nueve tipos pendientes y ningún puerto.
+- Al confirmar: 16 guardadas, 15 tipos y una línea.
+- En un equipo que ya importó el caso: ninguna pendiente; las nueve salen «Guardada en este dispositivo».
+- Con «40ST → 45G1» o «COTRB → JMKIN» sembradas: 40ST queda pendiente, con su explicación, y COTRB sale por el plan.
+
+## E2-P4. Un tipo del listado, varios códigos ISO en el plan
+
+### Qué pasa hoy
+
+- La equivalencia es de uno a uno (`EquivalenceProposal.planCode`; `tableOf`, `export_list_cross_checker.dart:365-374`).
+- «El mismo grupo» compara el código exacto en seis sitios: el cruce (`:383-399` y `:412`), la diferencia de tipo de un lleno (`:429`), las celdas que se ofrecen (`loading_operation.dart:225-227` y `:344-346`), la revisión de la carga (`load_check.dart:208-219`), la hoja (`loading_controls.dart:780-783`) y el conflicto «otro grupo» (`operation_state_deriver.dart:481-491`).
+
+**Con el caso** (`sonda-caso.json`, `p4`):
+- **16 celdas reservadas en nueve códigos que ningún tipo del listado llena:** 45G0 3, L5G0 3, 42R0 3, 22T4 2, 22T0 1, 22T1 1, 22U0 1, 42G0 1 y 45P4 1. Piden motivo al cargar y quedan en «Revisar».
+- **Los 17 «llenos con datos distintos» son por lo mismo:** 10 son 40HC que el plan trae como 45G0, 1 es 20ST como 22G0 y 6 son 20TK como 22T1 (3), 22T0 (2) y 22T6 (1).
+- **Lo que no se había visto:** esas 16 celdas son exactamente lo que les sobra a siete grupos. A 45G1 · COTRB le sobran 3 vacíos y hay 3 celdas 45G0 · COTRB; a L5G1 le sobran 3 y hay 3 L5G0; a 42R1, 3 y 3 de 42R0; a 22K2, 4 y 4 de cisterna; a 42G1, 22U1 y 45P3, 1 y 1.
+
+### Las tres salidas
+
+| | Qué es | Por qué sí o por qué no |
+|---|---|---|
+| A · Uno a varios dentro de la equivalencia | «40HC → 45G1 y 45G0», y la fila deja de tener un solo tipo | **Descartada así.** Cambia el `type` de la fila guardada: la 1.0.2 ya no arma los mismos grupos |
+| B · Una regla de códigos compatibles | dos códigos valen igual si empiezan con los mismos tres caracteres | **Descartada como regla.** Cubre 12 de las 16 celdas; las cisternas quedan fuera (22K2 contra 22T4, 22T0 y 22T1). Y mete un supuesto sobre los códigos ISO que no puedo respaldar. Sirve como sugerencia |
+| C · «Aceptar con motivo» desde la oficina | un movimiento nuevo que da por buena una desviación | **No en esta entrega.** La 1.0.2 no lee una bitácora con un tipo de movimiento que no conoce (`movement.dart:176-179`), y hay que tocar las reglas de Firestore. Es su propia tarea |
+
+### Lo que propongo: «también llena»
+
+La oficina declara, al importar, **qué otros códigos del plan llena cada tipo del listado.** La equivalencia sigue siendo una, la principal; los demás códigos se guardan aparte, dentro del listado.
+
+**Cómo se propone, sin trabajo de más para la oficina:**
+1. **Con respaldo repartido** (40HC: 45G1 60 y 45G0 10). Hoy queda pendiente: «Los contenedores no coinciden… Elige el código del plan». Propongo que salga propuesta, con el más frecuente como principal y los demás como «también»: «Propuesta: 60 contenedores van a 45G1 y 10 a 45G0. 40HC llena los dos.» El lápiz la corrige (D10). En el caso, 20ST, 20TK y 40HC dejan de estar pendientes: **quedan seis de las nueve.**
+2. **Sin respaldo,** una tarjeta nueva bajo las equivalencias: «Celdas reservadas que ningún tipo del listado llena (11)», con una línea por código: «L5G0 · 3 celdas. ¿Las llena 45HC (L5G1)?», con «Sí», «Otro tipo…» y «No: piden motivo».
+   - La sugerencia sale de los tres primeros caracteres de los códigos que el tipo ya llena. En el caso alcanza a las 11 celdas: nueve por el código principal, y las dos de 22T4 porque 20TK ya llena 22T0 y 22T1 por sus llenos. Esto último lo leo de las cuentas: la sonda solo probó la sugerencia contra el código principal, que cubre 12 de las 16.
+   - **No bloquea «Confirmar e importar».** Lo que no se declare sigue pidiendo motivo, como hoy.
+
+**Lo que cambia:**
+
+| Dónde | Hoy | Con «también llena» |
+|---|---|---|
+| El cruce, los grupos | 23, uno por código | uno por tipo principal: «45G1 · COTRB · LNH: 31 vacíos, 31 celdas (28 de 45G1 y 3 de 45G0)» |
+| El cruce, los llenos | «tipo 45G1 en el listado, 45G0 en el plan» | no es una diferencia si el código del plan es uno de los declarados |
+| La hoja, desde una celda 45G0 | los 40HC salen como «Otro grupo: pide motivo» | salen como de su grupo |
+| «Asignar vacío» | «Pide motivo: La reserva … es de otro grupo (tipo 45G0)…» | «Revisado: tipo, celda y grupo coinciden con el plan.» |
+| La celda ya cargada | «Revisar» | «Cargado» |
+| El rótulo de esas celdas en Carga | «—» | su código, puerto y línea |
+
+**Lo que no cambia:**
+- **La fila guardada.** Su tipo sigue siendo el principal, así que la 1.0.2 arma con el listado nuevo los mismos 23 grupos. Lo declarado va en una clave nueva del listado, que la 1.0.2 no lee (`ExportList.fromJson`, `export_list.dart:372-387`).
+- **El BAPLIE de salida.** El vacío asignado sale con el tipo de su fila, el principal (`departure_baplie_writer.dart:435`), aunque la celda fuera 45G0. Ninguna de las dos fuentes sabe el cuarto carácter del contenedor que subió.
+- **No se guarda en el dispositivo:** viaja con el listado, como pide P3.
+
+**Con el hallazgo 6 de la 10.85** (dos líneas con vacíos intercambiables): el mismo mecanismo serviría para la línea, pero no lo propongo aquí. Nadie lo pidió para el próximo piloto, y es otra pregunta para quien planifica. «Aceptar con motivo» queda para su tarea.
+
+### Entre versiones
+
+- La 1.0.2 abre el listado nuevo y no ve lo declarado: en esas 16 celdas pide motivo y marca «Revisar», como hoy. La versión nueva, no. **Los movimientos son los mismos.**
+- La versión nueva abre un listado de la 1.0.2 sin nada declarado: todo como hoy, hasta que la oficina lo vuelva a importar.
+
+### Las pruebas
+
+Rojas contra `v1.0.2`: el respaldo repartido se propone con principal y «también»; un código sin dueño se sugiere por sus tres primeros caracteres y uno de cisterna no; el cruce une los grupos y no cuenta el tipo declarado como diferencia; la hoja, las celdas ofrecidas, la revisión y el estado derivado tratan el código declarado como del grupo; un listado con lo declarado, leído por el código de la 1.0.2, da los mismos 23 grupos; la salida no cambia.
+
+### Lo que debe dar el caso A09
+
+Con P1, y declarando los nueve códigos (seis por la sugerencia y los tres de cisterna a mano; así corrió la sonda):
+
+| Grupo (tipo principal · descarga · línea) | Vacíos | Celdas | De qué códigos |
+|---|---:|---:|---|
+| 42G1 · COTRB · LNH | 63 | 63 | 42G1 62 y 42G0 1 |
+| L5G1 · COTRB · LNH | 64 | 64 | L5G1 61 y L5G0 3 |
+| 45R1 · JMKIN · LNH | 43 | 43 | |
+| 45G1 · COTRB · LNH | 31 | 31 | 45G1 28 y 45G0 3 |
+| 45G1 · JMKIN · LNJ | 24 | 24 | |
+| 22G1 · JMKIN · LNJ | 10 | 10 | |
+| 42U1 · JMKIN · LNH | 8 | 8 | |
+| 42R1 · JMKIN · LNH | 9 | 9 | 42R1 6 y 42R0 3 |
+| 22U1 · JMKIN · LNH | 6 | 6 | 22U1 5 y 22U0 1 |
+| 22K2 · COCTG · LNH | 8 | 8 | 22K2 4, 22T4 2, 22T0 1 y 22T1 1 |
+| 42P3 · JMKIN · LNH | 3 | 3 | |
+| 22P3 · JMKIN · LNH | 1 | 1 | ya con número |
+| 22R1 · JMKIN · LNH | 1 | 1 | ya con número |
+| 45P3 · JMKIN · LNH | 2 | 2 | 45P3 1 y 45P4 1 |
+| **14 grupos** | **273** | **273** | **los 14 cuadran** |
+
+- Sin P1, con las 448 filas, cuadran 13 de 14: a 45G1 · COTRB le sobran los tres vacíos cancelados (34 para 31).
+- Con P1 y P4, y con 22G0 y 22T6 declarados para los llenos: **ningún lleno con datos distintos, y el cruce queda limpio.** La sonda unió los grupos de los vacíos; lo de los llenos lo leo de sus cuentas (10, 1 y 6) y no lo corrió.
+- Las 16 celdas dejan de pedir motivo.
+
+## E2-P5. La matrícula repetida
+
+### Qué pasa hoy, mirado en el banco
+
+Un plan sintético que sale del caso cambiando un solo `EQD`: la misma matrícula en 018-01-82 (28.5 t) y en 018-00-82 (20.6 t), dos llenos que cargan en GTSTC. Son las mismas dos celdas que usó GLM; el generador es mío (`herramientas/plan_repetido_e2.py`). Banco Web de `v1.0.2`, a 360 × 800, de día, sin listado y sin cuenta. Diez capturas en `repetida-360-dia/capturas/`; ningún error de Flutter y ninguna petición fuera de `127.0.0.1`.
+
+| Paso | Lo que se ve | Captura |
+|---|---|---|
+| El plan, en Lista | «438 contenedores · 271 celdas reservadas» y «Matrículas repetidas en EQD: 1 contenedor · revisa esas celdas con quien hizo el plan» | `rep-02` |
+| Al tocar el aviso | «La misma matrícula viene en más de una celda. Un contenedor solo puede estar en una: pide el plan corregido antes de operar esas celdas.» y «‹matrícula›: 018-01-82 y 018-00-82» | `rep-03` |
+| Bahía 18, en Contenido | «9 contenedores · 73 celdas reservadas · **148.2 t**»: lo que trae el archivo | `rep-04` |
+| Bahía 18, en Carga | «9 contenedores · 73 celdas reservadas · **140.3 t**» y «Carga: **407** pendientes, **134** llenos, 273 vacíos» | `rep-05` |
+| **Se toca la primera celda, 018-01-82** | **nada.** No abre ningún diálogo ni dice nada | `rep-06` |
+| **Se toca la segunda celda, 018-00-82** | «Confirmar carga» · «‹matrícula› · sin OR en el listado» · «Posición planificada: 018-00-82» · «Revisado: tipo, celda y grupo coinciden con el plan.» | `rep-07` |
+| Se confirma | «Carga registrada · ‹matrícula›», la celda dice «Cargado» y la de al lado queda vacía; «Carga: 406 pendientes, 133 llenos, 273 vacíos» | `rep-08` |
+| Se toca otra vez la primera | nada | `rep-09` |
+
+- **La segunda celda se opera como cualquier lleno,** sin ningún aviso. Era lo que faltaba mirar.
+- **La primera no responde nunca.** El contenedor que el plan quería ahí no existe para la operación: no se puede cargar, ni buscar, ni cancelar.
+- **Ningún conflicto,** ni antes ni después de cargar.
+- **Las 7.9 t que faltan en Carga** son 28.5 menos 20.6: la proyección pone dos veces el contenedor de la última celda (`loading_operation.dart:52-62`), porque el plan combinado guarda una sola pieza por matrícula (`operation.dart:307-317`). Contenido lee el archivo y da 148.2 t.
+- **Lo que no miré:** con el listado importado, en Windows y el BAPLIE de salida. Leído en el código: la salida escribe un solo grupo para esa matrícula (`departure_baplie_writer.dart:67` y `:670-702`).
+
+### La regla, completa
+
+**Un plan con una matrícula en más de una celda no entra a la nube.** Leerlo y mirarlo, sí.
+
+| Dónde | Qué pasa | Qué dice |
+|---|---|---|
+| Abrir el plan | Se lee y se ve, con su aviso. No cambia | lo de hoy |
+| **«Publicar operación»** (`cloud_page.dart:263-285`) | **Se detiene antes de subir nada.** El botón queda apagado, con el texto debajo | «No se publica: el plan de carga («‹archivo›») trae 1 matrícula en más de una celda: ‹matrícula› en 018-01-82 y 018-00-82. Un contenedor solo puede estar en una. Pide el plan corregido a quien lo hizo y ábrelo de nuevo.» |
+| **«Agregar a la operación»** (T-130; `operation_sources.dart:235-253` y `dialogo_agregar_plan.dart`) | Igual: no se agrega. El diálogo muestra el motivo y su botón queda apagado | el mismo texto, con «No se agrega» |
+| **El plano de llegada** | La misma regla. Se pierde una descarga por la misma causa (`operation.dart:295-305`) | el mismo texto, con «el plano de llegada» |
+| La operación que vive solo en el dispositivo | **Se deja operar,** con el defecto a la vista (D11) | ver abajo |
+| Una operación que ya se publicó así con la 1.0.2 | No se puede retirar. La versión nueva la enseña con su banda | la banda de abajo |
+
+- Una matrícula que está una vez en el plano de llegada y una vez en el plan de carga **no es repetida:** es un contenedor de paso o una re-estiba.
+- **En el dispositivo solo, no la bloqueo:** no hay otro equipo con quien divergir, y quitarle la operación a quien trabaja sin cuenta lo deja sin nada. A cambio, tres cosas:
+  - una banda fija en Carga y en Descarga: «Plan con 1 matrícula repetida: una carga no se puede registrar. Pide el plan corregido.»;
+  - la primera celda responde: «Matrícula repetida. El plan trae ‹matrícula› también en 018-00-82. Esta celda no se puede operar hasta abrir el plan corregido.»;
+  - la ficha de la bahía en Carga da el peso del archivo, 148.2 t.
+- **Abrir el plan corregido** reemplaza el anterior en la operación sin publicar (`operation_sources.dart:255-269`), y lo ya registrado sigue valiendo por su matrícula.
+- **Descarto** cambiar la clave a `C:<matrícula>@<celda>` (3.3 de la entrega 1): toca los movimientos ya escritos y las reglas, y un contenedor en dos celdas es siempre un error del plan.
+
+### Entre versiones, las pruebas y el caso
+
+- No se guarda nada nuevo. La regla vive en el cliente de la oficina: una oficina en la 1.0.2 todavía puede publicar un plan así.
+- Pruebas, rojas contra `v1.0.2`: publicar y agregar se rechazan con su texto, para el plan de carga y para el de llegada; la misma matrícula en llegada y en carga no bloquea; la operación local se guarda; la primera celda responde; el peso de la bahía es el del archivo.
+- **El caso A09 no trae ninguna:** nada cambia con él.
+
+## E2-P6. O-147-1, lo que queda al abrirse el teclado
+
+Con el dato de Carlos (10.158): en el iPhone, por la Web y con el caso, la pantalla ya no se queda pegada. **No es lo que necesita el próximo piloto.** Lo que pidió saber es si hay un arreglo corto.
+
+### Las opciones
+
+| | Qué es | Archivos | Riesgo | Cuánto quita |
+|---|---|---|---|---|
+| **A · Guardar la huella del viaje** | `VesselVoyage` calcula su `hashCode` una vez, no en cada búsqueda del proveedor | uno: `vessel_voyage.dart`, cinco líneas | **bajo:** el viaje no cambia después de construirse, y no hallé en `lib/` ningún sitio que cambie sus listas | **medido, abajo** |
+| B · Buscar el proveedor por el id del viaje | las tres familias (`loadingOperationProvider` y las de descarga y plan) dejan de usar el viaje como llave | 51 lecturas en 15 archivos; uno, `loading_operation_provider.dart`, está entre las rutas de `sprint-4` | **alto:** el id no cambia cuando cambian la geometría o la escala, así que el proveedor dejaría de rehacerse solo | no lo medí |
+| C · Leer la operación una vez por plano, no por celda | la lectura sube de las celdas a la vista de la bahía | `bay_plan_view.dart` y sus celdas | medio | no lo medí |
+| D · Que el plano no se rehaga al subir el teclado | la página de debajo no cambia de alto con una hoja abierta | `vessel_overview_page.dart`, que está entre las rutas de `sprint-4` | medio, y hay que mirarlo en el teléfono | no lo medí |
+
+### La medida de A
+
+El mismo instrumento de la entrega 1 (`medir`, sin tocarlo), el caso A09, la celda 018-10-88, 360 × 800, Chrome 157.0.8103.79, tres corridas de cada una y cada corrida con un arranque nuevo. La base es el banco de `v1.0.2`; el prototipo, el mismo con tres líneas más (`prototipo-huella.diff`). Milisegundos, de soltar el dedo a la pantalla dibujada:
+
+| | Base (`v1.0.2`) | Con la huella guardada | Baja |
+|---|---|---|---|
+| Web · tocar la celda | 38.9 · 38.2 · 36.4 | 31.2 · 30.3 · 30.8 | 19 % |
+| **Web · el teclado** | **152.9 · 153.8 · 154.5** | **80.7 · 81.0 · 82.8** | **47 %** |
+| Web · una tecla | 22.6 · 22.0 · 23.3 | 16.2 · 18.4 · 15.9 | 26 % |
+| Web, CPU ÷ 4 · tocar la celda | 158.9 · 155.6 · 156.9 | 132.5 · 132.7 · 137.7 | 15 % |
+| **Web, CPU ÷ 4 · el teclado** | **693.4 · 656.3 · 687.5** | **391.0 · 391.1 · 391.8** | **42 %** |
+| Web, CPU ÷ 4 · una tecla | 96.7 · 100.0 · 99.1 | 75.6 · 74.1 · 74.5 | 24 % |
+
+- La base repite lo de la entrega 1 (145 a 148 ms y 698 a 735 ms).
+- **Quita más del tercio que estimé:** casi la mitad de lo que queda al abrirse el teclado.
+- Con el prototipo, la suite de la copia da **2280 de 2280.** `analyze` da una incidencia, `hash_and_equals`: pide que quien define `hashCode` defina también `==`. La versión de verdad lleva las dos líneas de `==`, que delegan en la de hoy, y queda en cero. Esa versión no la corrí.
+- **No lo medí** en Windows, en un teléfono ni con un plan más grande que el del caso. El teclado del banco es simulado, como en la entrega 1.
+
+### Mi respuesta
+
+- **Sí hay un arreglo corto: A.** Un archivo, cinco líneas, medido, y no toca ninguna ruta de `sprint-4`.
+- **«Sin riesgo» no lo puedo firmar yo.** Es la entidad que usa toda la app. Lo que tengo es la suite completa en verde y ningún sitio que cambie un viaje ya construido. Le falta su prueba propia y la mirada de quien acepte.
+- **Recomiendo que A entre en la parte 2b,** no en lo que espera el piloto, con dos pruebas (la huella se calcula una vez; dos viajes iguales siguen siendo iguales) y la medida repetida por GLM.
+- **B, C y D van con el frente de usabilidad del teléfono,** con su medida en el Honor. B no la recomiendo en ningún caso.
+- Si Carlos prefiere no tocar la entidad ahora, no pasa nada: el teléfono del piloto ya no lo nota (D12).
+
+## E2-P7. O-147-2 a O-147-5
+
+### O-147-2 · La hoja ofrece vacíos que no caben
+
+- **Hoy:** `rowsFor` no mira el largo (`loading_operation.dart:395-402`); el diálogo lo rechaza después (`load_check.dart:184-193`).
+- **Es peor desde una celda de 20 pies.** Con el caso (`sonda-caso.json`, `p7`): desde 018-10-88, de 40 pies, la hoja ofrece 274 filas y 24 no caben; **desde 001-02-84, de 20 pies, ofrece 274 y no caben 250.** Solo ocho son de su grupo.
+- **Propongo:** la hoja y la lista «Celda reservada» de «Asignar vacío» no ofrecen lo que no cabe por el largo, con la misma regla que ya usa la revisión (`nominalLength`, `load_check.dart:133-139`). Un tipo de largo desconocido se sigue ofreciendo.
+- **El caso, con P1:** desde 018-10-88, 247 filas; desde 001-02-84, 24.
+- **Costo:** una hora, con sus pruebas. Nada guardado.
+
+### O-147-3 · El orden de la hoja no es el mismo en todos los clientes
+
+- **Hoy:** el `sort` de la hoja ordena «su grupo primero» y no desempata (`loading_controls.dart:307-310`).
+- **En la máquina virtual de Dart** (Windows), con el caso y desde 018-10-88, los primeros OR son 269, 284, 250, 251…: ni su grupo ni los demás van por OR. En la Web van 250, 251, 252… (entrega 1).
+- **Android, no comprobado.** Hay cuatro emuladores en la máquina y compilé una app mínima que solo ordena el mismo patrón, pero no la pude instalar: el Pixel_8_Pro ya tiene una BayStream con otra firma, que no desinstalé, y en el Medium_Phone la instalación no terminó en ocho minutos. No quedó nada instalado. Lo que sé: Android corre el mismo `List.sort` de Dart que Windows, así que debería dar el orden de Windows.
+- **Propongo:** desempatar por OR. Todos los clientes quedan con el orden de la Web, que es el que el muelle espera. Windows y Android cambian de orden, a mejor.
+- **Costo:** media hora. Con P4, «su grupo» incluye los códigos declarados.
+
+### O-147-4 · «448 filas en 5 agencias»
+
+- **Hoy:** una sección («TRANSBORDOS», «VACIOS», «AGREGADOS») pisa el nombre de la agencia (`export_list_parser_service.dart:225-228`). Con el caso: AGENCIA 1 141, TRANSBORDOS 6, VACIOS 187, AGENCIA 2 53 y AGREGADOS 61.
+- **Propongo:** la sección va en un campo aparte y no pisa la agencia. «AGREGADOS» sigue contándose sola, como decidió T-122 (10.50).
+- **El caso:** «448 filas en 2 agencias» · «AGENCIA 1 S.A.: 334 (TRANSBORDOS 6, VACIOS 187)» · «AGENCIA 2 S.A.: 53» · «AGREGADOS: 61».
+- **Lo que no sé y pregunto (D13):** si «TRANSBORDOS» y «VACIOS» son de la agencia de arriba. En el archivo están entre las dos agencias.
+- **Entre versiones:** una clave nueva en la fila, que la 1.0.2 no lee. Con el listado nuevo, la 1.0.2 diría «3 agencias», que es más cierto que «5».
+- **Costo:** una hora.
+
+### O-147-5 · El grupo «sin número» con la posición mal formada
+
+- **Hoy:** se pierde sin aviso (`baplie_parser_service.dart:593`). Lo probé cambiando una posición del caso por «01A0282»: 270 celdas reservadas en vez de 271, el aviso dice ««NO» en 270 celdas» y nada nombra la que falta.
+- **Propongo:** el aviso de posición que ya existe, con otro sujeto: «Celda sin matrícula: «01A0282»». Es una clase de aviso que la 1.0.1 y la 1.0.2 ya leen.
+- **Costo:** media hora.
+
+O-147-6 no entra: va con el frente de usabilidad.
+
+## E2-P8. El hallazgo 7 de la 10.151, evaluado
+
+Son dos cosas distintas, con tamaños muy distintos.
+
+### a) Una vez cerrada, no deja abrir otra con el mismo buque, viaje y puerto
+
+- **Es un callejón, leído en el código.** `find` devuelve la operación publicada aunque esté cerrada (`operation_sources.dart:89-103`), y `save` contesta: «…ya está cerrada y sus BAPLIE no cambian. Para trabajar con este archivo, ábrelo como una operación nueva.» (`:208-218`). No hay cómo abrirla como nueva.
+- **Y es la salida que la propia app recomienda:** «cierra la operación y publica una nueva con los planos correctos» (`:274-279`). Hoy esa instrucción no se puede seguir. En el piloto 3 se rodeó cambiando el viaje en el archivo.
+- **Qué haría falta:** que una operación cerrada no cuente para un archivo nuevo. `find` prefiere la abierta; si solo hay una cerrada y el archivo es otro, nace una operación nueva, con otro id. Publicarla ya está permitido: la guarda de T-130 mira solo las abiertas, y las reglas de Firestore no cambian.
+- **Qué arriesga:**
+  - cuál operación se ve al abrir el archivo viejo: la cerrada, solo para mirar;
+  - **un equipo en la 1.0.2 que tuvo la cerrada la sigue encontrando,** y no opera la nueva. Para esto, todos los equipos tienen que estar en la versión nueva;
+  - la operación nueva empieza de cero: las marcas se quedan en la cerrada. El mensaje ya lo dice.
+- **Costo:** de dos a tres horas, con sus pruebas. Lo leí; no lo ejecuté.
+
+### b) Corregir el plan de una operación publicada y abierta
+
+- Es «reemplazar un BAPLIE con revisión» de T-130 (3.2 de `docs/T130-RESULTADOS.md`): los trozos con revisión, una cláusula nueva en las reglas de Firestore, sus baterías en el emulador, la comprobación de que no haya movimientos vigentes de ese papel y el aviso al muelle.
+- **Arriesga más que todo lo demás junto:** un BAPLIE es el contrato de las claves de los movimientos. Con versiones mezcladas, un equipo que no entiende la revisión se queda con el plan viejo y deriva otro estado.
+- Es del tamaño de T-127. Toca Firebase de verdad, que publica Carlos.
+
+### Mi recomendación
+
+- **a) aquí, en la parte 2b.** Es un defecto, es chico y hace verdadera una instrucción que la app ya da.
+- **b) en su propia tarea,** con su fase de diseño. Es lo que de verdad pide el muelle, porque el plan se corrige durante la escala, pero no cabe aquí.
+
+## E2-P9. El conjunto
+
+### 9.1 Una entrega o dos
+
+**Dos partes, en la misma rama.** Primero lo que necesita el próximo piloto.
+
+| Parte | Qué lleva, en este orden | Horas de reloj |
+|---|---|---:|
+| **2a · Lo que necesita el piloto** | P1, las filas canceladas | 2 |
+| | P4, «también llena» | 2 |
+| | P3, las equivalencias guardadas | 1.5 |
+| | P2, el destino final | 1 |
+| | O-147-2 y O-147-3, la hoja | 0.5 |
+| | El banco, el caso en pantalla, las rojas, la suite, la copia limpia y el informe | 1.5 |
+| | **Suma** | **8.5** |
+| **2b · El resto** | P5, la matrícula repetida | 1.5 |
+| | P8 a), abrir otra operación después de cerrar | 2.5 |
+| | P6, la huella, con su medida | 1 |
+| | O-147-4 y O-147-5 | 1.5 |
+| | Las validaciones y el informe | 1 |
+| | **Suma** | **7.5** |
+
+- Son estimaciones. La referencia es la entrega 1, que me llevó unas dos horas y media de reloj con seis reglas.
+- **Por qué P3 va en la 2a:** hoy no hay cómo quitar lo guardado, y las 33 del iPhone pueden mandar en el próximo listado si un puerto de trasbordo de ese viaje fue destino final en el anterior.
+- **Por qué P2 va en la 2a:** el piloto termina con el BAPLIE de salida, y Carlos pidió que el destino salga.
+- Cada parte tiene su revisión de Yov y su aceptación de GLM.
+
+### 9.2 La versión
+
+- De acuerdo con **`1.0.3+12`** y `msix_version: 1.0.3.0`. El último `versionCode` de Play es el 11.
+- Si el piloto llega antes de que la 2b esté aceptada, la 2a se publica sola como 1.0.3 y la 2b sale como `1.0.4+13`. Si no, las dos van en la 1.0.3 (D15).
+
+### 9.3 Entre versiones, punto por punto
+
+| | La 1.0.2 abre lo que guarde la nueva | La nueva abre lo de la 1.0.2 | Con versiones mezcladas |
+|---|---|---|---|
+| P1 | Sí: el listado no cambia de forma. Cuenta las 40 como carga | Sí, y las lee canceladas sin reimportar | Un muelle en la 1.0.2 puede cargar una cancelada; la oficina lo ve como conflicto |
+| P2 | Sí. Su salida no lleva `LOC+83` para lo cargado | Sí, también con filas de la 1.0.1 | La salida la genera la oficina, con la nueva |
+| P3 | Sí: la tabla del dispositivo no cambia de forma | Sí; deja de usar los puertos | No aplica: es por dispositivo |
+| P4 | Sí; no lee lo declarado y pide motivo en esas celdas | Sí; sin nada declarado, como hoy | Las mismas cargas; la 1.0.2 marca «Revisar» donde la nueva no |
+| P5 | No guarda nada | Enseña la banda | Una oficina en la 1.0.2 todavía publica un plan con repetidas |
+| P6 | No guarda nada | — | — |
+| O-147-4 | Sí; no lee la sección | Sí; las filas viejas traen la sección como agencia, hasta reimportar | — |
+| O-147-2, 3 y 5 | No guardan nada nuevo | — | — |
+| P8 a) | **No:** quien tuvo la operación cerrada la sigue encontrando | Sí | **No se opera mezclado** |
+
+**Lo que no se opera con versiones mezcladas:** un plan con «NO» (ya valía, 10.153) y, con P8 a), una operación publicada después de cerrar otra de la misma escala. Los tres clientes salen juntos.
+
+### 9.4 Los archivos que voy a tocar
+
+**Parte 2a:**
+- `lib/features/vessel/domain/entities/export_list.dart`
+- `lib/features/vessel/domain/entities/operation.dart`
+- `lib/features/vessel/domain/services/export_list_cross_checker.dart`
+- `lib/features/vessel/domain/services/loading_operation.dart`
+- `lib/features/vessel/domain/services/load_check.dart`
+- `lib/features/vessel/domain/services/loading_plan_progress.dart`
+- `lib/features/vessel/domain/services/operation_state_deriver.dart`
+- `lib/features/vessel/domain/services/departure_baplie_writer.dart`
+- `lib/features/vessel/presentation/providers/export_list_providers.dart`
+- `lib/features/vessel/presentation/pages/export_list_import_page.dart`
+- `lib/features/vessel/presentation/pages/operation_progress_page.dart`
+- `lib/features/vessel/presentation/pages/departure_baplie_page.dart`
+- `lib/features/vessel/presentation/widgets/loading_controls.dart`
+- `pubspec.yaml` (**cambia:** solo las dos líneas de la versión; `pubspec.lock` **no cambia**)
+- `test/t132_departure_fidelity_test.dart` (gana esperas) y `test/support/t147_listado_support.dart`
+- pruebas y accesorios nuevos, con el prefijo `t147e2_`, y el banco de `tool/t147_*`
+
+**Parte 2b:**
+- `lib/features/vessel/data/services/baplie_parser_service.dart`
+- `lib/features/vessel/data/services/export_list_parser_service.dart`
+- `lib/features/vessel/domain/entities/vessel_voyage.dart`
+- `lib/features/vessel/domain/services/operation_sources.dart`
+- `lib/features/vessel/presentation/pages/cloud_page.dart`
+- `lib/features/vessel/presentation/widgets/dialogo_agregar_plan.dart`
+- `lib/features/vessel/presentation/widgets/bay_plan_view.dart`
+- `lib/features/vessel/presentation/widgets/resumen_del_modo.dart`
+
+**Contra las 39 rutas que separan a `sprint-4` de `v1.0.2`: ninguno de esos archivos está entre ellas.**
+- Las 14 de `lib/` son de la Lista, el buscador y las estadísticas de T-120, más `vessel_overview_page.dart`, `vessel_providers.dart` y `loading_operation_provider.dart`.
+- **Esos tres son los que tengo cerca, y los evito a propósito.** P5 y P8 a) van en `operation_sources.dart` y en `cloud_page.dart`, no en `vessel_providers.dart`; y la opción B de P6, que tocaría `loading_operation_provider.dart`, no la propongo.
+- `DESIGN.md` sí está entre las 39: no lo edito. Su texto va en mi informe, como en la entrega 1, y lo pone Yov al mezclar.
+- Si al programar hace falta uno de esos tres, me detengo y lo digo antes.
+
+No toco `lib/main.dart`, los dos archivos congelados, `SPRINT-4.md`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `DESIGN.md`, el manual, las reglas de Firestore ni `.claude/`. Ninguna dependencia nueva.
+
+### 9.5 Las pruebas y la aceptación
+
+- **El piso es 2280** en esta rama y solo sube, sin omitidas. Cada punto trae las suyas, con su roja contra una copia de `v1.0.2`. `analyze`, en cero y sin ningún `// ignore:`.
+- El corpus, antes y después, como en la entrega 1: de los trece `.edi` no debe cambiar la lectura de ninguno; de los dos listados, cambia el del caso.
+- Al mezclar con `sprint-4`, el piso de la suma es 2393 más las nuevas.
+
+**Lo que debe repetir quien acepte, con el caso A09 y mirando la pantalla** (10.151), con el teléfono primero:
+1. El listado: «408 para cargar: 135 llenos y 273 vacíos» y «40 canceladas…», con sus cuatro cuentas.
+2. Las equivalencias: seis pendientes; 20ST, 20TK y 40HC, propuestas con sus códigos.
+3. La tarjeta de las celdas sin dueño, y el cruce después de declararlas: 135 de 135, 273 de 273 en 14 grupos, los 14 con su marca de que cuadran, y ningún lleno con datos distintos.
+4. La hoja desde 018-10-88: sin los OR 156, 168 y 182, por OR, y sin vacíos de 20. Desde una celda de 20, solo vacíos de 20.
+5. Un vacío 40HC en una celda 45G0: sin motivo y sin «Revisar».
+6. Con una segunda importación en el mismo equipo: las equivalencias guardadas, la tarjeta para quitarlas, y una sembrada que el plan contradice, que no se usa.
+7. Un listado sintético que cancela una fila ya cargada: la tarjeta, el conflicto y la salida.
+8. El BAPLIE de salida después de un lleno y un vacío con POD distinto: sus dos `LOC+83`, releídos con «Destino final» en el detalle; y las 40 con «cancelado en el listado».
+9. En la 2b: el plan sintético con la matrícula repetida, al publicar; la medida de P6 con el mismo instrumento; y cerrar una operación y abrir otra del mismo viaje.
+
+### 9.6 `DESIGN.md` y el manual
+
+**`DESIGN.md`:** una sección 17.7, «Los defectos del piloto 4, entrega 2», con los textos de esta propuesta que queden aprobados: el resumen con las canceladas y la nota sin reconocer; las dos tarjetas nuevas de la importación (celdas sin dueño y equivalencias guardadas) y los dos orígenes nuevos de una equivalencia; el conflicto «cancelado en el listado»; la línea del destino final y los avisos de la salida; y la banda y los mensajes de la matrícula repetida. La pone Yov al mezclar.
+
+**El manual de la 1.0.2** (`docs\MANUAL-USUARIO-1.0.2.md`, en `baystream-rediseno`; no lo edité):
+
+| Sección | Qué cambia |
+|---|---|
+| 3.2 El archivo y el previo | Un plan con una matrícula repetida se abre y se ve, pero no se publica |
+| 5.2 La Lista | El aviso «Matrículas repetidas en EQD» dice qué impide |
+| 7.3 Publicar desde la oficina | El plan con una matrícula repetida no se publica; qué hacer |
+| 7.6 El avance | La línea de las canceladas del listado y el conflicto nuevo |
+| 7.7 Agregar el plan de carga | No se agrega un plan con una matrícula repetida |
+| 7.8 El listado de la agencia | Las canceladas y la nota sin reconocer; quién manda en una equivalencia y cómo se quitan las guardadas; «también llena»; las agencias y sus secciones |
+| 7.9 Cargar por OR desde el muelle | La hoja no ofrece canceladas ni lo que no cabe, y va por OR; las celdas del mismo tipo con otro código ya no piden motivo |
+| 7.11 Cerrar la operación | Después de cerrar se puede abrir otra de la misma escala |
+| 8.2 El BAPLIE de salida | `LOC+83` con el destino final; «Filas que no cargaron» con la nota de la agencia |
+| 10. Mensajes y qué hacer | Los mensajes nuevos, con su acción |
+| 11. Glosario | «Cancelada en el listado», «Cancelado en la operación», «Destino final» y «También llena» |
+
+### 9.7 Las decisiones que le tocan a Carlos
+
+| | La decisión | Mi recomendación |
+|---|---|---|
+| D1 | Una nota en MARCHAMO que no dice CANCEL y no parece un marchamo | Se carga y se avisa; no se da por cancelada |
+| D2 | Un lleno que el plan trae y el listado cancela, en el muelle | No se registra; la agencia corrige el listado |
+| D3 | Reconocer la cancelación también en CONTENIDO | Sí: T-132 ya lo hace |
+| D4 | `LOC+83` también para los vacíos | Sí: el plan del caso lo hace con 40 de los suyos |
+| D5 | Un POD sin forma de UN/LOCODE | No se escribe, y se avisa |
+| D6 | El plan trae un `LOC+83` distinto del listado | Manda el listado, con un aviso; sin pedir que se elija |
+| D7 | A qué se atan las equivalencias guardadas | Al dispositivo, solo tipos y líneas, y nunca contra el plan (opción A) |
+| D8 | Las 33 de puerto del iPhone | Dejan de usarse y se quitan desde la tarjeta; no se borran solas |
+| D9 | Un tipo con varios códigos | «También llena», declarado al importar; «Aceptar con motivo», en su tarea |
+| D10 | Con el respaldo repartido (40HC: 60 y 10) | Se propone sola, con el más frecuente como principal |
+| D11 | La matrícula repetida | No entra a la nube, ni al publicar ni al agregar, llegada incluida; en el dispositivo solo, se opera con la banda |
+| D12 | O-147-1 | La huella guardada, en la parte 2b; lo demás, con el frente de usabilidad |
+| D13 | ¿«TRANSBORDOS» y «VACIOS» son de la agencia de arriba? | Sí, y «AGREGADOS» se cuenta sola. Lo sabe Carlos, no yo |
+| D14 | El hallazgo 7 | Abrir otra después de cerrar, en la 2b; corregir el plan de una operación abierta, en su propia tarea |
+| D15 | Una versión o dos | Dos partes en la rama; una sola 1.0.3 si el piloto da tiempo, y 1.0.4 para la 2b si no |
+
+## E2-10. Lo que no hice o no pude comprobar
+
+- **Android:** el orden de la hoja en un emulador (E2-P7). No toqué el Honor: no estaba conectado.
+- **Los equipos de Carlos:** no vi lo guardado en el iPhone ni en la laptop.
+- **Los prototipos:** solo el de la huella. Las reglas de P1 a P5 están probadas como cuentas sobre el caso, no como código del producto.
+- **P2 con las 408 cargas** y **P4 en los llenos:** son lo que da la regla; la sonda no los corrió.
+- **P8:** leído en el código, sin ejecutar.
+- **Windows:** no compilé el banco de Windows en esta fase. Todo lo de pantalla es de la Web del banco.
+- No abrí la BayStream instalada, `%LOCALAPPDATA%\BayStream` ni ningún paquete MSIX. No usé Firebase.
+
+**Lo que queda en `%TEMP%\t147-e2\`:** las dos copias limpias, `s4` (`9d6c199`, intacta) y `v102` (`v1.0.2` más dos sondas, una app mínima y el escenario `repetida` en `tool/`; `vessel_voyage.dart` volvió a su estado y lo cotejé con el commit). Son 2.9 GB y se pueden borrar después de la revisión. Borré el plan sintético y los tres perfiles de Chrome. En `build/t147/e2/propuesta/` hay 2.4 MB, sin ningún archivo del caso.
+
+## E2-11. Git (lo ejecuta Carlos)
+
+```powershell
+git add -- docs/T147-RESULTADOS.md
+git commit -m "Sprint 4: T-147, entrega 2: la propuesta"
+git push origin t147-piloto4
+```
+
+Es una sola ruta. `windows/flutter/generated_plugin_registrant.*` y `generated_plugins.cmake` siguen como en la entrega 1, con otros saltos de línea y el mismo contenido: no van.
+
+## E2-12. En tres líneas
+
+1. El paso 0 sale limpio (`analyze` en cero y 2393 de 2393 en `9d6c199`), y la propuesta cubre los nueve puntos con sus cifras del caso A09, leídas con el lector del producto.
+2. Las 40 canceladas se reconocen por la palabra CANCEL, el destino final sale en `LOC+83`, lo guardado deja de mandar y, declarando qué códigos llena cada tipo, los 23 grupos del caso quedan en 14 que cuadran.
+3. Propongo dos partes en la rama, 15 decisiones para Carlos y la versión `1.0.3+12`; no cambié código.
+
+## E2-13. Para Yov
+
+> Yov: la propuesta de la entrega 2 de T-147 está al final de `docs/T147-RESULTADOS.md`, sin commit; la evidencia, en `build/t147/e2/propuesta/`. No toqué `lib/`, `test/`, `tool/` ni `pubspec.*`.
+>
+> Paso 0: en una copia limpia de `9d6c199`, `analyze` da «No issues found!» y la suite, `+2393: All tests passed!`, sin omitidas. Las rutas que separan a `sprint-4` de `v1.0.2` son 39, no 38; ninguno de los archivos que propongo tocar está entre ellas.
+>
+> Cinco cosas para que mires:
+> 1. **P4 cambia de lectura:** las 16 celdas «de otro grupo» son exactamente lo que les sobra a siete grupos. Con «también llena», los 23 grupos quedan en 14 y los 14 cuadran; con P1, el cruce del caso sale limpio. Lo de los llenos (17 → 0) lo leo de las cuentas, no lo corrió la sonda.
+> 2. **La importación del caso guarda 16 equivalencias, no nueve:** también las seis deducidas que traducen y `LGH` → `LNH`. Y lo guardado manda aunque el plan lo contradiga: lo sembré y no pregunta.
+> 3. **La matrícula repetida:** la segunda celda se carga como cualquier lleno y la primera no responde nunca. Las 7.9 t que faltan son la proyección, que pone dos veces el contenedor de la última celda.
+> 4. **P6:** guardar la huella quita del 42 al 47 % de lo que queda al abrirse el teclado (153 → 81 ms; 679 → 391 ms con la CPU ÷ 4), con la suite en 2280. La dejo en la 2b, por la 10.158.
+> 5. **O-147-2 es peor de lo anotado:** desde una celda de 20 pies, la hoja ofrece 274 vacíos y 250 no caben.
+>
+> Lo que no pude: el orden de la hoja en Android (la app mínima no se instaló en el emulador) y ver lo guardado en el iPhone y en la laptop. P8 a), que una operación cerrada bloquea abrir otra de la misma escala, lo leí en el código y propongo arreglarlo en la 2b; corregir el plan de una operación abierta va en su tarea.
+
+## E2-14. Las horas del reloj
+
+| Tramo | Horas | Qué |
+|---|---|---|
+| 1 | hasta las 19:28 (no anoté el inicio; el primer registro del reloj es de las 19:26) | La punta, las huellas, las decisiones 10.85 a 10.158, los informes y el código |
+| 2 | 19:28 a 19:39 | Las dos copias limpias, cotejadas, y el conteo de `LOC+83` en el plan |
+| 3 | 19:39 a 19:40 | Ventana 1: `pub get` y `analyze` de `9d6c199` |
+| — | 19:40 a 20:09 | Sin trabajo: la sesión quedó detenida hasta que Carlos pidió seguir |
+| 4 | 20:09 a 20:12 | La suite de `9d6c199` y la ventana 2, la sonda del caso |
+| 5 | 20:14 a 20:26 | Ventana 3: el banco, la matrícula repetida, la medida de O-147-1 (20:16 a 20:23) y la suite con el prototipo |
+| 6 | 20:26 a 20:44 | El intento en los emuladores de Android, mientras redactaba |
+| 7 | 20:44 a 20:48 | El resto de este informe y la limpieza de `%TEMP%` |
+
+Cada ventana de Flutter y de Dart corrió con la luz verde de Carlos, que dio las tres de una vez, y con su línea `SEMÁFORO:` al empezar y al terminar.
