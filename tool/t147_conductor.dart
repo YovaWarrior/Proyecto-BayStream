@@ -6,6 +6,9 @@
 // Parámetros (variables `T147_…` en Windows; `?nombre=valor` en la Web):
 //   escenario  preparar | medir | recorrido (el de la sección 5, con el
 //              banco «después»: el aviso del lector, el POT y la carga)
+//              | recorrido2a (entrega 2, parte 2a: las canceladas,
+//              «también llena», la hoja, la salida, lo guardado y la
+//              revisión que cancela una fila ya cargada)
 //   plan       el BAPLIE del caso, por su nombre en la carpeta del caso
 //   listado    el listado de la agencia, por su nombre
 //   escala     el puerto de la escala (GTSTC)
@@ -16,6 +19,12 @@
 //              la primera que esté a la vista en su bahía
 //   bahia      la bahía que se abre al medir (por omisión, la de la celda)
 //   prefijo    el principio del nombre de las capturas
+//   listado2   (recorrido2a) la revisión del listado que cancela `lleno`
+//   lleno      (recorrido2a) el OR del lleno que se carga; por omisión, 1
+//   codigo     (recorrido2a) el código ISO de la celda de otro código de
+//              su tipo; por omisión, 45G0
+//   cancelado  (recorrido2a) el OR de un vacío cancelado que se busca en
+//              la hoja; por omisión, 156
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
@@ -23,6 +32,8 @@ import 'dart:ui' as ui;
 import 'package:baystream/core/app.dart';
 import 'package:baystream/features/vessel/domain/entities/app_theme_preference.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
+import 'package:baystream/features/vessel/domain/services/export_list_cross_checker.dart';
+import 'package:baystream/features/vessel/domain/services/loading_operation.dart';
 import 'package:baystream/features/vessel/domain/services/operation_sources.dart';
 import 'package:baystream/features/vessel/presentation/providers/export_list_providers.dart';
 import 'package:baystream/features/vessel/presentation/providers/loading_operation_provider.dart';
@@ -122,6 +133,9 @@ class T147Conductor {
         case 'recorrido':
           _quieto.value = true;
           await _recorrido();
+        case 'recorrido2a':
+          _quieto.value = true;
+          await _recorrido2a();
         default:
           throw StateError('Escenario desconocido: $escenario');
       }
@@ -432,6 +446,534 @@ class T147Conductor {
     _sinAvisos();
     await _asentar();
     await _capturar('carga-al-final', textos: RegExp('pendientes|por cargar'));
+  }
+
+  // --- T-147, entrega 2, parte 2a ------------------------------------------
+
+  /// El recorrido de la parte 2a con el caso, tocando la pantalla: lo que el
+  /// listado cancela, «también llena», la hoja de los vacíos, una carga en
+  /// una celda de otro código de su tipo, el BAPLIE de salida con su destino
+  /// final, lo guardado en el dispositivo y una revisión del listado que
+  /// cancela una fila ya cargada.
+  ///
+  /// Parámetros: `plan`, `listado`, `listado2` (la revisión que cancela el OR
+  /// de `lleno`), `elegir` (los tipos pendientes), `lleno` (el OR del lleno
+  /// que se carga; por omisión, 1) y `codigo` (el código ISO de la celda
+  /// donde se asigna un vacío de otro código de su tipo; por omisión, 45G0).
+  Future<void> _recorrido2a() async {
+    final contenedor = _contenedor();
+    await _asentar();
+    if (await _abrirElPlan()) await _confirmarElPlan();
+    // El proveedor de la importación vive mientras su página está abierta:
+    // se lee cada vez, con la página ya a la vista.
+    ExportListImportNotifier importacion() =>
+        contenedor.read(exportListImportProvider.notifier);
+    final nombre = parametro('listado');
+    LoadingOperation datos() =>
+        contenedor.read(loadingOperationProvider(_viaje())).value!;
+
+    // 1. El listado: lo que se carga y lo que la agencia cancela.
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.lista);
+    await _asentar();
+    await _tocarALaVista(() => _conClave('open-export-list'));
+    await _asentar();
+    await importacion().loadBytes(await leerDelCaso(nombre), fileName: nombre);
+    await _asentar();
+    _sinAvisos();
+    await _asentar();
+    await _registrarLa2a('listado-leido');
+    await _capturar('listado-resumen',
+        textos: RegExp('filas en|para cargar|ancelad|CANCEL|se entendieron|'
+            'no se reconoce|POT y POD'));
+    await _capturarEn('equivalencias', 'Equivalencias con el plan',
+        textos: RegExp('→|Propuesta|llena|códigos son iguales'));
+
+    // 2. Los tipos que nadie respalda, y las celdas sin dueño.
+    for (final par in parametro('elegir').split(',')) {
+      if (par.trim().isEmpty) continue;
+      final partes = RegExp(r'^(\w+):([^=]+)=(.+)$').firstMatch(par.trim())!;
+      importacion().choose(EquivalenceKind.type, partes[2]!, partes[3]!);
+    }
+    await _asentar();
+    await _registrarLa2a('listado-con-lo-elegido');
+    await _capturarDonde('celdas-sin-duenio',
+        (e) => e.widget.key == const ValueKey('orphan-codes'),
+        textos: RegExp(r'ningún tipo|celdas?[.:]| · \d+ celda'));
+    var aceptadas = 0;
+    bool esSi(Element e) {
+      final k = e.widget.key;
+      return k is ValueKey<String> && k.value.startsWith('orphan-yes-');
+    }
+
+    while (_buscarElemento(esSi, aLaVista: false) != null) {
+      final si = await _traer(esSi, 'una sugerencia');
+      await _registrar('acepta', {'sugerencia': _clave(si).substring(11)});
+      await _tocar(si);
+      await _asentar();
+      if (++aceptadas > 40) throw StateError('Las sugerencias no se acaban.');
+    }
+    await _registrarLa2a('listado-declarado');
+    await _capturarEn('equivalencias-declaradas', 'Equivalencias con el plan',
+        textos: RegExp('→|También llena|llena'));
+    await _capturarEn('cruce', 'Cruce con el plan de $_escala',
+        textos: RegExp('cruzan|no est|vacíos en|datos distintos|ancelad|'
+            r'· \w{5} · '));
+    _sinAvisos();
+    await _asentar();
+    await _tocar(_conClave('export-list-confirm'));
+    await _asentar();
+    await _capturar('listado-importado',
+        textos: RegExp('Listado guardado|Guardado en la operación|para cargar'));
+    _sinAvisos();
+    await _volver();
+
+    // 3. La hoja, desde una celda de 40 pies y desde una de 20.
+    final bahia = int.tryParse(parametro('bahia')) ?? 18;
+    await _aCarga(bahia);
+    await _capturar('carga-bahia',
+        textos: RegExp('pendientes|por cargar|Bahía'));
+    var celda = _celdaPorCargar('loading-R:');
+    await _hojaDesde(celda, 'hoja-desde-40', datos());
+    await _escribirEnLaHoja(parametro('cancelado').isEmpty
+        ? '156'
+        : parametro('cancelado'));
+    await _capturar('hoja-al-buscar-un-cancelado',
+        textos: RegExp('Cancelado en el listado|No hay coincidencias|OR '));
+    await _registrar('hoja-al-buscar-un-cancelado', _laHoja());
+    await _volver();
+
+    final de20 = datos()
+        .loading
+        .reservedSlots
+        .where((s) =>
+            s.portOfLoading == _escala && s.stowagePosition.bay.isOdd)
+        .map((s) => s.stowagePosition.bay)
+        .toSet();
+    for (final impar in de20) {
+      await _aCarga(impar);
+      try {
+        celda = _celdaPorCargar('loading-R:');
+      } on StateError {
+        continue;
+      }
+      await _hojaDesde(celda, 'hoja-desde-20', datos());
+      await _volver();
+      break;
+    }
+
+    // 4. Un vacío en una celda de otro código de su tipo: sin motivo.
+    final codigo =
+        parametro('codigo').isEmpty ? '45G0' : parametro('codigo');
+    final deEseCodigo = [
+      for (final item in datos().plan.loading.values)
+        if (item.reservedSlot?.isoSizeType == codigo &&
+            item.role == PlanRole.load)
+          item
+    ];
+    await _registrar('celdas-de-otro-codigo',
+        {'codigo': codigo, 'celdas': deEseCodigo.length});
+    for (final item in deEseCodigo) {
+      await _aCarga(datos().bayOf(item.plannedPosition));
+      final Element e;
+      try {
+        e = await _celdaDe('loading-${item.key}');
+      } on StateError {
+        continue;
+      }
+      await _hojaDesde(e, 'hoja-desde-otro-codigo', datos());
+      await _tocar(await _filaDeLaHoja(otroGrupo: false));
+      await _asentar();
+      await _capturar('asignar-en-celda-de-otro-codigo',
+          textos: RegExp('Asignar vacío|OR |Revisado|Pide motivo|'
+              'No se registra| · '));
+      await _tocarALaVista(() => _conClave('loading-confirm'));
+      await _asentar();
+      await _capturar('celda-de-otro-codigo-cargada',
+          textos: RegExp('Carga registrada|Cargado|Revisar|pendientes'));
+      _sinAvisos();
+      await _asentar();
+      await _registrar('celda-de-otro-codigo-cargada', {
+        'celda': item.key,
+        'estado': datos().state[item.key]?.state.name,
+        'en_conflicto': datos().state[item.key]?.inConflict,
+        'conflictos': datos().state.conflicts.length,
+      });
+      break;
+    }
+
+    // 5. Un lleno y un vacío con el POD distinto del POT.
+    final orden = int.tryParse(parametro('lleno')) ?? 1;
+    final lleno = datos().list!.byOrder(orden)!;
+    final suPieza = datos().numbered(lleno)!;
+    await _aCarga(datos().bayOf(suPieza.plannedPosition));
+    await _tocar(await _celdaDe('loading-${suPieza.key}'));
+    await _asentar();
+    await _capturar('confirmar-lleno',
+        textos: RegExp('Confirmar carga|Posición planificada|Revisado|POT |'
+            'Pide motivo'));
+    await _tocarALaVista(() => _conClave('loading-confirm'));
+    await _asentar();
+    await _capturar('lleno-cargado',
+        textos: RegExp('Carga registrada|pendientes'));
+    _sinAvisos();
+    await _asentar();
+
+    final vacio = datos().list!.loadRows.firstWhere((x) =>
+        x.isEmpty &&
+        x.potDiffersFromPod &&
+        datos().numbered(x) == null &&
+        datos().available(x));
+    for (final slot in datos().candidateSlots(vacio)) {
+      await _aCarga(slot.stowagePosition.bay);
+      final Element e;
+      try {
+        e = await _celdaDe('loading-${slot.key}');
+      } on StateError {
+        continue;
+      }
+      await _tocar(e);
+      await _asentar();
+      await _escribirEnLaHoja('${vacio.order}');
+      await _tocar(_conClave('loading-or-${vacio.order}'));
+      await _asentar();
+      await _capturar('asignar-vacio-con-destino-final',
+          textos: RegExp('Asignar vacío|OR |Revisado|POT '));
+      await _tocarALaVista(() => _conClave('loading-confirm'));
+      await _asentar();
+      _sinAvisos();
+      await _asentar();
+      await _registrar('vacio-con-destino-final', {
+        'or': vacio.order,
+        'pot': vacio.listPot,
+        'pod': vacio.listPod,
+        'celda': slot.key,
+      });
+      break;
+    }
+
+    // 6. El BAPLIE de salida.
+    await _salida('salida');
+
+    // 7. La segunda importación en el mismo equipo, y lo guardado.
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.lista);
+    await _asentar();
+    await _tocarALaVista(() => _conClave('open-export-list'));
+    await _asentar();
+    await importacion().loadBytes(await leerDelCaso(nombre), fileName: nombre);
+    await _asentar();
+    _sinAvisos();
+    await _asentar();
+    await _registrarLa2a('segunda-importacion');
+    await _capturarEn('segunda-importacion', 'Equivalencias con el plan',
+        textos: RegExp('→|revisión anterior|Guardada|Propuesta|llena'));
+    bool esLaTarjeta(Element e) =>
+        e.widget.key == const ValueKey('saved-equivalences');
+    await _tocar(await _traer(esLaTarjeta, 'lo guardado en el dispositivo'));
+    await _asentar();
+    await _capturarDonde('guardadas-en-este-dispositivo', esLaTarjeta,
+        textos: RegExp('guardadas en este dispositivo|→|Quitar|De puerto|'
+            'no cambia'));
+    // Una guardada que el plan contradice: no se usa, y se dice.
+    final local = await contenedor.read(localVesselRepositoryProvider.future);
+    final guardado =
+        (await local.getCodeEquivalences()).getOrElse(() => CodeEquivalences.empty);
+    await local.saveCodeEquivalences(guardado
+        .put(EquivalenceKind.type, '40ST', '45G1')
+        .put(EquivalenceKind.port, 'COTRB', 'JMKIN'));
+    importacion().discard();
+    await _asentar();
+    await importacion().loadBytes(await leerDelCaso(nombre), fileName: nombre);
+    await _asentar();
+    _sinAvisos();
+    await _asentar();
+    await _registrarLa2a('con-algo-guardado-que-el-plan-contradice');
+    await _capturarDonde(
+        'guardada-que-el-plan-contradice',
+        (e) =>
+            e.widget.key == const ValueKey('equivalence-discarded-type-40ST'),
+        textos: RegExp('no se usó|→'));
+    importacion().discard();
+    await _asentar();
+
+    // 8. La revisión del listado que cancela el lleno ya cargado.
+    final revision = parametro('listado2');
+    if (revision.isNotEmpty) {
+      await importacion().loadBytes(await leerDelCaso(revision),
+          fileName: revision);
+      await _asentar();
+      _sinAvisos();
+      await _asentar();
+      await _registrarLa2a('revision-leida');
+      await _capturar('revision-resumen',
+          textos: RegExp('filas en|para cargar|ancelad|CANCEL'));
+      await _capturarDonde('revision-lo-ya-operado',
+          (e) => e.widget.key == const ValueKey('revision-impact'),
+          textos: RegExp('ya cargad|no se pierden|cambia de grupo|ancelad'));
+      _sinAvisos();
+      await _asentar();
+      await _tocar(_conClave('export-list-confirm'));
+      await _asentar();
+      await _capturar('revision-importada',
+          textos: RegExp('Listado guardado|revisión|para cargar|ancelad'));
+      _sinAvisos();
+      await _volver();
+      await _aCarga(datos().bayOf(suPieza.plannedPosition));
+      await _celdaDe('loading-${suPieza.key}');
+      await _capturar('celda-de-la-cancelada-cargada',
+          textos: RegExp('Revisar|Cargado|pendientes'));
+      await _registrar('tras-la-revision', {
+        'estado': datos().state[suPieza.key]?.state.name,
+        'en_conflicto': datos().state[suPieza.key]?.inConflict,
+        'conflictos': [
+          for (final c in datos().state.conflicts)
+            '${c.kind.name}: ${c.message.replaceAll(lleno.containerId, '‹matrícula›')}'
+        ],
+      });
+      contenedor
+          .read(destinoDelViajeProvider.notifier)
+          .ir(DestinoDelViaje.avance);
+      await _asentar();
+      await _capturar('avance',
+          textos: RegExp('Listado:|Hechos y pendientes|TOTAL'));
+      await _capturarDonde('avance-conflictos', (e) {
+        final w = e.widget;
+        return w is Text && (w.data ?? '').startsWith('Conflictos ·');
+      }, textos: RegExp('Conflictos ·|se cargó y el listado|Motivo'));
+      await _salida('salida-con-la-cancelada-a-bordo');
+    }
+  }
+
+  /// Va a Carga y elige la bahía.
+  Future<void> _aCarga(int bahia) async {
+    final contenedor = _contenedor();
+    contenedor.read(destinoDelViajeProvider.notifier).ir(DestinoDelViaje.plano);
+    contenedor.read(bayPlanModeProvider.notifier).elegir(BayPlanMode.loading);
+    contenedor.read(selectedBayProvider.notifier).select(bahia);
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    await _asentar();
+  }
+
+  /// La celda con esa clave, traída a la vista y al alcance del dedo.
+  Future<Element> _celdaDe(String clave) async {
+    final lejos = _buscarElemento((e) => e.widget.key == ValueKey(clave),
+        aLaVista: false);
+    if (lejos == null) throw StateError('No está en la bahía: $clave');
+    await Scrollable.ensureVisible(lejos,
+        alignment: 0.5, duration: Duration.zero);
+    await _asentar();
+    final e = _conClave(clave);
+    if (!_alAlcance(e)) throw StateError('No queda al alcance: $clave');
+    return e;
+  }
+
+  /// Toca la celda reservada [celda], captura la hoja y anota lo que ofrece.
+  Future<void> _hojaDesde(
+      Element celda, String pantalla, LoadingOperation data) async {
+    final clave = _clave(celda);
+    final slot = data.loading.reservedSlots
+        .firstWhere((s) => s.key == clave.substring(8));
+    final filas = data.rowsFor(slot, '');
+    await _tocar(celda);
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await _asentar();
+    await _capturar(pantalla,
+        textos: RegExp('Vacíos del listado|No hay coincidencias'));
+    await _registrar(pantalla, {
+      'celda': clave.substring(8),
+      'grupo_de_la_celda':
+          '${slot.isoSizeType} · ${slot.portOfDischarge} · ${slot.operatorCode}',
+      'filas_que_ofrece': filas.length,
+      'de_su_grupo': filas.where((x) => data.sameGroup(slot, x)).length,
+      'canceladas_que_ofrece': filas.where((x) => x.cancelled).length,
+      'largos_que_ofrece': {
+        for (final x in filas) x.type.isEmpty ? '?' : x.type.substring(0, 1)
+      }.toList()
+        ..sort(),
+      'primeras_doce': filas.take(12).map((x) => x.order).toList(),
+      ..._laHoja(),
+    });
+  }
+
+  /// Escribe en «OR / últimos dígitos» de la hoja.
+  Future<void> _escribirEnLaHoja(String texto) async {
+    final campo = _exigir(
+        _buscarElemento((e) =>
+            e is StatefulElement &&
+            e.state is EditableTextState &&
+            _tieneAncestro(e, (w) => w is BottomSheet)),
+        'el campo de la hoja');
+    ((campo as StatefulElement).state as EditableTextState).updateEditingValue(
+        TextEditingValue(
+            text: texto,
+            selection: TextSelection.collapsed(offset: texto.length)));
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await _asentar();
+  }
+
+  /// Abre «Generar BAPLIE de salida» desde la Lista, captura la página y lo
+  /// que dice de las filas que no cargaron, y vuelve.
+  Future<void> _salida(String pantalla) async {
+    _contenedor()
+        .read(destinoDelViajeProvider.notifier)
+        .ir(DestinoDelViaje.lista);
+    await _asentar();
+    await _tocarALaVista(() => _conClave('departure-baplie-button'));
+    await _asentar();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await _asentar();
+    await _capturar(pantalla,
+        textos: RegExp('a bordo en la salida|destino final|Pendientes:|'
+            'por confirmar|está a bordo|decía|UN/LOCODE'));
+    bool esElTitulo(Element e) {
+      final w = e.widget;
+      return w is Text &&
+          (w.data ?? '').startsWith('Filas del listado que no cargaron');
+    }
+
+    final titulo = _buscarElemento(esElTitulo, aLaVista: false);
+    if (titulo != null) {
+      await Scrollable.ensureVisible(titulo,
+          alignment: 0, duration: Duration.zero);
+      final lista = _buscarElemento(
+          (e) =>
+              e.widget.key == const ValueKey('departure-not-loaded-list'),
+          aLaVista: false);
+      final texto = lista?.widget is SelectableText
+          ? (lista!.widget as SelectableText).data ?? ''
+          : '';
+      final lineas = texto.split('\n');
+      await _capturar('$pantalla-no-cargaron',
+          textos: RegExp('Filas del listado que no cargaron'));
+      await _registrar('$pantalla-no-cargaron', {
+        'lineas': lineas.length,
+        'canceladas_en_el_listado':
+            lineas.where((l) => l.contains('cancelado en el listado')).length,
+        'notas': {
+          for (final l in lineas)
+            if (l.contains('cancelado en el listado'))
+              l.substring(l.indexOf('(«'))
+        }.toList()
+          ..sort(),
+      });
+    }
+    await _volver();
+  }
+
+  /// Baja por la página de encima hasta que exista lo que [cumple], y lo
+  /// deja a la vista. La página es una lista perezosa: lo que queda lejos no
+  /// está construido.
+  Future<Element> _traer(bool Function(Element e) cumple, String que) async {
+    ScrollPosition? posicion;
+    void buscarLista(Element e) {
+      if (e is StatefulElement &&
+          e.state is ScrollableState &&
+          _visible(e) &&
+          _tieneAncestro(e, (w) => w is ListView)) {
+        final candidata = (e.state as ScrollableState).position;
+        if (candidata.axis == Axis.vertical) posicion = candidata;
+      }
+      e.visitChildren(buscarLista);
+    }
+
+    WidgetsBinding.instance.rootElement?.visitChildren(buscarLista);
+    var e = _buscarElemento(cumple, aLaVista: false);
+    if (e == null) {
+      posicion?.jumpTo(0);
+      await _asentar();
+      e = _buscarElemento(cumple, aLaVista: false);
+    }
+    while (e == null &&
+        posicion != null &&
+        posicion!.pixels < posicion!.maxScrollExtent) {
+      posicion!.jumpTo(
+          (posicion!.pixels + 300).clamp(0, posicion!.maxScrollExtent));
+      await _asentar();
+      e = _buscarElemento(cumple, aLaVista: false);
+    }
+    final hallado = _exigir(e, que);
+    await Scrollable.ensureVisible(hallado,
+        alignment: 0.3, duration: Duration.zero);
+    await _asentar();
+    return _exigir(_buscarElemento(cumple), que);
+  }
+
+  /// Trae a la vista lo que [cumple] y captura.
+  Future<void> _capturarDonde(
+      String pantalla, bool Function(Element e) cumple,
+      {RegExp? textos}) async {
+    final e = await _traer(cumple, pantalla);
+    await Scrollable.ensureVisible(e, alignment: 0, duration: Duration.zero);
+    await _capturar(pantalla, textos: textos);
+  }
+
+  /// Lo que la importación tiene a la vista, con las cuentas de la parte 2a.
+  Future<void> _registrarLa2a(String paso) async {
+    final estado = _contenedor().read(exportListImportProvider);
+    final lista = estado.list;
+    final cruce = estado.crossCheck;
+    final impacto = estado.impact;
+    await _registrar(paso, {
+      'error': estado.error,
+      'filas': lista?.rows.length,
+      'para_cargar': lista?.loadRows.length,
+      'llenos_para_cargar': lista?.loadRows.where((x) => x.isFull).length,
+      'vacios_para_cargar': lista?.loadRows.where((x) => x.isEmpty).length,
+      'canceladas': lista?.cancelledRows.length,
+      'canceladas_por_nota': lista?.cancelNotes,
+      'pendientes': [
+        for (final p in estado.proposals)
+          if (p.needsUser) '${p.kind.label} ${p.listCode} (${p.rows})'
+      ],
+      'origenes': {
+        for (final p in estado.proposals)
+          if (!(p.origin == EquivalenceOrigin.inferred && p.isIdentity))
+            '${p.kind.wire}:${p.listCode}':
+                '${p.planCode ?? '?'} (${p.origin.name})'
+      },
+      'tambien_llena': {
+        for (final p in estado.proposals)
+          if (p.also.isNotEmpty) p.listCode: p.also
+      },
+      'guardadas_que_no_se_usaron': {
+        for (final p in estado.proposals)
+          if (p.discarded != null) '${p.kind.wire}:${p.listCode}': p.discarded
+      },
+      'celdas_sin_duenio': {
+        for (final h in estado.orphans)
+          h.code: '${h.cells} · ${h.suggestedListCode ?? 'sin sugerencia'}'
+      },
+      'conflictos_de_un_codigo_en_dos_tipos': estado.conflicts.length,
+      'en_el_dispositivo': estado.device == null
+          ? null
+          : {
+              for (final kind in EquivalenceKind.values)
+                kind.wire: estado.device!.of(kind).length
+            },
+      if (cruce != null)
+        'cruce': {
+          'llenos_que_cruzan': cruce.matches.length,
+          'llenos': cruce.matches.length + cruce.fullsNotInPlan.length,
+          'del_plan_fuera_del_listado': cruce.planNotInList.length,
+          'vacios_en_grupos': cruce.emptiesInGroups,
+          'vacios': cruce.emptiesInGroups + cruce.emptiesWithoutGroup.length,
+          'grupos': cruce.groups.length,
+          'grupos_que_cuadran': cruce.groups.where((g) => g.balanced).length,
+          'llenos_con_datos_distintos': cruce.matchesWithDifferences.length,
+          'canceladas': cruce.cancelled.length,
+          'canceladas_que_el_plan_carga': cruce.cancelledInPlan.length,
+          'limpio': cruce.clean,
+        },
+      if (impacto != null)
+        'lo_ya_operado': {
+          'ya_cargados_sin_fila': impacto.loadedNotListed.length,
+          'vacios_que_cambian_de_grupo': impacto.emptiesRegrouped.length,
+          'ya_cargados_que_quedan_cancelados':
+              impacto.loadedNowCancelled.length,
+        },
+    });
   }
 
   String _clave(Element e) => (e.widget.key! as ValueKey<String>).value;

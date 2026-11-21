@@ -220,7 +220,8 @@ void main() {
       await _tap(tester, 'departure-copy-not-loaded');
       expect(
         copied,
-        'OR 4 · TSTU0001324 · cancelado en el listado\nOR 5 · TSTU0001325 · sin celda en el plan',
+        // T-147, entrega 2 (P1): el motivo lleva la nota de la agencia.
+        'OR 4 · TSTU0001324 · cancelado en el listado («CANCEL»)\nOR 5 · TSTU0001325 · sin celda en el plan',
       );
       expect(find.text('Lista de filas no cargadas copiada'), findsOneWidget);
     },

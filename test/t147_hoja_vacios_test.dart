@@ -7,8 +7,16 @@
 //
 // Solo datos sintéticos, con la forma del caso A09: cientos de reservas en
 // varios grupos y cientos de vacíos, más que celdas en algún grupo.
+//
+// T-147, entrega 2 (10.160) · Las dos referencias de la 1.0.1 de este archivo
+// llevan, a propósito, los dos cambios que esa entrega hace en lo que la hoja
+// ofrece, y nada más:
+// - O-147-2: una celda donde el vacío no cabe por su largo no se ofrece;
+// - O-147-3: dentro de «su grupo» y de «los demás», las filas van por OR.
+// Lo demás sigue comparándose con la expresión de la 1.0.1.
 import 'package:baystream/core/utils/iso_coordinate_parser.dart';
 import 'package:baystream/features/vessel/domain/entities/entities.dart';
+import 'package:baystream/features/vessel/domain/services/load_check.dart';
 import 'package:baystream/features/vessel/domain/services/loading_operation.dart';
 import 'package:baystream/features/vessel/presentation/providers/loading_operation_provider.dart';
 import 'package:baystream/features/vessel/presentation/widgets/loading_controls.dart';
@@ -100,7 +108,12 @@ List<int> _ordenesDeLa101(LoadingOperation data, ReservedSlot celda,
           .candidateSlots(row, otherGroups: true)
           .any((s) => s.key == celda.key))
       .toList()
-    ..sort((a, b) => (suGrupo(a) ? 0 : 1).compareTo(suGrupo(b) ? 0 : 1));
+    // Entrega 2 (O-147-3): el desempate por OR, que el `sort` de la 1.0.1 no
+    // tenía; por eso su orden dependía del cliente.
+    ..sort((a, b) {
+      final grupo = (suGrupo(a) ? 0 : 1).compareTo(suGrupo(b) ? 0 : 1);
+      return grupo != 0 ? grupo : a.order.compareTo(b.order);
+    });
   return [for (final row in rows) row.order];
 }
 
@@ -174,11 +187,20 @@ List<String> _celdasDeLa101(LoadingOperation data, ExportListRow row,
       slot.isoSizeType == row.type &&
       slot.portOfDischarge == row.pod &&
       slot.operatorCode == row.line;
+  // Entrega 2 (O-147-2): la celda donde el vacío no cabe por su largo no se
+  // ofrece. Es lo único que esta réplica no toma de la 1.0.1.
+  bool cabe(ReservedSlot slot) {
+    final largo = nominalLength(row.type);
+    return largo == null ||
+        largo == (slot.stowagePosition.bay.isOdd ? 20 : 40);
+  }
+
   final libres = [
     for (final item in data.plan.loading.values)
       if (item.role == PlanRole.load &&
           item.reservedSlot != null &&
           suGrupo(item.reservedSlot!) &&
+          cabe(item.reservedSlot!) &&
           state[item.key]?.state == ItemState.planned &&
           !state.occupancy.containsKey(item.plannedPosition))
         item.reservedSlot!
@@ -197,7 +219,7 @@ List<String> _celdasDeLa101(LoadingOperation data, ExportListRow row,
     final baja = ocupante == null ||
         (state['C:$ocupante']?.role == PlanRole.discharge &&
             state['C:$ocupante']?.state == ItemState.planned);
-    if (!baja) continue;
+    if (!baja || !cabe(slot)) continue;
     if (suGrupo(slot)) {
       esperan.add(slot);
     } else if (otherGroups) {

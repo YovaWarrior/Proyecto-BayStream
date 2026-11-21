@@ -88,8 +88,18 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
             _ListSummary(list: list),
             _EquivalencesCard(
               proposals: state.proposals,
+              conflicts: state.conflicts,
               onChoose: notifier.choose,
+              onUndeclare: (listCode, planCode) =>
+                  notifier.undeclare(planCode, listCode: listCode),
             ),
+            // T-147, entrega 2 (P4): «también llena».
+            if (state.orphans.isNotEmpty)
+              _OrphansCard(
+                orphans: state.orphans,
+                proposals: state.proposals,
+                onDeclare: notifier.declare,
+              ),
             if (state.crossCheck != null) _CrossCheckCard(check: state.crossCheck!),
             if (state.impact != null) _RevisionImpactCard(impact: state.impact!),
             _RowsCard(list: list),
@@ -104,7 +114,27 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
               ),
+            // 10.160, cambio 4: un código del plan, un solo tipo del listado.
+            if (state.conflicts.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'No se puede importar: '
+                  '${state.conflicts.map((c) => c.message).join(' ')}',
+                  key: const ValueKey('export-list-family-conflicts'),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ),
           ],
+          // T-147, entrega 2 (P3): lo guardado en este dispositivo, a la vista.
+          if (state.device != null && !state.device!.isEmpty)
+            _SavedEquivalencesCard(
+              device: state.device!,
+              busy: state.busy,
+              onRemove: notifier.removeSaved,
+              onRemovePorts: notifier.removeSavedPorts,
+              onRemoveAll: notifier.removeAllSaved,
+            ),
         ],
       );
       if (list != null) {
@@ -115,7 +145,7 @@ class _ExportListImportPageState extends ConsumerState<ExportListImportPage> {
           ),
           FilledButton.icon(
             key: const ValueKey('export-list-confirm'),
-            onPressed: state.busy || state.hasPending
+            onPressed: state.busy || !state.canConfirm
                 ? null
                 : () async {
                     final error = await notifier.confirm();
@@ -164,6 +194,21 @@ class _Banner extends StatelessWidget {
 
 String _count(int n, String one, String many) => '$n ${n == 1 ? one : many}';
 
+/// «0100282» → «010-02-82».
+String _cell(String? position) => position == null
+    ? 'sin posición'
+    : position.length == 7
+        ? '${position.substring(0, 3)}-${position.substring(3, 5)}-${position.substring(5)}'
+        : position;
+
+/// «12», «12 y 31», «12, 31 y 40».
+String _joinY(Iterable<Object> items) {
+  final list = [for (final item in items) '$item'];
+  return list.length <= 1
+      ? list.join()
+      : '${list.sublist(0, list.length - 1).join(', ')} y ${list.last}';
+}
+
 /// «7266.59» → «7 266.59»; «3900» → «3 900».
 String formatKg(double kg) {
   final fixed = kg == kg.roundToDouble() ? kg.toStringAsFixed(0) : kg.toStringAsFixed(2);
@@ -186,6 +231,10 @@ class _ListSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final agencies = list.agencies;
+    // T-147, entrega 2 (P1): las filas que el listado cancela no se cargan.
+    final cancelled = list.cancelledRows.toList();
+    final loading = list.loadRows.toList();
+    final unknown = list.unrecognizedNotes;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -197,11 +246,61 @@ class _ListSummary extends StatelessWidget {
               Text(line, style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
             Text(
-              '${list.rows.length} filas en ${agencies.length} agencias · '
-              '${list.fulls.length} llenos · ${list.empties.length} vacíos',
+              cancelled.isEmpty
+                  ? '${list.rows.length} filas en ${agencies.length} agencias · '
+                      '${list.fulls.length} llenos · ${list.empties.length} vacíos'
+                  : '${list.rows.length} filas en ${agencies.length} agencias · '
+                      '${loading.length} para cargar: '
+                      '${_count(loading.where((r) => r.isFull).length, 'lleno', 'llenos')} y '
+                      '${_count(loading.where((r) => r.isEmpty).length, 'vacío', 'vacíos')}',
               key: const ValueKey('export-list-counts'),
               style: theme.textTheme.titleMedium,
             ),
+            if (cancelled.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                '${_count(cancelled.length, 'cancelada', 'canceladas')} en el '
+                'listado, que no se ${cancelled.length == 1 ? 'carga' : 'cargan'}: '
+                '${_count(cancelled.where((r) => r.isFull).length, 'lleno', 'llenos')} y '
+                '${_count(cancelled.where((r) => r.isEmpty).length, 'vacío', 'vacíos')}',
+                key: const ValueKey('export-list-cancelled'),
+                style: theme.textTheme.titleSmall,
+              ),
+              Text(
+                [
+                  for (final note in list.cancelNotes.entries)
+                    '${note.key} ${note.value}'
+                ].join(' · '),
+                key: const ValueKey('export-list-cancel-notes'),
+              ),
+              ExpansionTile(
+                key: const ValueKey('export-list-cancelled-rows'),
+                tilePadding: EdgeInsets.zero,
+                title: Text('Canceladas en el listado (${cancelled.length})'),
+                children: [
+                  for (final r in cancelled)
+                    Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('OR ${r.order} · ${r.containerId} · '
+                            '${r.isFull ? 'lleno' : 'vacío'} · «${r.cancelNote}»')),
+                ],
+              ),
+            ],
+            // D1: una nota que no es una cancelación ni parece un marchamo.
+            for (final note in unknown.entries)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '${_count(note.value.length, 'fila trae', 'filas traen')} en '
+                  'MARCHAMO una nota que no se reconoce: «${note.key}» '
+                  '(OR ${_joinY(note.value)}). '
+                  '${note.value.length == 1 ? 'Se carga. Si no se carga' : 'Se cargan. Si no se cargan'} '
+                  'en este buque, pide a la agencia que diga CANCELADO y vuelve '
+                  'a importar el listado.',
+                  key: ValueKey('export-list-unknown-note-${note.key}'),
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ),
             const SizedBox(height: 4),
             for (final entry in agencies.entries) Text('${entry.key}: ${entry.value}'),
             // T-147 (10.151, hallazgo 3): con POT y POD distintos, el cruce
@@ -237,15 +336,26 @@ class _ListSummary extends StatelessWidget {
 
 class _EquivalencesCard extends StatelessWidget {
   final List<EquivalenceProposal> proposals;
+  final List<TypeFamilyConflict> conflicts;
   final void Function(EquivalenceKind kind, String listCode, String planCode) onChoose;
+  final void Function(String listCode, String planCode) onUndeclare;
 
-  const _EquivalencesCard({required this.proposals, required this.onChoose});
+  const _EquivalencesCard(
+      {required this.proposals,
+      this.conflicts = const [],
+      required this.onChoose,
+      required this.onUndeclare});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Una identidad deducida no se enseña, salvo que tenga algo que decir:
+    // un «también llena» o algo guardado que no se usó (T-147, entrega 2).
     final shown = proposals
-        .where((p) => !(p.origin == EquivalenceOrigin.inferred && p.isIdentity))
+        .where((p) => !(p.origin == EquivalenceOrigin.inferred &&
+            p.isIdentity &&
+            p.also.isEmpty &&
+            p.discarded == null))
         .toList()
       ..sort((a, b) => (a.needsUser ? 0 : 1).compareTo(b.needsUser ? 0 : 1));
     final same = proposals.length - shown.length;
@@ -259,7 +369,16 @@ class _EquivalencesCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text('Equivalencias con el plan', style: theme.textTheme.titleMedium),
             ),
-            for (final p in shown) _EquivalenceTile(proposal: p, onChoose: onChoose),
+            for (final conflict in conflicts)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Text(conflict.message,
+                    key: ValueKey('family-conflict-${conflict.code}'),
+                    style: TextStyle(color: theme.colorScheme.error)),
+              ),
+            for (final p in shown)
+              _EquivalenceTile(
+                  proposal: p, onChoose: onChoose, onUndeclare: onUndeclare),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
@@ -277,17 +396,55 @@ class _EquivalencesCard extends StatelessWidget {
 class _EquivalenceTile extends StatelessWidget {
   final EquivalenceProposal proposal;
   final void Function(EquivalenceKind kind, String listCode, String planCode) onChoose;
+  final void Function(String listCode, String planCode) onUndeclare;
 
-  const _EquivalenceTile({required this.proposal, required this.onChoose});
+  const _EquivalenceTile(
+      {required this.proposal,
+      required this.onChoose,
+      required this.onUndeclare});
+
+  /// T-147, entrega 2 (P3) · Lo que este dispositivo tenía guardado y no se
+  /// usó, con el porqué.
+  String? get _discarded {
+    final p = proposal;
+    final saved = p.discarded;
+    if (saved == null) return null;
+    final String why;
+    if (p.observed.isNotEmpty) {
+      why = 'el plan dice ${_joinY([
+            for (final e in p.observed.entries)
+              '${e.key} (${_count(e.value, 'contenedor', 'contenedores')})'
+          ])}';
+    } else if (p.origin == EquivalenceOrigin.previous) {
+      why = 'la revisión anterior de este listado usa ${p.planCode}';
+    } else {
+      why = 'el plan no carga $saved en esta escala';
+    }
+    return 'En este dispositivo estaba guardada ${p.listCode} → $saved, y $why: '
+        'no se usó.';
+  }
 
   String get _origin {
     final p = proposal;
     final seen = p.observed.entries.map((e) => '${e.key} (${e.value})').join(', ');
     switch (p.origin) {
       case EquivalenceOrigin.inferred:
+        // T-147, entrega 2 (P4, D10): el respaldo repartido se propone con
+        // el código más repetido como principal, y el tipo llena todos.
+        if (p.observed.length > 1) {
+          final codes = p.observed.entries.toList()
+            ..sort((a, b) => b.value.compareTo(a.value));
+          final first = codes.first;
+          return 'Propuesta: '
+              '${first.value == 1 ? '1 contenedor va' : '${first.value} contenedores van'} '
+              'a ${_joinY([first.key, for (final e in codes.skip(1)) '${e.value} a ${e.key}'])}. '
+              '${p.listCode} llena ${codes.length == 2 ? 'los dos' : 'todos'}.';
+        }
         return p.evidence == 1
             ? 'Propuesta: 1 contenedor está en el listado y en el plan.'
             : 'Propuesta: ${p.evidence} contenedores están en el listado y en el plan.';
+      case EquivalenceOrigin.previous:
+        return 'De la revisión anterior de este listado.';
       case EquivalenceOrigin.saved:
         return p.contradicted
             ? 'Guardada en este dispositivo, pero el plan dice $seen.'
@@ -362,6 +519,32 @@ class _EquivalenceTile extends StatelessWidget {
             ],
           ),
           Text(_origin, style: Theme.of(context).textTheme.bodySmall),
+          if (_discarded != null)
+            Text(_discarded!,
+                key: ValueKey('equivalence-discarded-${p.kind.wire}-${p.listCode}'),
+                style: Theme.of(context).textTheme.bodySmall),
+          // T-147, entrega 2 (P4): los otros códigos del plan que este tipo
+          // llena. Cada uno se quita con su ficha.
+          if (p.also.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  const Text('También llena:'),
+                  for (final code in p.also)
+                    InputChip(
+                      key: ValueKey('also-${p.listCode}-$code'),
+                      label: Text(code),
+                      deleteButtonTooltipMessage:
+                          'Quitar $code de ${p.listCode}',
+                      onDeleted: () => onUndeclare(p.listCode, code),
+                    ),
+                ],
+              ),
+            ),
           if (p.needsUser)
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -382,6 +565,200 @@ class _EquivalenceTile extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// T-147, entrega 2 (P4; hallazgo 6 de la 10.151) · «También llena»: las
+/// celdas reservadas de la escala cuyo código ISO no llena ningún tipo del
+/// listado. La oficina dice qué tipo las llena; lo que no declare sigue
+/// pidiendo motivo al cargar, como hasta la 1.0.2. No detiene la importación.
+class _OrphansCard extends StatefulWidget {
+  final List<OrphanTypeCode> orphans;
+  final List<EquivalenceProposal> proposals;
+  final void Function(String listCode, String planCode) onDeclare;
+
+  const _OrphansCard(
+      {required this.orphans, required this.proposals, required this.onDeclare});
+
+  @override
+  State<_OrphansCard> createState() => _OrphansCardState();
+}
+
+class _OrphansCardState extends State<_OrphansCard> {
+  /// Los códigos a los que la oficina dijo «No: piden motivo».
+  final _dismissed = <String>{};
+
+  Future<void> _other(OrphanTypeCode orphan) async {
+    final types = [
+      for (final p in widget.proposals)
+        if (p.kind == EquivalenceKind.type && p.planCode != null) p
+    ];
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('¿Qué tipo del listado llena ${orphan.code}?'),
+        children: [
+          for (final p in types)
+            SimpleDialogOption(
+              key: ValueKey('orphan-type-${orphan.code}-${p.listCode}'),
+              onPressed: () => Navigator.pop(context, p.listCode),
+              child: Text(p.isIdentity
+                  ? p.listCode
+                  : '${p.listCode} (${p.planCode})'),
+            ),
+        ],
+      ),
+    );
+    if (chosen != null) widget.onDeclare(chosen, orphan.code);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cells = widget.orphans.fold<int>(0, (sum, o) => sum + o.cells);
+    return Card(
+      key: const ValueKey('orphan-codes'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Celdas reservadas que ningún tipo del listado llena ($cells)',
+                style: theme.textTheme.titleMedium),
+            const SizedBox(height: 4),
+            Text(
+                'Al cargar piden motivo, salvo que digas qué tipo del listado '
+                'las llena. No detiene la importación.',
+                style: theme.textTheme.bodySmall),
+            for (final orphan in widget.orphans)
+              Padding(
+                key: ValueKey('orphan-${orphan.code}'),
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        '${orphan.code} · ${_count(orphan.cells, 'celda', 'celdas')}'
+                        '${_dismissed.contains(orphan.code) ? ': ${orphan.cells == 1 ? 'pide' : 'piden'} motivo al cargar.' : orphan.suggestedListCode == null ? '. Ningún tipo del listado se le parece.' : '. ¿${orphan.cells == 1 ? 'La' : 'Las'} llena ${orphan.suggestedListCode}${orphan.suggestedListCode == orphan.suggestedPlanCode ? '' : ' (${orphan.suggestedPlanCode})'}?'}',
+                        style: theme.textTheme.titleSmall),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        if (orphan.suggestedListCode != null &&
+                            !_dismissed.contains(orphan.code))
+                          ActionChip(
+                            key: ValueKey('orphan-yes-${orphan.code}'),
+                            label: const Text('Sí'),
+                            onPressed: () => widget.onDeclare(
+                                orphan.suggestedListCode!, orphan.code),
+                          ),
+                        ActionChip(
+                          key: ValueKey('orphan-other-${orphan.code}'),
+                          label: const Text('Otro tipo…'),
+                          onPressed: () => _other(orphan),
+                        ),
+                        if (!_dismissed.contains(orphan.code))
+                          ActionChip(
+                            key: ValueKey('orphan-no-${orphan.code}'),
+                            label: const Text('No: piden motivo'),
+                            onPressed: () =>
+                                setState(() => _dismissed.add(orphan.code)),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// T-147, entrega 2 (P3; hallazgo 3 de la 10.85) · Lo que este dispositivo
+/// guarda de importaciones anteriores, a la vista y con cómo quitarlo. Hasta
+/// la 1.0.2 no había dónde verlo. Los puertos ya no se usan: quedan de
+/// versiones anteriores y se quitan de una vez.
+class _SavedEquivalencesCard extends StatelessWidget {
+  final CodeEquivalences device;
+  final bool busy;
+  final void Function(EquivalenceKind kind, String listCode) onRemove;
+  final VoidCallback onRemovePorts;
+  final VoidCallback onRemoveAll;
+
+  const _SavedEquivalencesCard(
+      {required this.device,
+      required this.busy,
+      required this.onRemove,
+      required this.onRemovePorts,
+      required this.onRemoveAll});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final used = [
+      for (final kind in [EquivalenceKind.type, EquivalenceKind.line])
+        for (final entry in device.of(kind).entries.toList()
+          ..sort((a, b) => a.key.compareTo(b.key)))
+          (kind: kind, from: entry.key, to: entry.value)
+    ];
+    final ports = device.of(EquivalenceKind.port).length;
+    return Card(
+      child: ExpansionTile(
+        key: const ValueKey('saved-equivalences'),
+        title: Text(
+            'Equivalencias guardadas en este dispositivo (${used.length})'),
+        subtitle: Text(ports == 0
+            ? 'Se usan en el próximo listado, si el plan no dice otra cosa.'
+            : 'Y ${_count(ports, 'de puerto, que ya no se usa', 'de puerto, que ya no se usan')}.'),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final e in used)
+            Row(
+              children: [
+                Expanded(
+                    child: Text('${e.kind.label} ${e.from} → ${e.to}',
+                        key: ValueKey('saved-${e.kind.wire}-${e.from}'))),
+                TextButton(
+                  key: ValueKey('saved-remove-${e.kind.wire}-${e.from}'),
+                  onPressed: busy ? null : () => onRemove(e.kind, e.from),
+                  child: const Text('Quitar'),
+                ),
+              ],
+            ),
+          if (ports > 0)
+            Row(
+              children: [
+                Expanded(
+                    child: Text(
+                        'De puerto, de versiones anteriores ($ports): ya no se '
+                        '${ports == 1 ? 'usa' : 'usan'}.',
+                        key: const ValueKey('saved-ports'))),
+                TextButton(
+                  key: const ValueKey('saved-remove-ports'),
+                  onPressed: busy ? null : onRemovePorts,
+                  child: Text(ports == 1 ? 'Quitarla' : 'Quitar las $ports'),
+                ),
+              ],
+            ),
+          const SizedBox(height: 8),
+          Text('Quitar una equivalencia no cambia ningún listado ya importado.',
+              style: theme.textTheme.bodySmall),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton(
+              key: const ValueKey('saved-remove-all'),
+              onPressed: busy ? null : onRemoveAll,
+              child: const Text('Quitar todas'),
+            ),
+          ),
         ],
       ),
     );
@@ -444,8 +821,33 @@ class _CrossCheckCard extends StatelessWidget {
                 g.balanced,
                 '${g.type} · ${g.pod} · ${g.line}: ${_count(g.empties.length, 'vacío', 'vacíos')}, '
                 '${_count(g.planCells, 'celda', 'celdas')}'
+                // T-147, entrega 2 (P4): con «también llena», de qué códigos.
+                '${g.cellsByCode.length < 2 ? '' : ' (${_joinY([for (final e in g.cellsByCode.entries) '${e.value} de ${e.key}'])})'}'
                 '${g.numberedEmpties.isEmpty ? '' : ' (${g.numberedEmpties.length} ya con número en el plan)'}',
               ),
+            // T-147, entrega 2 (P1): las canceladas no entran en el cruce.
+            if (check.cancelled.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              status(
+                  check.cancelledInPlan.isEmpty,
+                  check.cancelledInPlan.isEmpty
+                      ? '${_count(check.cancelled.length, 'cancelada', 'canceladas')} '
+                          'en el listado: el plan no carga ninguna'
+                      : '${_count(check.cancelledInPlan.length, 'cancelada', 'canceladas')} '
+                          'en el listado que el plan todavía carga',
+                  key: const ValueKey('cross-cancelled')),
+            ],
+            if (check.cancelledInPlan.isNotEmpty) ...[
+              section(
+                  'Canceladas en el listado que el plan todavía carga '
+                  '(${check.cancelledInPlan.length})',
+                  check.cancelledInPlan.map((m) =>
+                      'OR ${m.row.order} · ${m.row.containerId} · '
+                      '${_cell(m.container.stowagePosition?.toIsoCode())}')),
+              const Text('Cancela su embarque desde el detalle de la celda o '
+                  'pide el plan corregido. Si alguna sube, el muelle la '
+                  'registra con motivo.'),
+            ],
             if (check.fullsNotInPlan.isNotEmpty)
               section('Llenos del listado que no están en el plan (${check.fullsNotInPlan.length})',
                   check.fullsNotInPlan.map((r) => 'OR ${r.order} · ${r.containerId}')),
@@ -518,6 +920,7 @@ class _RevisionImpactCard extends StatelessWidget {
         );
     final missing = impact.loadedNotListed.length;
     final regrouped = impact.emptiesRegrouped.length;
+    final cancelled = impact.loadedNowCancelled.length;
     return Card(
       key: const ValueKey('revision-impact'),
       child: Padding(
@@ -545,6 +948,18 @@ class _RevisionImpactCard extends StatelessWidget {
                     ? '1 vacío asignado cambia de grupo'
                     : '$regrouped vacíos asignados cambian de grupo',
                 key: const ValueKey('revision-empties-regrouped')),
+            // T-147, entrega 2 (P1): la carga no se toca; queda como conflicto.
+            if (cancelled > 0)
+              status(
+                  false,
+                  cancelled == 1
+                      ? '1 contenedor ya cargado queda cancelado en el listado nuevo'
+                      : '$cancelled contenedores ya cargados quedan cancelados en el listado nuevo',
+                  key: const ValueKey('revision-loaded-cancelled')),
+            if (cancelled > 0)
+              section(
+                  'Ya cargados que el listado nuevo cancela ($cancelled)',
+                  impact.loadedNowCancelled),
             if (missing > 0)
               section('Ya cargados sin fila en el listado nuevo ($missing)',
                   impact.loadedNotListed),
@@ -600,10 +1015,15 @@ class _RowsCard extends StatelessWidget {
                       ].join(' · '),
                       style: TextStyle(color: theme.colorScheme.error),
                     ),
-                  if (r.hour != null || r.seal != null)
+                  // T-147, entrega 2 (P1): la nota de la agencia no es un
+                  // marchamo.
+                  if (r.cancelled)
+                    Text('Cancelada en el listado: «${r.cancelNote}»',
+                        style: TextStyle(color: theme.colorScheme.error)),
+                  if (r.hour != null || (r.seal != null && !r.cancelled))
                     Text([
                       if (r.hour != null) 'Hora ${r.hour}',
-                      if (r.seal != null) 'Marchamo ${r.seal}',
+                      if (r.seal != null && !r.cancelled) 'Marchamo ${r.seal}',
                     ].join(' · ')),
                 ],
               ),

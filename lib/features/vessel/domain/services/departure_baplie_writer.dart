@@ -2,6 +2,7 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../entities/entities.dart';
 import 'container_number.dart';
 import 'departure_baplie_review.dart';
+import 'un_locode.dart';
 
 /// T-82 · Salida local en la versión del plan de carga. Para lo que sigue a
 /// bordo manda loading_baplie; llegada respalda únicamente datos no declarados
@@ -57,6 +58,7 @@ class DepartureBaplieWriter {
     final seen = <String>{};
     final cells = <String>{};
     final withoutRow = <String>[];
+    final destinations = <String>[];
     for (final item in state.items.values) {
       if (item.state == ItemState.cancelled || item.position == null) continue;
       if (item.role == PlanRole.load && item.state != ItemState.moved) continue;
@@ -91,6 +93,12 @@ class DepartureBaplieWriter {
       } else {
         final row = rows[container];
         if (row != null) {
+          // T-147, entrega 2 (10.160, cambio 3): el código ISO que el plan
+          // trae para esta pieza. El de un lleno está en su grupo de
+          // segmentos; el de un vacío asignado, en la celda reservada.
+          final planType = item.kind == PlanItemKind.reservedSlot
+              ? plan.loading[item.key]?.reservedSlot?.isoSizeType
+              : null;
           group = _loaded(
             row,
             position,
@@ -102,7 +110,15 @@ class DepartureBaplieWriter {
             errors: errors,
             charset: charset,
             operationId: operation.id,
+            plan: plan,
+            reservedType: planType,
+            destinations: destinations,
           );
+          // T-147, entrega 2 (P1): lo que subió, subió. Va a bordo, y se dice.
+          if (row.cancelled) {
+            warnings.add('OR ${row.order} · ${row.containerId}: está a bordo y '
+                'el listado lo marca cancelado («${row.cancelNote}»).');
+          }
         } else {
           // T-122, corrección 1 (10.57): un lleno cargado por su número sin
           // fila en el listado (H4) sale con el grupo de segmentos que el plan
@@ -183,12 +199,12 @@ class DepartureBaplieWriter {
       ..sort((a, b) => a.order.compareTo(b.order));
     for (final row in unshipped) {
       final item = state['C:${row.containerId}'];
-      final cancelledInList = RegExp(
-        r'\bCANCEL(?:ADO|ADA|ADOS|ADAS|LED|ED)?\b',
-        caseSensitive: false,
-      ).hasMatch(row.contents);
-      final reason = cancelledInList
-          ? 'cancelado en el listado'
+      // T-147, entrega 2 (P1): la nota de la agencia, que puede venir en
+      // MARCHAMO o en CONTENIDO (`ExportListRow.cancelNote`). T-132 la buscaba
+      // solo en CONTENIDO, y solo la palabra CANCEL.
+      final note = row.cancelNote;
+      final reason = note != null
+          ? 'cancelado en el listado («$note»)'
           : item?.state == ItemState.cancelled
               ? 'cancelado en la operación'
               : !loadingGroups.containsKey(row.containerId)
@@ -234,6 +250,7 @@ class DepartureBaplieWriter {
       errors: errors,
       notLoaded: notLoaded,
       canSave: canSave,
+      finalDestinations: destinations.length,
     );
   }
 
@@ -313,6 +330,9 @@ class DepartureBaplieWriter {
     required List<String> errors,
     required DepartureCharacterSet charset,
     required String operationId,
+    required OperationPlan plan,
+    String? reservedType,
+    required List<String> destinations,
   }) {
     final who = 'OR ${row.order} · ${row.containerId}';
     void validate(String name, String value) {
@@ -421,6 +441,46 @@ class DepartureBaplieWriter {
       if (row.pot != null && row.pot!.isNotEmpty && row.pot != row.pod)
         'LOC+13+${field('POT', row.pot!)}:139:6',
     ]);
+    // T-147, entrega 2 (P2; 10.156) · El destino final: `LOC+83` con el POD
+    // del Excel cuando la fila trae POT y POD distintos, el POD tiene forma
+    // de UN/LOCODE y no es el código que ya sale en `LOC+11`.
+    //
+    // - Va como viene en el Excel, sin pasar por las equivalencias de puerto,
+    //   que llevan al puerto del plan donde el contenedor baja: el destino
+    //   final no tiene contraparte en el plan.
+    // - Vale igual para llenos y vacíos (D4): el plan del piloto 4 lo trae en
+    //   40 de sus vacíos de paso.
+    // - Su lugar es detrás de `LOC+11` (o de `LOC+13`), antes de `LOC+76` y
+    //   de `RFF`: el orden de los 301 grupos de ese plan que lo traen.
+    //   EDIFACT no ordena los `LOC` repetidos entre sí.
+    // - La cita del calificador es la de `BaplieConstants.locFinalDestination`
+    //   (guía SMDG 2.2.1, 06/2016, p. 21).
+    if (row.potDiffersFromPod && row.listPod != row.pod) {
+      final planned = result.where((s) => s.startsWith('LOC+83+')).firstOrNull;
+      final plannedCode =
+          planned?.split('+').elementAtOrNull(2)?.split(':').first;
+      if (!formaDeUnLocode.hasMatch(row.listPod)) {
+        // D5: no se inventa un código ni se escribe un texto libre con
+        // `139:6`, que declara la lista de UN/LOCODE. Lo del plan se conserva.
+        warnings.add('$who: el POD «${row.listPod}» del listado no tiene forma '
+            'de UN/LOCODE; el destino final no se escribió.');
+      } else {
+        final segment =
+            'LOC+83+${field('POD (destino final)', row.listPod)}:139:6';
+        if (planned == null) {
+          final after = result.lastIndexWhere(
+              (s) => s.startsWith('LOC+11+') || s.startsWith('LOC+13+'));
+          result.insert(after + 1, segment);
+        } else if (plannedCode != row.listPod) {
+          // D6: manda el listado, que es lo que la agencia declara de lo que
+          // carga aquí, y se dice.
+          result[result.indexOf(planned)] = segment;
+          warnings.add('$who: destino final ${row.listPod}, del listado; el '
+              'plan decía ${plannedCode == null || plannedCode.isEmpty ? '«sin código»' : plannedCode}.');
+        }
+        destinations.add(row.containerId);
+      }
+    }
     if (!result.any((s) => s.startsWith('RFF+BM:'))) {
       replace((s) => s.startsWith('RFF+BM:'), ['RFF+BM:1']);
     }
@@ -432,7 +492,16 @@ class DepartureBaplieWriter {
     }
     equipment[2] = field('CONTENEDOR', row.containerId);
     // Solo se sustituye el código ISO; sus componentes adicionales se conservan.
-    final type = equipment[3].split(':')..[0] = field('TIPO', row.type);
+    //
+    // T-147, entrega 2 (10.160, cambio 3) · Manda el código del plan cuando
+    // el tipo del listado lo llena: el de su grupo de segmentos, si es un
+    // lleno; el de su celda reservada, si es un vacío asignado. El listado
+    // dice «40HC» y no sabe si el contenedor es 45G1 o 45G0; el plan trae el
+    // código de esa pieza. Solo si ese código no es uno de los que su tipo
+    // llena sale el de la fila, el principal, como hasta la 1.0.2.
+    final type = equipment[3].split(':');
+    final planType = reservedType ?? (current == null ? null : type[0]);
+    type[0] = field('TIPO', plan.shippedType(row.type, planType) ?? row.type);
     equipment[3] = type.join(':');
     equipment[6] = row.isEmpty ? '4' : '5';
     replace((s) => s.startsWith('EQD+CN+'), [equipment.join('+')]);
@@ -760,6 +829,10 @@ class DepartureBaplie {
   final List<String> errors;
   final List<String> notLoaded;
   final bool canSave;
+
+  /// T-147, entrega 2 (P2) · Cuántas cargas llevan su destino final en
+  /// `LOC+83`, tomado del POD del listado.
+  final int finalDestinations;
   DepartureBaplie({
     required this.text,
     required this.containers,
@@ -772,6 +845,7 @@ class DepartureBaplie {
     Iterable<String> errors = const [],
     Iterable<String> notLoaded = const [],
     this.canSave = true,
+    this.finalDestinations = 0,
   })  : cancelled = List.unmodifiable(cancelled),
         withoutRow = List.unmodifiable(withoutRow),
         decisions = List.unmodifiable(decisions),

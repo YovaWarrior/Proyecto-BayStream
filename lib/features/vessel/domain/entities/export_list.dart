@@ -150,6 +150,63 @@ class ExportListRow extends Equatable {
   /// pantalla enseña entonces los dos.
   bool get potDiffersFromPod => listPot != null && listPot != listPod;
 
+  /// T-147, entrega 2 (10.156 y 10.160, cambio 1) · Las tres notas con que la
+  /// agencia dice que una fila no se carga en este buque: la palabra CANCEL
+  /// con sus formas (CANCELADO, CANCELADA, sus plurales, CANCELLED y
+  /// CANCELED), «ROLEADO» y «YA EMBARCADO», con su femenino y su plural.
+  /// Enteras, sobre el texto en mayúsculas, sin tildes y con un solo espacio.
+  ///
+  /// En el listado del piloto 4 (caso A09) vienen en la columna MARCHAMO:
+  /// «ROLEADO - CANCEL», «YA EMBARCADO -CANCEL», «CANCELADO» y «REEMPLAZO -
+  /// CANCEL». Carlos confirmó que las cuatro, y «ROLEADO» y «YA EMBARCADO»
+  /// solas, quieren decir siempre que la fila no se carga.
+  static final cancellationNote = RegExp(r'\bCANCEL(?:AD[OA]S?|LED|ED)?\b'
+      r'|\bROLEAD[OA]S?\b'
+      r'|\bYA EMBARCAD[OA]S?\b');
+
+  /// Mayúsculas, sin tildes y con un solo espacio, para buscar una nota.
+  static String _plain(String text) {
+    const from = 'ÁÉÍÓÚÜáéíóúü';
+    const to = 'AEIOUUaeiouu';
+    final buffer = StringBuffer();
+    for (final rune in text.runes) {
+      final char = String.fromCharCode(rune);
+      final index = from.indexOf(char);
+      buffer.write(index < 0 ? char : to[index]);
+    }
+    return buffer.toString().toUpperCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  /// T-147, entrega 2 · La nota con que el listado cancela esta fila, o nulo
+  /// si la fila se carga. Se busca en MARCHAMO ([seal]) y, si no está, en
+  /// CONTENIDO ([contents]), que es donde T-132 ya la buscaba. Sale de lo que
+  /// la fila ya guarda: un listado guardado por la 1.0.1 o la 1.0.2 se lee
+  /// cancelado sin volver a importarlo.
+  ///
+  /// De MARCHAMO se devuelve el texto entero, como lo escribió la agencia; de
+  /// CONTENIDO, solo la nota, porque el resto es la descripción de la carga.
+  late final String? cancelNote = _findCancelNote();
+
+  String? _findCancelNote() {
+    final mark = seal;
+    if (mark != null && cancellationNote.hasMatch(_plain(mark))) {
+      return mark.replaceAll(RegExp(r'\s+'), ' ').trim();
+    }
+    return cancellationNote.firstMatch(_plain(contents))?.group(0);
+  }
+
+  /// Si el listado dice que esta fila no se carga en este buque.
+  bool get cancelled => cancelNote != null;
+
+  /// T-147, entrega 2 (D1) · Un texto en MARCHAMO que no es una cancelación
+  /// ni parece un marchamo, porque no trae ninguna cifra («PENDIENTE»): la
+  /// fila se carga y el resumen la avisa.
+  String? get unrecognizedNote {
+    final mark = seal?.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (mark == null || mark.isEmpty || cancelled) return null;
+    return RegExp(r'\d').hasMatch(mark) ? null : mark;
+  }
+
   /// T-122 (H4, 10.51) · La fila que el listado no trae: **un lleno** del plan
   /// de carga, armado desde el plan para cargarlo por su número de
   /// contenedor. Sin OR: [order] y [sheetRow] valen 0 y [unlisted] la
@@ -308,19 +365,64 @@ class ExportList extends Equatable {
   /// Las equivalencias con que se tradujeron los códigos; vacía si todavía no.
   final CodeEquivalences equivalences;
 
+  /// T-147, entrega 2 (hallazgo 6 de la 10.151; D9) · «También llena»: los
+  /// códigos ISO del plan que un tipo del listado llena además del suyo, cada
+  /// uno con el código principal de ese tipo. El listado del piloto 4 dice
+  /// 40HC y el plan separa 45G1 y 45G0: con `{45G0: 45G1}`, una celda 45G0 es
+  /// del grupo de los 45G1.
+  ///
+  /// La fila no cambia: su [ExportListRow.type] sigue siendo el principal, así
+  /// que la 1.0.2, que no lee esta clave, arma los mismos grupos que antes.
+  /// Un código del plan lo llena un solo grupo (10.160, cambio 4).
+  final Map<String, String> typeFamilies;
+
   ExportList({
     required this.fileName,
     Iterable<String> titleLines = const [],
     required Iterable<ExportListRow> rows,
     Iterable<ExportListIssue> issues = const [],
     CodeEquivalences? equivalences,
+    Map<String, String> typeFamilies = const {},
   })  : titleLines = List.unmodifiable(titleLines),
         rows = List.unmodifiable(rows),
         issues = List.unmodifiable(issues),
-        equivalences = equivalences ?? CodeEquivalences.empty;
+        equivalences = equivalences ?? CodeEquivalences.empty,
+        typeFamilies = Map.unmodifiable(typeFamilies);
 
   Iterable<ExportListRow> get fulls => rows.where((r) => r.isFull);
   Iterable<ExportListRow> get empties => rows.where((r) => r.isEmpty);
+
+  /// T-147, entrega 2 · Las filas que se cargan en este buque y las que el
+  /// listado cancela ([ExportListRow.cancelled]). [fulls], [empties] y [rows]
+  /// siguen trayendo todas.
+  Iterable<ExportListRow> get loadRows => rows.where((r) => !r.cancelled);
+  Iterable<ExportListRow> get cancelledRows => rows.where((r) => r.cancelled);
+
+  /// Las canceladas contadas por su nota, de la más repetida a la menos.
+  Map<String, int> get cancelNotes {
+    final counts = <String, int>{};
+    for (final row in cancelledRows) {
+      counts[row.cancelNote!] = (counts[row.cancelNote!] ?? 0) + 1;
+    }
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return Map.fromEntries(sorted);
+  }
+
+  /// Las notas de MARCHAMO que no se reconocen, con los OR que las traen.
+  Map<String, List<int>> get unrecognizedNotes {
+    final notes = <String, List<int>>{};
+    for (final row in rows) {
+      final note = row.unrecognizedNote;
+      if (note != null) notes.putIfAbsent(note, () => []).add(row.order);
+    }
+    return notes;
+  }
+
+  /// El código del grupo de [planType]: el principal del tipo que lo llena,
+  /// o él mismo si nadie lo declaró.
+  String? groupType(String? planType) =>
+      planType == null ? null : typeFamilies[planType] ?? planType;
 
   /// Agencias en el orden del listado, con cuántos contenedores trae cada una.
   Map<String, int> get agencies {
@@ -348,23 +450,38 @@ class ExportList extends Equatable {
 
   /// Traduce los códigos de cada fila desde los del Excel, nunca sobre una
   /// traducción anterior.
-  ExportList normalized(CodeEquivalences equivalences) => ExportList(
+  ExportList normalized(CodeEquivalences equivalences,
+          {Map<String, String> typeFamilies = const {}}) =>
+      ExportList(
         fileName: fileName,
         titleLines: titleLines,
         rows: rows.map((r) => r.translated(equivalences)),
         issues: issues,
         equivalences: equivalences,
+        typeFamilies: typeFamilies,
       );
 
   @override
-  List<Object?> get props => [fileName, titleLines, rows, issues, equivalences];
+  List<Object?> get props => [
+        fileName,
+        titleLines,
+        rows,
+        issues,
+        equivalences,
+        (typeFamilies.entries.toList()..sort((a, b) => a.key.compareTo(b.key)))
+            .map((e) => '${e.key}=${e.value}')
+            .join(','),
+      ];
 
+  /// `typeFamilies` solo se escribe si hay algo declarado: un listado sin
+  /// «también llena» se guarda byte por byte como lo guardaba la 1.0.2.
   Map<String, dynamic> toJson() => {
         'format': format,
         'schema': schema,
         'fileName': fileName,
         'titleLines': titleLines,
         'equivalences': equivalences.toJson(),
+        if (typeFamilies.isNotEmpty) 'typeFamilies': typeFamilies,
         'rows': rows.map((r) => r.toJson()).toList(),
         'issues': issues.map((i) => i.toJson()).toList(),
       };
@@ -379,6 +496,8 @@ class ExportList extends Equatable {
       titleLines: (json['titleLines'] as List<dynamic>? ?? const []).cast<String>(),
       equivalences: CodeEquivalences.fromJson(
           Map<String, dynamic>.from(json['equivalences'] as Map? ?? const {})),
+      typeFamilies:
+          Map<String, String>.from(json['typeFamilies'] as Map? ?? const {}),
       rows: (json['rows'] as List<dynamic>)
           .map((r) => ExportListRow.fromJson(Map<String, dynamic>.from(r as Map))),
       issues: (json['issues'] as List<dynamic>? ?? const [])

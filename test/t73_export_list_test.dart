@@ -205,13 +205,18 @@ void main() {
       expect(proposals.any((p) => p.needsUser), isFalse);
     });
 
-    test('una guardada que el plan contradice se marca', () {
+    // T-147, entrega 2 (P3; hallazgo 3 de la 10.85): hasta la 1.0.2 lo
+    // guardado mandaba y solo se marcaba como contradicho. Ahora manda el
+    // plan, y lo guardado que no se usó se dice.
+    test('una guardada que el plan contradice no se usa, y se dice', () {
       final saved = CodeEquivalences().put(EquivalenceKind.type, '40HC', '45R1');
       final proposals =
           ExportListCrossChecker.propose(list, t73Plan(), portOfCall: 'GTSTC', saved: saved);
       final hc = proposals.singleWhere((p) => p.listCode == '40HC');
-      expect(hc.planCode, '45R1');
-      expect(hc.contradicted, isTrue);
+      expect(hc.planCode, isNot('45R1'));
+      expect(hc.origin, isNot(EquivalenceOrigin.saved));
+      expect(hc.contradicted, isFalse);
+      expect(hc.discarded, '45R1');
     });
 
     test('la tabla y el listado normalizado van y vuelven por JSON', () {

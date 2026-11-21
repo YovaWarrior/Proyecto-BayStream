@@ -280,8 +280,43 @@ class OperationPlan {
 
   final Map<int, HatchCoverDeclaration> hatchCovers;
 
+  /// T-147, entrega 2 (P1) · Los contenedores que el listado cancela, con su
+  /// nota. Como [emptyGroups], sale del listado, que es una fuente de la
+  /// operación: todos los equipos ven la misma carga «cancelada en el
+  /// listado». Vacío sin listado.
+  final Map<String, String> listCancelled;
+
+  /// T-147, entrega 2 (P4) · «También llena», del listado
+  /// (`ExportList.typeFamilies`): cada código de más con el principal de su
+  /// tipo.
+  final Map<String, String> typeFamilies;
+
   OperationPlan._(this.portOfCall, this.arrival, this.loading, this.isDeckTier,
-      this.emptyGroups, this.hatchCovers);
+      this.emptyGroups, this.hatchCovers,
+      {this.listCancelled = const {}, this.typeFamilies = const {}});
+
+  /// El código del grupo de [planType]: el principal del tipo que lo llena,
+  /// o él mismo si nadie lo declaró.
+  String? groupType(String? planType) =>
+      planType == null ? null : typeFamilies[planType] ?? planType;
+
+  /// T-147, entrega 2 (10.160, cambio 3) · El código ISO con que una carga
+  /// queda a bordo: el que el plan trae para esa pieza ([planType]: el de su
+  /// grupo de segmentos, si es un lleno; el de su celda, si es un vacío
+  /// asignado), cuando el tipo de su fila lo llena. Si no, el de la fila
+  /// ([rowType], el principal de su tipo), como hasta la 1.0.2.
+  String? shippedType(String? rowType, String? planType) {
+    if (rowType == null || rowType.isEmpty) return planType;
+    if (planType == null || planType.isEmpty) return rowType;
+    return groupType(planType) == groupType(rowType) ? planType : rowType;
+  }
+
+  /// Si [slot] es del grupo de [row]: su tipo (o uno que su tipo también
+  /// llena), su puerto y su línea.
+  bool sameGroup(ReservedSlot slot, ExportListRow row) =>
+      groupType(slot.isoSizeType) == groupType(row.type) &&
+      slot.portOfDischarge == row.pod &&
+      slot.operatorCode == row.line;
 
   factory OperationPlan.build({
     required String portOfCall,
@@ -335,6 +370,11 @@ class OperationPlan {
           row.containerId: row.group
       }),
       Map.unmodifiable(hatchCovers),
+      listCancelled: Map.unmodifiable({
+        for (final row in list?.rows ?? const <ExportListRow>[])
+          if (row.cancelled) row.containerId: row.cancelNote!
+      }),
+      typeFamilies: list?.typeFamilies ?? const {},
     );
   }
 
@@ -346,7 +386,8 @@ class OperationPlan {
       Map.unmodifiable({for (final entry in loading.entries)
         entry.key: positions.containsKey(entry.key)
             ? entry.value.at(positions[entry.key]!) : entry.value}),
-      isDeckTier, emptyGroups, hatchCovers);
+      isDeckTier, emptyGroups, hatchCovers,
+      listCancelled: listCancelled, typeFamilies: typeFamilies);
 
   /// El objeto que el plan de carga tiene en esa posición, si lo hay.
   PlanItem? loadingItemAt(String position) {
@@ -386,6 +427,12 @@ enum ConflictKind {
   /// Un cambio obsoleto, malformado o incompatible con otro cambio vigente.
   invalidChange,
   invalidHatchCover,
+
+  /// T-147, entrega 2 (P1; 10.160, cambio 2) · Se cargó un contenedor que el
+  /// listado de la agencia cancela. Queda cargado, con su motivo, y a la
+  /// vista de la oficina. Cada equipo lo deriva del listado, como
+  /// [otherGroup]: no es un movimiento ni se guarda.
+  cancelledInList,
 }
 
 enum ChangeRequestStatus { pending, approved, rejected, conflict }

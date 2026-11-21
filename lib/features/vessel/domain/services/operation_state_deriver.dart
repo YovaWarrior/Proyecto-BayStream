@@ -428,6 +428,18 @@ class _Run {
       _conflict(ConflictKind.outOfPlan, key, m,
           '${_name(key)}: planificado en ${status.plannedPosition}, registrado en $position.');
     }
+    _cancelledInList(key, key.substring(2), m);
+  }
+
+  /// T-147, entrega 2 (P1; 10.160, cambio 2) · Lo que subió, subió: la carga
+  /// de un contenedor que el listado cancela queda registrada y a la vista
+  /// de la oficina, igual si se cargó antes de la revisión que lo cancela.
+  void _cancelledInList(String key, String container, Movement m) {
+    final note = plan.listCancelled[container];
+    if (note == null) return;
+    _conflict(ConflictKind.cancelledInList, key, m,
+        '${_capital(_shown(container, order: m.payload['order'] as int?))} se '
+        'cargó y el listado lo marca cancelado («$note»).');
   }
 
   void _assignEmpty(Movement m) {
@@ -478,17 +490,20 @@ class _Run {
     emptiesAssigned[container] = key;
     // T-77: lo que T-77 dejó pasar con motivo, u otro dispositivo sin aviso,
     // queda asignado pero a la vista. Sin listado no se sabe el grupo.
+    // T-147, entrega 2 (P4): el tipo se compara por su grupo, con lo que el
+    // listado declara en «también llena».
     final group = plan.emptyGroups[container];
     final slot = plan.loading[key]?.reservedSlot;
     if (group != null &&
         slot != null &&
-        (group.type != slot.isoSizeType ||
+        (plan.groupType(group.type) != plan.groupType(slot.isoSizeType) ||
             group.pod != slot.portOfDischarge ||
             group.line != slot.operatorCode)) {
       _conflict(ConflictKind.otherGroup, key, m,
           '$container (${group.type} · ${group.pod} · ${group.line}) quedó en una '
           'reserva de ${slot.isoSizeType} · ${slot.portOfDischarge} · ${slot.operatorCode}.');
     }
+    _cancelledInList(key, container, m);
   }
 
   void _cancel(Movement m) {

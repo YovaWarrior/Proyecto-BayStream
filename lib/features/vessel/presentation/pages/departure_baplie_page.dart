@@ -127,6 +127,15 @@ class _DepartureBapliePageState extends ConsumerState<DepartureBapliePage> {
       Text(
           'Pendientes: ${output.pendingLoads} de carga y ${output.pendingDischarges} de descarga.',
           key: const ValueKey('departure-pending')),
+      // T-147, entrega 2 (P2; 10.156): el destino final del listado.
+      if (output.finalDestinations > 0)
+        Text(
+            output.finalDestinations == 1
+                ? '1 carga lleva su destino final (LOC+83), tomado del POD del '
+                    'listado.'
+                : '${output.finalDestinations} cargas llevan su destino final '
+                    '(LOC+83), tomado del POD del listado.',
+            key: const ValueKey('departure-final-destinations')),
       if (output.pendingLoads + output.pendingDischarges > 0)
         const Text(
             'Puedes generar igual: la salida refleja lo registrado hasta ahora. '

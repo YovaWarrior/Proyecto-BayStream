@@ -87,6 +87,12 @@ class OperationProgressBody extends ConsumerWidget {
                     if (operation.list == null)
                       const Text(
                           'Sin listado de agencia: llenos y vacíos según el plan.'),
+                    // T-147, entrega 2 (P1): lo que el listado cancela no es
+                    // una pieza del plan ni cuenta en la columna «Cancelados»,
+                    // que es de lo que cancela la oficina.
+                    if (operation.list?.cancelledRows.isNotEmpty ?? false)
+                      Text(_cancelledInList(operation.list!),
+                          key: const ValueKey('progress-list-cancelled')),
                     const Text(
                         'Hechos y pendientes según el estado de la operación. Las re‑estibas se muestran aparte.'),
                     const SizedBox(height: 12),
@@ -254,6 +260,16 @@ class OperationProgressBody extends ConsumerWidget {
                     const SizedBox(height: 24),
                   ]),
             ));
+  }
+
+  /// «Listado: 40 filas canceladas, que no se cargan (37 llenos y 3 vacíos).»
+  String _cancelledInList(ExportList list) {
+    final rows = list.cancelledRows.toList();
+    return 'Listado: '
+        '${operationCount(rows.length, 'fila cancelada', 'filas canceladas')}, '
+        'que no se ${rows.length == 1 ? 'carga' : 'cargan'} '
+        '(${operationCount(rows.where((r) => r.isFull).length, 'lleno', 'llenos')} y '
+        '${operationCount(rows.where((r) => r.isEmpty).length, 'vacío', 'vacíos')}).';
   }
 
   String _discharge(BayOperationProgress row) =>

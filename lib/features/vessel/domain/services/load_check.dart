@@ -27,6 +27,11 @@ enum LoadIssueKind {
 
   /// El peso de la pila supera el límite del perfil. Pide motivo.
   stackWeight,
+
+  /// T-147, entrega 2 (P1; 10.160, cambio 2) · El listado de la agencia
+  /// cancela la fila. Pide motivo: si el contenedor llega al gancho, el
+  /// muelle registra lo que subió y la oficina lo ve como conflicto.
+  listCancelled,
 }
 
 class LoadIssue extends Equatable {
@@ -193,7 +198,15 @@ class LoadValidator {
     }
     if (issues.isNotEmpty) return LoadCheck(position: position, issues: issues);
 
-    // 2. Lo que se registra con motivo: posición, grupo y celda ocupada.
+    // 2. Lo que se registra con motivo: la cancelación del listado, la
+    // posición, el grupo y la celda ocupada.
+    final note = row.cancelNote;
+    if (note != null) {
+      issues.add(LoadIssue(
+          LoadIssueKind.listCancelled,
+          'el listado lo marca cancelado («$note»). Si sube a bordo, escribe '
+          'el motivo: la oficina lo verá como conflicto.'));
+    }
     if (numbered != null && numbered.plannedPosition != position) {
       final planned = plan.loadingItemAt(position);
       issues.add(LoadIssue(
@@ -205,8 +218,11 @@ class LoadValidator {
     }
     final slot = reservation?.reservedSlot;
     if (numbered == null && slot != null) {
+      // T-147, entrega 2 (P4): un código que el tipo de la fila también
+      // llena es de su grupo.
       final differences = [
-        if (slot.isoSizeType != row.type) 'tipo ${slot.isoSizeType}',
+        if (plan.groupType(slot.isoSizeType) != plan.groupType(row.type))
+          'tipo ${slot.isoSizeType}',
         if (slot.portOfDischarge != row.pod) 'puerto ${slot.portOfDischarge}',
         if (slot.operatorCode != row.line) 'línea ${slot.operatorCode}',
       ];

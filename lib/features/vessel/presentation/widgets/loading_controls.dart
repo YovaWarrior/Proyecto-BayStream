@@ -304,10 +304,10 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
         : slot == null
             ? data.search(query!, empties: widget.empties)
             : data.rowsFor(slot, query!, empties: widget.empties);
-    if (slot != null) {
-      rows.sort((a, b) =>
-          (_sameGroup(slot, a) ? 0 : 1).compareTo(_sameGroup(slot, b) ? 0 : 1));
-    }
+    // T-147, entrega 2 (O-147-3): `rowsFor` ya las da en su orden, primero
+    // las del grupo de la celda y, dentro de cada parte, por OR. Antes se
+    // ordenaban aquí con un `sort` sin desempate, que la Web y la máquina
+    // virtual de Dart resolvían distinto.
     return SafeArea(
         child: SizedBox(
             height: MediaQuery.sizeOf(context).height * .8,
@@ -345,7 +345,10 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
                                 subtitle: Text(
                                     '${row.type} · ${row.pod} · ${row.line}'
                                     '${row.isEmpty ? '\nTara ${row.tareKg.toStringAsFixed(0)} kg' : ''}'
-                                    '${slot != null && !_sameGroup(slot, row) ? '\nOtro grupo: pide motivo' : ''}'
+                                    '${slot != null && !data.sameGroup(slot, row) ? '\nOtro grupo: pide motivo' : ''}'
+                                    // T-147, entrega 2 (P1): sale solo si se
+                                    // la busca, y se carga con motivo.
+                                    '${row.cancelled ? '\nCancelado en el listado: pide motivo' : ''}'
                                     '${operated ? '\nYa cargado' : ''}'),
                                 trailing: operated
                                     ? const Icon(Icons.check_circle_outline)
@@ -412,7 +415,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
     final slot = start == null ? null : data?.plan.loadingItemAt(start);
     if (numbered == null &&
         slot?.reservedSlot != null &&
-        !_sameGroup(slot!.reservedSlot!, row)) {
+        !data!.sameGroup(slot!.reservedSlot!, row)) {
       otherGroups = true;
     }
     final previous = widget.correcting;
@@ -561,7 +564,10 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
         ? data?.list?.empties
                 .where((r) =>
                     data.available(r, correcting: widget.correcting) &&
-                    data.numbered(r) == null)
+                    data.numbered(r) == null &&
+                    // T-147, entrega 2 (P1): un vacío que el listado cancela
+                    // no se ofrece; el que ya está en el diálogo, sí.
+                    (!r.cancelled || r == row))
                 .toList() ??
             <ExportListRow>[]
         : <ExportListRow>[];
@@ -644,7 +650,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                                     value: slot.stowagePosition.toIsoCode(),
                                     child: Text(
                                         '${loadingPosition(slot.stowagePosition.toIsoCode())}'
-                                        '${_sameGroup(slot, row) ? '' : ' · otro grupo'}'
+                                        '${data?.sameGroup(slot, row) ?? true ? '' : ' · otro grupo'}'
                                         '${data?.state.occupancy.containsKey(slot.stowagePosition.toIsoCode()) == true ? ' · ocupada, baja aquí' : ''}'))
                             ],
                             onChanged: busy
@@ -676,7 +682,8 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                                           ?.reservedSlot;
                                   if (!value &&
                                       chosen != null &&
-                                      !_sameGroup(chosen, row)) {
+                                      data != null &&
+                                      !data.sameGroup(chosen, row)) {
                                     position = null;
                                   }
                                 }),
@@ -776,11 +783,6 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
         ]);
   }
 }
-
-bool _sameGroup(ReservedSlot slot, ExportListRow row) =>
-    slot.isoSizeType == row.type &&
-    slot.portOfDischarge == row.pod &&
-    slot.operatorCode == row.line;
 
 /// T-77 · La revisión antes de confirmar. Cada línea lleva icono y texto,
 /// no solo color, y se ajusta al ancho para leerse a 360 dp.
@@ -969,9 +971,15 @@ String loadingCellSemantics(LoadingOperation operation, String itemKey) {
         itemKey.startsWith('C:') ? itemKey.substring(2) : itemKey,
         status?.order);
   }
+  // T-147, entrega 2 (P1): un lleno que el plan trae y el listado cancela.
+  final listCancelled = !reserve &&
+      status?.state == ItemState.planned &&
+      operation.plan.listCancelled.containsKey(itemKey.substring(2));
   final mark = status?.inConflict == true
       ? 'revisar'
-      : status?.state == ItemState.cancelled
+      : listCancelled
+          ? 'cancelado en el listado, revisar'
+          : status?.state == ItemState.cancelled
           ? (reserve ? 'cancelada' : 'cancelado')
           : status?.state == ItemState.moved
               ? (reserve ? 'cargada' : 'cargado')
@@ -1014,7 +1022,12 @@ class LoadingCell extends StatelessWidget {
     final label = status?.order == null
         ? operation.progress.label(itemKey)
         : 'OR ${status!.order}';
-    final marca = conflict
+    // T-147, entrega 2 (P1): el lleno que el plan trae y el listado cancela
+    // se marca «Revisar» antes de cargarlo; cargado, lo marca su conflicto.
+    final listCancelled = itemKey.startsWith('C:') &&
+        status?.state == ItemState.planned &&
+        operation.plan.listCancelled.containsKey(itemKey.substring(2));
+    final marca = conflict || listCancelled
         ? BsMarcaDeCelda.revisar
         : cancelled
             ? BsMarcaDeCelda.cancelado

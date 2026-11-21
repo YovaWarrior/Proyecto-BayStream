@@ -41,6 +41,14 @@ class ExportListImportState {
   final String? error;
   final String? message;
 
+  /// T-147, entrega 2 (P4) · Los códigos de las celdas reservadas de la
+  /// escala que ningún tipo del listado leído llena todavía.
+  final List<OrphanTypeCode> orphans;
+
+  /// T-147, entrega 2 (P3) · Las equivalencias guardadas en este dispositivo,
+  /// para verlas y quitarlas; nulo mientras no se han leído.
+  final CodeEquivalences? device;
+
   const ExportListImportState({
     this.list,
     this.proposals = const [],
@@ -52,9 +60,19 @@ class ExportListImportState {
     this.busy = false,
     this.error,
     this.message,
+    this.orphans = const [],
+    this.device,
   });
 
   bool get hasPending => proposals.any((p) => p.needsUser);
+
+  /// T-147, entrega 2 (10.160, cambio 4) · Los códigos del plan que dos
+  /// tipos del listado declaran: mientras haya alguno, no se importa.
+  List<TypeFamilyConflict> get conflicts =>
+      ExportListCrossChecker.familyConflicts(proposals);
+
+  /// Si «Confirmar e importar» puede seguir.
+  bool get canConfirm => !hasPending && conflicts.isEmpty;
 
   ExportListImportState copyWith({
     ExportList? list,
@@ -69,6 +87,8 @@ class ExportListImportState {
     bool? busy,
     String? error,
     String? message,
+    List<OrphanTypeCode>? orphans,
+    CodeEquivalences? device,
   }) =>
       ExportListImportState(
         list: clearImport ? null : list ?? this.list,
@@ -81,6 +101,8 @@ class ExportListImportState {
         busy: busy ?? this.busy,
         error: error,
         message: message,
+        orphans: clearImport ? const [] : orphans ?? this.orphans,
+        device: device ?? this.device,
       );
 }
 
@@ -137,8 +159,109 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
     }
   }
 
+  /// T-147, entrega 2 (P3) · El listado que la operación de la escala tiene
+  /// hoy: sus equivalencias y su «también llena» son la revisión anterior.
+  ExportList? _previous;
+
+  Future<ExportList?> _previousList(
+      MovementLogRepository log, VesselVoyage plan) async {
+    try {
+      final source =
+          (await _operation(log, plan))?.source(OperationSourceKind.exportList);
+      return source == null
+          ? null
+          : ExportList.fromJson(
+              jsonDecode(source.content) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// T-147, entrega 2 (P3) · Lee lo guardado en este dispositivo, para la
+  /// tarjeta que lo enseña.
+  Future<void> loadDevice() async {
+    try {
+      final local = await ref.read(localVesselRepositoryProvider.future);
+      final device = (await local.getCodeEquivalences())
+          .fold((failure) => throw VesselOperationFailure(failure), (e) => e);
+      if (ref.mounted) state = state.copyWith(device: device);
+    } catch (error, stack) {
+      if (ref.mounted) {
+        state = state.copyWith(
+            error: vesselErrorMessage(error, stack,
+                'leer las equivalencias guardadas en este dispositivo'));
+      }
+    }
+  }
+
+  /// Guarda [next] como la tabla del dispositivo y, si hay un listado leído,
+  /// vuelve a proponer con ella, sin perder lo que la oficina ya eligió.
+  Future<void> _replaceDevice(CodeEquivalences next) async {
+    if (state.busy) return;
+    try {
+      final local = await ref.read(localVesselRepositoryProvider.future);
+      (await local.saveCodeEquivalences(next))
+          .fold((failure) => throw VesselOperationFailure(failure), (_) {});
+      if (!ref.mounted) return;
+      final plan = _plan;
+      final list = state.list;
+      if (plan == null || plan.portOfCall == null || list == null) {
+        state = state.copyWith(device: next);
+        return;
+      }
+      final before = {
+        for (final p in state.proposals) (p.kind, p.listCode): p
+      };
+      final fresh = ExportListCrossChecker.propose(list, plan,
+          portOfCall: plan.portOfCall!, saved: next, previous: _previous);
+      state = _withCrossCheck(
+          state.copyWith(device: next, proposals: [
+            for (final p in fresh)
+              () {
+                final old = before[(p.kind, p.listCode)];
+                if (old == null) return p;
+                if (old.origin == EquivalenceOrigin.chosen &&
+                    old.planCode != null) {
+                  return p.choose(old.planCode!).withAlso(old.also);
+                }
+                return p.planCode == null
+                    ? p
+                    : p.withAlso({...p.also, ...old.also});
+              }()
+          ]),
+          plan);
+    } catch (error, stack) {
+      if (ref.mounted) {
+        state = state.copyWith(
+            error: vesselErrorMessage(error, stack,
+                'quitar las equivalencias guardadas en este dispositivo'));
+      }
+    }
+  }
+
+  /// Quita una equivalencia guardada en este dispositivo. No cambia ningún
+  /// listado ya importado.
+  Future<void> removeSaved(EquivalenceKind kind, String listCode) async {
+    final device = state.device;
+    if (device != null) await _replaceDevice(device.remove(kind, listCode));
+  }
+
+  /// Quita las de puerto, que quedaron de versiones anteriores y ya no se
+  /// usan.
+  Future<void> removeSavedPorts() async {
+    final device = state.device;
+    if (device == null) return;
+    await _replaceDevice(CodeEquivalences({
+      for (final kind in EquivalenceKind.values)
+        if (kind != EquivalenceKind.port) kind: device.of(kind),
+    }));
+  }
+
+  Future<void> removeAllSaved() => _replaceDevice(CodeEquivalences.empty);
+
   /// Lee el listado que ya se guardó en la operación, para verlo sin el Excel.
   Future<void> loadSaved() async {
+    await loadDevice();
     final plan = _plan;
     if (plan == null || plan.portOfCall == null) return;
     try {
@@ -199,13 +322,18 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
       final local = await ref.read(localVesselRepositoryProvider.future);
       final saved = (await local.getCodeEquivalences())
           .fold((failure) => throw VesselOperationFailure(failure), (e) => e);
-      final proposals = ExportListCrossChecker.propose(list, plan,
-          portOfCall: plan.portOfCall!, saved: saved);
       final log = await ref.read(movementLogRepositoryProvider.future);
+      // T-147, entrega 2 (P3): la revisión anterior del listado de esta
+      // operación manda sobre lo guardado en el dispositivo.
+      _previous = await _previousList(log, plan);
+      final proposals = ExportListCrossChecker.propose(list, plan,
+          portOfCall: plan.portOfCall!, saved: saved, previous: _previous);
       _operated = await _operatedState(log, plan);
       if (!ref.mounted) return;
       state = _withCrossCheck(
-          state.copyWith(list: list, proposals: proposals, busy: false), plan);
+          state.copyWith(
+              list: list, proposals: proposals, busy: false, device: saved),
+          plan);
     } on _ListFailure catch (e) {
       if (ref.mounted) {
         state = state.copyWith(busy: false, error: e.failure.message);
@@ -232,12 +360,50 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
         plan);
   }
 
+  /// T-147, entrega 2 (P4) · «También llena»: la oficina declara que el tipo
+  /// [listCode] del listado llena también el código [planCode] del plan.
+  void declare(String listCode, String planCode) {
+    final plan = _plan;
+    final code = planCode.trim().toUpperCase();
+    if (plan == null || code.isEmpty) return;
+    state = _withCrossCheck(
+        state.copyWith(proposals: [
+          for (final p in state.proposals)
+            p.kind == EquivalenceKind.type &&
+                    p.listCode == listCode &&
+                    p.planCode != null
+                ? p.withAlso({...p.also, code})
+                : p,
+        ]),
+        plan);
+  }
+
+  /// Quita [planCode] de «también llena» del tipo [listCode], o de todos.
+  void undeclare(String planCode, {String? listCode}) {
+    final plan = _plan;
+    if (plan == null) return;
+    state = _withCrossCheck(
+        state.copyWith(proposals: [
+          for (final p in state.proposals)
+            p.kind == EquivalenceKind.type &&
+                    (listCode == null || p.listCode == listCode) &&
+                    p.also.contains(planCode)
+                ? p.withAlso(p.also.where((c) => c != planCode))
+                : p,
+        ]),
+        plan);
+  }
+
   ExportListImportState _withCrossCheck(
       ExportListImportState s, VesselVoyage plan) {
     final list = s.list;
     if (list == null) return s;
-    final normalized =
-        list.normalized(ExportListCrossChecker.tableOf(s.proposals));
+    final normalized = list.normalized(
+        ExportListCrossChecker.tableOf(s.proposals),
+        typeFamilies: ExportListCrossChecker.familiesOf(s.proposals));
+    s = s.copyWith(
+        orphans: ExportListCrossChecker.orphanTypeCodes(s.proposals, plan,
+            portOfCall: plan.portOfCall!));
     // T-127: el aviso sigue a las equivalencias elegidas, porque el grupo de
     // un vacío sale de los códigos ya traducidos.
     final operated = _operated;
@@ -271,6 +437,11 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
       return 'Falta elegir equivalencias: ${state.proposals.where((p) => p.needsUser).map((p) => p.listCode).join(', ')}. '
           'Elige una para cada código antes de importar.';
     }
+    // T-147, entrega 2 (10.160, cambio 4): un código del plan, un solo tipo.
+    final conflicts = state.conflicts;
+    if (conflicts.isNotEmpty) {
+      return conflicts.map((c) => c.message).join(' ');
+    }
     if (state.busy) return 'Hay una operación en curso: espera a que termine.';
     state = state.copyWith(busy: true);
     try {
@@ -291,14 +462,20 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
       final local = await ref.read(localVesselRepositoryProvider.future);
       final stored = (await local.getCodeEquivalences())
           .fold((failure) => throw VesselOperationFailure(failure), (e) => e);
-      (await local.saveCodeEquivalences(
-              stored.merge(ExportListCrossChecker.tableOf(state.proposals))))
+      // T-147, entrega 2 (P3): al dispositivo van solo los tipos y las
+      // líneas de esta importación. Los puertos que hubiera de versiones
+      // anteriores no se tocan: se quitan desde su tarjeta.
+      final device =
+          stored.merge(ExportListCrossChecker.deviceTableOf(state.proposals));
+      (await local.saveCodeEquivalences(device))
           .fold((failure) => throw VesselOperationFailure(failure), (_) {});
 
       ref.read(operationSourcesRevisionProvider.notifier).changed();
       if (!ref.mounted) return null;
       final revision = saved.exportListRevision;
+      _previous = normalized;
       state = ExportListImportState(
+        device: device,
         saved: normalized,
         savedCrossCheck: state.crossCheck,
         message: revision == 0
@@ -323,6 +500,7 @@ class ExportListImportNotifier extends Notifier<ExportListImportState> {
   /// Descarta el listado leído sin guardar nada.
   void discard() {
     _operated = null;
+    _previous = null;
     state = state.copyWith(clearImport: true);
   }
 }
