@@ -574,13 +574,20 @@ class BaplieMetadata extends Equatable {
 /// T-144 suma [locode] (un código de puerto que no es UN/LOCODE) y
 /// [dimension] (un DIM que no se pudo leer entero). Esos dos no los conoce la
 /// 1.0.0: se guardan aparte (ver [readByV100]) y como texto.
+///
+/// T-147 (10.151, hallazgo 2) suma [noNumber] (celdas cuyo EQD trae un texto
+/// donde va la matrícula, como «NO»: se leen como celdas reservadas) y
+/// [duplicate] (la misma matrícula en más de una celda). Van al final y
+/// también aparte: la 1.0.0 no los lee y la 1.0.1 los salta sin fallar.
 enum BaplieReadNoticeKind {
   weight,
   position,
   checkDigit,
   incomplete,
   locode,
-  dimension;
+  dimension,
+  noNumber,
+  duplicate;
 
   /// Los cuatro tipos que la 1.0.0 sabe leer de `readNotices`.
   bool get readByV100 => index <= incomplete.index;
@@ -588,7 +595,11 @@ enum BaplieReadNoticeKind {
   /// Se guarda el texto del detalle y no el índice del contenedor: el de
   /// [incomplete] nombra segmentos, y uno de [locode] puede ser de la cabecera.
   bool get storedAsText =>
-      this == incomplete || this == locode || this == dimension;
+      this == incomplete ||
+      this == locode ||
+      this == dimension ||
+      this == noNumber ||
+      this == duplicate;
 }
 
 class BaplieReadNotice extends Equatable {

@@ -154,8 +154,22 @@ class LoadingOperation {
 
   /// La nueva corrección sustituirá toda la cadena. La vista previa retira
   /// esa cadena sin registrar movimientos ni restaurar un antecesor.
+  ///
+  /// T-147 · El estado de una corrección se deriva una vez: el diálogo
+  /// «Corregir carga» lo pedía por cada vacío del listado.
   OperationState _before(Movement? correcting) {
     if (correcting == null) return state;
+    if (_beforeId == correcting.id) return _beforeState!;
+    final derived = _deriveBefore(correcting);
+    _beforeId = correcting.id;
+    _beforeState = derived;
+    return derived;
+  }
+
+  String? _beforeId;
+  OperationState? _beforeState;
+
+  OperationState _deriveBefore(Movement correcting) {
     final byId = {for (final movement in movements) movement.id: movement};
     final replaced = <String>{};
     Movement? previous = correcting;
@@ -171,11 +185,28 @@ class LoadingOperation {
     if (before['C:${row.containerId}']?.state == ItemState.cancelled) {
       return false;
     }
-    return !before.items.values.any((s) =>
-        s.state == ItemState.moved &&
-        (s.key == 'C:${row.containerId}' ||
-            s.assignedContainer == row.containerId));
+    return !_operated(before).contains(row.containerId);
   }
+
+  /// Los contenedores ya movidos en [state]: los que subieron o bajaron por
+  /// su número y los vacíos asignados a una reserva. T-147 · Una vez por
+  /// estado; antes se recorrían todas las piezas por cada fila.
+  Set<String> _operated(OperationState state) {
+    if (identical(state, _operatedOf)) return _operatedSet!;
+    final result = <String>{};
+    for (final s in state.items.values) {
+      if (s.state != ItemState.moved) continue;
+      if (s.key.startsWith('C:')) result.add(s.key.substring(2));
+      final assigned = s.assignedContainer;
+      if (assigned != null) result.add(assigned);
+    }
+    _operatedOf = state;
+    _operatedSet = result;
+    return result;
+  }
+
+  OperationState? _operatedOf;
+  Set<String>? _operatedSet;
 
   List<ReservedSlot> slots(ExportListRow row,
       {int? selectedBay, Movement? correcting}) {
@@ -185,6 +216,7 @@ class LoadingOperation {
       return const [];
     }
     final before = _before(correcting);
+    final occupied = before.occupancy;
     final result = plan.loading.values
         .where((item) {
           final slot = item.reservedSlot;
@@ -194,7 +226,7 @@ class LoadingOperation {
               slot.portOfDischarge == row.pod &&
               slot.operatorCode == row.line &&
               before[item.key]?.state == ItemState.planned &&
-              !before.occupancy.containsKey(item.plannedPosition);
+              !occupied.containsKey(item.plannedPosition);
         })
         .map((item) => item.reservedSlot!)
         .toList();
@@ -294,21 +326,21 @@ class LoadingOperation {
       return free;
     }
     final before = _before(correcting);
+    // T-147: una reserva es su celda; buscarla en `free` por su clave da lo
+    // mismo que compararla campo por campo con cada una, que era un quinto
+    // del tiempo de la hoja.
+    final freeKeys = {for (final slot in free) slot.key};
     final waiting = <ReservedSlot>[];
     final others = <ReservedSlot>[];
     for (final item in plan.loading.values) {
       final slot = item.reservedSlot;
       if (slot == null ||
           item.role != PlanRole.load ||
-          free.contains(slot) ||
+          freeKeys.contains(slot.key) ||
           before[item.key]?.state != ItemState.planned) {
         continue;
       }
-      final occupant = before.occupancy[item.plannedPosition];
-      final leaving = occupant == null ||
-          (before['C:$occupant']?.role == PlanRole.discharge &&
-              before['C:$occupant']?.state == ItemState.planned);
-      if (!leaving) continue;
+      if (!_leaves(before, item)) continue;
       final sameGroup = slot.isoSizeType == row.type &&
           slot.portOfDischarge == row.pod &&
           slot.operatorCode == row.line;
@@ -330,6 +362,43 @@ class LoadingOperation {
     }
 
     return [...free, ...waiting..sort(order), ...others..sort(order)];
+  }
+
+  /// Si la celda de [item] está libre o la ocupa un contenedor que baja en
+  /// esta escala y todavía no se ha marcado.
+  bool _leaves(OperationState before, PlanItem item) {
+    final occupant = before.occupancy[item.plannedPosition];
+    return occupant == null ||
+        (before['C:$occupant']?.role == PlanRole.discharge &&
+            before['C:$occupant']?.state == ItemState.planned);
+  }
+
+  /// T-147 (10.151, regla 1) · Si [slot] admite hoy un vacío del listado: es
+  /// una reserva que el plan carga aquí, sigue planificada y su celda está
+  /// libre o la ocupa un contenedor que baja aquí sin marcar.
+  ///
+  /// Es lo que [candidateSlots] decide de una celda con `otherGroups`, y no
+  /// depende de la fila: las de su grupo entran por libres o por «baja
+  /// aquí», y las de otro grupo, con motivo, por la misma condición. La hoja
+  /// «Vacíos del listado» lo pregunta una vez, no una vez por fila.
+  bool admitsEmpty(ReservedSlot slot) => plan.loading.values.any((item) =>
+      item.reservedSlot?.key == slot.key &&
+      item.role == PlanRole.load &&
+      state[item.key]?.state == ItemState.planned &&
+      _leaves(state, item));
+
+  /// T-147 · Las filas que la hoja ofrece al abrirse desde [slot]: las de
+  /// [search] que son un vacío por asignar (sin celda propia en el plan y sin
+  /// operar), si la celda lo admite. Las mismas, y en el mismo orden, que
+  /// filtrar [search] con `candidateSlots(row, otherGroups: true)` fila por
+  /// fila, que es lo que hacía la hoja hasta la 1.0.1.
+  List<ExportListRow> rowsFor(ReservedSlot slot, String query,
+      {bool empties = true}) {
+    if (!admitsEmpty(slot)) return [];
+    return [
+      for (final row in search(query, empties: empties))
+        if (row.isEmpty && numbered(row) == null && available(row)) row
+    ];
   }
 
   /// T-77 · «Marcar su descarga y cargar»: la descarga del ocupante que baja

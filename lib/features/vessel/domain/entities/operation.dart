@@ -582,7 +582,13 @@ class OperationState {
 
   /// Qué hay en cada celda ahora: número de contenedor por posición. Una
   /// reserva cuenta solo si ya tiene su vacío; lo que bajó ya no está.
-  Map<String, String> get occupancy {
+  ///
+  /// T-147 (10.151, hallazgo 1) · Se calcula una vez por estado, que no
+  /// cambia después de derivarse: antes cada lectura rehacía el mapa, y la
+  /// hoja de los vacíos lo leía una vez por fila y por celda.
+  late final Map<String, String> occupancy = Map.unmodifiable(_occupancy());
+
+  Map<String, String> _occupancy() {
     final result = <String, String>{};
     for (final item in items.values) {
       final position = item.position;

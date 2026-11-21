@@ -19,6 +19,11 @@ enum EquivalenceOrigin {
 
   /// Nada permite deducirla: se pide al usuario.
   pending,
+
+  /// T-147 (10.151, regla 5) · Ningún contenedor la respalda, pero el plan
+  /// carga en la escala ese mismo código: se propone como identidad y la
+  /// pantalla dice de dónde sale. No se guarda en el dispositivo.
+  samePlanCode,
 }
 
 /// T-73 · Una fila de la tabla de equivalencias para un listado concreto.
@@ -265,13 +270,16 @@ class ExportListCrossChecker {
 
   static String _listCode(EquivalenceKind kind, ExportListRow r) => switch (kind) {
         EquivalenceKind.type => r.listType,
-        EquivalenceKind.port => r.listPod,
+        // T-147: el puerto que se cruza es el POT si la fila lo trae.
+        EquivalenceKind.port => r.listCrossPort,
         EquivalenceKind.line => r.listLine,
       };
 
-  /// Una fila por código del listado (tipo, POD y línea), en orden de
+  /// Una fila por código del listado (tipo, puerto y línea), en orden de
   /// aparición. Lo guardado en el dispositivo manda; si no hay, se deduce de
-  /// los contenedores que están en los dos; si tampoco, se pide.
+  /// los contenedores que están en los dos; si tampoco y el plan carga en la
+  /// escala ese mismo código, se propone la identidad (T-147); si no, se
+  /// pide.
   static List<EquivalenceProposal> propose(
     ExportList list,
     VesselVoyage plan, {
@@ -310,15 +318,31 @@ class ExportListCrossChecker {
           candidates: sorted,
         ));
       }
-      // Sin respaldo, se sugieren los códigos que el plan carga en la escala
-      // y que ninguna otra equivalencia de este tipo explica todavía.
-      final claimed = {for (final p in proposals) if (p.planCode != null) p.planCode!};
-      final loadCodes = <String>{
+      final planCodes = <String>{
         for (final c in plan.containers)
           if (c.portOfLoading == portOfCall && _planCode(kind, c) != null) _planCode(kind, c)!,
         for (final s in plan.reservedSlots)
           if (s.portOfLoading == portOfCall && _slotCode(kind, s) != null) _slotCode(kind, s)!,
-      }.where((code) => !claimed.contains(code)).toList()
+      };
+      // T-147 (regla 5): sin ningún contenedor que lo respalde, un código que
+      // el plan carga en la escala con ese mismo nombre se propone como
+      // identidad. Con respaldo manda el respaldo, y lo guardado, sobre todo.
+      for (var i = 0; i < proposals.length; i++) {
+        final p = proposals[i];
+        if (p.needsUser && p.observed.isEmpty && planCodes.contains(p.listCode)) {
+          proposals[i] = EquivalenceProposal(
+            kind: p.kind,
+            listCode: p.listCode,
+            planCode: p.listCode,
+            origin: EquivalenceOrigin.samePlanCode,
+            rows: p.rows,
+          );
+        }
+      }
+      // Sin respaldo, se sugieren los códigos que el plan carga en la escala
+      // y que ninguna otra equivalencia de este tipo explica todavía.
+      final claimed = {for (final p in proposals) if (p.planCode != null) p.planCode!};
+      final loadCodes = planCodes.where((code) => !claimed.contains(code)).toList()
         ..sort();
       for (final p in proposals) {
         result.add(p.needsUser && p.candidates.isEmpty
@@ -337,12 +361,13 @@ class ExportListCrossChecker {
   }
 
   /// Tabla resultante de unas propuestas resueltas. Las identidades deducidas
-  /// no se guardan: se vuelven a deducir cada vez.
+  /// o propuestas (T-147) no se guardan: se vuelven a deducir cada vez.
   static CodeEquivalences tableOf(Iterable<EquivalenceProposal> proposals) {
     var table = CodeEquivalences.empty;
     for (final p in proposals) {
       if (p.planCode == null) continue;
       if (p.origin == EquivalenceOrigin.inferred && p.isIdentity) continue;
+      if (p.origin == EquivalenceOrigin.samePlanCode) continue;
       table = table.put(p.kind, p.listCode, p.planCode!);
     }
     return table;
