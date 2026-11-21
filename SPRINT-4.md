@@ -5027,4 +5027,60 @@ El mensaje está en el documento del proyecto `BayStream_T147_e2b_revision_21nov
 
 **El disco de la laptop** está al 93 %, con 73 GB libres: las copias de GLM ya no están. Quedan las de Timonel, para cuando termine la entrega 2: `t147-e2` (2.9 GB), `t147-e2b` (0.8 GB), `t147-e2a` y `t147` (0.4 GB cada una), y `build\windows` de su carpeta (9.6 GB).
 
-La siguiente decisión es la **10.165**.
+### 10.165 · T-147, entrega 2, parte 2b: la corrección de la 10.164, revisada por Yov; después de cerrar hay una sola puerta, con el botón siempre a mano, y el arnés ya dice qué programa corre; pasa a la aceptación de GLM (21-nov, 13:00)
+
+**Carlos corrió los dos bloques de la 10.164** (12:13): la parte 2b quedó en `t147-piloto4` (`f71675c`) y la decisión en `sprint-4` (`ffc6d59`). **Y aprobó el ajuste de P8 a):** le pasó a Timonel el mensaje de la corrección entero, con su punto 1.
+
+**Timonel encontró un hueco en la propuesta de Yov antes de programarla,** como se le pidió:
+- el botón «Empezar una operación nueva» solo salía con el plano de la operación cerrada abierto. Quien abre la app y elige el archivo nuevo ve el rechazo, va a «Nube y cuenta» y lee «Abre un plano con su escala confirmada para ver su operación.», sin botón. Yov había dado por hecho que ahí se vería la cerrada, y no: sin la escala confirmada no hay operación a la vista;
+- **Carlos eligió «Botón siempre a mano»,** con una precisión de Yov. Al final de «Nube y cuenta» va una lista de las operaciones cerradas de ese equipo que no tienen sucesora, la más reciente primero, cada una con su buque, viaje, puerto y fecha de cierre, y su botón. El muelle no la ve, y la cerrada que ya se ve arriba no sale dos veces.
+
+**Timonel entregó la corrección a las 12:39,** sin commit: siete rutas y su informe, sobre `f71675c` (E2b-18 de `docs/T147-RESULTADOS.md`, con dos notas en E2b-6 y E2b-9).
+
+**Lo que quedó:**
+- **una sola puerta.** Con la operación cerrada, otro BAPLIE de la misma escala se rechaza y no guarda nada, igual que otro listado. El aviso dice: «La operación de esta escala ya está cerrada y sus BAPLIE no cambian: este archivo no se guardó. Para trabajar la escala otra vez, pulsa «Empezar una operación nueva» en «Nube y cuenta» y confirma este archivo de nuevo. En el muelle no se empieza: únete a la que publique la oficina, en «Operaciones abiertas en la nube».» Con la nueva empezada, el archivo entra a ella, que conserva el otro plano de la cerrada;
+- **el botón, siempre a mano:** «Operaciones cerradas en este dispositivo», al final de «Nube y cuenta», como la eligió Carlos. Empezada desde ahí, dice «Operación nueva, en este dispositivo. Abre o confirma su plano para trabajar en ella.» No es el selector de O-147-11: no deja ver una cerrada después de empezar otra;
+- **el arnés de la Web** (`tool/t147_web.py`) borra el *service worker* y su caché antes de cargar, sin tocar el almacén de la app. Anota en `navegador.json` la huella del `main.dart.js` que cargó la página y la del que se sirve, y la corrida falla si son distintas;
+- **«la 1.0.2 abre lo que guarda la 2b»,** repetida, y ahora sí con la 1.0.2;
+- **los dos detalles:** la segunda captura de la salida enseña «Avisos de la salida», y «AGREGADOS» seguido de otra sección ya no cuenta como agencia.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia** (`build/t147/e2b/correccion/`):
+- **las rutas:** son 8 por su blob contra `f71675c`, y ninguna más. `pubspec.yaml`, `pubspec.lock` y los tres archivos que Timonel evita no cambian;
+- **la suite y `analyze`:** `+2418: All tests passed!`, en una sola corrida, sin omitidas ni fallidas, en la carpeta (12:28) y en la copia limpia (12:31); «No issues found!» en las dos. Todo, después del último cambio (12:23). La copia limpia es `f71675c` con los siete archivos, iguales a los de la carpeta;
+- **las rojas:** con el informe en JSON, fallan 7 de las 27 pruebas de los dos archivos contra `f71675c`, y son las que dice Timonel: las dos que cambian de regla, la de agregar, la de «AGREGADOS» y tres de la lista. Ninguna es de compilación;
+- **el caso:** los 291 valores de `caso-2b.json` salen iguales;
+- **el arnés:** Yov leyó el cambio. De sus cuatro corridas de prueba sobre un mismo perfil, tres cargan el programa que se sirve; la que conserva el *service worker* carga el de la otra compilación y sale con «ALTO»;
+- **la 1.0.2, de verdad:** el `main.dart.js` que cargó la página es el del banco de `v1.0.2`, por su huella. Abrió lo que guardó la 2b corregida: Carga y la hoja desde 018-10-88, con los OR 250, 251, 252…, sin errores de Flutter. Y da la razón a la 10.164: sin frenar la CPU, el teclado tardó 147 ms con la 1.0.2 de verdad, y 80 ms en la corrida de la mañana, que era la 2b;
+- **el código:** Yov leyó entero el cambio (123 líneas que entran y 31 que salen en `lib/`) y sus pruebas. Ningún `// ignore:` ni dependencia nueva;
+- **en pantalla:** siete capturas. El rechazo, con su aviso entero; la lista de las cerradas, con su tarjeta y su botón; el diálogo; la operación nueva, antes de abrir su plano y con «Fuentes: llegada · carga»; la 1.0.2 con la hoja del listado guardado, y la salida con sus avisos;
+- **nombres y matrículas reales:** ninguno. **En `%TEMP%`,** nada del caso ni perfiles de Chrome.
+
+**La corrección queda revisada y entra a `t147-piloto4`.** El piso de la rama es 2418.
+
+**Lo que Yov anota:**
+- **O-147-12, nueva: el aviso del rechazo es largo y dura cuatro segundos.** Lo dijo Timonel. Son 58 palabras en el aviso del pie, que se va solo (`avisoDelViaje`, 4 s): no da tiempo de leerlas. En el teléfono puede quedarse en su texto corto, con «Ver». Y en el recorrido de Timonel, después del rechazo la app queda en el inicio: ahí, «confirma este archivo de nuevo» quiere decir abrirlo otra vez.
+  - Yov propone que un aviso con texto largo dure diez segundos, como ya dura el de los parámetros conservados (T-61), y que el mensaje diga «ábrelo de nuevo».
+  - No detiene la aceptación: va con lo que encuentre GLM, antes de publicar.
+- **El BAPLIE de salida no se puede mirar en una escala cerrada** sin empezar otra operación. Es lo que hacía la 1.0.2. Mirar un archivo sin operarlo es de O-147-11.
+- **Dos detalles.** Si el arnés no puede leer el cuerpo de la primera respuesta de `main.dart.js`, sigue con la siguiente, y tendría que fallar. Y `test/t147e2b_otra_operacion_test.dart` todavía dice que compila contra `v1.0.2`: desde la corrección llama a `startNew`, que la 1.0.2 no tiene. Sus rojas contra `v1.0.2` son las de la versión de `f71675c`, 9 de 11.
+
+**La parte 2b pasa a la aceptación de GLM,** en un chat nuevo, sobre la punta corregida. Primero, lo que nadie ha visto en pantalla:
+- **el muelle frente a la operación cerrada y a la nueva,** contra el emulador y con las dos cuentas;
+- **la oficina que cierra y abre el BAPLIE de salida** en el mismo equipo;
+- **Descarga con la matrícula repetida;**
+- **la nube a 360 × 800,** con el aviso del rechazo a ese tamaño;
+- un muelle en la 1.0.2 frente a la operación nueva, si queda sesión.
+
+Y la medición, otra vez, con el arnés corregido: los tres bancos, cada uno con su perfil.
+
+El prompt está en el documento del proyecto `BayStream_T147_e2b_aceptacion_21nov.md`.
+
+**Lo que sigue:**
+1. Carlos: tres bloques. La corrección, a `t147-piloto4`; `baystream-qa-r4`, a esa punta, y esta decisión, en `sprint-4`. Después, el prompt a GLM, en un chat nuevo.
+2. GLM acepta. Mientras tanto, ningún otro agente corre Flutter.
+3. Yov comprueba la aceptación contra su carpeta. Si hace falta, una corrección corta, con O-147-12.
+4. La lista de publicación de la 1.0.3, con las dos partes.
+
+**Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.166**.
