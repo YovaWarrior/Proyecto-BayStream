@@ -4652,4 +4652,24 @@ Lo que la propuesta tiene que decir: `LOC+83` con el POD del listado cuando es d
 
 **Siguen pendientes de Carlos:** decir en cuál teléfono midió los 0.36 s y si la pantalla se queda pegada al subir el teclado; revisar en el iPhone las equivalencias que digan «Guardada en este dispositivo» (10.151); O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.158**.
+### 10.158 · Carlos: los 0.36 s son del iPhone, por la Web, y al subir el teclado la pantalla ya no se queda pegada; O-147-1 deja de ir primero en la entrega 2 (20-nov, 19:40)
+
+**Carlos corrió los dos bloques de la 10.157** (hacia las 19:20): `sprint-4` está en `67692ee`, con la decisión, `DESIGN.md` 17.6 y el manual de la 1.0.2; y `baystream-t147` quedó adelantada a `99995db`, la `v1.0.2`, y subida. Yov lo comprobó en GitHub.
+
+**Y respondió lo que faltaba de la prueba corta** (19:26): «En el iPhone desde web, y no se quedó ya pegada la pantalla».
+- **Los 0.36 s de la hoja son del iPhone, por la Web:** el mismo teléfono y el mismo cliente donde se trabó el piloto 4 (10.151). Con qué lo midió no quedó dicho.
+- **Al subir el teclado, la pantalla ya no se queda pegada.** Es el paso 7 de la prueba corta, con el caso A09: 438 contenedores, 271 celdas reservadas y 276 vacíos en el listado. Era lo que quedaba de O-147-1 a la vista: en el banco, 0.15 s, y de 0.7 a 1.2 s con la CPU frenada (10.153 y 10.155).
+- **Lo que no se probó:** el teclado en el Honor, donde el paso 10 solo abre la hoja; y un plan más grande que el del caso. O-147-1 crece con el tamaño del plan, no con el listado.
+
+**O-147-1 deja de ir primero en la entrega 2.** La 10.153 lo ponía primero, a la espera de esta prueba. En el teléfono del piloto, con un plan del tamaño del piloto, no se nota: ya no es lo que necesita el próximo piloto. Sigue en la propuesta, como P6, y Timonel dice ahí si hay un arreglo corto y sin riesgo para esta entrega o si conviene dejarlo para el frente de usabilidad del teléfono, con su medida en el Honor. Lo propone Yov; decide Carlos, con la propuesta.
+
+**El prompt de la propuesta no se reescribe: se le suma una línea,** que Carlos le pasa a Timonel junto con el prompt, o en el mismo chat si ya se lo pasó. Dice lo de arriba y manda leer esta decisión. Está en el documento del proyecto `BayStream_Publicacion_1.0.2_20nov.md`.
+
+**Lo que sigue:**
+1. Carlos: el commit de esta decisión, en `baystream-rediseno`, y la línea a Timonel.
+2. Timonel: el paso 0 y la propuesta de la entrega 2 de T-147 (10.157).
+3. Yov revisa la propuesta y le lleva a Carlos las decisiones. Después, la entrega 2 de T-120 (10.154).
+
+**Siguen pendientes de Carlos:** revisar en el iPhone las equivalencias que digan «Guardada en este dispositivo» (10.151); O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.159**.
