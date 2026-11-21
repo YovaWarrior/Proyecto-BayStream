@@ -1137,29 +1137,26 @@ class T147Conductor {
     await Future<void>.delayed(const Duration(milliseconds: 500));
     await _asentar();
     await _capturar(pantalla, textos: patron);
-    bool esElAviso(Element e) {
+    // La segunda captura enseña «Avisos de la salida», con su título arriba.
+    // Si la página no trae avisos, sobra (corrección de la 10.164: salía dos
+    // veces la misma imagen).
+    bool esElTitulo(Element e) {
       final w = e.widget;
-      final texto = w is Text
-          ? w.data ?? ''
-          : w is SelectableText
-              ? w.data ?? ''
-              : '';
-      return texto.contains(patron);
+      return w is Text && (w.data ?? '').startsWith('Avisos de la salida');
     }
 
-    Element? aviso = _buscarElemento(esElAviso, aLaVista: false);
-    if (aviso == null) {
-      try {
-        aviso = await _traer(esElAviso, 'el aviso de la salida');
-      } on StateError {
-        aviso = null;
-      }
+    Element? titulo;
+    try {
+      titulo = await _traer(esElTitulo, 'los avisos de la salida');
+    } on StateError {
+      titulo = null;
     }
-    if (aviso != null) {
-      await Scrollable.ensureVisible(aviso,
-          alignment: 0.2, duration: Duration.zero);
+    if (titulo != null) {
+      await Scrollable.ensureVisible(titulo,
+          alignment: 0, duration: Duration.zero);
       await _asentar();
-      await _capturar('$pantalla-avisos', textos: patron);
+      await _capturar('$pantalla-avisos',
+          textos: RegExp('Avisos de la salida|${patron.pattern}'));
     }
     await _registrar(pantalla, {
       'textos': _textosConLaMatricula(patron, matricula),

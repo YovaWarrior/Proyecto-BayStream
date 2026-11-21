@@ -484,14 +484,20 @@ class ExportList extends Equatable {
       group._rows++;
       final section = row.section;
       if (section == null) continue;
-      if (section == name) {
-        group._added = true;
-      } else {
+      // Corrección de la 10.164: «AGREGADOS» se reconoce por su título, no
+      // por tener filas justo debajo. Seguido de otra sección sin filas en
+      // medio, contaba como una agencia. En un listado de la 1.0.2 sus filas
+      // no traen sección, y sigue saliendo como entonces.
+      if (_addedTitle.hasMatch(name)) group._added = true;
+      if (section != name) {
         group._sections[section] = (group._sections[section] ?? 0) + 1;
       }
     }
     return result.values.toList();
   }
+
+  /// El título de «AGREGADOS» como lo deja el lector, en singular o plural.
+  static final _addedTitle = RegExp(r'^AGREGADOS?$');
 
   /// Cuántas agencias trae el listado, sin contar «AGREGADOS».
   int get agencyCount => agencyGroups.where((g) => !g.added).length;

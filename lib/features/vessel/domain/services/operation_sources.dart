@@ -105,7 +105,7 @@ class OperationSources {
   ///
   /// 1. la publicada y abierta, como siempre;
   /// 2. si no hay, y hay una cerrada, la que se empezó **después** de ese
-  ///    cierre ([startNew], o [save] con otro archivo): nace con una fecha
+  ///    cierre ([startNew], la única puerta desde la 10.164): nace con una fecha
   ///    posterior al cierre, y por eso se distingue de la copia local que el
   ///    muelle abrió antes de unirse, que es anterior y no cuenta;
   /// 3. si no, la cerrada, la más reciente: se sigue viendo, solo para mirar;
@@ -295,28 +295,17 @@ class OperationSources {
                   'listado no cambia. Para trabajar con otro listado, empieza '
                   'una operación nueva desde «Nube y cuenta».');
         }
-        // T-130: la oficina confirmó «Agregar a la operación» y, mientras
-        // tanto, la operación se cerró. No se agrega, ni se abre otra a sus
-        // espaldas: al abrir el archivo otra vez, nace la nueva.
-        if (attachTo != null) {
-          throw const ValidationFailure(
-              field: 'source',
-              message: 'La operación de esta escala ya está cerrada y sus '
-                  'BAPLIE no cambian: el plan no se agregó. Vuelve a abrir '
-                  'este archivo y empezará una operación nueva.');
-        }
-        // T-147, entrega 2, parte 2b (P8 a; 10.160, D14): otro BAPLIE en una
-        // escala que ya se cerró abre una operación nueva, con otro
-        // identificador. Hasta la 1.0.2 se rechazaba con «ábrelo como una
-        // operación nueva», y no había cómo. La cerrada no cambia.
-        final operation = _after(existing,
-            vesselName: voyage.vessel.name,
-            voyageNumber: voyage.voyageNumber,
-            sources: [source],
-            clock: clock);
-        (await repository.saveOperation(operation))
-            .fold((failure) => throw failure, (_) {});
-        return operation;
+        // T-147, entrega 2, parte 2b, corrección (10.164): una sola puerta.
+        // Con la operación cerrada, otro BAPLIE no abre nada: se rechaza,
+        // como el listado, y el mensaje dice por dónde seguir. La parte 2b
+        // abría aquí una operación nueva sin preguntar, y la cerrada dejaba
+        // de verse en el equipo sin que nadie lo avisara: le pasaba a quien
+        // abría, para revisarlo, el BAPLIE de salida que acababa de guardar.
+        // Con la nueva empezada ([startNew]), el archivo entra a ella por el
+        // camino de siempre. Vale igual si la oficina confirmó «Agregar a la
+        // operación» y, mientras tanto, la operación se cerró (T-130).
+        throw ValidationFailure(
+            field: 'source', message: closedMessage(added: attachTo != null));
       }
       if (source.kind == OperationSourceKind.exportList) {
         if (sync == null) {
@@ -378,6 +367,42 @@ class OperationSources {
     (await repository.saveOperation(operation))
         .fold((failure) => throw failure, (_) {});
     return operation;
+  }
+
+  /// T-147, entrega 2, parte 2b, corrección (10.164) · Lo que se lee al
+  /// confirmar otro BAPLIE de una escala cuya operación ya se cerró. Lo lee
+  /// la oficina, que empieza la nueva, y el muelle, que no la empieza: se
+  /// une a la que publique la oficina.
+  static String closedMessage({bool added = false}) =>
+      'La operación de esta escala ya está cerrada y sus BAPLIE no cambian: '
+      '${added ? 'el plan no se agregó' : 'este archivo no se guardó'}. Para '
+      'trabajar la escala otra vez, pulsa «Empezar una operación nueva» en '
+      '«Nube y cuenta» y confirma este archivo de nuevo. En el muelle no se '
+      'empieza: únete a la que publique la oficina, en «Operaciones abiertas '
+      'en la nube».';
+
+  /// T-147, entrega 2, parte 2b, corrección (10.164) · Las operaciones
+  /// cerradas de este equipo desde las que se puede empezar otra: las que
+  /// son todavía la que se ve de su escala ([current]), es decir, las que no
+  /// tienen una abierta ni una empezada después. La más reciente, primero.
+  /// «Nube y cuenta» las lista para que «Empezar una operación nueva» esté a
+  /// mano aunque no haya ningún plano abierto.
+  static List<Operation> closedToRestart(Iterable<Operation> all) {
+    final operations = all.toList();
+    final result = <Operation>[];
+    for (final closed in operations) {
+      if (!closed.published || !closed.closed) continue;
+      final ofTheCall = [
+        for (final other in operations)
+          if (other.vesselName == closed.vesselName &&
+              other.portOfCall == closed.portOfCall &&
+              (other.matchesVoyage(closed.voyageNumber) ||
+                  closed.matchesVoyage(other.voyageNumber)))
+            other
+      ];
+      if (current(ofTheCall)?.id == closed.id) result.add(closed);
+    }
+    return result..sort((a, b) => b.closedAt!.compareTo(a.closedAt!));
   }
 
   /// T-130 (3.2 del diseño) · Lo que dice la página cuando la oficina abre un

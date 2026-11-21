@@ -112,9 +112,63 @@ class _CloudPageState extends ConsumerState<CloudPage> {
             _section(context, 'Operaciones abiertas en la nube'),
             _openOperations(context),
           ],
+          ..._closedOperations(context, operator),
         ],
       ),
     );
+  }
+
+  /// T-147, entrega 2, parte 2b, corrección (10.164) · Al final de la página,
+  /// las operaciones cerradas de este equipo desde las que se puede empezar
+  /// otra, la más reciente primero. Así «Empezar una operación nueva» está a
+  /// mano aunque no haya ningún plano abierto: es adonde manda el rechazo de
+  /// otro BAPLIE en una escala cerrada. El muelle no la ve, porque no empieza
+  /// operaciones, y la cerrada que ya se ve arriba no sale dos veces.
+  List<Widget> _closedOperations(BuildContext context, Operator? operator) {
+    if (operator?.role == OperatorRole.dock) return const [];
+    final active = ref.watch(activeOperationProvider).value;
+    final closed = [
+      for (final operation in OperationSources.closedToRestart(
+          ref.watch(localOperationsProvider).value ?? const <Operation>[]))
+        if (operation.id != active?.id) operation
+    ];
+    if (closed.isEmpty) return const [];
+    final office = operator != null &&
+        operator.authorized &&
+        operator.role == OperatorRole.office;
+    return [
+      const SizedBox(height: 24),
+      _section(context, 'Operaciones cerradas en este dispositivo'),
+      const Padding(
+        padding: EdgeInsets.only(bottom: 8),
+        child: Text('Para trabajar otra vez una escala que ya se cerró, '
+            'empieza una operación nueva con sus planos.'),
+      ),
+      for (final operation in closed)
+        Card(
+          key: ValueKey('closed-operation-${operation.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                  '${operation.vesselName} · '
+                  '${voyageNumberLabel(operation.voyageNumber)} · '
+                  '${operation.portOfCall}',
+                  style: Theme.of(context).textTheme.titleSmall),
+              Text('Cerrada el ${fechaCorta(operation.closedAt!)}'),
+              const SizedBox(height: 8),
+              FilledButton(
+                key: ValueKey('new-operation-${operation.id}'),
+                onPressed: _busy
+                    ? null
+                    : () => _startNew(operation, office, fromList: true),
+                child: const Text('Empezar una operación nueva'),
+              ),
+            ]),
+          ),
+        ),
+    ];
   }
 
   Widget _section(BuildContext context, String title) => Padding(
@@ -371,7 +425,11 @@ class _CloudPageState extends ConsumerState<CloudPage> {
 
   /// T-147, entrega 2, parte 2b (P8 a) · «Empezar una operación nueva»: con
   /// los planos de la cerrada, en este equipo y sin publicar.
-  Future<void> _startNew(Operation closed, bool office) async {
+  ///
+  /// Con [fromList] se empieza desde la lista del final de la página, sin el
+  /// plano de la cerrada a la vista: el aviso dice además cómo seguir.
+  Future<void> _startNew(Operation closed, bool office,
+      {bool fromList = false}) async {
     final planos = [
       for (final kind in const [
         OperationSourceKind.arrivalBaplie,
@@ -411,10 +469,13 @@ class _CloudPageState extends ConsumerState<CloudPage> {
       _changed();
       return null;
     },
-        done: office
-            ? 'Operación nueva, en este dispositivo. Publícala para que el '
-                'muelle la reciba.'
-            : 'Operación nueva, en este dispositivo.');
+        done: fromList
+            ? 'Operación nueva, en este dispositivo. Abre o confirma su plano '
+                'para trabajar en ella.'
+            : office
+                ? 'Operación nueva, en este dispositivo. Publícala para que el '
+                    'muelle la reciba.'
+                : 'Operación nueva, en este dispositivo.');
   }
 
   Widget _openOperations(BuildContext context) {

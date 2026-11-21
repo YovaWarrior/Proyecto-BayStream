@@ -15,8 +15,19 @@ el conductor (tool/t147_conductor.dart) escriba «fin» o «error».
   su resumen (`cpu-resumen.json`): sirve con una compilación `--profile`,
   que conserva los nombres de las funciones.
 - No toca el Chrome de Carlos, la nube ni ningún almacén real.
+- (10.164) El banco lleva un service worker que guarda el programa en el
+  perfil. Antes de cargar se borran el service worker y su caché de ese
+  origen, sin tocar el almacén de la app, y `navegador.json` anota la huella
+  (SHA-256) del `main.dart.js` que cargó la página y la del que hay en la
+  carpeta que se sirve. Si son distintas, la corrida falla: corrió el
+  programa de otra compilación. `--conservar-service-worker` no lo borra, y
+  sirve solo para comprobar que entonces falla.
+- `--capturas-de-sondeo` guarda una captura cada vez que la pantalla cambia
+  (`capturas/sondeo-NN.png`): para mirar la corrida de un conductor que no
+  captura, como `medir`. No se usa al medir: tomar la captura cuesta tiempo.
 """
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -83,6 +94,35 @@ def resumen_del_perfil(perfil, patrones):
     }
 
 
+def programa_cargado(respuestas, servido):
+    """10.164 · La huella (SHA-256) del `main.dart.js` que cargó la página y
+    la del que hay en la carpeta que se sirve. Una corrida vale solo si son
+    la misma: si no, corrió el programa de otra compilación."""
+    en_disco = hashlib.sha256(servido.read_bytes()).hexdigest()
+    cargado = None
+    desde_sw = None
+    url = None
+    # La primera respuesta es la que arrancó la app; las de después son las
+    # que el service worker pide por detrás para guardar la compilación nueva.
+    for respuesta in respuestas:
+        try:
+            cuerpo = respuesta.body()
+        except Exception:  # la respuesta ya no está en el navegador
+            continue
+        cargado = hashlib.sha256(cuerpo).hexdigest()
+        desde_sw = respuesta.from_service_worker
+        url = respuesta.url
+        break
+    return {
+        'url': url,
+        'cargado_sha256': cargado,
+        'servido_sha256': en_disco,
+        'desde_el_service_worker': desde_sw,
+        'respuestas_de_main_dart_js': len(respuestas),
+        'es_el_que_se_sirve': cargado == en_disco,
+    }
+
+
 def principal():
     p = argparse.ArgumentParser()
     p.add_argument('--web', required=True)
@@ -99,6 +139,12 @@ def principal():
     p.add_argument('--patrones', default='occupancy,candidateSlots,slots,available,_before,search,_LoadingPickerState,contains')
     p.add_argument('--consulta', required=True)
     p.add_argument('--tope', type=int, default=600, help='segundos')
+    p.add_argument('--capturas-de-sondeo', action='store_true',
+                   help='una captura cada vez que la pantalla cambia')
+    p.add_argument('--conservar-service-worker', action='store_true',
+                   help='no borra el service worker ni su caché antes de cargar; '
+                        'solo para comprobar que la corrida falla si la página '
+                        'corre el programa de otra compilación')
     a = p.parse_args()
 
     salida = Path(a.salida).resolve()
@@ -120,6 +166,8 @@ def principal():
     origen = f'http://127.0.0.1:{a.puerto}'
     red = {'cortadas': [], 'servidas': 0}
     final = None
+    programa = {'es_el_que_se_sirve': False, 'cargado_sha256': None,
+                'servido_sha256': None}
     try:
         time.sleep(1.5)
         if servidor.poll() is not None:
@@ -144,6 +192,12 @@ def principal():
 
             ctx.route('**/*', filtrar)
             page = ctx.pages[0] if ctx.pages else ctx.new_page()
+            # 10.164: las respuestas de `main.dart.js`, para saber después qué
+            # programa cargó la página. Aquí solo se guardan; el cuerpo se
+            # pide al final, fuera del manejador.
+            programas = []
+            ctx.on('response', lambda r: programas.append(r)
+                   if urlparse(r.url).path.endswith('/main.dart.js') else None)
             consola = []
             page.on('console', lambda m: consola.append(m.text[:300]))
             page.on('pageerror', lambda e: consola.append(f'ERROR {str(e)[:300]}'))
@@ -154,12 +208,31 @@ def principal():
                 cdp.send('Profiler.enable')
                 cdp.send('Profiler.setSamplingInterval', {'interval': 500})
                 cdp.send('Profiler.start')
+            # 10.164: el banco lleva un service worker que guarda el programa
+            # en el perfil. Con el mismo perfil y el mismo puerto, la primera
+            # carga después de cambiar de compilación corría la anterior. Se
+            # borran el service worker y su caché de este origen, y nada más:
+            # el almacén de la app (IndexedDB) queda como estaba.
+            if not a.conservar_service_worker:
+                cdp.send('Storage.clearDataForOrigin', {
+                    'origin': origen,
+                    'storageTypes': 'service_workers,cache_storage'})
             page.goto(f'{origen}/?{a.consulta}', wait_until='commit')
             limite = time.time() + a.tope
+            vistas, ultima = 0, None
             while time.time() < limite and final is None:
                 # No `time.sleep`: Playwright solo atiende sus eventos (el
                 # filtro de la red entre ellos) dentro de una llamada suya.
                 page.wait_for_timeout(500)
+                if a.capturas_de_sondeo:
+                    imagen = page.screenshot()
+                    huella = hashlib.sha256(imagen).hexdigest()
+                    if huella != ultima:
+                        ultima = huella
+                        vistas += 1
+                        carpeta = salida / 'capturas'
+                        carpeta.mkdir(exist_ok=True)
+                        (carpeta / f'sondeo-{vistas:02d}.png').write_bytes(imagen)
                 if pasos.exists():
                     for linea in pasos.read_text(encoding='utf-8').splitlines():
                         paso = json.loads(linea)
@@ -172,15 +245,25 @@ def principal():
                     resumen_del_perfil(crudo, a.patrones.split(',')),
                     ensure_ascii=False, indent=2), encoding='utf-8')
             (salida / 'consola.log').write_text('\n'.join(consola), encoding='utf-8')
+            programa = programa_cargado(programas, Path(a.web) / 'main.dart.js')
+            programa['service_worker'] = (
+                'conservado' if a.conservar_service_worker
+                else 'borrado antes de cargar, con su caché')
             (salida / 'navegador.json').write_text(json.dumps({
                 'version': ctx.browser.version if ctx.browser else page.evaluate('navigator.userAgent'),
                 'viewport': page.viewport_size, 'escala': escala, 'cpu': a.cpu,
                 'consulta': a.consulta, 'perfil': str(perfil),
+                'programa': programa,
             }, ensure_ascii=False, indent=2), encoding='utf-8')
             ctx.close()
     finally:
         servidor.terminate()
         (salida / 'red.json').write_text(json.dumps(red, ensure_ascii=False, indent=2), encoding='utf-8')
+    if not programa['es_el_que_se_sirve']:
+        sys.exit('ALTO: la página no corrió el programa de la carpeta que se '
+                 f"sirve. Cargó {programa['cargado_sha256']} y en {a.web} hay "
+                 f"{programa['servido_sha256']}. La corrida no vale: mira "
+                 'navegador.json y consola.log.')
     if final is None:
         sys.exit('El conductor no terminó: mira consola.log y pasos.jsonl.')
     print(f"T-147: {final['paso']} · {salida}")

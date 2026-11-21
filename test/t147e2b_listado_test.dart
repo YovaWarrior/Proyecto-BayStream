@@ -93,6 +93,30 @@ void main() {
       }
     });
 
+    test('«AGREGADOS» seguido de otra sección, sin filas en medio, no '
+        'cuenta como agencia', () {
+      // Corrección de la 10.164.
+      final hoja = t147Hoja();
+      final agregados =
+          hoja.indexWhere((f) => f.length == 1 && f[0] == 'AGREGADOS');
+      hoja.insert(agregados + 1, const ['VACIOS']);
+      final lista = const ExportListParserService()
+          .parseGrid(hoja, fileName: 'sintetico-t147.xlsx');
+      expect(lista.issues, isEmpty);
+      expect(lista.byOrder(8)!.agency, 'AGREGADOS');
+      expect(_seccion(lista.byOrder(8)!), 'VACIOS');
+      final cuenta = e2Nuevo<Object?>(
+          () => (lista as dynamic).agencyCount as int, null);
+      expect(cuenta, 2, reason: 'la 2b contaba «AGREGADOS» como la tercera');
+      final rotulos = e2Nuevo<List<String>>(
+          () => [
+                for (final g in (lista as dynamic).agencyGroups as List)
+                  (g as dynamic).label as String
+              ],
+          const []);
+      expect(rotulos, contains('AGREGADOS: 1 (VACIOS 1)'));
+    });
+
     test('un listado guardado por la 1.0.2 se lee como entonces', () {
       final viejo = _guardadoPorLa102(t147Listado());
       expect(viejo.agencies, {

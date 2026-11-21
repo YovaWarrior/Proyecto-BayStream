@@ -2041,11 +2041,11 @@ El instrumento de la entrega 1 (`escenario=medir`, sin tocarlo), el caso A09, la
 
 | | 1.0.2 | 2a | 2b |
 |---|---|---|---|
-| Tocar la celda | 161 · 159 · 154 · 160 · 153 | 213 · 158 · 155 · 156 · 160 | 135 · 134 · 132 · 130 · 142 |
+| Tocar la celda | 161 · 159 · 154 · 160 · 153 | 213 ¹ · 158 · 155 · 156 · 160 | 135 · 134 · 132 · 130 · 142 |
 | mediana | **159** | **158** | **134** |
-| El teclado | 664 · 673 · 661 · 705 · 656 | 985 · 666 · 666 · 642 · 694 | 381 · 378 · 379 · 367 · 384 |
+| El teclado | 664 · 673 · 661 · 705 · 656 | 985 ¹ · 666 · 666 · 642 · 694 | 381 · 378 · 379 · 367 · 384 |
 | mediana | **664** | **666** | **379** |
-| Una tecla | 95 · 96 · 98 · 97 · 94 | 138 · 131 · 97 · 93 · 100 | 84 · 74 · 74 · 72 · 74 |
+| Una tecla | 95 · 96 · 98 · 97 · 94 | 138 ¹ · 131 · 97 · 93 · 100 | 84 · 74 · 74 · 72 · 74 |
 | mediana | **96** | **100** | **74** |
 
 **Serie 2 · Un perfil propio por banco,** cada uno con la operación que preparó su propio código:
@@ -2074,6 +2074,15 @@ El instrumento de la entrega 1 (`escenario=medir`, sin tocarlo), el caso A09, la
 **La hoja, al tocar la celda, no quedó más lenta que en la 1.0.2:** 159 ms contra 134 ms en la serie 1 y 215 contra 168 ms en la serie 2. Con la 2a, 158 y 211.
 
 - **No lo medí** en Windows, en un teléfono ni con un plan más grande que el del caso. El teclado del banco es simulado, como en la entrega 1.
+
+**Nota de la corrección (10.164, 21-nov): qué corrió de verdad.**
+
+- ¹ **La primera corrida de la 2a en la serie 1 no corrió la 2a.** Corrió el programa de la 1.0.2, que el service worker del banco tenía guardado en el perfil, mientras Chrome instalaba el de la 2a por detrás. Lo encontró Yov en `medicion/s1-2a-medir-cpu4-1`, y es así.
+- **Lo que escribí arriba de esa corrida está mal:** no cayó en «el paso lento de la máquina», y no explica lo que midió GLM. Lo dejo escrito como estaba y lo corrijo aquí.
+- **Las otras 29 corridas corrieron lo que dicen.** En la serie 1, desde la tercera, cada carga actualiza el programa antes de arrancar; en la serie 2, cada banco tiene su perfil.
+- **Las medianas no cambian** y las dos respuestas se sostienen. Sin esa corrida, las cuatro de la 2a en la serie 1 dan 666 · 666 · 642 · 694: mediana 666, contra 664 de la 1.0.2.
+- **Sigue sin explicación** por qué la serie 2 entera salió una vez y media más lenta que la serie 1 para los tres bancos. No es esto: en la serie 2 cada banco tenía su perfil.
+- Desde esta corrección, `tool/t147_web.py` borra el service worker antes de cargar, anota qué programa cargó la página y falla si no es el que se sirve (E2b-18.3).
 
 ## E2b-7. El corpus, antes y después
 
@@ -2119,6 +2128,12 @@ Todo después del último cambio (`build/t147/e2b/registros/`):
 | **La operación nueva de una escala que ya se cerró** | Un equipo en la 1.0.2 que tuvo la cerrada puede seguir encontrándola a ella y no a la nueva, aunque se una. Para trabajar la nueva, todos los equipos en la 1.0.3. **Leído en el código de la 1.0.2; no lo corrí** con un muelle en la 1.0.2 contra el emulador |
 | **El plan con una matrícula repetida** | La regla vive en el cliente: una oficina en la 1.0.2 todavía puede publicarlo o agregarlo. La 1.0.3 que se une lo enseña con su ficha |
 | Lo de la 2a | Sigue igual: lo que la 1.0.2 no lee de «también llena» y de las canceladas (E2a-9) |
+
+**Nota de la corrección (10.164, 21-nov): qué corrió de verdad.**
+
+- **La comprobación «en pantalla» de arriba no corrió la 1.0.2.** El perfil `e2b-s2-2b` traía el service worker del banco de la 2b, y lo que arrancó fue la 2b: `consola.log` empieza con «Loading from existing service worker.», y el servidor entregó `main.dart.js` después de que el conductor ya estaba registrando. Lo encontró Yov, y es así. **Esa evidencia no vale.**
+- **La comprobación «con el código» sí vale:** leía un archivo con el código de `v1.0.2`, sin navegador.
+- **Está repetida, y ahora sí es la 1.0.2:** el banco de `v1.0.2` sobre un perfil en que el banco de la 2b guardó la operación con su listado importado, con la huella del programa anotada. Carga, la hoja desde 018-10-88 con las filas del listado guardado, y ningún error de Flutter. Está en E2b-18.4, con sus capturas.
 
 ## E2b-10. `DESIGN.md` y el manual
 
@@ -2338,3 +2353,196 @@ git push origin t147-piloto4
 | Las validaciones finales y el informe | 11:12 | 11:23 |
 
 **Unas dos horas de reloj,** contra las 7.5 que estimé en la propuesta para menos puntos. P8 a), que estimé en 2.5 horas, salió en menos de una.
+
+## E2b-18. La corrección de la 10.164
+
+21 de noviembre de 2026, de 12:14 a 12:39. Sobre `f71675c` («Sprint 4: T-147, entrega 2, parte 2b: la matricula repetida no entra a la nube, …»), con `912daac` debajo. Sin commit: lo ejecuta Carlos (18.9). Lo anterior no se reescribe; solo sumé las dos notas que pide el punto 3, en E2b-6 y en E2b-9.
+
+### 18.1 En corto
+
+- **Una sola puerta.** Con la operación cerrada, otro BAPLIE de la misma escala ya no abre nada: se rechaza, no se guarda, y el mensaje manda a «Empezar una operación nueva». Con la nueva empezada, el archivo entra a ella, y la nueva conserva el otro plano.
+- **El botón, siempre a mano.** Lo dije antes de programar y Carlos lo eligió: «Nube y cuenta» lista al final las operaciones cerradas de este equipo, cada una con su botón.
+- **El arnés de la Web ya no deja pasar una corrida con el programa de otra compilación:** lo impide y, si pasa, lo delata y falla.
+- **La 1.0.2, de verdad, abrió en pantalla lo que guardó la 2b,** con la huella de su programa anotada.
+- **Suite 2418 de 2418** (2412 más 6), sin omitidas, en una sola corrida, y `analyze` en cero, aquí y en una copia limpia. **7 de 27 rojas contra la punta de la 2b.** El caso, igual que en la 2b.
+
+### 18.2 P8 a) · Con la operación cerrada, otro archivo se rechaza
+
+**Lo que cambia en el dominio** (`operation_sources.dart`):
+
+- La rama de la operación cerrada ya no crea nada. Para un BAPLIE lanza un rechazo, igual que para el listado, con `OperationSources.closedMessage`.
+- La rama de `attachTo` (la oficina confirmó «Agregar a la operación» y la operación se cerró mientras tanto) usa el mismo mensaje, con «el plan no se agregó». Ya no promete que al volver a abrir el archivo empezará una operación nueva.
+- `OperationSources.closedToRestart`, nueva: las operaciones cerradas de este equipo desde las que se puede empezar otra. Son las que todavía son «la que se ve» de su escala: no tienen una abierta ni una empezada después. La más reciente, primero.
+
+**El texto del rechazo, que propongo:**
+
+> La operación de esta escala ya está cerrada y sus BAPLIE no cambian: este archivo no se guardó. Para trabajar la escala otra vez, pulsa «Empezar una operación nueva» en «Nube y cuenta» y confirma este archivo de nuevo. En el muelle no se empieza: únete a la que publique la oficina, en «Operaciones abiertas en la nube».
+
+- Sirve a los dos: a la oficina le dice el botón y el paso siguiente; al muelle, que no tiene el botón, le dice qué le toca.
+- Sale donde salen los errores al abrir un archivo: en el aviso rojo del pie, que se va solo a los pocos segundos. **Es largo para un aviso que se va.** No lo cambié: ese aviso es de `vessel_overview_page.dart` y de `vessel_providers.dart`, que evito. Lo anoto para Yov.
+
+**El caso sin salida que dije antes de programar.**
+
+- El botón «Empezar una operación nueva» salía en «Nube y cuenta» solo con el plano de la operación cerrada abierto. Quien abre la app y elige el archivo nuevo ve el rechazo, va a «Nube y cuenta» y encuentra «Abre un plano con su escala confirmada para ver su operación.», sin botón. La salida era abrir antes el plano viejo desde «Recientes»; sin ese plano, no había ninguna.
+- **Carlos eligió «Botón siempre a mano»,** y después precisó cómo. Quedó así (`cloud_page.dart`):
+  - al final de «Nube y cuenta», debajo de «Operaciones abiertas en la nube», una sección **«Operaciones cerradas en este dispositivo»**;
+  - una tarjeta por operación, **la más reciente primero,** con su buque, viaje y puerto, «Cerrada el ‹fecha›» y el botón «Empezar una operación nueva», con el mismo diálogo de antes;
+  - **el muelle no la ve;**
+  - **la cerrada que ya se ve arriba,** en «Operación de la escala abierta», **no sale dos veces;**
+  - una cerrada que ya tiene sucesora deja de salir. Sin ninguna, la sección no está.
+- Empezada desde ahí, dice: «Operación nueva, en este dispositivo. Abre o confirma su plano para trabajar en ella.»
+- **No es el selector de O-147-11:** no deja ver una cerrada después de empezar otra. Solo deja empezar.
+
+**Lo que no se arregla aquí, y conviene que se sepa.** El caso que preocupaba, la oficina que abre en la misma laptop el BAPLIE de salida para revisarlo: ahora se rechaza y la cerrada sigue ahí, pero **ese archivo no se puede mirar en esa escala** sin empezar una operación nueva. Es lo que hacía la 1.0.2. Mirarlo sin operar es de O-147-11, o de abrirlo con otra escala.
+
+**Las pruebas** (`test/t147e2b_otra_operacion_test.dart`, de 11 a 16):
+
+| Prueba | Qué fija ahora |
+|---|---|
+| «con otro archivo se rechaza y no se guarda nada; después de «Empezar una operación nueva», entra a ella» | Era «…nace una operación nueva, y la cerrada no cambia». El rechazo, con su texto; la bitácora, igual; después de `startNew`, el archivo reemplaza al de su clase en la nueva |
+| «el plano de llegada que faltaba también se rechaza; después entra a la nueva, que conserva el plan de carga» | Era «…también abre una nueva…». La nueva queda con «carga.edi» y «llegada.edi» |
+| «el reloj atrasado del equipo no esconde la operación nueva» | La misma, ahora por `startNew` |
+| «agregar a una operación que se cerró mientras tanto…», nueva | El mensaje dice «el plan no se agregó» y ya no dice «empezará una operación nueva» |
+| Cuatro de pantalla, nuevas | Sin ningún plano abierto, la lista sale al final, con la más reciente primero, y el botón empieza la nueva; la cerrada que ya se ve arriba no sale dos veces; sin cuenta, también sale; el muelle no la ve |
+
+### 18.3 El arnés de la Web (`tool/t147_web.py`)
+
+- **Lo impide:** antes de cargar, borra el service worker y su caché de ese origen (`Storage.clearDataForOrigin`, con `service_workers,cache_storage`). El almacén de la app, que es IndexedDB, no se toca.
+- **Lo delata:** guarda las respuestas de `main.dart.js` y, al terminar, anota en `navegador.json`, en `programa`, la huella SHA-256 del que cargó la página y la del que hay en la carpeta que se sirve, si vino del service worker y qué se hizo con él. **Si las dos huellas no son la misma, la corrida falla** con «ALTO: la página no corrió el programa de la carpeta que se sirve…», aunque el conductor haya dicho «fin».
+- Dos opciones nuevas: `--conservar-service-worker`, que no lo borra y sirve solo para comprobar que entonces falla; y `--capturas-de-sondeo`, que guarda una captura cada vez que la pantalla cambia, para mirar la corrida de un conductor que no captura.
+- **El instrumento de la medición y el conductor no cambian** en esto. Al conductor solo le toqué la segunda captura de la salida (18.5).
+
+**La prueba, con dos compilaciones sobre un mismo perfil** (`build/t147/e2b/correccion/arnes/`):
+
+| Corrida | Se sirve | Service worker | Cargó | Sale |
+|---|---|---|---|---|
+| 1 · `preparar`, perfil nuevo | la 2a (`079e3f51…`) | borrado | `079e3f51…` | vale |
+| 2 · `medir`, el mismo perfil | la 2b corregida (`b82a46a6…`) | borrado | `b82a46a6…` | vale |
+| 3 · `medir`, el mismo perfil | la 2a | **conservado** | **`b82a46a6…`, del service worker** | **falla, con su «ALTO»** |
+| 4 · `medir`, el mismo perfil | la 2a | borrado | `079e3f51…` | vale |
+
+- La corrida 3 es lo que pasó en la 2b: su consola empieza con «Loading from existing service worker.». Las otras tres, con «Installing/Activating first service worker.».
+
+### 18.4 «La 1.0.2 abre lo que guarda la 2b», en pantalla y de verdad
+
+`build/t147/e2b/correccion/entre-versiones/`, con el arnés corregido y un solo perfil:
+
+| Paso | Se sirve | Cargó | Qué hizo |
+|---|---|---|---|
+| 1 · `preparar` | la 2b corregida (`b82a46a6…`) | `b82a46a6…` | Abre el plan del caso, importa el listado y lo guarda en el perfil. 12 capturas. «fin», sin errores de Flutter |
+| 2 · `medir`, con capturas de sondeo | **`v1.0.2`** (`7526c039…`) | **`7526c039…`,** no del service worker | Abre lo guardado, va a Carga, toca 018-10-88 y escribe en la hoja. 9 capturas. «fin», sin errores de Flutter |
+
+**Lo que se ve en las capturas de la 1.0.2** (`2-la-102-abre/capturas/sondeo-NN.png`):
+
+- `02`: Carga, bahía 18: «9 contenedores · 73 celdas reservadas · 148.2 t», con sus celdas «Sube».
+- `03` a `05`: la hoja «Vacíos del listado» desde 018-10-88, con las filas del listado guardado: OR 250, 251, 252…, cada una con su grupo («L5G1 · COTRB · LNH») y su tara.
+- `06` y `07`: con «1» escrito, OR 252, 270, 296, 311 y, después, OR 158 y OR 167 con «Otro grupo: pide motivo».
+- **Eso último es la 1.0.2:** no lee «también llena», y un 45G1 en una celda L5G1 le pide motivo. Es lo que E2a-9 ya decía.
+- **Lo que no se ve:** el resumen del listado. El conductor de la 1.0.2 no abre esa página sin importar otra vez, y no lo forcé. Lo que la 1.0.2 enseña del listado guardado, aquí, es la hoja y las cuentas de Carga.
+
+### 18.5 Los dos detalles
+
+- **Las capturas de la salida:** la segunda (`10-salida-avisos`) baja hasta «Avisos de la salida» y lo enseña con su título. Si la página no trae avisos, no se toma. Comprobado en dos corridas del `recorrido2b` con el banco corregido, a 360 × 800 de día y a 1366 × 690 de noche: `09` y `10` ya son imágenes distintas, y las dos corridas cargaron el programa que se servía.
+- **«AGREGADOS» seguido de otra sección, sin filas en medio:** ya no cuenta como agencia. «AGREGADOS» se reconoce por su título y no por tener filas justo debajo (`export_list.dart`). Un listado guardado por la 1.0.2 sigue leyéndose como entonces. Una prueba nueva en `test/t147e2b_listado_test.dart`.
+
+### 18.6 Las rojas, la suite y `analyze`
+
+Registros en `build/t147/e2b/correccion/registros/`.
+
+| Qué | Resultado |
+|---|---|
+| Las pruebas cambiadas y nuevas, contra la punta de la 2b (`f71675c`) | **7 de 27 fallan ahí** (`rojas-contra-la-2b.log` y `.json`): las dos que cambian de regla, la de agregar, la de «AGREGADOS» y tres de la lista. Ninguna de compilación |
+| Las 20 que pasan en los dos lados | Los controles, la del reloj, que ahora va por `startNew`, y «el muelle no ve la lista», que en la 2b era cierto porque la lista no existía |
+| `flutter analyze`, aquí | **0** (`final-analyze.log`) |
+| `flutter test`, aquí, en una sola corrida | **2418 de 2418,** sin omitidas (`final-suite.log`) |
+| Copia limpia: `f71675c` más los siete archivos, en `%TEMP%\t147-e2b\p2b` | `analyze` **0** y **2418 de 2418** (`limpia-analyze.log`, `limpia-suite.log`) |
+| El caso A09 (`caso/caso-correccion.json`) | **Igual que en la 2b,** clave por clave |
+
+- El piso era 2412. Suben 6: una de agregar, cuatro de la lista y una de «AGREGADOS».
+- `pubspec.yaml` y `pubspec.lock` no cambian. Ningún `// ignore:`, ninguna dependencia nueva, y ninguno de los tres archivos que evito.
+
+### 18.7 En pantalla, contra el emulador
+
+El emulador de T-143 y el banco de T-130 compilado con la corrección, como oficina, a 1920 × 1080. Siete capturas en `build/t147/e2b/correccion/nube/`.
+
+| Paso | Lo que se ve | Captura |
+|---|---|---|
+| Se publica la operación con el plan del caso y se cierra | «Publicada y cerrada», con su botón | `c164-01` |
+| Se vuelve al inicio y se abre **otro archivo:** un plano de llegada del mismo buque, viaje y puerto | No entra: la app sigue en el inicio, y al pie sale el aviso con el texto de 18.2, entero | `c164-02` |
+| «Nube y cuenta», sin ningún plano abierto | Arriba, «Abre un plano con su escala confirmada para ver su operación.» Al final, **«Operaciones cerradas en este dispositivo»:** «BUQUE HOTEL · VIAJE009A · GTSTC» · «Cerrada el 21-nov, 12:35» · «Empezar una operación nueva» | `c164-03` |
+| Se pulsa | El diálogo de antes, con «…que deja de verse en este equipo.» | `c164-04` |
+| «Empezar» | «Operación nueva, en este dispositivo. Abre o confirma su plano para trabajar en ella.» La tarjeta ya no está | `c164-05` |
+| **El mismo archivo, otra vez** | **Entra.** En «Nube y cuenta»: «Solo en este dispositivo» · «Es una operación nueva: la anterior de esta escala se cerró el 21-nov, 12:35…» · **«Fuentes: llegada · carga»** | `c164-06` |
+| «Publicar operación» | «Operación publicada.» | `c164-07` |
+
+- La primera captura del rechazo salió sin el aviso: ya se había ido. La repetí capturando antes.
+- Solo como oficina. El muelle frente a la lista tiene su prueba de widget; en el emulador no lo recorrí.
+- Al terminar apagué el emulador y el control, y borré de `%TEMP%` lo que salía del caso y los perfiles de Chrome.
+
+### 18.8 Lo que cambia en mis textos de E2b-10 y E2b-11
+
+**`DESIGN.md` 17.7, «Después de cerrar».** La última frase («Abrir otro archivo de la misma escala, con la operación cerrada, empieza una nueva sin preguntar.») se cambia por:
+
+> Con la operación cerrada, otro BAPLIE de la misma escala no se guarda: sale el aviso «La operación de esta escala ya está cerrada y sus BAPLIE no cambian: este archivo no se guardó. Para trabajar la escala otra vez, pulsa «Empezar una operación nueva» en «Nube y cuenta» y confirma este archivo de nuevo. En el muelle no se empieza: únete a la que publique la oficina, en «Operaciones abiertas en la nube».» Con la nueva empezada, el archivo entra a ella. Al final de «Nube y cuenta», «Operaciones cerradas en este dispositivo» lista, la más reciente primero, las cerradas desde las que se puede empezar otra, cada una en una tarjeta con su buque, viaje y puerto, «Cerrada el …» y el botón lleno «Empezar una operación nueva». El muelle no la ve, y la cerrada que ya se ve arriba no se repite.
+
+**El manual.** En 5.2 y 7.11: otro archivo de una escala cerrada se rechaza, y por dónde se sigue; la lista de las cerradas; y, como pide la 10.164, que antes de empezar otra se guarda de la cerrada lo que haga falta, porque después deja de verse en ese equipo.
+
+**«Para quien acepte».**
+
+- **Las rojas de la corrección:** en una copia de `f71675c`, copiar `test/t147e2b_otra_operacion_test.dart` y `test/t147e2b_listado_test.dart` y correrlos: fallan 7 de 27. La copia que usé es `%TEMP%\t147-e2b\p2b`, que después dejé con los siete archivos para la suite.
+- **Cada compilación del banco, con su perfil nuevo.** Y si se comparte un perfil, el arnés lo cuida: en `navegador.json`, `programa.es_el_que_se_sirve` tiene que ser verdadero, y si no, la corrida sale con error.
+- **La nube:** a los pasos de E2b-11 se suma el recorrido de 18.7. El aviso del rechazo se va solo: hay que capturarlo en el segundo y medio siguiente.
+
+### 18.9 Los archivos y Git (lo ejecuta Carlos)
+
+Siete rutas, más este informe:
+
+- `lib/features/vessel/domain/services/operation_sources.dart`
+- `lib/features/vessel/presentation/pages/cloud_page.dart`
+- `lib/features/vessel/domain/entities/export_list.dart`
+- `test/t147e2b_otra_operacion_test.dart`
+- `test/t147e2b_listado_test.dart`
+- `tool/t147_web.py`
+- `tool/t147_conductor.dart`
+
+```powershell
+git add -- lib/features/vessel/domain/services/operation_sources.dart
+git add -- lib/features/vessel/presentation/pages/cloud_page.dart
+git add -- lib/features/vessel/domain/entities/export_list.dart
+git add -- test/t147e2b_otra_operacion_test.dart
+git add -- test/t147e2b_listado_test.dart
+git add -- tool/t147_web.py
+git add -- tool/t147_conductor.dart
+git add -- docs/T147-RESULTADOS.md
+git commit -m "Sprint 4: T-147, entrega 2, parte 2b, correccion: con la operacion cerrada otro archivo se rechaza y manda a Empezar una operacion nueva, las cerradas al final de Nube y cuenta, y el arnes de la Web dice que programa cargo"
+git push origin t147-piloto4
+```
+
+- `pubspec.yaml` y `pubspec.lock` no cambian. Los tres archivos de `windows/flutter/` siguen fuera.
+- La evidencia, en `build/t147/e2b/correccion/`: `registros/`, `arnes/`, `entre-versiones/`, `recorrido/`, `nube/`, `caso/` y los dos bancos.
+
+### 18.10 Lo que no hice
+
+- **El muelle, en el emulador,** frente a la operación cerrada y a la nueva. Sigue primero en la aceptación (10.164).
+- **Un muelle en la 1.0.2 frente a la operación nueva.**
+- **La nube a 360 × 800 y de noche,** el Honor, y Descarga con la matrícula repetida en pantalla. Como en E2b-12.
+- **El resumen del listado visto por la 1.0.2** (18.4).
+- **El aviso del rechazo, que se va solo** (18.2): lo anoto y no lo toqué.
+- **Las otras tres corridas del `recorrido2b` y las de Windows** con el banco corregido: repetí dos de la Web. El cambio de la corrección no toca lo que esas corridas miran.
+
+### 18.11 En tres líneas
+
+1. Con la operación cerrada, otro archivo de la misma escala se rechaza sin guardar nada y manda a «Empezar una operación nueva», que ahora está también al final de «Nube y cuenta», en la lista de las cerradas de ese equipo.
+2. El arnés de la Web borra el service worker antes de cargar, anota qué programa cargó la página y falla si no es el que se sirve; con él, la 1.0.2 de verdad abrió en pantalla lo que guardó la 2b.
+3. Suite 2418 de 2418 y `analyze` en cero, aquí y en copia limpia; 7 de 27 rojas contra la punta de la 2b; el caso, igual.
+
+### 18.12 Para Yov
+
+> Yov: está la corrección de la 10.164, en `docs/T147-RESULTADOS.md`, sección E2b-18, sin commit. Siete rutas sobre `f71675c`. Suite 2418 de 2418 (2412 más 6) y `analyze` en cero, aquí y en copia limpia; 7 de 27 rojas contra la punta de la 2b; el caso, igual que en la 2b.
+>
+> 1. **P8 a):** con la operación cerrada, otro BAPLIE se rechaza y no guarda nada; `attachTo` usa el mismo mensaje. El texto está en 18.2. Antes de programar vi que el botón solo salía con el plano de la cerrada abierto, y Carlos eligió ponerlo siempre a mano: al final de «Nube y cuenta» va «Operaciones cerradas en este dispositivo», la más reciente primero, sin el muelle y sin repetir la que ya se ve arriba. No es el selector de O-147-11.
+> 2. **El arnés:** borra el service worker y su caché antes de cargar, anota en `navegador.json` la huella del `main.dart.js` que cargó la página y la del que se sirve, y falla si difieren. Probado con dos compilaciones en un perfil: tres corridas valen y la que conserva el service worker falla (18.3).
+> 3. **La 1.0.2, de verdad,** sobre lo que guardó la 2b: cargó `7526c039…`, que es el de su carpeta, y abrió Carga y la hoja desde 018-10-88, sin errores de Flutter. Las notas están en E2b-6 y E2b-9, con la corrida de 985 ms señalada.
+> 4. **Los dos detalles** están hechos (18.5).
+>
+> Dos cosas que anoto y no toqué: el aviso del rechazo es largo y se va solo, porque sale donde salen los errores al abrir un archivo; y el BAPLIE de salida sigue sin poder mirarse en una escala cerrada sin empezar otra operación, que es de O-147-11. El muelle en el emulador sigue sin recorrer.

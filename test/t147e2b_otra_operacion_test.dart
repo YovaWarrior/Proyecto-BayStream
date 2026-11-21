@@ -2,9 +2,11 @@
 // una del mismo buque, viaje y puerto (10.160, D14), también con el mismo
 // archivo.
 //
-// La cerrada se sigue viendo, solo para mirar. Con otro archivo nace una
-// operación nueva; con el mismo, «Nube y cuenta» ofrece «Empezar una operación
-// nueva» con sus planos.
+// La cerrada se sigue viendo, solo para mirar, y hay una sola puerta para
+// seguir: «Empezar una operación nueva», en «Nube y cuenta», con sus planos.
+// Otro archivo de la misma escala se rechaza y manda a ese botón; con la
+// nueva empezada, entra a ella (corrección de la 10.164: la 2b abría una
+// operación nueva sin preguntar).
 //
 // Compila también contra `v1.0.2`, para que la roja sea por comportamiento:
 // las pruebas usan `find` y `save`, que ya existían, y la pantalla.
@@ -103,7 +105,7 @@ class _Sesion implements SessionRepository {
 }
 
 class _Plano extends VoyageNotifier {
-  final VesselVoyage plan;
+  final VesselVoyage? plan;
   _Plano(this.plan);
 
   @override
@@ -115,24 +117,38 @@ void main() {
   final otroPlan = e2Plan(_otraCargaEdi);
 
   group('P8 a) · La operación de la escala, después de cerrar', () {
-    test('con otro archivo nace una operación nueva, y la cerrada no cambia',
-        () async {
+    test('con otro archivo se rechaza y no se guarda nada; después de '
+        '«Empezar una operación nueva», entra a ella', () async {
       final bitacora = E2Bitacora([_cerrada()]);
-      final Operation nueva;
+      Object? error;
       try {
-        nueva = await OperationSources.save(
-            bitacora, otroPlan, e2Escala, _otraCarga,
-            clock: () => DateTime.utc(2026, 11, 21, 9));
+        await OperationSources.save(bitacora, otroPlan, e2Escala, _otraCarga);
       } on ValidationFailure catch (e) {
-        fail('la 1.0.2 lo rechazaba, y no había cómo seguir: ${e.message}');
+        error = e;
       }
-      expect(nueva.id, isNot('cerrada'));
-      expect(nueva.published, isFalse);
-      expect(nueva.closed, isFalse);
-      expect(nueva.vesselName, 'BUQUE SINTETICO DOS');
-      expect(nueva.voyageNumber, 'VIAJE147E');
-      expect(nueva.portOfCall, e2Escala);
-      expect(nueva.sources.map((s) => s.fileName), ['carga-2.edi']);
+      expect(error, isNotNull,
+          reason: 'la 2b abría aquí una operación nueva sin preguntar, y la '
+              'cerrada dejaba de verse');
+      final mensaje = (error! as ValidationFailure).message;
+      expect(mensaje, contains('ya está cerrada'));
+      expect(mensaje, contains('este archivo no se guardó'));
+      expect(mensaje, contains('«Empezar una operación nueva» en «Nube y cuenta»'));
+      expect(mensaje, contains('confirma este archivo de nuevo'));
+      expect(mensaje, contains('En el muelle no se empieza: únete'));
+      expect(bitacora.operaciones, [_cerrada()]);
+      expect((await OperationSources.find(bitacora, otroPlan, e2Escala))!.id,
+          'cerrada');
+
+      // La única puerta: «Empezar una operación nueva».
+      final nueva = await OperationSources.startNew(bitacora, _cerrada(),
+          clock: () => DateTime.utc(2026, 11, 21, 9));
+      expect(nueva.sources.map((s) => s.fileName), ['carga.edi']);
+      // Y el archivo entra por el camino de siempre: reemplaza al de su clase.
+      final conElArchivo =
+          await OperationSources.save(bitacora, otroPlan, e2Escala, _otraCarga);
+      expect(conElArchivo.id, nueva.id);
+      expect(conElArchivo.published, isFalse);
+      expect(conElArchivo.sources.map((s) => s.fileName), ['carga-2.edi']);
       expect(bitacora.operaciones, hasLength(2));
       expect(bitacora.operaciones.firstWhere((o) => o.id == 'cerrada'),
           _cerrada());
@@ -140,27 +156,47 @@ void main() {
           nueva.id);
     });
 
-    test('el plano de llegada que faltaba también abre una nueva, y el plan '
-        'de carga se le suma', () async {
+    test('el plano de llegada que faltaba también se rechaza; después entra '
+        'a la nueva, que conserva el plan de carga', () async {
       final bitacora = E2Bitacora([_cerrada()]);
-      final Operation nueva;
-      try {
-        nueva = await OperationSources.save(
-            bitacora, e2Plan(_llegadaEdi), e2Escala, _llegada,
-            clock: () => DateTime.utc(2026, 11, 21, 9));
-      } on ValidationFailure catch (e) {
-        fail('la 1.0.2 lo rechazaba: ${e.message}');
-      }
-      expect(nueva.sources.map((s) => s.kind),
-          [OperationSourceKind.arrivalBaplie]);
-      // El mismo plan de carga de la cerrada entra a la nueva.
-      final completa =
-          await OperationSources.save(bitacora, plan, e2Escala, _carga);
+      await expectLater(
+          OperationSources.save(
+              bitacora, e2Plan(_llegadaEdi), e2Escala, _llegada),
+          throwsA(isA<ValidationFailure>().having((f) => f.message, 'mensaje',
+              contains('«Empezar una operación nueva» en «Nube y cuenta»'))),
+          reason: 'la 2b abría una operación nueva con solo la llegada');
+      expect(bitacora.operaciones, [_cerrada()]);
+
+      final nueva = await OperationSources.startNew(bitacora, _cerrada(),
+          clock: () => DateTime.utc(2026, 11, 21, 9));
+      final completa = await OperationSources.save(
+          bitacora, e2Plan(_llegadaEdi), e2Escala, _llegada);
       expect(completa.id, nueva.id);
       expect(completa.sources.map((s) => s.fileName),
-          ['llegada.edi', 'carga.edi']);
+          ['carga.edi', 'llegada.edi'],
+          reason: 'la nueva conserva el otro plano de la cerrada');
       expect(bitacora.operaciones.firstWhere((o) => o.id == 'cerrada'),
           _cerrada());
+    });
+
+    test('agregar a una operación que se cerró mientras tanto: se rechaza y '
+        'no promete lo que ya no pasa', () async {
+      final bitacora = E2Bitacora([_cerrada()]);
+      Object? error;
+      try {
+        await OperationSources.save(
+            bitacora, e2Plan(_llegadaEdi), e2Escala, _llegada,
+            attachTo: _cerrada());
+      } on ValidationFailure catch (e) {
+        error = e;
+      }
+      final mensaje = (error! as ValidationFailure).message;
+      expect(mensaje, contains('el plan no se agregó'));
+      expect(mensaje, isNot(contains('empezará una operación nueva')),
+          reason: 'la 2b decía «Vuelve a abrir este archivo y empezará una '
+              'operación nueva», que ya no es cierto');
+      expect(mensaje, contains('«Empezar una operación nueva» en «Nube y cuenta»'));
+      expect(bitacora.operaciones, [_cerrada()]);
     });
 
     test('con el mismo archivo se sigue viendo la cerrada', () async {
@@ -175,16 +211,10 @@ void main() {
     test('el reloj atrasado del equipo no esconde la operación nueva',
         () async {
       final bitacora = E2Bitacora([_cerrada()]);
-      final Operation nueva;
-      try {
-        nueva = await OperationSources.save(
-            bitacora, otroPlan, e2Escala, _otraCarga,
-            clock: () => _cierre.subtract(const Duration(hours: 3)));
-      } on ValidationFailure catch (e) {
-        fail('la 1.0.2 lo rechazaba: ${e.message}');
-      }
+      final nueva = await OperationSources.startNew(bitacora, _cerrada(),
+          clock: () => _cierre.subtract(const Duration(hours: 3)));
       expect(nueva.createdAt.isAfter(_cierre), isTrue);
-      expect((await OperationSources.find(bitacora, otroPlan, e2Escala))!.id,
+      expect((await OperationSources.find(bitacora, plan, e2Escala))!.id,
           nueva.id);
     });
 
@@ -277,11 +307,15 @@ void main() {
 
   group('P8 a) · «Empezar una operación nueva», en «Nube y cuenta»', () {
     Future<E2Bitacora> abrirLaNube(WidgetTester tester,
-        {OperatorRole? rol, Iterable<OperationSource>? fuentes}) async {
+        {OperatorRole? rol,
+        Iterable<OperationSource>? fuentes,
+        Iterable<Operation>? operaciones,
+        bool conElPlano = true}) async {
       tester.view.physicalSize = const Size(360, 1600);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      final bitacora = E2Bitacora([_cerrada(fuentes: fuentes)]);
+      final bitacora =
+          E2Bitacora(operaciones ?? [_cerrada(fuentes: fuentes)]);
       await tester.pumpWidget(ProviderScope(overrides: [
         if (rol != null) ...[
           sessionRepositoryProvider.overrideWith((ref) async => _Sesion(rol)),
@@ -289,7 +323,8 @@ void main() {
               .overrideWith((ref) async => const LocalOnlyOperationSync()),
         ],
         movementLogRepositoryProvider.overrideWith((ref) async => bitacora),
-        voyageNotifierProvider.overrideWith(() => _Plano(plan)),
+        voyageNotifierProvider
+            .overrideWith(() => _Plano(conElPlano ? plan : null)),
       ], child: const MaterialApp(home: CloudPage())));
       await tester.pumpAndSettle();
       return bitacora;
@@ -358,6 +393,100 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('new-operation-confirm')));
       await tester.pumpAndSettle();
       expect(bitacora.operaciones, hasLength(2));
+      expect(tester.takeException(), isNull);
+    });
+
+    // Corrección de la 10.164: el botón, a mano aunque no haya un plano
+    // abierto, que es adonde manda el rechazo de otro archivo.
+    final otraEscala = Operation(
+        id: 'otra-escala',
+        vesselName: 'BUQUE SINTETICO TRES',
+        voyageNumber: 'VIAJE200',
+        portOfCall: 'COCTG',
+        createdAt: DateTime.utc(2026, 11, 10),
+        sources: [_carga],
+        published: true,
+        closedAt: DateTime.utc(2026, 11, 12, 6));
+
+    testWidgets('sin ningún plano abierto, la cerrada sale al final con su '
+        'botón, y la más reciente va primero', (tester) async {
+      final bitacora = await abrirLaNube(tester,
+          rol: OperatorRole.office,
+          conElPlano: false,
+          operaciones: [otraEscala, _cerrada(fuentes: [_llegada, _carga])]);
+      expect(find.byKey(const ValueKey('new-operation-button')), findsNothing,
+          reason: 'sin plano abierto no hay operación de la escala arriba');
+      expect(find.text('Operaciones cerradas en este dispositivo'),
+          findsOneWidget,
+          reason: 'la 2b no tenía dónde empezar otra sin el plano de la '
+              'cerrada a la vista');
+      final reciente =
+          find.byKey(const ValueKey('closed-operation-cerrada'));
+      final antigua =
+          find.byKey(const ValueKey('closed-operation-otra-escala'));
+      expect(reciente, findsOneWidget);
+      expect(antigua, findsOneWidget);
+      expect(tester.getTopLeft(reciente).dy,
+          lessThan(tester.getTopLeft(antigua).dy));
+      // Va al final de la página, debajo de las abiertas en la nube.
+      expect(
+          tester.getTopLeft(reciente).dy,
+          greaterThan(tester
+              .getTopLeft(find.text('Operaciones abiertas en la nube'))
+              .dy));
+      expect(e2Textos(tester, 'BUQUE SINTETICO DOS · '),
+          ['BUQUE SINTETICO DOS · VIAJE147E · GTSTC']);
+      expect(e2Textos(tester, 'BUQUE SINTETICO TRES · '),
+          ['BUQUE SINTETICO TRES · VIAJE200 · COCTG']);
+      expect(e2Textos(tester, 'Cerrada el '), hasLength(2));
+
+      await tester.tap(find.byKey(const ValueKey('new-operation-cerrada')));
+      await tester.pumpAndSettle();
+      expect(e2Textos(tester, 'deja de verse en este equipo'), hasLength(1));
+      await tester.tap(find.byKey(const ValueKey('new-operation-confirm')));
+      await tester.pumpAndSettle();
+      expect(bitacora.operaciones, hasLength(3));
+      final nueva = bitacora.operaciones.firstWhere(
+          (o) => o.id != 'cerrada' && o.id != 'otra-escala');
+      expect(nueva.published, isFalse);
+      expect(nueva.sources.map((s) => s.fileName),
+          ['llegada.edi', 'carga.edi']);
+      expect(e2Textos(tester, 'Operación nueva, en este dispositivo'),
+          hasLength(1));
+      // La que ya tiene sucesora deja de salir; la otra sigue.
+      expect(reciente, findsNothing);
+      expect(antigua, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('la cerrada que ya se ve arriba no sale dos veces',
+        (tester) async {
+      await abrirLaNube(tester,
+          rol: OperatorRole.office, operaciones: [otraEscala, _cerrada()]);
+      expect(find.byKey(const ValueKey('new-operation-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('closed-operation-cerrada')),
+          findsNothing);
+      expect(find.byKey(const ValueKey('closed-operation-otra-escala')),
+          findsOneWidget,
+          reason: 'la de otra escala no está arriba: va en la lista');
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('sin cuenta, la lista también sale', (tester) async {
+      await abrirLaNube(tester, conElPlano: false);
+      expect(find.byKey(const ValueKey('new-operation-cerrada')),
+          findsOneWidget, reason: 'la 2b no la tenía');
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('el muelle no ve la lista de las cerradas', (tester) async {
+      await abrirLaNube(tester,
+          rol: OperatorRole.dock,
+          conElPlano: false,
+          operaciones: [otraEscala, _cerrada()]);
+      expect(find.text('Operaciones cerradas en este dispositivo'),
+          findsNothing);
+      expect(find.byKey(const ValueKey('new-operation-cerrada')), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
