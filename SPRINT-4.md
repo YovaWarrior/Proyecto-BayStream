@@ -4746,4 +4746,64 @@ Lo que la propuesta tiene que decir: `LOC+83` con el POD del listado cuando es d
 
 **Siguen pendientes de Carlos:** revisar en el iPhone las equivalencias que digan «Guardada en este dispositivo» (10.151); O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113). Las dos copias de `%TEMP%\t147-e2\`, de 2.9 GB, se pueden borrar cuando termine la entrega 2.
 
-La siguiente decisión es la **10.160**.
+### 10.160 · T-147, entrega 2: las respuestas de Carlos; la propuesta queda aprobada con cuatro cambios y empieza la parte 2a (20-nov, 21:40)
+
+**Carlos corrió los dos bloques de la 10.159** (21:09): `t147-piloto4` está en `adbbefd`, con la propuesta, y `sprint-4`, en `938971b`. **Y respondió las cinco decisiones que pedían un dato suyo** (21:11). Las otras once quedan como las recomendaron Timonel y Yov: D3 a D12 y D14.
+
+**Las respuestas:**
+- **D1: «ROLEADO» y «YA EMBARCADO», solas, también quieren decir que la fila no se carga.** En sus palabras: «también son no se carga». Cualquier otra nota sin cifras sigue como propone Timonel: la fila se carga y el resumen la avisa.
+- **D2: con motivo.** Carlos dio por buena la recomendación de Yov. Un lleno que el plan trae y el listado cancela se puede registrar en el muelle, con su motivo, y le sale a la oficina como conflicto. No se bloquea.
+- **D15: no hay fecha para el próximo piloto.** «Aún no sé, así que podemos pulir bien.» Las dos partes salen juntas, en una sola 1.0.3. El orden no cambia: primero la 2a y después la 2b, cada una con su revisión y su aceptación.
+- **D16: lo dejó en manos de Yov** («como tú quieras»). Manda el código del plan; la regla está abajo.
+- **D13: la pregunta no se entendió** («¿cómo así?»). Yov se la vuelve a hacer con el listado a la vista. Es de la parte 2b y no detiene la 2a.
+
+**Los cuatro cambios a la propuesta:**
+1. **La cancelación se reconoce por tres notas** (D1 y D3): la palabra CANCEL, con sus formas; «ROLEADO», y «YA EMBARCADO». Enteras, sin mirar mayúsculas ni tildes, en MARCHAMO o en CONTENIDO. Timonel escribe en su informe la expresión exacta, con el femenino y el plural.
+2. **Una fila cancelada no se ofrece, pero se puede cargar con motivo** (D2).
+   - El lleno que el plan trae y el listado cancela: al tocar su celda, el diálogo pide motivo y dice por qué.
+   - El vacío cancelado: la hoja y «Asignar vacío» no lo ofrecen. Si se busca por su OR o su número, sale marcado y se puede asignar con motivo. Es la misma regla, que Yov extiende al vacío.
+   - La carga queda como conflicto para la oficina: el mismo que la propuesta ya define para la fila que se cargó antes de la revisión que la cancela.
+3. **En el BAPLIE de salida manda el código ISO del plan cuando el tipo del listado lo llena** (D16). Una carga sale con el código que el plan trae para esa pieza: el de su grupo, si es un lleno; el de su celda, si es un vacío asignado. Solo si ese código no es uno de los que su tipo llena sale el principal de su tipo, como hoy, y el cruce lo cuenta como dato distinto.
+   - Hoy el escritor cambia siempre el código por el de la fila (`departure_baplie_writer.dart:434-436`), para llenos y vacíos. Con el caso, 17 llenos saldrían con un código distinto del que planificó la línea, y hasta 16 vacíos.
+   - La pregunta era por los vacíos. Yov la extiende a los llenos, que es la misma razón con más fuerza: el plan trae el código de ese contenedor, con su matrícula.
+   - Con el caso y sus códigos declarados, las 408 cargas tienen que salir con el código del plan. Esta vez la sonda las registra y lo cuenta.
+4. **Un código del plan, un solo tipo del listado** (D9). Si dos tipos declaran el mismo código, la importación no sigue y la pantalla dice cuáles.
+
+**La versión es `1.0.3+12`,** con las dos partes (D15). No se publica hasta que la 2b esté aceptada. Su prueba corta puede repetir el caso A09, porque abrir otra operación después de cerrar (P8 a) ya va adentro.
+
+**La parte 2a,** en este orden: las filas canceladas (P1), «también llena» (P4), las equivalencias guardadas (P3), el destino final en `LOC+83` (P2) y la hoja (O-147-2 y O-147-3), con los cuatro cambios. La programa Timonel en el mismo chat de la propuesta, la revisa Yov y la acepta GLM (10.137). Lo que la propuesta dejó como cuenta, ahora se corre: las 408 cargas con sus 470 `LOC+83` y sus códigos, y los llenos con «también llena». El mensaje de arranque está en el documento del proyecto `BayStream_T147_e2_propuesta_20nov.md`.
+
+**D13, vuelta a preguntar.** En el listado del caso, el Excel trae estos renglones de título, en este orden:
+
+| Título | Filas debajo | Línea |
+|---|---|---|
+| «AGENCIA 1 S.A.» | 141 llenos | `LGH` |
+| «TRANSBORDOS» | 6 llenos | `LGH` |
+| «VACIOS» | 187 vacíos | `LGH` |
+| «AGENCIA 2 S.A.» | 19 llenos y 34 vacíos | `LNJ` |
+| «AGREGADOS» | 6 llenos y 55 vacíos | `LGH` |
+
+Hoy la app cuenta los cinco títulos como agencias: «448 filas en 5 agencias». La pregunta es si los 6 de «TRANSBORDOS» y los 187 de «VACIOS» son de la primera agencia, la de arriba. Son de su misma línea. Si lo son, el resumen diría «2 agencias», la primera con 334 filas, y «AGREGADOS» seguiría contándose sola (10.50).
+
+**Lo que sigue:**
+1. Carlos: el commit de esta decisión, y el mensaje de arranque a Timonel, en el mismo chat de la propuesta.
+2. Timonel: la parte 2a. Mientras programa, ningún otro agente corre Flutter.
+3. Yov la revisa contra la carpeta y el caso; GLM la acepta.
+4. La parte 2b, con D13 respondida. Después se publica la 1.0.3, y sigue la entrega 2 de T-120 (10.154).
+
+**Siguen pendientes de Carlos:** responder D13; O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113). Las equivalencias del iPhone se podrán ver y quitar con la 1.0.3 (D8).
+
+### 10.161 · D13, respondida: «TRANSBORDOS» y «VACIOS» son de la agencia de arriba (20-nov, 21:45)
+
+**Carlos respondió la pregunta que quedaba** (21:33), con el listado del caso a la vista (10.160): **sí,** los 6 de «TRANSBORDOS» y los 187 de «VACIOS» son de la primera agencia.
+- **Una sección es de la agencia de arriba.** «TRANSBORDOS» y «VACIOS» dejan de contarse como agencias, y sus filas conservan el nombre de la suya. Es O-147-4, como lo propuso Timonel (E2-P7 de su informe), y va en la parte 2b.
+- **Con el caso, el resumen dirá «448 filas en 2 agencias»:** la primera con 334 filas (141, más 6 de «TRANSBORDOS» y 187 de «VACIOS») y la segunda con 53. «AGREGADOS», con 61, se sigue contando sola (10.50).
+- **No cambia nada de la parte 2a.** Carlos se lo pasa a Timonel en una línea, en el mismo chat.
+
+**Con esto, las dieciséis decisiones de la 10.159 están respondidas,** y la entrega 2 no espera nada más de Carlos.
+
+**Lo que sigue** es lo de la 10.160: el commit de las dos decisiones, el mensaje de arranque a Timonel y la parte 2a.
+
+**Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.162**.
