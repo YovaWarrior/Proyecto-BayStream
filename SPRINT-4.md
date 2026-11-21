@@ -4586,4 +4586,70 @@ Lo que la propuesta tiene que decir: `LOC+83` con el POD del listado cuando es d
 3. Yov lee el registro y anota la publicación. Pone 17.6 en `DESIGN.md` y el manual al día.
 4. La propuesta de la entrega 2 de T-147 (Timonel), ya con estas dos respuestas. Después, la entrega 2 de T-120 (10.154).
 
-La siguiente decisión es la **10.157**.
+### 10.157 · La 1.0.2, publicada en los tres clientes, con la prueba corta del caso A09: en el teléfono, la hoja de los vacíos ya no se traba; `DESIGN.md` 17.6 y el manual de la 1.0.2 (20-nov, 19:30)
+
+**Carlos corrió los dos bloques de la 10.156** (`a3a506f`, el informe de GLM, en `t147-piloto4`; `79bda34`, la decisión con la lista, en `sprint-4`) **y publicó la 1.0.2 con la lista** (`docs/piloto/PUBLICACION-1.0.2.md`, la de `79bda34`). Yov le pasó los bloques en el chat, en su orden, y Carlos los corrió de seguido: del primero al de la Web en vivo, de las 17:57 a las 18:11. El registro tiene la línea final de cada bloque, una vez cada una. Las huellas, los tamaños y las horas están en `build\t147\publicacion\registro.txt` de `baystream-rediseno`, fuera de Git.
+- **Antes de empezar (17:57):** la Web en vivo era la 1.0.1 (10) del 17-nov, con sus tres huellas (bloque 0.6). El cotejo de las reglas (0.4) se saltó, como permite la lista. Lo que se mira a mano (Play en el 10, la operación del piloto 4 cerrada y ninguna de BUQUE HOTEL abierta) va por lo que dijo Carlos: que hizo todos los pasos «al pie de la letra».
+- **La mezcla (17:57):** `master` en `99995db`, «Sprint 4: la 1.0.2, mezcla de t147-piloto4 a master», de `37be8a5` y `a3a506f`, con la etiqueta anotada `v1.0.2`. Su árbol es el de `a3a506f`: el código de `57497db`, que es el que aceptó GLM, más su informe.
+- **`build\`, apartada (17:58)** en `C:\Proyectos\baystream-publicaciones\build-1.0.1`, con la MSIX 1.0.1.0 en su huella. Después, `flutter clean` y el `.zip` del SDK 13.13.1, de vuelta.
+- **Android (18:00):** el AAB 1.0.2 (11), de 54 057 871 bytes (`519EC879E700B4458DA39DEC873F572642C232F984E8384357B54729AAA67396`), para la prueba interna de Play. De Play no hay captura.
+- **Windows, la Release y la MSIX (18:03):** la Release 1.0.2.11 (`1.0.2+11`), con Firebase C++ 13.13.1 dentro del `.exe`. `BayStream_1.0.2.0.msix`, de 26 739 084 bytes (`5BA7BBFCB685ACD3295FBDCFABA479A7AF27BDE05127B562A7AC34D0988383C0`).
+- **Windows, el asistente (18:04):** `BayStream_Setup_1.0.2.11.exe`, de 18 453 739 bytes (`2907D2E647C5B611BB519F5015CCB2DA226A93EA28ACAC1FB78A320EB448D186`), de la misma Release. Su manifiesto dice producción, publicable, 24 archivos, 5 excluidos y ningún aviso; va sin firma de código, como los anteriores. Está en `C:\Users\Public\BayStream-1.0.2`.
+- **Windows, la laptop (18:04):** la copia de las dos carpetas de datos, en `C:\Proyectos\respaldo-almacen-20261120-1804`, y la MSIX 1.0.2.0, instalada encima de la 1.0.1.0.
+- **La Web, al final (18:06):** la 1.0.2 (11), con `t92_verify` aprobado, publicada solo a Hosting. En vivo (18:11), las cinco cabeceras y un solo HSTS, en `/` y en `/privacidad.html`, y `version.json` dice 1.0.2 (11). Sus huellas, anotadas antes de publicar:
+  - `version.json`: `614EF4DFF451449DEF152728CA079C931F4E043D697E72F1DBC36C2972949A0F`;
+  - `main.dart.js`: `C322B8AC24131B2C9C73A44BE0EED4CB799BD548823F69DBB1CB91B567AC205C`;
+  - `flutter_bootstrap.js`: `CCF17E681EB5D306643FCEBB9AAA8ADDB8AE088118C25CC3516C77A2BB45CEB0`.
+- **`sprint-4`, al día (18:48):** `9d6c199`, «Sprint 4: mezcla de master a sprint-4, con la 1.0.2», de `79bda34` y `99995db` (bloque 8.2). Trae 31 rutas: las 30 de la entrega y el informe de GLM. Desde ahí, `docs/T147-RESULTADOS.md` también está en `baystream-rediseno`.
+
+**Lo que Yov comprobó desde el equipo,** entre las 18:54 y las 19:00:
+- en GitHub: `master` en `99995db`, la etiqueta `v1.0.2` sobre ese commit, `sprint-4` en `9d6c199` y `t147-piloto4` en `a3a506f`. El árbol de `99995db` es el de `a3a506f`, que frente a `57497db` solo suma el informe de GLM;
+- en `proyecto-baystream\build`, el AAB, la MSIX y el asistente tienen el tamaño y la huella del registro, y el `.sha256` del asistente coincide. Su manifiesto dice lo de arriba, con Firebase C++ 13.13.1 pedido, extraído y dentro del `.exe`. La Release tiene 26 archivos, y `build\web`, 57, como en la 1.0.1;
+- **las tres huellas de la Web en vivo son las del registro,** y `version.json` dice 1.0.2 (11);
+- `SPRINT-4.md` y la lista no cambiaron con la mezcla de `sprint-4`;
+- **lo que Yov no puede ver desde aquí:** Play, `C:\Users\Public`, `baystream-publicaciones`, la copia de los datos y la BayStream instalada. De eso vale el registro y lo que dijo Carlos.
+
+**La prueba corta pasó completa** (Carlos, 18:50), contra Firebase de verdad, con el caso A09: la operación BUQUE HOTEL · VIAJE009A · GTSTC, publicada desde la laptop con el plan como vino y el listado con sus nueve tipos; el iPhone, por la Web, abre la hoja de los vacíos y asigna uno; el Honor carga un lleno, y la laptop cierra. **No hay capturas:** vale lo que dijo Carlos, que hizo todos los pasos «al pie de la letra» y que «todo funcionó correctamente».
+- **En el teléfono, la hoja de los vacíos ya no se traba.** Carlos: «ya no se traba tampoco al abrir para meter un vacío en un slot que escoja y ya no se queda tantos segundos esperando, lo hace en aprox. 0.36 s». Es la primera medida en un teléfono de verdad. En el piloto, con la 1.0.1, eran unos 6 segundos por toque (10.151).
+- **No dijo en cuál de los dos teléfonos lo midió, ni con qué.** Cuadra con el banco: ahí, después del toque, la hoja termina de subir entre 375 y 436 ms, que es su animación (sección 4 del informe de Timonel).
+- **Del teclado no dijo nada aparte.** El paso 7 pedía anotar si la pantalla se queda pegada al subir el teclado, que es O-147-1. Yov se lo pregunta. O-147-1 sigue como estaba, y va a la propuesta de la entrega 2.
+- **Las nueve equivalencias de tipo que se eligieron tienen que haber quedado guardadas en la laptop,** por cómo guarda la app (hallazgo 3 de la 10.85). Yov no lo vio. En el próximo listado saldrían como «Guardada en este dispositivo», y lo guardado manda; el lápiz las corrige. Es un punto de la entrega 2.
+
+**El asistente 1.0.2.11:** Carlos lo instaló en «BayStream Prueba», encima del 1.0.1.10, y dijo que salió correcto. **Se puede repartir,** con su `.sha256` y su manifiesto. O-146-8 sigue como estaba (10.145): `windows/installer/` no cambió en la 1.0.2, así que instalar encima no borra los tres archivos viejos de un equipo que tuvo el 1.0.0.9. No hace daño.
+
+**La 1.0.2 queda completa en los tres clientes, y la entrega 1 de T-147, cerrada.** Lleva los hallazgos 1, 2, 3 y 5 del piloto 4 (10.151). Quedan para la entrega 2 el 4, las equivalencias guardadas y el 6; el 7 se evalúa ahí.
+
+**De la lista, para la próxima:**
+- los diez bloques que se usaron corrieron sin errores de sintaxis. Ninguno había pasado por el analizador de PowerShell (10.155). Los tres que no se usaron siguen sin correr nunca: el cotejo de las reglas (0.4) y los dos de la vuelta atrás;
+- pegados de seguido, del primero al de la Web en vivo pasaron 14 minutos;
+- ninguna cifra salió distinta de la esperada: 24 archivos en la carga del asistente, 26 en la Release y 57 en la Web.
+
+**Entre versiones** sigue valiendo lo de la 10.153: un plan con «NO» no se opera con versiones mezcladas, y un viaje guardado en «Recientes» por la 1.0.1 desde un plan con «NO» conserva sus 709 contenedores hasta que se vuelve a abrir el archivo.
+
+**`DESIGN.md` 17.6, puesto.** Es el texto de la sección 9.3 del informe de Timonel. Yov lo comprobó contra el código de `9d6c199`: los títulos de los dos avisos, sus líneas de resumen y las tres líneas del listado están tal cual (`voyage_summary_card.dart`, `baplie_parser_service.dart`, `export_list_import_page.dart` y `loading_controls.dart`). Yov sumó dos cosas, leídas en ese código: la frase de cada diálogo, y que el diálogo de la carga es uno solo con tres títulos, así que «POT … · POD …» sale también en «Corregir carga».
+
+**El manual de la 1.0.2** es un archivo nuevo, `docs/MANUAL-USUARIO-1.0.2.md`. El de la 1.0.1 no se toca, como no se tocó el de la 1.0.0.
+- **Cambian las siete secciones de 9.2 del informe:** 3.2, 5.2, 7.8, 7.9, 8.2, 10 y el glosario. Además, la portada, los números de versión de 2.1 y la lista final de lo no recorrido.
+- **No lleva capturas nuevas.** Sus 46 figuras son las de la 1.0.0 y la 1.0.1. Con los datos del manual, lo que cambia en la 1.0.2 no sale en ninguna: sus planes no traen «NO» ni celdas reservadas, y su listado trae el mismo puerto en POT y en POD (`tool/t73_listado_sintetico.py`). Yov miró la figura 35: tres equivalencias, las tres con respaldo, y ninguna pendiente.
+- **Lo nuevo va con los textos de la app, leídos en el código,** y marcado «(no recorrido en esta edición)».
+- **En 7.9, el vacío se carga tocando la celda reservada,** que es el camino del muelle y el que se trabó en el piloto. El manual solo contaba «Acciones» → «Asignar vacío», que queda como el otro camino.
+- **En 8.2 dice lo que hace la 1.0.2:** `LOC+11` lleva el POT, `LOC+13` ya no sale y el destino final del listado no se escribe. Cambia con la entrega 2 (10.156).
+
+**Para volver a la 1.0.1:** la sección 9 de la lista. La carpeta `build\` de esa versión está entera en `build-1.0.1`, con su MSIX (`CBB75D00…`). La vuelta de la MSIX sigue sin probar (10.143).
+
+**La entrega 2 de T-147. Lo propone Yov y queda aprobado cuando Carlos le pasa el prompt a Timonel:**
+- **sigue en su carpeta y en su rama,** `C:\Proyectos\baystream-t147` y `t147-piloto4`, adelantada a `v1.0.2`. Así la versión siguiente lleva solo los arreglos del piloto, y T-120 sigue en `sprint-4` (10.151). La propuesta dice cuáles de sus archivos están entre las rutas que separan a `sprint-4` de `master` (38 hoy), para saber antes dónde puede haber conflicto al mezclar;
+- **primero la propuesta, solo en `docs/`:** una parte nueva al final de `docs/T147-RESULTADOS.md`. Lleva O-147-1, las filas canceladas y el destino final en `LOC+83` (10.156), las equivalencias guardadas, un tipo con varios códigos ISO, la matrícula repetida, O-147-2 a O-147-5 y la evaluación del hallazgo 7. Dice si va en una entrega o en dos y con qué versión, y trae las decisiones que le tocan a Carlos, cada una con su recomendación;
+- **el paso 0 corre lo que nadie ha corrido:** la suite y `analyze` con T-120 y T-147 juntos, en una copia limpia de `9d6c199`. Se esperan 2393 pruebas: las 2340 de `sprint-4` más las 53 de T-147. Si no sale así, Timonel lo informa y no corrige: es de `sprint-4`;
+- la hace Timonel (Claude Opus 5.5, en Alto). El prompt está en el documento del proyecto `BayStream_Publicacion_1.0.2_20nov.md`.
+
+**Lo que sigue:**
+1. Carlos: el commit de esta decisión, con `DESIGN.md` y el manual, en `baystream-rediseno`.
+2. Carlos: adelantar `baystream-t147` a `v1.0.2` y pasarle a Timonel el prompt de la propuesta, en un chat nuevo abierto en esa carpeta.
+3. Timonel: el paso 0 y la propuesta. No toca código.
+4. Yov revisa la propuesta contra el código y el caso, y le lleva a Carlos las decisiones.
+5. Después, la entrega 2 de T-120 (10.154).
+
+**Siguen pendientes de Carlos:** decir en cuál teléfono midió los 0.36 s y si la pantalla se queda pegada al subir el teclado; revisar en el iPhone las equivalencias que digan «Guardada en este dispositivo» (10.151); O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+La siguiente decisión es la **10.158**.

@@ -2677,6 +2677,25 @@ Los dos tipos se guardan aparte (`extraReadNotices`), para que la 1.0.0 siga abr
 - **Con la matrícula de 11 posiciones y una naviera de seis letras,** con las fuentes del producto, solo a 360 dp con letra 2.0 baja la naviera. A 360 dp con 1.0 y 1.45, y a 600 dp con 1.0, 1.45 y 2.0, todo queda en una línea, como antes.
 - **La etiqueta accesible** lleva la matrícula completa («TSTU 144000 2»).
 
+### 17.6 Los defectos del piloto 4 (T-147, entrega 1; 10.151 y 10.157)
+
+Lo que cambia en pantalla con la entrega 1 de T-147, publicada como 1.0.2. El lector, el cruce y la medición están en `docs/T147-RESULTADOS.md`; esta sección sale de su 9.3.
+
+Dos avisos de lectura más, con el aspecto de los de 17.4 y guardados aparte como ellos (`extraReadNotices`):
+
+| Tipo | Línea de resumen | Al tocarla |
+|---|---|---|
+| `noNumber` | «Celdas sin matrícula en EQD: «NO» en 271 celdas · se leyeron como celdas reservadas» | «El archivo trae un texto donde va la matrícula. Esas celdas se leyeron como reservadas, con su tipo, sus puertos, su línea y su peso: el vacío de cada una se asigna al cargar.» y una línea por texto: ««NO» en 271 celdas» |
+| `duplicate` | «Matrículas repetidas en EQD: 1 contenedor · revisa esas celdas con quien hizo el plan» | «La misma matrícula viene en más de una celda. Un contenedor solo puede estar en una: pide el plan corregido antes de operar esas celdas.» y una línea por matrícula: «MSCU1234567: 010-02-82 y 010-04-84» |
+
+El aviso `noNumber` es uno solo por archivo y lleva la cuenta en lugar de una acción.
+
+En el listado de la agencia: bajo las agencias, «N filas traen POT y POD distintos: el cruce con el plan usa el POT, donde el contenedor baja del buque.» («1 fila trae…» con una sola); en cada fila con los dos distintos, una línea «POT … · POD …»; una identidad propuesta dice «Propuesta: el plan carga X en esta escala con ese mismo código. Ningún contenedor de X está en el listado y en el plan (N filas).»
+
+En el diálogo de la carga, bajo el grupo de la fila, «POT … · POD …» cuando son distintos. El diálogo es uno solo con tres títulos, «Confirmar carga», «Asignar vacío» y «Corregir carga»: la línea sale en los tres.
+
+La hoja «Vacíos del listado» no cambia lo que ofrece ni su orden.
+
 ## 18. La Lista y el buscador (T-120; 10.146 a 10.148)
 
 La propuesta y lo que Carlos decidió están en `docs/T120-RESULTADOS.md` (sección 1 y la 10.148);
