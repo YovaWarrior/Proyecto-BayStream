@@ -5376,4 +5376,61 @@ El prompt está en el documento del proyecto `BayStream_T120_e2_aceptada_22nov.m
 
 `%TEMP%\t120-e2\`, de 13 GB, se queda hasta los monitores, que piden unos 9 GB más. Mejor borrar desde el Explorador: esas carpetas traen enlaces al caché de paquetes, y el Explorador borra el enlace, no lo enlazado.
 
-La siguiente decisión es la **10.171**.
+### 10.171 · T-120, corrección 1 de la entrega 2: entregada y revisada, coincide con la carpeta y pasa a la aceptación de GLM; el arrastre de una celda al perder el foco queda por comprobar (O-120-7) (22-nov, 15:10)
+
+**Carlos corrió los dos bloques de la 10.170** (22-nov, 12:37): el informe de GLM quedó en `b1d7dae`, y la decisión con `DESIGN.md` 17.7, en `1a7b03b`. Le pasó el prompt a Timonel con el punto B, y con eso **aprobó la ayuda de los segmentos en Windows,** la opción 1 de la 10.169. Del corte de la versión todavía no ha dicho nada.
+
+**D1 fue un hallazgo, a media corrección** (13:51). Timonel hizo que la prueba de los dos contactos arrastrara de verdad, en seis pasos, y el producto no se movió: después de dos contactos que nunca se levantan y una pérdida de foco, un dedo nuevo desplazaba la rejilla 0.0 dp. Lo dijo antes de corregirlo, como pedía el prompt. Yov recomendó corregirlo ahí mismo, con un tope de 30 minutos y una pista: cancelar esos contactos también en Flutter. Carlos eligió eso. **En la 10.170, Yov dio por probable que ese 0.0 fuera del instrumento de GLM. No lo era: el producto no se movía.**
+
+**Timonel terminó la corrección a las 14:40,** sobre `1a7b03b` y sin commit (`docs/T120-RESULTADOS.md`, «Corrección 1 de la entrega 2», C2.1 a C2.12). Carlos pasó su mensaje a las 14:48.
+
+**Lo que trae:**
+- **A · T120-E2-01, la clave de la tarjeta.** La prueba salió roja antes de cambiar nada con la matrícula en tres celdas, que es el caso de GLM, y **también con dos,** que es lo que traería un plan de verdad. Ahora la clave de cada tarjeta lleva su celda (`tarjeta-TSTU0000003-0020382`), y la Lista la busca por ella. Lo que se ve no cambia. La prueba va en su propio archivo: contra el código de antes deja el árbol roto, y hacía fallar a las que venían después.
+- **B · la ayuda de los segmentos en Windows.** En la app de Windows, el nombre de cada segmento lleva su ayuda una vez, detrás: «botón Destino. El puerto de descarga de cada contenedor». En las demás plataformas, también en la Web, la ayuda sigue como pista.
+- **D1 · un dedo vuelve a desplazar la rejilla.** Los contactos que siguen puestos al perder el foco se cancelan también en Flutter (`cancelPointer`, como hace el `Navigator` al cambiar de ruta). Con eso, el dedo nuevo mueve la rejilla 60 dp, igual que cuando el sistema cancela los contactos. El cambio tomó dos minutos, de las 14:05 a las 14:07. **Cambia el arrastre de una celda:** si la ventana pierde el foco a medio arrastre, ese arrastre ya no sigue. Va abajo, en O-120-7.
+- **D2 · lo que recibe el lector en la Web.** En el árbol de accesibilidad de Chrome, cada segmento es un `radio`, con su nombre una vez y la ayuda como descripción. En la Web la pista sí llega, y por eso ahí no cambia nada.
+- **D3 · la descripción emergente, con el mouse.** Sale sobre el icono y sobre el rótulo. Sobre el borde del segmento no sale. No se cambió.
+- **D4 · O-120-4, sin la captura por dentro.** La columna vacía dura dos cuadros de 60, unos 33 ms, en tres de los seis toques, y hasta tres en los otros, donde la grabación pierde cuadros. El código esperaba uno.
+- **C · los dos monitores y el pellizco de verdad siguen pendientes.** Carlos no pudo en esa sesión.
+- **Cifras:** la suite, 2563 de 2563 (2558 + 5), sin omitidas, y `analyze` en cero, en la carpeta y en una copia limpia. Contra `1a7b03b` fallan 8 de las 32 pruebas de los cuatro archivos. `pubspec.*` no cambia. El piso de `sprint-4` sigue en 2558 hasta que GLM acepte.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia:**
+- **el árbol:** contra `1a7b03b` cambian 13 archivos y hay uno nuevo, los 14 de su bloque. De `DESIGN.md` cambian 14.6 y 18.4; 17.7 está intacta. No cambian `pubspec.*`, `lib/main.dart`, los congelados ni los archivos de T-147, y no hay ningún `// ignore:`. Las dos sondas temporales ya no están;
+- **los registros:** `analyze` y la suite de la carpeta (14:28:50 a 14:31:09), y los de la copia limpia (14:31:39 a 14:34:12). El último cambio de código es de las 14:22:05, antes de todos ellos. El manifiesto de la copia limpia coincide con la carpeta en sus 13 rutas, por su huella;
+- **las rojas,** cada una en su comprobación y ninguna de compilación: las tres de Windows del selector, las dos de T120-E2-01, las dos de la matrícula repetida y la de los dos contactos. Con dos celdas sale la misma aserción del framework que con tres;
+- **el código:** los tres archivos de `lib/` hacen lo que dice el informe, y nada más. En el repositorio, nadie más buscaba la clave vieja. La sonda de GLM, que está fuera, sí: busca `tarjeta-TSTU0000001`, y ya no la encuentra;
+- **B en Windows:** el árbol de la corrección y el de la entrega 2, de 500 líneas, difieren en 10: los cinco segmentos, en UIA y en MSAA;
+- **la Web:** en las dos corridas, el `main.dart.js` que cargó la página es el de la carpeta que se sirve, y cada una fue con su perfil nuevo. El `lib/` del banco es el de la carpeta. En el árbol de Chrome están los cinco segmentos, con el nombre y la descripción que dice el informe;
+- **D1:** antes del cambio, la sonda da 0.0 dp en la rejilla con dos contactos viejos, y 0.0 en la columna con uno solo. Después da 60 en sus ocho casos. Las 59 pruebas vecinas, las de T-119, las del pellizco y las del arrastre, siguen en verde;
+- **la pantalla:** Yov abrió seis imágenes. Con el filtro de LNB, en Windows a 1366 de día y en la Web a 360 de noche, se lee «Contenedores (4), naviera LNB», con las dos tarjetas de TSTU0000003 seguidas, en Fila 03 y en Fila 04. Al soltarlo, «Contenedores (13)», en su orden. En la hoja del mouse, la descripción sale sobre el icono y sobre el rótulo, y en los tres bordes que enseña, no. En la del toque 1, los cuadros 48 y 49 traen la columna vacía, y el 50, el título;
+- **las claves, en los pasos del conductor:** en Windows y en la Web, de día y de noche y en los dos tamaños, las tarjetas van en su orden, cada una con su celda, y sin errores de Flutter;
+- **nombres y matrículas reales:** ninguno en las 14 rutas;
+- **las horas,** por los archivos: de la primera roja, a las 13:41, al informe, a las 14:36.
+
+**O-120-7 (nueva, P3, por comprobar) · Un arrastre de celda cancelado puede tomarse como soltado.**
+- **Lo que dice el informe:** si la ventana pierde el foco a medio arrastre de una celda, el arrastre se cancela, y al soltar no sale nada ni se registra nada.
+- **Lo que Yov leyó, sin correrlo,** en el código de Flutter y en el del plano: Flutter avisa del final de un arrastre igual cuando se cancela que cuando se suelta (`onDragEnd`), y el plano no los distingue (`_PlanDragSource._soltar`, de T-122): toma como destino la celda que quedó bajo el puntero. Si es así, al perder el foco con el puntero sobre otra celda saldría en ese momento la hoja que confirma el movimiento, o el aviso de que no se puede, sin que nadie haya soltado.
+- **Lo que no pasa:** nada se guarda sin pulsar «Confirmar».
+- No sería nuevo del todo: es lo que ya haría cuando el sistema cancela un contacto. La corrección lo extiende a perder el foco.
+- La salida de la sonda con la que Timonel lo miró no quedó en la evidencia, y ninguna prueba de la suite fija este caso.
+- **Lo mide GLM en la aceptación,** con el puntero sobre otra celda, sobre la de origen y fuera de las celdas. Si se confirma, la salida es que un arrastre cancelado no proponga nada, con su prueba. Iría en la sesión de los monitores.
+
+**Lo que la revisión deja anotado, y no detiene la aceptación:**
+- **cancelar todos los contactos es lo prudente.** Cancelar solo cuando hay dos dejaría como estaba el caso de un contacto viejo, que no dejaba mover la columna;
+- **la clave nueva se repite si un archivo trae la misma matrícula dos veces en la misma celda.** El lector guarda los dos contenedores. Nadie lo ha probado: lo prueba GLM. Si falla, la clave lleva el identificador del contenedor, que es único;
+- **lo medido es el árbol accesible,** en Windows y en Chrome, no un lector de pantalla hablando;
+- **en `columna-vacia.json`, los campos que terminan en `_ms` traen marcas de cuadro,** de un sesentavo de segundo, no milisegundos. El informe las lee bien;
+- **el informe dice que las salidas de las dos sondas quedaron en la evidencia.** Está la del dedo; la del arrastre, no;
+- **O-120-4 queda como está:** dos cuadros con la columna vacía donde salía uno con la Lista arriba.
+
+**Lo que sigue:**
+1. Carlos: dos bloques en `sprint-4`, la corrección de Timonel (14 rutas) y esta decisión; y uno en `baystream-qa-r4`, que pasa a la punta.
+2. GLM 5.3 Flash, en Max, en un chat nuevo: la aceptación de la corrección. El prompt está en el documento del proyecto `BayStream_T120_e2c1_revision_22nov.md`. GLM pone al día su banco de `%TEMP%\t120-glm2\`, sin extraer otra vez el SDK de Firebase.
+3. Con Timonel, en su mismo chat, cuando Carlos tenga los 30 minutos: los dos monitores y el pellizco de verdad. En esa sesión entra lo que confirme GLM. Mientras GLM acepta, Timonel no toca la carpeta.
+4. La entrega 3 de T-147, si Carlos aprueba el corte de la 10.168, y la versión.
+
+**Siguen pendientes de Carlos:** el corte de la próxima versión (10.168); los 30 minutos de los monitores; si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** sigue al 96 %, con 44 GB libres. De lo que listaba la 10.170 no se ha borrado nada. **`%TEMP%\t120-glm2\` ahora se queda** hasta que GLM acepte la corrección: ahí está su banco. Lo demás de esa lista se puede borrar, desde el Explorador: lo de T-147, unos 16 GB, y lo de la entrega 1 de T-120, cerca de 5 GB. De `%TEMP%\t120-e2\`, de 13 GB, se quedan `banco\` y `caso\` para los monitores; lo demás se borra cuando GLM acepte.
+
+La siguiente decisión es la **10.172**.
