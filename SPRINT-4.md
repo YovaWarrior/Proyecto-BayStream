@@ -5433,4 +5433,78 @@ El prompt está en el documento del proyecto `BayStream_T120_e2_aceptada_22nov.m
 
 **El disco de la laptop** sigue al 96 %, con 44 GB libres. De lo que listaba la 10.170 no se ha borrado nada. **`%TEMP%\t120-glm2\` ahora se queda** hasta que GLM acepte la corrección: ahí está su banco. Lo demás de esa lista se puede borrar, desde el Explorador: lo de T-147, unos 16 GB, y lo de la entrega 1 de T-120, cerca de 5 GB. De `%TEMP%\t120-e2\`, de 13 GB, se quedan `banco\` y `caso\` para los monitores; lo demás se borra cuando GLM acepte.
 
-La siguiente decisión es la **10.172**.
+### 10.172 · T-120, corrección 1 de la entrega 2: aceptada por GLM, con O-120-7 confirmada y dos hallazgos nuevos (T120-E2-02 y T120-E2-03, P3); sigue la corrección 2 (22-nov, 17:25)
+
+**Carlos corrió los tres bloques de la 10.171** (22-nov, 15:21): la corrección 1 de Timonel quedó en `sprint-4` (`07d8236`); la decisión, en `ed1255e`, y `baystream-qa-r4`, en esa punta. Le pasó el prompt a GLM.
+
+**GLM aceptó la corrección 1** el 22-nov, de las 15:26 a las 16:22, en un chat nuevo (`docs/t120/entrega2/aceptacion-glm-c1.md`, con su evidencia en `build/t120/glm-e2c1/` de `baystream-qa-r4`: 8.5 MB en 120 archivos). Carlos pasó su mensaje a las 17:04. **Su dictamen: PASA, con dos hallazgos nuevos, los dos P3 y los dos de antes de la corrección. Y O-120-7 queda confirmada.**
+
+**O-120-7, confirmada: un arrastre de celda cancelado se toma como soltado.** GLM lo midió con una sonda sobre el arnés de T-105, con el dedo y con el mouse, en la punta y contra `1a7b03b`: 16 escenarios en cada lado.
+- **En la punta,** al perder el foco con el puntero sobre una celda válida sale en ese momento la hoja que confirma el movimiento, sin que nadie suelte. Sobre una celda que no lo admite, o sobre la de origen, sale el aviso. Fuera de las celdas no sale nada.
+- **Contra `1a7b03b`,** al perder el foco el arrastre seguía, y la hoja o el aviso salían al soltar. Con la cancelación del sistema ya salían al momento: eso viene de T-122, y la corrección lo extendió a perder el foco.
+- **En ningún caso se registró nada** sin pulsar «Confirmar», y un arrastre nuevo de la misma celda termina en su hoja.
+
+Es lo que Yov había leído en la 10.171. El informe de Timonel decía que al soltar no salía nada: es cierto, porque la hoja o el aviso ya habían salido antes, al perder el foco.
+
+**Lo que GLM corrió y vio, además:**
+- la punta `ed1255e`, con las 14 rutas de la corrección en `07d8236`;
+- `analyze` en cero, en una copia limpia, y la suite, 2563 de 2563 en una corrida, sin omitidas;
+- las 8 rojas contra `1a7b03b`, cada una en su comprobación: las dos de las claves, con la aserción de T120-E2-01; las tres de Windows del selector; las dos de la matrícula repetida, y la de los dos contactos, con 0.0 dp;
+- **D1:** después de dos contactos sin levantar, o de uno, y del ciclo de vida entero, un dedo nuevo mueve la rejilla y la columna 60 dp. El «up» de los contactos viejos no lanza nada, la rueda mueve la columna y un clic abre el detalle de una celda;
+- **la clave de la tarjeta:** con la matrícula en dos celdas de navieras distintas, y en cuatro celdas, hay una clave por tarjeta y la Lista se rearma sin errores;
+- **B en las demás plataformas:** en iOS, macOS y Linux la ayuda va como pista, igual que en Android;
+- **Windows:** tres corridas terminadas, sin errores de Flutter, con 20, 1 y 8 capturas. El árbol accesible cambia en 10 líneas contra el de la mañana, las de los cinco segmentos, y nada más;
+- **la Web:** tres corridas, con el programa de la carpeta que se sirve. En el árbol de Chrome, los cinco segmentos son `radio`, con la ayuda como descripción. La descripción emergente sale sobre el icono y sobre el rótulo, y sobre el borde no.
+
+**T120-E2-02 (P3) · Después de dos contactos y de perder el foco, un pellizco del touchpad no amplía.**
+- **Lo medido:** con dos contactos sin levantar y el ciclo de vida entero, un pellizco del touchpad deja la escala en 1.000. La rueda sí mueve la columna.
+- **No lo trajo la corrección:** contra `1a7b03b` falla igual, y además fallaba con un solo contacto, que la corrección arregló.
+- **La causa no está leída.** Con los mismos dos contactos cancelados directo, sin el ciclo de vida, el pellizco amplía: lo que lo deja así es el camino de perder el foco, no la cancelación.
+- Es una sonda de widgets, con eventos sintéticos y un solo paso de pellizco. En un equipo pide una pantalla táctil y un touchpad a la vez, y dos contactos que no se levanten: es raro.
+- **Va a la corrección,** primero con su prueba roja y su causa.
+
+**T120-E2-03 (P3) · Elegir en el buscador una matrícula repetida rompe el armado del Plano.**
+- **Lo medido:** con una matrícula en dos celdas del mismo nivel de una bahía, el buscador da dos resultados. Al elegir uno, el Plano lanza «Duplicate keys found». Contra `1a7b03b` pasa igual.
+- **La causa, leída por Yov en el código:** el buscador resalta por matrícula, y cada celda resaltada va dentro de un `_RevealPosition` con la clave de la matrícula (`bay_plan_view.dart`). Las celdas de un nivel son hijas de una misma fila, así que dos resaltadas comparten clave. Es la familia de T120-E2-01, en el Plano.
+- El plan de prueba de la matrícula repetida de T-147 tiene esa forma: 018-01-82 y 018-00-82.
+- En release la aserción no corre, y nadie ha mirado qué se ve ahí.
+- **Va a la corrección:** la clave, por contenedor.
+
+**Lo que Yov comprobó de la aceptación:**
+- `baystream-qa-r4` es igual a `ed1255e` en sus 2184 archivos, y lo único nuevo es el informe;
+- los registros dicen lo que el informe: `analyze`, la suite, las rojas (2 de 2, 3 de 7, 2 de 15 y 1 de 8), las tres corridas de Windows y las tres de la Web;
+- **la sonda de O-120-7,** leída: manda los eventos crudos, comprueba que el arrastre empezó, y mira la hoja, el aviso y la bitácora del arnés antes y después de soltar. Sus dos salidas dicen lo que dicen las tablas del informe;
+- **en la Web corrió el mismo programa que probó Timonel:** el `main.dart.js` que compiló GLM tiene su misma huella;
+- el árbol de Windows de GLM es igual, línea por línea, al de la corrección de Timonel;
+- el banco de GLM quedó con el `lib/` y el `tool/` de la punta, y sus perfiles de Chrome ya no están;
+- Yov abrió tres imágenes de GLM: la Lista con el filtro de LNB en Windows, de noche, y dos del mouse sobre el selector, en la Web. Dicen lo del informe;
+- las horas salen de sus archivos: de las 15:26 a las 16:22, y el informe, a las 16:26.
+
+**Tres cosas del informe que no son como dice.** El dictamen no cambia:
+- **«con la misma matrícula dos veces en la misma celda, la Lista enseña una tarjeta».** La sonda cuenta las tarjetas por su texto, y dos tarjetas iguales le cuentan como una. La Lista recibe los dos contenedores del lector, con la misma clave. Y el archivo de esa sonda trae solo esos dos, así que el filtro no mueve ninguna tarjeta, que es lo que rompía en T120-E2-01. **Ese caso sigue sin probar,** y va a la corrección;
+- **de T120-E2-02 dice que pasa «lo mismo con el ciclo corto».** La sonda define ese ciclo y no lo usa: ninguna salida lo dice;
+- **de T120-E2-03 dice que es una fila con la clave de la matrícula, y que los dos resultados llevan a lo mismo.** La evidencia trae solo la primera línea de cada error, y el segundo resultado se midió después de volver a montar la página, con errores de ese remonte. La causa es la que leyó Yov, arriba.
+
+Y en su mensaje, no en el informe, GLM dice que la salida de T120-E2-02 es la de O-120-7. No lo es: son dos cosas distintas.
+
+**Lo que GLM no hizo, y lo dice:** los dos monitores y el pellizco de verdad, que no eran suyos; Android, y un lector de pantalla hablando.
+
+**La corrección 1 de la entrega 2 de T-120 queda aceptada, con observaciones.** El piso de `sprint-4` sube a **2563**.
+
+**Sigue la corrección 2 de la entrega 2,** con Timonel, en su mismo chat. **La aprueba Carlos al pasar el prompt:**
+- **A · O-120-7:** un arrastre de celda cancelado no propone nada, ni la hoja ni el aviso, lo cancele el sistema o el plano al perder el foco. Con su prueba, que hoy no existe;
+- **B · las claves, por contenedor:** la del Plano (T120-E2-03) y, si la prueba de la misma celda falla, la de la tarjeta de la Lista;
+- **C · T120-E2-02:** primero la prueba roja y la causa. Se corrige si es chico; si no, Timonel lo dice antes de tocar nada;
+- **D · los dos monitores y el pellizco de verdad,** con unos 30 minutos de Carlos. Si no puede en esa sesión, Timonel entrega lo demás.
+
+No entra que cada resultado del buscador resalte solo su celda: hoy resalta la matrícula, en todas sus celdas. Va con O-120-6, al bloque 4.
+
+El prompt está en el documento del proyecto `BayStream_T120_e2c1_aceptada_22nov.md`. La corrección 2 la acepta GLM, en un chat nuevo. Después, la entrega 3 de T-147, si Carlos aprueba el corte, y la versión.
+
+**Los bloques:** uno en `baystream-qa-r4`, con el informe de GLM, que sube a `sprint-4`; y uno en `baystream-rediseno`, que trae ese commit y sube esta decisión.
+
+**Siguen pendientes de Carlos:** el corte de la próxima versión (10.168); los 30 minutos de los monitores; si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** sigue al 96 %, con 43 GB libres. `%TEMP%\t120-glm2\`, de 12 GB, se queda hasta que GLM acepte la corrección 2. Ya se puede borrar, desde el Explorador: de `%TEMP%\t120-e2\`, todo menos `banco\` y `caso\`; lo de T-147, unos 16 GB, y lo de la entrega 1 de T-120, cerca de 5 GB.
+
+La siguiente decisión es la **10.173**.
