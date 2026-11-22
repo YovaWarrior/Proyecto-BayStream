@@ -7,6 +7,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/repositories/operation_sync_repository.dart';
 import '../../domain/repositories/session_repository.dart';
 import '../../domain/services/operation_sources.dart';
+import '../../domain/services/repeated_containers.dart';
 import 'discharge_provider.dart' show dockOperator;
 import 'movement_log_provider.dart';
 import 'vessel_providers.dart';
@@ -63,6 +64,36 @@ final activeOperationProvider = FutureProvider<Operation?>((ref) async {
   final voyage = ref.read(voyageNotifierProvider).value!;
   final log = await ref.watch(movementLogRepositoryProvider.future);
   return OperationSources.find(log, voyage, key.$3);
+});
+
+/// T-147, entrega 2, parte 2b (P5; 10.160, D11) · Por qué la operación que se
+/// ve no se publica, o nulo si se puede: un plan con una matrícula en más de
+/// una celda no entra a la nube, el plano de llegada incluido. Se leen los
+/// BAPLIE de la operación con el lector de siempre; un archivo que no se
+/// puede leer no se juzga aquí.
+final publishRefusalProvider = FutureProvider.autoDispose<String?>((ref) async {
+  final operation = await ref.watch(activeOperationProvider.future);
+  if (operation == null) return null;
+  final parser = ref.read(baplieParserServiceProvider);
+  for (final kind in const [
+    OperationSourceKind.arrivalBaplie,
+    OperationSourceKind.loadingBaplie
+  ]) {
+    final source = operation.source(kind);
+    if (source == null) continue;
+    VesselVoyage plan;
+    try {
+      plan = parser.parse(source.content);
+    } on Exception {
+      continue;
+    }
+    final refusal = RepeatedContainers.refusal('No se publica',
+        sourceName: OperationSources.sourceName(kind),
+        fileName: source.fileName,
+        repeated: RepeatedContainers.of(plan));
+    if (refusal != null) return refusal;
+  }
+  return null;
 });
 
 /// Estado de envío de la operación que se ve. No se descarta al salir de la

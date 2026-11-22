@@ -62,8 +62,20 @@ class ExportListParserService {
   /// T-147 (10.151, hallazgo 5) · «TRANSBORDOS» y «VACIOS» también: en el
   /// listado del piloto 4 (caso A09) separan los llenos de trasbordo y los
   /// vacíos dentro de una agencia.
+  ///
+  /// T-147, entrega 2, parte 2b (O-147-4; 10.161) · «TRANSBORDOS» y «VACIOS»
+  /// son de la agencia de arriba: la fila guarda su sección y conserva su
+  /// agencia. «AGREGADOS» ([_addedHeader]) se sigue contando sola (10.50).
+  ///
+  /// Cómo se distingue una de otra: el separador de agencia trae su código
+  /// ([_agencyCode]: «CODIGO» o «COD.»); el título de una sección es una de
+  /// estas palabras, sola en una fila sin OR. Cualquier otra fila sin OR se
+  /// informa como «No es un contenedor ni un separador de agencia» y no
+  /// cambia ni la agencia ni la sección de las filas de debajo: el lector no
+  /// sabe si es un título o una nota.
   static final _sectionHeader =
       RegExp(r'^(AGREGADOS?|TRANSBORDOS?|VACIOS?)$');
+  static final _addedHeader = RegExp(r'^AGREGADOS?$');
 
   /// T-147 (10.151, hallazgo 5) · El separador de agencia: su nombre y su
   /// código. Una agencia escribe «CODIGO» y otra «COD.». «CODIGO» se busca
@@ -201,6 +213,7 @@ class ExportListParserService {
     final seenContainers = <String, int>{};
     final seenOrders = <int, int>{};
     String? agency;
+    String? section;
 
     for (var r = headerIndex + 1; r < grid.length; r++) {
       final row = grid[r];
@@ -218,12 +231,16 @@ class ExportListParserService {
         if (_agencyCode.hasMatch(name)) {
           agency = text.substring(0, _codigoStart(text)).trim();
           if (agency.isEmpty) agency = text.trim();
+          // Una agencia nueva cierra la sección de la anterior.
+          section = null;
           continue;
         }
         // H3: las filas de debajo de «AGREGADOS» se cuentan en esa sección,
         // no en la última agencia, que es donde quedaban en la 3.1.0.
+        // O-147-4 (10.161): «TRANSBORDOS» y «VACIOS» no pisan la agencia.
         if (_sectionHeader.hasMatch(name)) {
-          agency = name;
+          if (_addedHeader.hasMatch(name)) agency = name;
+          section = name;
           continue;
         }
         issues.add(ExportListIssue(sheetRow,
@@ -288,6 +305,7 @@ class ExportListParserService {
         hour: _text(at('HORA')),
         seal: _text(at('MARCHAMO')),
         agency: agency,
+        section: section,
         imdgClass: dangerous.imdgClass,
         unNumbers: dangerous.unNumbers,
       ));

@@ -7,6 +7,7 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/load_check.dart';
 import '../../domain/services/loading_operation.dart';
+import '../../domain/services/operation_state_deriver.dart';
 import '../formatters/vessel_error_message.dart';
 import '../pages/change_requests_page.dart';
 import '../providers/discharge_provider.dart';
@@ -119,11 +120,16 @@ class LoadingControls extends ConsumerWidget {
     final search = busquedaDeCarga(context, ref, voyage, selectedBay,
         disponible: data != null);
     if (compact) {
+      final fija = fichaFijaDelResumen(summary);
       return PlanSummaryLine(
           trailing: busquedaEnLaTira ? null : search,
+          fixed: fija,
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: summary));
+              children: [
+                for (final ficha in summary)
+                  if (!identical(ficha, fija)) ficha
+              ]));
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ...summary,
@@ -148,10 +154,16 @@ class LoadingControls extends ConsumerWidget {
 /// quede sin espacio; otro lo recoge. Recogido, el resumen sigue en el árbol,
 /// recortado a su primera línea, así que sus textos y sus claves de prueba no
 /// cambian.
+///
+/// T-147, entrega 2, parte 2b (P5) · [fixed] va siempre a la vista, encima
+/// de la línea, recogida o abierta: es la ficha del plan con una matrícula
+/// repetida, que en el teléfono quedaba dentro del resumen recogido.
 class PlanSummaryLine extends StatefulWidget {
   final Widget child;
   final Widget? trailing;
-  const PlanSummaryLine({super.key, required this.child, this.trailing});
+  final Widget? fixed;
+  const PlanSummaryLine(
+      {super.key, required this.child, this.trailing, this.fixed});
   @override
   State<PlanSummaryLine> createState() => _PlanSummaryLineState();
 }
@@ -161,6 +173,15 @@ class _PlanSummaryLineState extends State<PlanSummaryLine> {
 
   @override
   Widget build(BuildContext context) {
+    final fixed = widget.fixed;
+    if (fixed == null) return _line(context);
+    return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [fixed, _line(context)]);
+  }
+
+  Widget _line(BuildContext context) {
     // El alto de una línea con la letra y la escala que usará el resumen.
     final painter = TextPainter(
         text: TextSpan(text: 'Ág', style: DefaultTextStyle.of(context).style),
@@ -304,10 +325,10 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
         : slot == null
             ? data.search(query!, empties: widget.empties)
             : data.rowsFor(slot, query!, empties: widget.empties);
-    if (slot != null) {
-      rows.sort((a, b) =>
-          (_sameGroup(slot, a) ? 0 : 1).compareTo(_sameGroup(slot, b) ? 0 : 1));
-    }
+    // T-147, entrega 2 (O-147-3): `rowsFor` ya las da en su orden, primero
+    // las del grupo de la celda y, dentro de cada parte, por OR. Antes se
+    // ordenaban aquí con un `sort` sin desempate, que la Web y la máquina
+    // virtual de Dart resolvían distinto.
     return SafeArea(
         child: SizedBox(
             height: MediaQuery.sizeOf(context).height * .8,
@@ -345,7 +366,10 @@ class _LoadingPickerState extends ConsumerState<_LoadingPicker> {
                                 subtitle: Text(
                                     '${row.type} · ${row.pod} · ${row.line}'
                                     '${row.isEmpty ? '\nTara ${row.tareKg.toStringAsFixed(0)} kg' : ''}'
-                                    '${slot != null && !_sameGroup(slot, row) ? '\nOtro grupo: pide motivo' : ''}'
+                                    '${slot != null && !data.sameGroup(slot, row) ? '\nOtro grupo: pide motivo' : ''}'
+                                    // T-147, entrega 2 (P1): sale solo si se
+                                    // la busca, y se carga con motivo.
+                                    '${row.cancelled ? '\nCancelado en el listado: pide motivo' : ''}'
                                     '${operated ? '\nYa cargado' : ''}'),
                                 trailing: operated
                                     ? const Icon(Icons.check_circle_outline)
@@ -390,6 +414,11 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
   final _hour = TextEditingController();
   final _reason = TextEditingController();
 
+  /// O-147-9: el campo del motivo, para llevarlo a la vista cuando la carga
+  /// empieza a pedirlo.
+  final _reasonKey = GlobalKey();
+  bool _reasonAsked = false;
+
   /// T-77: un lleno que quedó en otra celda que la planificada.
   final _cell = TextEditingController();
 
@@ -412,7 +441,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
     final slot = start == null ? null : data?.plan.loadingItemAt(start);
     if (numbered == null &&
         slot?.reservedSlot != null &&
-        !_sameGroup(slot!.reservedSlot!, row)) {
+        !data!.sameGroup(slot!.reservedSlot!, row)) {
       otherGroups = true;
     }
     final previous = widget.correcting;
@@ -556,12 +585,47 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
         : data.check(row, validPosition, correcting: widget.correcting);
     final needsReason =
         widget.correcting != null || (review?.needsReason ?? false);
+    final reasonUnderWarning = review?.needsReason ?? false;
+    // O-147-9: en cuanto la carga pide motivo (al abrir, o al elegir una
+    // celda de otro grupo), el campo se lleva a la vista. Solo desplaza si
+    // hace falta: en un teléfono más bajo, o con la letra más grande.
+    if (reasonUnderWarning && !_reasonAsked) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final field = _reasonKey.currentContext;
+        if (!mounted || field == null) return;
+        Scrollable.ensureVisible(field,
+            alignment: 1,
+            alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd);
+      });
+    }
+    _reasonAsked = reasonUnderWarning;
+    final reasonField = !needsReason
+        ? null
+        : KeyedSubtree(
+            key: _reasonKey,
+            child: TextField(
+                key: ValueKey(widget.correcting != null
+                    ? 'loading-correction-reason'
+                    : 'loading-reason'),
+                controller: _reason,
+                enabled: !busy,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                    labelText: widget.correcting != null
+                        ? 'Motivo de la corrección'
+                        : 'Motivo (obligatorio)',
+                    helperText: reasonUnderWarning
+                        ? 'Viaja con el movimiento.'
+                        : null)));
     final occupant = review?.dischargeFirst;
     final alternatives = widget.correcting?.type == MovementType.assignEmpty
         ? data?.list?.empties
                 .where((r) =>
                     data.available(r, correcting: widget.correcting) &&
-                    data.numbered(r) == null)
+                    data.numbered(r) == null &&
+                    // T-147, entrega 2 (P1): un vacío que el listado cancela
+                    // no se ofrece; el que ya está en el diálogo, sí.
+                    (!r.cancelled || r == row))
                 .toList() ??
             <ExportListRow>[]
         : <ExportListRow>[];
@@ -644,7 +708,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                                     value: slot.stowagePosition.toIsoCode(),
                                     child: Text(
                                         '${loadingPosition(slot.stowagePosition.toIsoCode())}'
-                                        '${_sameGroup(slot, row) ? '' : ' · otro grupo'}'
+                                        '${data?.sameGroup(slot, row) ?? true ? '' : ' · otro grupo'}'
                                         '${data?.state.occupancy.containsKey(slot.stowagePosition.toIsoCode()) == true ? ' · ocupada, baja aquí' : ''}'))
                             ],
                             onChanged: busy
@@ -676,7 +740,8 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                                           ?.reservedSlot;
                                   if (!value &&
                                       chosen != null &&
-                                      !_sameGroup(chosen, row)) {
+                                      data != null &&
+                                      !data.sameGroup(chosen, row)) {
                                     position = null;
                                   }
                                 }),
@@ -688,6 +753,12 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                   if (review != null)
                     _LoadCheckPanel(
                         check: review, portOfCall: widget.voyage.portOfCall),
+                  // O-147-9: cuando la carga pide motivo, su campo va justo
+                  // debajo del aviso que lo pide. En el teléfono quedaba
+                  // debajo de la hora, la fecha y el marchamo, fuera de la
+                  // pantalla, con «Confirmar carga» apagado y sin decir por
+                  // qué.
+                  if (reasonField != null && reasonUnderWarning) reasonField,
                   const SizedBox(height: 12),
                   TextField(
                       key: const ValueKey('loading-hour'),
@@ -718,22 +789,7 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
                       enabled: !busy,
                       decoration: const InputDecoration(
                           labelText: 'Marchamo (opcional)')),
-                  if (needsReason)
-                    TextField(
-                        key: ValueKey(widget.correcting != null
-                            ? 'loading-correction-reason'
-                            : 'loading-reason'),
-                        controller: _reason,
-                        enabled: !busy,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                            labelText: widget.correcting != null
-                                ? 'Motivo de la corrección'
-                                : 'Motivo (obligatorio)',
-                            helperText: review?.needsReason == true
-                                ? 'Viaja con el movimiento y deja el conflicto a la vista.'
-                                : null,
-                            helperMaxLines: 2)),
+                  if (reasonField != null && !reasonUnderWarning) reasonField,
                   if (error != null)
                     Text(error!,
                         key: const ValueKey('loading-error'),
@@ -776,11 +832,6 @@ class _LoadingEntryState extends ConsumerState<_LoadingEntry> {
         ]);
   }
 }
-
-bool _sameGroup(ReservedSlot slot, ExportListRow row) =>
-    slot.isoSizeType == row.type &&
-    slot.portOfDischarge == row.pod &&
-    slot.operatorCode == row.line;
 
 /// T-77 · La revisión antes de confirmar. Cada línea lleva icono y texto,
 /// no solo color, y se ajusta al ancho para leerse a 360 dp.
@@ -875,7 +926,11 @@ Future<void> showLoadingDetails(
                         for (final conflict in data?.state.conflicts
                                 .where((c) => c.key == key) ??
                             <OperationConflict>[])
-                          Text(conflict.message,
+                          // O-147-8 (d): aquí ya se está en el detalle de
+                          // la celda; la frase que manda a él sobra.
+                          Text(
+                              OperationStateDeriver.messageInCellDetail(
+                                  conflict.message),
                               style: TextStyle(
                                   color: Theme.of(context).colorScheme.error)),
                       ])),
@@ -969,9 +1024,15 @@ String loadingCellSemantics(LoadingOperation operation, String itemKey) {
         itemKey.startsWith('C:') ? itemKey.substring(2) : itemKey,
         status?.order);
   }
+  // T-147, entrega 2 (P1): un lleno que el plan trae y el listado cancela.
+  final listCancelled = !reserve &&
+      status?.state == ItemState.planned &&
+      operation.plan.listCancelled.containsKey(itemKey.substring(2));
   final mark = status?.inConflict == true
       ? 'revisar'
-      : status?.state == ItemState.cancelled
+      : listCancelled
+          ? 'cancelado en el listado, revisar'
+          : status?.state == ItemState.cancelled
           ? (reserve ? 'cancelada' : 'cancelado')
           : status?.state == ItemState.moved
               ? (reserve ? 'cargada' : 'cargado')
@@ -1014,7 +1075,12 @@ class LoadingCell extends StatelessWidget {
     final label = status?.order == null
         ? operation.progress.label(itemKey)
         : 'OR ${status!.order}';
-    final marca = conflict
+    // T-147, entrega 2 (P1): el lleno que el plan trae y el listado cancela
+    // se marca «Revisar» antes de cargarlo; cargado, lo marca su conflicto.
+    final listCancelled = itemKey.startsWith('C:') &&
+        status?.state == ItemState.planned &&
+        operation.plan.listCancelled.containsKey(itemKey.substring(2));
+    final marca = conflict || listCancelled
         ? BsMarcaDeCelda.revisar
         : cancelled
             ? BsMarcaDeCelda.cancelado

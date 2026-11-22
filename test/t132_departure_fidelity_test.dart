@@ -230,6 +230,15 @@ void main() {
       final text = f.output().text;
       expect(text, contains('LOC+11+$pot:139:6'));
       expect(text, isNot(contains('LOC+13+')));
+      // T-147, entrega 2 (P2; 10.156): la prueba gana esperas y no pierde
+      // ninguna. El destino final, el POD del Excel (PAMIT), sale en LOC+83
+      // justo detrás de LOC+11 cuando es distinto del POT; si son iguales,
+      // no sale.
+      if (pot == 'PAMIT') {
+        expect(text, isNot(contains('LOC+83+')));
+      } else {
+        expect(text, contains("LOC+11+$pot:139:6'\nLOC+83+PAMIT:139:6'"));
+      }
     }
     // La regla de T-132 sigue en el escritor para una fila cuyo puerto no es
     // su POT: la de un listado que guardó la 1.0.1, con el POD como puerto.
@@ -243,6 +252,8 @@ void main() {
     expect(text, contains('LOC+11+PAMIT:139:6'));
     expect(text, contains('LOC+13+JMKWL:139:6'));
     expect(text, isNot(contains('LOC+13+OLD')));
+    // Entrega 2: ahí el destino final ya está en LOC+11, y LOC+83 no sale.
+    expect(text, isNot(contains('LOC+83+')));
   });
   test(
     'T-132 lo que sigue a bordo: tildes, escapes y CRLF idénticos byte a byte',
@@ -333,7 +344,8 @@ void main() {
         extraMovements: [cancel],
       );
       expect(f.output().notLoaded, [
-        'OR 2 · TSTU0001322 · cancelado en el listado',
+        // T-147, entrega 2 (P1): el motivo lleva la nota de la agencia.
+        'OR 2 · TSTU0001322 · cancelado en el listado («CANCEL»)',
         'OR 3 · TSTU0001323 · carga no registrada',
         'OR 4 · TSTU0001324 · cancelado en la operación',
         'OR 5 · TSTU0001325 · sin celda en el plan',

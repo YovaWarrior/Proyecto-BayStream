@@ -5,6 +5,7 @@ import '../../domain/repositories/movement_log_repository.dart';
 import '../../domain/services/discharge_progress.dart';
 import '../../domain/services/operation_sources.dart';
 import '../../domain/services/operation_state_deriver.dart';
+import '../../domain/services/repeated_containers.dart';
 import '../formatters/vessel_error_message.dart';
 import 'movement_log_provider.dart';
 import 'vessel_providers.dart';
@@ -55,11 +56,14 @@ final dischargeProgressProvider = StreamProvider.autoDispose
       loading: loading,
       hatchCovers: profile?.hatchCovers ?? const {},
       geometry: voyage.geometry);
+  // T-147, entrega 2, parte 2b (P5): las matrículas repetidas del plano de
+  // llegada que se ve.
+  final repeated = RepeatedContainers.of(voyage);
   DischargeProgress derive(Iterable<MovementRecord> records) {
     final movements = records.where((r) => r.state != SendState.rejected).map((r) => r.movement).toList();
     return DischargeProgress.build(
         plan, const OperationStateDeriver().derive(plan, movements),
-        operationId: operation?.id, movements: movements);
+        operationId: operation?.id, movements: movements, repeated: repeated);
   }
 
   if (operation == null) {

@@ -9,6 +9,7 @@ import '../../domain/entities/entities.dart';
 import '../../domain/services/discharge_progress.dart';
 import '../../domain/services/loading_operation.dart';
 import '../../domain/services/loading_plan_progress.dart';
+import '../../domain/services/repeated_containers.dart';
 import '../formatters/operation_text.dart';
 import '../pages/operation_progress_page.dart';
 import '../pages/stowage_alerts_page.dart';
@@ -1627,6 +1628,26 @@ class _Rejilla extends StatelessWidget {
       final isHighlighted = container != null &&
           grid.highlightedContainerId != null &&
           container.containerId == grid.highlightedContainerId;
+      // T-147, entrega 2, parte 2b (P5): de una matrícula repetida, la
+      // operación se queda con una celda. Las demás no se pueden operar: se
+      // ven como las trae el archivo y, al tocarlas, dicen por qué.
+      final repetida = container == null
+          ? null
+          : loading?.repeatedAt(position) ??
+              grid.discharge?.repeatedAt(position);
+      if (container != null &&
+          repetida != null &&
+          repetida.containerId == container.containerId) {
+        celdas.add(_contenedor(
+          context,
+          container,
+          clave: ValueKey('repeated-$position'),
+          enCubierta: enCubierta,
+          curva: curva,
+          onTap: () => _avisarCeldaRepetida(context, repetida, position),
+        ));
+        continue;
+      }
       final slotKey = '${row.toString().padLeft(2, '0')}'
           '${tier.toString().padLeft(2, '0')}';
       final reservation = reservedPositionMap[key];
@@ -2022,3 +2043,23 @@ bool _containerMatchesFilter(
       return isInTransit;
   }
 }
+
+/// T-147, entrega 2, parte 2b (P5) · Lo que responde una celda que la
+/// operación no puede operar porque su matrícula viene también en otra.
+Future<void> _avisarCeldaRepetida(
+        BuildContext context, RepeatedContainer repetida, String position) =>
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const ValueKey('repeated-cell-dialog'),
+        title: const Text('Matrícula repetida'),
+        content: Text(RepeatedContainers.cellMessage(repetida, position),
+            key: const ValueKey('repeated-cell-message')),
+        actions: [
+          TextButton(
+              key: const ValueKey('repeated-cell-ok'),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Entendido')),
+        ],
+      ),
+    );

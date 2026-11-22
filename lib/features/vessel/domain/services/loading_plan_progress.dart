@@ -35,7 +35,10 @@ class LoadingPlanProgress {
       for (final group in cross.groups.where((g) => g.empties.isNotEmpty)) {
         for (final slot in group.reservedSlots) {
           final item = plan.loadingItemAt(slot.stowagePosition.toIsoCode());
-          labels[item?.key ?? slot.key] = '${group.type}\n${group.pod}\n${group.line}';
+          // T-147, entrega 2 (P4): con «también llena» el grupo junta varios
+          // códigos; la celda dice el suyo, el que el plan le dio.
+          labels[item?.key ?? slot.key] =
+              '${slot.isoSizeType ?? group.type}\n${group.pod}\n${group.line}';
         }
       }
     }

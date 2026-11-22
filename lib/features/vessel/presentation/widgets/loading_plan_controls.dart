@@ -427,16 +427,26 @@ class _ResumenEnLinea extends ConsumerWidget {
   final bool soloLaBahia;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => PlanSummaryLine(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: fichasDelResumen(context, ref,
-              voyage: voyage,
-              modo: modo,
-              bahia: selectedBay,
-              soloLaBahia: soloLaBahia),
-        ),
-      );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fichas = fichasDelResumen(context, ref,
+        voyage: voyage,
+        modo: modo,
+        bahia: selectedBay,
+        soloLaBahia: soloLaBahia);
+    // T-147, entrega 2, parte 2b (P5): la ficha del plan con una matrícula
+    // repetida va fija, sobre la línea recogida.
+    final fija = fichaFijaDelResumen(fichas);
+    return PlanSummaryLine(
+      fixed: fija,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final ficha in fichas)
+            if (!identical(ficha, fija)) ficha
+        ],
+      ),
+    );
+  }
 }
 
 /// «Acciones» del plano (T-107; `DESIGN.md` 14.7): las tablas de pendientes,

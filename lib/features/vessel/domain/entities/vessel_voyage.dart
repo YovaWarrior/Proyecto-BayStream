@@ -315,6 +315,27 @@ class VesselVoyage extends Equatable {
   /// Contenedores que van de paso.
   int get containersInTransit => containers.where(isInTransit).length;
 
+  /// T-147, entrega 2, parte 2b (P6; 10.160, D12) · La huella del viaje,
+  /// calculada una vez por objeto.
+  ///
+  /// El viaje es la llave de los proveedores de la operación
+  /// (`loadingOperationProvider` y los de descarga y plan), y cada búsqueda
+  /// pide su `hashCode`. El de `Equatable` recorre todos los contenedores,
+  /// las reservas y las bahías cada vez: con el caso A09, casi la mitad de lo
+  /// que tardaba la pantalla en dibujarse al abrir el teclado (O-147-1).
+  ///
+  /// Se puede guardar porque un viaje no cambia después de construirse: sus
+  /// campos son `final` y lo que cambia nace con [copyWith]. Va fuera del
+  /// objeto, en un `Expando`, porque el constructor es `const`. La igualdad
+  /// sigue siendo la de siempre, campo por campo.
+  static final _hashes = Expando<int>('huella del viaje');
+
+  @override
+  int get hashCode => _hashes[this] ??= super.hashCode;
+
+  @override
+  bool operator ==(Object other) => identical(this, other) || super == other;
+
   @override
   List<Object?> get props => [
         id,

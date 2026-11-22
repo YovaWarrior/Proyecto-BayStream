@@ -5,6 +5,7 @@ import 'load_check.dart';
 import 'loading_plan_progress.dart';
 import 'operation_state_deriver.dart';
 import 'reference_bay.dart';
+import 'repeated_containers.dart';
 
 /// T-76: selección de carga y reservas sobre la misma bitácora de descarga.
 class LoadingOperation {
@@ -18,6 +19,12 @@ class LoadingOperation {
   final LoadingPlanProgress progress;
   final DischargeProgress discharge;
 
+  /// T-147, entrega 2, parte 2b (P5) · Las matrículas que el plan de carga
+  /// trae en más de una celda. La operación se queda con la última celda de
+  /// cada una; las demás ([repeatedAt]) no se pueden operar.
+  final List<RepeatedContainer> repeated;
+  final Map<String, RepeatedContainer> _repeatedCells;
+
   LoadingOperation._(
       this.operationId,
       this.loading,
@@ -27,7 +34,13 @@ class LoadingOperation {
       this.movements,
       this.state,
       this.progress,
-      this.discharge);
+      this.discharge,
+      this.repeated)
+      : _repeatedCells = RepeatedContainers.extraCells(repeated);
+
+  /// La matrícula repetida de la celda [position] (código ISO), si es una de
+  /// las que la operación no puede operar.
+  RepeatedContainer? repeatedAt(String position) => _repeatedCells[position];
 
   factory LoadingOperation.build({
     String? operationId,
@@ -47,13 +60,23 @@ class LoadingOperation {
         list: list);
     final state = const OperationStateDeriver().derive(plan, events);
     final effective = state.effectivePlan!;
+    // T-147, entrega 2, parte 2b (P5): de una matrícula repetida, el plan
+    // guarda una sola pieza. Las demás celdas se quedan como las trae el
+    // archivo: sin esto la proyección ponía dos veces el contenedor de la
+    // última celda, y la bahía pesaba otra cosa que el archivo.
+    final repeated = RepeatedContainers.of(loading);
+    final extras = RepeatedContainers.extraCells(repeated);
     // La fuente publicada permanece intacta. Esta proyección se reconstruye
     // también en otra bahía, con sus sombras de 40 pies y sus reservas.
     final projected = VesselVoyage.fromJson({
       ...loading.toJson(includeBays: false),
       'containers': [
         for (final c in loading.containers)
-          (effective.loading['C:${c.containerId}']?.container ?? c).toJson()
+          (extras.isNotEmpty &&
+                      extras.containsKey(c.stowagePosition?.toIsoCode())
+                  ? c
+                  : effective.loading['C:${c.containerId}']?.container ?? c)
+              .toJson()
       ],
       'reservedSlots': [
         for (final s in loading.reservedSlots)
@@ -70,7 +93,10 @@ class LoadingOperation {
         state,
         LoadingPlanProgress.build(projected, state, list: list),
         DischargeProgress.build(effective, state,
-            operationId: operationId, movements: events));
+            operationId: operationId,
+            movements: events,
+            repeated: RepeatedContainers.of(arrival)),
+        repeated);
   }
 
   PlanItem? numbered(ExportListRow row) {
@@ -139,9 +165,12 @@ class LoadingOperation {
           : numbered(row) == null && !assigned(row)) {
         return false;
       }
-      return value.isEmpty ||
-          row.order == order ||
-          row.containerId.endsWith(value);
+      final matches = row.order == order || row.containerId.endsWith(value);
+      // T-147, entrega 2 (P1; 10.160, cambio 2): una fila que el listado
+      // cancela no se ofrece; sale solo si se la busca por su OR o su número,
+      // y entonces se puede cargar con motivo. La que ya se cargó sí se ve.
+      if (row.cancelled && available(row)) return value.isNotEmpty && matches;
+      return value.isEmpty || matches;
     }).toList()
       ..sort((a, b) => a.order.compareTo(b.order));
     if (empties) return listed;
@@ -222,9 +251,8 @@ class LoadingOperation {
           final slot = item.reservedSlot;
           return item.role == PlanRole.load &&
               slot != null &&
-              slot.isoSizeType == row.type &&
-              slot.portOfDischarge == row.pod &&
-              slot.operatorCode == row.line &&
+              plan.sameGroup(slot, row) &&
+              fits(slot, row) &&
               before[item.key]?.state == ItemState.planned &&
               !occupied.containsKey(item.plannedPosition);
         })
@@ -270,7 +298,8 @@ class LoadingOperation {
       result.add(ContainerUnit(
         id: 'assigned-$container',
         containerId: container,
-        isoSizeType: row?.type ?? slot?.isoSizeType,
+        // 10.160, cambio 3: el código de la celda, si su tipo lo llena.
+        isoSizeType: plan.shippedType(row?.type, slot?.isoSizeType),
         status: ContainerStatus.empty,
         stowagePosition: IsoCoordinateParser.parse(at),
         grossWeight: tare,
@@ -341,10 +370,10 @@ class LoadingOperation {
         continue;
       }
       if (!_leaves(before, item)) continue;
-      final sameGroup = slot.isoSizeType == row.type &&
-          slot.portOfDischarge == row.pod &&
-          slot.operatorCode == row.line;
-      if (sameGroup) {
+      // O-147-2: una celda donde el vacío no cabe por su largo no se ofrece:
+      // la revisión no la dejaría registrar, ni con motivo.
+      if (!fits(slot, row)) continue;
+      if (plan.sameGroup(slot, row)) {
         waiting.add(slot);
       } else if (otherGroups) {
         others.add(slot);
@@ -389,17 +418,44 @@ class LoadingOperation {
 
   /// T-147 · Las filas que la hoja ofrece al abrirse desde [slot]: las de
   /// [search] que son un vacío por asignar (sin celda propia en el plan y sin
-  /// operar), si la celda lo admite. Las mismas, y en el mismo orden, que
-  /// filtrar [search] con `candidateSlots(row, otherGroups: true)` fila por
-  /// fila, que es lo que hacía la hoja hasta la 1.0.1.
+  /// operar), si la celda lo admite. Hasta la 1.0.1 la hoja filtraba [search]
+  /// con `candidateSlots(row, otherGroups: true)` fila por fila.
+  ///
+  /// T-147, entrega 2 · Dos cambios en lo que ofrece:
+  ///
+  /// - O-147-2: no ofrece un vacío que no cabe en la celda por su largo
+  ///   ([fits]). Desde una celda de 20 pies, la hoja del caso A09 ofrecía 274
+  ///   vacíos y 250 no cabían.
+  /// - O-147-3: primero los del grupo de la celda y después los demás, y
+  ///   dentro de cada parte, por OR. El orden salía de un `sort` sin
+  ///   desempate, que la Web y la máquina virtual de Dart resuelven distinto.
   List<ExportListRow> rowsFor(ReservedSlot slot, String query,
       {bool empties = true}) {
     if (!admitsEmpty(slot)) return [];
-    return [
-      for (final row in search(query, empties: empties))
-        if (row.isEmpty && numbered(row) == null && available(row)) row
-    ];
+    final own = <ExportListRow>[];
+    final others = <ExportListRow>[];
+    // `search` ya viene por OR: repartir conserva ese orden en las dos partes.
+    for (final row in search(query, empties: empties)) {
+      if (!row.isEmpty || numbered(row) != null || !available(row)) continue;
+      if (!fits(slot, row)) continue;
+      (plan.sameGroup(slot, row) ? own : others).add(row);
+    }
+    return [...own, ...others];
   }
+
+  /// O-147-2 · Si el contenedor de [row] cabe en [slot] por su largo: una
+  /// bahía impar es de 20 pies y una par, de 40, como en la revisión de la
+  /// carga (`LoadValidator`). Un tipo de largo desconocido no se descarta.
+  bool fits(ReservedSlot slot, ExportListRow row) {
+    final length = nominalLength(row.type);
+    return length == null ||
+        length == (slot.stowagePosition.bay.isOdd ? 20 : 40);
+  }
+
+  /// T-147, entrega 2 (P4) · Si [slot] es del grupo de [row], con lo que el
+  /// listado declara en «también llena».
+  bool sameGroup(ReservedSlot slot, ExportListRow row) =>
+      plan.sameGroup(slot, row);
 
   /// T-77 · «Marcar su descarga y cargar»: la descarga del ocupante que baja
   /// aquí, que se registra justo antes de la carga.

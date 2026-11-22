@@ -4,6 +4,7 @@ import '../../../../core/utils/fecha_corta.dart';
 import '../../../../core/utils/voyage_number.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/services/operation_sources.dart';
+import '../../domain/services/repeated_containers.dart';
 
 /// T-130 (10.90) · «Agregar el plan de carga a la operación publicada»: la
 /// confirmación explícita de la oficina antes de que el plan que falta suba a
@@ -24,6 +25,13 @@ Future<bool> confirmarAgregarPlan(
   final cargo = plan.cargoCountsFor(port);
   final reservas = plan.reservedCountsFor(port);
   final publishedAt = lookup.publishedAt;
+  // T-147, entrega 2, parte 2b (P5; 10.160, D11): un plan con una matrícula en
+  // más de una celda no se agrega. El diálogo dice el motivo y su botón queda
+  // apagado.
+  final repetidas = RepeatedContainers.refusal('No se agrega',
+      sourceName: nombre,
+      fileName: fileName,
+      repeated: RepeatedContainers.of(plan));
   final cuando = publishedAt == null
       ? 'guardada el ${fechaCorta(operation.createdAt)}'
       : 'publicada el ${fechaCorta(publishedAt)}';
@@ -60,8 +68,11 @@ Future<bool> confirmarAgregarPlan(
                   '${cargo.discharged + reservas.discharged}.',
                   key: const ValueKey('attach-plan-counts')),
               const SizedBox(height: 8),
-              const Text('El muelle lo recibe solo. Los movimientos '
-                  'registrados no se pierden ni cambian.'),
+              if (repetidas == null)
+                const Text('El muelle lo recibe solo. Los movimientos '
+                    'registrados no se pierden ni cambian.')
+              else
+                Text(repetidas, key: const ValueKey('attach-plan-repeated')),
             ],
           ),
         ),
@@ -72,7 +83,8 @@ Future<bool> confirmarAgregarPlan(
             child: const Text('Cancelar')),
         FilledButton(
             key: const ValueKey('attach-plan-confirm'),
-            onPressed: () => Navigator.pop(context, true),
+            onPressed:
+                repetidas != null ? null : () => Navigator.pop(context, true),
             child: Text('Agregar a la operación '
                 '${voyageNumberLabel(operation.voyageNumber)}')),
       ],

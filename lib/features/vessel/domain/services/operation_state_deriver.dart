@@ -10,6 +10,18 @@ import '../../../../core/utils/iso_coordinate_parser.dart';
 /// T-80: primero obtiene el plan efectivo; después evalúa las operaciones
 /// contra ese plan final, incluso si la aprobación se registró más tarde.
 class OperationStateDeriver {
+  /// Cómo se deshace una carga que quedó en conflicto. O-147-8 (d): el
+  /// detalle de la celda, que es donde se deshace, no lo repite.
+  static const cellRemedy =
+      'Si el registro fue un error, deshazlo desde el detalle de la celda.';
+
+  /// El mensaje de un conflicto como se lee dentro del detalle de la celda:
+  /// sin la frase que manda a ese mismo detalle.
+  static String messageInCellDetail(String message) =>
+      message.endsWith(' $cellRemedy')
+          ? message.substring(0, message.length - cellRemedy.length - 1)
+          : message;
+
   const OperationStateDeriver();
 
   OperationState derive(OperationPlan plan, Iterable<Movement> movements) {
@@ -330,7 +342,7 @@ class _Run {
         MovementType.cancelItem =>
           'Si la cancelación fue un error, la oficina la deshace desde el detalle '
               'de la celda.',
-        _ => 'Si el registro fue un error, deshazlo desde el detalle de la celda.',
+        _ => OperationStateDeriver.cellRemedy,
       };
 
   void _discharge(Movement m) {
@@ -428,6 +440,18 @@ class _Run {
       _conflict(ConflictKind.outOfPlan, key, m,
           '${_name(key)}: planificado en ${status.plannedPosition}, registrado en $position.');
     }
+    _cancelledInList(key, key.substring(2), m);
+  }
+
+  /// T-147, entrega 2 (P1; 10.160, cambio 2) · Lo que subió, subió: la carga
+  /// de un contenedor que el listado cancela queda registrada y a la vista
+  /// de la oficina, igual si se cargó antes de la revisión que lo cancela.
+  void _cancelledInList(String key, String container, Movement m) {
+    final note = plan.listCancelled[container];
+    if (note == null) return;
+    _conflict(ConflictKind.cancelledInList, key, m,
+        '${_capital(_shown(container, order: m.payload['order'] as int?))} se '
+        'cargó y el listado lo marca cancelado («$note»).');
   }
 
   void _assignEmpty(Movement m) {
@@ -478,17 +502,20 @@ class _Run {
     emptiesAssigned[container] = key;
     // T-77: lo que T-77 dejó pasar con motivo, u otro dispositivo sin aviso,
     // queda asignado pero a la vista. Sin listado no se sabe el grupo.
+    // T-147, entrega 2 (P4): el tipo se compara por su grupo, con lo que el
+    // listado declara en «también llena».
     final group = plan.emptyGroups[container];
     final slot = plan.loading[key]?.reservedSlot;
     if (group != null &&
         slot != null &&
-        (group.type != slot.isoSizeType ||
+        (plan.groupType(group.type) != plan.groupType(slot.isoSizeType) ||
             group.pod != slot.portOfDischarge ||
             group.line != slot.operatorCode)) {
       _conflict(ConflictKind.otherGroup, key, m,
           '$container (${group.type} · ${group.pod} · ${group.line}) quedó en una '
           'reserva de ${slot.isoSizeType} · ${slot.portOfDischarge} · ${slot.operatorCode}.');
     }
+    _cancelledInList(key, container, m);
   }
 
   void _cancel(Movement m) {
