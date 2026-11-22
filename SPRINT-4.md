@@ -5314,4 +5314,66 @@ El prompt está en el documento del proyecto `BayStream_T120_e2_arranque_21nov.m
 
 **El disco de la laptop** está al 94 %, con 62 GB libres. `%TEMP%\t120-e2\`, de 13 GB, se queda hasta los monitores. Lo de T-147 que listaba la 10.168, unos 16 GB, ya se puede borrar.
 
-La siguiente decisión es la **10.170**.
+### 10.170 · T-120, entrega 2: aceptada por GLM, con un hallazgo nuevo (T120-E2-01, P3) que entra a la corrección; `DESIGN.md` 17.7, puesto (22-nov, 12:40)
+
+**Carlos corrió los tres bloques de la 10.169** (22-nov, 09:56): la entrega 2 de T-120 quedó en `sprint-4` (`7ace4b4`); la decisión, en `fcc8302`, y `baystream-qa-r4`, en esa punta. De la ayuda de los segmentos en Windows y del corte de la versión todavía no ha dicho nada.
+
+**GLM aceptó la entrega 2 de T-120** el 22-nov, de las 10:00 a las 11:28, en un chat nuevo (`docs/t120/entrega2/aceptacion-glm.md`, con su evidencia en `build/t120/glm-e2/` de `baystream-qa-r4`: 157 MB en 1072 archivos). **Su dictamen: PASA, con un hallazgo nuevo, T120-E2-01 (P3), que no detiene.**
+
+**Lo que GLM corrió y vio:**
+- la punta `fcc8302`, con las 18 rutas de la entrega en `7ace4b4`;
+- `analyze` en cero, en una copia limpia y en la carpeta, y la suite, 2558 de 2558 en una corrida, sin omitidas;
+- las 13 rojas contra `261ee4b`, cada una en su comprobación. Y las seis del teléfono de `test/t120_filtros_matriz_test.dart`, de las que no había registro: esperan dos renglones, y la punta de antes da tres;
+- cinco corridas en Windows y cinco en la Web, todas terminadas, sin errores ni textos que no caben. En la Web, cada una con el programa de la carpeta que se sirve;
+- O-120-5, D9 y la matrícula repetida, de día y de noche;
+- **O-120-4: ningún cuadro enseña la Lista arriba.** En la grabación de Windows, dos de los cuatro toques dejan uno y dos cuadros con la columna vacía, y en los otros dos la grabación tiene huecos. En la de Chrome sale un cuadro vacío en tres de los cuatro toques;
+- **O-128-4, con una pérdida de foco de verdad:** el pellizco se suelta y la rueda vuelve a mover la columna, en Windows y en la Web;
+- **O2:** los cinco segmentos, una vez, en UIA y en MSAA. Contra la punta de antes cambian los 10 renglones de esos segmentos y nada más, y la ayuda viene vacía;
+- **las sondas:** O-119-1 da 0.000 dp en pasos de 0.5 % y de 3 %, alejando desde el 300 %, en los topes, con la rejilla en su extremo y con la letra a 2.0. El ciclo de vida no lanza nada; la Lista nunca se queda sin pintar; y a 320 dp, y con la letra a 1.45, la fila de carga no se desborda;
+- **O-120-2, con la misma sonda en los dos lados:** la primera tarjeta queda 56.0 dp más abajo con la letra a 1.0 (de 1053.0 a 1109.0) y 66.6 con la letra a 2.0 (de 1964.6 a 2031.2). Es el renglón de O-120-5.
+
+**T120-E2-01 (P3) · Dos tarjetas con la misma clave rompen el rearme de la Lista.** Con una matrícula en tres celdas, el filtro de su naviera deja a la vista dos tarjetas de esa matrícula. Al soltarlo, la lista perezosa lanza una aserción del framework (`indexOf(child) > index`) y, detrás, otras dos. En release la aserción no corre, pero el orden de las tarjetas queda inconsistente. **Yov leyó la causa en el código:** `ContainersSliverList` le da a cada tarjeta la clave de su matrícula y la busca por ella (`findChildIndexCallback`); con una matrícula repetida, dos tarjetas comparten clave. Es la otra mitad de O-120-6, y la prueba de Timonel solo cubría el filtro que deja una de las dos. La salida es que la clave lleve la celda. **Entra a la corrección.**
+
+**Lo que Yov comprobó de la aceptación:**
+- `baystream-qa-r4` sigue igual a `fcc8302` en sus 2182 archivos, y lo único nuevo es el informe;
+- los registros dicen lo que el informe: la suite, `analyze`, las rojas (5 de 8, 4 de 4, 4 de 15 y 6 de 17) y las diez corridas, con sus capturas (30, 8, 12, 8 y 1) y su «fin»;
+- **en la Web corrió el mismo programa que probó Timonel:** el `main.dart.js` que compiló GLM tiene la huella del de Timonel. Sus perfiles de Chrome ya no están, y los de Timonel siguen;
+- el árbol de Windows de GLM es igual, línea por línea, al de la entrega de Timonel, y difiere del de la punta en 10;
+- Yov abrió dos hojas de cuadros y una captura: el toque 3 de Windows, con sus dos cuadros vacíos; el toque 1 de la Web, con uno, y la lista corta de VELAG a 1366. Dicen lo del informe;
+- las horas salen de sus archivos: de las 10:00:09 a las 11:28.
+
+**Cinco cosas del informe que no son como dice.** El dictamen y las cifras no cambian, y quedan anotadas aquí:
+- **la sonda corrió diez veces, y el informe cita la sexta** (`e/sonda-salida-6.txt`). En esa fallan tres pruebas: dos por errores de la propia sonda y la del hallazgo. La última, con las 20 en verde y las mismas cifras, es `e/sonda-salida-10.txt`;
+- **«un dedo vuelve a desplazar la rejilla» no lo comprobó nadie.** En el teléfono, después de perder el foco con dos dedos puestos, la sonda de GLM movió la rejilla 0.0 dp. GLM lo atribuye a su instrumento, y es lo probable: manda el arrastre en un solo paso. Pero la prueba de Timonel que lleva esa frase en el nombre tampoco arrastra: solo comprueba que la rejilla vuelve a ser desplazable. Va a la corrección;
+- **las hojas de cuadros de Windows no están en la evidencia.** El informe remite a `d/cuadros-web/`, que tiene las de la Web; las de Windows están en `%TEMP%\t120-glm2\cuadros-o1204\`. La grabación, `ventana.mkv`, sí está;
+- de MSAA, GLM midió la ayuda, no la descripción. La descripción la midió Timonel;
+- de la lista corta dice que el título queda «arriba». La captura lo enseña a media vista, con toda la lista a la vista, que es lo que pide D9.
+
+**Lo que GLM no hizo, y lo dice:** el banco sin la captura por dentro, a 60 cuadros; la descripción emergente con el mouse y el árbol de accesibilidad de Chrome, y Android. Eran opcionales. Sigue sin medirse qué recibe el lector en la Web, y dónde sale la descripción emergente.
+
+**Una incidencia de la máquina:** la primera compilación del banco de GLM falló, porque el SDK de C++ de Firebase quedó extraído a medias. GLM completó la extracción dentro de su copia, desde el zip ya descargado, y la segunda compiló. Ese SDK ocupa 8.5 GB extraído, en cada banco nuevo.
+
+**La entrega 2 de T-120 queda aceptada, con observaciones.** El piso de `sprint-4` es **2558**.
+
+**`DESIGN.md` 17.7, puesto.** Estaba pendiente desde la 10.168: lo que cambia en pantalla con la entrega 2 de T-147, en sus dos partes, con los textos de E2a-10.1, E2b-10.1 y E2b-18.8 del informe de Timonel. Yov cotejó contra el código de la punta cada texto entre comillas, y coinciden. Dos ajustes: la tercera ficha de la tarjeta de las celdas sin dueño es «No», como quedó en la 2b, y no «No: piden motivo»; y se suma lo que lee el muelle con la operación cerrada. Va en el commit de esta decisión.
+
+**Sigue la corrección 1 de la entrega 2 de T-120,** con Timonel, en su mismo chat:
+- **A · T120-E2-01:** la clave de la tarjeta, con su celda, y las pruebas con la matrícula en dos y en tres celdas;
+- **B · la ayuda de los segmentos en Windows,** una vez, detrás del nombre: la opción 1 de la 10.169. **La decide Carlos al pasar el prompt:** si no la quiere, borra ese punto;
+- **C · los dos monitores y el pellizco de verdad,** con unos 30 minutos de Carlos. Si no puede en esa sesión, Timonel entrega lo demás;
+- **D · lo que dejaron las dos revisiones:** que la prueba de los dos contactos arrastre de verdad; qué recibe el lector en la Web; dónde sale la descripción emergente, con el mouse, y cuántos cuadros dura la columna vacía de O-120-4 sin la captura por dentro.
+
+El prompt está en el documento del proyecto `BayStream_T120_e2_aceptada_22nov.md`. La corrección la acepta GLM, en un chat nuevo. Después, la entrega 3 de T-147, si Carlos aprueba el corte, y la versión.
+
+**Los bloques:** uno en `baystream-qa-r4`, con el informe de GLM, que sube a `sprint-4`; y uno en `baystream-rediseno`, que trae ese commit y sube esta decisión con `DESIGN.md`.
+
+**Siguen pendientes de Carlos:** la ayuda de los segmentos en Windows, al pasar el prompt; el corte de la próxima versión (10.168); los 30 minutos de los monitores; si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** está al 96 %, con 46 GB libres: la aceptación se llevó 16 GB. Ya se pueden borrar:
+- `%TEMP%\t120-glm2\`, de GLM, de 12 GB;
+- lo de T-147 que listaba la 10.168, unos 16 GB;
+- lo de la entrega 1 de T-120: `%TEMP%\t120-ram\`, de 3.3 GB, y sus copias (`t120-antes`, `t120-glm-*`, `t120-limpia-*`, `t120-e1c1-*` y `t120-cache-*`), cerca de 1.6 GB entre todas.
+
+`%TEMP%\t120-e2\`, de 13 GB, se queda hasta los monitores, que piden unos 9 GB más. Mejor borrar desde el Explorador: esas carpetas traen enlaces al caché de paquetes, y el Explorador borra el enlace, no lo enlazado.
+
+La siguiente decisión es la **10.171**.

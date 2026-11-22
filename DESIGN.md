@@ -2721,6 +2721,59 @@ En el diálogo de la carga, bajo el grupo de la fila, «POT … · POD …» cua
 
 La hoja «Vacíos del listado» no cambia lo que ofrece ni su orden.
 
+### 17.7 Los defectos del piloto 4, entrega 2 (T-147; 10.159 a 10.166)
+
+Lo que cambia en pantalla con la entrega 2 de T-147, aceptada en sus dos partes el 21-nov (10.163 y 10.166). Todavía no está publicada: sale con la versión que siga a la 1.0.2 (10.168). El lector, el cruce, la operación y las cifras del caso están en `docs/T147-RESULTADOS.md`; esta sección sale de sus E2a-10.1, E2b-10.1 y E2b-18.8, con los textos cotejados contra el código.
+
+**El listado de la agencia.**
+
+- El resumen separa lo que se carga de lo que la agencia cancela: «N filas en M agencias · P para cargar: X llenos y Y vacíos». Debajo, «C canceladas en el listado, que no se cargan: X llenos y Y vacíos», sus cuentas por nota y un desplegable, «Canceladas en el listado (C)», con una línea por fila. Sin canceladas, el resumen es el de siempre.
+- Las secciones no son agencias. Cada agencia lleva las suyas entre paréntesis: «AGENCIA: 334 (TRANSBORDOS 6, VACIOS 187)». «AGREGADOS» va en su línea y no cuenta como agencia.
+- Con filas canceladas, la línea del POT (17.6) cuenta las que se cargan: «169 filas que se cargan traen POT y POD distintos (y 33 canceladas)».
+- Una nota de MARCHAMO que no se reconoce va en el color de error, con su OR y qué hacer.
+
+**Las equivalencias.**
+
+- Dos orígenes más: «De la revisión anterior de este listado.» y, con el respaldo repartido, «Propuesta: 60 contenedores van a 45G1 y 10 a 45G0. 40HC llena los dos.»
+- Bajo la equivalencia, «También llena:» y una ficha por código, con su «✕». Con el lápiz, el código que deja de ser el principal de un tipo se queda en «También llena» si el plan lo respalda y ningún otro tipo lo tiene de principal.
+- Lo guardado que no se usó se dice en una línea más: «En este dispositivo estaba guardada … : no se usó.»
+- Un código que dos tipos declaran va en el color de error, arriba de las equivalencias y al pie, y apaga «Confirmar e importar».
+
+**Dos tarjetas nuevas.**
+
+- «Celdas reservadas que ningún tipo del listado llena (N)», bajo las equivalencias. Sale cuando ya no queda ningún tipo por elegir, con una línea por código y tres fichas, «Sí», «Otro tipo…» y «No», que caben en una línea a 360 dp. La descripción emergente de «No» dice «No: piden motivo al cargar».
+- «Equivalencias guardadas en este dispositivo (N)», al final de la página y recogida, con «Quitar» en cada una, «Quitar las N» para las de puerto y «Quitar todas». Sin nada guardado, no sale.
+
+**El cruce.** Con «también llena», la línea de un grupo dice de qué códigos son sus celdas: «…31 vacíos, 31 celdas (28 de 45G1 y 3 de 45G0)». Las canceladas van en su línea: «40 canceladas en el listado: el plan no carga ninguna», o, en el color de error, las que el plan todavía carga.
+
+**La carga.**
+
+- Una fila cancelada no sale en la hoja «Vacíos del listado» ni en la carga por OR. Si se la busca, sale con «Cancelado en el listado: pide motivo». El diálogo dice «Pide motivo: el listado lo marca cancelado («…»). Si sube a bordo, escribe el motivo: la oficina lo verá como conflicto.» y registra con el motivo. La celda queda con la marca «Revisar» (13.3), y el avance la lista en Conflictos.
+- El campo «Motivo (obligatorio)» va justo debajo del aviso que lo pide, antes de la hora, la fecha y el marchamo, y el diálogo lo lleva a la vista. Su ayuda es «Viaja con el movimiento.» En el detalle de la celda, la línea del conflicto no manda al detalle de la celda.
+- **La hoja «Vacíos del listado»** no ofrece un vacío donde no cabe por su largo. Primero van los del grupo de la celda y después los demás; dentro de cada parte, por OR, igual en todos los clientes. Una celda de un código que su tipo también llena es de su grupo: no dice «Otro grupo: pide motivo».
+
+**La matrícula repetida.** Un plan con una matrícula en más de una celda no entra a la nube.
+
+- En «Nube y cuenta», «Publicar operación» queda apagado y debajo va el motivo, en el color del texto: «No se publica: el plan de carga («…») trae 1 matrícula en más de una celda: … en 018-01-82 y 018-00-82. Un contenedor solo puede estar en una. Pide el plan corregido a quien lo hizo y ábrelo de nuevo.» El diálogo «Agregar el plan…» dice lo mismo con «No se agrega» y apaga su botón.
+- En Carga y en Descarga, una ficha en el color de Revisar (14.7): «Plan con 1 matrícula repetida: una carga no se puede registrar. Pide el plan corregido.» En el teléfono va en una línea propia, encima del resumen recogido.
+- La celda que la operación no guarda se dibuja con su contenedor y, al tocarla, abre un diálogo «Matrícula repetida» con «Entendido».
+- El BAPLIE de salida lo dice en «Avisos de la salida».
+- En la Lista, cada celda sale en su tarjeta, y ninguna dice que su matrícula está repetida (O-120-6).
+
+**Después de cerrar.** La operación cerrada se sigue viendo, solo para mirar.
+
+- En «Nube y cuenta», la oficina lee «Se sigue viendo, solo para mirar. Para trabajar esta escala otra vez, empieza una operación nueva con sus planos.» y tiene un botón lleno, «Empezar una operación nueva», que pide confirmar. El muelle lee «Se sigue viendo, solo para mirar. Si la oficina publica otra operación de esta escala, únete a ella desde «Operaciones abiertas en la nube».», y no tiene el botón.
+- La operación nueva lo dice con una línea: «Es una operación nueva: la anterior de esta escala se cerró el … y lo registrado se quedó en ella.»
+- Con la operación cerrada, otro BAPLIE de la misma escala no se guarda. Sale el aviso «La operación de esta escala ya está cerrada y sus BAPLIE no cambian: este archivo no se guardó. Para trabajar la escala otra vez, pulsa «Empezar una operación nueva» en «Nube y cuenta» y confirma este archivo de nuevo. En el muelle no se empieza: únete a la que publique la oficina, en «Operaciones abiertas en la nube».» Con la nueva empezada, el archivo entra a ella.
+- Al final de «Nube y cuenta», «Operaciones cerradas en este dispositivo» lista, la más reciente primero, las cerradas desde las que se puede empezar otra. Cada una va en una tarjeta con su buque, su viaje y su puerto, «Cerrada el …» y el botón lleno «Empezar una operación nueva». El muelle no la ve, y la cerrada que ya se ve arriba no se repite.
+
+**El avance y la salida.**
+
+- Bajo las notas del avance, «Listado: 40 filas canceladas, que no se cargan (37 llenos y 3 vacíos).» Con una cancelada a bordo: «Listado: 41 filas canceladas (38 llenos y 3 vacíos): 40 no se cargan y 1 está a bordo.»
+- En el BAPLIE de salida, una línea con la cuenta, «N cargas llevan su destino final (LOC+83), tomado del POD del listado.»; en «Filas del listado que no cargaron», el motivo con la nota, «cancelado en el listado («…»)»; y «1 conflicto vigente», en singular.
+
+**El lector de BAPLIE.** Un grupo sin matrícula con la posición mal formada suma un aviso de posición: «Celda reservada sin matrícula: «…»».
+
 ## 18. La Lista y el buscador (T-120; 10.146 a 10.148)
 
 La propuesta y lo que Carlos decidió están en `docs/T120-RESULTADOS.md` (sección 1 y la 10.148);
