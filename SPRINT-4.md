@@ -5161,4 +5161,52 @@ El prompt está en el documento del proyecto `BayStream_T147_e2b_aceptacion_21no
 
 **El disco de la laptop** está al 93 %, con 68 GB libres. Cuando GLM termine su revisión se pueden borrar `%TEMP%\t147-glm2b` (1.1 GB) y `%TEMP%\t147\perfiles` (1.0 GB). Lo de Timonel, cuando termine la entrega 2: `t147-e2` (2.9 GB), `t147-e2b` (1.0 GB), `t147-e2a` y `t147\copias` (0.4 GB cada una), y `build\windows` de su carpeta (9.6 GB).
 
-La siguiente decisión es la **10.167**.
+### 10.167 · T-147, entrega 2: el informe de GLM de la parte 2b, corregido y ya en `t147-piloto4`; la lista de publicación de la 1.0.3, con `528ea3b` de candidata (21-nov, 19:25)
+
+**Carlos corrió el bloque de la 10.166** (18:53): la decisión quedó en `sprint-4` (`e1fcd76`). **Y le pasó a GLM el mensaje de la revisión.** De las dos opciones de la 10.166 todavía no ha dicho cuál: preguntó qué sigue después de publicar con esta punta. La lista queda escrita para esa opción, que es la que recomienda Yov, y Carlos decide al correr su bloque 1.
+
+**GLM corrigió su informe a las 19:06,** en el mismo chat y sin correr nada: 626 líneas, 43 174 bytes.
+
+**Lo que Yov comprobó:**
+- **solo cambió el informe.** `baystream-qa-r4` siguió igual a `528ea3b` en sus 2147 archivos, por su blob;
+- **los cambios, contra la versión anterior:** salen 73 líneas y entran 234, en 15 lugares, y todos son de los siete puntos pedidos. El dictamen, las cifras del caso y la evidencia no cambian;
+- **los siete puntos dicen ahora lo de sus archivos:** la medición, como fue, sin el listado y con los perfiles por vuelta; el paso 11.d, por la tarjeta de la lista; «408 pendientes», en la captura que lo enseña; Descarga, con «Por bajar 1 · Bajado 1»; 27 de 41 rojas; las horas, de sus archivos, y lo que no se hizo, con el banco de Windows y la tarjeta de las cerradas a 360 × 800;
+- **nombres y matrículas reales:** ninguno.
+
+**Una corrección a la 10.166:** los perfiles de Chrome que quedan en `%TEMP%\t147\perfiles` son 25, no 24. Yov contó mal, y GLM lo dijo.
+
+**Dos detalles de escritura del informe revisado, que quedan como están:** en la sección de la revisión, `%TEMP%` salió escrito `\TEMP@` en cuatro líneas; y el total de la tabla de horas, «2 h 35 min», queda diez minutos corto con sus propios tramos.
+
+**Carlos corrió los dos bloques del informe** (19:12): quedó en `t147-piloto4` (`8602770`, sobre `528ea3b`), y la carpeta de Timonel, en esa punta. El commit trae solo el informe, y es el revisado.
+
+**La lista de publicación de la 1.0.3** es `docs/piloto/PUBLICACION-1.0.3.md`: 759 líneas y 13 bloques de PowerShell. Sale de la de la 1.0.2 (10.155).
+- **Lo que publica:** `528ea3b`, con las dos partes de la entrega 2. Android `1.0.3` (12), la MSIX 1.0.3.0, el asistente 1.0.3.12 y la Web `1.0.3` (12). La mezcla se detiene si `t147-piloto4` trae código posterior a `528ea3b`, o si le falta alguno de los dos informes de GLM.
+- **La prueba corta, con el caso A09 contra Firebase de verdad,** en 14 pasos:
+  - empieza por «Empezar una operación nueva», porque la laptop ya cerró esa escala el 20-nov;
+  - mira el teclado en el iPhone y en el Honor con el listado importado, que la aceptación midió sin él. En el Honor no se ha mirado nunca;
+  - busca un vacío cancelado, que no se ofrece;
+  - termina con «Operaciones cerradas en este dispositivo» en la laptop: la corrección no ha corrido en Windows.
+- **La regla entre versiones:** todos los equipos pasan a la 1.0.3 antes de empezar una operación nueva de una escala cerrada.
+- **La vuelta atrás** es a la 1.0.2: `build\` se aparta entera en `build-1.0.2`, con su MSIX y su Web.
+
+**Lo que Yov comprobó para la lista:**
+- en la punta, `pubspec.yaml` dice `1.0.3+12` y `msix_version: 1.0.3.0`, y `pubspec.lock` no cambia;
+- en `proyecto-baystream`, ninguna de las 50 rutas de la entrega 2 está cambiada ni existe sin seguimiento: la mezcla no tiene dónde chocar. `build\` tiene lo de la 1.0.2, con la MSIX en la huella de su registro, y quedan 67 GB libres;
+- `sprint-4` (39 rutas desde la 1.0.2) y la entrega 2 (50) no comparten ninguna ruta;
+- las tres huellas de la Web en vivo que coteja el bloque 0.6 son las del registro del 20-nov;
+- los textos de la prueba corta salen de los registros de la aceptación y del código de la punta, no de memoria;
+- los 13 bloques pasaron por el mismo analizador de gramática de la lista anterior, con los mismos siete avisos falsos. **Yov no puede ejecutar PowerShell,** y el bloque 0.4 y los dos de la vuelta atrás no han corrido nunca.
+
+**Lo que Yov dejó preparado en el equipo:** en el escritorio, `BayStream_1.0.3_prueba_corta\`, con `CORPUS_A09.edi`, `LISTADO_A09.xlsx` y un `LEEME.txt` con los seis tipos por elegir. La copia de `SPRINT-4.md` de antes está en `%TEMP%\SPRINT-4.antes-10167.md`.
+
+**Lo que sigue:**
+1. Carlos: el bloque de esta decisión, con la lista, en `sprint-4`.
+2. Carlos decide. Si publica, sigue la lista de 0 a 7, con los tres clientes el mismo día. Mientras compila, ningún agente corre Flutter.
+3. Yov: el registro, la decisión de la publicación, `DESIGN.md` 17.7, el manual de la 1.0.3 y el tablero. Después, el bloque 8.2 de la lista mezcla `master` en `sprint-4`.
+4. La entrega 2 de T-120, con O-120-5 decidida. Su paso 0 corre la suite con T-120 y la entrega 2 de T-147 juntos: se esperan 2531 pruebas.
+
+**Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** está al 93 %, con 67 GB libres. GLM ya terminó: se pueden borrar `%TEMP%\t147-glm2b` (1.1 GB) y `%TEMP%\t147\perfiles` (1.0 GB). Lo de Timonel, cuando la 1.0.3 esté publicada.
+
+La siguiente decisión es la **10.168**.
