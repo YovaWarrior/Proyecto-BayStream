@@ -5253,4 +5253,65 @@ El prompt está en el documento del proyecto `BayStream_T120_e2_arranque_21nov.m
 
 **El disco de la laptop** está al 93 %, con 67 GB libres. Ya se pueden borrar `%TEMP%\t147-glm2b` (1.1 GB) y `%TEMP%\t147\perfiles` (1.0 GB), de GLM, y lo de Timonel de la entrega 2: `t147-e2` (2.9 GB), `t147-e2b` (1.0 GB), `t147-e2a` y `t147\copias` (0.4 GB cada una), y `build\windows` de `baystream-t147` (9.6 GB).
 
-La siguiente decisión es la **10.169**.
+### 10.169 · T-120, entrega 2: entregada y revisada, coincide con la carpeta y pasa a la aceptación de GLM; la ayuda de los segmentos en Windows la decide Carlos, y los dos monitores quedan pendientes (22-nov, 00:10)
+
+**Carlos corrió los dos bloques de la 10.168** (21-nov, 22:14 y 22:15): la decisión con `AGENTS.md` quedó en `5f850e9`, y la mezcla de `t147-piloto4`, en `261ee4b`. Le pasó el prompt a Timonel, y con él **aprobó O-120-5**.
+
+**Timonel entregó la entrega 2 de T-120 a las 23:35,** sobre `261ee4b` y sin commit (`docs/T120-RESULTADOS.md`, «Entrega 2 · El plano y la oficina», E2.1 a E2.13). Carlos pasó su mensaje a las 23:40. Termina con una pregunta: «¿Cómo queda la ayuda de los segmentos en Windows?».
+
+**El paso 0, lo que nadie había corrido:** en una copia limpia de `261ee4b`, con T-120 y la entrega 2 de T-147 juntas, `analyze` da cero y la suite, 2531 de 2531, sin omitidas (22:17 a 22:19). La mezcla no trajo nada.
+
+**Lo que trae la entrega:**
+- **O-119-1, el pellizco en el cruce de caber a no caber.** La prueba salió roja antes de cambiar nada, y con el touchpad: 0.562 dp en horizontal, un paso después del cruce, y 0.740 dp en vertical, con la columna al fondo. La hipótesis se confirmó en su mecanismo: un `jumpTo` fuera del alcance medido arma una simulación que devuelve el desplazamiento al tope viejo antes de que se mida el nuevo. El cambio (`plan_drag_confirmation.dart`): hasta el tope medido, `jumpTo`; el resto, `correctPixels`. Las cinco pruebas dan ahora 0.000 dp (0.081 en ráfagas), y las 11 de T-119 siguen pasando.
+- **O-128-4, el pellizco y el foco.** `PlanZoomViewport` escucha el ciclo de vida y, al pasar a `inactive`, `hidden` o `paused`, suelta el pellizco del touchpad, la columna congelada y los contactos de la pantalla. Un gesto nuevo del touchpad cierra el que quedó abierto.
+- **O2, los segmentos del selector de modo.** En el árbol de Windows cada segmento dice su nombre una vez: «botón Destino», donde decía «botón Destino. Destino. El puerto de descarga de cada contenedor». **Windows no expone la pista** (`hint`), que es donde la propuesta ponía la ayuda (1.6.1): la ayuda ya no se oye ahí. Lo decide Carlos, abajo.
+- **O-120-4, el cuadro con la Lista arriba.** Se veía en Windows y en la Web. Ahora, al llegar desde una barra de Estadísticas, la Lista se dispone sin pintarse hasta que salta a su título.
+- **O-120-5:** en el teléfono, «Carga especial» enseña sus tres chips, sin «Ver las 3 cargas».
+- **D9, precisada en `DESIGN.md` 18.5,** con ocho pruebas de la lista corta y dos de la Lista con una matrícula repetida. Las diez pasan también contra `261ee4b`: fijan lo que ya estaba bien. La última tarjeta se ve entera, como leyó Yov en la 10.154.
+- **Cifras:** 27 pruebas nuevas, de las que 13 fallan contra `261ee4b`; la suite, 2558 de 2558, sin omitidas, y `analyze` en cero, en la carpeta y en una copia limpia. `pubspec.*` no cambia.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia:**
+- **el árbol:** contra `261ee4b` cambian 7 archivos y hay 11 nuevos, los 18 de su bloque. No cambian `pubspec.*`, `lib/main.dart`, los congelados, `domain/`, `data/` ni los archivos de T-147, y no hay ningún `// ignore:`;
+- **los registros:** el paso 0 (`analyze`, de 22:17:05 a 22:17:23, y la suite, hasta las 22:19:48); `analyze` y la suite de la carpeta (23:25:52 a 23:28:08), y los de la copia limpia (23:28:34 a 23:30:54). El último cambio de código es de las 23:22:56, antes de todos ellos. El manifiesto de la copia limpia coincide con la carpeta en las 17 rutas, por su huella;
+- **las rojas,** cada una en su comprobación y ninguna de compilación: 5 de 8 del pellizco (dos de O-119-1 y las tres de O-128-4), 4 de 4 del selector y 4 de 15 de la Lista (las dos de O-120-5 y dos de las tres de O-120-4);
+- **el código:** los cuatro archivos de `lib/` hacen lo que dice el informe, y nada más. Nadie escucha con `addListener` los desplazamientos del plano, y `_dejarQuieto` solo corre cuando la escala cambió;
+- **O2 en Windows:** los dos árboles, de 500 líneas, difieren en 10: los cinco segmentos, en UIA y en MSAA. En los dos, la ayuda de UIA y la descripción y la ayuda de MSAA vienen vacías;
+- **O-128-4 en la app:** en Windows, en el banco de la punta el pellizco sigue abierto después de perder el foco y la rueda no mueve la columna (37.2 → 37.2); en el de la entrega se suelta y la mueve (37.2 → 137.2). En la Web se suelta igual; ahí la punta no se corrió;
+- **la Web:** en las siete corridas, el `main.dart.js` que cargó la página es el de la carpeta que se sirve, y cada una fue con su perfil. El `lib/` del banco es el de la carpeta, salvo un comentario;
+- **la pantalla:** Yov abrió las cuatro hojas de cuadros de O-120-4 y 9 de las 165 capturas. Antes, entre Estadísticas y el título sale un cuadro con el resumen del viaje, los botones y los filtros; después no sale, ni en Windows ni en la Web. A 360 × 800, las tres cargas van una por renglón, de día con la letra a 1.0 y de noche a 2.0. La lista corta de VELAG, a 360, y la de «Sin destino», a 1366 de noche, enseñan el título y sus dos tarjetas enteras. Con la matrícula repetida, el aviso «Matrículas repetidas en EQD: 1 contenedor · revisa esas celdas con quien hizo el plan» está arriba, en el resumen;
+- **nombres y matrículas reales:** ninguno en las 18 rutas.
+
+**Lo que la revisión deja anotado, y no detiene la aceptación:**
+- **O-119-1 quedó corregido en las pruebas, no visto en la app.** En el banco, con eventos sintéticos, la punta y la entrega dan las mismas cifras (0.52, 0.28 y 0.50 dp): el instrumento no las distingue. Y los 1.9 dp que midió Codex en Chrome (10.81) no se reprodujeron: el pellizco de la Web ya daba 0.000 en las pruebas. Lo dice un pellizco de verdad, con la mano de Carlos: el escenario `mano` del banco;
+- **`correctPixels`:** la documentación del SDK lo reserva para corregir durante la disposición. Aquí se usa justo antes del cuadro que vuelve a medir, y las pruebas lo fijan cuadro por cuadro. Se mira otra vez cuando cambie la versión de Flutter;
+- **O-120-4 cambia un cuadro con la Lista arriba por un cuadro con la columna vacía.** En la grabación de Windows ocupa dos cuadros, con el conductor capturando por dentro; sin esa captura no se midió. En ese cuadro la Lista tampoco está en el árbol accesible: lo dice el código, y nadie lo ha medido;
+- **la descripción emergente de los segmentos** sale ahora sobre el icono y sobre el rótulo, no sobre todo el segmento. Su prueba comprueba que está, no que salga al pasar el mouse, y no hay captura. En la Web no se midió qué recibe el lector;
+- **`test/t120_filtros_matriz_test.dart`** cambia por O-120-5: en el teléfono esperaba tres filas en dos líneas y ahora, dos. De sus seis casos rojos contra la punta no quedó registro;
+- **O-120-5 hace más alta la fila** con la letra a 1.0: tres renglones en vez de dos, unos 56 dp, según Timonel. Suma a O-120-2. Con las tres cargas en cero ocupa lo mismo;
+- **Android no se tocó ni se miró.** Y la corrida `windows/punta-foco`, que no terminó, no está en el informe;
+- **`DESIGN.md`:** además de 18.5 y de lo que decía 1.11 (14.6, 16.2 y 16.3), Timonel puso al día 18.3, que es de T-120 y describe la fila que O-120-5 cambia. Se acepta. 14.9 espera a los monitores;
+- **las horas,** por los archivos: de las 22:16 a las 23:35.
+
+**O-120-6 (nueva, P3) · La tarjeta de una matrícula repetida no lo dice.** Con un plan que trae una matrícula en dos celdas, la Lista enseña dos tarjetas, una por celda, cada una con su naviera y su posición. El título cuenta las celdas («Contenedores (12)»), y el aviso del lector está arriba, en el resumen. Ninguna tarjeta dice que su matrícula está repetida, y las dos llevan la misma clave; la lista es perezosa y se reconstruye bien, y la prueba lo fija. La anotó Timonel, que no lo toma como defecto: la Lista enseña lo que trae el archivo, y el plano marca las dos celdas desde T-147. Va con O-120-1, al bloque 4.
+
+**La ayuda de los segmentos en Windows: decide Carlos.**
+- **Lo que pasa:** la ayuda de cada modo («El puerto de descarga de cada contenedor», «Toca un contenedor o busca su OR para cargarlo») iba en la descripción emergente, y Windows la pegaba al nombre: por eso el nombre se oía dos veces, y por eso mismo se oía la ayuda. La propuesta la pasó a la pista, contando con que Windows la diera como descripción. No la da. Hoy, en Windows, la ayuda queda solo en la descripción emergente, con el mouse.
+- **Opción 1, la que recomienda Yov:** en Windows, la ayuda va una vez detrás del nombre: «Destino. El puerto de descarga de cada contenedor». Lo aprobado en la 10.148 era quitar la repetición, no la ayuda. Son cinco textos, y son lo que le dice a quien usa el lector qué enseña o qué hace cada modo. La 1.0.2, la publicada, sí los dice. Con «Acciones» (10.45) no se perdía nada: su descripción solo repetía el nombre. Es un cambio chico, y va en la corrección de esta entrega.
+- **Opción 2:** se queda como está, igual que «Acciones». Con el lector de Windows, la ayuda no se oye.
+- En las dos, lo medido es el árbol accesible, no un lector de pantalla hablando.
+
+**Los dos monitores siguen pendientes:** Carlos no pudo en esa sesión. `tool/t120_monitores.ps1` está listo. Yov lo leyó: solo abre el banco que se le da; exige que el banco, su almacén y el caso estén en `%TEMP%`, y escribe dentro de `build\t120\e2`. Falta compilar el banco en depuración, que ocupa unos 9 GB, y unos 30 minutos de Carlos, con Timonel en su mismo chat. En esa sesión cabe también el pellizco de verdad, en Windows y en Chrome.
+
+**Lo que sigue:**
+1. Carlos: dos bloques en `sprint-4`, la entrega de Timonel (18 rutas) y esta decisión; y uno en `baystream-qa-r4`, que pasa a la punta de `sprint-4`.
+2. GLM 5.3 Flash, en Max, en un chat nuevo: la aceptación, sobre esa punta (10.137). No espera a O2 ni a los monitores. El prompt está en el documento del proyecto `BayStream_T120_e2_revision_22nov.md`.
+3. Después, una sola corrección de la entrega 2, con Timonel en su mismo chat: lo que encuentre GLM, la ayuda en Windows si Carlos elige la opción 1, y los dos monitores, con Carlos. Mientras GLM acepta, Timonel no toca la carpeta.
+4. La entrega 3 de T-147, si Carlos aprueba el corte de la 10.168, y la versión.
+
+**`DESIGN.md` 17.7 sigue pendiente de Yov** (10.168). El archivo va en la entrega de Timonel, con su huella en el bloque: Yov lo edita cuando ese commit esté hecho.
+
+**Siguen pendientes de Carlos:** la ayuda de los segmentos en Windows; el corte de la próxima versión (10.168); los 30 minutos de los monitores; si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** está al 94 %, con 62 GB libres. `%TEMP%\t120-e2\`, de 13 GB, se queda hasta los monitores. Lo de T-147 que listaba la 10.168, unos 16 GB, ya se puede borrar.
+
+La siguiente decisión es la **10.170**.
