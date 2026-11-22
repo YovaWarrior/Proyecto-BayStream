@@ -138,6 +138,11 @@ herramientas de Flutter y el Honor, así que se reparten así:
 - En Chrome, la ventana que controla la automatización tiene que quedar visible: con la
   pestaña minimizada u oculta, Flutter deja de dibujar, los menús no abren y las capturas
   expiran.
+- En la Web, el banco lleva un *service worker* que guarda el programa en el perfil de Chrome:
+  con otra compilación en el mismo puerto y con el mismo perfil, la primera carga corre la
+  anterior. Una corrida vale si el `main.dart.js` que cargó la página es el de la carpeta que
+  se sirve. `tool/t147_web.py` lo comprueba y se detiene si no lo es; con otro instrumento, cada
+  compilación va con su perfil nuevo, y el informe dice cómo se comprobó (10.164).
 - Durante trabajos largos, informa brevemente el avance y cualquier supuesto
   importante. Evita detenerte por preguntas que puedan resolverse mediante una
   inspección segura del proyecto.

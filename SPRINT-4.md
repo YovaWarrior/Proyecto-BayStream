@@ -5209,4 +5209,48 @@ El prompt está en el documento del proyecto `BayStream_T147_e2b_aceptacion_21no
 
 **El disco de la laptop** está al 93 %, con 67 GB libres. GLM ya terminó: se pueden borrar `%TEMP%\t147-glm2b` (1.1 GB) y `%TEMP%\t147\perfiles` (1.0 GB). Lo de Timonel, cuando la 1.0.3 esté publicada.
 
-La siguiente decisión es la **10.168**.
+### 10.168 · Carlos decide no publicar todavía la 1.0.3: primero se avanza más; la entrega 2 de T-147 entra a `sprint-4` y sigue la entrega 2 de T-120 (21-nov, 19:55)
+
+**Carlos corrió el bloque de la 10.167** (19:44): la decisión y la lista quedaron en `sprint-4` (`8b20d99`). **Y decidió** (19:45): «Antes de publicar quiero que avancemos más, no que estemos publicando cosa por cosa; sigamos con lo que toque ahora».
+
+**Lo que cambia:**
+- **la 1.0.3 no se publica ahora.** `master` sigue en `v1.0.2`, y los tres clientes, en la 1.0.2;
+- **la próxima versión lleva más que la entrega 2 de T-147,** y sale de `sprint-4`, no de `t147-piloto4`. Cambia lo que decía la 10.160, que la entrega 2 salía sola como 1.0.3;
+- **la lista de la 10.167 queda escrita y no se usa como está.** Cuando se corte la versión, Yov la pone al día: la candidata, lo que trae y su prueba corta. Sus bloques y sus guardias sirven igual;
+- **la entrega 2 de T-147 entra ya a `sprint-4`,** con una mezcla de `t147-piloto4`. Así, lo que sigue parte de ella.
+
+**Lo que queda igual mientras lo publicado sea la 1.0.2:**
+- un piloto con un buque de verdad correría con la 1.0.2: las 40 filas canceladas contarían como carga, una escala cerrada no se podría volver a trabajar, y un plan con una matrícula repetida se publicaría;
+- sigue el aviso de la 10.159: no publicar y cerrar una operación con el archivo de verdad, como ensayo;
+- **si sale una escala para el piloto antes de terminar lo que sigue, se publica lo aceptado hasta ese día.** La lista sirve con cambiar la candidata.
+
+**La mezcla de `t147-piloto4` a `sprint-4`:**
+- entran las 50 rutas de la entrega 2 y el informe de GLM de la 2b (`8602770`). `sprint-4` cambió 39 rutas desde la 1.0.2, y ninguna es común (10.167): no tiene dónde chocar;
+- `pubspec.yaml` pasa a `1.0.3+12` en `sprint-4`;
+- **la suite con T-120 y la entrega 2 de T-147 juntos no se ha corrido.** Se esperan 2531 pruebas: las 2393 de `sprint-4` más 77 de la 2a y 61 de la 2b. Es el paso 0 de la entrega 2 de T-120, antes de tocar nada.
+
+**Con la mezcla, Yov pone la regla del *service worker* en `AGENTS.md`** («Implementación y verificación»): una corrida de la Web vale si el `main.dart.js` que cargó la página es el de la carpeta que se sirve (10.164). Va en el commit de esta decisión. **`DESIGN.md` 17.7,** con los textos de E2a-10.1, E2b-10.1 y E2b-18.8 del informe de Timonel, lo pone Yov en la vuelta siguiente: la entrega 2 de T-120 no toca esas pantallas.
+
+**Sigue la entrega 2 de T-120, el plano y la oficina,** que esperaba a T-147 desde el 20-nov (10.154). La programa Timonel en un chat nuevo, en `C:\Proyectos\baystream-rediseno`:
+- **lo aprobado** (10.148 y 10.154): el pellizco (O-119-1 y O-128-4), los segmentos del selector de modo en Windows (O2) y los dos monitores, con unos 30 minutos de Carlos; D9 precisada en `DESIGN.md` 18.5, con la prueba de la lista corta; la prueba de la Lista con una matrícula repetida, y O-120-4, el parpadeo de D9, que nadie ha mirado en pantalla;
+- **O-120-5,** que en el teléfono la fila «Carga especial» enseñe siempre sus tres chips: la decide Carlos al pasar el prompt. Yov la recomienda;
+- O-119-1 sigue con su condición: primero, una prueba que hoy falle. Si no sale roja, Timonel se detiene;
+- la acepta GLM 5.3 Flash, en Max, en un chat nuevo (10.137).
+
+El prompt está en el documento del proyecto `BayStream_T120_e2_arranque_21nov.md`.
+
+**Yov propone el corte de la próxima versión,** y lo decide Carlos:
+- **dentro:** la entrega 2 de T-147, ya aceptada; la entrega 2 de T-120; y una entrega 3 de T-147, corta, con lo que dejó la aceptación: el aviso largo y sus cuatro segundos (O-147-12), Carga que no registre en una operación que el equipo ya sabe cerrada (O-147-13) y los dos detalles de la 10.165. O-147-11, el selector de las operaciones cerradas, si Carlos lo quiere antes de publicar;
+- **fuera, para la siguiente:** RF-035 con T-115, que toca las reglas de Firestore, y los bloques 3 y 4.
+
+**Lo que sigue:**
+1. Carlos: dos bloques, en `sprint-4`. Esta decisión con `AGENTS.md`, y la mezcla de `t147-piloto4`. Después, el prompt a Timonel, con su respuesta a O-120-5.
+2. Timonel: el paso 0, con la suite de las dos tareas juntas, y la entrega 2 de T-120. Mientras tanto, ningún otro agente corre Flutter.
+3. Yov: `DESIGN.md` 17.7; después, la revisión de la entrega contra la carpeta y el prompt de la aceptación.
+4. La entrega 3 de T-147, si Carlos aprueba el corte, y la versión.
+
+**Siguen pendientes de Carlos:** si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** está al 93 %, con 67 GB libres. Ya se pueden borrar `%TEMP%\t147-glm2b` (1.1 GB) y `%TEMP%\t147\perfiles` (1.0 GB), de GLM, y lo de Timonel de la entrega 2: `t147-e2` (2.9 GB), `t147-e2b` (1.0 GB), `t147-e2a` y `t147\copias` (0.4 GB cada una), y `build\windows` de `baystream-t147` (9.6 GB).
+
+La siguiente decisión es la **10.169**.
