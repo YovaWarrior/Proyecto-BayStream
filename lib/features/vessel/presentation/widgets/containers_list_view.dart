@@ -79,16 +79,25 @@ class ContainersSliverList extends StatelessWidget {
       itemCount: containers.length,
       findChildIndexCallback: (Key clave) {
         if (clave is! ValueKey<String>) return null;
-        final i = containers.indexWhere(
-            (ContainerUnit c) => 'tarjeta-${c.containerId}' == clave.value);
+        final i = containers
+            .indexWhere((ContainerUnit c) => claveDe(c) == clave.value);
         return i < 0 ? null : i;
       },
       itemBuilder: (BuildContext context, int index) => _ContainerCard(
-        key: ValueKey<String>('tarjeta-${containers[index].containerId}'),
+        key: ValueKey<String>(claveDe(containers[index])),
         container: containers[index],
       ),
     );
   }
+
+  /// T-120, corrección 1 de la entrega 2 (T120-E2-01) · La clave de la
+  /// tarjeta: la matrícula y su celda («tarjeta-TSTU0000003-0020382»). Con
+  /// una matrícula en más de una celda, dos tarjetas compartían la clave de
+  /// la matrícula, y al rearmarse la lista con las dos a la vista el
+  /// framework se encontraba dos hijos con la misma clave. Sin celda, el
+  /// identificador del contenedor.
+  static String claveDe(ContainerUnit c) =>
+      'tarjeta-${c.containerId}-${c.stowagePosition?.toIsoCode() ?? c.id}';
 }
 
 /// Tarjeta individual para mostrar un contenedor

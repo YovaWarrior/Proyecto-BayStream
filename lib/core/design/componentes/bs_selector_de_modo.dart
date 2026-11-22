@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../bs_medidas.dart';
@@ -56,6 +57,13 @@ class BsEntradaDeModo<T> {
   /// cuenta entera, una vez («Descarga, 28 por bajar en GTSTC»; T-120, O2).
   String get nombreEntero =>
       <String>[rotulo, if (cuenta != null) cuenta!].join(', ');
+
+  /// El nombre en Windows, donde el motor no expone la pista: el entero y,
+  /// detrás, la ayuda, una vez («Destino. El puerto de descarga de cada
+  /// contenedor»; T-120, corrección 1 de la entrega 2, la opción 1 de la
+  /// 10.169).
+  String get nombreConAyuda =>
+      ayuda == null ? nombreEntero : '$nombreEntero. ${ayuda!}';
 
   /// Lo que dice la descripción emergente: el nombre, la cuenta y la ayuda.
   String get descripcion => <String>[
@@ -142,6 +150,10 @@ class _Segmentos<T> extends StatelessWidget {
     final esquema = Theme.of(context).colorScheme;
     final elegido = selector.elegido;
     final valores = selector.entradas.map((e) => e.valor).toSet();
+    // En Windows (la app, no la Web) el motor no expone la pista: la ayuda
+    // va en el nombre, detrás, una vez.
+    final ayudaEnElNombre =
+        !kIsWeb && Theme.of(context).platform == TargetPlatform.windows;
     return Semantics(
       label: selector.nombre,
       container: true,
@@ -155,8 +167,8 @@ class _Segmentos<T> extends StatelessWidget {
             // semántica; el nombre es el entero con su cuenta entera, una
             // vez, como «Acciones» (10.45), y la ayuda va como pista. En
             // Windows el motor no expone la pista (ni UIA ni MSAA, medido
-            // en la entrega 2): ahí la ayuda queda en la descripción
-            // emergente.
+            // en la entrega 2): ahí la ayuda va en el nombre, detrás, una
+            // vez (corrección 1 de la entrega 2).
             ButtonSegment<T>(
               value: entrada.valor,
               icon: entrada.icono == null
@@ -170,8 +182,10 @@ class _Segmentos<T> extends StatelessWidget {
                 message: entrada.descripcion,
                 excludeFromSemantics: true,
                 child: Semantics(
-                  label: entrada.nombreEntero,
-                  hint: entrada.ayuda,
+                  label: ayudaEnElNombre
+                      ? entrada.nombreConAyuda
+                      : entrada.nombreEntero,
+                  hint: ayudaEnElNombre ? null : entrada.ayuda,
                   excludeSemantics: true,
                   child: Text.rich(
                     TextSpan(children: <InlineSpan>[

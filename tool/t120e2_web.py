@@ -6,6 +6,12 @@ del foco de Playwright, minimiza la ventana de Chrome dos segundos y medio y
 la restaura: la pestaña del banco pierde el foco y lo recupera (O-128-4). Con --grabar (O-120-4), guarda cada cuadro que pinta
 Chrome (`Page.startScreencast`, sin saltar ninguno) en `pantalla/`, con su
 hora en `pantalla.jsonl`, para mirar lo que salió en la pantalla.
+Con --selector (corrección 1, D2 y D3), cuando el conductor anota
+«selector-listo»: pasa el mouse, de a uno, por el icono, el rótulo y el borde
+de cada segmento del selector y guarda una captura de cada uno
+(`raton/NN-<que>.png`, con `raton.json`); después enciende la semántica de
+Flutter y guarda el árbol de accesibilidad de Chrome (`arbol-chrome.json`, de
+`Accessibility.getFullAXTree`).
 
     python -X utf8 tool/t120e2_web.py --web <compilación Web>
         --caso %TEMP%\\t120-e2\\caso --salida build/t120/e2/web/<corrida>
@@ -136,6 +142,7 @@ def principal():
     p.add_argument('--perfil', required=True, help='nombre del perfil de Chrome en %%TEMP%%\\t120-e2\\perfiles')
     p.add_argument('--foco', action='store_true')
     p.add_argument('--grabar', action='store_true')
+    p.add_argument('--selector', action='store_true')
     p.add_argument('--puerto', type=int, default=5948)
     p.add_argument('--ancho', type=int, default=360)
     p.add_argument('--alto', type=int, default=800)
@@ -242,6 +249,7 @@ def principal():
             limite = time.time() + a.tope
             vistas, ultima = 0, None
             foco_hecho = False
+            selector_hecho = False
             while time.time() < limite and final is None:
                 # No `time.sleep`: Playwright solo atiende sus eventos (el
                 # filtro de la red entre ellos) dentro de una llamada suya.
@@ -260,6 +268,35 @@ def principal():
                         paso = json.loads(linea)
                         if paso['paso'] in ('fin', 'error'):
                             final = paso
+                        if a.selector and paso['paso'] == 'selector-listo' and not selector_hecho:
+                            selector_hecho = True
+                            raton = salida / 'raton'
+                            raton.mkdir(exist_ok=True)
+                            hechos = []
+                            segmentos = [x for x in paso['segmentos'] if x['que'] == 'segmento']
+                            puntos = [(x['que'], x.get('mensaje'), x['rect'][0] + x['rect'][2] / 2,
+                                       x['rect'][1] + x['rect'][3] / 2)
+                                      for x in paso['segmentos'] if x['que'] != 'segmento']
+                            # El borde: dentro del segmento, a 4 dp de su borde izquierdo.
+                            puntos += [('borde', None, x['rect'][0] + 4, x['rect'][1] + x['rect'][3] / 2)
+                                       for x in segmentos]
+                            for n, (que, mensaje, x, y) in enumerate(puntos, 1):
+                                page.mouse.move(5, 5)
+                                page.wait_for_timeout(700)
+                                page.mouse.move(x, y)
+                                page.wait_for_timeout(1500)
+                                nombre = f'{n:02d}-{que}.png'
+                                (raton / nombre).write_bytes(page.screenshot())
+                                hechos.append({'n': n, 'que': que, 'mensaje_del_tooltip': mensaje,
+                                               'punto': [round(x, 1), round(y, 1)], 'captura': nombre})
+                            page.mouse.move(5, 5)
+                            (salida / 'raton.json').write_text(json.dumps(
+                                hechos, ensure_ascii=False, indent=2), encoding='utf-8')
+                            page.evaluate("document.querySelector('flt-semantics-placeholder')?.click()")
+                            page.wait_for_timeout(2500)
+                            arbol = cdp.send('Accessibility.getFullAXTree')
+                            (salida / 'arbol-chrome.json').write_text(json.dumps(
+                                arbol, ensure_ascii=False), encoding='utf-8')
                         if a.foco and paso['paso'] == 'esperando-foco' and not foco_hecho:
                             foco_hecho = True
                             # Playwright emula el foco (la página siempre se

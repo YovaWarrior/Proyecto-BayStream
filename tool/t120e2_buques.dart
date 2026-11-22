@@ -9,6 +9,8 @@
 //   su barra, y cada una lleva a una Lista de dos tarjetas (D9, 18.5).
 // - T120_REPETIDA.edi: doce contenedores; el 3.º y el 5.º con la misma
 //   matrícula, en celdas distintas (10.160 y 10.164).
+// - T120_REPETIDA_TRES.edi (corrección 1, T120-E2-01): trece; el 3.º, el 4.º
+//   y el 7.º con la misma matrícula.
 //
 //   dart tool/t120e2_buques.dart "$env:TEMP\t120-e2\caso"
 import 'dart:io';
@@ -28,6 +30,12 @@ String t120e2ListaCorta() => t120Baplie(200, puertos: t120e2PuertosCortos);
 
 String t120e2Repetida() => t120Baplie(12)
     .replaceFirst('EQD+CN+${t120Numero(5)}', 'EQD+CN+${t120Numero(3)}');
+
+/// Corrección 1 (T120-E2-01): el caso de GLM, la matrícula en tres celdas
+/// (el 3.º, el 4.º y el 7.º); el 3.º y el 4.º son de LNB.
+String t120e2RepetidaTres() => t120Baplie(13)
+    .replaceFirst('EQD+CN+${t120Numero(4)}', 'EQD+CN+${t120Numero(3)}')
+    .replaceFirst('EQD+CN+${t120Numero(7)}', 'EQD+CN+${t120Numero(3)}');
 
 void main(List<String> args) {
   if (args.isEmpty) {
@@ -66,6 +74,12 @@ void main(List<String> args) {
     final ids = v.containers.map((c) => c.containerId).toSet();
     if (v.containers.length != 12 || ids.length != 11) {
       throw StateError('Repetida: ${v.containers.length} y ${ids.length}');
+    }
+  });
+  escribir('T120_REPETIDA_TRES.edi', t120e2RepetidaTres(), (v) {
+    final ids = v.containers.map((c) => c.containerId).toSet();
+    if (v.containers.length != 13 || ids.length != 11) {
+      throw StateError('Repetida en tres: ${v.containers.length} y ${ids.length}');
     }
   });
   stdout.writeln('Carga de prueba sintética, no un viaje.');

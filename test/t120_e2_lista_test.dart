@@ -1,8 +1,10 @@
 // T-120, entrega 2 · Lo que dejó la aceptación de la entrega 1 (SPRINT-4.md
 // 10.152 y 10.154): la Lista corta desde Estadísticas (D9 precisada en
 // `DESIGN.md` 18.5), el cuadro con la Lista arriba antes del salto
-// (O-120-4), la Lista con una matrícula repetida y, en el teléfono, la fila
-// «Carga especial» con sus tres chips siempre (O-120-5).
+// (O-120-4), la Lista con una matrícula repetida (desde la corrección 1,
+// cada tarjeta con su clave, la de su celda; T120-E2-01 tiene su archivo,
+// `t120_e2c1_claves_test.dart`) y, en el teléfono, la fila «Carga especial»
+// con sus tres chips siempre (O-120-5).
 //
 // Buque sintético (BUQUE LISTA, TSTU) con las fuentes del producto; sin nube
 // ni almacén real.
@@ -131,7 +133,8 @@ void main() {
             find.textContaining('Matrículas repetidas en EQD: 1 contenedor'),
             findsOneWidget);
 
-        // Las tarjetas, bajando por toda la Lista.
+        // Las tarjetas, bajando por toda la Lista, con su clave.
+        final claves = <String, String>{};
         Future<List<(String, String)>> recorrer() async {
           final posicion = _posicion(tester);
           final vistas = <String, (String, String)>{};
@@ -153,6 +156,8 @@ void main() {
                   textos[textos.indexOf('Posición') + 1];
               vistas['$matricula $posicionDeLaCelda'] =
                   (matricula, posicionDeLaCelda);
+              claves['$matricula $posicionDeLaCelda'] =
+                  (el.widget.key! as ValueKey<String>).value;
             }
             if (y >= posicion.maxScrollExtent) break;
             y = (y + 150).clamp(0, posicion.maxScrollExtent).toDouble();
@@ -169,10 +174,17 @@ void main() {
         expect(repetidas,
             {'Bahía 002, Fila 03, Nivel 82', 'Bahía 002, Fila 05, Nivel 82'},
             reason: 'una tarjeta por celda, con su posición');
+        // T120-E2-01 (corrección 1): cada tarjeta, su clave, con su celda.
+        expect(claves.values.toSet(), hasLength(12),
+            reason: 'doce tarjetas, doce claves: $claves');
+        expect(claves['${t120Numero(3)} Bahía 002, Fila 03, Nivel 82'],
+            'tarjeta-${t120Numero(3)}-0020382');
+        expect(claves['${t120Numero(3)} Bahía 002, Fila 05, Nivel 82'],
+            'tarjeta-${t120Numero(3)}-0020582');
         expect(tester.takeException(), isNull);
 
         // Un filtro que deja una sola de las dos, y soltarlo: la lista se
-        // reconstruye con las claves repetidas sin perder ninguna.
+        // reconstruye sin perder ninguna.
         final una = viaje.containers
             .firstWhere((c) => c.containerId == t120Numero(3));
         scope.read(selectedCarrierProvider.notifier).select(una.operatorCode);
@@ -186,6 +198,7 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+
   });
 
   group('O-120-5 · en el teléfono, «Carga especial» enseña sus tres chips',

@@ -24,6 +24,13 @@
 // - `mano`: mide los pellizcos de verdad (el touchpad de Carlos) durante
 //   `tope` segundos: por cada gesto, el peor desvío del punto bajo el
 //   puntero, cuadro por cuadro.
+// - `parpadeo` (corrección 1, D4): toca la barra de PAMIT `toques` veces,
+//   sin capturar por dentro, para medir O-120-4 en la grabación de la
+//   ventana sin que el instrumento alargue los cuadros.
+// - `selector` (corrección 1, D2 y D3): abre el Plano, anota el rectángulo
+//   de cada segmento del selector (el icono, el rótulo y el segmento entero,
+//   en píxeles lógicos de la ventana) y espera `tope` segundos: el arnés pasa
+//   el mouse y lee el árbol de accesibilidad del navegador.
 // - `monitores`: abre el Plano con zoom y desplazado y se queda quieto;
 //   anota cada cambio de tamaño o de densidad de la ventana y cada error de
 //   Flutter (para los dos monitores, con tool/t120_monitores.ps1).
@@ -132,6 +139,10 @@ class T120e2Conductor {
           await _foco();
         case 'mano':
           await _mano();
+        case 'parpadeo':
+          await _parpadeoSinCaptura();
+        case 'selector':
+          await _selector();
         case 'monitores':
           await _monitores();
           return; // se queda abierto: lo cierra el script
@@ -263,7 +274,8 @@ class T120e2Conductor {
         final halladas = _todos((e) {
           final k = e.widget.key;
           return k is ValueKey<String> &&
-              k.value == 'tarjeta-TSTU0000003' &&
+              // Corrección 1 (T120-E2-01): la clave lleva la celda.
+              k.value.startsWith('tarjeta-TSTU0000003-') &&
               _visible(e);
         });
         if (halladas.length > vez) tarjeta = halladas[vez];
@@ -278,6 +290,32 @@ class T120e2Conductor {
           {'textos_de_la_tarjeta': textos});
     }
     await _registrar('repetida', {'tarjetas': tarjetas});
+    if (_p('archivo').contains('TRES')) await _filtroYSoltar(sufijo);
+  }
+
+  /// Corrección 1 (T120-E2-01): el filtro de LNB deja dos tarjetas de la
+  /// matrícula a la vista; al soltarlo, la Lista se rearma. Anota las claves
+  /// en orden y los errores de Flutter.
+  Future<void> _filtroYSoltar(String sufijo) async {
+    List<String> claves() {
+      final todas = _todos((e) {
+        final k = e.widget.key;
+        return k is ValueKey<String> && k.value.startsWith('tarjeta-');
+      })
+        ..sort((a, b) => _rect(a).top.compareTo(_rect(b).top));
+      return [for (final e in todas) (e.widget.key! as ValueKey<String>).value];
+    }
+
+    final lista = _scrollDeLaLista();
+    lista.jumpTo(0);
+    _riverpod().read(selectedCarrierProvider.notifier).select('LNB');
+    await _asentar();
+    await _alaVista('titulo-de-la-lista');
+    await _capturar(sufijo, 'repetida_4_filtro_LNB', {'claves': claves()});
+    _riverpod().read(selectedCarrierProvider.notifier).clear();
+    await _asentar();
+    await _alaVista('titulo-de-la-lista');
+    await _capturar(sufijo, 'repetida_5_filtro_soltado', {'claves': claves()});
   }
 
   Map<String, Object?> _dondeQuedaLaLista() {
@@ -618,6 +656,66 @@ class T120e2Conductor {
       }
     }
     await _registrar('mano', {'gestos': gestos});
+  }
+
+  // --- parpadeo y selector (corrección 1 de la entrega 2) ----------------
+
+  /// D4: el toque de la barra, sin capturar por dentro. Anota la hora de
+  /// cada toque, para buscarlo en la grabación de la ventana.
+  Future<void> _parpadeoSinCaptura() async {
+    final toques = int.parse(_p('toques', '6'));
+    for (var i = 1; i <= toques; i++) {
+      _sinFiltros();
+      await _ir(DestinoDelViaje.estadisticas);
+      await _alaVista('estadisticas-puertos');
+      await Scrollable.ensureVisible(_barraDe('PAMIT'),
+          alignment: 0.5, duration: Duration.zero);
+      await _asentar();
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+      await _registrar('toque', {'n': i});
+      await _tocar(_barraDe('PAMIT'));
+      await Future<void>.delayed(const Duration(milliseconds: 1500));
+      await _registrar('tras-el-toque', {'n': i, ..._dondeQuedaLaLista()});
+    }
+  }
+
+  /// D2 y D3: los rectángulos de los segmentos del selector, en la ventana.
+  Future<void> _selector() async {
+    await _ir(DestinoDelViaje.plano);
+    await _asentar();
+    final segmentos = <Map<String, Object?>>[];
+    for (final boton in _todos((e) => e.widget is SegmentedButton)) {
+      final caja = boton.renderObject;
+      if (caja is! RenderBox || !caja.hasSize) continue;
+      void visitar(Element e) {
+        final w = e.widget;
+        if (w is Tooltip && e.renderObject is RenderBox) {
+          final r = e.renderObject! as RenderBox;
+          final global = r.localToGlobal(Offset.zero) & r.size;
+          segmentos.add({
+            'mensaje': w.message,
+            'que': w.child is Icon ? 'icono' : 'rotulo',
+            'rect': [global.left, global.top, global.width, global.height],
+          });
+        }
+        if (w.runtimeType.toString().startsWith('_SegmentButton') ||
+            w is TextButton) {
+          final r = e.renderObject;
+          if (r is RenderBox && r.hasSize) {
+            final global = r.localToGlobal(Offset.zero) & r.size;
+            segmentos.add({
+              'que': 'segmento',
+              'rect': [global.left, global.top, global.width, global.height],
+            });
+          }
+        }
+        e.visitChildren(visitar);
+      }
+
+      boton.visitChildren(visitar);
+    }
+    await _registrar('selector-listo', {'segmentos': segmentos});
+    await Future<void>.delayed(Duration(seconds: int.parse(_p('tope', '90'))));
   }
 
   // --- monitores --------------------------------------------------------

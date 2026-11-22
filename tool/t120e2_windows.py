@@ -84,8 +84,9 @@ def principal():
     if caso == RAIZ or RAIZ in caso.parents:
         sys.exit('El caso se lee de fuera del repositorio.')
     salida = Path(a.salida).resolve()
-    if RAIZ / 'build' / 't120' / 'e2' not in [salida, *salida.parents]:
-        sys.exit('--salida tiene que estar dentro de build/t120/e2.')
+    # La entrega 2 y su corrección 1 (build/t120/e2c1).
+    if not any(RAIZ / 'build' / 't120' / c in [salida, *salida.parents] for c in ('e2', 'e2c1')):
+        sys.exit('--salida tiene que estar dentro de build/t120/e2 o de build/t120/e2c1.')
     pasos = salida / 'pasos.jsonl'
     if pasos.exists():
         sys.exit(f'{pasos} ya existe: cada corrida va en su carpeta.')

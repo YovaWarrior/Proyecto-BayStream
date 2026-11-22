@@ -1732,3 +1732,273 @@ git push origin sprint-4
 > pendientes, con el script listo.
 
 **ALTO: Yov revisa y GLM acepta.**
+
+---
+
+## Corrección 1 de la entrega 2 (22-nov; 10.170)
+
+### C2.1 Resultado en tres líneas
+
+- **T120-E2-01:** la clave de cada tarjeta de la Lista lleva ahora su celda; con la matrícula en
+  dos o en tres celdas, el filtro y su vuelta ya no rompen la Lista (rojo antes, en las dos).
+- **O2 en Windows:** el nombre de cada segmento lleva la ayuda una vez detrás; en la Web se queda
+  como pista, porque el lector de Chrome sí la recibe como descripción. Además, un hallazgo de D1
+  corregido con la pista de Yov: un dedo vuelve a desplazar la rejilla tras dos contactos que
+  nunca se levantaron.
+- **Suite 2563 de 2563** (2558 + 5), sin omitidas, y `analyze` en cero, aquí y en una copia
+  limpia; 8 de 32 pruebas rojas contra `1a7b03b`. **Los dos monitores y el pellizco de verdad
+  siguen pendientes** (Carlos no pudo hoy).
+
+### C2.2 Paso 0
+
+- La punta: `1a7b03b` (10.170), debajo `b1d7dae` (la aceptación) y `fcc8302`. Es la esperada.
+- La suite no se repitió al empezar (el piso es 2558, de GLM).
+- **El disco**, antes de cada compilación: 45 GB libres (las dos de las 14:18 y las dos de las
+  14:2x); 44 GB al terminar. No se extrajo otra vez el SDK de Firebase: se usó el banco de
+  `%TEMP%\t120-e2\banco`, con `lib/` y `tool/` puestos al día y cotejados con `diff`.
+- **Semáforo:** Carlos dio la luz verde de la ventana de desarrollo y de la de los bancos.
+
+### C2.3 Cada punto
+
+#### A · T120-E2-01: una clave por tarjeta, con su celda
+
+- **La prueba, antes de cambiar nada** (`test/t120_e2c1_claves_test.dart`, dos casos): la
+  matrícula en **tres** celdas (el caso de GLM: el 3.º, el 4.º y el 7.º) y en **dos** (el 3.º y el
+  4.º, los dos de LNB, que es lo que traería un plan de verdad). El filtro de LNB deja dos
+  tarjetas de la matrícula a la vista; al soltarlo, la Lista se rearma sin errores del framework,
+  las 13 en el orden de antes, una clave por tarjeta, con la celda.
+- **Contra `1a7b03b` fallan los dos** (`build/t120/e2c1/rojas/e201-contra-1a7b03b.txt`): con tres
+  celdas, el error de GLM, `'child == null || indexOf(child) > index'`, y detrás «RenderSliverPadding
+  expected a child of type RenderSliver but received … RenderErrorBox», un `type cast` y
+  `'_dependents.isEmpty'`. **Con dos celdas falla igual:** no hace falta una matrícula en tres.
+- **La prueba de la repetida de la entrega 2 se pone al día:** fijaba la reconstrucción con las
+  dos tarjetas en la misma clave; ahora fija las doce claves distintas, y las de la repetida,
+  `tarjeta-TSTU0000003-0020382` y `-0020582`. Contra `1a7b03b` falla (11 claves para 12 tarjetas).
+- **El cambio** (`containers_list_view.dart`): `ContainersSliverList.claveDe`, «tarjeta-<matrícula>-
+  <celda>» (`IsoCoordinate.toIsoCode()`; sin celda, el `id` del contenedor), en la clave y en
+  `findChildIndexCallback`. Lo que se ve no cambia.
+- **Quién más usaba la clave:** mi conductor (`t120e2_conductor.dart`, buscaba
+  `tarjeta-TSTU0000003` exacta: ahora, por prefijo con la celda) y dos usos por el prefijo
+  `tarjeta-`, que siguen valiendo (`t120e2_conductor.dart` y `t120_conductor.dart`). Ninguna prueba
+  ni soporte del repositorio la usaba. La sonda de GLM, fuera del repositorio, busca
+  `tarjeta-TSTU0000001` exacta: con esta corrección ya no la encuentra.
+- **Una cosa de la prueba:** la puse primero en `t120_e2_lista_test.dart` y, contra el código de
+  antes, el árbol roto dejaba un `Tooltip` con su ruta de puntero registrada que hacía fallar a las
+  pruebas de O-120-4 que venían después en el mismo aislado (solas pasan: 3 de 3). Por eso
+  T120-E2-01 va en su propio archivo.
+- **En pantalla** (`T120_REPETIDA_TRES.edi`, escrito por `t120e2_buques.dart` en
+  `%TEMP%\t120-e2\caso-c1`; Windows y la Web, de día y de noche, a 1366 y a 360): con el filtro de
+  LNB, «Contenedores (4), naviera LNB», con las dos tarjetas de TSTU0000003 seguidas, en Fila 03 y
+  Fila 04; al soltarlo, «Contenedores (13)» en su orden. Las claves en el orden en que se ven,
+  `TSTU0000003-0020382`, `-0020482` … `-0020782`, y **ningún error de Flutter** en las 16
+  capturas. Abrí 1366 de día con el filtro (Windows) y 360 de noche soltado (Web).
+
+#### B · La ayuda de los segmentos en Windows (la opción 1 de la 10.169, aprobada por Carlos)
+
+- **El cambio** (`bs_selector_de_modo.dart`): en Windows (la app: `!kIsWeb` y la plataforma del
+  tema), el nombre es `BsEntradaDeModo.nombreConAyuda` —el entero, su cuenta y, detrás, la ayuda,
+  una vez— y no hay pista. En las demás plataformas, como lo dejé: el nombre entero y la ayuda
+  como pista.
+- **Las pruebas** (`t120_selector_nombre_test.dart`): las dos de los temas y la de la cabecera
+  de la oficina corren ahora en Android y en Windows (3 casos más). **Contra `1a7b03b` fallan las
+  tres de Windows**; las de Android pasan.
+- **El árbol de Windows, antes y después** (`build/t120/e2c1/o2/`, el instrumento de T-117, con el
+  banco en el Plano a 1539 dp): contra el de la entrega 2 **cambian 10 renglones, y nada más**: los
+  cinco segmentos, en UIA y en MSAA (`diferencia-con-la-entrega-2.txt`). Ahora: «botón Contenido.
+  El destino de cada contenedor», «botón Número de orden, Sin listado de la agencia. Los OR del
+  listado de la agencia», «botón Carga, 977 pendientes: 977 llenos, 0 vacíos. Toca un contenedor
+  o busca su OR para cargarlo», «botón Destino. El puerto de descarga de cada contenedor» y «botón
+  Tipo de vacío. El tipo ISO de los vacíos; los llenos en papel». 224 nodos de UIA y 240 de MSAA,
+  como antes.
+- **La Web (D2), antes de decidir:** el lector **sí** recibe la ayuda (abajo), así que ahí se
+  queda como pista.
+- `DESIGN.md` 14.6, al día.
+
+#### C · Los dos monitores y el pellizco de verdad: pendientes
+
+Carlos no pudo en esta sesión. **No los doy por vistos.** Sigue listo lo de E2.10, puntos 3 y 5;
+el banco de depuración no lo compilé. `tool/t120_monitores.ps1` acepta la salida en
+`build\t120\e2c1`.
+
+#### D · Lo que dejaron las dos revisiones
+
+**D1 · «Un dedo vuelve a desplazar la rejilla»: era un hallazgo, y se corrigió aquí.**
+- **La prueba arrastra de verdad:** después de perder el foco con dos contactos puestos, un dedo
+  nuevo arrastra la rejilla en seis pasos de 15 dp. **En el producto no se movía: 0.0 dp.**
+- **No era del instrumento**, con una sonda de controles (`build/t120/e2c1/d1-sonda-dedo.txt`):
+  un dedo sin nada antes, 60 dp; con los dos contactos **cancelados** (lo que suele mandar el
+  sistema), 60 dp; con dos contactos sin levantar y pérdida de foco, 0.0 en la rejilla (y la
+  columna, 90, sin el umbral del gesto); con un solo contacto viejo, la rejilla 60 y la columna
+  0.0. Las arenas de gestos de los contactos viejos seguían abiertas.
+- **Lo dije antes de corregirlo; Carlos pidió corregirlo aquí,** con tope de 30 minutos y la pista
+  de Yov, para comprobar: de las 14:05 a las 14:07.
+- **El cambio** (`plan_drag_confirmation.dart`, `_soltarTodo`): los contactos que siguen puestos
+  al perder el foco se cancelan también en Flutter (`GestureBinding.instance.cancelPointer`, como
+  el `Navigator`). Solo corre al perder el foco con contactos puestos; el pellizco normal no pasa
+  por ahí.
+- **Después:** los ocho casos de la sonda, 60 dp en la rejilla y en la columna
+  (`d1-sonda-dedo-despues.txt`), y la prueba pasa (60.0 dp). Contra `1a7b03b` falla.
+- **Lo que cambia, y lo digo:**
+  - **un solo contacto viejo:** antes la columna no se movía después (0.0); ahora, sí;
+  - **un arrastre de una celda a medias:** antes, si la ventana perdía el foco a medio arrastre, el
+    arrastre seguía y al soltar salía la confirmación del movimiento; **ahora se cancela**: al
+    soltar no sale nada y no se registra nada. Es lo mismo que si el sistema cancelara el
+    contacto. Lo miré con una sonda sobre el arnés de T-105, aquí y en la copia de la entrega 2.
+- **Siguen en verde** las de T-119, las del pellizco (O-119-1 y O-128-4) y las de arrastre
+  (T-105, T-106, T-122 y T-123): 59 de 59 (`d1-pruebas-vecinas.txt`).
+
+**D2 · Lo que recibe el lector en la Web** (`web/selector/arbol-chrome.json`, el árbol de
+accesibilidad de Chrome con la semántica de Flutter encendida, a 1920 × 1000):
+
+| Segmento | Rol | Nombre | Descripción |
+|---|---|---|---|
+| Contenido | `radio` | Contenido | El destino de cada contenedor |
+| Número de orden | `radio` | Número de orden, Sin listado de la agencia | Los OR del listado de la agencia |
+| Carga | `radio` | Carga, 977 pendientes: 977 llenos, 0 vacíos | Toca un contenedor o busca su OR para cargarlo |
+| Destino («Colorear por») | `radio` | Destino | El puerto de descarga de cada contenedor |
+| Tipo de vacío | `radio` | Tipo de vacío | El tipo ISO de los vacíos; los llenos en papel |
+
+El nombre, una vez, y la ayuda como descripción: en la Web la pista llega. Es el árbol, no un
+lector hablando.
+
+**D3 · La descripción emergente con el mouse** (la Web, 1920 × 1000; `web/selector/raton/` y la
+hoja `hoja-raton.png`, que miré):
+- **sobre el icono:** sale («Contenido. El destino de cada contenedor»; «Carga. 977 pendientes:
+  977 llenos, 0 vacíos. Toca un contenedor o busca su OR para cargarlo»);
+- **sobre el rótulo:** sale la misma; en «Colorear por», «Destino. El puerto de descarga de cada
+  contenedor»;
+- **sobre el borde del segmento** (a 4 dp de su borde izquierdo): **no sale**; el segmento se
+  resalta. No lo cambié.
+
+**D4 · O-120-4 sin la captura por dentro** (escenario `parpadeo`, seis toques de la barra de
+PAMIT, la ventana grabada con `gdigrab`; `windows/parpadeo/video/columna-vacia.json`):
+- la grabación no es un 60 limpio: pierde cuadros (unos 45 por segundo efectivos). Cada cuadro
+  extraído lleva su marca a 60 por segundo;
+- **en los tres toques sin huecos, la columna vacía dura dos cuadros (≈ 33 ms)**; en los otros
+  tres, uno o dos cuadros grabados con huecos al lado (entre 33 y 50 ms). No es uno solo, como
+  esperaba el código: el cuadro siguiente, el del salto, construye las tarjetas y tarda más;
+- lo vi en la hoja del toque 1 (`hoja-toque1-cuadros-46-51.png`): 46 y 47 Estadísticas, **48 y 49
+  la columna vacía** con la cabecera, el riel y el panel, y desde el 50 el título y las tarjetas.
+
+### C2.4 Las pruebas nuevas y las rojas
+
+| Archivo | Qué | Contra `1a7b03b` |
+|---|---|---|
+| `test/t120_e2c1_claves_test.dart` (nuevo) | T120-E2-01, con dos y con tres celdas (2) | **fallan 2 de 2** |
+| `test/t120_selector_nombre_test.dart` | los tres casos de Windows (3 nuevos) | **fallan 3**; pasan las 4 de antes |
+| `test/t120_e2_lista_test.dart` | la repetida fija una clave por tarjeta (cambia) | **fallan las 2** |
+| `test/t120_pellizco_test.dart` | los dos contactos arrastran de verdad (cambia) | **falla 1** |
+
+- **8 de 32 rojas** en los cuatro archivos, cada una en su comprobación y ninguna de compilación
+  (`rojas/correccion1-contra-1a7b03b.txt`, en una copia con el `lib/` de `1a7b03b`).
+- La suite sube en 5: 2558 → 2563.
+
+### C2.5 Validaciones
+
+| Qué | Resultado | Registro (`build/t120/e2c1/`) |
+|---|---|---|
+| La suite en la carpeta, después del último cambio (hasta las 14:31:09) | **2563 de 2563**, sin omitidas | `suite-carpeta.txt` |
+| `flutter analyze --no-pub` en la carpeta | **«No issues found!»** | `analyze-carpeta.txt` |
+| La copia limpia: `git archive 1a7b03b` + las 13 rutas, iguales por su huella, + la entrada de T-124; `pub get --offline --enforce-lockfile`, el lock igual | `analyze` **«No issues found!»**; suite **2563 de 2563** | `copia-limpia-*.txt`, `copia-limpia-manifiesto.json` |
+| La Web: el programa que cargó la página | En las dos corridas, `1dd1344c…`, el de la carpeta que se sirve; cada una con su perfil nuevo | `web/*/navegador.json` |
+| `// ignore:` | Ninguno | |
+| `pubspec.*`, `lib/main.dart`, los congelados, los archivos de T-147, `DESIGN.md` 17.7 | **No cambian** | `git diff --stat` |
+
+### C2.6 Lo que no se pudo y lo que queda anotado
+
+- **Los dos monitores y el pellizco de verdad:** pendientes (C). Los 1.9 dp de Chrome siguen sin
+  verse ni descartarse.
+- **D1 cambia el arrastre de una celda a medias:** se cancela si la ventana pierde el foco (arriba).
+- **La descripción emergente no sale en el borde del segmento** (D3).
+- **El vacío de O-120-4 dura dos cuadros, no uno** (D4).
+- **Las sondas temporales** (`t120_sonda_dedo_test.dart` y `t120_sonda_arrastre_test.dart`) se
+  borraron; sus salidas quedan en `build/t120/e2c1/`.
+
+### C2.7 Archivos
+
+**Cambian (12):** `DESIGN.md` (14.6 y 18.4), `lib/core/design/componentes/bs_selector_de_modo.dart`,
+`lib/features/vessel/presentation/widgets/containers_list_view.dart`,
+`lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart`,
+`test/t120_e2_lista_test.dart`, `test/t120_pellizco_test.dart`, `test/t120_selector_nombre_test.dart`,
+`tool/t120e2_buques.dart`, `tool/t120e2_conductor.dart`, `tool/t120e2_servidor.py`,
+`tool/t120e2_web.py` y `tool/t120e2_windows.py`.
+
+**Nuevo (1):** `test/t120_e2c1_claves_test.dart`. Y este informe. **`pubspec.*` no cambia.**
+`DESIGN.md` 14.9 espera a los monitores; 17.7 no se tocó.
+
+**Fuera de Git:** `build/t120/e2c1/` (118 MB). En `%TEMP%\t120-e2\`, **13 GB en total** (los
+enlaces del SDK de Firebase cuentan una vez): `banco\` (10 GB, el banco de Windows y su SDK; se
+queda para los monitores), `limpia\` (11 GB contando el SDK enlazado: la copia de `261ee4b` con su
+banco de la punta), `limpia-c1\` y `limpia-final\` (unos 210 MB cada una), `perfiles\` (374 MB),
+`web-antes-o1204\`, `web-final\` y `web-c1\` (37 MB cada una), `caso\` y `caso-c1\` (las entradas
+sintéticas) y `almacenes\` (6 MB). Cuando se acepte, todo menos `banco\` y `caso\` se puede borrar,
+mejor desde el Explorador (traen enlaces).
+
+### C2.8 Horas
+
+Del reloj, el 22-nov: de las 13:35, más o menos (no anoté el inicio; la primera roja es de las
+13:41), a las 14:40. D1, de las 14:05 a las 14:07. Los bancos, de las 14:18 a las 14:28.
+
+### C2.9 Para quien acepte
+
+1. La suite y `analyze` en una copia limpia de la punta con este bloque: 2563, sin omitidas, con
+   la entrada de T-124.
+2. Las rojas: los cuatro archivos en una copia con el `lib/` de `1a7b03b` (8 de 32).
+3. A en pantalla: `T120_REPETIDA_TRES.edi` (`dart tool/t120e2_buques.dart <carpeta nueva en
+   %TEMP%>`), el filtro de LNB y su vuelta, en Windows y en la Web.
+4. B: el árbol de Windows de los segmentos; y, si se puede, un lector de pantalla hablando, en
+   Windows y en Chrome (lo medido es el árbol).
+5. D1: el arrastre de una celda a medias con pérdida de foco, que ahora se cancela.
+6. Los monitores y el pellizco de verdad, con Carlos (E2.10, puntos 3 y 5).
+
+### C2.10 Git
+
+Para que lo ejecute Carlos. Fuera quedan los archivos que solo cambian el fin de línea
+(`test/t114_fase3_correccion_test.dart` y tres de `windows/flutter/`) y las carpetas sin
+seguimiento de `docs/`.
+
+```powershell
+git add -- DESIGN.md
+git add -- lib/core/design/componentes/bs_selector_de_modo.dart
+git add -- lib/features/vessel/presentation/widgets/containers_list_view.dart
+git add -- lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart
+git add -- test/t120_e2_lista_test.dart
+git add -- test/t120_e2c1_claves_test.dart
+git add -- test/t120_pellizco_test.dart
+git add -- test/t120_selector_nombre_test.dart
+git add -- tool/t120e2_buques.dart
+git add -- tool/t120e2_conductor.dart
+git add -- tool/t120e2_servidor.py
+git add -- tool/t120e2_web.py
+git add -- tool/t120e2_windows.py
+git add -- docs/T120-RESULTADOS.md
+git commit -m "Sprint 4: T-120, correccion 1 de la entrega 2: la clave de la tarjeta lleva su celda, la ayuda de los segmentos en el nombre en Windows, el plano cancela los contactos al perder el foco y las mediciones de la Web, la descripcion emergente y la columna vacia"
+git push origin sprint-4
+```
+
+### C2.11 En tres líneas
+
+- T120-E2-01 corregido: la clave lleva la celda; rojo antes con la matrícula en dos y en tres
+  celdas, y en pantalla sin errores en Windows y en la Web.
+- O2 en Windows con la ayuda detrás del nombre (10 renglones del árbol, nada más); en la Web el
+  lector ya la recibía como descripción. D1 era un hallazgo, corregido con `cancelPointer`; cambia
+  el arrastre de una celda a medias.
+- Suite 2563/2563 y `analyze` cero, aquí y en copia limpia; 8 de 32 rojas; monitores y pellizco
+  de verdad, pendientes.
+
+### C2.12 Mensaje para Yov
+
+> Yov, la corrección 1 de la entrega 2 de T-120 está al final de `docs/T120-RESULTADOS.md` (C2.1 a
+> C2.12), sobre `1a7b03b`, sin commit. A: la clave de la tarjeta lleva la celda; la prueba falla
+> antes con tres celdas y **también con dos** (el caso de un plan de verdad), y va en su archivo
+> porque el árbol roto arrastraba a las vecinas. B (aprobada por Carlos): en Windows la ayuda va
+> detrás del nombre; el árbol cambia en los 10 renglones de los cinco segmentos y nada más; en la
+> Web se queda como pista, porque el árbol de Chrome sí la trae como descripción. D1 era un
+> hallazgo: tras dos contactos sin levantar y perder el foco, un dedo no movía la rejilla (0.0 dp;
+> con los contactos cancelados, 60); Carlos pidió corregirlo, y tu pista se sostuvo
+> (`cancelPointer`). Cambia una cosa: un arrastre de celda a medias se cancela al perder el foco.
+> D3: la descripción emergente sale en el icono y en el rótulo, no en el borde. D4: la columna
+> vacía dura dos cuadros de 60, no uno. Suite 2563/2563; `analyze` cero aquí y en copia limpia;
+> 8 de 32 rojas. Monitores y pellizco de verdad, pendientes.
+
+**ALTO: Yov revisa y GLM acepta.**

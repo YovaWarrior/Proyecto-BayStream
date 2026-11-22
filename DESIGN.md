@@ -1820,9 +1820,12 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
   «Acciones» (10.45), y la ayuda como pista (`hint`). La descripción emergente sigue al pasar el
   mouse por el icono o el rótulo, fuera de la semántica. La geometría no cambia.
   **En Windows el motor no expone la pista:** en el banco, ni el `HelpText` de UIA ni la
-  descripción ni la ayuda de MSAA la traen. Antes llegaba solo porque iba pegada al nombre,
-  repetida; ahora, en Windows, la ayuda queda en la descripción emergente. Si se quiere que el
-  lector de Windows la diga, iría una vez detrás del nombre (lo decide Carlos).
+  descripción ni la ayuda de MSAA la traen. Por eso, **en Windows (la app, no la Web) la ayuda va en
+  el nombre, una vez, detrás** (`BsEntradaDeModo.nombreConAyuda`; corrección 1 de la entrega 2, la
+  opción 1 de la 10.169, que aprobó Carlos): «Destino. El puerto de descarga de cada contenedor»;
+  «Carga, 977 pendientes: 977 llenos, 0 vacíos. Toca un contenedor o busca su OR para cargarlo».
+  Es lo que decía la 1.0.2, sin el nombre repetido. En las demás plataformas, también en la Web, la
+  ayuda sigue como pista.
 - **Menú:** un botón con el icono, el nombre del elegido y ⌄, que abre un `MenuAnchor` de Material
   3 con la superficie de panel, el borde en línea y el radio de hoja (10). Cada entrada mide 56 dp
   o más: el icono, el nombre, una línea con su cuenta o su ayuda en tinta suave y, en la elegida,
@@ -2858,8 +2861,11 @@ cambian.
 - La pestaña es un `CustomScrollView`: lo de arriba (el resumen, los botones, las reservas, los
   filtros y el título) en un `SliverToBoxAdapter`, como antes, y las tarjetas en un
   `SliverList.builder` (`ContainersSliverList`) que solo construye las que se ven y las de su
-  margen. Cada tarjeta lleva la clave de su matrícula. `ContainersListView` se queda para donde se
-  monta sola.
+  margen. Cada tarjeta lleva la clave de su matrícula **y su celda**
+  (`ContainersSliverList.claveDe`: «tarjeta-TSTU0000003-0020382»), y la lista la busca por ella. Con
+  la clave de la matrícula sola, una matrícula en dos celdas daba dos tarjetas con la misma clave, y
+  al rearmarse la lista con las dos a la vista el framework fallaba (T120-E2-01, corrección 1 de la
+  entrega 2). `ContainersListView` se queda para donde se monta sola.
 - Lo de arriba no se fija: se desplaza con la lista. Al cambiar un filtro, nada salta.
 - **La Lista recuerda dónde estaba** al cambiar de pestaña; al llegar desde Estadísticas, se abre
   con su título arriba (18.5).

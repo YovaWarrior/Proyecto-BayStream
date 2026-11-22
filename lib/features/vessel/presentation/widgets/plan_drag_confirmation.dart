@@ -228,7 +228,15 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
   void _soltarTodo() {
     _escalaDelTouchpad = null;
     _terminarElPellizco();
-    if (pointers.isNotEmpty && mounted) setState(pointers.clear);
+    if (pointers.isEmpty || !mounted) return;
+    // Corrección 1 de la entrega 2 (10.170): los contactos que siguen puestos
+    // se cancelan también en Flutter, como hace el Navigator al cambiar de
+    // ruta. Si solo se olvidaban aquí, sus arenas de gestos seguían abiertas,
+    // y después un dedo nuevo no desplazaba la rejilla. Así queda igual que si
+    // el sistema los hubiera cancelado. Solo corre al perder el foco con
+    // contactos puestos: el pellizco normal no pasa por aquí.
+    pointers.keys.toList().forEach(GestureBinding.instance.cancelPointer);
+    setState(pointers.clear);
   }
 
   void _terminarElPellizco() {

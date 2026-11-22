@@ -356,6 +356,26 @@ void main() {
               .physics,
           isNot(isA<NeverScrollableScrollPhysics>()),
           reason: 'los contactos viejos se olvidan');
+
+      // Corrección 1 de la entrega 2 (10.170): que un dedo la desplace de
+      // verdad. El arrastre va en varios pasos: con uno solo no pasa el
+      // umbral del gesto y nada se mueve.
+      final antes = rejilla.pixels;
+      final dedo = TestPointer(13, PointerDeviceKind.touch);
+      await tester.sendEventToBinding(dedo.down(centro));
+      await tester.pump();
+      for (var i = 1; i <= 6; i++) {
+        await tester.sendEventToBinding(
+            dedo.move(centro - Offset(15.0 * i, 0)));
+        await tester.pump(_cuadro);
+      }
+      await tester.sendEventToBinding(dedo.up());
+      await tester.pumpAndSettle();
+      final movida = _rejilla(tester, _celda).pixels - antes;
+      debugPrint('un dedo, 90 dp a la izquierda: la rejilla se movió '
+          '${movida.toStringAsFixed(1)} dp');
+      expect(movida, greaterThan(30),
+          reason: 'un dedo vuelve a desplazar la rejilla');
       expect(tester.takeException(), isNull);
     }, variant: _windows);
 
