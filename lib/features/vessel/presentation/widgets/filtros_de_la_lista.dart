@@ -19,7 +19,8 @@ import 'navegacion_del_viaje.dart';
 ///   del ancho (la letra a 2.0 en una ventana angosta), va encima.
 /// - **En el teléfono**, el rótulo arriba y los chips en hasta dos líneas
 ///   ([BsFichasEnLineas]); si no caben, «Ver los n destinos» abre una hoja con
-///   todos. El elegido siempre se ve.
+///   todos. El elegido siempre se ve. «Carga especial», con tres chips como
+///   mucho, los enseña siempre (O-120-5).
 /// - El orden es el del viaje y no cambia al elegir (10.147, punto 1).
 class FilasDeFiltros extends ConsumerWidget {
   /// Crea las filas.
@@ -206,7 +207,10 @@ class FilasDeFiltros extends ConsumerWidget {
             for (final fila in filas) ...<Widget>[
               rotulo(fila),
               SizedBox(height: medidas.espacioXs),
-              chips(fila, enLineas: !oficina),
+              // O-120-5 (10.168): «Carga especial» tiene tres chips como
+              // mucho y los enseña siempre, también en el teléfono: una hoja
+              // para llegar a uno solo no compensa.
+              chips(fila, enLineas: !oficina && fila.clave != 'carga'),
               SizedBox(height: medidas.espacioS),
             ],
           ],

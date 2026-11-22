@@ -144,7 +144,7 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
         final destino = (inicio(despues) + punto * despues - foco.dx)
             .clamp(0.0, tope)
             .toDouble();
-        if (destino != posicion.pixels) posicion.jumpTo(destino);
+        _llevarA(posicion, destino);
       }
     }
     final columna = Scrollable.maybeOf(context, axis: Axis.vertical)?.position;
@@ -156,8 +156,27 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
           .clamp(columna.minScrollExtent,
               math.max(columna.minScrollExtent, columna.maxScrollExtent + crece))
           .toDouble();
-      if (destino != columna.pixels) columna.jumpTo(destino);
+      _llevarA(columna, destino);
     }
+  }
+
+  /// T-120, O-119-1 (`DESIGN.md` 16.3) · Lleva [posicion] a [destino] antes
+  /// del cuadro con la escala nueva. Dentro del alcance medido, con `jumpTo`,
+  /// como siempre. Fuera de él (la bahía acaba de dejar de caber, o la
+  /// columna está al fondo y crece), `jumpTo` arma una simulación de la
+  /// física que, en el cuadro siguiente, devuelve el desplazamiento al tope
+  /// viejo antes de que se mida el nuevo: el punto bajo el puntero saltaba
+  /// medio dp o más. Por eso, hasta el tope medido con `jumpTo` y el resto
+  /// con `correctPixels`, sin simulación: al medirse el alcance nuevo, la
+  /// física lo acota a él (`correctForNewDimensions`) y nada se mueve
+  /// después.
+  static void _llevarA(ScrollPosition posicion, double destino) {
+    if (destino == posicion.pixels) return;
+    final dentro = destino
+        .clamp(posicion.minScrollExtent, posicion.maxScrollExtent)
+        .toDouble();
+    if (dentro != posicion.pixels) posicion.jumpTo(dentro);
+    if (dentro != destino) posicion.correctPixels(destino);
   }
 
   /// Dónde está [evento] en este lienzo, ahora. No es `localPosition`: el
@@ -189,8 +208,41 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
     }
   }
 
-  void _empiezaElTouchpad(PointerPanZoomStartEvent evento) =>
-      _escalaDelTouchpad = ref.read(planZoomProvider);
+  /// T-120, O-128-4 (`DESIGN.md` 16.2) · Si la ventana pierde el foco a
+  /// media seña (Alt + Tab, un aviso del sistema), el final del gesto puede
+  /// no llegar nunca, y la rejilla y la columna se quedaban congeladas. En
+  /// Windows, perder el foco de la ventana es `inactive`; en la Web, perder
+  /// el de la pestaña.
+  late final AppLifecycleListener _cicloDeVida;
+
+  @override
+  void initState() {
+    super.initState();
+    _cicloDeVida = AppLifecycleListener(
+        onInactive: _soltarTodo, onHide: _soltarTodo, onPause: _soltarTodo);
+  }
+
+  /// Suelta lo que haya a medias: el pellizco del touchpad (la escala se
+  /// queda donde quedó), la columna congelada y los contactos de la
+  /// pantalla.
+  void _soltarTodo() {
+    _escalaDelTouchpad = null;
+    _terminarElPellizco();
+    if (pointers.isNotEmpty && mounted) setState(pointers.clear);
+  }
+
+  void _terminarElPellizco() {
+    _pellizco?.terminar();
+    _pellizco = null;
+    if (_pellizcando && mounted) setState(() => _pellizcando = false);
+  }
+
+  /// Un gesto nuevo del touchpad con el viejo abierto (su final no llegó):
+  /// primero se cierra el viejo.
+  void _empiezaElTouchpad(PointerPanZoomStartEvent evento) {
+    _terminarElPellizco();
+    _escalaDelTouchpad = ref.read(planZoomProvider);
+  }
 
   void _sigueElTouchpad(PointerPanZoomUpdateEvent evento) {
     final base = _escalaDelTouchpad;
@@ -210,14 +262,12 @@ class _PlanZoomViewportState extends ConsumerState<PlanZoomViewport> {
 
   void _terminaElTouchpad(PointerPanZoomEndEvent evento) {
     _escalaDelTouchpad = null;
-    if (!_pellizcando) return;
-    setState(() => _pellizcando = false);
-    _pellizco?.terminar();
-    _pellizco = null;
+    _terminarElPellizco();
   }
 
   @override
   void dispose() {
+    _cicloDeVida.dispose();
     _pellizco?.terminar();
     super.dispose();
   }

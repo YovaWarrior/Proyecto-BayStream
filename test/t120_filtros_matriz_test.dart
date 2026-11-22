@@ -1,7 +1,8 @@
 // T-120 · Los filtros de la Lista con las fuentes del producto, en el teléfono
 // y en la oficina, con la letra a 1.0, 1.45 y 2.0 (DESIGN.md 18.3): nada
 // desbordado ni fuera de la pantalla, hasta dos líneas y «Ver los n» en el
-// teléfono, con el elegido a la vista y la hoja con todos.
+// teléfono, con el elegido a la vista y la hoja con todos. Desde la entrega
+// 2 (O-120-5), «Carga especial» enseña sus tres chips siempre.
 //
 // Buque sintético (BUQUE LISTA, TSTU); sin nube ni almacén real.
 import 'package:baystream/core/design/design.dart';
@@ -37,9 +38,16 @@ void main() {
                 find.byType(BsFichasEnLineas))
             .toList();
         if (telefono) {
-          // Las tres filas, cada una en dos líneas como mucho.
-          expect(renders, hasLength(3));
+          // Las navieras y los destinos, cada una en dos líneas como mucho.
+          // «Carga especial» enseña sus tres chips siempre (O-120-5, entrega
+          // 2): envuelve, sin «Ver las 3 cargas».
+          expect(renders, hasLength(2));
           final destinos = renders[1];
+          expect(find.byKey(const ValueKey('filtro-carga-ver-todas')),
+              findsNothing);
+          for (final carga in ['peligrosa', 'refrigerado', 'fueraDeMedida']) {
+            expect(t120Chip('carga', carga), findsOneWidget, reason: carga);
+          }
           expect(destinos.conVerTodas, isTrue,
               reason: 'once chips no caben en dos líneas de un teléfono');
           expect(find.textContaining(RegExp(r'^Ver los \d+ destinos$')),

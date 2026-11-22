@@ -1310,3 +1310,425 @@ git push
 > repitió. La entrega 2 espera.
 
 **ALTO: Yov revisa y GLM acepta.**
+
+---
+
+## Entrega 2 · El plano y la oficina (21-nov; 10.168)
+
+### E2.1 Resultado en tres líneas
+
+- **El pellizco:** O-119-1 se confirmó con dos pruebas rojas antes de cambiar nada (0.562 dp en
+  horizontal y 0.740 en vertical, con el touchpad) y se corrigió; O-128-4 también, y en la app de
+  verdad: en Windows y en la Web, al perder el foco, el plano suelta el pellizco.
+- **O2, O-120-4 y O-120-5:** cada segmento dice su nombre una vez en el árbol de Windows; el cuadro
+  con la Lista arriba antes del salto se veía en Windows y en la Web, y ya no se pinta; en el
+  teléfono, «Carga especial» enseña sus tres chips.
+- **Suite 2558 de 2558** (2531 + 27), sin omitidas, y `analyze` en cero, aquí y en una copia
+  limpia; 13 de las 27 pruebas nuevas fallan contra `261ee4b`. **Los dos monitores quedan
+  pendientes** (Carlos no pudo en esta sesión).
+
+### E2.2 Paso 0
+
+- **La punta:** `git log --oneline -5` da `261ee4b` («Sprint 4: mezcla de t147-piloto4 a
+  sprint-4, con la entrega 2 de T-147») y debajo `5f850e9` («decision 10.168»). Es la esperada.
+- **La copia limpia:** `git -c core.autocrlf=false archive 261ee4b`, extraída en
+  `%TEMP%\t120-e2\limpia` (2171 archivos, con su huella en `%TEMP%\t120-e2\copia-limpia-manifiesto.json`),
+  más la entrada de T-124 (O-143-3). `flutter pub get --offline --enforce-lockfile` pasa y
+  `pubspec.lock` no cambia.
+- **Lo que nadie había corrido, T-120 y la entrega 2 de T-147 juntas:**
+
+| Qué | Resultado | Registro (`build/t120/e2/paso0/`) |
+|---|---|---|
+| `flutter analyze --no-pub`, todo el paquete (22:17:05 a 22:17:23) | **«No issues found!»** | `analyze.txt` |
+| La suite completa, en una sola corrida (22:17:23 a 22:19:48) | **`+2531: All tests passed!`**, sin omitidas ni fallidas | `suite.txt` |
+
+  Las 2531 esperadas: 2393 de `sprint-4`, 77 de la parte 2a y 61 de la 2b. Nada de la mezcla.
+- `pubspec.yaml` sigue en `1.0.3+12`; no lo toqué.
+- **Semáforo:** Carlos dio la luz verde de cada ventana (el paso 0; las pruebas y `analyze` en
+  la carpeta; los bancos de Windows y de la Web). Nadie más corrió Flutter.
+
+### E2.3 Cada punto
+
+#### A · O-119-1: el punto bajo el puntero, en el cruce de caber a no caber
+
+- **La prueba, antes de cambiar nada** (`test/t120_pellizco_test.dart`, grupo O-119-1): en pasos
+  chicos y cuadro por cuadro, el punto que estaba bajo el puntero tiene que seguir ahí, con
+  0.25 dp de tolerancia, salvo donde no puede (16.3: la bahía cabe y va centrada, o el
+  desplazamiento está en su tope). Cinco casos: el touchpad en pasos de 1 % del 100 % a no
+  caber; el touchpad con la columna al fondo; el touchpad alejando, de no caber a caber; el
+  pellizco de la Web (`PointerScaleEvent` de 1.01) y la Web en ráfagas de tres pasos por cuadro.
+- **Mi primera versión medía mal,** y lo digo porque salió roja por eso: comparaba con la posición
+  del inicio, y mientras la bahía cabe la celda se corre ~0.16 dp por cada 1 % por diseño (va
+  centrada). La desglosé con una sonda (`build/t120/e2/rojas/sonda-desglose*.txt`) y reescribí la
+  medida como el desvío del punto bajo el puntero, paso a paso.
+- **Contra `261ee4b`, fallan dos de cinco, cada una en su comprobación**
+  (`rojas/pellizco-contra-261ee4b.txt`):
+  - el touchpad del 100 % a no caber: **0.562 dp en horizontal, en el paso siguiente al cruce**
+    (a 1.40);
+  - el touchpad con la columna al fondo: **0.740 dp en vertical** (a 1.14).
+  - La Web, en pasos y en ráfagas, y alejar dan 0.000 (las ráfagas, 0.081): ya pasaban.
+- **La hipótesis se confirmó en su mecanismo,** con un escucha del desplazamiento
+  (`sonda-desglose-3.txt`): `jumpTo(5.294)` con el alcance medido todavía en 4.732 deja una
+  `BallisticScrollActivity`; en el cuadro siguiente, en la fase `transientCallbacks`, **antes de
+  medir el alcance nuevo**, la simulación lo devuelve a 4.732; después se mide 11.052, pero ya es
+  tarde. **Difiere de lo que yo esperaba en dónde sale:** con el touchpad (y no con el
+  `PointerScaleEvent` de la Web) y un paso después del cruce. Los 1.9 dp que midió Codex en
+  Chrome no se reproducen en las pruebas de widgets (abajo, «Lo que no se pudo»).
+- **El cambio** (`plan_drag_confirmation.dart`, `_llevarA`): dentro del alcance medido, `jumpTo`
+  como siempre; fuera de él, hasta el tope medido con `jumpTo` y el resto con `correctPixels`,
+  sin simulación. Al medirse el alcance nuevo, `correctForNewDimensions` lo acota a él (lo leí
+  en `scroll_position.dart` del SDK antes de usarlo). Nadie escucha con `addListener` los
+  controladores del plano: la barra va por notificaciones, que el SDK manda al cambiar las
+  medidas.
+- **Ahora:** los cinco casos, 0.000 dp (las ráfagas, 0.081), y las 11 de T-119 siguen pasando.
+- **En la app de verdad, el instrumento no distingue esto,** y no lo cuento como visto: el
+  conductor del banco manda los mismos eventos sintéticos y mide igual, y da 0.52 / 0.28 / 0.50
+  dp **en el banco de la punta y en el de la entrega, las mismas cifras en los mismos pasos**
+  (`windows/punta-pellizco`, `windows/final-pellizco` y `web/final-pellizco`). El peor es el
+  primer paso del touchpad, en vertical, y no el cruce: es del instrumento (el desplazamiento
+  redondeado a píxeles en la ventana real), no del código. La diferencia de O-119-1 la mide la
+  prueba de widgets.
+
+#### A · O-128-4: el plano suelta el pellizco cuando pierde el foco
+
+- **Las pruebas** (grupo O-128-4, tres): un pellizco del touchpad sin su `panZoomEnd` y la app a
+  `inactive`: la columna se suelta y la rueda la mueve; dos contactos de la pantalla sin `up`: se
+  olvidan y la rejilla vuelve a desplazarse; un gesto del touchpad nuevo con el viejo abierto lo
+  cierra al empezar.
+- **Contra `261ee4b` fallan las tres.**
+- **El cambio:** `_PlanZoomViewportState` crea un `AppLifecycleListener` (`onInactive`,
+  `onHide`, `onPause`) que suelta todo: la escala del touchpad (la escala se queda donde quedó),
+  `pellizcoDelPlanoProvider` y los contactos. `PointerPanZoomStart` cierra el gesto viejo.
+- **Un matiz que la prueba fija como es:** el gesto nuevo que cierra al viejo **no desplaza** —
+  la columna ya lo repartió cuando estaba congelada, sin su reconocedor de arrastre —; desplaza
+  el siguiente. Es el respaldo: con el ciclo de vida, al volver el foco ya está todo suelto.
+- **En la app de verdad, con una pérdida de foco real** (escenario `foco`: empieza un pellizco
+  del touchpad sin su final y espera):
+  - **Windows**, minimizando y restaurando la ventana del banco por su PID: en la punta
+    (`windows/punta-foco-2`) el ciclo pasa por `hidden`, `inactive` y `resumed`, **el pellizco
+    sigue abierto y la rueda no mueve la columna** (37.2 → 37.2); en la entrega
+    (`windows/final-foco`) se suelta y la rueda la mueve (37.2 → 137.2).
+  - **La Web:** la primera corrida (`web/final-foco`) no sirvió: Playwright emula el foco y la
+    página nunca lo perdía. Con la emulación apagada y la ventana de Chrome minimizada de verdad
+    (`web/final-foco-2`), la página pasa a `inactive` y vuelve a `resumed`, el pellizco se suelta
+    y la rueda mueve la columna (37.2 → 137.2). En la Web, perder el foco **sí** llega como
+    `inactive`. La Web de la punta no la corrí.
+  - La primera corrida de la punta en Windows (`windows/punta-foco`) la cortó mi arnés al leer
+    una línea a medio escribir; lo corregí y la repetí (`punta-foco-2`).
+
+#### B · O2: los segmentos de `BsSelectorDeModo` dicen su nombre una vez
+
+- **El cambio** (`bs_selector_de_modo.dart`): el segmento sin `tooltip`; el icono y el rótulo con
+  su `Tooltip` fuera de la semántica; el nombre, el entero con su cuenta entera, una vez
+  (`BsEntradaDeModo.nombreEntero`: «Descarga, 28 por bajar en GTSTC»), y la ayuda como pista.
+  La geometría no cambia.
+- **La prueba** (`test/t120_selector_nombre_test.dart`, cuatro): cada segmento, de día y de
+  noche, con su nombre una vez, sin descripción emergente en la semántica y la ayuda como pista;
+  la descripción emergente sigue con el mouse; y en la cabecera de la oficina a 1920 dp ningún
+  segmento lleva la descripción emergente. **Contra `261ee4b` fallan las cuatro.**
+- **El árbol de Windows, antes y después** (`build/t120/e2/o2/`, el instrumento de T-117
+  `t117_correccion2_windows.ps1`, con el banco abierto en el Plano, sin tocar el mouse; la
+  ventana quedó en 1539 dp, el ancho de la pantalla, y la cabecera lleva segmentos):
+
+| | `261ee4b` | Entrega 2 |
+|---|---|---|
+| Modo del plano | «botón Contenido. Contenido. El destino de cada contenedor» | «botón Contenido» |
+| | «botón Orden. Número de orden. Sin listado de la agencia. Los OR del listado de la agencia» | «botón Número de orden, Sin listado de la agencia» |
+| | «botón Carga 977. Carga. 977 pendientes: … Toca un contenedor o busca su OR para cargarlo» | «botón Carga, 977 pendientes: 977 llenos, 0 vacíos» |
+| Colorear por | «botón Destino. Destino. El puerto de descarga de cada contenedor» | «botón Destino» |
+
+  Lo mismo en MSAA. El resto del árbol no cambia (224 nodos de UIA y 240 de MSAA en los dos).
+- **Lo que contradice mi propuesta (1.6.1), y lo digo antes que nada:** escribí que Windows da
+  la pista «como descripción y no como nombre». **No la da.** En los dos bancos, ni el
+  `HelpText` de UIA ni `accDescription` ni `accHelp` de MSAA traen nada en ningún segmento
+  (`o2/*/descripcion.txt`). Antes la ayuda llegaba solo porque iba pegada al nombre, repetida;
+  **ahora, en Windows, el lector oye el nombre sin la ayuda**, que queda en la descripción
+  emergente con el mouse. Es lo mismo que pasa con «Acciones» desde la 10.45. La propiedad
+  `FullDescription` de UIA no la pude leer con la API administrada. Corregí el comentario del
+  código, el de la prueba y `DESIGN.md` 14.6. **Decide Carlos** (abajo, «Para quien acepte»).
+
+#### C · Los dos monitores: pendientes
+
+Carlos no pudo en esta sesión. **No los doy por vistos.** Queda listo:
+- `tool/t120_monitores.ps1`: abre el banco de depuración con el escenario `monitores` (el Plano
+  con zoom a 150 % y la rejilla desplazada, quieto), y mientras Carlos arrastra, sondea cada
+  medio segundo la ventana de ese proceso (por su PID): monitor, DPI, rectángulo del cliente,
+  maximizada o minimizada, con una captura (`PrintWindow`) en cada cambio. El conductor anota el
+  tamaño lógico, la densidad, el zoom, los desplazamientos y cada error de Flutter (en
+  depuración, los desbordes).
+- Los pasos de 1.7 y los comandos, abajo en «Para quien acepte». El banco de depuración no lo
+  compilé, para no ocupar disco sin uso (unos 9 GB, por el SDK de Firebase).
+
+#### D · Lo que dejó la aceptación de la entrega 1
+
+**D9 precisada (`DESIGN.md` 18.5) y la prueba de la lista corta.**
+- 18.5 dice ahora «con su título arriba de lo que se ve, o con toda la lista a la vista cuando no
+  hay más que desplazar».
+- `test/t120_e2_lista_test.dart`, ocho casos: «Sin destino» con una y con dos tarjetas, y un
+  puerto (VELAG) con una y con dos, a 1366 × 690 y a 360 × 800, con la letra a 1.0. El título a
+  la vista, cada tarjeta entera dentro de la vista (su cuerpo, sin el margen) y el título arriba
+  o el desplazamiento en su tope. **Pasan con el código de hoy y contra `261ee4b`:** fijan lo
+  que ya estaba bien. **La última tarjeta se ve entera:** se confirma la lectura de Yov de la
+  10.154; los «40 a 48 dp cortados» eran de la sonda.
+- **En pantalla** (`T120_LISTA_CORTA.edi`: 200 contenedores, dos de VELAG y dos sin destino), en
+  Windows y en la Web, de día y de noche: el título queda a 272 dp a 1366 y a 178 o 240 dp a 360,
+  con el desplazamiento en su tope, y las dos tarjetas enteras (la de abajo termina a 598 dp de
+  una vista de 626, y a 636 de 664).
+
+**La Lista con una matrícula repetida.**
+- **Qué enseña** (`T120_REPETIDA.edi`: doce contenedores, el 3.º y el 5.º con TSTU0000003, en
+  002-03-82 y 002-05-82):
+  - arriba, en el resumen del viaje, el aviso del lector: «Matrículas repetidas en EQD: 1
+    contenedor · revisa esas celdas con quien hizo el plan»;
+  - el título **«Contenedores (12)»**: cuenta las celdas, no las matrículas (11);
+  - **dos tarjetas, una por celda**, cada una con su naviera y su posición: «TSTU0000003 · LNB ·
+    Bahía 002, Fila 03, Nivel 82» y «TSTU0000003 · LNC · Bahía 002, Fila 05, Nivel 82». Ninguna
+    dice que la matrícula está repetida.
+  - Las dos tarjetas llevan la misma clave (`tarjeta-TSTU0000003`), pero la lista se reconstruye
+    bien con un filtro que deja una sola y al soltarlo, sin excepción.
+- **No lo veo como un defecto:** la Lista enseña lo que trae el archivo, celda por celda; el
+  aviso está arriba y el plano marca las dos celdas desde T-147. Lo dejo como observación,
+  O-120-6.
+- **Por qué la sonda de GLM daba 0 tarjetas:** con un buque chico, lo de arriba de la Lista llena
+  la vista, y la lista perezosa no construye ninguna tarjeta hasta que se baja.
+- **La prueba,** a 1366 y a 360: recorre la Lista entera y fija las doce tarjetas, las dos de la
+  repetida con su posición, el título, el aviso y la reconstrucción con el filtro. Pasa también
+  contra `261ee4b`.
+
+**O-120-4: el cuadro con la Lista arriba.**
+- **Se veía, en Windows y en la Web.** Escenario `capturas` con el buque de 977: el conductor
+  toca la barra de PAMIT y captura, por dentro, los cuatro cuadros que siguen, sin esperar.
+  - Por dentro: en el cuadro 1 la Lista se pinta con el título a 816 dp del borde de arriba de la
+    vista a 1366, y a 1186 dp a 360; desde el cuadro 2, a 0 dp.
+  - **En la pantalla de Windows** (`windows/977-antes-o1204/ventana.mkv`, `gdigrab` de la ventana
+    a 60 cuadros por segundo; la hoja `hoja-claro1366-cuadros-16-17-26-29.png`): el cuadro 26 es
+    Estadísticas, **el 27 es la Lista arriba, con el resumen del viaje, los botones y los
+    filtros**, y el 28 ya es el título.
+  - **En la pantalla de Chrome** (`web/977-antes-o1204`, el *screencast* de Chrome; la hoja
+    `hoja-cuadros-2189-2194.png`): el 2189 es Estadísticas, **el 2190 es la Lista arriba** y el 2191,
+    el título.
+- **El cambio** (`vessel_overview_page.dart`): al llegar desde una barra, la Lista se dispone
+  pero no se pinta (opacidad cero) hasta que salta a su título, en el cuadro siguiente. Por el
+  riel o la barra se ve desde el primer cuadro.
+- **La prueba** (tres): en el cuadro que sigue al toque, la Lista no se pinta o el título está
+  arriba; en el siguiente, se ve con el título arriba (a 1366 y a 360); y por el riel se ve desde
+  el primer cuadro. **Contra `261ee4b` fallan las dos primeras**: «se pinta la Lista con el
+  título a 661 dp» (1029 a 360).
+- **Después, en pantalla:**
+  - por dentro, el cuadro 1 enseña la columna central vacía (el fondo), con la cabecera, el riel y
+    el panel (`windows/final-977/capturas/*_o1204_cuadro1_*.png`);
+  - en la pantalla de Windows (`windows/final-977/video/hoja-claro1366-cuadros-24-36.png`):
+    Estadísticas, después la columna vacía y después el título. **La Lista arriba no sale en
+    ningún cuadro.** El vacío ocupa dos cuadros grabados; el conductor, que captura por dentro en
+    cada cuadro, los alarga, y sin esa captura no lo medí;
+  - en Chrome (`web/final-977/hoja-cuadros-tras-el-toque.png`): Estadísticas y después el título,
+    sin la Lista arriba ni el vacío. El *screencast* manda los cuadros cuando se le confirman y
+    puede saltarse alguno: no afirmo que el vacío no exista en la Web.
+
+**O-120-5 (aprobada por Carlos): «Carga especial» con sus tres chips en el teléfono.**
+- **El cambio** (`filtros_de_la_lista.dart`): en el teléfono, esa fila envuelve como en la
+  oficina, sin «Ver las 3 cargas». Los destinos y las navieras no cambian.
+- **La prueba** (dos, a 360 × 800, con la letra a 1.0 y a 2.0): los tres chips se ven y se tocan,
+  sin «Ver las 3 cargas», y los destinos y las navieras siguen con lo suyo. **Contra `261ee4b`
+  fallan las dos.**
+- **Cambia una prueba de la entrega 1,** `test/t120_filtros_matriz_test.dart`: en el teléfono
+  esperaba tres filas en `BsFichasEnLineas` y ahora son dos. Lo demás no se afloja: dos líneas
+  como mucho, «Ver los n destinos» y nada fuera de la pantalla; además pide los tres chips de
+  carga. Contra `261ee4b` fallan sus seis casos del teléfono. Ese registro lo sobrescribió una
+  corrida posterior y no quedó guardado.
+- **En pantalla** (Windows y la Web, de día y de noche, a 360 con la letra a 1.0 y a 2.0): los
+  tres chips enteros, uno por renglón, con su ícono y su cuenta; «Ver las 4 navieras» y «Ver los
+  10 destinos» siguen. **Lo que se ve y anoto:** a 360 dp con la letra a 1.0, dos chips no
+  caben juntos en 328 dp, así que la fila pasa de dos renglones a tres, y la Lista baja unos
+  56 dp. Suma a O-120-2.
+
+### E2.4 Los bancos y cómo se miró
+
+- **Las entradas:** `tool/t120e2_buques.dart` escribe en `%TEMP%\t120-e2\caso` el buque de 977 de
+  la entrega 1, la lista corta y la repetida, y las verifica con el lector (977/977; 200 con VELAG
+  2 y sin destino 2; 12 contenedores con 11 matrículas y el aviso `duplicate`). Es carga de
+  prueba sintética.
+- **El banco:** `tool/t120e2_main.dart` y `tool/t120e2_conductor.dart`, con los helpers de
+  plataforma de T-147 sin tocarlos. Namespace `r4`; en Windows, el almacén en `%TEMP%`, uno por
+  corrida; sin nube. Copia del árbol con `t99_copia.ps1 -Arbol -Sufijo r4` en
+  `%TEMP%\t120-e2\banco`, con `lib/` y el conductor iguales a la carpeta (comprobado con `diff`).
+  Windows y Web en *release*.
+- **Windows:** `tool/t120e2_windows.py` (el de T-147 con la salida en `build/t120/e2`, `--foco` y
+  `--grabar`).
+- **La Web:** `tool/t120e2_web.py` y `tool/t120e2_servidor.py` (los de T-147), solo contra
+  `127.0.0.1:5948`, **cada corrida con su perfil nuevo de Chrome** (el arnés borra el perfil
+  antes) y el *service worker* borrado antes de cargar. **Cómo comprobé que corrió el programa de
+  la carpeta:** el arnés anota en `navegador.json` la huella del `main.dart.js` que cargó la
+  página y la del que se sirve, y falla si son distintas. En las siete corridas de la Web son
+  iguales: `809bcc6e…` en `977-antes-o1204` y `2f7ad0c3…` en las seis finales.
+- **El banco de la punta** (para O-128-4 y O2 «antes»): la copia limpia de `261ee4b` más
+  `t120e2_main.dart` y `t120e2_conductor.dart`; su `lib/` es el de `261ee4b` en sus 212 archivos,
+  por la huella.
+- **Las corridas** (todas terminan en «fin», sin errores de Flutter ni textos que no caben;
+  `build/t120/e2/resumen-final.txt`, de `tool/t120e2_resumen.py`): en Windows y en la Web,
+  `final-977` (30 capturas), `final-corta` (8), `final-repetida` (12), `final-pellizco` (8) y
+  `final-foco`; además `977-antes-o1204` en los dos y `final-foco-2` en la Web.
+- **Lo que miré con mis ojos,** imagen por imagen: los cuadros 1 y 2 de O-120-4 antes y después;
+  las tres hojas de la grabación y del *screencast*; O-120-5 a 360 de día (letra 1.0) y de noche
+  (letra 2.0); la lista corta de VELAG a 360 de día (Windows) y la de «Sin destino» a 1366 de
+  noche (Web); la repetida a 360 de día (el aviso) y a 1366 (la segunda tarjeta, Web). Las demás
+  capturas tienen sus cifras en los registros, pero no las abrí una por una.
+- **El *screencast* de la Web** se recortó a los cuadros de 1 s antes a 1 s después de cada toque
+  (`pantalla-conservada.json`); la evidencia queda en 243 MB.
+
+### E2.5 Las pruebas nuevas (27) y las rojas
+
+| Archivo | Pruebas | Contra `261ee4b` |
+|---|---|---|
+| `test/t120_pellizco_test.dart` | 5 de O-119-1 y 3 de O-128-4 | **fallan 5 de 8** (2 y 3); pasan la Web, las ráfagas y alejar |
+| `test/t120_selector_nombre_test.dart` | 4 de O2 | **fallan 4 de 4** |
+| `test/t120_e2_lista_test.dart` | 8 de la lista corta, 2 de la repetida, 2 de O-120-5 y 3 de O-120-4 | **fallan 4 de 15** (O-120-5 y O-120-4); pasan las 11 que fijan lo que ya estaba bien |
+
+- **Rojas en total: 13 de 27, cada una en su comprobación.** Ninguna es de compilación: solo usan
+  piezas que ya estaban. Registros en `build/t120/e2/rojas/`, corridos en la copia limpia de
+  `261ee4b` con el archivo de prueba copiado.
+- **Cambia:** `test/t120_filtros_matriz_test.dart` (O-120-5).
+
+### E2.6 Validaciones
+
+| Qué | Resultado | Registro (`build/t120/e2/`) |
+|---|---|---|
+| La suite completa en la carpeta, después del último cambio (23:26:13 a 23:28:08) | **2558 de 2558**, sin omitidas ni fallidas | `suite-carpeta.txt` |
+| `flutter analyze --no-pub` en la carpeta | **«No issues found!»** | `analyze-carpeta.txt` |
+| La copia limpia: `261ee4b` + las 17 rutas, iguales por su huella, + la entrada de T-124; `pub get --offline --enforce-lockfile` (el lock, igual al del commit) | `analyze` **«No issues found!»**; suite **2558 de 2558** | `copia-limpia-*.txt`, `copia-limpia-final-manifiesto.json` |
+| `// ignore:` | Ninguno | |
+| `pubspec.*`, `lib/main.dart`, los congelados, `domain/`, `data/`, `web/`, `windows/`, los archivos de T-147 | **No cambian** | `git diff --stat` |
+
+- **Una corrida anterior de la suite dio 2559** con tres avisos de `analyze`: eran de mi sonda
+  temporal (`test/t120_sonda977_test.dart`). La borré y repetí las dos.
+
+### E2.7 Lo que no se pudo, y lo que queda anotado
+
+- **Los dos monitores:** pendientes (C).
+- **Los 1.9 dp de Codex en Chrome (O-119-1) no se reprodujeron.** El pellizco de la Web en las
+  pruebas, sin el cambio, ya daba 0.000 (0.081 en ráfagas). Lo que arreglé es el touchpad. Si lo de
+  Chrome viene de otra cosa, solo lo dice un pellizco de verdad en Chrome. El escenario `mano` del
+  conductor mide los gestos de una persona, cuadro por cuadro; no lo corrí: hace falta la mano de
+  Carlos.
+- **O-119-1 en la app de verdad:** el banco no distingue la punta de la entrega (A).
+- **Android:** no se tocó ni se miró. El pellizco de dos dedos y el ciclo de vida están en las
+  pruebas.
+- **O-120-6 (nueva, P3): la tarjeta de una matrícula repetida no lo dice.** La Lista enseña las
+  dos celdas como dos contenedores cualesquiera; el aviso está solo arriba. Una marca en la
+  tarjeta, como la celda del plano, ayudaría a encontrarlas desde la Lista.
+- **O-120-5 hace la fila de carga más alta** en el teléfono con la letra a 1.0 (tres renglones en
+  vez de dos): suma a O-120-2.
+- **O2: en Windows, la ayuda del segmento ya no se oye** (B). Decide Carlos.
+
+### E2.8 Archivos
+
+**Cambiados (6):**
+- `DESIGN.md`: 14.6 (O2), 16.2 (O-128-4), 16.3 (O-119-1), 18.3 (O-120-5) y 18.5 (D9 precisada y
+  O-120-4). 18.3 no estaba en la lista de 1.11 de mi propuesta; es la sección de T-120 y dice
+  cómo se ven las filas en el teléfono, que O-120-5 cambia. **14.9 (los monitores) no se toca**
+  hasta que se vean.
+- `lib/core/design/componentes/bs_selector_de_modo.dart`: O2.
+- `lib/features/vessel/presentation/pages/vessel_overview_page.dart`: O-120-4.
+- `lib/features/vessel/presentation/widgets/filtros_de_la_lista.dart`: O-120-5.
+- `lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart`: O-119-1 y O-128-4.
+- `test/t120_filtros_matriz_test.dart`: O-120-5.
+
+**Nuevos (11):** `test/t120_e2_lista_test.dart`, `test/t120_pellizco_test.dart`,
+`test/t120_selector_nombre_test.dart`, `tool/t120_monitores.ps1`, `tool/t120e2_buques.dart`,
+`tool/t120e2_conductor.dart`, `tool/t120e2_main.dart`, `tool/t120e2_resumen.py`,
+`tool/t120e2_servidor.py`, `tool/t120e2_web.py` y `tool/t120e2_windows.py`.
+
+Y este informe. **`pubspec.yaml` y `pubspec.lock` no cambian.** Fuera de Git: `build/t120/e2/`
+(243 MB) y `%TEMP%\t120-e2\` (13 GB contando los enlaces del SDK de Firebase; se puede borrar
+entera cuando se acepte, salvo `caso\` si se quieren los monitores).
+
+### E2.9 Horas
+
+Del reloj, el 21-nov: de las 22:10, más o menos (no anoté el inicio; la copia del paso 0 es de las
+22:16), a las 23:40, una hora y media. El paso 0 terminó a las 22:19.
+De ese tiempo, unos 25 minutos fueron de máquina: tres compilaciones de Windows, dos de la Web,
+las corridas y cuatro suites completas.
+
+### E2.10 Para quien acepte
+
+1. **La suite y `analyze`** en una copia limpia de la punta con este bloque: 2558, sin omitidas,
+   con la entrada de T-124.
+2. **Las rojas:** los tres archivos nuevos en una copia de `261ee4b` (13 de 27; E2.5), y la
+   matriz cambiada (seis del teléfono).
+3. **El pellizco con el touchpad de verdad**, en Windows y en Chrome, sobre todo desde el 100 %
+   hasta que la bahía deja de caber, y Alt + Tab a media seña. En el banco:
+   ```powershell
+   python -X utf8 tool/t120e2_windows.py --exe "$env:TEMP\t120-e2\banco\build\windows\x64\runner\Release\baystream.exe" --almacen "$env:TEMP\t120-e2\almacenes\mano-1" --caso "$env:TEMP\t120-e2\caso" --salida build/t120/e2/windows/mano-1 escenario=mano archivo=T120_BUQUE_LISTA_977.edi tope=180
+   ```
+   anota en `pasos.jsonl` cada gesto con su peor desvío, cuadro por cuadro.
+4. **O2:** decidir si la ayuda va una vez detrás del nombre para que el lector de Windows la
+   diga (hoy no la dice, B); y mirar en la Web qué hace el lector con la pista, que no medí.
+5. **Los dos monitores, con Carlos** (1.7): compilar el banco de depuración y abrirlo con el script:
+   ```powershell
+   flutter build windows --debug --no-pub -t tool/t120e2_main.dart
+   ```
+   (en `%TEMP%\t120-e2\banco`), y después
+   ```powershell
+   ./tool/t120_monitores.ps1 -Exe "$env:TEMP\t120-e2\banco\build\windows\x64\runner\Debug\baystream.exe" -Almacen "$env:TEMP\t120-e2\almacenes\monitores-1" -Caso "$env:TEMP\t120-e2\caso" -Salida build/t120/e2/monitores/1
+   ```
+   Carlos: el Plano en la laptop → al otro monitor → maximizar allí (Win + Mayús + →) → media
+   pantalla (Win + ← y →) → a medias entre los dos → de vuelta; y lo mismo en la Lista y en
+   Estadísticas. Se mira `monitores.jsonl`, `pasos.jsonl` (los errores de Flutter) y las
+   capturas.
+6. **O-120-4 sin la captura por dentro:** si el cuadro vacío se nota en una pantalla real.
+
+### E2.11 Git
+
+Para que lo ejecute Carlos. Fuera quedan los cuatro archivos que solo cambian el fin de línea y las
+carpetas sin seguimiento de `docs/`.
+
+```powershell
+git add -- DESIGN.md
+git add -- lib/core/design/componentes/bs_selector_de_modo.dart
+git add -- lib/features/vessel/presentation/pages/vessel_overview_page.dart
+git add -- lib/features/vessel/presentation/widgets/filtros_de_la_lista.dart
+git add -- lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart
+git add -- test/t120_filtros_matriz_test.dart
+git add -- test/t120_e2_lista_test.dart
+git add -- test/t120_pellizco_test.dart
+git add -- test/t120_selector_nombre_test.dart
+git add -- tool/t120_monitores.ps1
+git add -- tool/t120e2_buques.dart
+git add -- tool/t120e2_conductor.dart
+git add -- tool/t120e2_main.dart
+git add -- tool/t120e2_resumen.py
+git add -- tool/t120e2_servidor.py
+git add -- tool/t120e2_web.py
+git add -- tool/t120e2_windows.py
+git add -- docs/T120-RESULTADOS.md
+git commit -m "Sprint 4: T-120, entrega 2: el plano suelta el pellizco al perder el foco y no salta en el cruce, los segmentos dicen su nombre una vez, la Lista no se pinta arriba antes del salto desde Estadisticas, carga especial con sus tres chips en el telefono y las pruebas de la lista corta y de la matricula repetida"
+git push origin sprint-4
+```
+
+### E2.12 En tres líneas
+
+- El pellizco: O-119-1 y O-128-4 confirmados con pruebas rojas y corregidos; O-128-4, además, visto
+  en Windows y en la Web con una pérdida de foco real.
+- O2, O-120-4 y O-120-5 hechos y mirados en pantalla; O2 dejó a la vista que Windows no lee la
+  pista, y la ayuda del segmento ya no se oye ahí (decide Carlos).
+- Suite 2558/2558 y `analyze` en cero aquí y en copia limpia; 13 de 27 rojas contra `261ee4b`;
+  los dos monitores, pendientes.
+
+### E2.13 Mensaje para Yov
+
+> Yov, la entrega 2 de T-120 está al final de `docs/T120-RESULTADOS.md` («Entrega 2 · El plano y
+> la oficina», E2.1 a E2.13), sobre `261ee4b`, sin commit. Paso 0: `analyze` cero y 2531/2531 con
+> T-120 y T-147 juntas. O-119-1 salió rojo antes de tocar nada (0.562 dp en horizontal y 0.740 en
+> vertical, con el touchpad: un `jumpTo` fuera del alcance medido arma una simulación que
+> devuelve al tope viejo antes de medir el nuevo); se corrige con `correctPixels` fuera del
+> alcance. Los 1.9 dp de Chrome no se reprodujeron en pruebas. O-128-4: el plano suelta el
+> pellizco al perder el foco; visto en Windows (minimizando) y en la Web (con la emulación del
+> foco de Playwright apagada). O2: en el árbol de Windows cada segmento dice su nombre una vez,
+> pero **la pista no la expone Windows**, así que la ayuda ya no se oye ahí: lo decide Carlos.
+> O-120-4 se veía en Windows y en la Web (grabación y *screencast*) y ya no se pinta; O-120-5,
+> hecho. La lista corta y la repetida pasan también contra la punta: la última tarjeta se ve
+> entera, y la repetida enseña dos tarjetas, una por celda (O-120-6, nueva, P3). 27 pruebas
+> nuevas, 13 rojas; suite 2558/2558; `analyze` cero aquí y en copia limpia. Los monitores quedan
+> pendientes, con el script listo.
+
+**ALTO: Yov revisa y GLM acepta.**

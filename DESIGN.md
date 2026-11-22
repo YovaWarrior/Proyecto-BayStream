@@ -1813,6 +1813,16 @@ Descarga / Carga de la cabecera de la oficina, y sirve también para «Colorear 
   la cuenta corta en tinta suave y cifras tabulares («Descarga 28»); el elegido va invertido
   (13.1: tinta con texto noche de noche, marca tenue de día). Mide 40 dp en la oficina y 48 en el
   muelle. El nombre entero y la ayuda van en la descripción emergente.
+- **El nombre de cada segmento, una vez** (T-120, entrega 2, O2): el segmento no lleva `tooltip`,
+  porque Windows le suma al nombre la descripción emergente, que empieza por el mismo nombre
+  («botón Destino. Destino. El puerto…», C2.9). El lector de pantalla oye el nombre entero con su
+  cuenta entera, una vez («Descarga, 28 por bajar en GTSTC»; `BsEntradaDeModo.nombreEntero`), como
+  «Acciones» (10.45), y la ayuda como pista (`hint`). La descripción emergente sigue al pasar el
+  mouse por el icono o el rótulo, fuera de la semántica. La geometría no cambia.
+  **En Windows el motor no expone la pista:** en el banco, ni el `HelpText` de UIA ni la
+  descripción ni la ayuda de MSAA la traen. Antes llegaba solo porque iba pegada al nombre,
+  repetida; ahora, en Windows, la ayuda queda en la descripción emergente. Si se quiere que el
+  lector de Windows la diga, iría una vez detrás del nombre (lo decide Carlos).
 - **Menú:** un botón con el icono, el nombre del elegido y ⌄, que abre un `MenuAnchor` de Material
   3 con la superficie de panel, el borde en línea y el radio de hoja (10). Cada entrada mide 56 dp
   o más: el icono, el nombre, una línea con su cuenta o su ayuda en tinta suave y, en la elegida,
@@ -2560,6 +2570,13 @@ En `PlanZoomViewport`, además de los dos contactos de la pantalla:
 - **El pellizco de la Web:** el motor web de Flutter 3.38 entrega el pellizco y Ctrl + rueda como
   `PointerScaleEvent` con escala e^(−dy/200) (`pointer_binding.dart`); se multiplica por su escala.
 - La escala sigue acotada entre **75 y 300 %** por `planZoomProvider`, y el chip del zoom no cambia.
+- **Si la ventana pierde el foco a media seña** (Alt + Tab, un aviso del sistema), el final del
+  gesto puede no llegar nunca (T-120, entrega 2, O-128-4). `PlanZoomViewport` escucha el ciclo de
+  vida (`AppLifecycleListener`) y, al pasar a `inactive`, `hidden` o `paused` (en Windows, perder el
+  foco de la ventana es `inactive`; en la Web, el de la pestaña), **suelta todo**: el pellizco del
+  touchpad (la escala se queda donde quedó), la columna congelada y los contactos de la pantalla.
+  Y un gesto nuevo del touchpad con uno viejo abierto lo cierra al empezar; ese primer gesto no
+  desplaza (la columna ya lo repartió congelada), el siguiente sí.
 - En el teléfono (el lienzo sin `alturaNatural`) también amplían Ctrl + rueda y el touchpad, desde
   la esquina, como el chip: ahí no hay punto fijo ni barra.
 
@@ -2577,6 +2594,14 @@ para que lo que está bajo el puntero quede donde estaba:
   punto × nueva − foco, acotado a lo que se puede desplazar.
 - Los dos se mueven **antes** del cuadro que dibuja la escala nueva, así que se ven juntos. Si una
   cuenta pasa del borde nuevo, la física lo acota al medirse.
+- **Fuera del alcance medido, sin `jumpTo`** (T-120, entrega 2, O-119-1): cuando el destino pasa
+  del alcance que el desplazamiento midió en el cuadro anterior (la bahía acaba de dejar de caber,
+  o la columna está al fondo y crece), `jumpTo` arma una simulación de la física que, en el cuadro
+  siguiente, lo devuelve al tope viejo antes de que se mida el nuevo: el punto bajo el puntero
+  saltaba medio dp o más (0.56 en horizontal y 0.74 en vertical, con el touchpad, en las pruebas).
+  Ahora va hasta el tope medido con `jumpTo` y el resto con `correctPixels`, sin simulación; al
+  medirse el alcance nuevo, la física lo acota a él. Lo fija `test/t120_pellizco_test.dart`, cuadro
+  por cuadro, con 0.25 dp.
 - Cuando la bahía vuelve a caber, la centra el ancho mínimo y el punto ya no puede quedarse:
   la bahía entera está a la vista.
 - Con el chip, el zoom sigue ampliando desde la esquina de arriba a la izquierda.
@@ -2759,6 +2784,9 @@ cambian.
   caben y «Ver los 9 destinos» («Ver las 4 navieras»), que abre una hoja con todos, su ficha, su
   cuenta y la palomita en el elegido. Elegir en la hoja la cierra y filtra. **El elegido siempre se
   ve:** si no es de los primeros, toma el último lugar antes de «Ver los n».
+- **«Carga especial» enseña siempre sus chips** (T-120, entrega 2, O-120-5): tiene tres como mucho,
+  y una hoja para llegar a uno solo no compensa. En el teléfono envuelve como en la oficina, sin
+  «Ver las 3 cargas»; los destinos y las navieras siguen en dos líneas.
 - **`BsFichasEnLineas({required List<Widget> fichas, required Widget verTodas, int maxLineas = 2,
   double espacio = 8, double espacioEntreLineas = 8, int? fija})`**, en
   `lib/core/design/componentes/bs_fichas_en_lineas.dart`: dispone las fichas como un `Wrap`
@@ -2797,9 +2825,16 @@ cambian.
   va fuera de la semántica. «Sin destino» abre su chip; «Otros N puertos» no se toca; la tabla de
   «Ver como tabla» tampoco.
 - **Al tocar**, el destino pasa a ese puerto, la naviera y la carga especial se sueltan (la barra
-  cuenta todas) y se va a la Lista **con su título arriba de lo que se ve** («Contenedores (25),
-  destino PAMIT», con «Quitar filtros») y las tarjetas debajo, no con el resumen del viaje (D9 de la
-  10.149). La Lista se dispone en el cuadro siguiente, y ahí se lleva el título arriba.
+  cuenta todas) y se va a la Lista **con su título arriba de lo que se ve, o con toda la lista a la
+  vista cuando no hay más que desplazar** («Contenedores (25), destino PAMIT», con «Quitar
+  filtros»), y las tarjetas debajo, no con el resumen del viaje (D9 de la 10.149, precisada en la
+  10.154). Con una lista corta, de «Sin destino» o de un puerto, el desplazamiento queda en su
+  tope: el título y todas las tarjetas se ven, y la última entera (`test/t120_e2_lista_test.dart`,
+  a 1366 × 690 y a 360 × 800). La Lista se dispone en el cuadro siguiente, y ahí se lleva el
+  título arriba. **Ese primer cuadro no se pinta** (T-120, entrega 2, O-120-4): enseñaba la Lista
+  arriba, con el resumen del viaje, y se veía en Windows y en la Web. Ahora la Lista se dispone
+  sin pintarse (opacidad cero) hasta que salta a su título; por el riel o la barra se ve desde
+  el primer cuadro.
 - **El panel dice que se toca:** «Toca un puerto para verlo en la Lista», debajo de las barras (D10).
 - **Cómo se vuelve:** por el riel o la barra, como siempre; y **Atrás de Android vuelve a
   Estadísticas una vez** (se anota en `cerrablesDeAtrasProvider`, 8, y no cuenta como el primero del

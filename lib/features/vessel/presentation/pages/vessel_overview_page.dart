@@ -121,6 +121,12 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
   /// abre con él arriba de lo que se ve.
   final GlobalKey _tituloDeLaLista = GlobalKey(debugLabel: 'titulo-de-la-lista');
 
+  /// O-120-4 (T-120, entrega 2) · Desde Estadísticas, la Lista se dispone
+  /// en el primer cuadro arriba, y salta a su título en el siguiente: ese
+  /// cuadro enseñaba el resumen del viaje (se veía en Windows y en la Web).
+  /// Mientras tanto la Lista se dispone, pero no se pinta.
+  bool _listaSinSaltar = false;
+
   @override
   void dispose() {
     _abrirPorElMouse?.cancel();
@@ -151,10 +157,13 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
     // «Quitar filtros») arriba y las tarjetas debajo, no con el resumen del
     // viaje. La Lista se dispone en el cuadro siguiente: ahí se lleva el
     // título arriba. Por el riel o la barra, la Lista recuerda dónde estaba.
+    // O-120-4: hasta ese salto, la Lista no se pinta.
+    setState(() => _listaSinSaltar = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final titulo = _tituloDeLaLista.currentContext;
-      if (!mounted || titulo == null) return;
-      Scrollable.ensureVisible(titulo, alignment: 0);
+      if (titulo != null) Scrollable.ensureVisible(titulo, alignment: 0);
+      setState(() => _listaSinSaltar = false);
     });
   }
 
@@ -1327,7 +1336,7 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
       ],
     );
 
-    return CustomScrollView(
+    final lista = CustomScrollView(
       key: const ValueKey<String>('lista-scroll'),
       controller: _scrollDeLaLista,
       semanticChildCount: filteredContainers.length,
@@ -1363,6 +1372,8 @@ class _VesselOverviewPageState extends ConsumerState<VesselOverviewPage> {
         ),
       ],
     );
+    // O-120-4: dispuesta pero sin pintar hasta que salta a su título.
+    return Opacity(opacity: _listaSinSaltar ? 0 : 1, child: lista);
   }
 }
 

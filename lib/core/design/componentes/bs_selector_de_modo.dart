@@ -52,6 +52,11 @@ class BsEntradaDeModo<T> {
   /// Qué se hace en ese modo, para la descripción emergente y el menú.
   final String? ayuda;
 
+  /// El nombre de un segmento para el lector de pantalla: el entero y la
+  /// cuenta entera, una vez («Descarga, 28 por bajar en GTSTC»; T-120, O2).
+  String get nombreEntero =>
+      <String>[rotulo, if (cuenta != null) cuenta!].join(', ');
+
   /// Lo que dice la descripción emergente: el nombre, la cuenta y la ayuda.
   String get descripcion => <String>[
         rotulo,
@@ -143,28 +148,51 @@ class _Segmentos<T> extends StatelessWidget {
       child: SegmentedButton<T>(
         segments: <ButtonSegment<T>>[
           for (final entrada in selector.entradas)
+            // T-120, O2 · Sin `tooltip` en el segmento: Windows le suma al
+            // nombre la descripción emergente, que empieza por el mismo
+            // nombre («Destino. Destino. El puerto…»). La descripción sigue
+            // al pasar el mouse por el icono o el rótulo, fuera de la
+            // semántica; el nombre es el entero con su cuenta entera, una
+            // vez, como «Acciones» (10.45), y la ayuda va como pista. En
+            // Windows el motor no expone la pista (ni UIA ni MSAA, medido
+            // en la entrega 2): ahí la ayuda queda en la descripción
+            // emergente.
             ButtonSegment<T>(
               value: entrada.valor,
-              tooltip: entrada.descripcion,
-              icon: entrada.icono == null ? null : Icon(entrada.icono),
-              label: Text.rich(
-                TextSpan(children: <InlineSpan>[
-                  TextSpan(text: entrada.rotuloCorto ?? entrada.rotulo),
-                  if (entrada.cuentaCorta != null)
-                    TextSpan(
-                      text: ' ${entrada.cuentaCorta}',
-                      // En el elegido, el color de la selección: la tinta
-                      // suave sobre la tinta invertida no se lee.
-                      style: TextStyle(
-                        color: entrada.valor == elegido
-                            ? null
-                            : esquema.onSurfaceVariant,
-                        fontFeatures: cifrasTabulares,
-                      ),
+              icon: entrada.icono == null
+                  ? null
+                  : Tooltip(
+                      message: entrada.descripcion,
+                      excludeFromSemantics: true,
+                      child: Icon(entrada.icono),
                     ),
-                ]),
-                maxLines: 1,
-                softWrap: false,
+              label: Tooltip(
+                message: entrada.descripcion,
+                excludeFromSemantics: true,
+                child: Semantics(
+                  label: entrada.nombreEntero,
+                  hint: entrada.ayuda,
+                  excludeSemantics: true,
+                  child: Text.rich(
+                    TextSpan(children: <InlineSpan>[
+                      TextSpan(text: entrada.rotuloCorto ?? entrada.rotulo),
+                      if (entrada.cuentaCorta != null)
+                        TextSpan(
+                          text: ' ${entrada.cuentaCorta}',
+                          // En el elegido, el color de la selección: la tinta
+                          // suave sobre la tinta invertida no se lee.
+                          style: TextStyle(
+                            color: entrada.valor == elegido
+                                ? null
+                                : esquema.onSurfaceVariant,
+                            fontFeatures: cifrasTabulares,
+                          ),
+                        ),
+                    ]),
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                ),
               ),
             ),
         ],
