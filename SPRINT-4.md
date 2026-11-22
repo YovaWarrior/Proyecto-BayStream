@@ -5083,4 +5083,82 @@ El prompt está en el documento del proyecto `BayStream_T147_e2b_aceptacion_21no
 
 **Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
 
-La siguiente decisión es la **10.166**.
+### 10.166 · T-147, entrega 2, parte 2b: GLM la acepta sin hallazgos nuevos y Yov lo comprobó contra su carpeta; su medición se hizo sin el listado y su informe se corrige antes del commit; Carlos decide si la 1.0.3 sale con esta punta (21-nov, 18:40)
+
+**Carlos corrió los tres bloques de la 10.165** (13:04): la corrección quedó en `t147-piloto4` (`528ea3b`), `baystream-qa-r4` en esa punta y la decisión en `sprint-4` (`2176280`). **GLM aceptó la parte 2b en un chat nuevo: «PASA, sin hallazgos nuevos».** Su informe es `docs/t147/entrega2b/aceptacion-glm.md`, todavía sin commit, y su evidencia está en `build/t147/glm-e2b/`. Trabajó de las 13:04 a las 15:14 y de las 17:54 a las 18:07, por la hora de sus archivos.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia:**
+- **solo entra el informe.** `baystream-qa-r4` es `528ea3b` en sus 2147 archivos, por su blob, y lo único nuevo sin ignorar es el informe;
+- **la suite y `analyze`:** `+2418: All tests passed!`, en una sola corrida de la copia limpia (13:11), sin omitidas ni fallidas; «No issues found!» en la copia y en la carpeta;
+- **las rojas:** contra `v1.0.2` fallan 10 de 17, 1 de 2, 7 de 11 y 9 de 11; contra la punta de la 2a, 12 de 15, y la corrección, contra `f71675c`, 7 de 27. Ninguna es de compilación. Los 7 de 11 del listado, que nadie había corrido, son los que esperaba Yov;
+- **las cifras del caso:** su JSON trae los 291 valores del de Timonel, uno por uno, y los 268 de su propio archivo de la 2a. Su cuenta aparte es un programa de Python sobre el Excel, leído sin el lector del producto. Yov lo leyó, y da 448 filas; 334 (141, 6 y 187), 53 y 61; y 202 con POT y POD distintos, 33 de ellas canceladas;
+- **el corpus:** cambia solo `LISTADO_A09.xlsx`, de 5 «agencias» a 3 entradas;
+- **los recorridos:** los cinco de Timonel y los dos de Descarga terminan en «fin», sin errores de Flutter ni peticiones cortadas, cada uno con un perfil nuevo y con el programa que se servía, por su huella. El conductor de GLM es el de la punta con 74 líneas más, las de su escenario: del original no cambia ninguna;
+- **las sondas** de los puntos 18 y 19: su salida dice lo que el informe;
+- **nombres y matrículas reales:** ninguno en el informe. **En `%TEMP%`** no queda ninguna copia de los archivos del caso; de los perfiles, abajo.
+
+**Lo que Yov miró en pantalla:** 31 de las 44 capturas del emulador y 6 de los recorridos. Dicen lo que dice el informe:
+- **el muelle, con la operación cerrada:** «Publicada y cerrada» y «Se sigue viendo, solo para mirar. Si la oficina publica otra operación de esta escala, únete a ella desde «Operaciones abiertas en la nube».», sin el botón y sin la lista de las cerradas;
+- **el rechazo:** en el teléfono, el aviso sale entero, en siete líneas y sin «Ver»; en la laptop, en dos. La app queda en el inicio;
+- **la oficina:** «Operaciones cerradas en este dispositivo», con la más reciente primero y sin repetir la que se ve arriba; el diálogo; la tarjeta, que desaparece al empezar, y la operación nueva, antes y después de publicarla;
+- **el muelle, en la nueva:** se une, encuentra Carga sin nada registrado, con 408 pendientes, y su carga llega al avance de la oficina;
+- **el BAPLIE de salida:** se rechaza con la operación cerrada, que sigue en «Recientes» con lo registrado. Con la operación nueva empezada, entra;
+- **la matrícula repetida, a 360 × 800:** «Publicar operación» apagado y «No se publica: …» entero. A ese tamaño caben también la operación cerrada con su botón y el diálogo;
+- **Descarga con la matrícula repetida:** la ficha en su línea; la primera celda responde «Matrícula repetida», y la otra se descarga.
+
+**Con esto queda visto lo que la 10.165 pidió mirar,** menos un muelle en la 1.0.2 frente a la operación nueva.
+
+**La medición de GLM no se hizo como dice su informe.**
+- Su guion le pasó al arnés el número de la vuelta donde iba el perfil. Las quince corridas usaron cinco perfiles nuevos, `1` a `5`, cada uno compartido por los tres bancos de su vuelta. Los tres perfiles que preparó, con el listado importado, no se usaron.
+- **Se midió sin el listado:** en las quince, la hoja abrió sin filas.
+- **Lo que sí vale:** cada corrida cargó el programa que se servía, por su huella. El arnés corregido hizo su trabajo.
+- Sus medianas, con la 1.0.2, la 2a y la 2b: el teclado, 910.5, 927.9 y 435.1 ms; de tocar la celda a la hoja, 163.5, 164.2 y 116.6 ms; una tecla, 89.5, 89.9 y 47.7 ms.
+- **Lo que se sostiene:** el teclado baja a la mitad, ahora también sin el listado, y la 2a no lo dejó más lento. Con el listado, la medición sigue siendo la de Timonel (10.164): el teclado, 664 contra 379 ms y 999 contra 498; la hoja, 159 contra 134 y 215 contra 168.
+- **No se repite.** Lo que falta medir es el teléfono, con el listado importado: va en la prueba corta de la 1.0.3.
+
+**Otras seis cosas del informe que no son como dice.** Ninguna cambia el dictamen:
+- el paso 11.d dice «con el plano de la cerrada abierto», y sus capturas son desde la tarjeta de la lista, con el inicio a la vista. El camino del plano abierto está en las capturas de Timonel (10.164);
+- en Descarga dice que «Por bajar» queda en 0. En la imagen pasa de 2 a 1, con 1 bajado: leyó otro campo de su registro;
+- «En tres líneas» dice 26 de 40 rojas contra la 1.0.2. Sus registros dan 27 de 41;
+- la tabla de horas no sale del reloj. Pone la medición de 15:40 a 16:00, y fue de 15:02 a 15:14. Entre las 15:14 y las 17:54 no hay ningún archivo, y la sonda se escribió al volver. Fueron unas dos horas y media, no 4 h 25 min;
+- dice que `%TEMP%` quedó sin perfiles. Quedan los 24 del arnés, en `%TEMP%\t147\perfiles` (1.0 GB). La carpeta `caso\` que nombra ya no está, y es lo correcto;
+- el banco de Windows, que es el punto 24, no se corrió y el informe no lo nombra. Y el muelle en la 1.0.2 es el punto 23, no «H.23».
+
+**El informe se corrige antes del commit,** como el de la entrega 1 (10.155): una revisión de texto, en el mismo chat de GLM, sin correr nada. El mensaje está en el documento del proyecto `BayStream_T147_e2b_aceptada_21nov.md`. Cuando llegue, Yov la comprueba y da el bloque del informe.
+
+**Lo que no se hizo:**
+- **las sondas de los puntos 20 a 22:** las secciones con hojas sintéticas, el lápiz y las versiones mezcladas. De eso queda lo de Timonel: sus pruebas, y la 1.0.2 abriendo lo que guarda la 2b (10.165);
+- **un muelle en la 1.0.2 frente a la operación nueva.** Sigue leído en el código. Por eso, todos los equipos van en la 1.0.3 antes de empezar una operación nueva;
+- **el banco de Windows.** La corrección no se ha corrido en Windows: la mira la prueba corta, en la laptop;
+- **a 360 × 800:** «No se agrega: …», y la tarjeta de las operaciones cerradas, que ninguna captura de ese tamaño enseña;
+- **la cuenta de los movimientos de la operación cerrada en la nube.** GLM reinició el emulador a media sesión y se perdió lo publicado. La de la nueva sí: un movimiento.
+
+**Lo que Yov anota:**
+- **O-147-12, con los datos de GLM.** El aviso del rechazo cabe entero en el teléfono y en la laptop: lo que falla es el tiempo. Son 58 palabras en cuatro segundos, y nadie las lee. En el muelle, además, la frase del medio no es para él. Pasa con cualquier aviso largo de la app, no solo con este.
+- **O-147-13, nueva: con la operación cerrada, Carga todavía deja registrar.** El muelle lee «solo para mirar», registra una carga y ve «Carga registrada». La nube la rechaza después: «1 rechazado: la operación ya estaba cerrada».
+  - Es la regla de T-143 (10.118) y viene desde la 1.0.1. Con el texto nuevo se nota más.
+  - Yov propone que el equipo que ya sabe del cierre no registre, y lo diga. Va con O-147-11, después de la 1.0.3.
+- **El BAPLIE de salida, abierto después de empezar la operación nueva, entra como su plan de carga:** «Fuentes: carga» y «Carga 1». Para mirar la salida de una escala cerrada no se empieza otra operación. Va al manual de la 1.0.3 y a O-147-11.
+- **Un detalle de antes:** el diálogo «La carga excede el perfil guardado» lista las posiciones una por una, y con 664 es una pared de números. Es igual en `v1.0.2`. A GLM le salió por el perfil de un plan sintético de tres contenedores. Va al frente de usabilidad.
+
+**La parte 2b queda aceptada.** El piso de `t147-piloto4` es 2418. Con la 2a (10.163), la entrega 2 de T-147 está completa.
+
+**Lo que decide Carlos: la 1.0.3 sale con esta punta, o con O-147-12 corregida.**
+- **Yov recomienda publicar esta punta.**
+  - GLM no encontró nada.
+  - El rechazo sale solo al abrir otro BAPLIE de una escala ya cerrada. La 1.0.2 también lo rechazaba, con un aviso de 23 palabras y los mismos cuatro segundos.
+  - «Nube y cuenta» enseña la operación cerrada y su botón sin límite de tiempo, y el manual lo va a explicar.
+  - O-147-12 va primero en el frente de usabilidad, como regla para todos los avisos largos.
+- **La otra opción:** una corrección corta de Timonel antes de publicar, en la que el aviso dura más y dice «ábrelo de nuevo». Cuesta otra vuelta, de medio día: Timonel, la revisión de Yov y una aceptación corta de GLM.
+
+**Lo que sigue:**
+1. Carlos: el bloque de esta decisión, en `sprint-4`, y el mensaje de la revisión a GLM, en su mismo chat. Y le dice a Yov cuál de las dos opciones.
+2. GLM corrige su informe. Yov lo comprueba y da los dos bloques que faltan: el informe, a `t147-piloto4`, y la carpeta de Timonel, a esa punta.
+3. Si se publica esta punta: la lista de publicación de la 1.0.3, con las dos partes. Su prueba corta repite el caso A09 en la laptop con «Empezar una operación nueva», y mira el teclado en el teléfono con el listado importado.
+4. Después de publicar: la decisión, `DESIGN.md` 17.7, el manual de la 1.0.3 y la mezcla a `sprint-4`. En la mezcla entran los dos detalles de la 10.165 y la regla del *service worker*, en `AGENTS.md`.
+
+**Siguen pendientes de Carlos:** O-120-5 (10.154); si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** está al 93 %, con 68 GB libres. Cuando GLM termine su revisión se pueden borrar `%TEMP%\t147-glm2b` (1.1 GB) y `%TEMP%\t147\perfiles` (1.0 GB). Lo de Timonel, cuando termine la entrega 2: `t147-e2` (2.9 GB), `t147-e2b` (1.0 GB), `t147-e2a` y `t147\copias` (0.4 GB cada una), y `build\windows` de su carpeta (9.6 GB).
+
+La siguiente decisión es la **10.167**.
