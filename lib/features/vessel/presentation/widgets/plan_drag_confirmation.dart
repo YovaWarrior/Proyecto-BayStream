@@ -615,8 +615,19 @@ class _PlanDragSourceState extends State<_PlanDragSource> {
     _ultimo = null;
   }
 
+  /// T-120, O-120-7 (`DESIGN.md` 16.2) · Si el último contacto que terminó
+  /// sobre esta celda se canceló, en vez de soltarse.
+  bool _cancelado = false;
+
   void _soltar(DraggableDetails details) {
     _detener();
+    // Un arrastre cancelado (lo cancela el sistema, o el plano al perder el
+    // foco) termina sin proponer nada: ni la hoja ni el aviso. Flutter avisa
+    // los dos finales por el mismo `onDragEnd`, y `DraggableDetails` no los
+    // distingue (`wasAccepted` tampoco: es falso también al soltar en el hueco
+    // entre celdas cuando el plano se movió bajo un dedo quieto, y entonces
+    // cuenta la celda que quedó bajo el puntero, T-122).
+    if (_cancelado) return;
     // Con `pointerDragAnchorStrategy`, `offset` es el puntero en pantalla.
     widget.onDrop(details.offset);
   }
@@ -627,18 +638,27 @@ class _PlanDragSourceState extends State<_PlanDragSource> {
     super.dispose();
   }
 
+  /// El `Listener` está en el camino del contacto que arrastra, por encima de
+  /// la celda: recibe su `up` o su `cancel` antes que el reconocedor del
+  /// arrastre, que lo recibe al final, por la ruta de punteros, y en ese
+  /// mismo evento llama a [_soltar]. Así [_cancelado] dice cómo terminó el
+  /// contacto que termina el arrastre.
   @override
-  Widget build(BuildContext context) => LongPressDraggable<_PlanDrag>(
-        key: widget.dragKey,
-        data: widget.data,
-        maxSimultaneousDrags: 1,
-        dragAnchorStrategy: pointerDragAnchorStrategy,
-        feedback: widget.feedback,
-        childWhenDragging: widget.childWhenDragging,
-        onDragStarted: _empezar,
-        onDragUpdate: _mover,
-        onDragEnd: _soltar,
-        child: widget.child,
+  Widget build(BuildContext context) => Listener(
+        onPointerUp: (_) => _cancelado = false,
+        onPointerCancel: (_) => _cancelado = true,
+        child: LongPressDraggable<_PlanDrag>(
+          key: widget.dragKey,
+          data: widget.data,
+          maxSimultaneousDrags: 1,
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: widget.feedback,
+          childWhenDragging: widget.childWhenDragging,
+          onDragStarted: _empezar,
+          onDragUpdate: _mover,
+          onDragEnd: _soltar,
+          child: widget.child,
+        ),
       );
 }
 

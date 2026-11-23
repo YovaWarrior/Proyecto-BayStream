@@ -1767,8 +1767,15 @@ class _Rejilla extends StatelessWidget {
         curva: curva,
         onTap: () => grid.onContainerTap(container),
       );
+      // T-120, T120-E2-03 (DESIGN.md 18.4): la clave es de la celda y del
+      // contenedor, no de la matrícula. Con una matrícula en dos celdas del
+      // mismo nivel, las dos resaltadas son hermanas en la fila y compartían
+      // clave. Con el contenedor, al cambiar lo resaltado la vista sigue
+      // yendo a la celda (un `_RevealPosition` nuevo).
       celdas.add(target(isHighlighted
-          ? _RevealPosition(key: ValueKey(container.containerId), child: cell)
+          ? _RevealPosition(
+              key: ValueKey('revelar-$position-${container.containerId}'),
+              child: cell)
           : cell));
     }
     return celdas;

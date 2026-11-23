@@ -11,6 +11,9 @@
 //   matrícula, en celdas distintas (10.160 y 10.164).
 // - T120_REPETIDA_TRES.edi (corrección 1, T120-E2-01): trece; el 3.º, el 4.º
 //   y el 7.º con la misma matrícula.
+// - T120_PLANO_REPETIDA.edi (corrección 2, T120-E2-03): trece; el 3.º y el 7.º
+//   con la misma matrícula, en dos celdas del mismo nivel (0020382 y
+//   0020782), el caso de GLM para el Plano.
 //
 //   dart tool/t120e2_buques.dart "$env:TEMP\t120-e2\caso"
 import 'dart:io';
@@ -35,6 +38,11 @@ String t120e2Repetida() => t120Baplie(12)
 /// (el 3.º, el 4.º y el 7.º); el 3.º y el 4.º son de LNB.
 String t120e2RepetidaTres() => t120Baplie(13)
     .replaceFirst('EQD+CN+${t120Numero(4)}', 'EQD+CN+${t120Numero(3)}')
+    .replaceFirst('EQD+CN+${t120Numero(7)}', 'EQD+CN+${t120Numero(3)}');
+
+/// Corrección 2 (T120-E2-03): la matrícula en dos celdas del mismo nivel de
+/// la bahía 2 (el 3.º y el 7.º): en el Plano, dos hermanas de la misma fila.
+String t120e2PlanoRepetida() => t120Baplie(13)
     .replaceFirst('EQD+CN+${t120Numero(7)}', 'EQD+CN+${t120Numero(3)}');
 
 void main(List<String> args) {
@@ -80,6 +88,15 @@ void main(List<String> args) {
     final ids = v.containers.map((c) => c.containerId).toSet();
     if (v.containers.length != 13 || ids.length != 11) {
       throw StateError('Repetida en tres: ${v.containers.length} y ${ids.length}');
+    }
+  });
+  escribir('T120_PLANO_REPETIDA.edi', t120e2PlanoRepetida(), (v) {
+    final celdas = v.containers
+        .where((c) => c.containerId == t120Numero(3))
+        .map((c) => c.stowagePosition?.toIsoCode())
+        .toList();
+    if (v.containers.length != 13 || celdas.join(',') != '0020382,0020782') {
+      throw StateError('Plano repetida: ${v.containers.length} y $celdas');
     }
   });
   stdout.writeln('Carga de prueba sintética, no un viaje.');

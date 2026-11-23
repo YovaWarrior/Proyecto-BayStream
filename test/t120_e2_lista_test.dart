@@ -174,13 +174,15 @@ void main() {
         expect(repetidas,
             {'Bahía 002, Fila 03, Nivel 82', 'Bahía 002, Fila 05, Nivel 82'},
             reason: 'una tarjeta por celda, con su posición');
-        // T120-E2-01 (corrección 1): cada tarjeta, su clave, con su celda.
+        // T120-E2-01 (corrección 1): cada tarjeta, su clave, con su celda; y
+        // desde la corrección 2 (B2), con el identificador del contenedor
+        // detrás.
         expect(claves.values.toSet(), hasLength(12),
             reason: 'doce tarjetas, doce claves: $claves');
         expect(claves['${t120Numero(3)} Bahía 002, Fila 03, Nivel 82'],
-            'tarjeta-${t120Numero(3)}-0020382');
+            startsWith('tarjeta-${t120Numero(3)}-0020382-'));
         expect(claves['${t120Numero(3)} Bahía 002, Fila 05, Nivel 82'],
-            'tarjeta-${t120Numero(3)}-0020582');
+            startsWith('tarjeta-${t120Numero(3)}-0020582-'));
         expect(tester.takeException(), isNull);
 
         // Un filtro que deja una sola de las dos, y soltarlo: la lista se

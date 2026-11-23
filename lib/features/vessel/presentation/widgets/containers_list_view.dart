@@ -91,13 +91,20 @@ class ContainersSliverList extends StatelessWidget {
   }
 
   /// T-120, corrección 1 de la entrega 2 (T120-E2-01) · La clave de la
-  /// tarjeta: la matrícula y su celda («tarjeta-TSTU0000003-0020382»). Con
-  /// una matrícula en más de una celda, dos tarjetas compartían la clave de
-  /// la matrícula, y al rearmarse la lista con las dos a la vista el
-  /// framework se encontraba dos hijos con la misma clave. Sin celda, el
-  /// identificador del contenedor.
-  static String claveDe(ContainerUnit c) =>
-      'tarjeta-${c.containerId}-${c.stowagePosition?.toIsoCode() ?? c.id}';
+  /// tarjeta: la matrícula, su celda y el identificador del contenedor
+  /// («tarjeta-TSTU0000003-0020382-» y el identificador). Con una matrícula
+  /// en más de una celda, dos tarjetas compartían la clave de la matrícula,
+  /// y al rearmarse
+  /// la lista con las dos a la vista el framework se encontraba dos hijos con
+  /// la misma clave. Corrección 2 (B2): si el archivo repite matrícula y
+  /// celda, el lector guarda los dos contenedores y la celda tampoco basta;
+  /// el identificador sí es único (el lector da uno a cada contenedor, y los
+  /// vacíos asignados llevan «assigned-» y su matrícula, cada uno en su celda).
+  /// La matrícula y la celda se quedan delante para leer la clave.
+  static String claveDe(ContainerUnit c) {
+    final celda = c.stowagePosition?.toIsoCode();
+    return 'tarjeta-${c.containerId}-${celda == null ? '' : '$celda-'}${c.id}';
+  }
 }
 
 /// Tarjeta individual para mostrar un contenedor

@@ -2002,3 +2002,382 @@ git push origin sprint-4
 > 8 de 32 rojas. Monitores y pellizco de verdad, pendientes.
 
 **ALTO: Yov revisa y GLM acepta.**
+
+## Corrección 2 de la entrega 2 (22-nov; 10.172)
+
+### E2c2.1 Resultado en tres líneas
+
+- **O-120-7:** un arrastre de celda cancelado, lo cancele el sistema o el plano al perder el foco,
+  ya no propone nada: ni la hoja ni el aviso, con el dedo y con el mouse, sobre una celda válida,
+  una roja y la de origen (12 casos, rojos antes). Soltar de verdad no cambia.
+- **Las claves, por contenedor:** en el Plano (T120-E2-03), la celda que resalta el buscador lleva
+  la clave de su celda y su contenedor, y elegir una matrícula repetida ya no rompe el armado; en
+  la Lista (B2), la clave de la tarjeta suma el identificador del contenedor, porque con la
+  matrícula dos veces en la misma celda **sí fallaba** como T120-E2-01.
+- **C (T120-E2-02) queda como observación, con su causa leída, y sale una nueva, O-120-8:** al
+  100 %, en la oficina, el pellizco de dos dedos de la pantalla táctil no amplía si empieza en una
+  celda vacía. Carlos eligió no tocar el código de C. Suite **2586 de 2586** (2563 + 23), sin
+  omitidas, y `analyze` en cero, aquí y en una copia limpia; 19 de 48 rojas contra `f828860`.
+  **Los monitores y el pellizco de verdad siguen pendientes** (D).
+
+### E2c2.2 Paso 0
+
+- La punta de `sprint-4`: `f828860` (10.172), debajo `6aaefa9` (la aceptación de GLM) y `ed1255e`.
+  Es la esperada.
+- La suite no se repitió al empezar: el piso es 2563.
+- **El disco:** 43 GB libres al empezar y antes de cada compilación (las de las 19:38, 19:43 y
+  19:46); 42 GB al terminar. No se extrajo otra vez el SDK de Firebase: se usó el banco de
+  `%TEMP%\t120-e2\banco`, con `lib/` y `tool/` puestos al día y cotejados con `diff` (sin los `\r`
+  de la laptop: el `lib/` del banco era el de la punta).
+- **Semáforo:** Carlos dio la luz verde de tres ventanas: la de desarrollo (17:50 a 19:36), la de
+  los bancos (19:38 a 19:50) y la de la suite y las rojas (19:51 a 19:58).
+
+### E2c2.3 Cada punto
+
+#### A · O-120-7: un arrastre de celda cancelado no propone nada
+
+- **La prueba, antes de cambiar nada** (`test/t120_e2c2_arrastre_cancelado_test.dart`, 12 casos):
+  sobre el arnés de T-105 (operación publicada y abierta, operador autorizado, la celda pendiente
+  0030282), con el dedo y con el mouse, el arrastre a medias con el puntero sobre una celda válida
+  (la reserva 0030382: intercambio), sobre una que no lo admite (0030182: «no cabe») y sobre la de
+  origen; y en cada una, la cancelación del sistema (un `PointerCancelEvent`) y la pérdida de foco
+  (`inactive`). En cada caso comprueba que el arrastre empezó y su vista previa; que al cancelarse
+  desaparece la copia y no sale ni la hoja ni el aviso; que el `up` tardío no hace nada; que no se
+  registra nada; y que un arrastre nuevo de la misma celda termina en su hoja. El modelo es la sonda
+  de GLM.
+- **Contra la punta fallan los 12** (`build/t120/e2c2/rojas/roja-arrastre.txt` y
+  `punta-t120_e2c2_arrastre_cancelado.txt`), cada uno en su comprobación: sobre la válida sale **la
+  hoja**, y sobre la roja y sobre la de origen sale **el aviso**, con las dos formas de cancelar y
+  con los dos dispositivos. Es lo que midió GLM.
+- **Cómo se sabe que se canceló, y por qué así.** `DraggableDetails` no dice si el arrastre se soltó
+  o se canceló, y `wasAccepted` tampoco sirve: también es falso al soltar en el hueco entre celdas
+  cuando el plano se movió bajo un dedo quieto, y ahí la regla de T-122 hace contar la celda que
+  quedó bajo el puntero. Elegí la salida que proponía el prompt: la celda que se arrastra
+  (`_PlanDragSource`) va dentro de un `Listener` que anota, en `_cancelado`, si el último contacto
+  que terminó sobre ella se soltó (`onPointerUp`) o se canceló (`onPointerCancel`). Ese `Listener`
+  está en el camino del contacto, por encima de la celda, así que recibe el `up` o el `cancel`
+  **en el mismo evento** y antes que el reconocedor del arrastre. El reconocedor lo recibe al final,
+  por la ruta de punteros, y entonces llama a `onDragEnd`. Si `_cancelado`, `_soltar` se detiene
+  (detiene el desplazamiento automático) y no llama a `onDrop`. Vale igual para la cancelación del
+  sistema y para la del plano al perder el foco: las dos llegan como `PointerCancelEvent` por el
+  camino del contacto.
+- **Después del cambio pasan los 12**: al cancelarse, ni hoja ni aviso, la copia desaparece, no se
+  registra nada, y el arrastre nuevo termina en su hoja. **Soltar de verdad no cambia:** siguen en
+  verde las pruebas de T-105 (`t105_*`), T-106, T-122 (la celda bajo el puntero aunque el plano se
+  mueva) y T-123 (`build/t120/e2c2/vecinas.txt`, 167 de 167 con las del pellizco y las de T-119).
+- **Lo que no entra, y se queda así:** soltar una celda sobre sí misma da el aviso rojo.
+- **No se mira en el banco:** el banco no tiene una operación publicada; A se comprueba en pruebas
+  de widgets.
+
+#### B1 · T120-E2-03: la clave de la celda que resalta el buscador
+
+- **La prueba, antes de cambiar nada** (`test/t120_e2c2_plano_repetida_test.dart`, 2 casos): el
+  caso de GLM, el 3.º y el 7.º de `t120Baplie(13)` con la misma matrícula, en 0020382 y 0020782. El
+  buscador da dos resultados (Fila 03 y Fila 07); por cada uno, se elige y se mira que el Plano se
+  arme sin errores, en la bahía 2, y qué queda resaltado.
+- **Contra la punta fallan los 2:** «Duplicate keys found.» y detrás las aserciones del framework
+  (línea 6420 y `'_dependents.isEmpty'`). Corridas juntas, la del segundo resultado trae antes
+  errores de `TooltipState` que deja la primera en el mismo aislado (como en la corrección 1); **sola
+  da también «Duplicate keys found»** (`rojas/punta-t120_e2c2_plano_repetida-fila07-sola.txt`).
+- **La causa** es la que leyó Yov: la celda resaltada va dentro de un `_RevealPosition` con la clave
+  de la matrícula, y las celdas de un nivel son hijas de una misma fila.
+- **El cambio** (`bay_plan_view.dart`, en `_celdasDeNivel`): la clave es
+  `'revelar-<celda>-<matrícula>'`, de la celda y del contenedor. Se conserva lo que hacía: al
+  cambiar lo resaltado (otra matrícula), la clave cambia, el `_RevealPosition` es nuevo y la vista
+  va a la celda.
+- **Después pasan los 2.** **Qué queda resaltado con cada resultado: las dos celdas**
+  (`cell-3-82` y `cell-7-82`), con el de la Fila 03 y con el de la Fila 07, porque el buscador
+  resalta por matrícula. Que cada resultado resalte solo su celda no entra (O-120-6, bloque 4).
+- **Las demás claves por matrícula entre hermanas del Plano**, leídas en `_celdasDeNivel`:
+  - `pending-discharge-<matrícula>` y `loading-<clave>` (con su `_RevealPosition` de la clave de
+    carga, `C:<matrícula>`) solo salen en el modo Carga, y ahí cada celda va dentro de
+    `PlanDragCell`, que lleva la clave de su celda (`plan-cell-<celda>`): no son hermanas entre sí,
+    **no se pueden repetir**. Además, de una matrícula repetida la operación se queda con una celda
+    y las demás salen como `repeated-<celda>` (T-147, 2b).
+  - `reserved-R:<celda>`, `reserved-shadow-…-<celda>-…`, `cell-<fila>-<nivel>`, `repeated-<celda>`
+    y `neighbor-twenty-<celda>` son de la celda.
+  - La única que se podía repetir era la del `_RevealPosition` de los modos sin operación de carga
+    (Contenido, Orden, Descarga): es la que cambió. No hay otra que corregir.
+- **En pantalla** (`T120_PLANO_REPETIDA.edi`, escrito por `tool/t120e2_buques.dart` en
+  `%TEMP%\t120-e2\caso-c2`: 13 contenedores, 12 matrículas, TSTU0000003 en 0020382 y 0020782). El
+  escenario nuevo `buscador` del conductor abre el buscador con su botón, escribe la matrícula, toca
+  cada resultado y captura el Plano, a 1366 × 690 y a 360 × 800, de día. Lo corrí **antes**
+  (el banco con el `lib/` de la punta) y **después**, en Windows (release) y en la Web (release), y
+  abrí cinco capturas:
+  - **Antes, Windows, 1366, el primer resultado** (`windows/buscador-antes/capturas/
+    1366x690_buscador_1_plano.png`): el Plano, «Bahía 02», Contenido, 100 %. En el nivel 82, de
+    babor a estribor, las nueve celdas en su orden (08 USHOU 19.0, 06 GTSTC 24.0, 04 GTSTC 22.0, 02
+    GTSTC 20.0, 00 vacía, 01 GTSTC 19.0, **03 GTSTC 21.0**, 05 GTSTC 23.0, **07 GTSTC 18.0**), con
+    las dos de TSTU0000003 marcadas con el borde de resaltado. No falta ni sobra ninguna.
+  - **Antes, Windows, 1366, el segundo resultado:** igual.
+  - **Antes, la Web, 360, el segundo resultado:** el Plano del teléfono, la rejilla corrida a
+    estribor (00 a 07), con las dos celdas marcadas a la vista.
+  - **Después, la Web, 1366, el segundo resultado, y Windows, 360, el primero:** lo mismo que
+    antes.
+  - **Qué se ve antes y después en release:** lo mismo. Sin la aserción, la clave repetida no
+    rompe nada a la vista en estas corridas, y el conductor no anotó ningún error de Flutter en las
+    16 capturas (8 antes y 8 después). La diferencia está en depuración: la prueba de widgets daba
+    «Duplicate keys found» y ya no.
+  - La Web: cada compilación con su perfil nuevo de Chrome (`c2-buscador-antes-3` y
+    `c2-buscador-despues`), el *service worker* borrado antes de cargar, y el `main.dart.js` que
+    cargó la página es el de la carpeta que se sirve: `65d2e7bd…` antes y `155e65b7…` después
+    (`web/*/navegador.json`). La consola, sin errores.
+  - **Del instrumento:** la primera corrida de la Web dio «Hay 0 resultados»: en la Web en release,
+    `runtimeType.toString()` sale minificado y el conductor no encontraba `_ContainerSearchResultTile`
+    por su nombre. Ahora busca el `ListTile` con «Posición:». Volví a compilar el «antes» de las
+    dos plataformas con ese conductor y repetí las dos corridas; las que valen son esas. Los
+    perfiles de las corridas descartadas (`c2-buscador-antes` y `-2`) ya no están.
+
+#### B2 · La tarjeta de la Lista, con la misma matrícula dos veces en la misma celda
+
+- **La prueba** (`test/t120_e2c2_misma_celda_test.dart`): los 13 del buque sintético, con el 4.º en
+  la celda del 3.º (0020382) y con su matrícula; el lector guarda los 13. El filtro de LNB (las dos
+  son de LNB), puesto y quitado. **Las tarjetas se cuentan por elemento:** cada una por la altura a
+  la que está en la lista, así que dos iguales cuentan como dos.
+- **Contra la punta falla como T120-E2-01:** antes del filtro, la Lista enseña **13 tarjetas**, dos
+  de TSTU0000003 en Bahía 002, Fila 03, Nivel 82, las dos con la clave
+  `tarjeta-TSTU0000003-0020382`; con el filtro, 4; al quitarlo, `'child == null || indexOf(child) >
+  index'`, «RenderSliverPadding expected a child of type RenderSliver but received … RenderErrorBox»
+  y `'_dependents.isEmpty'` (`rojas/roja-misma-celda.txt`). El título no lo leí bien en esa corrida:
+  el instrumento tomaba otro texto («Contenedores» a secas); lo corregí antes de la corrida verde.
+- **El cambio** (`containers_list_view.dart`): `ContainersSliverList.claveDe` es ahora
+  `tarjeta-<matrícula>-<celda>-<id>` (sin celda, `tarjeta-<matrícula>-<id>`), con `id` el
+  identificador del contenedor. **Por qué es único en `aboardContainersProvider`:** el lector da a
+  cada contenedor un identificador propio (`Uuid().v4()`, también a los que repiten matrícula y
+  celda), y los vacíos asignados llevan `assigned-<matrícula>`, cada uno en la celda de su reserva.
+  Dejé delante la matrícula y la celda para poder leer la clave.
+- **Después pasa:** la Lista enseña **13 tarjetas** y dice **«Contenedores (13)»**; con el filtro,
+  **«Contenedores (4), naviera LNB»**, con las dos de TSTU0000003 seguidas; al quitarlo, 13 en el
+  mismo orden, sin errores, y 13 claves distintas, las dos de la repetida con su identificador.
+- **Puestos al día:** `t120_e2_lista_test.dart` (la repetida fija las claves por su comienzo,
+  `tarjeta-TSTU0000003-0020382-`), `t120_e2c1_claves_test.dart` (fija la clave con el
+  identificador), el comentario del conductor (busca por el comienzo, `tarjeta-TSTU0000003-`, y sigue
+  valiendo) y `DESIGN.md` 18.4.
+
+#### C · T120-E2-02: queda como observación; y O-120-8
+
+- **La prueba, primero, y el instrumento comprobado** (`test/t120_pellizco_test.dart`): uno y dos
+  contactos sin levantar; el ciclo corto (`inactive` y de vuelta) y el entero (hasta `paused` y de
+  vuelta); 500 ms entre el ciclo y el gesto; un pellizco del touchpad en cuatro pasos (1.05, 1.10,
+  1.15 y 1.20), y un segundo gesto después (0.95 y 0.90).
+  - **Con un contacto amplía** con los dos ciclos: 1.050, 1.100, 1.150, 1.200, y el segundo gesto
+    lleva a 1.080. Es lo que arregló la corrección 1.
+  - **Con dos no amplía**, con los dos ciclos: 1.000 en los cuatro pasos y en el segundo gesto, sin
+    encender el pellizco. **Es del producto, no de la sonda:** pasa con varios pasos, con tiempo
+    entre el ciclo y el gesto, y en el segundo gesto. Y pasa también con el ciclo corto (GLM lo decía
+    sin haberlo medido; ahora está medido).
+- **La causa, leída en el código y comprobada con dos sondas temporales** (`build/t120/e2c2/
+  sondas/`, sus fuentes como `.dart.txt` y sus salidas):
+  1. Con un rastreo temporal en `PlanZoomViewport`, el `Listener` del plano recibe el `down` del
+     primer contacto (11), pero **ni el del segundo (12) ni el gesto del touchpad**.
+  2. Por qué: al 100 % la bahía cabe y la rejilla no se desplaza (`rejilla-horizontal`, tope 0), así
+     que en la arena del primer contacto el único reconocedor de arrastre es el de **la columna**
+     (`columna-del-plano`). Gana sin rival en cuanto el dedo se apoya y la columna empieza a
+     arrastrar (`DragScrollActivity`). Mientras arrastra, el `Scrollable` de la columna pone su
+     `IgnorePointer` sobre todo lo de dentro. La prueba de acierto en cualquier punto del plano se
+     corta ahí: de 88 entradas pasa a 55, sin el `Listener` del plano.
+  3. El segundo contacto no llega al plano: lo toma la columna. Al perder el foco, `_soltarTodo`
+     cancela solo el que conoce (11). El 12 sigue puesto en la columna, que se queda arrastrando y
+     tapando el plano. El touchpad ya no llega al `Listener`, y tampoco llegarían los toques, hasta
+     que ese contacto termine.
+  4. Por eso GLM vio que, cancelando los dos directo con `cancelPointer`, sí amplía: así también se
+     cancela el que tenía la columna. Con un solo contacto, el plano lo conoce y lo cancela.
+  - **Lo que no sé:** si en Windows, tras un Alt + Tab con dos dedos puestos, el sistema llega a
+    mandar el final del segundo contacto. Si lo manda, la columna se suelta sola. Pide la pantalla
+    táctil de verdad.
+- **O-120-8 (nueva), de la misma causa:** al 100 %, en la oficina, **el pellizco de dos dedos de la
+  pantalla táctil no amplía** si el primer dedo cae donde solo se desplaza la columna (una celda
+  vacía): el plano solo ve un dedo. Dos dedos a 40 dp que se separan a 160 dp dejan la escala en
+  **1.000** (se esperaba llegar al tope).
+  - Con la escala en 2, la rejilla también se desplaza, el arrastre de la columna no gana solo y
+    el plano ve los dos dedos: amplía (2 → 3.000, el tope).
+  - **En el teléfono no pasa:** a 360 × 800 y a 412 × 915, al 100 %, los mismos dos dedos amplían
+    hasta el tope (3.000). Ahí el `Listener` del plano envuelve los desplazables de la rejilla, y no
+    hay una columna por fuera que lo tape. Lo que no probé: una bahía que quepa entera en el
+    teléfono, donde el único arrastre de la arena sería el de las pestañas.
+  - Reproducción: la oficina a 1366 × 690, Plano al 100 %, la bahía 2 del buque de T-117; dos dedos
+    sobre `cell-0-90` (una celda vacía) que se separan.
+- **Carlos decidió no tocar el código de C.** Las pruebas que quedan en la suite y fijan el defecto
+  lo dicen en su nombre: «T120-E2-02 (DEFECTO CONOCIDO, sin corregir)…» con dos contactos (2) y
+  «O-120-8 (DEFECTO CONOCIDO, sin corregir)…» en la oficina al 100 % (1). Las demás fijan lo que se
+  quiere: con un contacto (2), la oficina con la escala en 2 (1) y el teléfono (2). Cuando se
+  arregle, las dos de defecto cambian.
+- **El arreglo de fondo, para una entrega aparte (no programado):**
+  - **Archivos:** `plan_drag_confirmation.dart` (`PlanZoomViewport`) y `bay_plan_view.dart` (la
+    columna `columna-del-plano`); quizá `plano_providers.dart`.
+  - **Cómo lo haría:** que el plano vea **todos** sus contactos aunque la columna los tape. Hay dos
+    caminos. El primero, que `PlanZoomViewport` los siga con una ruta global de punteros
+    (`GestureBinding.instance.pointerRouter.addGlobalRoute`): toma los `down` que caen dentro de su
+    caja, y sus `move`, `up` y `cancel`, en vez de solo los que le entrega su `Listener`. El
+    segundo, en la oficina, subir el `Listener` de los contactos por encima de la columna. Con dos
+    contactos sobre el plano, la columna se congela como con el pellizco del touchpad
+    (`NeverScrollableScrollPhysics`), y su arrastre ya empezado se suelta. Al perder el foco, el
+    plano cancela todos sus contactos, también los que tenía la columna.
+  - **Qué cambia en el gesto táctil:** al 100 % en la oficina, el primer dedo sigue desplazando la
+    columna en cuanto se apoya. Si llega un segundo dedo, la columna se detiene (con lo poco que
+    alcanzó a moverse) y empieza el pellizco, desde cualquier celda. Un dedo solo no cambia, y el
+    teléfono no cambia.
+  - **Cómo se mide con una pantalla táctil de verdad:** el escenario `mano`, extendido a los
+    contactos táctiles, en Windows y en Chrome. Por cada gesto: dos dedos que empiezan en una celda
+    vacía y en una llena, al 100 % y al 200 %, con la escala y lo que se movió la columna. Un dedo
+    solo tiene que seguir desplazando la columna desde el primer cuadro. Y Alt + Tab con dos dedos
+    puestos, con un pellizco del touchpad después. Y en el teléfono, que el pellizco no cambió.
+
+#### D · Los dos monitores y el pellizco de verdad
+
+**Pendientes.** Carlos no pudo en esta sesión. No los hice ni los doy por vistos; `DESIGN.md` 14.9
+sigue esperando. Siguen como dice E2.10, puntos 3 y 5.
+
+### E2c2.4 Las pruebas nuevas y las rojas
+
+| Archivo | Qué | Contra `f828860` |
+|---|---|---|
+| `test/t120_e2c2_arrastre_cancelado_test.dart` (nuevo) | O-120-7 (12) | **fallan 12 de 12** |
+| `test/t120_e2c2_plano_repetida_test.dart` (nuevo) | T120-E2-03 (2) | **fallan 2 de 2** |
+| `test/t120_e2c2_misma_celda_test.dart` (nuevo) | B2 (1) | **falla 1 de 1** |
+| `test/t120_pellizco_test.dart` | T120-E2-02, 2 de lo que se quiere y 2 de defecto conocido; O-120-8, 3 de lo que se quiere y 1 de defecto conocido (8 nuevas) | pasan 16 de 16: C no cambia código |
+| `test/t120_e2c1_claves_test.dart` | la clave con el identificador (cambian 2) | **fallan 2 de 2** |
+| `test/t120_e2_lista_test.dart` | la repetida, la clave por su comienzo (cambian 2) | **fallan 2 de 15** |
+
+- **19 de 48 rojas**, cada una en su comprobación y ninguna de compilación, en una copia de
+  `f828860` con solo estas seis pruebas (`%TEMP%\t120-e2\rojas-c2`; `build/t120/e2c2/rojas/punta-*`).
+  Las cuatro de las claves de la Lista fallan por el texto de la clave (ahora lleva el
+  identificador); las de A, B1 y B2, por el defecto.
+- La suite sube en 23: 2563 → **2586**.
+
+### E2c2.5 Validaciones
+
+| Qué | Resultado | Registro (`build/t120/e2c2/`) |
+|---|---|---|
+| Las pruebas vecinas, después de A, B y C: el pellizco, T-119, T-105, T-106, T-122, T-123, T-76, T-78 y las alertas de estiba | **167 de 167** | `vecinas.txt` |
+| La suite en la carpeta, después del último cambio (19:51 a 19:53) | **2586 de 2586**, sin omitidas | `suite-carpeta.txt` |
+| `flutter analyze --no-pub` en la carpeta | **«No issues found!»** | `analyze-carpeta.txt` |
+| La copia limpia: `git archive f828860` + las 14 rutas, iguales por su huella, + la entrada de T-124; `pub get --offline --enforce-lockfile`, el lock igual en contenido | `analyze` **«No issues found!»**; suite **2586 de 2586** | `analyze-limpia.txt`, `suite-limpia.txt`, `copias-manifiesto.json` |
+| La Web: el programa que cargó la página | `65d2e7bd…` (antes) y `155e65b7…` (después), los de la carpeta que se sirve; cada uno con su perfil nuevo | `web/*/navegador.json` |
+| `// ignore:` | Ninguno en el repositorio (la sonda temporal que lo usaba está fuera, como `.dart.txt`) | |
+| `pubspec.*`, `lib/main.dart`, los congelados, los archivos de T-147, `DESIGN.md` 17.7 y 14.9 | **No cambian** | `git diff --stat` |
+
+### E2c2.6 Lo que no se pudo y lo que queda anotado
+
+- **D, los monitores y el pellizco de verdad:** pendientes.
+- **T120-E2-02 y O-120-8:** observaciones, sin corregir (decisión de Carlos), con su causa, su
+  reproducción y las pruebas que fijan el defecto. Sin medir: si Windows manda el final del
+  segundo contacto tras un Alt + Tab, y una bahía que quepa entera en el teléfono.
+- **A y C solo en pruebas de widgets:** el banco no tiene una operación publicada, y C pide un
+  equipo con pantalla táctil y touchpad.
+- **B1 en release se ve igual antes y después;** la diferencia es de depuración.
+- **Las sondas temporales** (`t120c2_sonda_c_test.dart`, `t120c2_sonda_c2_test.dart` y
+  `t120c2_sonda_telefono_test.dart`) se sacaron de `test/`; sus fuentes y salidas quedan en
+  `build/t120/e2c2/sondas/`. El rastreo temporal de `plan_drag_confirmation.dart` se quitó: el
+  archivo volvió a su huella de antes (`9b0b0dfc…`) antes del arreglo de A.
+
+### E2c2.7 Archivos
+
+**Cambian (11):** `DESIGN.md` (16.2 y 18.4),
+`lib/features/vessel/presentation/widgets/bay_plan_view.dart`,
+`lib/features/vessel/presentation/widgets/containers_list_view.dart`,
+`lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart`,
+`test/t120_e2_lista_test.dart`, `test/t120_e2c1_claves_test.dart`, `test/t120_pellizco_test.dart`,
+`tool/t120e2_buques.dart`, `tool/t120e2_conductor.dart`, `tool/t120e2_servidor.py` y
+`tool/t120e2_windows.py`.
+
+**Nuevos (3):** `test/t120_e2c2_arrastre_cancelado_test.dart`,
+`test/t120_e2c2_misma_celda_test.dart` y `test/t120_e2c2_plano_repetida_test.dart`. Y este informe.
+**`pubspec.*` no cambia.**
+
+**Fuera de Git:** `build/t120/e2c2/` (3.5 MB). En `%TEMP%\t120-e2\`, **unos 14 GB en total** (los
+enlaces del SDK de Firebase cuentan una vez):
+- `banco\` (11 GB, el banco de Windows con su SDK, ya con el `lib/` de esta corrección): se queda
+  para los monitores;
+- `limpia\` (11 GB contando el SDK enlazado; la copia de `261ee4b`);
+- `limpia-c1\`, `limpia-final\`, `limpia-c2\` y `rojas-c2\`, de 209 a 215 MB cada una;
+- `perfiles\` (374 MB; los cuatro de esta corrección ya están borrados);
+- `web-antes-o1204\`, `web-c1\`, `web-final\`, `web-c2-antes\` y `web-c2\`, de 37 MB cada una;
+- `caso\`, `caso-c1\` y `caso-c2\` (las entradas sintéticas) y `almacenes\` (6 MB).
+
+Cuando se acepte, todo menos `banco\` y `caso\` se puede borrar, mejor desde el Explorador
+(traen enlaces).
+
+### E2c2.8 Horas
+
+Del reloj, el 22-nov:
+- **Inicio:** poco después de las 17:40. No lo anoté; la primera roja es de las 17:50.
+- **Las rojas,** de las 17:50 a las 17:51.
+- **La causa de C,** de las 17:51 a las 17:54. Ahí pregunté, y la respuesta de Carlos llegó antes
+  de las 19:33.
+- **La sonda del teléfono, y A, B1 y B2,** de las 19:32 a las 19:34. Las vecinas, a las 19:34.
+  `analyze`, a las 19:36.
+- **Los bancos,** de las 19:38 a las 19:50.
+- **La suite, la copia limpia y las rojas,** de las 19:51 a las 19:58.
+- **El informe,** a las 20:03.
+
+### E2c2.9 Para quien acepte
+
+1. La suite y `analyze` en una copia limpia de la punta con este bloque: 2586, sin omitidas, con la
+   entrada de T-124.
+2. Las rojas: las seis pruebas en una copia de `f828860` (19 de 48), cada una en su motivo.
+3. A: la sonda de O-120-7 de GLM contra esta corrección (los 16 escenarios, también «fuera de las
+   celdas»), y que soltar de verdad sigue igual, con el T-122 de la celda bajo un dedo quieto.
+4. B1 en pantalla: `T120_PLANO_REPETIDA.edi` (`dart tool/t120e2_buques.dart <carpeta nueva en
+   %TEMP%>`) y el escenario `buscador`, en Windows y en la Web; mejor también en depuración, que es
+   donde se veía el fallo.
+5. B2: la sonda de claves de GLM contando por elemento, y la Lista con un archivo que repita
+   matrícula y celda.
+6. C: leer la causa de E2c2.3 en el código de Flutter (`scroll_activity.dart`,
+   `DragScrollActivity.shouldIgnorePointer`; `scrollable.dart`, `IgnorePointer`) y las salidas de las
+   sondas. Que las pruebas de defecto conocido lo digan en su nombre.
+7. D: los monitores y el pellizco de verdad, con Carlos.
+
+### E2c2.10 Git
+
+Para que lo ejecute Carlos. Fuera quedan los archivos que solo cambian el fin de línea
+(`test/t114_fase3_correccion_test.dart` y tres de `windows/flutter/`) y las carpetas sin
+seguimiento de `docs/`.
+
+```powershell
+git add -- DESIGN.md
+git add -- lib/features/vessel/presentation/widgets/bay_plan_view.dart
+git add -- lib/features/vessel/presentation/widgets/containers_list_view.dart
+git add -- lib/features/vessel/presentation/widgets/plan_drag_confirmation.dart
+git add -- test/t120_e2_lista_test.dart
+git add -- test/t120_e2c1_claves_test.dart
+git add -- test/t120_e2c2_arrastre_cancelado_test.dart
+git add -- test/t120_e2c2_misma_celda_test.dart
+git add -- test/t120_e2c2_plano_repetida_test.dart
+git add -- test/t120_pellizco_test.dart
+git add -- tool/t120e2_buques.dart
+git add -- tool/t120e2_conductor.dart
+git add -- tool/t120e2_servidor.py
+git add -- tool/t120e2_windows.py
+git add -- docs/T120-RESULTADOS.md
+git commit -m "Sprint 4: T-120, correccion 2 de la entrega 2: un arrastre de celda cancelado no propone nada, las claves del plano y de la tarjeta por contenedor, y T120-E2-02 y O-120-8 como observaciones con su causa"
+git push origin sprint-4
+```
+
+### E2c2.11 En tres líneas
+
+- O-120-7 corregido: un arrastre de celda cancelado ya no propone nada (12 casos, rojos antes);
+  soltar de verdad no cambia.
+- Las claves por contenedor: el Plano ya no se rompe con una matrícula repetida en el buscador, y
+  la tarjeta suma el identificador porque la misma matrícula en la misma celda sí fallaba.
+- T120-E2-02 queda como observación, con su causa (la columna tapa el plano mientras arrastra), y
+  sale O-120-8 (el pellizco táctil al 100 % en la oficina); suite 2586/2586, `analyze` cero; D
+  pendiente.
+
+### E2c2.12 Mensaje para Yov
+
+> Yov, la corrección 2 de la entrega 2 de T-120 está al final de `docs/T120-RESULTADOS.md` (E2c2.1
+> a E2c2.12), sobre `f828860`, sin commit. **A:** un arrastre de celda cancelado ya no propone nada.
+> La celda que se arrastra va dentro de un `Listener` que ve el `cancel` antes que el reconocedor;
+> `wasAccepted` no servía por la regla de T-122. Son 12 casos, rojos antes. **B1:** la clave del
+> `_RevealPosition` es de la celda y el contenedor; las demás claves del Plano no se pueden
+> repetir. En release se ve igual antes y después; la diferencia era de depuración. **B2 sí
+> fallaba** con la matrícula dos veces en la misma celda: la clave suma el identificador del
+> contenedor. **C:** la causa no era el ciclo de vida. Al 100 %, el primer dedo hace ganar al
+> arrastre de la columna, que tapa el plano con su `IgnorePointer`, y el segundo dedo nunca llega
+> al plano. Carlos lo dejó como observación, y sale **O-120-8**: el pellizco táctil al 100 % en la
+> oficina no amplía si empieza en una celda vacía (en el teléfono, sí). Las pruebas que fijan el
+> defecto lo dicen en su nombre. Suite 2586/2586 y `analyze` cero, aquí y en copia limpia; 19 de
+> 48 rojas. D, pendiente.
+
+**ALTO: Yov revisa y GLM acepta.**

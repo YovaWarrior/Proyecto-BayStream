@@ -419,5 +419,183 @@ void main() {
       expect(_zoom(scope), closeTo(1.2, 1e-9));
       expect(tester.takeException(), isNull);
     }, variant: _windows);
+
+    // Corrección 2 de la entrega 2 · T120-E2-02 (10.172): después de dos
+    // contactos sin levantar y de perder el foco, un pellizco del touchpad no
+    // amplía. GLM lo midió con un paso; aquí, para descartar el instrumento,
+    // con varios pasos, con tiempo entre el ciclo y el gesto, y con un segundo
+    // gesto después del primero. Con uno y con dos contactos, y con el ciclo
+    // corto (inactive y de vuelta) y el entero (hasta paused y de vuelta).
+    //
+    // Con un contacto, amplía: es lo que se quiere, y lo arregló la
+    // corrección 1. Con dos, no: es un DEFECTO CONOCIDO, que Carlos dejó como
+    // observación (no se corrige aquí; `docs/T120-RESULTADOS.md`, corrección 2
+    // de la entrega 2, C). La causa: al 100 % la rejilla no se desplaza, así
+    // que el primer contacto hace ganar al arrastre de la columna, sin rival
+    // en la arena, y la columna tapa el plano con su `IgnorePointer` mientras
+    // arrastra. El segundo contacto nunca llega al plano; al perder el foco,
+    // el plano cancela solo el que conoce, y la columna se queda arrastrando
+    // con el otro, tapando el plano: el touchpad ya no llega. Estas pruebas
+    // fijan ese defecto, con su nombre: cuando se arregle, cambian.
+    for (final contactos in [1, 2]) {
+      for (final (ciclo, estados) in [
+        ('corto', [AppLifecycleState.inactive, AppLifecycleState.resumed]),
+        (
+          'entero',
+          [
+            AppLifecycleState.inactive,
+            AppLifecycleState.hidden,
+            AppLifecycleState.paused,
+            AppLifecycleState.hidden,
+            AppLifecycleState.inactive,
+            AppLifecycleState.resumed,
+          ]
+        ),
+      ]) {
+        final defecto = contactos == 2;
+        testWidgets(
+            defecto
+                ? 'T120-E2-02 (DEFECTO CONOCIDO, sin corregir) · 2 contactos sin '
+                    'levantar y el ciclo $ciclo: después, el pellizco del '
+                    'touchpad NO amplía, ni en varios pasos ni en un segundo '
+                    'gesto'
+                : 'T120-E2-02 · 1 contacto sin levantar y el ciclo $ciclo: '
+                    'después, el pellizco del touchpad amplía, en varios '
+                    'pasos, y un segundo gesto también',
+            (tester) async {
+          final scope = await t117Pump(tester, tamano: _ventana);
+          final foco = tester.getCenter(_celda);
+          for (var i = 0; i < contactos; i++) {
+            await tester.sendEventToBinding(TestPointer(11 + i)
+                .down(foco + Offset(80.0 * i, 0)));
+          }
+          await tester.pump();
+          for (final estado in estados) {
+            tester.binding.handleAppLifecycleStateChanged(estado);
+            await tester.pump();
+          }
+          // Tiempo entre el ciclo y el gesto.
+          await tester.pump(const Duration(milliseconds: 500));
+          await tester.pumpAndSettle();
+          expect(_zoom(scope), closeTo(1, 1e-9));
+
+          final primero = TestPointer(2, PointerDeviceKind.trackpad);
+          await tester.sendEventToBinding(primero.panZoomStart(foco));
+          await tester.pump(_cuadro);
+          final pasos = <String>[];
+          for (final escala in [1.05, 1.1, 1.15, 1.2]) {
+            await tester.sendEventToBinding(
+                primero.panZoomUpdate(foco, scale: escala));
+            await tester.pump(_cuadro);
+            pasos.add('${escala.toStringAsFixed(2)}→'
+                '${_zoom(scope).toStringAsFixed(3)}'
+                '${scope.read(pellizcoDelPlanoProvider) ? '' : ' (sin pellizco)'}');
+          }
+          await tester.sendEventToBinding(primero.panZoomEnd());
+          await tester.pumpAndSettle();
+          final trasElPrimero = _zoom(scope);
+
+          final segundo = TestPointer(3, PointerDeviceKind.trackpad);
+          await tester.sendEventToBinding(segundo.panZoomStart(foco));
+          await tester.pump(_cuadro);
+          for (final escala in [0.95, 0.9]) {
+            await tester.sendEventToBinding(
+                segundo.panZoomUpdate(foco, scale: escala));
+            await tester.pump(_cuadro);
+          }
+          final pellizcandoElSegundo = scope.read(pellizcoDelPlanoProvider);
+          await tester.sendEventToBinding(segundo.panZoomEnd());
+          await tester.pumpAndSettle();
+          debugPrint('T120-E2-02 $contactos contacto(s), ciclo $ciclo · '
+              'primer gesto: ${pasos.join(', ')}; tras él '
+              '${trasElPrimero.toStringAsFixed(3)}; segundo gesto (×0.9): '
+              '${_zoom(scope).toStringAsFixed(3)}, pellizcando='
+              '$pellizcandoElSegundo');
+          if (defecto) {
+            expect(trasElPrimero, closeTo(1, 1e-9),
+                reason: 'defecto conocido: el primer pellizco no amplía');
+            expect(_zoom(scope), closeTo(1, 1e-9),
+                reason: 'defecto conocido: el segundo tampoco');
+          } else {
+            expect(trasElPrimero, closeTo(1.2, 1e-9),
+                reason: 'el primer pellizco amplía');
+            expect(_zoom(scope), closeTo(1.2 * 0.9, 1e-9),
+                reason: 'el segundo también');
+          }
+          expect(scope.read(pellizcoDelPlanoProvider), isFalse);
+          expect(tester.takeException(), isNull);
+        }, variant: _windows);
+      }
+    }
+  });
+
+  // Corrección 2 de la entrega 2 · O-120-8 (nueva; la causa es la de
+  // T120-E2-02): al 100 %, en la oficina, el pellizco de dos dedos en una
+  // pantalla táctil no amplía si el primer dedo cae donde solo se desplaza la
+  // columna, como una celda vacía. El plano no ve el segundo dedo: la columna
+  // ya está arrastrando y lo tapa. Con la escala en 2 la rejilla también se
+  // desplaza, el arrastre de la columna no gana solo y el plano ve los dos.
+  // En el teléfono, el `Listener` del plano envuelve los desplazables de la
+  // rejilla y ninguno lo tapa: amplía.
+  group('O-120-8 · el pellizco de dos dedos que empieza en una celda vacía', () {
+    /// Dos dedos a 40 dp sobre la celda vacía, que se separan hasta 160 dp
+    /// (×4), en seis cuadros. Devuelve la escala con los dos todavía puestos.
+    Future<double> separar(WidgetTester tester, ProviderContainer scope) async {
+      final foco = tester.getCenter(_celda);
+      final uno = TestPointer(11);
+      final dos = TestPointer(12);
+      await tester.sendEventToBinding(uno.down(foco));
+      await tester.pump();
+      await tester.sendEventToBinding(dos.down(foco + const Offset(40, 0)));
+      await tester.pump();
+      for (var i = 1; i <= 6; i++) {
+        await tester.sendEventToBinding(uno.move(foco - Offset(10.0 * i, 0)));
+        await tester
+            .sendEventToBinding(dos.move(foco + Offset(40 + 10.0 * i, 0)));
+        await tester.pump(_cuadro);
+      }
+      final escala = _zoom(scope);
+      await tester.sendEventToBinding(uno.up());
+      await tester.sendEventToBinding(dos.up());
+      await tester.pumpAndSettle();
+      return escala;
+    }
+
+    testWidgets(
+        'O-120-8 (DEFECTO CONOCIDO, sin corregir) · en la oficina, al 100 %, '
+        'dos dedos que empiezan en una celda vacía NO amplían', (tester) async {
+      final scope = await t117Pump(tester, tamano: _ventana);
+      final escala = await separar(tester, scope);
+      debugPrint('O-120-8 oficina al 100 %: escala ${escala.toStringAsFixed(3)}');
+      expect(escala, closeTo(1, 1e-9),
+          reason: 'defecto conocido: el plano no ve el segundo dedo');
+      expect(tester.takeException(), isNull);
+    }, variant: _windows);
+
+    testWidgets(
+        'O-120-8 · en la oficina, con la escala en 2, los dos dedos amplían '
+        '(hasta el tope)', (tester) async {
+      final scope = await t117Pump(tester, tamano: _ventana);
+      scope.read(planZoomProvider.notifier).fijar(2);
+      await tester.pumpAndSettle();
+      final escala = await separar(tester, scope);
+      debugPrint('O-120-8 oficina a 2: escala ${escala.toStringAsFixed(3)}');
+      expect(escala, greaterThan(2.5));
+      expect(tester.takeException(), isNull);
+    }, variant: _windows);
+
+    for (final tamano in [const Size(360, 800), const Size(412, 915)]) {
+      testWidgets(
+          'O-120-8 · en el teléfono (${tamano.width.toInt()} × '
+          '${tamano.height.toInt()}), al 100 %, dos dedos que empiezan en una '
+          'celda vacía amplían', (tester) async {
+        final scope = await t117Pump(tester, tamano: tamano);
+        final escala = await separar(tester, scope);
+        debugPrint('O-120-8 teléfono ${tamano.width.toInt()} al 100 %: '
+            'escala ${escala.toStringAsFixed(3)}');
+        expect(escala, greaterThan(2.5));
+        expect(tester.takeException(), isNull);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+    }
   });
 }

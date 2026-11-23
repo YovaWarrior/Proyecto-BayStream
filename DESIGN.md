@@ -2580,6 +2580,27 @@ En `PlanZoomViewport`, además de los dos contactos de la pantalla:
   touchpad (la escala se queda donde quedó), la columna congelada y los contactos de la pantalla.
   Y un gesto nuevo del touchpad con uno viejo abierto lo cierra al empezar; ese primer gesto no
   desplaza (la columna ya lo repartió congelada), el siguiente sí.
+- **Los contactos que siguen puestos se cancelan también en Flutter** (`cancelPointer`, como hace
+  el `Navigator` al cambiar de ruta; corrección 1 de la entrega 2), y quedan como si el sistema los
+  hubiera cancelado: un dedo nuevo vuelve a desplazar la rejilla.
+- **Un arrastre de celda cancelado no propone nada** (O-120-7, corrección 2 de la entrega 2): si su
+  contacto se cancela, lo cancele el sistema o el plano al perder el foco, el arrastre termina sin la
+  hoja que confirma el movimiento y sin el aviso; la copia desaparece y no se registra nada. Flutter
+  avisa los dos finales por el mismo `onDragEnd`, y `DraggableDetails` no los distingue
+  (`wasAccepted` es falso también al soltar en el hueco entre celdas tras moverse el plano bajo un
+  dedo quieto, y ahí cuenta la celda que quedó bajo el puntero, T-122). Por eso la celda que se
+  arrastra (`_PlanDragSource`) va dentro de un `Listener` que anota si el contacto que terminó se
+  soltó o se canceló: está en el camino del contacto, por encima de la celda, y recibe su `up` o su
+  `cancel` antes que el reconocedor del arrastre, que en ese mismo evento llama a `onDragEnd`.
+  Soltar de verdad no cambia.
+- **Lo que no suelta (T120-E2-02 y O-120-8, observaciones; corrección 2 de la entrega 2).** Al
+  100 % en la oficina, la rejilla no se desplaza; el primer dedo sobre una celda vacía hace ganar al
+  arrastre de la columna, sin rival en la arena, y la columna empieza a arrastrar y tapa el plano
+  con su `IgnorePointer`. El segundo dedo no llega a `PlanZoomViewport`: el pellizco de dos dedos
+  no amplía (O-120-8), y al perder el foco el plano cancela solo el dedo que conoce; la columna
+  sigue arrastrando con el otro y el touchpad ya no llega (T120-E2-02). En el teléfono, el
+  `Listener` del plano envuelve los desplazables de la rejilla y amplía. El arreglo de fondo va en
+  una entrega aparte (`docs/T120-RESULTADOS.md`, corrección 2 de la entrega 2).
 - En el teléfono (el lienzo sin `alturaNatural`) también amplían Ctrl + rueda y el touchpad, desde
   la esquina, como el chip: ahí no hay punto fijo ni barra.
 
@@ -2861,11 +2882,21 @@ cambian.
 - La pestaña es un `CustomScrollView`: lo de arriba (el resumen, los botones, las reservas, los
   filtros y el título) en un `SliverToBoxAdapter`, como antes, y las tarjetas en un
   `SliverList.builder` (`ContainersSliverList`) que solo construye las que se ven y las de su
-  margen. Cada tarjeta lleva la clave de su matrícula **y su celda**
-  (`ContainersSliverList.claveDe`: «tarjeta-TSTU0000003-0020382»), y la lista la busca por ella. Con
-  la clave de la matrícula sola, una matrícula en dos celdas daba dos tarjetas con la misma clave, y
-  al rearmarse la lista con las dos a la vista el framework fallaba (T120-E2-01, corrección 1 de la
-  entrega 2). `ContainersListView` se queda para donde se monta sola.
+  margen. Cada tarjeta lleva la clave de su matrícula, **su celda y el identificador del
+  contenedor** (`ContainersSliverList.claveDe`: «tarjeta-TSTU0000003-0020382-» y el identificador),
+  y la lista la busca por ella. Con la clave de la matrícula sola, una matrícula en dos celdas daba
+  dos tarjetas con la misma clave, y al rearmarse la lista con las dos a la vista el framework
+  fallaba (T120-E2-01, corrección 1 de la entrega 2). Con la matrícula y la celda, un archivo que
+  repite las dos volvía a dar dos tarjetas con la misma clave (corrección 2): el lector guarda los
+  dos contenedores, y el identificador es lo único que no se repite (el lector da uno a cada
+  contenedor; los vacíos asignados llevan «assigned-» y su matrícula, cada uno en su celda). La
+  matrícula y la celda van delante para leer la clave. `ContainersListView` se queda para donde se
+  monta sola.
+- **En el Plano, lo mismo** (T120-E2-03, corrección 2): la celda que resalta el buscador va dentro
+  de un `_RevealPosition` con la clave de su celda y su contenedor («revelar-0020382-TSTU0000003»),
+  no de la matrícula sola: con una matrícula en dos celdas del mismo nivel, las dos resaltadas son
+  hermanas en la fila. Al cambiar lo resaltado, la vista sigue yendo a la celda. Las demás claves
+  de las celdas son de la celda, o van dentro de `PlanDragCell`, que lleva la de la celda.
 - Lo de arriba no se fija: se desplaza con la lista. Al cambiar un filtro, nada salta.
 - **La Lista recuerda dónde estaba** al cambiar de pestaña; al llegar desde Estadísticas, se abre
   con su título arriba (18.5).

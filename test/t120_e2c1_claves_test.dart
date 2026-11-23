@@ -127,12 +127,14 @@ void main() {
         expect(despues, antes, reason: 'las 13, en el mismo orden');
         final claves = despues.map((t) => t.split(' = ').last).toList();
         expect(claves.toSet(), hasLength(13), reason: 'una clave por tarjeta');
+        // Desde la corrección 2 (B2), con el identificador del contenedor
+        // detrás de la celda.
         for (final c in repetidos) {
           expect(
               claves,
-              contains(
-                  'tarjeta-${t120Numero(3)}-${c.stowagePosition!.toIsoCode()}'),
-              reason: 'la clave lleva la celda');
+              contains('tarjeta-${t120Numero(3)}-'
+                  '${c.stowagePosition!.toIsoCode()}-${c.id}'),
+              reason: 'la clave lleva la celda y el identificador');
         }
       });
     }

@@ -31,6 +31,10 @@
 //   de cada segmento del selector (el icono, el rótulo y el segmento entero,
 //   en píxeles lógicos de la ventana) y espera `tope` segundos: el arnés pasa
 //   el mouse y lee el árbol de accesibilidad del navegador.
+// - `buscador` (corrección 2, T120-E2-03): con la matrícula en dos celdas del
+//   mismo nivel (T120_PLANO_REPETIDA.edi), por cada resultado del buscador:
+//   abre el buscador con su botón, escribe la matrícula, toca el resultado y
+//   captura el Plano, con las celdas resaltadas y los errores de Flutter.
 // - `monitores`: abre el Plano con zoom y desplazado y se queda quieto;
 //   anota cada cambio de tamaño o de densidad de la ventana y cada error de
 //   Flutter (para los dos monitores, con tool/t120_monitores.ps1).
@@ -143,6 +147,8 @@ class T120e2Conductor {
           await _parpadeoSinCaptura();
         case 'selector':
           await _selector();
+        case 'buscador':
+          await _buscador();
         case 'monitores':
           await _monitores();
           return; // se queda abierto: lo cierra el script
@@ -274,7 +280,8 @@ class T120e2Conductor {
         final halladas = _todos((e) {
           final k = e.widget.key;
           return k is ValueKey<String> &&
-              // Corrección 1 (T120-E2-01): la clave lleva la celda.
+              // Corrección 1 (T120-E2-01): la clave lleva la celda; desde la
+              // corrección 2 (B2), también el identificador del contenedor.
               k.value.startsWith('tarjeta-TSTU0000003-') &&
               _visible(e);
         });
@@ -716,6 +723,90 @@ class T120e2Conductor {
     }
     await _registrar('selector-listo', {'segmentos': segmentos});
     await Future<void>.delayed(Duration(seconds: int.parse(_p('tope', '90'))));
+  }
+
+  // --- buscador (corrección 2) ------------------------------------------
+
+  /// T120-E2-03: elegir en el buscador cada resultado de una matrícula
+  /// repetida y mirar el Plano. En release la aserción de la clave repetida
+  /// no corre: lo que se ve queda en la captura.
+  Future<void> _buscador() async {
+    final c = _riverpod();
+    final matricula = _p('matricula', 'TSTU0000003');
+    await c
+        .read(themePreferenceProvider.notifier)
+        .select(AppThemePreference.light);
+    for (final especificacion in _p('tamanos', '1366x690,360x800').split(',')) {
+      final partes = especificacion.split('x');
+      _tamano.value = Size(double.parse(partes[0]), double.parse(partes[1]));
+      _letra.value = 1.0;
+      await _asentar();
+      for (var i = 0; i < 2; i++) {
+        await _ir(DestinoDelViaje.lista);
+        await _tocar(_conClave('buscar-contenedor'));
+        await _asentar();
+        final campo = _buscar((e) => e.widget is TextField) ??
+            (throw StateError('No se abrió el buscador'));
+        (campo.widget as TextField).controller!.text = matricula;
+        await _asentar();
+        // Por su `ListTile` con la posición: en la Web en release, el nombre
+        // del tipo (`runtimeType`) sale minificado.
+        final resultados = _todos((e) =>
+            e.widget is ListTile &&
+            _visible(e) &&
+            _textosDe(e).any((t) => t.startsWith('Posición:')))
+          ..sort((a, b) => _rect(a).top.compareTo(_rect(b).top));
+        if (resultados.length <= i) {
+          await _registrar('buscador-diagnostico', {
+            'campos': [
+              for (final e in _todos((e) => e.widget is TextField))
+                {
+                  'texto': (e.widget as TextField).controller?.text,
+                  'visible': _visible(e),
+                }
+            ],
+            'tiles': _todos((e) => e.widget is ListTile).length,
+            'textos': _textosDe(_buscar((e) => e.widget is Scaffold) ??
+                    WidgetsBinding.instance.rootElement!)
+                .take(40)
+                .toList(),
+          });
+          throw StateError('Hay ${resultados.length} resultados');
+        }
+        final elegido = _textosDe(resultados[i]);
+        await _registrar('buscador-resultados', {
+          'tamano': especificacion,
+          'resultados': [for (final r in resultados) _textosDe(r).join(' | ')],
+          'elegido': i,
+        });
+        await _tocar(resultados[i]);
+        await _asentar();
+        // `_RevealPosition` lleva la vista a la celda a los 350 ms.
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        await _asentar();
+        final resaltadas = [
+          for (final e in _todos((e) =>
+              e.widget is BsCelda && (e.widget as BsCelda).resaltada))
+            {
+              'clave': '${(e.widget.key as ValueKey<String>?)?.value}',
+              'etiqueta': (e.widget as BsCelda).etiqueta,
+              'visible': _visible(e),
+              'rect': [
+                for (final v in [_rect(e).left, _rect(e).top, _rect(e).width,
+                    _rect(e).height])
+                  v.roundToDouble()
+              ],
+            }
+        ];
+        await _capturar(especificacion, 'buscador_${i + 1}_plano', {
+          'elegido': elegido.join(' | '),
+          'pestana': c.read(destinoDelViajeProvider).name,
+          'bahia': c.read(selectedBayProvider),
+          'resaltado': c.read(highlightedContainerProvider),
+          'celdas_resaltadas': resaltadas,
+        });
+      }
+    }
   }
 
   // --- monitores --------------------------------------------------------
