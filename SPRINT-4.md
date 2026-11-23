@@ -5507,4 +5507,76 @@ El prompt está en el documento del proyecto `BayStream_T120_e2c1_aceptada_22nov
 
 **El disco de la laptop** sigue al 96 %, con 43 GB libres. `%TEMP%\t120-glm2\`, de 12 GB, se queda hasta que GLM acepte la corrección 2. Ya se puede borrar, desde el Explorador: de `%TEMP%\t120-e2\`, todo menos `banco\` y `caso\`; lo de T-147, unos 16 GB, y lo de la entrega 1 de T-120, cerca de 5 GB.
 
-La siguiente decisión es la **10.173**.
+### 10.173 · T-120, corrección 2 de la entrega 2: entregada y revisada, coincide con la carpeta y pasa a la aceptación de GLM; T120-E2-02 queda como observación con su causa, y sale O-120-8 (22-nov, 20:35)
+
+**Carlos corrió los dos bloques de la 10.172** (22-nov, 17:40): el informe de GLM quedó en `6aaefa9`, y la decisión, en `f828860`. Le pasó el prompt a Timonel, y con eso **aprobó la corrección 2.** Del corte de la versión todavía no ha dicho nada.
+
+**La consulta de C, a media corrección** (18:37). Timonel leyó la causa de T120-E2-02 dentro de su tope y preguntó antes de tocar nada, como pedía el prompt. Dio tres salidas: un arreglo chico (que al perder el foco se cancelen todos los contactos de la ventana, con una ruta global de punteros), el arreglo de fondo, o dejarlo como observación. Carlos le pasó la pregunta a Yov desde el teléfono, con la laptop sin enlazar: Yov respondió con lo que tenía a mano, sin leer la carpeta, y no escribió nada en este archivo. **Recomendó dejarlo como observación,** con su causa, sus pruebas y una nota del arreglo de fondo, y Carlos eligió eso. Las razones:
+- el arreglo chico cierra solo una esquina rara, la de dos dedos puestos y perder el foco, y mete un efecto en toda la ventana, también en los teléfonos del muelle, sin medirlo;
+- el de fondo cambia el gesto táctil del plano, y eso pide una pantalla táctil de verdad.
+
+**Timonel terminó la corrección a las 19:58,** sobre `f828860` y sin commit (`docs/T120-RESULTADOS.md`, «Corrección 2 de la entrega 2», E2c2.1 a E2c2.12). Carlos pasó su mensaje a las 20:05.
+
+**Lo que trae:**
+- **A · O-120-7, corregida.** Un arrastre de celda cancelado ya no propone nada: ni la hoja ni el aviso, lo cancele el sistema o el plano al perder el foco. La celda que se arrastra va dentro de un `Listener`, que ve la cancelación antes que el arrastre; si el contacto se canceló, el plano no busca destino. `wasAccepted` no servía: también es falso con la regla de T-122. Soltar de verdad no cambia. La prueba nueva tiene 12 casos: el dedo y el mouse; sobre una celda válida, una que no lo admite y la de origen; y la cancelación del sistema y la pérdida de foco.
+- **B1 · T120-E2-03, corregida.** La clave de la celda resaltada es ahora de la celda y la matrícula (`revelar-0020382-TSTU0000003`). Con cualquiera de los dos resultados del buscador, el Plano se arma sin errores, en su bahía, con las dos celdas resaltadas, porque el buscador resalta por matrícula. Ninguna otra clave del Plano se puede repetir entre celdas hermanas.
+- **B2 · la misma matrícula dos veces en la misma celda sí rompía la Lista,** igual que T120-E2-01. La clave de la tarjeta lleva ahora también el identificador del contenedor, que el lector da a cada uno (`tarjeta-<matrícula>-<celda>-<id>`). La Lista enseña 13 tarjetas, contadas por elemento, y dice «Contenedores (13)»; con el filtro de LNB, «Contenedores (4), naviera LNB».
+- **C · T120-E2-02, sin tocar el código.** Queda como observación, con su causa, y de la misma causa sale O-120-8. Van abajo.
+- **D · los dos monitores y el pellizco de verdad siguen pendientes.** Carlos no pudo en esa sesión.
+- **Cifras:** la suite, 2586 de 2586 (2563 + 23), sin omitidas, y `analyze` en cero, en la carpeta y en una copia limpia. Contra `f828860` fallan 19 de las 48 pruebas de los seis archivos. `pubspec.*` no cambia. El piso de `sprint-4` sigue en 2563 hasta que GLM acepte.
+
+**T120-E2-02 (P3), la causa. No está en el ciclo de vida.**
+- En la oficina, el plano va dentro de la columna que se desplaza. Al 100 % la bahía cabe a lo ancho y la rejilla no se desplaza, así que a un dedo que cae en una celda vacía solo lo quiere un arrastre: el de la columna. Flutter se lo da en cuanto el dedo se apoya.
+- Mientras la columna arrastra, tapa todo lo que lleva dentro, y el plano con ello. El segundo dedo ya no le llega al plano, y un pellizco del touchpad tampoco.
+- Al perder el foco, el plano cancela el contacto que conoce, el primero. El segundo sigue puesto en la columna, que se queda arrastrando y tapando el plano hasta que ese contacto termine.
+- Con un solo contacto, el plano lo conoce y lo cancela: es lo que arregló la corrección 1. Y cancelando los dos directo, como hizo GLM, se suelta también el de la columna.
+- **La 10.172 decía que lo que lo dejaba así era el camino de perder el foco. No era eso:** el plano nunca vio el segundo contacto.
+- **Es del producto, no de la sonda:** pasa con el ciclo corto y con el entero, con cuatro pasos de pellizco, con medio segundo entre el ciclo y el gesto, y en un segundo gesto.
+- **Lo que no se sabe:** si Windows, después de un Alt + Tab con dos dedos puestos, manda el final del segundo contacto. Si lo manda, la columna se suelta sola.
+
+**O-120-8 (nueva, P3 por ahora) · En la oficina, al 100 %, el pellizco de dos dedos de una pantalla táctil no amplía si empieza en una celda vacía.**
+- **Lo medido,** en pruebas de widgets: a 1366 × 690, dos dedos que se separan de 40 a 160 dp sobre una celda vacía dejan la escala en 1.000. Con la escala en 2, la rejilla también se desplaza, el plano ve los dos dedos y amplía hasta el tope, 3.000. En el teléfono, a 360 × 800 y a 412 × 915, amplía hasta el tope.
+- **No lo trajo T-120:** viene de la oficina de T-117. Por lectura, la 1.0.2 publicada lo tiene: en `master`, el plano y la columna están armados igual. Ahí no está medido.
+- **A quién le toca: no es solo una laptop táctil.** La app arma la oficina desde 600 dp de ancho, sin mirar el alto, y en Android no fija la orientación. Así que, por lectura, le toca también a una tableta y a un teléfono acostado. Ni este archivo ni `DESIGN.md` dicen nada del teléfono acostado: en el rediseño no lo ha mirado nadie.
+- **Lo que no está medido:** el pellizco que empieza sobre un contenedor; una bahía que quepa entera en el teléfono; el teléfono acostado, y nada de esto en una pantalla táctil de verdad. Lo que se puede medir en pruebas de widgets lo mide GLM en la aceptación.
+- **Lo que sigue sirviendo:** el control del zoom de la barra y el pellizco del touchpad.
+- **Las pruebas que fijan los dos defectos lo dicen en su nombre:** «DEFECTO CONOCIDO, sin corregir». Cuando se arregle, cambian.
+- **El arreglo de fondo va en su propia entrega.** La nota de Timonel queda en su informe (E2c2.3): que el plano vea todos sus contactos aunque la columna los tape; que con dos dedos sobre el plano la columna se detenga, y que al perder el foco el plano los cancele todos. Se mide con una pantalla táctil de verdad.
+
+**Lo que Yov comprobó contra la carpeta y la evidencia:**
+- **el árbol:** contra `f828860` cambian 12 archivos y hay 3 nuevos, los 15 de su bloque. De `DESIGN.md` cambian 16.2 y 18.4; 17.7 y 14.9 están intactas. No cambian `pubspec.*`, `lib/main.dart`, los congelados ni los archivos de T-147, y no hay ningún `// ignore:`. Las sondas temporales ya no están en `test/`: sus fuentes y sus salidas quedaron en la evidencia;
+- **los registros:** `analyze` y la suite de la carpeta (19:51 a 19:53), y los de la copia limpia (19:54 a 19:57). El último cambio de `lib/` es de las 19:36, y el de las herramientas, de las 19:43. El manifiesto de la copia limpia coincide con la carpeta en sus 14 rutas, por su huella;
+- **las rojas,** cada una en su comprobación y ninguna de compilación: las 12 del arrastre, con la hoja o con el aviso; las 2 del Plano, con «Duplicate keys found»; la de la misma celda, con la aserción de T120-E2-01 al quitar el filtro, y 4 de la Lista, porque la clave cambió de texto. Las 16 del pellizco pasan también contra la punta, porque C no cambia código;
+- **el código:** los tres archivos de `lib/` hacen lo que dice el informe, y nada más;
+- **A, en el código de Flutter:** un evento pasa por los `Listener` del camino antes de llegar a los reconocedores. La marca de cancelado se queda puesta hasta el siguiente «up» sobre esa celda, y un arrastre que se suelta de verdad entrega su «up» antes de proponer: no le estorba;
+- **B1, las demás claves:** con una operación de carga, cada celda va dentro de su `PlanDragCell`, con la clave de su celda, y la descarga pendiente solo sale ahí. La única clave por matrícula que quedaba entre hermanas era la que cambió;
+- **B2:** la Lista arma la clave y la busca con la misma función. El lector da un identificador a cada contenedor, y los vacíos asignados llevan el suyo. En el repositorio nadie más busca el texto de la clave: el conductor la busca por su comienzo;
+- **C, las sondas:** después del primer contacto, la columna pasa a arrastrar y a ignorar los punteros, y el camino de un toque sobre el plano baja de 88 entradas a 55, sin el `Listener` del plano. Coincide con el código de Flutter, que Yov leyó: una arena con un solo miembro se resuelve al cerrarse, y un desplazable que arrastra tapa su contenido;
+- **el banco:** las cuatro corridas, dos en Windows y dos en la Web, terminan en «fin», sin errores de Flutter. En las cuatro, el buscador da dos resultados, el Plano queda en la bahía 2 y las dos celdas quedan resaltadas, a 1366 × 690 y a 360 × 800. En la Web, el `main.dart.js` que cargó la página es el de la carpeta que se sirve, distinto antes y después, y cada corrida fue con su perfil nuevo. El `lib/` del banco es el de la carpeta, en sus 212 archivos;
+- **la pantalla:** las 16 capturas son cuatro imágenes distintas, una por plataforma y tamaño: antes y después, y con uno y otro resultado, son iguales byte a byte. Yov abrió las cuatro. En las de 1366, el nivel 82 de la bahía 02 trae sus nueve celdas en orden, con las de las filas 03 y 07 marcadas con el borde de resaltado. En las de 360, la rejilla está corrida a estribor, con las dos marcadas a la vista. No hay ninguna pantalla de error;
+- **nombres y matrículas reales:** ninguno en las 15 rutas;
+- **las horas,** por los archivos: de la primera roja, a las 17:50, al informe, a las 20:03.
+
+**Lo que la revisión deja anotado, y no detiene la aceptación:**
+- **en release, el banco enseña lo mismo antes y después del cambio de B1.** Lo que prueba la corrección es la prueba de widgets, que corre con las aserciones;
+- **B2 no se miró en pantalla en esta corrección.** No estaba pedido. GLM corre en el banco el escenario de la matrícula repetida, con la clave nueva;
+- **el informe pone el modo Orden entre los que no tienen operación de carga.** Con puerto de escala sí la tiene, y ahí sus celdas van dentro de `PlanDragCell`. La conclusión no cambia;
+- **la sonda de claves de GLM vuelve a quedar vieja:** busca el texto entero de la clave, que ahora termina en el identificador;
+- **`banco\` y `limpia\`, de `%TEMP%\t120-e2\`, comparten el SDK de Firebase por enlaces,** según el informe. Cada una mide unos 10 GB, y las dos juntas, poco más: borrar `limpia\` libera poco mientras `banco\` siga.
+
+**Lo que decide Carlos: cuándo va el arreglo de fondo de O-120-8.** La recomendación de Yov:
+- va en su propia entrega, con Timonel, después de que GLM acepte esta corrección, y en la misma sesión que los monitores y el pellizco de verdad;
+- **no detiene la versión, salvo que le pegue al muelle.** Eso lo dicen dos cosas: lo que mida GLM con el teléfono acostado, y una prueba de un minuto de Carlos en un teléfono de verdad, con la app publicada o con la Web: acostarlo, abrir un plano al 100 % y separar dos dedos empezando en una celda vacía;
+- **falta saber con qué pantalla táctil se mide.** Para el banco sirve una laptop o un monitor táctil con Windows: los agentes no instalan nada en el Honor. Yov se lo pregunta a Carlos.
+
+**Lo que sigue:**
+1. Carlos: dos bloques en `sprint-4`, la corrección de Timonel (15 rutas) y esta decisión; y uno en `baystream-qa-r4`, que pasa a la punta.
+2. GLM 5.3 Flash, en Max, en un chat nuevo: la aceptación de la corrección 2. El prompt está en el documento del proyecto `BayStream_T120_e2c2_revision_22nov.md`. GLM pone al día su banco de `%TEMP%\t120-glm2\`. Mientras acepta, Timonel no toca la carpeta.
+3. Con Timonel, cuando Carlos tenga el tiempo y diga cuándo: el arreglo de fondo de O-120-8, con los dos monitores y el pellizco de verdad.
+4. La entrega 3 de T-147, si Carlos aprueba el corte de la 10.168, y la versión.
+
+**Siguen pendientes de Carlos:** el corte de la próxima versión (10.168); los 30 minutos de los monitores; si Antigravity queda de respaldo (10.137), y desactivar las cuentas de demostración, que vencían el 14-nov (10.113).
+
+**El disco de la laptop** sigue al 96 %, con 42 GB libres. `%TEMP%\t120-glm2\`, de 12 GB, se queda hasta que GLM acepte la corrección 2. De `%TEMP%\t120-e2\`, de unos 14 GB, se quedan `banco\` y `caso\`; lo demás, unos 3 GB según el informe, se borra cuando GLM acepte. Ya se puede borrar, desde el Explorador: lo de T-147, unos 16 GB, y lo de la entrega 1 de T-120, cerca de 5 GB.
+
+La siguiente decisión es la **10.174**.
